@@ -5,6 +5,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
+import "../Commons"
 
 Singleton {
     id: root
@@ -16,26 +17,30 @@ Singleton {
     readonly property var focusedToplevel: Hyprland.focusedToplevel
 
     function dispatch(cmd: string) {
-        Hyprland.dispatch(cmd);
+        try {
+            Hyprland.dispatch(cmd);
+        } catch (e) {
+            Logger.error("Hypr", "dispatch '" + cmd + "' failed: " + e);
+        }
     }
 
     function focusWorkspace(id: int) {
-        Hyprland.dispatch("workspace " + id);
+        root.dispatch("workspace " + id);
     }
 
     function moveToWorkspace(id: int) {
-        Hyprland.dispatch("movetoworkspace " + id);
+        root.dispatch("movetoworkspace " + id);
     }
 
     function focusWindow(address: string) {
-        Hyprland.dispatch("focuswindow address:" + address);
+        root.dispatch("focuswindow address:" + address);
     }
 
     function closeWindow(address: string) {
-        Hyprland.dispatch("closewindow address:" + address);
+        root.dispatch("closewindow address:" + address);
     }
 
     function reload() {
-        Hyprland.dispatch("reload");
+        root.dispatch("reload");
     }
 }

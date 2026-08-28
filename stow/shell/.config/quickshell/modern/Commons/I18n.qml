@@ -33,9 +33,16 @@ Singleton {
         watchChanges: true
         printErrors: true
         onFileChanged: reload()
-        onLoaded: root._active = JSON.parse(text())
+        onLoaded: {
+            try {
+                root._active = JSON.parse(text());
+            } catch (e) {
+                Logger.error("I18n", `parse failed for "${root.activeLang}.json": ${e}`);
+                root._active = ({});
+            }
+        }
         onLoadFailed: (error) => {
-            console.warn(`I18n: failed to load "${root.activeLang}.json" (${error}) — falling back to "${root.fallbackLang}" only`);
+            Logger.warn("I18n", `failed to load "${root.activeLang}.json" (${error}) — falling back to "${root.fallbackLang}" only`);
             root._active = ({});
         }
     }
@@ -49,9 +56,16 @@ Singleton {
         watchChanges: true
         printErrors: true
         onFileChanged: reload()
-        onLoaded: root._fallback = JSON.parse(text())
+        onLoaded: {
+            try {
+                root._fallback = JSON.parse(text());
+            } catch (e) {
+                Logger.error("I18n", `parse failed for fallback "${root.fallbackLang}.json": ${e}`);
+                root._fallback = ({});
+            }
+        }
         onLoadFailed: (error) => {
-            console.warn(`I18n: failed to load fallback "${root.fallbackLang}.json" (${error})`);
+            Logger.warn("I18n", `failed to load fallback "${root.fallbackLang}.json" (${error})`);
             root._fallback = ({});
         }
     }
@@ -77,7 +91,7 @@ Singleton {
         if (value === undefined)
             value = root._lookup(root._fallback, path);
         if (value === undefined) {
-            console.warn(`I18n.t: missing key "${path}"`);
+            Logger.warn("I18n", `missing key "${path}"`);
             return path;
         }
         return root._interpolate(value, params);

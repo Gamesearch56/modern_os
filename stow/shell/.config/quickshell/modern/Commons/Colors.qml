@@ -74,9 +74,12 @@ Singleton {
                 if (data.color)
                     root.color = data.color;
             } catch (e) {
-                console.warn("Colors: tokens.json parse failed, keeping fallback: " + e);
+                Logger.error("Colors", "tokens.json parse failed, keeping fallback: " + e);
             }
         }
-        onLoadFailed: root.color = root._fallback
+        onLoadFailed: {
+            root.color = root._fallback;
+            Logger.warn("Colors", "tokens.json missing — using MD3 dark baseline");
+        }
     }
 }

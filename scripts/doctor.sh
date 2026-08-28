@@ -102,6 +102,15 @@ if command -v qs >/dev/null 2>&1; then
     ok "qs on PATH"
 fi
 
+section "isolation"
+PROTECTED="${MODERN_PROTECT_HOME:-/home/bastianweigand}"
+if [ "$HOME" = "$PROTECTED" ]; then
+    warn "this shell is the daily-driver account ($HOME) — do not run install.sh without --target /home/devuser"
+    ok "install.sh will refuse this home unless --allow-live-home is passed"
+else
+    ok "HOME=$HOME is not the protected daily-driver path ($PROTECTED)"
+fi
+
 echo
 if [ "$CRIT" -ne 0 ]; then
     printf 'doctor: CRITICAL — this checkout is incomplete.\n' >&2

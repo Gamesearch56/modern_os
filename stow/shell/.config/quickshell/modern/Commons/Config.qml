@@ -29,6 +29,7 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         printErrors: true
+        onLoadFailed: (error) => Logger.error("Config", "failed to load config.json: " + error)
 
         JsonAdapter {
             id: adapter

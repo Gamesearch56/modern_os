@@ -5,6 +5,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Networking
 import QtQuick
+import "../Commons"
 
 Singleton {
     id: root
@@ -35,12 +36,16 @@ Singleton {
     }
 
     function connect(network: var, password: string) {
-        if (!network)
-            return;
-        if (password && password.length > 0)
-            network.connect(password);
-        else
-            network.connect();
+        try {
+            if (!network)
+                return;
+            if (password && password.length > 0)
+                network.connect(password);
+            else
+                network.connect();
+        } catch (e) {
+            Logger.error("Network", String(e));
+        }
     }
 
     function disconnect() {

@@ -34,6 +34,8 @@ Singleton {
         onLoadFailed: {
             root.raw = "";
             root.events = [];
+            if (root.icsUrl.length > 0)
+                Logger.warn("Calendar", "failed to load ICS from " + root.icsUrl);
         }
     }
 }

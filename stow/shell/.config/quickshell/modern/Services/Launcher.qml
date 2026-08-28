@@ -25,6 +25,7 @@ Singleton {
             try {
                 root.usage = JSON.parse(text());
             } catch (e) {
+                Logger.warn("Launcher", "launcher-usage.json parse failed: " + e);
                 root.usage = ({});
             }
         }
@@ -45,11 +46,15 @@ Singleton {
     }
 
     function record(id: string) {
-        const next = Object.assign({}, root.usage);
-        const prev = next[id] || { count: 0, last: 0 };
-        next[id] = { count: prev.count + 1, last: Date.now() };
-        root.usage = next;
-        file.setText(JSON.stringify(next));
+        try {
+            const next = Object.assign({}, root.usage);
+            const prev = next[id] || { count: 0, last: 0 };
+            next[id] = { count: prev.count + 1, last: Date.now() };
+            root.usage = next;
+            file.setText(JSON.stringify(next));
+        } catch (e) {
+            Logger.error("Launcher", "failed to persist usage: " + e);
+        }
     }
 
     function mostUsed(limit: int): var {
@@ -85,12 +90,16 @@ Singleton {
     }
 
     function launch(item: var) {
-        if (!item)
-            return;
-        root.record(item.id);
-        if (item.exec?.execute)
-            item.exec.execute();
-        root.hide();
+        try {
+            if (!item)
+                return;
+            root.record(item.id);
+            if (item.exec?.execute)
+                item.exec.execute();
+            root.hide();
+        } catch (e) {
+            Logger.error("Launcher", String(e));
+        }
     }
 
     function _subseq(hay: string, needle: string): bool {

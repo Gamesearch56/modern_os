@@ -23,8 +23,10 @@ Singleton {
         }
         stderr: StdioCollector {
             onStreamFinished: {
-                if (this.text.trim().length > 0)
+                if (this.text.trim().length > 0) {
                     root.lastError = this.text.trim();
+                    Logger.warn("Ai", root.lastError);
+                }
             }
         }
     }
@@ -33,12 +35,17 @@ Singleton {
         const q = (text || "").trim();
         if (!q || root.busy)
             return;
-        root.history = root.history.concat([{ role: "user", text: q }]);
-        const model = Config.accounts?.ai?.ollamaModel ?? "llama3";
-        root.busy = true;
-        root.lastError = "";
-        proc.command = ["ollama", "run", model, q];
-        proc.running = true;
+        try {
+            root.history = root.history.concat([{ role: "user", text: q }]);
+            const model = Config.accounts?.ai?.ollamaModel ?? "llama3";
+            root.busy = true;
+            root.lastError = "";
+            proc.command = ["ollama", "run", model, q];
+            proc.running = true;
+        } catch (e) {
+            root.busy = false;
+            Logger.error("Ai", String(e));
+        }
     }
 
     function clear() {

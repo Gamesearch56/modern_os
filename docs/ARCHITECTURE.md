@@ -39,8 +39,8 @@ Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media
            Users KdeConnect Diagnostics
            — imports Commons only. Owns ALL process spawning, IPC, D-Bus and
            filesystem access. Each file is `pragma Singleton` with a
-           `Singleton { }` root; Quickshell auto-generates the `qmldir`
-           per directory (no hand-written one — see docs/DECISIONS.md).
+           `Singleton { }` root and a matching line in that directory's
+           `qmldir` (docs/DECISIONS.md #19).
 
 Widgets/   MButton MIconButton MSwitch MSlider MCard MChip MListItem
            MTextField MPopup MIcon MText MDialog MTooltip
@@ -87,8 +87,8 @@ modern_dotfile/
 │   ├── kitty/ dolphin/ gtk/ qt/ bash/ git/
 │   └── modern/.config/modern/               config.default.json, themes/, translations/
 ├── scripts/    theme-apply.sh wallpaper.sh optiscaler.sh game-profile.sh
-│               lint-layers.sh snapshot-packages.sh check-isolation.sh doctor.sh
-└── bin/        modern (IPC CLI)
+│               lint-layers.sh snapshot-packages.sh check-isolation.sh
+│               doctor.sh modern (IPC CLI)
 ```
 
 ## Config layer

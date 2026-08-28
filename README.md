@@ -7,25 +7,206 @@ replaces Wallust for dynamic, wallpaper-derived color; one JSON config file
 drives both the shell and Hyprland's Lua config. German and English are
 both first-class throughout.
 
-Built to be daily-drivable on a fresh, empty `devuser` account and fully
-reproducible from a bare Arch install via `install.sh`, or from bare metal
-via `bootstrap.sh`.
+Two install paths exist:
 
-> **Status.** This repo is under active construction against the plan in
-> `docs/ARCHITECTURE.md`. It is developed entirely against a separate
-> `devuser` account — see `docs/ISOLATION.md` — and has **not yet been
-> installed or booted**. Package installation, account creation and any
-> system-wide file (`install/system/`) are staged, reviewed, and applied
-> manually; nothing in this repo runs itself against your machine. See
-> "Current state" below for exactly what has been verified.
+- **This machine (now):** keep using `bastianweigand` as the daily driver.
+  Create `devuser`, install *only* into that home, and start Hyprland on a
+  **second TTY** so the current session is never replaced.
+- **New PC / bare metal:** `scripts/bootstrap.sh` (print-only until you
+  pass `--yes --disk`) then `install/install.sh` as the new user.
 
-## Why
+Full plan: `docs/ARCHITECTURE.md`. Isolation rules: `docs/ISOLATION.md`.
 
-The previous setup (`~/dotfiles`, Wallust + Waybar + SwayNC + Rofi) hit a
-ceiling: Wallust's 19 color slots can't express Material Design 3's ~30
-semantic roles and tonal palette, three separate flat-CSS/rasi apps drift
-out of sync with each other, and monitor names, audio sinks and a weather
-city were hardcoded. Full audit and rationale in `docs/DECISIONS.md`.
+## Status
+
+The shell, installer, token pipeline and Settings modules are in the
+repo and internally consistent (`scripts/lint-layers.sh`). They have
+**not** been lived as a daily session yet. Package installs are additive
+(pacman has no per-user scope). Everything that would change boot, login,
+or `/etc` lives under `install/system/` and is **never** applied by
+`install.sh`.
+
+| Milestone | Scope | Code |
+|---|---|---|
+| M0 | Bar, launcher, power menu, cheatsheet, Vivaldi, Cursor on `devuser` | present |
+| M1 | Lock/login/shutdown, Plymouth (gated), notifications, GTK/Qt/Vivaldi | present |
+| M2 | Wallpaper picker, media/performance/weather/VPN/notes widgets | present |
+| M3 | Settings app | present |
+| M4 | Gaming: OptiScaler, profiles, perf sysctls (gated) | present |
+| M5 | Watchdog, portals, IPC CLI, KDE Connect, backups, bootstrap, onboarding | present |
+| M6 | Personal layer, plugins, extras | present |
+
+Hand-check remaining items: `docs/TROUBLESHOOTING.md` and the milestone
+notes in `docs/DECISIONS.md`.
+
+## Safety — testing will not replace your current session
+
+If you follow the **this machine** path below and **do not** apply
+`install/system/` (greetd, Plymouth/mkinitcpio, sysctl, polkit, ufw,
+snapper, ESP hook):
+
+- `install.sh` **refuses** to stow into `/home/bastianweigand` (even
+  `--dry-run`). Override only with `--allow-live-home` for a deliberate
+  cutover, not for testing.
+- Stow backups go under the *target* home, never into the daily-driver
+  `$HOME`.
+- Creating `devuser` does **not** change autologin. Your existing
+  graphical session stays on TTY1/TTY2.
+- Coming back: `Ctrl+Alt+F1` or `F2` — the `bastianweigand` session is
+  still running. Log out of the `devuser` Hyprland if you started one;
+  that does not log you out of the main account.
+- Optional rollback of the test account only:
+  `sudo userdel -r devuser` (deletes `/home/devuser`; does not touch
+  `/home/bastianweigand`).
+
+The one machine-wide side effect of a real (non-dry-run) install is
+**packages**: pacman/yay install is system-wide and additive. It will not
+remove anything the daily driver uses. The existing
+`/etc/pacman.d/hooks/package_list.hook` will rewrite lists in the *old*
+`~/dotfiles` repo — leave that hook alone and ignore the diff. See
+`docs/ISOLATION.md`.
+
+**Do not run** while testing:
+
+```text
+sudo systemctl enable greetd
+# anything that copies install/system/ into /etc
+# install.sh without --target if you are logged in as bastianweigand
+# install.sh --allow-live-home
+```
+
+Verify from this account before and after:
+
+```bash
+scripts/check-isolation.sh
+```
+
+## This machine — install and switch to `devuser`
+
+Your home is mode `700`, so `devuser` cannot read this checkout. Clone a
+**copy** as `devuser`. Prefer a second TTY so you never log out of
+`bastianweigand`.
+
+### 1. Create the test account (gated, once)
+
+From `bastianweigand`:
+
+```bash
+cd /home/bastianweigand/CursorProjects/modern_dotfile
+scripts/check-isolation.sh
+sudo install/system/create-devuser.sh
+```
+
+Set a password when asked. Rollback: `sudo userdel -r devuser`.
+
+### 2. Clone and install **as `devuser`**
+
+```bash
+sudo -iu devuser
+git clone git@github.com:Gamesearch56/modern_dotfile.git ~/modern_dotfile
+# or: git clone https://github.com/Gamesearch56/modern_dotfile.git ~/modern_dotfile
+cd ~/modern_dotfile
+./install/install.sh --profile m0 --dry-run
+./install/install.sh --profile m0
+```
+
+Use `--profile dev` if you want Cursor on that account
+(`docs/CURSOR-SETUP.md`).
+
+If you must run the installer from `bastianweigand` instead, you still
+cannot target your own home:
+
+```bash
+./install/install.sh --profile m0 --target /home/devuser --dry-run
+```
+
+That only works if `devuser`'s home is writable by you (it usually is
+not). `sudo -iu devuser` is the supported path.
+
+### 3. Start the new desktop without leaving the current one
+
+Stay logged in as `bastianweigand`. On another virtual terminal:
+
+1. `Ctrl+Alt+F3` (F4 also works if F3 is busy).
+2. Log in as `devuser`.
+3. Start the compositor: `Hyprland`  
+   (or `uwsm start hyprland-uwsm.desktop` if that is how Hyprland is
+   launched on this box).
+4. After stow, enable the user unit **as `devuser`**:
+   `systemctl --user enable --now modern-shell.service`
+
+You now have two sessions: the old desktop on TTY1/TTY2, the new one on
+TTY3.
+
+### 4. Switch back to your main user
+
+- **Keep both sessions:** `Ctrl+Alt+F1` or `Ctrl+Alt+F2` until you see
+  the `bastianweigand` desktop. Nothing in the main home was rewritten.
+- **End the test session:** in the `devuser` Hyprland, `SUPER+M` → log
+  out (or `exit` from the TTY). Then `Ctrl+Alt+F1`/`F2` again.
+- **After a reboot:** autologin is still the daily-driver account,
+  because greetd was never enabled. Log in as usual.
+
+### 5. Cursor on `devuser`
+
+Follow `docs/CURSOR-SETUP.md` inside the `devuser` session (`--profile
+dev` installs `cursor-bin`). Open `~/modern_dotfile` there — not the
+copy under `/home/bastianweigand`.
+
+## New PC — install from scratch
+
+Gated `/etc` files are still **not** applied by default. You get a
+working user session first; greetd/Plymouth are a later, explicit step
+(`docs/BOOT.md`, `docs/ISOLATION.md`).
+
+### Already running Arch (one empty user)
+
+```bash
+git clone git@github.com:Gamesearch56/modern_dotfile.git ~/modern_dotfile
+cd ~/modern_dotfile
+./install/install.sh --profile m0 --dry-run
+./install/install.sh --profile m0
+scripts/theme-apply.sh --wallpaper /path/to/image.jpg
+systemctl --user enable --now modern-shell.service
+Hyprland
+```
+
+If that user is named `bastianweigand` **and** `/home/bastianweigand`
+exists (this machine, or a restore of this username), the live-home
+guard will refuse. That is intentional on the current PC. On a **new**
+machine where this *is* the account you want to own, pass
+`--allow-live-home` after reading `docs/ISOLATION.md`.
+
+### Bare metal (live ISO)
+
+Default is **print-only**. Disks are not wiped unless `--yes` and
+`--disk /dev/X` are both passed, and even then this script prints the
+plan rather than calling `mkfs` from the repo (see
+`scripts/bootstrap.sh`).
+
+```bash
+cp install/hardware.conf.example install/hardware.conf
+# set DISK=, HOSTNAME=, USERNAME=, TIMEZONE=, LOCALE=
+./scripts/bootstrap.sh --dry-run
+# review the plan, then on the ISO run the printed partition/pacstrap steps
+# as root. After chroot + first boot, as the new user:
+cd ~/modern_dotfile
+./install/install.sh --profile m0
+```
+
+QEMU recipe only: `./scripts/bootstrap.sh --vm`.
+
+## Logging and errors
+
+| Layer | Where it goes | User-visible |
+|---|---|---|
+| Installer | terminal + `install/install.log` (gitignored) + `journalctl -t modern-install` | no toasts (would hit the wrong session) |
+| Shell | Quickshell `log.qslog` + `Logger` ring (Settings → System) | **errors** become notification toasts; DND does not hide errors |
+| Soft failures | `Logger.warn` (console + ring) | no toast unless `Logger.notifyOnWarn` is enabled |
+
+Failed `config.json` writes, Hyprland dispatch, brightness, Drive sync,
+and uncaught Service exceptions call `Logger.error` and surface in the
+notification panel.
 
 ## Architecture at a glance
 
@@ -39,9 +220,8 @@ Wallpaper + theme profile → matugen → tokens.json (single source of truth)
 config.json (behaviour, written only by Settings) ──► hyprland.lua + Quickshell
 ```
 
-QML is organized in four one-way layers — `Commons → Services → Widgets →
-Modules` — enforced by `scripts/lint-layers.sh`. Full details:
-`docs/ARCHITECTURE.md`, `AGENTS.md`.
+QML layers (enforced by `scripts/lint-layers.sh`):
+`Commons → Services → Widgets → Modules`. See `AGENTS.md`.
 
 ## Repository layout
 
@@ -50,39 +230,9 @@ modern_dotfile/
 ├── AGENTS.md, README.md, LICENSE
 ├── docs/           architecture, design, decisions, install & ops guides
 ├── install/        install.sh, manifests/, baseline/, system/ (gated)
-├── stow/           everything that becomes a dotfile on devuser
-├── scripts/        standalone tooling (theme-apply, doctor, optiscaler, ...)
-└── bin/            the `modern` IPC CLI
+├── stow/           everything that becomes a dotfile on the target user
+└── scripts/        theme-apply, doctor, isolation check, `modern` IPC CLI
 ```
-
-## Milestones
-
-| # | Scope | Status |
-|---|---|---|
-| M0 | Bar, launcher, power menu, cheatsheet, Vivaldi, Cursor on a daily-drivable `devuser` | in progress |
-| M1 | Lock/login/shutdown session, Plymouth boot theme, notifications, full GTK/Qt/Vivaldi theming | scaffolded |
-| M2 | Wallpaper picker, media/performance/weather/VPN/notes widgets | scaffolded |
-| M3 | Full Settings app (18 sections) | scaffolded |
-| M4 | Gaming: OptiScaler manager, game profiles, perf tuning | scaffolded |
-| M5 | Reliability: watchdog, portals, keyring, IPC CLI, KDE Connect, backups, bare-metal recovery, onboarding | scaffolded |
-| M6 | Personal layer, plugin system, extras | scaffolded |
-
-"Scaffolded" means the architecture, files and staged config exist and are
-internally consistent, but the milestone has not been exercised on a live
-`devuser` session yet — see `docs/TROUBLESHOOTING.md` and the milestone
-checklists in `docs/DECISIONS.md` for what's left to verify by hand.
-
-## Getting started
-
-1. Read `docs/ISOLATION.md` — this explains what is and isn't safe to run
-   on a machine with an existing daily-driver account.
-2. Create `devuser` (staged, not automatic):
-   `sudo install/system/create-devuser.sh`
-3. As `devuser`: `git clone <this repo> ~/modern_dotfile && cd ~/modern_dotfile`
-4. `./install/install.sh --profile m0` (add `--dry-run` first to preview).
-5. Install Cursor on `devuser` following `docs/CURSOR-SETUP.md`.
-6. Log in as `devuser`, then run `scripts/check-isolation.sh` from your own
-   account to confirm nothing leaked across.
 
 ## Keybinds (M0 defaults)
 
@@ -99,14 +249,22 @@ checklists in `docs/DECISIONS.md` for what's left to verify by hand.
 | `SUPER` + `E` | File manager (Dolphin) |
 | `SUPER` + `Q` | Close window |
 
-Full, always-current list: press `SUPER`+`K`, or see
-`stow/modern/.config/modern/config.default.json` → `keybinds`.
+Full list: `SUPER`+`K`, or `stow/modern/.config/modern/config.default.json`
+→ `keybinds`.
 
-## Troubleshooting
+## Verify (from the daily-driver account)
 
-See `docs/TROUBLESHOOTING.md`. For a broken install, run `scripts/doctor.sh`
-first — it diagnoses missing packages, missing secrets, low disk space and
-unapplied gated phases before you go digging manually.
+These commands do not stow onto your live home:
+
+```bash
+scripts/lint-layers.sh
+scripts/check-isolation.sh
+./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
+scripts/doctor.sh
+```
+
+Troubleshooting: `docs/TROUBLESHOOTING.md`. `scripts/doctor.sh` never
+mutates the machine.
 
 ## License
 

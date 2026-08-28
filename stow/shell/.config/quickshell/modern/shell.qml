@@ -3,6 +3,7 @@
 import Quickshell
 import QtQuick
 import Quickshell.Io
+import "Commons"
 import "Modules/Bar" as Bar
 import "Modules/Launcher" as LauncherMod
 import "Modules/PowerMenu" as PowerMenuMod
@@ -32,4 +33,6 @@ ShellRoot {
         target: "shell"
         function reload() { Quickshell.reload(true); }
     }
+
+    Component.onCompleted: Logger.info("shell", "session started")
 }

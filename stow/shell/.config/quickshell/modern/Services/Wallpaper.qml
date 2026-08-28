@@ -7,6 +7,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "../Commons"
 
 Singleton {
     id: root
@@ -72,11 +73,18 @@ Singleton {
     }
 
     function setWallpaper(path: string) {
-        if (!path || path.length === 0)
-            return;
-        root.currentPath = path;
-        Quickshell.execDetached(["theme-apply.sh", "--wallpaper", path]);
-        Quickshell.execDetached(["wallpaper-sync.sh", path]);
-        root.pickerOpen = false;
+        try {
+            if (!path || path.length === 0) {
+                Logger.warn("Wallpaper", "setWallpaper called with an empty path");
+                return;
+            }
+            root.currentPath = path;
+            Quickshell.execDetached(["theme-apply.sh", "--wallpaper", path]);
+            Quickshell.execDetached(["wallpaper-sync.sh", path]);
+            root.pickerOpen = false;
+            Logger.info("Wallpaper", "applied " + path);
+        } catch (e) {
+            Logger.error("Wallpaper", String(e));
+        }
     }
 }

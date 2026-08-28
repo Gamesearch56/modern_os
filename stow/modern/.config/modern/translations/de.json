@@ -89,7 +89,9 @@
   "notifications": {
     "empty": "Keine Benachrichtigungen",
     "clearAll": "Alle löschen",
-    "dnd": "Nicht stören"
+    "dnd": "Nicht stören",
+    "shellError": "Shell-Fehler",
+    "shellWarning": "Shell-Warnung"
   },
   "quickSettings": {
     "title": "Schnelleinstellungen",

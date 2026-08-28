@@ -78,14 +78,18 @@ else
     ok "no ~/.config to check"
 fi
 
-# 3. gated system state untouched, unless explicitly allowed
+# 3. gated system state untouched, unless explicitly allowed.
+# Creating the devuser *account* is the supported test path and is NOT
+# a leak — greetd/polkit/sysctl/tmpfiles/ESP-hook are the dangerous ones.
+# Plymouth in mkinitcpio is not checked: this machine may already use it.
 if [ "$ALLOW_GATED" -eq 0 ]; then
     gated_hits=""
     systemctl is-enabled greetd.service >/dev/null 2>&1 && gated_hits="${gated_hits}greetd.service enabled\n"
     [ -e /etc/polkit-1/actions/link.modern.usermanager.policy ] && gated_hits="${gated_hits}modern-usersd polkit action installed\n"
     [ -e /usr/local/bin/modern-usersd ] && gated_hits="${gated_hits}modern-usersd binary installed\n"
-    id devuser >/dev/null 2>&1 && gated_hits="${gated_hits}devuser account exists\n"
-    grep -q '^HOOKS=.*plymouth' /etc/mkinitcpio.conf 2>/dev/null && gated_hits="${gated_hits}plymouth hook present in mkinitcpio.conf\n"
+    [ -e /etc/tmpfiles.d/modern-session.conf ] && gated_hits="${gated_hits}/etc/tmpfiles.d/modern-session.conf present\n"
+    [ -e /etc/sysctl.d/99-modern-gaming.conf ] && gated_hits="${gated_hits}/etc/sysctl.d/99-modern-gaming.conf present\n"
+    [ -e /etc/pacman.d/hooks/esp-backup.hook ] && gated_hits="${gated_hits}/etc/pacman.d/hooks/esp-backup.hook present\n"
 
     if [ -z "$gated_hits" ]; then
         ok "no gated system-wide change has been applied"
@@ -95,6 +99,12 @@ if [ "$ALLOW_GATED" -eq 0 ]; then
     fi
 else
     echo "  (gated-state checks skipped: --allow-gated)"
+fi
+
+if id devuser >/dev/null 2>&1; then
+    ok "devuser account exists (expected for testing; not a leak)"
+else
+    ok "devuser account not created yet (optional: sudo install/system/create-devuser.sh)"
 fi
 
 # 4. home mtime is advisory — the daily-driver account keeps running

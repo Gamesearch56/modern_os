@@ -8,6 +8,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "../Commons"
 
 Singleton {
     id: root
@@ -40,7 +41,12 @@ Singleton {
             const text = bundled.text();
             if (text && text.length > 0)
                 live.setText(text);
+            else {
+                Logger.error("FirstRun", "config.default.json is empty or unreadable");
+                return;
+            }
         } catch (e) {
+            Logger.warn("FirstRun", "FileView setText failed, copying with cp: " + e);
             Quickshell.execDetached(["cp", "-n", root.defaultPath, root.configPath]);
         }
         root.configPresent = true;

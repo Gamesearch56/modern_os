@@ -15,10 +15,15 @@ Singleton {
     property string lastError: ""
 
     function set(path, value) {
-        const encoded = JSON.stringify(value);
-        proc.command = ["modern", "config", "set", path, encoded];
-        proc.running = true;
-        Logger.info("ConfigWrite", path + " = " + encoded);
+        try {
+            const encoded = JSON.stringify(value);
+            proc.command = ["modern", "config", "set", path, encoded];
+            proc.running = true;
+            Logger.info("ConfigWrite", path + " = " + encoded);
+        } catch (e) {
+            root.lastError = String(e);
+            Logger.error("ConfigWrite", String(e));
+        }
     }
 
     Process {
@@ -38,6 +43,10 @@ Singleton {
                     Logger.error("ConfigWrite", t);
                 }
             }
+        }
+        onExited: (exitCode) => {
+            if (exitCode !== 0 && root.lastError.length === 0)
+                Logger.error("ConfigWrite", "modern config set exited " + exitCode);
         }
     }
 }

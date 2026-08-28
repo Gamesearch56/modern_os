@@ -9,6 +9,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "../Commons"
 
 Singleton {
     id: root
@@ -24,10 +25,15 @@ Singleton {
     }
 
     function lock() {
-        root.mode = "lock";
-        root.pendingAction = "";
-        root.locked = true;
-        Quickshell.execDetached(["loginctl", "lock-session"]);
+        try {
+            root.mode = "lock";
+            root.pendingAction = "";
+            root.locked = true;
+            Quickshell.execDetached(["loginctl", "lock-session"]);
+            Logger.info("Session", "lock requested");
+        } catch (e) {
+            Logger.error("Session", String(e));
+        }
     }
 
     function unlock() {

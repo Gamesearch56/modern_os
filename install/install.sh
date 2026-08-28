@@ -4,6 +4,7 @@
 #
 # Usage:
 #   install.sh --profile <m0|dev|gaming|full> [--dry-run] [--yes] [--target DIR]
+#              [--allow-live-home]
 #
 # Profiles (see install/manifests/README.md for exact layer membership):
 #   m0       base + desktop + theming + minimal apps  (default, matches the plan's M0)
@@ -15,6 +16,10 @@
 # into $TARGET (default $HOME). It NEVER touches anything under
 # install/system/ — those are gated, separately-invoked changes. See
 # docs/ISOLATION.md.
+#
+# Live-home guard: refuses to stow into /home/bastianweigand (override
+# with MODERN_PROTECT_HOME). Pass --allow-live-home only for a deliberate
+# cutover onto that account (new-PC install as that username).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,6 +27,7 @@ LOG_FILE="$REPO_ROOT/install/install.log"
 PROFILE="m0"
 DRY_RUN=0
 ASSUME_YES=0
+ALLOW_LIVE_HOME=0
 TARGET="$HOME"
 
 for arg in "$@"; do
@@ -30,6 +36,7 @@ for arg in "$@"; do
         --profile) shift_next=1 ;;
         --dry-run) DRY_RUN=1 ;;
         --yes|-y) ASSUME_YES=1 ;;
+        --allow-live-home) ALLOW_LIVE_HOME=1 ;;
         --target=*) TARGET="${arg#*=}" ;;
         --help|-h)
             grep '^#' "$0" | sed 's/^#//'; exit 0 ;;
@@ -46,7 +53,7 @@ for i in "${!args[@]}"; do
     fi
 done
 
-export DRY_RUN ASSUME_YES REPO_ROOT LOG_FILE TARGET
+export DRY_RUN ASSUME_YES ALLOW_LIVE_HOME REPO_ROOT LOG_FILE TARGET
 
 # shellcheck source=lib/log.sh
 source "$REPO_ROOT/install/lib/log.sh"
@@ -60,6 +67,8 @@ source "$REPO_ROOT/install/lib/stow.sh"
 source "$REPO_ROOT/install/lib/preflight.sh"
 
 : > "$LOG_FILE"
+trap 'rc=$?; log_error "install aborted at line $LINENO (exit $rc). See $LOG_FILE"; exit "$rc"' ERR
+
 log_info "modern_dotfile installer — profile '$PROFILE', target '$TARGET', dry-run=$DRY_RUN"
 
 case "$PROFILE" in
@@ -134,6 +143,12 @@ log_phase "Phase 5/5: post-install"
 
 run systemctl --user daemon-reload 2>/dev/null || true
 
+if [ "$TARGET" != "$HOME" ]; then
+    log_warn "stow target ($TARGET) is not this account's HOME ($HOME)."
+    log_warn "  systemctl --user above applies to the user who ran install.sh."
+    log_warn "  Enable modern-shell.service after logging in as the target user."
+fi
+
 if command -v matugen >/dev/null 2>&1; then
     run "$REPO_ROOT/scripts/theme-apply.sh" --initial
 else
@@ -141,5 +156,6 @@ else
 fi
 
 log_ok "Install complete for profile '$PROFILE'."
-log_info "Next: log in to Hyprland, then read docs/CURSOR-SETUP.md to set up Cursor."
-log_info "From your OTHER account, run scripts/check-isolation.sh to confirm nothing leaked."
+log_info "Start Hyprland as this user (see README.md — second TTY keeps the daily-driver session)."
+log_info "From the daily-driver account, run scripts/check-isolation.sh to confirm nothing leaked."
+log_info "Log: $LOG_FILE"

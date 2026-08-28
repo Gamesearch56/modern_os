@@ -6,12 +6,14 @@
 # directory and log exactly what moved.
 
 STOW_DIR="${STOW_DIR:-$REPO_ROOT/stow}"
-STOW_BACKUP_ROOT="${STOW_BACKUP_ROOT:-$HOME/.local/state/modern/stow-backups}"
 
 stow_package() {
     local pkg="$1"
     local target="${2:-$HOME}"
     local pkg_dir="$STOW_DIR/$pkg"
+    # Backups stay under the *target* home so a --target /home/devuser run
+    # from another account never writes into the daily-driver $HOME.
+    local backup_root="${STOW_BACKUP_ROOT:-$target/.local/state/modern/stow-backups}"
 
     [ -d "$pkg_dir" ] || { log_warn "stow package '$pkg' not found at $pkg_dir, skipping"; return 0; }
 
@@ -22,7 +24,7 @@ stow_package() {
     conflicts="$(cd "$STOW_DIR" && stow -n -t "$target" "$pkg" 2>&1 | grep -E '^\s*\*' || true)"
 
     if [ -n "$conflicts" ]; then
-        local backup_dir="$STOW_BACKUP_ROOT/$(date +%Y%m%d-%H%M%S)/$pkg"
+        local backup_dir="$backup_root/$(date +%Y%m%d-%H%M%S)/$pkg"
         run mkdir -p "$backup_dir"
         log_warn "Conflicts for '$pkg', backing up to $backup_dir:"
         while IFS= read -r line; do

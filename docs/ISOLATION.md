@@ -5,19 +5,38 @@ daily-driver account on this machine. Nothing here may break that account
 until you explicitly decide the new system is ready and run the gated
 system-wide phase yourself.
 
+How to create `devuser`, start Hyprland on a second TTY, and return to
+this session: **`README.md`**. Install flags: `docs/INSTALL.md`.
+
 ## Safe by construction
 
 - All development lives in this repo, at
   `/home/bastianweigand/CursorProjects/modern_dotfile`. Nothing is ever
   written to `~/.config/`, `~/.local/`, `~/dotfiles/` or `~/.bashrc` for the
-  `bastianweigand` account.
-- `stow` is never invoked against `bastianweigand`'s home. It only ever
-  targets `/home/devuser` (or `--target` explicitly passed by whoever runs
-  `install.sh`).
-- All runtime state this project creates lives under `devuser`'s home or
-  the new `/var/lib/modern/` path — nothing pre-existing reads either.
+  `bastianweigand` account by this project's default commands.
+- `install.sh` **refuses** a stow target of `/home/bastianweigand` (or any
+  path under it). Override with `MODERN_PROTECT_HOME` if the protected
+  path differs; override the refuse with `--allow-live-home` only for a
+  deliberate cutover (new PC that reuses this username).
+- `stow` therefore never runs against the daily-driver home during testing.
+  Conflict backups are stored under `$TARGET/.local/state/modern/stow-backups`.
+- All runtime state this project creates lives under the **target** user's
+  home or the new `/var/lib/modern/` path — nothing pre-existing reads either.
 - `~/dotfiles` (the old repo) is read-only reference material. It is never
   committed to, never modified, from this repo or its scripts.
+- Creating the `devuser` **account** is the intended test path. It does not
+  change autologin, greetd, or `/etc`. Isolation check treats that account
+  as OK, not as a leak.
+
+## Switching sessions without touching the main user
+
+1. Leave the `bastianweigand` Hyprland session running.
+2. `Ctrl+Alt+F3`, log in as `devuser`, start `Hyprland`.
+3. Return with `Ctrl+Alt+F1` or `F2`.
+
+A reboot still autologins the daily-driver account as long as greetd was
+never enabled. Removing the test account (`sudo userdel -r devuser`)
+deletes `/home/devuser` only.
 
 ## Gated: system-wide changes
 
@@ -28,17 +47,17 @@ comment for the exact command.
 
 | Change | Why it's gated | Rollback |
 |---|---|---|
-| `greetd` enablement | Replaces autologin machine-wide. A broken greeter locks out *both* users graphically. | `sudo systemctl disable greetd`, re-enable the previous getty autologin unit, reboot. Documented in the file header of `install/system/greetd/config.toml`. |
+| `greetd` enablement | Replaces autologin machine-wide. A broken greeter locks out *both* users graphically. | `sudo systemctl disable greetd`, re-enable the previous getty autologin unit, reboot. Documented in the file header of `install/system/greetd/config.toml` (when that file lands). |
 | Plymouth theme + `mkinitcpio` hooks | Rewrites the initramfs. A bad rebuild can leave the machine unable to boot. | `sudo mkinitcpio -P` after reverting `/etc/mkinitcpio.conf`; the previous initramfs stays as a fallback boot entry — never delete it. |
 | `sysctl.d`, `polkit` actions, `tmpfiles.d`, udev rules, gaming perf sysctls | System-wide kernel/session policy. | Remove the dropped-in file under `/etc/{sysctl.d,polkit-1,tmpfiles.d,udev/rules.d}/modern-*` and reload (`sysctl --system`, `systemctl restart polkit`, `systemd-tmpfiles --create`). |
 | `modern-usersd` + its polkit action | Privileged account/group mutation. | Remove `/usr/local/bin/modern-usersd` and the `.policy` file; nothing else depends on it. |
-| Devuser creation (`install/system/create-devuser.sh`) | Creates a system account. | `sudo userdel -r devuser` if you want to remove it entirely. |
+| Devuser creation (`install/system/create-devuser.sh`) | Creates a system account. | `sudo userdel -r devuser` if you want to remove it entirely. Autologin is unchanged. |
 | Backup: snapper configs, the ESP-copy pacman hook | Touches `/etc/snapper`, `/etc/pacman.d/hooks`. | Delete the config/hook files; existing snapshots are untouched. |
 
 **None of the files above are referenced by `install.sh`'s default run.**
-`install.sh` only ever touches packages and `devuser`'s stowed dotfiles. A
-second, explicitly named script or flag is required for anything in the
-table — see each script's own `--help`.
+`install.sh` only ever touches packages and the target user's stowed
+dotfiles. A second, explicitly named script or flag is required for
+anything in the table — see each script's own `--help`.
 
 ## The one side effect that isn't gated: packages
 
@@ -61,7 +80,8 @@ between the machine and the manifests.
 
 ## Verification
 
-Run before every commit and before/after any install step:
+Run before every commit and before/after any install step, **from
+`bastianweigand`**:
 
 ```bash
 scripts/check-isolation.sh
@@ -69,16 +89,19 @@ scripts/check-isolation.sh
 
 It asserts:
 
-1. No file under `/home/bastianweigand/` outside this repo has a newer
-   mtime than the isolation baseline recorded at first run.
+1. `/etc/pacman.d/hooks/package_list.hook` is byte-identical to the
+   snapshot taken at first run (`--init`).
 2. No symlink inside `/home/bastianweigand/.config` points into this repo
    or into `/home/devuser`.
-3. `greetd.service`, `plymouth`-related mkinitcpio hooks, and any
-   `modern-*` systemd/polkit/tmpfiles/sysctl file are absent or in their
-   pre-existing state, unless `--allow-gated` is passed (meaning you've
-   deliberately opened the gate).
-4. `/etc/pacman.d/hooks/package_list.hook` is byte-identical to the
-   snapshot taken at first run.
+3. Gated files are absent (`greetd` enabled, `modern-usersd`,
+   `tmpfiles.d/modern-session.conf`, `sysctl.d/99-modern-gaming.conf`,
+   `esp-backup.hook`), unless `--allow-gated` is passed. Creating
+   `devuser` is **not** a failure. Pre-existing Plymouth in mkinitcpio is
+   not treated as a leak from this repo.
+4. Home mtime under `bastianweigand` is **advisory** (WARN): a live
+   account keeps writing caches. Real isolation is checks 1–3.
 
 The script exits non-zero and prints exactly what changed if any check
 fails, rather than a generic warning.
+
+First-time baseline (once): `scripts/check-isolation.sh --init`.

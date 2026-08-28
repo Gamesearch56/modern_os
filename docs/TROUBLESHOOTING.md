@@ -12,14 +12,23 @@ symlinks.
 scripts/check-isolation.sh
 ```
 
-See `docs/ISOLATION.md`. Stow only with `--target /home/devuser` (or as
-devuser). Never run `install.sh` against the live user.
+See `docs/ISOLATION.md` and `README.md` (second TTY). Stow only as
+`devuser`, or with `--target /home/devuser`. `install.sh` refuses
+`/home/bastianweigand` unless `--allow-live-home` is passed.
+
+To return to the main session without reboot: `Ctrl+Alt+F1` or `F2`.
+Do not enable greetd while testing. Shell `Logger.error` toasts appear
+only on the session that is running Quickshell (`devuser`), not on the
+daily-driver desktop.
 
 ## Shell does not start / black bar
 
 - `systemctl --user status modern-shell.service`
 - Run `quickshell -p ~/.config/quickshell/modern` in kitty — QML errors
-  go to that terminal
+  go to that terminal. `Logger.error` also posts a notification toast
+  on the **devuser** session (DND does not hide errors).
+- Installer failures: `install/install.log` and
+  `journalctl -t modern-install`
 - `TypeError: … is not a function` on a singleton: the type is missing
   from `Services/qmldir` (or Commons/Widgets). See `docs/DECISIONS.md` #19
   and `AGENTS.md`

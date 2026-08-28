@@ -89,7 +89,9 @@
   "notifications": {
     "empty": "No notifications",
     "clearAll": "Clear all",
-    "dnd": "Do not disturb"
+    "dnd": "Do not disturb",
+    "shellError": "Shell error",
+    "shellWarning": "Shell warning"
   },
   "quickSettings": {
     "title": "Quick settings",

@@ -5,6 +5,10 @@
 // so this does not duplicate that with its own file I/O — the ring
 // buffer is purely for in-process, no-disk-read display.
 //
+// `logged` is the bridge to Services/Notifications: Commons must not
+// import Services, so the notification daemon connects here and posts
+// toasts for errors (and optionally warnings).
+//
 // Usage: Logger.info("Bar", "workspace changed"); Logger.error("Audio", "pipewire socket closed")
 pragma Singleton
 
@@ -21,8 +25,14 @@ Singleton {
     // (id: diagnostics) lands.
     property string level: "info"
 
+    // Errors always toast. Warnings toast only when this is true —
+    // keep it off by default so missing i18n keys don't spam the panel.
+    property bool notifyOnWarn: false
+
     readonly property int maxHistory: 200
     property var history: []
+
+    signal logged(string level, string tag, string message)
 
     function _shouldLog(levelName: string): bool {
         return root._levels[levelName] >= root._levels[root.level];
@@ -33,6 +43,7 @@ Singleton {
         if (root.history.length > root.maxHistory)
             root.history.shift();
         root.history = root.history; // reassign to fire the change signal for bound views
+        root.logged(levelName, tag, message);
     }
 
     function debug(tag: string, message: string) {

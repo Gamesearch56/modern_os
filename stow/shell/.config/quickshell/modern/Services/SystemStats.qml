@@ -37,22 +37,26 @@ Singleton {
     }
 
     function _parse(text: string) {
-        const lines = text.trim().split("\n");
-        const cpu = (lines[0] ?? "").trim().split(/\s+/);
-        if (cpu.length >= 5) {
-            const user = Number(cpu[1]) + Number(cpu[2]) + Number(cpu[3]);
-            const idle = Number(cpu[4]);
-            const total = user + idle;
-            const dTotal = total - root._prev.total;
-            const dIdle = idle - root._prev.idle;
-            if (dTotal > 0)
-                root.cpuPercent = 100 * (1 - dIdle / dTotal);
-            root._prev = { idle: idle, total: total };
+        try {
+            const lines = text.trim().split("\n");
+            const cpu = (lines[0] ?? "").trim().split(/\s+/);
+            if (cpu.length >= 5) {
+                const user = Number(cpu[1]) + Number(cpu[2]) + Number(cpu[3]);
+                const idle = Number(cpu[4]);
+                const total = user + idle;
+                const dTotal = total - root._prev.total;
+                const dIdle = idle - root._prev.idle;
+                if (dTotal > 0)
+                    root.cpuPercent = 100 * (1 - dIdle / dTotal);
+                root._prev = { idle: idle, total: total };
+            }
+            const mem = (lines[1] ?? "").trim().split(/\s+/);
+            const t = Number(mem[0]);
+            const a = Number(mem[1]);
+            if (t > 0)
+                root.ramPercent = 100 * (1 - a / t);
+        } catch (e) {
+            Logger.warn("SystemStats", String(e));
         }
-        const mem = (lines[1] ?? "").trim().split(/\s+/);
-        const t = Number(mem[0]);
-        const a = Number(mem[1]);
-        if (t > 0)
-            root.ramPercent = 100 * (1 - a / t);
     }
 }

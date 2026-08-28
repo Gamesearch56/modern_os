@@ -34,6 +34,13 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: root._parse(this.text)
         }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const t = this.text.trim();
+                if (t.length > 0)
+                    Logger.warn("Weather", t);
+            }
+        }
     }
 
     Timer {
@@ -72,6 +79,7 @@ Singleton {
         } catch (e) {
             root.available = false;
             root.display = "";
+            Logger.warn("Weather", "parse failed: " + e);
         }
     }
 }

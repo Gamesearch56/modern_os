@@ -43,10 +43,15 @@ Singleton {
     }
 
     function _parse(text: string) {
-        const lines = text.trim().split("\n").filter(s => s.length > 0 && s.indexOf("error") === -1);
-        const next = [];
-        for (let i = 0; i < lines.length; i++)
-            next.push({ id: lines[i].trim() });
-        root.devices = next;
+        try {
+            const lines = text.trim().split("\n").filter(s => s.length > 0 && s.indexOf("error") === -1);
+            const next = [];
+            for (let i = 0; i < lines.length; i++)
+                next.push({ id: lines[i].trim() });
+            root.devices = next;
+        } catch (e) {
+            Logger.warn("KdeConnect", String(e));
+            root.devices = [];
+        }
     }
 }

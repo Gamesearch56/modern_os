@@ -6,6 +6,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "../Commons"
 
 Singleton {
     id: root
@@ -23,6 +24,13 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.list = this.text.trim().split("\n").filter(s => s.length > 0);
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const t = this.text.trim();
+                if (t.length > 0)
+                    Logger.warn("Notes", t);
             }
         }
     }
@@ -50,8 +58,10 @@ Singleton {
 
     function create(name: string) {
         let n = root._safe(name);
-        if (!n)
+        if (!n) {
+            Logger.warn("Notes", "refusing unsafe note name");
             return;
+        }
         if (!n.endsWith(".md"))
             n = n + ".md";
         Quickshell.execDetached(["sh", "-c", `mkdir -p '${root.dir}' && : >> '${root.dir}/${n}'`]);
@@ -60,8 +70,10 @@ Singleton {
 
     function removeNote(name: string) {
         const n = root._safe(name);
-        if (!n)
+        if (!n) {
+            Logger.warn("Notes", "refusing unsafe note name");
             return;
+        }
         Quickshell.execDetached(["rm", "-f", `${root.dir}/${n}`]);
         if (root.activeName === n)
             root.activeName = "";
@@ -69,9 +81,13 @@ Singleton {
     }
 
     function save(text: string) {
-        if (!root.activeName)
-            return;
-        body.setText(text);
-        root.activeText = text;
+        try {
+            if (!root.activeName)
+                return;
+            body.setText(text);
+            root.activeText = text;
+        } catch (e) {
+            Logger.error("Notes", String(e));
+        }
     }
 }
