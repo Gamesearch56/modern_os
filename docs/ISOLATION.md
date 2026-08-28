@@ -31,7 +31,8 @@ this session: **`README.md`**. Install flags: `docs/INSTALL.md`.
 ## Switching sessions without touching the main user
 
 1. Leave the `bastianweigand` Hyprland session running.
-2. `Ctrl+Alt+F3`, log in as `devuser`, start `Hyprland`.
+2. `Ctrl+Alt+F3`, log in as `devuser`, run `start-hyprland`
+   (not the `Hyprland` binary).
 3. Return with `Ctrl+Alt+F1` or `F2`.
 
 A reboot still autologins the daily-driver account as long as greetd was

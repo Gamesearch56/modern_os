@@ -61,7 +61,7 @@ echo "  cd ~/modern_dotfile && ./install/install.sh --profile m0 --dry-run"
 echo "  ./install/install.sh --profile m0"
 echo
 echo "Start a test session without leaving the main desktop:"
-echo "  Ctrl+Alt+F3  →  login as $USERNAME  →  Hyprland"
+echo "  Ctrl+Alt+F3  →  login as $USERNAME  →  start-hyprland"
 echo "Return: Ctrl+Alt+F1 or F2 (whichever still shows your main session)."
 echo
 echo "Rollback this account: sudo userdel -r $USERNAME"

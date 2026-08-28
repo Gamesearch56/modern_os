@@ -129,11 +129,14 @@ Stay logged in as `bastianweigand`. On another virtual terminal:
 
 1. `Ctrl+Alt+F3` (F4 also works if F3 is busy).
 2. Log in as `devuser`.
-3. Start the compositor: `Hyprland`  
-   (or `uwsm start hyprland-uwsm.desktop` if that is how Hyprland is
-   launched on this box).
-4. After stow, enable the user unit **as `devuser`**:
-   `systemctl --user enable --now modern-shell.service`
+3. Start the compositor with **`start-hyprland`** (Hyprland ≥ 0.53).
+   Do **not** run the `Hyprland` binary — that skips the session wrapper,
+   shows a warning, and leaves `systemd --user` without `WAYLAND_DISPLAY`
+   (no bar, no shell). Optional UWSM:
+   `uwsm start hyprland-uwsm.desktop`.
+4. Once, as `devuser`: `systemctl --user enable modern-shell.service`
+   (autostart starts it; `--now` before a compositor is running does nothing
+   useful).
 
 You now have two sessions: the old desktop on TTY1/TTY2, the new one on
 TTY3.
@@ -166,8 +169,8 @@ git clone git@github.com:Gamesearch56/modern_dotfile.git ~/modern_dotfile
 cd ~/modern_dotfile
 ./install/install.sh --profile m0 --dry-run
 ./install/install.sh --profile m0
-systemctl --user enable --now modern-shell.service
-Hyprland
+systemctl --user enable modern-shell.service
+start-hyprland
 ```
 
 If that user is named `bastianweigand` **and** `/home/bastianweigand`

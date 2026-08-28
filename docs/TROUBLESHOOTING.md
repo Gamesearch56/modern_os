@@ -51,8 +51,15 @@ scripts/theme-apply.sh --profile fixed-brand --no-reload
 
 Then pick a wallpaper: `scripts/theme-apply.sh --wallpaper /path/to/image.jpg`
 
-## Shell does not start / black bar
+## Shell does not start / no top bar
 
+Hyprland ≥ 0.53 must be started with **`start-hyprland`**, not the
+`Hyprland` binary. The binary skips the session wrapper: you get a
+warning toast, `systemd --user` has no `WAYLAND_DISPLAY`, and
+`modern-shell.service` has nowhere to draw.
+
+- Exit the broken session (`SUPER+M` or `SUPER+Q` for a terminal), then
+  from the TTY: `start-hyprland`
 - `systemctl --user status modern-shell.service`
 - Run `quickshell -p ~/.config/quickshell/modern` in kitty — QML errors
   go to that terminal. `Logger.error` also posts a notification toast
@@ -62,6 +69,21 @@ Then pick a wallpaper: `scripts/theme-apply.sh --wallpaper /path/to/image.jpg`
 - `TypeError: … is not a function` on a singleton: the type is missing
   from `Services/qmldir` (or Commons/Widgets). See `docs/DECISIONS.md` #19
   and `AGENTS.md`
+
+## `unknown config key 'misc.vfr'` / `'dwindle.pseudotile'`
+
+Those keys were removed in Hyprland 0.55. Current `modules/general.lua`
+does not set them. Restow `stow/hypr` (or re-run `install.sh`) and
+reload / restart the session.
+
+## Wallpaper too bright / saturated on an HDR panel
+
+Catch-all monitors use `cm = "srgb"` and `render.cm_auto_hdr = 0` so
+SDR wallpapers are not mapped as HDR. Restow `stow/hypr` and restart.
+Turn HDR on later from Settings → Displays (`monitors.profiles` `hdr`).
+The shipped default image is still a high-chroma still; pick another
+wallpaper with `scripts/theme-apply.sh --wallpaper PATH` if you want
+something calmer.
 
 ## No colors / ugly defaults
 

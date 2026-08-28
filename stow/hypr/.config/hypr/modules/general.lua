@@ -35,12 +35,16 @@ hl.config({
         },
     },
     dwindle = {
-        pseudotile = true,
         preserve_split = true,
     },
     misc = {
         disable_hyprland_logo = true,
         disable_splash_rendering = true,
-        vfr = true,
+    },
+    -- Keep the desktop in SDR until Settings > Displays opts into HDR.
+    -- Hyprland 0.55+ auto-HDR on wide-gamut panels maps SDR wallpapers
+    -- (and the bar) as if they were PQ, which looks blown-out / neon.
+    render = {
+        cm_auto_hdr = 0,
     },
 })

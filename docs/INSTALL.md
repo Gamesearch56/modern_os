@@ -28,9 +28,10 @@ cd ~/modern_dotfile
 ./install/install.sh --profile m0
 ```
 
-Start Hyprland on **another TTY** (`Ctrl+Alt+F3`) so the daily-driver
-session stays up. Return with `Ctrl+Alt+F1` or `F2`. Full steps:
-`README.md`.
+Start the session on **another TTY** (`Ctrl+Alt+F3`) with
+`start-hyprland` so the daily-driver session stays up. Do not run the
+`Hyprland` binary — Hyprland ≥ 0.53 needs the wrapper or the bar never
+appears. Return with `Ctrl+Alt+F1` or `F2`. Full steps: `README.md`.
 
 ## `install.sh` (existing user)
 
@@ -84,7 +85,8 @@ use a different image later:
 
 1. `scripts/theme-apply.sh --wallpaper PATH` (writes `tokens.json` and
    syncs lock/login assets)
-2. `systemctl --user enable --now modern-shell.service`
+2. `systemctl --user enable modern-shell.service` then
+   `start-hyprland` on a TTY (not the `Hyprland` binary)
 3. `scripts/doctor.sh`
 4. Optional gated: sysctl, ufw KDE Connect, ESP hook, snapper — each
    file's header comment has the copy command

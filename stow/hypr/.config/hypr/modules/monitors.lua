@@ -15,15 +15,28 @@ local config = require("modules.config")
 local profiles = config.value("monitors.profiles", {})
 
 for description, p in pairs(profiles) do
-    hl.monitor({
+    local spec = {
         output = "desc:" .. description,
         mode = p.mode or "preferred",
         position = p.position or "auto",
         scale = p.scale or 1,
-    })
+        cm = p.cm or (p.hdr and "hdr" or "srgb"),
+    }
+    if p.vrr ~= nil then
+        spec.vrr = p.vrr
+    end
+    if p.sdrbrightness ~= nil then
+        spec.sdrbrightness = p.sdrbrightness
+    end
+    if p.sdrsaturation ~= nil then
+        spec.sdrsaturation = p.sdrsaturation
+    end
+    if p.hdr then
+        spec.bitdepth = 10
+    end
+    hl.monitor(spec)
 end
 
--- Catch-all for any monitor not covered by a saved profile — never leave
--- a display unconfigured, which is what produced the old setup's
--- hardcoded DP-1/DP-2 brittleness.
-hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
+-- Catch-all: SDR. HDR auto-mapping on first boot is what made the
+-- shipped wallpaper look too bright/saturated on HDR panels.
+hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1, cm = "srgb" })

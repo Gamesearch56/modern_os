@@ -179,6 +179,6 @@ else
 fi
 
 log_ok "Install complete for profile '$PROFILE'."
-log_info "Start Hyprland as this user (see README.md — second TTY keeps the daily-driver session)."
+log_info "Start the session with start-hyprland (not Hyprland) — see README.md; a second TTY keeps the daily-driver session."
 log_info "From the daily-driver account, run scripts/check-isolation.sh to confirm nothing leaked."
 log_info "Log: $LOG_FILE"

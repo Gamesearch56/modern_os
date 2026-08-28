@@ -30,7 +30,7 @@ if [ -x "$ROOT/install/install.sh" ]; then
     "$ROOT/install/install.sh" --dry-run --profile m0 >/dev/null && ok "install.sh --dry-run --profile m0" || bad "install dry-run failed"
 fi
 
-printf '\nManual (on devuser, graphical session):\n'
+printf '\nManual (on devuser, graphical session via start-hyprland):\n'
 printf '  1. bar visible on every monitor\n'
 printf '  2. SUPER+Space launcher; SUPER+M power menu; SUPER+K cheatsheet\n'
 printf '  3. scroll volume on the audio pill; media controls with Spotify\n'
