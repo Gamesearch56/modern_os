@@ -7,15 +7,18 @@
 local config = require("modules.config")
 
 hl.on("hyprland.start", function()
-    -- Import compositor env into systemd --user so units (the shell)
-    -- can open the Wayland display. start-hyprland / UWSM do this
-    -- already; a raw `Hyprland` TTY start does not.
+    -- Import compositor env, then start the shell as a child of this
+    -- compositor. systemd --user is one instance per login, so a leftover
+    -- Hyprland on another TTY would keep modern-shell.service pointed at
+    -- the old WAYLAND_DISPLAY and this session would get wallpaper only.
     hl.exec_cmd("sh -lc '"
+        .. "mkdir -p \"${XDG_STATE_HOME:-$HOME/.local/state}/modern\"; "
+        .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
         .. "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE; "
         .. "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP; "
-        .. "systemctl --user start hyprpolkitagent; "
-        .. "systemctl --user start modern-shell.service "
-        .. "|| exec quickshell -p \"$HOME/.config/quickshell/modern\"'")
+        .. "systemctl --user start hyprpolkitagent || true; "
+        .. "systemctl --user stop modern-shell.service 2>/dev/null || true; "
+        .. "exec quickshell -p \"$HOME/.config/quickshell/modern\" >>\"$log\" 2>&1'")
 
     hl.exec_cmd("hypridle")
 

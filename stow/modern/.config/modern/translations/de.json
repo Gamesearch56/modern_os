@@ -140,6 +140,7 @@
     "action": {
       "launcher": "Starter öffnen",
       "powerMenu": "Ein/Aus-Menü",
+      "exitSession": "Hyprland beenden",
       "cheatsheet": "Tastenkombinationen",
       "settings": "Einstellungen öffnen",
       "wallpaperPicker": "Hintergrund wählen",

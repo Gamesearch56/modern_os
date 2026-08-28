@@ -53,22 +53,23 @@ Then pick a wallpaper: `scripts/theme-apply.sh --wallpaper /path/to/image.jpg`
 
 ## Shell does not start / no top bar
 
-Hyprland ≥ 0.53 must be started with **`start-hyprland`**, not the
-`Hyprland` binary. The binary skips the session wrapper: you get a
-warning toast, `systemd --user` has no `WAYLAND_DISPLAY`, and
-`modern-shell.service` has nowhere to draw.
+Wallpaper plus `SUPER+T` / `SUPER+B` / `SUPER+Q` means Hyprland loaded
+this repo's Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell.
 
-- Exit the broken session (`SUPER+M` or `SUPER+Q` for a terminal), then
-  from the TTY: `start-hyprland`
-- `systemctl --user status modern-shell.service`
-- Run `quickshell -p ~/.config/quickshell/modern` in kitty — QML errors
-  go to that terminal. `Logger.error` also posts a notification toast
-  on the **devuser** session (DND does not hide errors).
-- Installer failures: `install/install.log` and
-  `journalctl -t modern-install`
-- `TypeError: … is not a function` on a singleton: the type is missing
-  from `Services/qmldir` (or Commons/Widgets). See `docs/DECISIONS.md` #19
-  and `AGENTS.md`
+- **One Hyprland per user.** A second TTY's `start-hyprland` does not get
+  the shell if an older instance still owns `modern-shell.service`.
+  Exit every leftover compositor before starting a new one.
+- End a session: `SUPER+T`, then `hyprctl dispatch exit`. You return to
+  the TTY prompt; `exit` or Ctrl+D logs out of that TTY. Switch back to
+  the daily driver with `Ctrl+Alt+F1` or `F2`.
+- Extra `devuser` sessions: `loginctl list-sessions`, then
+  `loginctl terminate-session <id>` from the daily-driver account, or as
+  `devuser` on a TTY: `pkill -x Hyprland`.
+- After restow, autostart runs `quickshell` as a child of *this*
+  compositor. QML errors: `~/.local/state/modern/quickshell.log` or
+  `quickshell -p ~/.config/quickshell/modern` in kitty.
+- `TypeError: … is not a function` on a singleton: missing `qmldir`
+  entry. See `docs/DECISIONS.md` #19.
 
 ## `unknown config key 'misc.vfr'` / `'dwindle.pseudotile'`
 

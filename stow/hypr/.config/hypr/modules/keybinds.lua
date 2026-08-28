@@ -14,13 +14,16 @@ local function combo(action)
 end
 
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
+-- `modern` lives in the git clone, not on PATH for Hyprland keybinds.
+-- `qs` is /usr/bin/qs from the quickshell package.
 local bindings = {
-    launcher = hl.dsp.exec_cmd("modern launcher toggle"),
-    powerMenu = hl.dsp.exec_cmd("modern powermenu toggle"),
-    cheatsheet = hl.dsp.exec_cmd("modern cheatsheet toggle"),
-    settings = hl.dsp.exec_cmd("modern settings open"),
-    wallpaperPicker = hl.dsp.exec_cmd("modern wallpaper picker"),
-    overview = hl.dsp.exec_cmd("modern overview toggle"),
+    launcher = hl.dsp.exec_cmd("qs ipc call launcher toggle"),
+    powerMenu = hl.dsp.exec_cmd("qs ipc call powermenu toggle"),
+    cheatsheet = hl.dsp.exec_cmd("qs ipc call cheatsheet toggle"),
+    settings = hl.dsp.exec_cmd("qs ipc call settings open"),
+    wallpaperPicker = hl.dsp.exec_cmd("qs ipc call wallpaper pick"),
+    overview = hl.dsp.exec_cmd("qs ipc call overview toggle"),
+    exitSession = hl.dsp.exit(),
     terminal = hl.dsp.exec_cmd("kitty"),
     browser = hl.dsp.exec_cmd("vivaldi"),
     fileManager = hl.dsp.exec_cmd("dolphin"),
@@ -75,16 +78,21 @@ for action, dispatcher in pairs(bindings) do
     end
 end
 
+-- Power menu (SUPER+M) needs the shell. This always ends the compositor.
+if not combo("exitSession") then
+    hl.bind("SUPER + SHIFT + M", hl.dsp.exit())
+end
+
 -- Media/backlight keys are hardware-fixed X11 keysyms, not user-remapped
 -- via the shortcut editor, so they're bound directly rather than through
 -- config.json — matching the ArchWiki's documented pattern.
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("modern volume up"), { repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("modern volume down"), { repeating = true })
-hl.bind("XF86AudioMute", hl.dsp.exec_cmd("modern volume mute-toggle"))
-hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("modern volume mic-mute-toggle"))
-hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("modern media play-pause"))
-hl.bind("XF86AudioPause", hl.dsp.exec_cmd("modern media play-pause"))
-hl.bind("XF86AudioNext", hl.dsp.exec_cmd("modern media next"))
-hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("modern media previous"))
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { repeating = true })
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
+hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
+hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"))
+hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"))
+hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"))
+hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"))
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl s +5%"))
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl s 5%-"))

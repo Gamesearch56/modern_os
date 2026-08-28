@@ -145,8 +145,11 @@ TTY3.
 
 - **Keep both sessions:** `Ctrl+Alt+F1` or `Ctrl+Alt+F2` until you see
   the `bastianweigand` desktop. Nothing in the main home was rewritten.
-- **End the test session:** in the `devuser` Hyprland, `SUPER+M` → log
-  out (or `exit` from the TTY). Then `Ctrl+Alt+F1`/`F2` again.
+- **End the test session:** `SUPER+T`, then `hyprctl dispatch exit`
+  (or `SUPER+SHIFT+M` once that bind is stowed). You land back on the
+  TTY prompt — `exit` or Ctrl+D logs out of that TTY. Then
+  `Ctrl+Alt+F1`/`F2`. Do not open a second `start-hyprland` while the
+  first is still running; one user gets one graphical session.
 - **After a reboot:** autologin is still the daily-driver account,
   because greetd was never enabled. Log in as usual.
 

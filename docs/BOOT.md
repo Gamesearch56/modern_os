@@ -30,8 +30,10 @@ the **devuser** account only:
 systemctl --user enable modern-shell.service
 ```
 
-`modules/autostart.lua` starts the unit (or falls back to `quickshell -p`
-in the compositor process) once the display is up.
+`modules/autostart.lua` starts Quickshell as a child of this compositor
+(logs: `~/.local/state/modern/quickshell.log`) so a second TTY cannot
+steal the bar via the user unit. `modern-shell.service` remains the
+watchdog for a later UWSM/greetd session.
 
 Do not enable it on the daily-driver account while isolation is in
 force.

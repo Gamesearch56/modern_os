@@ -9,12 +9,13 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 
 | Combo | Action | IPC |
 |-------|--------|-----|
-| `SUPER + SPACE` | Launcher | `modern launcher toggle` |
-| `SUPER + M` | Power menu | `modern powermenu toggle` |
-| `SUPER + K` | Cheatsheet | `modern cheatsheet toggle` |
-| `SUPER + I` | Settings | `modern settings open` |
-| `SUPER + W` | Wallpaper picker | `modern wallpaper pick` |
-| `SUPER + TAB` | Overview | `modern overview toggle` |
+| `SUPER + SPACE` | Launcher | `qs ipc call launcher toggle` |
+| `SUPER + M` | Power menu | `qs ipc call powermenu toggle` |
+| `SUPER + SHIFT + M` | Exit compositor | `hyprctl dispatch exit` (no shell needed) |
+| `SUPER + K` | Cheatsheet | `qs ipc call cheatsheet toggle` |
+| `SUPER + I` | Settings | `qs ipc call settings open` |
+| `SUPER + W` | Wallpaper picker | `qs ipc call wallpaper pick` |
+| `SUPER + TAB` | Overview | `qs ipc call overview toggle` |
 | `SUPER + T` | Terminal | kitty |
 | `SUPER + B` | Browser | Vivaldi |
 | `SUPER + E` | File manager | Dolphin |

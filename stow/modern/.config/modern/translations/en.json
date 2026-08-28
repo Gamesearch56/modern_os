@@ -140,6 +140,7 @@
     "action": {
       "launcher": "Open launcher",
       "powerMenu": "Power menu",
+      "exitSession": "Exit Hyprland",
       "cheatsheet": "Keyboard shortcuts",
       "settings": "Open settings",
       "wallpaperPicker": "Wallpaper picker",

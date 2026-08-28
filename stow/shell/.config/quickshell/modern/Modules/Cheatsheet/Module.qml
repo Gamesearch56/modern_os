@@ -15,7 +15,7 @@ Scope {
     }
 
     readonly property var categories: ({
-        applications: ["launcher", "terminal", "browser", "fileManager", "settings", "wallpaperPicker", "overview"],
+        applications: ["launcher", "terminal", "browser", "fileManager", "settings", "wallpaperPicker", "overview", "exitSession"],
         windowManagement: ["closeWindow", "fullscreen", "toggleFloating", "pseudoTile", "toggleSplit", "moveFocusLeft", "moveFocusRight", "moveFocusUp", "moveFocusDown", "moveWindowLeft", "moveWindowRight", "moveWindowUp", "moveWindowDown"],
         workspaces: ["workspace1", "workspace2", "workspace3", "workspace4", "workspace5", "workspace6", "workspace7", "workspace8", "workspace9", "workspace10", "moveToWorkspace1", "moveToWorkspace2", "moveToWorkspace3", "moveToWorkspace4", "moveToWorkspace5", "moveToWorkspace6", "moveToWorkspace7", "moveToWorkspace8", "moveToWorkspace9", "moveToWorkspace10"],
         screenshots: ["screenshotRegion", "screenshotWindow", "screenshotFull", "colorPicker"],
