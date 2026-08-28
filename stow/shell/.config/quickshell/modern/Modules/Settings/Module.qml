@@ -94,12 +94,35 @@ Scope {
                             Layout.fillHeight: true
                             clip: true
                             contentWidth: width
-                            contentHeight: sectionLoader.item ? sectionLoader.item.implicitHeight : 0
+                            contentHeight: {
+                                const it = sectionLoader.item;
+                                if (!it)
+                                    return 0;
+                                return Math.max(it.implicitHeight, it.childrenRect.height);
+                            }
 
                             Loader {
                                 id: sectionLoader
                                 width: pane.width
                                 source: Qt.resolvedUrl("sections/" + Settings.sectionId + "/Section.qml")
+                                onLoaded: {
+                                    if (item)
+                                        item.width = Qt.binding(() => sectionLoader.width);
+                                }
+                                onStatusChanged: {
+                                    if (status === Loader.Error)
+                                        Logger.error("Settings", "failed to load section '" + Settings.sectionId + "'");
+                                }
+                            }
+
+                            MText {
+                                visible: sectionLoader.status === Loader.Error
+                                width: pane.width
+                                key: "settings.loadError"
+                                styleName: "bodyMedium"
+                                color: Colors.color.error
+                                wrapMode: Text.WordWrap
+                                elide: Text.ElideNone
                             }
                         }
                     }

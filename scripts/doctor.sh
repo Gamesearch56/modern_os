@@ -102,6 +102,17 @@ if command -v qs >/dev/null 2>&1; then
     ok "qs on PATH"
 fi
 
+section "theme packages (system-wide; missing icons look like a broken texture)"
+if command -v pacman >/dev/null 2>&1; then
+    for pkg in papirus-icon-theme bibata-cursor-theme qt6-svg inter-font ttf-jetbrains-mono-nerd; do
+        if pacman -Q "$pkg" >/dev/null 2>&1; then
+            ok "$pkg installed"
+        else
+            warn "$pkg not installed (install.sh --profile m0, or pacman -S $pkg)"
+        fi
+    done
+fi
+
 section "isolation"
 PROTECTED="${MODERN_PROTECT_HOME:-/home/bastianweigand}"
 if [ "$HOME" = "$PROTECTED" ]; then

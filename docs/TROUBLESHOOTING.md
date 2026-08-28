@@ -71,6 +71,9 @@ this repo's Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell.
   `qs -c modern log -t 80` or `~/.local/state/modern/quickshell.log`.
 - `TypeError: … is not a function` on a singleton: missing `qmldir`
   entry. See `docs/DECISIONS.md` #19.
+- Broken-image / empty icons: Papirus-Dark is the configured theme but
+  was missing from the package manifests. Install `papirus-icon-theme`
+  and `bibata-cursor-theme`, then restart the session.
 
 ## `unknown config key 'misc.vfr'` / `'dwindle.pseudotile'`
 

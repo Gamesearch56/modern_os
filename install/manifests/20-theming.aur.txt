@@ -2,3 +2,4 @@
 # falls back to `cargo install matugen` if this AUR package ever goes
 # stale, since matugen is a single static Rust binary.
 matugen
+bibata-cursor-theme     # gtk-cursor-theme-name / config.json design.cursorTheme

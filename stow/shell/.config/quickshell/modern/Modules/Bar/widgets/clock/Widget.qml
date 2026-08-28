@@ -18,7 +18,7 @@ Rectangle {
     MText {
         id: label
         anchors.centerIn: parent
-        value: root._format()
+        value: root._format(clock.date)
         styleName: "labelLarge"
     }
 
@@ -32,12 +32,9 @@ Rectangle {
         return n < 10 ? "0" + n : "" + n;
     }
 
-    function _format(): string {
-        const d = clock.date;
+    function _format(d: var): string {
         if (!d)
             return "";
-        const dateFmt = Config.widgets.clock?.dateFormat ?? Config.language.dateFormat;
-        const timeFmt = Config.widgets.clock?.timeFormat ?? Config.language.timeFormat;
         const dateStr = root._pad(d.getDate()) + "." + root._pad(d.getMonth() + 1) + "." + d.getFullYear();
         let timeStr = root._pad(d.getHours()) + ":" + root._pad(d.getMinutes());
         if (Config.widgets.clock?.showSeconds)

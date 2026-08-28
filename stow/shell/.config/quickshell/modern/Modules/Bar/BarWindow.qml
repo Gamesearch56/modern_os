@@ -37,7 +37,7 @@ PanelWindow {
                 spacing: Tokens.spacing.xs
                 Repeater {
                     model: Config.bar.left
-                    WidgetLoader { widgetId: modelData }
+                    WidgetLoader {}
                 }
             }
 
@@ -47,7 +47,7 @@ PanelWindow {
                 spacing: Tokens.spacing.xs
                 Repeater {
                     model: Config.bar.center
-                    WidgetLoader { widgetId: modelData }
+                    WidgetLoader {}
                 }
             }
 
@@ -57,7 +57,7 @@ PanelWindow {
                 spacing: Tokens.spacing.xs
                 Repeater {
                     model: Config.bar.right
-                    WidgetLoader { widgetId: modelData }
+                    WidgetLoader {}
                 }
             }
         }
