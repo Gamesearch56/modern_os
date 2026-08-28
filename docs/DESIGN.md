@@ -58,26 +58,69 @@ MD3 uses tonal elevation (a lighter surface tone) more than shadow.
 (subtle, optional) shadow, applied via a shared `MCard` background — no
 component defines its own shadow.
 
+## Wallpaper chroma in chrome
+
+The default theme profile is **expressive-dark** (`design.activeProfile`)
+so secondary/tertiary pick up wallpaper hue. `Tokens.elevation` tint
+opacities are ~2× the MD3 resting values, then multiplied by
+`design.surfaceTint` (default `1`, Design slider ~0.5–2). Selected /
+checked / focused chrome uses `primaryContainer` / `onPrimaryContainer`
+(or filled `primary`), not a grey `secondaryContainer`. `MIcon` tints
+symbolic icons onto the role; launcher app icons set `tint: false`.
+
+## QML primitives
+
+Every overlay and Settings form is assembled from `Widgets/` (stateless,
+token-only, listed in `Widgets/qmldir`):
+
+`MText`, `MIcon`, `MButton`, `MIconButton`, `MSwitch`, `MSlider`, `MChip`,
+`MTextField`, `MCard`, `MPopup`, `MDialog`, `MTooltip`, `MListItem`
+(trailing slot), `MOverlay` (shared overlay chrome + fade/zoom),
+`MSectionHeader`, `MHint`, `MField`, `MSelect`, `MCheckbox`,
+`MSearchField`, `MKeycap`, `MTable`, `MEmptyState`, `MDivider`,
+`MImageTile`, `MAvatar`.
+
+Chrome contract: bar groups are `BarIsland` pills (`surfaceContainer`,
+`radius.full`, equal `Tokens.spacing.sm` vertical margin). Menus are
+`MOverlay` / `MPopup` (title row, close, `MDivider`, hover border
+`primary`). Settings uses that overlay; section bodies are
+`MSectionHeader` + `MField` rows. Empty = `MEmptyState` centered.
+Destructive = `error`. Overlay enter/exit only through `Motion.overlay*`
+(`docs/MOTION.md`).
+
 ## Layout reference (bar)
 
-Circular launcher → workspace pills → tray → taskbar on the left; clock
-pill then media pill centered; audio, weather, network, mic, RAM,
-CPU/GPU temp, VPN, Bluetooth, notification bell, settings, power on the
-right. Floating pill style with configurable transparency and blur,
-matching the reference screenshots. See `docs/WIDGETS.md` for every
-widget's own layout.
+Transparent `PanelWindow` with **islands**, not one full-width pill.
+Equal top/bottom margin (`Tokens.spacing.sm` when floating). Defaults in
+`config.default.json`:
+
+- **Left island:** launcher, workspaces, media (media only while an MPRIS
+  player exists)
+- **Taskbar island:** pulled out of the left list; shown when that
+  workspace has windows
+- **Center island:** clock
+- **Right island:** network, bluetooth, audio, power, settings (gear opens
+  the control center, not the Settings app)
+
+Tray, weather, mic, performance, vpn, kdeconnect, and the notification
+bell stay available in Settings → Widgets. See `docs/WIDGETS.md`.
 
 ## Cross-toolkit consistency
 
 - **GTK 3/4** — `gtk.css` generated from `tokens.json` (see
   `stow/theme/.config/matugen/templates/gtk.css`), selection color derived
   from `primary` (not hardcoded `#FFFFFF` as the old Wallust setup did).
-- **Qt** — `kdeglobals` + a Qt6ct color scheme generated the same way, so
-  Dolphin and other Qt apps match without `QT_QPA_PLATFORM=xcb` (dropped —
-  it forced XWayland).
-- **Vivaldi** — native theme merged into `Preferences` via `jq`, plus a
-  CSS overlay for what the theme API doesn't reach. See
-  `docs/THEMING.md`.
+- **Qt / Dolphin** — `kdeglobals` + `modern.colors` with full KColorScheme
+  roles, Fusion via qt6ct, and generated `qt6ct/qss/modern.qss` (radii and
+  fonts patched after matugen from `config.json`). Restart Dolphin after
+  `theme-apply.sh`. No `QT_QPA_PLATFORM=xcb`.
+- **hyprpolkitagent** — same qt6ct palette (QML `SystemPalette`) plus
+  `~/.config/hypr/application-style.conf` mapped from
+  `design.cornerRounding` / `motion.scale`. Not QSS. See `docs/THEMING.md`.
+- **Vivaldi** — native theme object plus CSS overlay and a copied wallpaper
+  at `~/.config/vivaldi/custom_css/wallpaper` when
+  `design.bootScreen.wallpaperOnVivaldi` is on. CSS mods need
+  `vivaldi://experiments` once. See `docs/THEMING.md`.
 - **Plymouth** — boot/shutdown splash themed from the same tokens, see
   `docs/BOOT.md`.
 

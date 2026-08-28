@@ -28,3 +28,14 @@ hl.window_rule({
     match = { xwayland = true },
     no_initial_focus = true,
 })
+
+-- hyprpolkitagent has no .desktop file; Wayland app_id is the binary
+-- name or the QApplication name. Float+center so the prompt is not
+-- tiled behind the requesting window. Rounding follows decoration.
+hl.window_rule({
+    name = "polkit-auth-dialog",
+    match = { class = "hyprpolkitagent|hyprland-polkit-agent" },
+    float = true,
+    center = true,
+})
+

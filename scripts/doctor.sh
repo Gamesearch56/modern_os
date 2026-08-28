@@ -38,6 +38,11 @@ else
 fi
 
 section "optional runtime files (this account)"
+if command -v hyprctl >/dev/null 2>&1 && hyprctl plugin list 2>/dev/null | grep -qi hyprbars; then
+    ok "hyprbars plugin loaded"
+else
+    warn "hyprbars not listed in hyprctl plugin list — titlebars need: hyprpm add https://github.com/hyprwm/hyprland-plugins && hyprpm enable hyprbars"
+fi
 TOKENS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/tokens.json"
 if [ -f "$TOKENS" ]; then
     ok "tokens.json present"
@@ -89,6 +94,17 @@ elif systemctl --user is-enabled modern-shell.service >/dev/null 2>&1; then
     ok "modern-shell.service enabled"
 else
     warn "neither qs nor modern-shell.service is running (start Hyprland via start-hyprland)"
+fi
+if systemctl --user is-active hyprpolkitagent.service >/dev/null 2>&1; then
+    ok "hyprpolkitagent.service is active"
+else
+    warn "hyprpolkitagent.service is not active — pkexec prompts will not render"
+fi
+STYLE_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/application-style.conf"
+if [ -f "$STYLE_CONF" ]; then
+    ok "application-style.conf present (hyprpolkitagent chrome)"
+else
+    warn "application-style.conf missing — run scripts/theme-apply.sh so hyprpolkitagent gets MD3 radii"
 fi
 
 section "PATH tools"

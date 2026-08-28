@@ -14,7 +14,8 @@ scripts/check-isolation.sh
 
 See `docs/ISOLATION.md` and `README.md` (second TTY). Stow only as
 `devuser`, or with `--target /home/devuser`. `install.sh` refuses
-`/home/bastianweigand` unless `--allow-live-home` is passed.
+`/home/bastianweigand` unless `--allow-live-home` is passed. Live-account
+cutover (rewind, then clean cut): `docs/CUTOVER.md`.
 
 To return to the main session without reboot: `Ctrl+Alt+F1` or `F2`.
 Do not enable greetd while testing. Shell `Logger.error` toasts appear
@@ -152,3 +153,39 @@ scripts/lint-layers.sh
 Fails on Commons←Services imports, Modules spawning `Process`/`FileView`,
 hardcoded `#hex` in QML, or keys present in only one of `en.json` /
 `de.json`.
+
+## hyprbars titlebars missing
+
+Hyprland has no built-in SSD. Titlebars come from the official hyprbars
+plugin, loaded with `hyprpm` so the build matches the running compositor.
+`scripts/doctor.sh` warns when `hyprctl plugin list` does not mention
+hyprbars. `autostart.lua` runs `hyprpm reload -n` on session start.
+
+```bash
+hyprpm add https://github.com/hyprwm/hyprland-plugins
+hyprpm enable hyprbars
+hyprpm reload
+```
+
+Settings → Windows (`windows.titlebar`) gates the plugin options in
+`modules/titlebar.lua`. Fullscreen windows use `hyprbars:no_bar`. Qt apps
+set `QT_WAYLAND_DISABLE_WINDOWDECORATION=1` so they do not draw a second
+CSD under the SSD.
+
+## Polkit prompt is light / unthemed / tiled
+
+hyprpolkitagent is Qt Quick, not Fusion+QSS. It needs
+`QT_QPA_PLATFORMTHEME=qt6ct` (drop-in under
+`~/.config/systemd/user/hyprpolkitagent.service.d/` plus Hyprland
+`import-environment`) and a current `qt6ct/colors/modern.conf`. After
+`theme-apply.sh`, the agent is restarted automatically. By hand:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user restart hyprpolkitagent
+pkexec true
+```
+
+Radii come from `~/.config/hypr/application-style.conf` (written by
+`theme-apply.sh` from `design.cornerRounding`). The wrong-password
+label is hardcoded red in upstream QML.

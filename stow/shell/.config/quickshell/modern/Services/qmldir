@@ -27,3 +27,7 @@ singleton Ai 1.0 Ai.qml
 singleton Wallpaper 1.0 Wallpaper.qml
 singleton Session 1.0 Session.qml
 singleton Drive 1.0 Drive.qml
+singleton User 1.0 User.qml
+singleton Apps 1.0 Apps.qml
+singleton IdleInhibit 1.0 IdleInhibit.qml
+singleton Screenshot 1.0 Screenshot.qml

@@ -16,6 +16,12 @@ end
 -- Hyprland's own PATH often lacks ~/.bashrc. Scripts live in the checkout.
 local modern = (os.getenv("HOME") or "") .. "/modern_dotfile/scripts/modern"
 
+local function app_cmd(role, fallback)
+    local id = config.value("apps.defaults." .. role, fallback) or fallback
+    id = tostring(id):gsub("%.desktop$", "")
+    return hl.dsp.exec_cmd("gtk-launch " .. id)
+end
+
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
 -- Named config `modern` is ~/.config/quickshell/modern. Bare `qs ipc`
 -- looks for a `default` instance that this desktop never starts.
@@ -27,11 +33,14 @@ local bindings = {
     wallpaperPicker = hl.dsp.exec_cmd("qs -c modern ipc call wallpaper pick"),
     overview = hl.dsp.exec_cmd("qs -c modern ipc call overview toggle"),
     exitSession = hl.dsp.exit(),
-    terminal = hl.dsp.exec_cmd("kitty"),
-    browser = hl.dsp.exec_cmd("vivaldi"),
-    fileManager = hl.dsp.exec_cmd("dolphin"),
+    terminal = app_cmd("terminal", "kitty.desktop"),
+    browser = app_cmd("browser", "vivaldi-stable.desktop"),
+    fileManager = app_cmd("fileManager", "org.kde.dolphin.desktop"),
     spotify = hl.dsp.exec_cmd("spotify-launcher"),
-    closeWindow = hl.dsp.window.close(),
+    -- Overlays (Settings, launcher, …) are layer-shell, not toplevels.
+    -- killactive would close the window behind them; modern window close
+    -- dismisses an open overlay first, then killactive.
+    closeWindow = hl.dsp.exec_cmd(modern .. " window close"),
     fullscreen = hl.dsp.window.fullscreen(),
     toggleFloating = hl.dsp.window.float({ action = "toggle" }),
     pseudoTile = hl.dsp.window.pseudo(),

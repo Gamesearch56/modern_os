@@ -14,7 +14,10 @@ Singleton {
     property string subsectionId: ""
 
     function openAt(section: string, subsection: string) {
-        root.sectionId = section || "general";
+        let id = section || "general";
+        if (id === "time")
+            id = "language";
+        root.sectionId = id;
         root.subsectionId = subsection || "";
         root.open = true;
     }
@@ -27,5 +30,6 @@ Singleton {
         target: "settings"
         function open() { root.openAt("general", ""); }
         function openAt(section: string) { root.openAt(section, ""); }
+        function close() { root.close(); }
     }
 }

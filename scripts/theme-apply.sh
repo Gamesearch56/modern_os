@@ -55,21 +55,154 @@ merge_vivaldi_theme() {
         warn "Vivaldi is running — not touching Preferences; CSS overlay is already updated"
         return 0
     fi
-    local primary surface on_surface
+    local primary surface on_surface primary_container
     primary="$(jq -r '.color.primary' "$tokens")"
     surface="$(jq -r '.color.surface' "$tokens")"
     on_surface="$(jq -r '.color.onSurface' "$tokens")"
+    primary_container="$(jq -r '.color.primaryContainer' "$tokens")"
+    local radius
+    radius="$(merged_config | jq -r '.design.cornerRounding // 1')"
     jq \
         --arg bg "$surface" \
         --arg fg "$on_surface" \
         --arg accent "$primary" \
+        --arg highlight "$primary_container" \
+        --argjson radius "$radius" \
         '.vivaldi.themes.current = "modern"
          | .vivaldi.themes.user = ((.vivaldi.themes.user // []) | map(select(.id != "modern")))
            + [{id:"modern", name:"modern",
                colorBg:$bg, colorFg:$fg, colorAccentBg:$accent,
-               accentOnWindow:false, accentFromPage:false}]' \
+               colorHighlightBg:$highlight,
+               accentOnWindow:false, accentFromPage:false,
+               windowBg:$bg}]
+         | .vivaldi.customUiMods = true' \
         "$prefs" > "$prefs.tmp" && mv "$prefs.tmp" "$prefs"
     log "merged Vivaldi native theme (id=modern)"
+}
+
+patch_toolkit_chrome() {
+    local cfg radius font mono blur trans
+    cfg="$(merged_config)"
+    radius="$(jq -r '.design.cornerRounding // 1' <<<"$cfg")"
+    font="$(jq -r '.typography.ui // "Inter"' <<<"$cfg")"
+    mono="$(jq -r '.typography.monospace // "JetBrainsMono Nerd Font"' <<<"$cfg")"
+    blur="$(jq -r '.design.blurStrength // 40' <<<"$cfg")"
+    trans="$(jq -r '.design.transparency // 0.85' <<<"$cfg")"
+    local sm md lg
+    sm="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 8*r }')"
+    md="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 16*r }')"
+    lg="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 28*r }')"
+    local css_dir="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi/custom_css"
+    mkdir -p "$css_dir"
+    local wp_on
+    wp_on="$(jq -r '.design.bootScreen.wallpaperOnVivaldi // false' <<<"$cfg")"
+    local wp_url="none"
+    if [ "$wp_on" = "true" ] && [ -f "$WALLPAPER_STATE" ]; then
+        local src
+        src="$(cat "$WALLPAPER_STATE")"
+        if [ -f "$src" ]; then
+            cp -f "$src" "$css_dir/wallpaper"
+            wp_url="url('wallpaper')"
+        fi
+    else
+        rm -f "$css_dir/wallpaper"
+    fi
+    cat > "$css_dir/01-chrome.css" <<EOF
+:root {
+  --md-font-ui: ${font};
+  --md-font-mono: ${mono};
+  --md-radius-sm: ${sm}px;
+  --md-radius-md: ${md}px;
+  --md-radius-lg: ${lg}px;
+  --md-radius-full: 9999px;
+  --md-space-xs: 4px;
+  --md-space-sm: 8px;
+  --md-space-md: 12px;
+  --md-space-lg: 16px;
+  --md-space-xl: 24px;
+  --md-blur: ${blur}px;
+  --md-transparency: $(awk -v t="$trans" 'BEGIN { printf "%.0f", t*100 }')%;
+  --md-wallpaper: ${wp_url};
+}
+body, #browser { font-family: var(--md-font-ui), sans-serif !important; }
+EOF
+    local qss="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qss/modern.qss"
+    if [ -f "$qss" ]; then
+        local tmp
+        tmp="$(mktemp)"
+        sed \
+            -e "s|@FONT_UI@|${font}|g" \
+            -e "s|@RADIUS_SM@|${sm}|g" \
+            -e "s|@RADIUS_MD@|${md}|g" \
+            -e "s|@RADIUS_FULL@|9999|g" \
+            -e "s|@SPACE_XS@|4|g" \
+            -e "s|@SPACE_SM@|8|g" \
+            -e "s|@SPACE_MD@|12|g" \
+            "$qss" > "$tmp" && mv "$tmp" "$qss"
+    fi
+    local kde="${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals"
+    if [ -f "$kde" ]; then
+        local scale
+        scale="$(jq -r '.typography.scale // 1' <<<"$cfg")"
+        local pt
+        pt="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 11*s }')"
+        local icon
+        icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
+        awk -v font="$font" -v mono="$mono" -v pt="$pt" -v icon="$icon" '
+            BEGIN { g=0; i=0 }
+            /^\[General\]/ { print; print "font=" font "," pt ",-1,5,50,0,0,0,0,0"; print "fixed=" mono "," pt ",-1,5,50,0,0,0,0,0"; g=1; next }
+            /^\[Icons\]/ { print; print "Theme=" icon; i=1; next }
+            { print }
+            END {
+              if (!g) { print "[General]"; print "font=" font "," pt ",-1,5,50,0,0,0,0,0" }
+              if (!i) { print "[Icons]"; print "Theme=" icon }
+            }
+        ' "$kde" > "$kde.tmp" && mv "$kde.tmp" "$kde"
+    fi
+    local qtconf="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qt6ct.conf"
+    if [ -f "$qtconf" ]; then
+        local icon
+        icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
+        awk -v icon="$icon" '
+            /^icon_theme=/ { print "icon_theme=" icon; next }
+            /^stylesheets=/ { print "stylesheets=~/.config/qt6ct/qss/modern.qss"; next }
+            { print }
+        ' "$qtconf" > "$qtconf.tmp" && mv "$qtconf.tmp" "$qtconf"
+        if ! grep -q '^stylesheets=' "$qtconf"; then
+            printf '\n[Interface]\nstylesheets=~/.config/qt6ct/qss/modern.qss\n' >> "$qtconf"
+        fi
+    fi
+
+    # hyprpolkitagent (and other hypr* Qt Quick apps) read chrome from
+    # ~/.config/hypr/application-style.conf — QSS never reaches that QML
+    # style. Enum steps are 0/4/8/16 px; Tokens.radius.small is 8 * rounding.
+    local hypr_round=2
+    if [ "$sm" -le 2 ]; then
+        hypr_round=0
+    elif [ "$sm" -le 6 ]; then
+        hypr_round=1
+    elif [ "$sm" -le 12 ]; then
+        hypr_round=2
+    else
+        hypr_round=3
+    fi
+    local motion_scale reduce_motion
+    motion_scale="$(jq -r '.motion.scale // 1' <<<"$cfg")"
+    if awk -v s="$motion_scale" 'BEGIN { exit (s+0 == 0) ? 0 : 1 }'; then
+        reduce_motion="true"
+    else
+        reduce_motion="false"
+    fi
+    local style_conf="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/application-style.conf"
+    mkdir -p "$(dirname "$style_conf")"
+    cat > "$style_conf" <<EOF
+# GENERATED by scripts/theme-apply.sh — do not hand-edit.
+# Maps config.json design.cornerRounding / motion.scale onto
+# hyprland-qt-support (hyprpolkitagent QML chrome). See docs/THEMING.md.
+roundness = ${hypr_round}
+border_width = 1
+reduce_motion = ${reduce_motion}
+EOF
 }
 
 usage() { grep '^#' "$0" | cut -c3- | head -n26; }
@@ -192,6 +325,7 @@ fi
 log "running matugen (${MATUGEN_ARGS[*]})"
 matugen "${MATUGEN_ARGS[@]}"
 log "regenerated tokens.json, Colors.qml, kitty/GTK/Qt/KDE/Vivaldi color files"
+patch_toolkit_chrome || warn "toolkit chrome patch skipped"
 
 if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ]; then
     sync_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-sync.sh"
@@ -237,6 +371,14 @@ fi
 # never fight its Preferences writer.
 if [ "$RELOAD" -eq 1 ]; then
     merge_vivaldi_theme || warn "vivaldi Preferences merge skipped"
+    # QML SystemPalette does not re-read qt6ct when the scheme file
+    # changes; the running agent must restart. Style conf live-reloads
+    # on its own via hyprland-qt-support's watcher.
+    if systemctl --user try-restart hyprpolkitagent.service >/dev/null 2>&1; then
+        log "restarted hyprpolkitagent (qt6ct palette + application-style.conf)"
+    else
+        warn "hyprpolkitagent not restarted — start it from the session or: systemctl --user start hyprpolkitagent"
+    fi
 fi
 
 log "done (profile=$PROFILE)"

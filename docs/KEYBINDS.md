@@ -20,7 +20,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + B` | Browser | Vivaldi |
 | `SUPER + E` | File manager | Dolphin |
 | `SUPER + R` | Spotify | `spotify-launcher` |
-| `SUPER + Q` | Close window | |
+| `SUPER + Q` | Close overlay or window | `modern window close` — dismisses Settings/launcher/control center/… if open, else `killactive` |
 | `SUPER + F` | Fullscreen | |
 | `SUPER + G` | Game mode | |
 | `PRINT` | Screenshot region | `modern screenshot region` → `~/Pictures/Screenshots` |

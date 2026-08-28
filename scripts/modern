@@ -15,6 +15,7 @@ Examples:
   modern settings open
   modern volume up
   modern shell reload
+  modern window close
   modern config set motion.scale 1.2
 EOF
 }
@@ -51,6 +52,23 @@ case "$TARGET" in
     shell)
         ipc shell "${1:-reload}"
         ;;
+    window)
+        ACTION="${1:-close}"
+        case "$ACTION" in
+            close)
+                dismissed="$(qs -c modern ipc call shell dismiss 2>/dev/null || true)"
+                dismissed="$(printf '%s' "$dismissed" | tr -d '[:space:]\"')"
+                if [ "$dismissed" = "true" ]; then
+                    exit 0
+                fi
+                exec hyprctl dispatch "hl.dsp.window.close()"
+                ;;
+            *)
+                echo "unknown window action: $ACTION" >&2
+                exit 1
+                ;;
+        esac
+        ;;
     settings)
         ipc settings "${1:-open}"
         ;;
@@ -73,8 +91,12 @@ case "$TARGET" in
         exec modern-game "$@"
         ;;
     screenshot)
+        MODE="${1:-region}"
+        if qs -c modern ipc call screenshot "$MODE" >/dev/null 2>&1; then
+            exit 0
+        fi
         SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-        exec "$SCRIPT_DIR/screenshot.sh" "${1:-region}"
+        exec "$SCRIPT_DIR/screenshot.sh" "$MODE"
         ;;
     *)
         FUNC="${1:-toggle}"

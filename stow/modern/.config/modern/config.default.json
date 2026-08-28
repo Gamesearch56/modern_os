@@ -1,19 +1,26 @@
 {
   "$schema": "config.schema.json",
   "_comment": "Shipped defaults. Tracked in git. Copied to config.json on first install; config.json is the live, gitignored, per-machine file that the Settings app edits. Never edit this file to change YOUR machine's behaviour — edit config.json.",
-
   "general": {
     "autostart": [],
     "notificationTimeoutMs": 5000,
-    "dndSchedule": { "enabled": false, "from": "23:00", "to": "07:00" },
-    "idleTimings": { "dimSec": 120, "screenOffSec": 300, "lockSec": 600, "suspendSec": 1800 },
+    "dndSchedule": {
+      "enabled": false,
+      "from": "23:00",
+      "to": "07:00"
+    },
+    "idleTimings": {
+      "dimSec": 120,
+      "screenOffSec": 300,
+      "lockSec": 600,
+      "suspendSec": 1800
+    },
     "autologin": false
   },
-
   "motion": {
-    "scale": 1.0
+    "scale": 1.0,
+    "overlay": "fadeZoom"
   },
-
   "typography": {
     "ui": "Inter",
     "document": "Inter",
@@ -21,9 +28,8 @@
     "scale": 1.0,
     "weight": 400
   },
-
   "design": {
-    "activeProfile": "tonal-spot-dark",
+    "activeProfile": "expressive-dark",
     "cornerRounding": 1.0,
     "transparency": 0.85,
     "blurStrength": 40,
@@ -35,10 +41,10 @@
       "wallpaperOnSplash": true,
       "wallpaperOnLock": true,
       "wallpaperOnLogin": true,
-      "wallpaperOnVivaldi": true
-    }
+      "wallpaperOnVivaldi": false
+    },
+    "surfaceTint": 1.0
   },
-
   "language": {
     "ui": "de",
     "fallback": "en",
@@ -46,26 +52,61 @@
     "timeFormat": "HH:mm",
     "firstDayOfWeek": 1
   },
-
   "bar": {
     "position": "top",
     "style": "floating",
     "height": 48,
     "autoHide": false,
-    "perMonitor": { "enabled": true },
-    "left": ["launcher", "workspaces", "tray", "taskbar"],
-    "center": ["clock", "media"],
-    "right": ["audio", "weather", "network", "microphone", "performance", "vpn", "bluetooth", "kdeconnect", "notifications", "settings", "power"]
+    "perMonitor": {
+      "enabled": true
+    },
+    "left": [
+      "launcher",
+      "workspaces",
+      "media",
+      "taskbar"
+    ],
+    "center": [
+      "clock"
+    ],
+    "right": [
+      "network",
+      "bluetooth",
+      "audio",
+      "power",
+      "settings"
+    ]
   },
-
   "widgets": {
-    "clock": { "dateFormat": "DD.MM.YYYY", "timeFormat": "HH:mm", "showSeconds": false, "showWeekday": false },
-    "weather": { "locationMode": "auto", "manualLocation": "", "units": "metric" },
-    "performance": { "pollIntervalMs": 2000, "showGpu": true, "showTemps": true },
-    "audio": { "scrollStepPercent": 5, "scrollStepFinePercent": 1 },
-    "quickSettingsOrder": ["wifi", "bluetooth", "audio", "brightness", "dnd", "calendar"]
+    "clock": {
+      "dateFormat": "DD.MM.YYYY",
+      "timeFormat": "HH:mm",
+      "showSeconds": false,
+      "showWeekday": false
+    },
+    "weather": {
+      "locationMode": "auto",
+      "manualLocation": "",
+      "units": "metric"
+    },
+    "performance": {
+      "pollIntervalMs": 2000,
+      "showGpu": true,
+      "showTemps": true
+    },
+    "audio": {
+      "scrollStepPercent": 5,
+      "scrollStepFinePercent": 1
+    },
+    "quickSettingsOrder": [
+      "wifi",
+      "bluetooth",
+      "audio",
+      "brightness",
+      "dnd",
+      "calendar"
+    ]
   },
-
   "input": {
     "kbLayout": "de",
     "kbVariant": "",
@@ -73,35 +114,59 @@
     "repeatDelay": 600,
     "numlockOnBoot": true
   },
-
   "monitors": {
     "profiles": {},
-    "rules": []
+    "rules": [],
+    "workspaceMode": "dynamic"
   },
-
   "windowRules": [
     {
       "name": "steam-game",
-      "match": { "class": "steam_app_.*" },
+      "match": {
+        "class": "steam_app_.*"
+      },
       "workspace": "special:game",
       "fullscreen": true
     },
     {
       "name": "jetbrains-dialogs",
-      "match": { "class": "jetbrains-.*", "title": "win0" },
+      "match": {
+        "class": "jetbrains-.*",
+        "title": "win0"
+      },
       "float": true
     }
   ],
-
   "launcher": {
     "providers": {
-      "apps": { "enabled": true, "prefix": "" },
-      "shell": { "enabled": true, "prefix": ">" },
-      "calculator": { "enabled": true, "prefix": "=" },
-      "websearch": { "enabled": true, "prefix": "?" },
-      "emoji": { "enabled": true, "prefix": ":" },
-      "files": { "enabled": true, "prefix": "/" },
-      "windows": { "enabled": true, "prefix": "w " }
+      "apps": {
+        "enabled": true,
+        "prefix": ""
+      },
+      "shell": {
+        "enabled": true,
+        "prefix": ">"
+      },
+      "calculator": {
+        "enabled": true,
+        "prefix": "="
+      },
+      "websearch": {
+        "enabled": true,
+        "prefix": "?"
+      },
+      "emoji": {
+        "enabled": true,
+        "prefix": ":"
+      },
+      "files": {
+        "enabled": true,
+        "prefix": "/"
+      },
+      "windows": {
+        "enabled": true,
+        "prefix": "w "
+      }
     },
     "frecencyEnabled": true,
     "mostUsedGridSize": 8,
@@ -109,7 +174,6 @@
     "showIcons": true,
     "showDescriptions": true
   },
-
   "power": {
     "buttonAction": "ask",
     "lidActionAc": "lock",
@@ -117,7 +181,6 @@
     "inhibitOnFullscreen": true,
     "inhibitOnMedia": true
   },
-
   "screenshots": {
     "directory": "~/Pictures/Screenshots",
     "filenameTemplate": "screenshot-%Y%m%d-%H%M%S",
@@ -127,35 +190,46 @@
     "openEditorAfterCapture": false,
     "includeCursor": false
   },
-
   "audio": {
     "autoSwitchBluetooth": "ask",
     "perAppVolume": {},
     "masterVolumeLimit": 100
   },
-
-  "network": { "wifiAutoconnectPriority": {}, "dnsOverride": [] },
-
-  "kdeconnect": { "enabled": true, "mirrorNotifications": true, "sharedClipboard": true },
-
-  "accounts": {
-    "protonDrive": { "enabled": false },
-    "calendarIcsUrl": "",
-    "ai": { "provider": "ollama", "ollamaModel": "llama3" }
+  "network": {
+    "wifiAutoconnectPriority": {},
+    "dnsOverride": []
   },
-
+  "kdeconnect": {
+    "enabled": true,
+    "mirrorNotifications": true,
+    "sharedClipboard": true
+  },
+  "accounts": {
+    "protonDrive": {
+      "enabled": false
+    },
+    "calendarIcsUrl": "",
+    "ai": {
+      "provider": "ollama",
+      "ollamaModel": "llama3"
+    }
+  },
   "gaming": {
     "profiles": {},
-    "systemFixes": { "vmMaxMapCount": true, "fileDescriptorLimits": true, "splitLockMitigate": false },
-    "optiscaler": { "trackedGames": {} }
+    "systemFixes": {
+      "vmMaxMapCount": true,
+      "fileDescriptorLimits": true,
+      "splitLockMitigate": false
+    },
+    "optiscaler": {
+      "trackedGames": {}
+    }
   },
-
   "backup": {
     "snapperEnabled": false,
     "resticEnabled": false,
     "preUpdateSnapshot": true
   },
-
   "keybinds": {
     "_comment": "Combo strings use Hyprland's Lua hl.bind() format: 'MOD + MOD + KEY', matching docs.hypr.land's 0.55+ Lua examples (e.g. 'SUPER + SHIFT + T'). This is the table Settings > Keyboard's shortcut editor and Modules/Cheatsheet both read.",
     "launcher": "SUPER + SPACE",
@@ -208,5 +282,16 @@
     "gameMode": "SUPER + G",
     "colorPicker": "SUPER + SHIFT + C",
     "clipboardHistory": "SUPER + SHIFT + V"
+  },
+  "apps": {
+    "defaults": {
+      "browser": "vivaldi-stable.desktop",
+      "calendar": "org.kde.korganizer.desktop",
+      "fileManager": "org.kde.dolphin.desktop",
+      "terminal": "kitty.desktop"
+    }
+  },
+  "windows": {
+    "titlebar": true
   }
 }

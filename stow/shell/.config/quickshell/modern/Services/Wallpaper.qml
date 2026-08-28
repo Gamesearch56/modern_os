@@ -36,10 +36,10 @@ Singleton {
     Process {
         id: listProc
         running: false
-        command: ["bash", "-c", "HOME='" + root.home.replace(/'/g, "'\\''") + "'; export HOME; pic=$(xdg-user-dir PICTURES 2>/dev/null || true); pic=${pic:-$HOME/Pictures}; extra=\"$HOME/.config/modern/wallpapers\"; find \"$extra\" \"$pic/Wallpapers\" -maxdepth 1 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) 2>/dev/null | sort -u"]
+        command: [root.home + "/modern_dotfile/scripts/wallpaper-list.sh"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const lines = text().trim().split("\n").filter(l => l.length > 0);
+                const lines = this.text.trim().split("\n").filter(l => l.length > 0);
                 root.images = lines;
             }
         }
@@ -49,11 +49,6 @@ Singleton {
         id: importProc
         running: false
         command: [root.home + "/modern_dotfile/scripts/wallpaper-import.sh"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                text();
-            }
-        }
         onExited: (code) => {
             if (code === 2)
                 Logger.error("Wallpaper", I18n.t("wallpaper.alreadyInLibrary"));
@@ -86,9 +81,13 @@ Singleton {
             root._refresh();
     }
 
+    function hide() { root.setPickerOpen(false); }
+
     function _refresh() {
         listProc.running = false;
-        listProc.running = true;
+        Qt.callLater(() => {
+            listProc.running = true;
+        });
     }
 
     function importWallpaper() {

@@ -21,14 +21,20 @@ matugen -c ~/.config/matugen/config.toml ...
         ├─▶ hypr/modules/colors.lua               (Hyprland borders)
         ├─▶ kitty/colors.conf
         ├─▶ gtk-3.0/gtk.css, gtk-4.0/gtk.css
-        ├─▶ qt6ct/colors/modern.conf
+        ├─▶ qt6ct/colors/modern.conf              (QPalette; hyprpolkitagent)
         ├─▶ kdeglobals                            (Dolphin, other KDE apps)
+        ├─▶ qt6ct/qss/modern.qss                  (Fusion stylesheet)
+        ├─▶ hypr/application-style.conf           (hyprland-qt-support radii)
         └─▶ vivaldi/custom_css/00-modern.css
+            + 01-chrome.css (fonts/radii/wallpaper)
 ```
 
-Every output in that list is written by **one** `matugen` invocation from
-**one** seed color, so nothing can drift out of sync the way hand-rolled
-per-app Wallust templates could. `tokens.json` is also readable directly
+Every *color* output in that list is written by **one** `matugen`
+invocation from **one** seed color, so nothing can drift out of sync the
+way hand-rolled per-app Wallust templates could. Radii, fonts, and
+motion for toolkit chrome (`01-chrome.css`, QSS placeholders,
+`application-style.conf`) are patched afterwards from `config.json`.
+`tokens.json` is also readable directly
 by anything that isn't a matugen template consumer (e.g. a shell script
 via `jq`, or the future Settings > Diagnostics color preview).
 
@@ -94,10 +100,26 @@ Hyprland (`hyprctl reload` picks up the freshly-written
 requires `allow_remote_control` in a `kitty.conf` this repo doesn't ship
 yet). GTK/Qt live-reload (re-reading `settings.ini`/`qt6ct.conf` in
 already-running apps) and the Vivaldi `Preferences` merge are out of
-scope here — see the `gtk-qt-theming` and `vivaldi-theme` plan entries in
-`docs/DECISIONS.md`. The files these templates write are always correct
-on disk either way, so a restarted app always picks up the current theme
-even before those tasks land.
+scope of a running-app live-reload: CSS overlay + `01-chrome.css` are
+always rewritten; the native theme object is merged only while Vivaldi is
+**not** running (so we do not fight its Preferences writer). Dolphin does
+not reload QSS live — restart it after `theme-apply.sh`. **hyprpolkitagent**
+is QML (`org.hyprland.style`): colors come from the qt6ct `SystemPalette`
+(not QSS), radii/motion from `~/.config/hypr/application-style.conf`.
+`theme-apply.sh` restarts the user unit so a new palette is picked up;
+the style conf live-reloads on its own. The agent's error string is
+hardcoded `"red"` upstream and cannot follow `error`. The files these
+templates write are always correct on disk, so a restarted app always
+picks up the current theme.
+
+**Vivaldi CSS modifications** must be enabled once in the browser:
+open `vivaldi://experiments` and turn on “Allow CSS modifications”, then
+point Custom UI Modifications at `~/.config/vivaldi/custom_css`. That
+toggle cannot be flipped from `config.json`. When
+`design.bootScreen.wallpaperOnVivaldi` is true, `theme-apply.sh` copies
+the current wallpaper to `custom_css/wallpaper` and `01-chrome.css` sets
+`--md-wallpaper` (plus `--md-font-*`, `--md-radius-*`, `--md-space-*`,
+`--md-blur`, `--md-transparency` from `config.json`).
 
 `--no-reload` skips all of the above — used by CI/lint checks and the M0
 verification script, where no Hyprland/kitty session exists to reload.

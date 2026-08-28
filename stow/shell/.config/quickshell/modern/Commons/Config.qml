@@ -53,6 +53,7 @@ Singleton {
 
             property JsonObject motion: JsonObject {
                 property real scale: 1.0
+                property string overlay: "fadeZoom"
             }
 
             property JsonObject typography: JsonObject {
@@ -64,9 +65,10 @@ Singleton {
             }
 
             property JsonObject design: JsonObject {
-                property string activeProfile: "tonal-spot-dark"
+                property string activeProfile: "expressive-dark"
                 property real cornerRounding: 1.0
                 property real transparency: 0.85
+                property real surfaceTint: 1.0
                 property int blurStrength: 40
                 property string iconTheme: "Papirus-Dark"
                 property string cursorTheme: "Bibata-Modern-Classic"
@@ -76,7 +78,7 @@ Singleton {
                     property bool wallpaperOnSplash: true
                     property bool wallpaperOnLock: true
                     property bool wallpaperOnLogin: true
-                    property bool wallpaperOnVivaldi: true
+                    property bool wallpaperOnVivaldi: false
                 }
             }
 
@@ -96,9 +98,9 @@ Singleton {
                 property JsonObject perMonitor: JsonObject {
                     property bool enabled: true
                 }
-                property list<string> left: ["launcher", "workspaces", "tray", "taskbar"]
-                property list<string> center: ["clock", "media"]
-                property list<string> right: ["audio", "weather", "network", "microphone", "performance", "vpn", "bluetooth", "kdeconnect", "notifications", "settings", "power"]
+                property list<string> left: ["launcher", "workspaces", "media", "taskbar"]
+                property list<string> center: ["clock"]
+                property list<string> right: ["network", "bluetooth", "audio", "power", "settings"]
             }
 
             // Per-widget settings blobs — shape varies per widget, each
@@ -114,9 +116,22 @@ Singleton {
             // Per-monitor profiles (keyed by "description + serial") and
             // workspace-assignment rules — see docs/ARCHITECTURE.md
             // "Monitors". Free-form since the key set is per-machine.
-            property var monitors: ({ profiles: ({}), rules: [] })
+            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "dynamic" })
 
             property var windowRules: []
+
+            property JsonObject windows: JsonObject {
+                property bool titlebar: true
+            }
+
+            property JsonObject apps: JsonObject {
+                property JsonObject defaults: JsonObject {
+                    property string browser: "vivaldi-stable.desktop"
+                    property string calendar: "org.kde.korganizer.desktop"
+                    property string fileManager: "org.kde.dolphin.desktop"
+                    property string terminal: "kitty.desktop"
+                }
+            }
 
             property JsonObject input: JsonObject {
                 property string kbLayout: "de"
@@ -250,6 +265,8 @@ Singleton {
     readonly property alias widgets: adapter.widgets
     readonly property alias monitors: adapter.monitors
     readonly property alias windowRules: adapter.windowRules
+    readonly property alias windows: adapter.windows
+    readonly property alias apps: adapter.apps
     readonly property alias launcher: adapter.launcher
     readonly property alias power: adapter.power
     readonly property alias screenshots: adapter.screenshots
