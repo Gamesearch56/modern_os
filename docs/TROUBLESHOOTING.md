@@ -24,10 +24,32 @@ daily-driver desktop.
 ## Stow aborted on `.bashrc`
 
 `useradd -m` copies `/etc/skel/.bashrc` into the new home. GNU Stow
-refuses to replace that regular file. `install/lib/stow.sh` now moves
-those files to `$TARGET/.local/state/modern/stow-backups/` before
-stowing. Re-run `./install/install.sh --profile full` as `devuser`
-(idempotent — packages already installed are skipped).
+refuses to replace that regular file. `install/lib/stow.sh` moves those
+files to `$TARGET/.local/state/modern/stow-backups/` before stowing.
+Re-run `./install/install.sh --profile full` as `devuser` (idempotent).
+
+If a re-run logged hundreds of "backing up" lines under `.config/hypr`
+or `quickshell`, an older walker treated Stow folded directories as
+conflicts and may have moved files out of the git clone. Restore with
+`git checkout -- stow/` in `~/modern_dotfile`, then re-run install.
+Current stow.sh skips paths that already resolve inside the package and
+uses `--no-folding`.
+
+## `theme-apply.sh` unknown argument `--initial`
+
+That flag never existed. Phase 5 now runs
+`theme-apply.sh --profile fixed-brand --no-reload` when no wallpaper is
+set, and does not abort the install if matugen fails.
+
+```bash
+cd ~/modern_dotfile
+git pull
+./install/install.sh --profile full
+# or only the missing step:
+scripts/theme-apply.sh --profile fixed-brand --no-reload
+```
+
+Then pick a wallpaper: `scripts/theme-apply.sh --wallpaper /path/to/image.jpg`
 
 ## Shell does not start / black bar
 
