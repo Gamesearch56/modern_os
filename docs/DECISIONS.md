@@ -256,7 +256,7 @@ wonder about the inherited `tr()` again) but is not fixing a real bug.
 
 ## 20. Traffic-light window controls are functional colors, not MD3 roles
 
-**Decision:** hyprbars titlebar buttons use orange (fullscreen), green (float), and red (close) as OS window-control affordances (macOS/Windows traffic lights). Close stays in the error-red family. Orange and green have no Material Design 3 role, so they are the one documented hex exception in compositor chrome. Titlebar *surface* (`bar_color`, text, height, padding, rounding) still comes from matugen tokens and `Tokens` / `typography` via `titlebar.lua` + `hyprland-colors.lua.template`. `windows.titlebar` in `config.json` gates the plugin options.
+**Decision:** hyprbars titlebar buttons use orange (fullscreen), green (float), and red (close) as OS window-control affordances (macOS/Windows traffic lights). Close stays in the error-red family. Orange and green have no Material Design 3 role, so they are the one documented hex exception in compositor chrome. Titlebar *surface* (`bar_color`, text, height, padding, rounding) still comes from matugen tokens and `Tokens` / `typography` via `titlebar.lua` + `hyprland-colors.lua.template`. `windows.titlebar` in `config.json` gates the plugin options, and `titlebar.lua` no-ops when `hl.plugin.hyprbars` is absent so a session without the plugin does not fill the error overlay with unknown `plugin.hyprbars` keys.
 
 **Rejected:** mapping all three buttons onto `primary` / `tertiary` / `error` (float would not read as “safe”), or drawing titlebars in Quickshell (fights the compositor; hyprbars is the SSD path).
 

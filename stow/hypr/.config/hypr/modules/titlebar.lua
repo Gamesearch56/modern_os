@@ -1,15 +1,24 @@
--- SSD titlebars via hyprbars. Enabled from config.json windows.titlebar.
+-- SSD titlebars via hyprbars. Enabled from config.json windows.titlebar
+-- *and* only when the plugin is actually loaded — hl.config({ plugin =
+-- { hyprbars = … }}) is an unknown key and fills the error overlay if
+-- we apply it at parse time before hyprpm has loaded the .so.
 -- Traffic-light hues are OS window-control affordances, not MD3 roles
--- (docs/DECISIONS.md). Close still uses the error token from colors.lua.
+-- (docs/DECISIONS.md). Surface colors come from modules/colors.lua.
 
 local config = require("modules.config")
+local colors = require("modules.colors")
 
 if not config.value("windows.titlebar", true) then
     return
 end
 
-local rounding = math.floor(8 * (config.value("design.cornerRounding", 1.0)))
+local bars = hl.plugin and hl.plugin.hyprbars
+if not bars then
+    return
+end
+
 local font = config.value("typography.ui", "Inter")
+local surface = (type(colors) == "table" and colors.hyprbars) or {}
 
 hl.config({
     plugin = {
@@ -23,26 +32,34 @@ hl.config({
             bar_text_font = font,
             bar_text_size = 14,
             bar_text_align = "left",
+            bar_buttons_alignment = "left",
+            bar_color = surface.bar_color,
+            ["col.text"] = surface["col.text"],
         },
     },
 })
 
-if hl.plugin and hl.plugin.hyprbars and hl.plugin.hyprbars.add_button then
-    local bars = hl.plugin.hyprbars
+if bars.add_button then
     bars.add_button({
+        bg_color = "rgb(c42b1c)",
+        fg_color = "rgb(ffffff)",
+        size = 12,
         icon = "",
-        onclick = "killactive",
-        col = { idle = 0xffc42b1c, hover = 0xffe64539 },
+        action = "hyprctl dispatch 'hl.dsp.window.close()'",
     })
     bars.add_button({
+        bg_color = "rgb(30d158)",
+        fg_color = "rgb(ffffff)",
+        size = 12,
         icon = "",
-        onclick = "togglefloating",
-        col = { idle = 0xff30d158, hover = 0xff3ee66e },
+        action = "hyprctl dispatch 'hl.dsp.window.float({ action = \"toggle\" })'",
     })
     bars.add_button({
+        bg_color = "rgb(ff9f0a)",
+        fg_color = "rgb(ffffff)",
+        size = 12,
         icon = "",
-        onclick = "fullscreen",
-        col = { idle = 0xffff9f0a, hover = 0xffffb340 },
+        action = "hyprctl dispatch 'hl.dsp.window.fullscreen()'",
     })
 end
 

@@ -10,6 +10,7 @@
 -- ConfigWatcher dependency tracking — see docs/DECISIONS.md and
 -- AGENTS.md's Hyprland Lua rule.
 
+require("modules.permissions")
 require("modules.env")
 require("modules.general")
 require("modules.colors")

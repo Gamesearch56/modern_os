@@ -15,6 +15,38 @@ Singleton {
     readonly property PwNode source: Pipewire.defaultAudioSource
     readonly property var nodes: Pipewire.nodes
 
+    // Hardware endpoints only — application streams are not switchable
+    // outputs. Tracked so nickname/description bind (docs/DECISIONS.md
+    // never-hardcode-device-ids: labels come from PipeWire).
+    readonly property list<PwNode> sinks: {
+        const t = root.trackedNodes;
+        const out = [];
+        for (let i = 0; i < t.length; i++) {
+            if (t[i].isSink)
+                out.push(t[i]);
+        }
+        return out;
+    }
+    readonly property list<PwNode> sources: {
+        const t = root.trackedNodes;
+        const out = [];
+        for (let i = 0; i < t.length; i++) {
+            if (!t[i].isSink)
+                out.push(t[i]);
+        }
+        return out;
+    }
+    readonly property list<PwNode> trackedNodes: {
+        const vals = root.nodes.values;
+        const out = [];
+        for (let i = 0; i < vals.length; i++) {
+            const n = vals[i];
+            if (n && n.isStream === false)
+                out.push(n);
+        }
+        return out;
+    }
+
     readonly property real volume: {
         const n = root.sink;
         if (!n || !n.audio)
@@ -31,7 +63,14 @@ Singleton {
     readonly property bool sourceMuted: root.source?.audio?.muted ?? false
 
     PwObjectTracker {
-        objects: [root.sink, root.source]
+        objects: root.trackedNodes
+    }
+
+    function nodeLabel(n: var): string {
+        if (!n)
+            return "";
+        const _ = n.ready;
+        return n.nickname || n.description || n.name || "";
     }
 
     function setVolume(percent: real) {
@@ -65,17 +104,12 @@ Singleton {
     }
 
     function cycleSink() {
-        const sinks = [];
-        for (let i = 0; i < root.nodes.values.length; i++) {
-            const n = root.nodes.values[i];
-            if (n.isSink && n.isStream === false)
-                sinks.push(n);
-        }
-        if (sinks.length < 2)
+        const list = root.sinks;
+        if (list.length < 2)
             return;
-        let idx = sinks.findIndex(n => n === root.sink);
-        const next = sinks[(idx + 1) % sinks.length];
-        Pipewire.preferredDefaultAudioSink = next;
+        let idx = list.findIndex(n => root.sink && n.id === root.sink.id);
+        const next = list[(idx + 1) % list.length];
+        root.setDefaultSink(next);
     }
 
     function setDefaultSink(node: var) {

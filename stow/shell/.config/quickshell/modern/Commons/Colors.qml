@@ -8,7 +8,7 @@ Singleton {
     id: root
 
     readonly property string mode: "dark"
-    readonly property string sourceColor: "#122b42"
+    readonly property string sourceColor: "#0f253b"
 
     // A JS object literal (`property var`), NOT nested QML `property`
     // declarations — QML's grammar reserves any `on<Capitalized>`
@@ -19,40 +19,40 @@ Singleton {
     // this restriction only bites declared `property` names. See
     // docs/DECISIONS.md.
     readonly property var color: ({
-        primary: "#afd282",
-        onPrimary: "#1f3700",
-        primaryContainer: "#334e0d",
-        onPrimaryContainer: "#cbee9b",
-        secondary: "#e7b9d6",
-        onSecondary: "#45263c",
-        secondaryContainer: "#5e3c53",
-        onSecondaryContainer: "#ffd7ef",
-        tertiary: "#b1c6f9",
-        onTertiary: "#182f59",
-        tertiaryContainer: "#314671",
-        onTertiaryContainer: "#d8e2ff",
+        primary: "#acd284",
+        onPrimary: "#1c3700",
+        primaryContainer: "#304f10",
+        onPrimaryContainer: "#c7ef9e",
+        secondary: "#e8b9d4",
+        onSecondary: "#46263b",
+        secondaryContainer: "#5f3c52",
+        onSecondaryContainer: "#ffd8ed",
+        tertiary: "#b3c6f9",
+        onTertiary: "#1b2f59",
+        tertiaryContainer: "#334671",
+        onTertiaryContainer: "#d9e2ff",
         error: "#ffb4ab",
         onError: "#690005",
         errorContainer: "#93000a",
         onErrorContainer: "#ffdad6",
-        background: "#10131a",
+        background: "#11131a",
         onBackground: "#e1e2ec",
-        surface: "#10131a",
+        surface: "#11131a",
         onSurface: "#e1e2ec",
-        surfaceVariant: "#424753",
+        surfaceVariant: "#424654",
         onSurfaceVariant: "#c2c6d6",
-        surfaceDim: "#10131a",
-        surfaceBright: "#363941",
-        surfaceContainerLowest: "#0b0e15",
-        surfaceContainerLow: "#191b22",
-        surfaceContainer: "#1d2027",
+        surfaceDim: "#11131a",
+        surfaceBright: "#373941",
+        surfaceContainerLowest: "#0c0e15",
+        surfaceContainerLow: "#191b23",
+        surfaceContainer: "#1d1f27",
         surfaceContainerHigh: "#272a31",
         surfaceContainerHighest: "#32353c",
         outline: "#8c909f",
-        outlineVariant: "#424753",
+        outlineVariant: "#424654",
         inverseSurface: "#e1e2ec",
         inverseOnSurface: "#2e3038",
-        inversePrimary: "#4a6724",
+        inversePrimary: "#476726",
         shadow: "#000000",
         scrim: "#000000"
     })

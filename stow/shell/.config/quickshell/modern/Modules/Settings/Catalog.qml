@@ -83,7 +83,7 @@ QtObject {
         privacy: { icon: "security-high", order: 44, group: "apps", keywords: ["dnd", "kdeconnect"] },
         language: { icon: "preferences-desktop-locale", order: 50, group: "input", keywords: ["locale", "date", "time"] },
         keyboard: { icon: "input-keyboard", order: 52, group: "input", keywords: ["keybinds", "layout"] },
-        audio: { icon: "audio-volume-high", order: 60, group: "devices", keywords: ["volume", "bluetooth"] },
+        audio: { icon: "audio-volume-high", order: 60, group: "devices", keywords: ["volume", "bluetooth", "speakers", "headphones", "output"] },
         network: { icon: "network-wireless", order: 62, group: "devices", keywords: ["wifi", "dns"] },
         storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["backup", "snapper"] },
         system: { icon: "computer", order: 72, group: "system", keywords: ["diagnostics"] },

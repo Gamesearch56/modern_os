@@ -36,7 +36,9 @@
   "audio": {
     "output": "Output",
     "input": "Input",
-    "applications": "Applications"
+    "applications": "Applications",
+    "noOutputs": "No output devices",
+    "noInputs": "No input devices"
   },
   "network": {
     "disconnected": "Disconnected",
@@ -366,7 +368,8 @@
       "storageGated": "Snapshots are applied by the gated install/system helpers.",
       "gamingGated": "Kernel tweaks live under install/system and are not applied automatically.",
       "timeMerged": "Date and time formats live under Language & region.",
-      "weatherLocation": "Empty uses IP geolocation. Or a city, or latitude,longitude."
+      "weatherLocation": "Empty uses IP geolocation. Or a city, or latitude,longitude.",
+      "audioDevices": "The highlighted device is the default. Click another to send sound there."
     }
   },
   "onboarding": {

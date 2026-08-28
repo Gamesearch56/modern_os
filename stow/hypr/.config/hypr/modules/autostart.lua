@@ -24,7 +24,14 @@ hl.on("hyprland.start", function()
         .. "exec qs -c modern >>\"$log\" 2>&1'")
 
     hl.exec_cmd("hypridle")
-    hl.exec_cmd("hyprpm reload -n")
+    -- hyprpm stores plugins in /var/cache/hyprpm/$USER and needs pkexec
+    -- to create that tree the first time. Calling reload before the
+    -- store exists dies with "Failed to run a superuser cmd" and the
+    -- -n flag turns that into the startup "plugin loaded failed"
+    -- overlay. Skip until the user has run `hyprpm add` once. hyprbars
+    -- itself reloads config from PLUGIN_INIT, so titlebar.lua applies
+    -- on the second parse once the .so is in.
+    hl.exec_cmd("sh -lc 'if [ -d /var/cache/hyprpm/\"$USER\" ]; then hyprpm reload -n; fi'")
 
     -- Clipboard history backend (see Modules/Cheatsheet + the
     -- "clipboardHistory" bind in modules/keybinds.lua).

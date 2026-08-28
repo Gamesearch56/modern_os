@@ -41,7 +41,11 @@ section "optional runtime files (this account)"
 if command -v hyprctl >/dev/null 2>&1 && hyprctl plugin list 2>/dev/null | grep -qi hyprbars; then
     ok "hyprbars plugin loaded"
 else
-    warn "hyprbars not listed in hyprctl plugin list — titlebars need: hyprpm add https://github.com/hyprwm/hyprland-plugins && hyprpm enable hyprbars"
+    if [ ! -d "/var/cache/hyprpm/${USER}" ]; then
+        warn "hyprpm state store missing (/var/cache/hyprpm/${USER}) — run once in a terminal (pkexec): hyprpm add https://github.com/hyprwm/hyprland-plugins && hyprpm enable hyprbars && hyprpm reload"
+    else
+        warn "hyprbars not listed in hyprctl plugin list — titlebars need: hyprpm enable hyprbars && hyprpm reload"
+    fi
 fi
 TOKENS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/tokens.json"
 if [ -f "$TOKENS" ]; then

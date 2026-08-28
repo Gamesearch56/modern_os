@@ -154,12 +154,27 @@ Fails on Commons←Services imports, Modules spawning `Process`/`FileView`,
 hardcoded `#hex` in QML, or keys present in only one of `en.json` /
 `de.json`.
 
-## hyprbars titlebars missing
+## hyprbars titlebars missing / "plugin loaded failed"
 
 Hyprland has no built-in SSD. Titlebars come from the official hyprbars
 plugin, loaded with `hyprpm` so the build matches the running compositor.
 `scripts/doctor.sh` warns when `hyprctl plugin list` does not mention
-hyprbars. `autostart.lua` runs `hyprpm reload -n` on session start.
+hyprbars.
+
+Two separate failures look similar on a fresh session:
+
+1. **Unknown config key `plugin hyprbars.*`** — `modules/titlebar.lua`
+   (and generated `colors.lua`) used to call `hl.config({ plugin = {
+   hyprbars = … }})` at parse time. Those keys do not exist until the
+   plugin is loaded, so Hyprland puts them on the error overlay. Config
+   is now applied only when `hl.plugin.hyprbars` is present. hyprbars
+   reloads config from `PLUGIN_INIT`, so a later `hyprpm reload` picks
+   the options up without a second hand reload.
+2. **`plugin loaded failed` / `ensureStateStoreExists: Failed to run a
+   superuser cmd`** — hyprpm keeps plugins under `/var/cache/hyprpm/$USER`
+   and uses pkexec to create that tree. Autostart cannot type a password,
+   so `hyprpm reload -n` is skipped until that directory exists. Run the
+   following **in a terminal** (polkit prompt) once per account:
 
 ```bash
 hyprpm add https://github.com/hyprwm/hyprland-plugins
@@ -167,7 +182,12 @@ hyprpm enable hyprbars
 hyprpm reload
 ```
 
-Settings → Windows (`windows.titlebar`) gates the plugin options in
+`modules/permissions.lua` allows `/usr/(bin|local/bin)/hyprpm` to load
+`.so` plugins. Permission rules apply only at compositor start — restart
+Hyprland after the first `hyprpm add`, then the session autostart reload
+will succeed.
+
+Settings → Windows (`windows.titlebar`) also gates the plugin options in
 `modules/titlebar.lua`. Fullscreen windows use `hyprbars:no_bar`. Qt apps
 set `QT_WAYLAND_DISABLE_WINDOWDECORATION=1` so they do not draw a second
 CSD under the SSD.

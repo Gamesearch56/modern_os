@@ -36,7 +36,9 @@
   "audio": {
     "output": "Ausgabe",
     "input": "Eingabe",
-    "applications": "Anwendungen"
+    "applications": "Anwendungen",
+    "noOutputs": "Keine Ausgabegeräte",
+    "noInputs": "Keine Eingabegeräte"
   },
   "network": {
     "disconnected": "Getrennt",
@@ -366,7 +368,8 @@
       "storageGated": "Snapshots liegen unter den abgeschotteten install/system-Helfern.",
       "gamingGated": "Kernel-Anpassungen liegen unter install/system und werden nicht automatisch angewendet.",
       "timeMerged": "Datums- und Zeitformate liegen unter Sprache & Region.",
-      "weatherLocation": "Leer nutzt IP-Standort. Oder Stadt, oder Breitengrad,Längengrad."
+      "weatherLocation": "Leer nutzt IP-Standort. Oder Stadt, oder Breitengrad,Längengrad.",
+      "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken."
     }
   },
   "onboarding": {
