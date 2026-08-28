@@ -25,6 +25,9 @@ live in their own singleton rather than the hand-written `Tokens.qml`
 Plus the full tonal palette (0–100 steps) per key color, for anything that
 needs a specific tone rather than a semantic role (e.g. a chart series).
 
+**Default profile:** `tonal-spot-dark` (less chroma on wide-gamut HDR).
+Expressive remains in Settings → Design.
+
 **Switchable variants** (matugen scheme types), selectable in Settings →
 Design: `Auto` (matches wallpaper mood), `Content`, `Expressive`,
 `Fidelity`, `Fruit Salad`, `Monochrome`, `Neutral`, `Rainbow`,

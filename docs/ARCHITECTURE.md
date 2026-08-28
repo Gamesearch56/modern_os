@@ -23,7 +23,8 @@ graph TD
 
 Two flows, deliberately kept separate: **colors** derive from the
 wallpaper and the active theme profile; **behaviour** derives from
-`config.json`. The Settings app writes JSON only, never Lua or QML —
+`config.json`. The Settings app is a Hyprland `FloatingWindow` (title
+`modern.settings`) and writes JSON only, never Lua or QML —
 `hyprland.lua` and the shell parse `config.json` at load/reload. This
 one rule is what makes a GUI monitor and keybind editor safe to build:
 there is no code generation step that can produce invalid Lua.

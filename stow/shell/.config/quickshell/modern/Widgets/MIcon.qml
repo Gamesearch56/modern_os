@@ -11,7 +11,7 @@ Item {
     id: root
 
     property string name: ""
-    property int size: Tokens.spacing.lg
+    property int size: Tokens.icon.md
     property color color: Colors.color.onSurface
     property bool tint: true
 

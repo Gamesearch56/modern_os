@@ -9,51 +9,76 @@ Scope {
     LazyLoader {
         active: Wallpaper.pickerOpen
 
-        PanelWindow {
+        FloatingWindow {
+            id: win
             visible: Wallpaper.pickerOpen
-            color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            title: "modern.wallpaper"
+            color: Colors.color.surface
+            implicitWidth: Tokens.spacing.xxl * 28
+            implicitHeight: Tokens.spacing.xxl * 20
 
-            MOverlay {
-                open: Wallpaper.pickerOpen
-                titleKey: "wallpaper.title"
-                actionKey: "wallpaper.add"
-                actionIcon: "list-add"
-                cardWidth: Tokens.spacing.xxl * 22
-                cardHeight: Tokens.spacing.xxl * 16
-                onClosed: Wallpaper.setPickerOpen(false)
-                onActionClicked: Wallpaper.importWallpaper()
+            onVisibleChanged: {
+                if (!visible)
+                    Wallpaper.setPickerOpen(false);
+            }
 
-                Item {
-                    GridView {
-                        id: grid
-                        visible: Wallpaper.images.length > 0
-                        anchors.fill: parent
-                        clip: true
-                        cellWidth: Tokens.spacing.xxl * 8
-                        cellHeight: Tokens.spacing.xxl * 6
-                        model: Wallpaper.images
-                        delegate: MImageTile {
-                            required property var modelData
-                            width: grid.cellWidth
-                            height: grid.cellHeight
-                            source: "file://" + modelData
-                            selected: modelData === Wallpaper.currentPath
-                            onClicked: Wallpaper.setWallpaper(modelData)
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Tokens.spacing.md
+                spacing: Tokens.spacing.sm
+
+                MWindowChrome {
+                    Layout.fillWidth: true
+                    titleKey: "wallpaper.title"
+                    actionKey: "wallpaper.add"
+                    actionIcon: "list-add"
+                    onClosed: Wallpaper.setPickerOpen(false)
+                    onActionClicked: Wallpaper.importWallpaper()
+                }
+
+                GridView {
+                    id: grid
+                    visible: Wallpaper.images.length > 0
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    cellWidth: Math.floor(width / 2)
+                    cellHeight: Tokens.spacing.xxl * 7
+                    model: Wallpaper.images
+                    currentIndex: 0
+                    keyNavigationWraps: true
+                    focus: true
+                    delegate: MImageTile {
+                        required property var modelData
+                        required property int index
+                        width: grid.cellWidth
+                        height: grid.cellHeight
+                        source: "file://" + modelData
+                        selected: grid.currentIndex === index
+                        onClicked: {
+                            grid.currentIndex = index;
+                            Wallpaper.setWallpaper(modelData);
                         }
                     }
 
-                    MEmptyState {
-                        visible: Wallpaper.images.length === 0
-                        anchors.fill: parent
-                        iconName: "folder-pictures-symbolic"
-                        titleKey: "wallpaper.empty"
+                    Keys.onReturnPressed: {
+                        const path = Wallpaper.images[grid.currentIndex];
+                        if (path)
+                            Wallpaper.setWallpaper(path);
                     }
+                    Keys.onEnterPressed: {
+                        const path = Wallpaper.images[grid.currentIndex];
+                        if (path)
+                            Wallpaper.setWallpaper(path);
+                    }
+                }
+
+                MEmptyState {
+                    visible: Wallpaper.images.length === 0
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    iconName: "folder-pictures-symbolic"
+                    titleKey: "wallpaper.empty"
                 }
             }
 

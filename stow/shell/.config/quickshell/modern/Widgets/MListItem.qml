@@ -1,6 +1,5 @@
-// One row in a list (launcher results, settings search, cheatsheet
-// shortcuts, device lists). Icon + title + optional subtitle + trailing
-// slot. Highlight follows keyboard focus, not just hover.
+// One row in a list. `variant` row uses tonal selected; nav uses a
+// filled primary pill so Settings sidebar matches Material You.
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"
@@ -9,6 +8,7 @@ Item {
     id: root
 
     property string iconName: ""
+    property string imageSource: ""
     property bool tintIcon: true
     property string titleKey: ""
     property string titleValue: ""
@@ -16,20 +16,34 @@ Item {
     property string subtitleValue: ""
     property bool selected: false
     property bool enabled: true
+    property string variant: "row"
 
     default property alias extra: trailing.data
 
     signal clicked()
     signal activated()
 
-    implicitHeight: Tokens.spacing.xxl + Tokens.spacing.md * 2
+    readonly property bool _nav: root.variant === "nav"
+    readonly property color _fg: {
+        if (!root.selected)
+            return Colors.color.onSurface;
+        return root._nav ? Chrome.navSelected.fg : Chrome.tonal.fg;
+    }
+
+    implicitHeight: root.imageSource.length > 0
+        ? Tokens.spacing.xxl * 2 + Tokens.spacing.md * 2
+        : Tokens.spacing.xxl + Tokens.spacing.md * 2
     implicitWidth: Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
 
     Rectangle {
         anchors.fill: parent
-        radius: Tokens.radius.small
-        color: root.selected ? Colors.color.primaryContainer : "transparent"
+        radius: root._nav ? Tokens.radius.full : Tokens.radius.small
+        color: {
+            if (root.selected)
+                return root._nav ? Chrome.navSelected.bg : Chrome.tonal.bg;
+            return "transparent";
+        }
 
         Behavior on color {
             ColorAnimation {
@@ -37,6 +51,18 @@ Item {
                 easing.bezierCurve: Motion.easingStandard
             }
         }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: root._nav ? Tokens.radius.full : Tokens.radius.small
+        color: Colors.color.primary
+        opacity: root.selected ? 0 : Chrome.stateLayer(hover.hovered, false)
+    }
+
+    HoverHandler {
+        id: hover
+        enabled: root.enabled
     }
 
     MouseArea {
@@ -52,16 +78,34 @@ Item {
         anchors.fill: parent
         anchors.leftMargin: Tokens.spacing.md
         anchors.rightMargin: Tokens.spacing.md
-        anchors.topMargin: Tokens.spacing.md
-        anchors.bottomMargin: Tokens.spacing.md
+        anchors.topMargin: Tokens.spacing.sm
+        anchors.bottomMargin: Tokens.spacing.sm
         spacing: Tokens.spacing.md
 
+        Rectangle {
+            visible: root.imageSource.length > 0
+            Layout.preferredWidth: Tokens.spacing.xxl * 2
+            Layout.preferredHeight: Tokens.spacing.xxl * 2
+            radius: Tokens.radius.small
+            color: Colors.color.surfaceContainerHighest
+            clip: true
+
+            Image {
+                anchors.fill: parent
+                source: root.imageSource
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                sourceSize.width: Tokens.spacing.xxl * 2
+                sourceSize.height: Tokens.spacing.xxl * 2
+            }
+        }
+
         MIcon {
-            visible: root.iconName.length > 0
+            visible: root.iconName.length > 0 && root.imageSource.length === 0
             name: root.iconName
-            size: Tokens.spacing.xl
+            size: Tokens.icon.md
             tint: root.tintIcon
-            color: root.selected ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+            color: root._fg
         }
 
         ColumnLayout {
@@ -72,7 +116,7 @@ Item {
                 key: root.titleKey
                 value: root.titleValue
                 styleName: "bodyLarge"
-                color: root.selected ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+                color: root._fg
                 Layout.fillWidth: true
             }
 

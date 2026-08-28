@@ -26,4 +26,7 @@ Text {
     wrapMode: Text.NoWrap
     elide: Text.ElideRight
     verticalAlignment: Text.AlignVCenter
+    renderType: Text.QtRendering
+    antialiasing: true
+    font.hintingPreference: Font.PreferNoHinting
 }

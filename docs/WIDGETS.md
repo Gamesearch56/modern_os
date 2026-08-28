@@ -25,12 +25,17 @@ directory plus an id in those arrays — no central switch.
 | `settings` | `bar.settings` | Notifications | Opens the control center (`Notifications.toggle`), not the Settings app |
 | `power` | `bar.power` | PowerMenu | Session power menu |
 
+| `ai` | `ai.title` | Ai | Assistant chat popup |
+| `connectivity` | `bar.connectivity` | Network, Bluetooth | Combined wifi + BT; click opens Settings |
+| `battery` | `bar.battery` | Battery | Shown only on battery |
+
 Default layout (islands) in `stow/modern/.config/modern/config.default.json`:
 
-- `bar.left`: `launcher`, `workspaces`, `media`, `taskbar`
-- `bar.center`: `clock`
-- `bar.right`: `network`, `bluetooth`, `audio`, `power`, `settings`
+- `bar.left`: `launcher`, `ai`, `workspaces`, `media`, `tray`
+- `bar.center`: `clock` (calendar popup)
+- `bar.right`: `weather`, `connectivity`, `audio`, `battery`, `settings`, `power`
 
-Network and Bluetooth open a bar `MPopup` (`widgets/<id>/Panel.qml`).
-Reorder in Settings → Widgets (or `config.json`); `BarWindow` pulls
-`taskbar` into its own island when it is present in any list.
+`bar.position` is `top` / `bottom` / `left` / `right`. Default height is 36.
+Wi-Fi and Bluetooth on the bar open Settings, not a popup. AI, weather, and
+clock use `MPopup`. Reorder in Settings → Widgets.
+

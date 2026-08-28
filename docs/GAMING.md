@@ -49,12 +49,15 @@ buggy userspace, not a free lunch. Default in `config.json` is
 Set per-game (Steam launch options) or in a wrapper — not globally in
 the session, because not every compositor/client is HDR-ready.
 
+Keep these as **launch options or Settings → Gaming / Displays**, never
+`~/.bashrc`. `env.lua` exports `PROTON_ENABLE_WAYLAND` / `ENABLE_HDR_WSI`
+only when `config.gaming.protonWayland` / `config.gaming.hdrSession` are
+true (off by default).
+
 ```
-# Vulkan / DXVK / Proton (keep as launch options, not ~/.bashrc)
 DXVK_HDR=1
 ENABLE_HDR_WSI=1
 PROTON_ENABLE_HDR=1
-# gamescope HDR (needs a gamescope session that supports it)
 # gamescope --hdr-enabled --hdr-debug-force-output -- %command%
 ```
 

@@ -47,4 +47,33 @@ Singleton {
         if (device)
             device.pair();
     }
+
+    function forgetDevice(device: var) {
+        if (!device)
+            return;
+        if (device.forget)
+            device.forget();
+        else if (root.adapter?.removeDevice)
+            root.adapter.removeDevice(device);
+    }
+
+    readonly property var connectedDevices: {
+        const out = [];
+        const list = root.devices?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].connected)
+                out.push(list[i]);
+        }
+        return out;
+    }
+
+    readonly property var availableDevices: {
+        const out = [];
+        const list = root.devices?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            if (!list[i].connected)
+                out.push(list[i]);
+        }
+        return out;
+    }
 }

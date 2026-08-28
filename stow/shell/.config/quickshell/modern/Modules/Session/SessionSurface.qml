@@ -54,15 +54,27 @@ Item {
         width: Math.min(parent.width - Tokens.spacing.xxl * 2, Tokens.spacing.xxl * 12)
         spacing: Tokens.spacing.xl
 
+        MAvatar {
+            Layout.alignment: Qt.AlignHCenter
+            size: Tokens.spacing.xxl * 3
+            source: User.faceUrl
+        }
+
         MText {
             Layout.alignment: Qt.AlignHCenter
-            value: root._time()
+            value: User.displayName
+            styleName: "titleMedium"
+        }
+
+        MText {
+            Layout.alignment: Qt.AlignHCenter
+            value: DateTime.formatTime(clock.date, Config.language.timeFormat || "HH:mm", false)
             styleName: "displayLarge"
         }
 
         MText {
             Layout.alignment: Qt.AlignHCenter
-            value: root._date()
+            value: DateTime.formatDate(clock.date, Config.language.dateFormat || "DD.MM.YYYY")
             styleName: "titleMedium"
             color: Colors.color.onSurfaceVariant
         }
@@ -75,6 +87,14 @@ Item {
             echoMode: TextInput.Password
             onAccepted: Session.authenticate(text)
             Component.onCompleted: forceActiveFocus()
+        }
+
+        MText {
+            visible: Session.lastError.length > 0
+            Layout.alignment: Qt.AlignHCenter
+            key: "session.authFailed"
+            styleName: "bodySmall"
+            color: Colors.color.error
         }
 
         MButton {
@@ -111,21 +131,4 @@ Item {
         }
     }
 
-    function _pad(n: int): string {
-        return n < 10 ? "0" + n : "" + n;
-    }
-
-    function _time(): string {
-        const d = clock.date;
-        if (!d)
-            return "";
-        return root._pad(d.getHours()) + ":" + root._pad(d.getMinutes());
-    }
-
-    function _date(): string {
-        const d = clock.date;
-        if (!d)
-            return "";
-        return root._pad(d.getDate()) + "." + root._pad(d.getMonth() + 1) + "." + d.getFullYear();
-    }
 }

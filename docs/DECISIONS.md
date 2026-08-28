@@ -260,6 +260,12 @@ wonder about the inherited `tr()` again) but is not fixing a real bug.
 
 **Rejected:** mapping all three buttons onto `primary` / `tertiary` / `error` (float would not read as “safe”), or drawing titlebars in Quickshell (fights the compositor; hyprbars is the SSD path).
 
+## 21. Settings and picker menus are Hyprland windows, not layer overlays
+
+**Decision:** Settings, wallpaper, cheatsheet, power menu, launcher, and overview are Quickshell `FloatingWindow`s with unique titles (`modern.settings`, …). Super+Q is `killactive` on those. The screenshot HUD, bar `MPopup`s, and Super+L control panel stay layer-shell. Lock stays on the power menu; Super+L is the control panel.
+
+**Rejected:** keeping Settings as an `MOverlay` PanelWindow (no compositor focus border, Super+Q had to special-case it), or faking a Hyprland highlight ring on layers.
+
 ## Open decisions
 
 - Whether `matugen` alone gives enough control over contrast/variant, or

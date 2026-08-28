@@ -18,15 +18,18 @@ ColumnLayout {
         from: 0
         to: Config.audio.masterVolumeLimit ?? 100
         value: Audio.volume
+        showValue: true
         onMoved: (v) => Audio.setVolume(v)
     }
 
     MText {
+        visible: Brightness.available
         key: "quickSettings.brightness"
         styleName: "labelMedium"
         color: Colors.color.onSurfaceVariant
     }
     MSlider {
+        visible: Brightness.available
         Layout.fillWidth: true
         enabled: Brightness.available
         from: 1

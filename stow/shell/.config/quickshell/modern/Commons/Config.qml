@@ -65,10 +65,10 @@ Singleton {
             }
 
             property JsonObject design: JsonObject {
-                property string activeProfile: "expressive-dark"
+                property string activeProfile: "tonal-spot-dark"
                 property real cornerRounding: 1.0
                 property real transparency: 0.85
-                property real surfaceTint: 1.0
+                property real surfaceTint: 0.7
                 property int blurStrength: 40
                 property string iconTheme: "Papirus-Dark"
                 property string cursorTheme: "Bibata-Modern-Classic"
@@ -93,14 +93,16 @@ Singleton {
             property JsonObject bar: JsonObject {
                 property string position: "top"
                 property string style: "floating"
-                property int height: 48
+                property int height: 36
+                property int edgeGap: 8
+                property int endGap: 8
                 property bool autoHide: false
                 property JsonObject perMonitor: JsonObject {
                     property bool enabled: true
                 }
-                property list<string> left: ["launcher", "workspaces", "media", "taskbar"]
+                property list<string> left: ["launcher", "ai", "workspaces", "media", "tray"]
                 property list<string> center: ["clock"]
-                property list<string> right: ["network", "bluetooth", "audio", "power", "settings"]
+                property list<string> right: ["weather", "connectivity", "audio", "battery", "settings", "power"]
             }
 
             // Per-widget settings blobs — shape varies per widget, each
@@ -109,19 +111,21 @@ Singleton {
                 clock: { dateFormat: "DD.MM.YYYY", timeFormat: "HH:mm", showSeconds: false, showWeekday: false },
                 weather: { locationMode: "auto", manualLocation: "", units: "metric" },
                 performance: { pollIntervalMs: 2000, showGpu: true, showTemps: true },
-                audio: { scrollStepPercent: 5, scrollStepFinePercent: 1 },
-                quickSettingsOrder: ["wifi", "bluetooth", "audio", "brightness", "dnd", "calendar"]
+                audio: { scrollStepPercent: 5, scrollStepFinePercent: 1 }
             })
 
             // Per-monitor profiles (keyed by "description + serial") and
             // workspace-assignment rules — see docs/ARCHITECTURE.md
             // "Monitors". Free-form since the key set is per-machine.
-            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "dynamic" })
+            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "fixed" })
 
             property var windowRules: []
 
             property JsonObject windows: JsonObject {
                 property bool titlebar: true
+                property real opacity: 1.0
+                property int gapsIn: 5
+                property int gapsOut: 10
             }
 
             property JsonObject apps: JsonObject {
@@ -182,7 +186,7 @@ Singleton {
                 property int masterVolumeLimit: 100
             }
 
-            property var network: ({ wifiAutoconnectPriority: ({}), dnsOverride: [] })
+            property var network: ({ wifiAutoconnectPriority: ({}), dnsOverride: [], mirrorCountry: "Germany" })
 
             property JsonObject kdeconnect: JsonObject {
                 property bool enabled: true
@@ -198,6 +202,8 @@ Singleton {
 
             property var gaming: ({
                 profiles: ({}),
+                protonWayland: false,
+                hdrSession: false,
                 systemFixes: { vmMaxMapCount: true, fileDescriptorLimits: true, splitLockMitigate: false },
                 optiscaler: { trackedGames: ({}) }
             })
@@ -215,12 +221,14 @@ Singleton {
             property var keybinds: ({
                 launcher: "SUPER + SPACE",
                 powerMenu: "SUPER + M",
+                controlCenter: "SUPER + L",
                 cheatsheet: "SUPER + K",
                 settings: "SUPER + I",
                 wallpaperPicker: "SUPER + W",
                 overview: "SUPER + TAB",
                 terminal: "SUPER + T",
                 browser: "SUPER + B",
+                browserIncognito: "SUPER + SHIFT + B",
                 fileManager: "SUPER + E",
                 spotify: "SUPER + R",
                 closeWindow: "SUPER + Q",
@@ -246,7 +254,7 @@ Singleton {
                 moveToWorkspace7: "SUPER + SHIFT + 7", moveToWorkspace8: "SUPER + SHIFT + 8",
                 moveToWorkspace9: "SUPER + SHIFT + 9", moveToWorkspace10: "SUPER + SHIFT + 0",
                 screenshotRegion: "PRINT",
-                screenshotWindow: "ALT + PRINT",
+                screenshotWindow: "SHIFT + PRINT",
                 screenshotFull: "SUPER + PRINT",
                 gameMode: "SUPER + G",
                 colorPicker: "SUPER + SHIFT + C",

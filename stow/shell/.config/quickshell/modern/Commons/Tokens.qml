@@ -57,6 +57,23 @@ Singleton {
         readonly property real lock: 0.48
     }
 
+    readonly property QtObject icon: QtObject {
+        readonly property real sm: 20
+        readonly property real md: 24
+        readonly property real lg: 40
+    }
+
+    readonly property QtObject interaction: QtObject {
+        readonly property real hover: 0.08
+        readonly property real press: 0.12
+        readonly property real focus: 0.12
+    }
+
+    readonly property QtObject slider: QtObject {
+        readonly property real trackHeight: 8
+        readonly property real thumb: 20
+    }
+
     function elevationFor(level: int): var {
         const raw = elevation[Math.max(0, Math.min(level, elevation.length - 1))];
         return {

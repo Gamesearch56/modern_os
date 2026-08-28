@@ -10,7 +10,7 @@ Singleton {
     id: root
 
     readonly property var players: Mpris.players
-    readonly property var active: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
+    readonly property var active: root._pickActive()
     readonly property bool hasPlayer: root.active !== null
     readonly property string identity: root.active?.identity ?? ""
     readonly property string trackTitle: root.active?.trackTitle ?? ""
@@ -75,5 +75,33 @@ Singleton {
     }
     function raise() {
         root.setActive(root.active);
+    }
+
+    function _pickActive(): var {
+        const vals = Mpris.players.values;
+        if (!vals || vals.length === 0)
+            return null;
+        let spotify = null;
+        let playingOther = null;
+        let playingAny = null;
+        for (let i = 0; i < vals.length; i++) {
+            const p = vals[i];
+            const ident = String(p.identity || p.dbusName || "").toLowerCase();
+            const isSpotify = ident.indexOf("spotify") !== -1;
+            if (isSpotify)
+                spotify = p;
+            const playing = !!p.isPlaying;
+            if (playing)
+                playingAny = p;
+            if (playing && !isSpotify)
+                playingOther = p;
+        }
+        if (playingOther)
+            return playingOther;
+        if (playingAny)
+            return playingAny;
+        if (spotify)
+            return spotify;
+        return vals[0];
     }
 }

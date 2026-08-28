@@ -17,6 +17,8 @@ Singleton {
         let id = section || "general";
         if (id === "time")
             id = "language";
+        if (id === "accounts")
+            id = "privacy";
         root.sectionId = id;
         root.subsectionId = subsection || "";
         root.open = true;

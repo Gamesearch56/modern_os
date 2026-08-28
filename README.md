@@ -21,25 +21,19 @@ desktop (with a rewind path, then a later clean cut): `docs/CUTOVER.md`.
 
 ## Status
 
-The shell, installer, token pipeline and Settings modules are in the
-repo and internally consistent (`scripts/lint-layers.sh`). They have
-**not** been lived as a daily session yet. Package installs are additive
-(pacman has no per-user scope). Everything that would change boot, login,
-or `/etc` lives under `install/system/` and is **never** applied by
-`install.sh`.
+The desktop is a daily Hyprland + Quickshell session: Material You widget
+kit, Settings as a real window, island bar (including vertical), compact
+control panel (Super+L), overlay menus as floating windows, tokenized
+GTK/Qt/Dolphin/Vivaldi/lock chrome. Verify with:
 
-| Milestone | Scope | Code |
-|---|---|---|
-| M0 | Bar, launcher, power menu, cheatsheet, Vivaldi, Cursor on `devuser` | present |
-| M1 | Lock/login/shutdown, Plymouth (gated), notifications, GTK/Qt/Vivaldi | present |
-| M2 | Wallpaper picker, media/performance/weather/VPN/notes widgets | present |
-| M3 | Settings app | present |
-| M4 | Gaming: OptiScaler, profiles, perf sysctls (gated) | present |
-| M5 | Watchdog, portals, IPC CLI, KDE Connect, backups, bootstrap, onboarding | present |
-| M6 | Personal layer, plugins, extras | present |
+```bash
+scripts/lint-layers.sh
+scripts/doctor.sh
+scripts/check-isolation.sh
+```
 
-Hand-check remaining items: `docs/TROUBLESHOOTING.md` and the milestone
-notes in `docs/DECISIONS.md`.
+System-wide boot/login/`/etc` files stay under `install/system/` and are
+**never** applied by `install.sh` or Settings.
 
 ## Safety — testing will not replace your current session
 

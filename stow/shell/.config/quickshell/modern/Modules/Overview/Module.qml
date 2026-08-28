@@ -10,25 +10,33 @@ Scope {
     LazyLoader {
         active: Overview.open
 
-        PanelWindow {
+        FloatingWindow {
             visible: Overview.open
-            color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            title: "modern.overview"
+            color: Colors.color.surface
+            implicitWidth: Tokens.spacing.xxl * 22
+            implicitHeight: Tokens.spacing.xxl * 16
 
-            MOverlay {
-                open: Overview.open
-                titleKey: "overview.title"
-                cardWidth: Tokens.spacing.xxl * 22
-                cardHeight: Tokens.spacing.xxl * 16
-                onClosed: Overview.hide()
+            onVisibleChanged: {
+                if (!visible)
+                    Overview.hide();
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Tokens.spacing.md
+                spacing: Tokens.spacing.md
+
+                MWindowChrome {
+                    Layout.fillWidth: true
+                    titleKey: "overview.title"
+                    onClosed: Overview.hide()
+                }
 
                 GridView {
                     id: grid
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                     clip: true
                     cellWidth: Tokens.spacing.xxl * 7
                     cellHeight: Tokens.spacing.xxl * 4

@@ -62,4 +62,19 @@ if [ -f "$TOKENS" ]; then
     cp "$TOKENS" "$SHARED/tokens.json"
 fi
 
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+EN="${XDG_CONFIG_HOME:-$HOME/.config}/modern/translations/en.json"
+DE="${XDG_CONFIG_HOME:-$HOME/.config}/modern/translations/de.json"
+if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    lang="$(jq -r '.language.ui // "en"' "$CFG")"
+    trans="$EN"
+    [ "$lang" = "de" ] && [ -f "$DE" ] && trans="$DE"
+    jq -n \
+        --argjson cfg "$(jq '{typography,design:{cornerRounding,transparency},language}' "$CFG")" \
+        --arg unlock "$(jq -r '.session.unlock // "Unlock"' "$trans")" \
+        --arg password "$(jq -r '.session.password // "Password"' "$trans")" \
+        '$cfg + {strings:{unlock:$unlock, password:$password}}' \
+        > "$SHARED/chrome.json" || warn "chrome.json skipped"
+fi
+
 log "synced to $SHARED"

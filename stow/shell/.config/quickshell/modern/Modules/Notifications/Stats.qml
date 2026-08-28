@@ -6,7 +6,7 @@ import "../../Services"
 
 RowLayout {
     Layout.fillWidth: true
-    spacing: Tokens.spacing.md
+    spacing: Tokens.spacing.sm
 
     MText {
         styleName: "labelSmall"
@@ -22,5 +22,16 @@ RowLayout {
         styleName: "labelSmall"
         Layout.fillWidth: true
         value: I18n.t("performance.disk") + " " + Math.round(SystemStats.diskPercent) + "%"
+    }
+    MText {
+        styleName: "labelSmall"
+        Layout.fillWidth: true
+        value: I18n.t("performance.gpu") + " " + Math.round(SystemStats.gpuPercent) + "%"
+    }
+    MText {
+        visible: SystemStats.fanRpm > 0
+        styleName: "labelSmall"
+        Layout.fillWidth: true
+        value: I18n.t("performance.fan") + " " + SystemStats.fanRpm
     }
 }

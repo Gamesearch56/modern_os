@@ -29,7 +29,7 @@
     "weight": 400
   },
   "design": {
-    "activeProfile": "expressive-dark",
+    "activeProfile": "tonal-spot-dark",
     "cornerRounding": 1.0,
     "transparency": 0.85,
     "blurStrength": 40,
@@ -43,7 +43,7 @@
       "wallpaperOnLogin": true,
       "wallpaperOnVivaldi": false
     },
-    "surfaceTint": 1.0
+    "surfaceTint": 0.7
   },
   "language": {
     "ui": "de",
@@ -55,26 +55,30 @@
   "bar": {
     "position": "top",
     "style": "floating",
-    "height": 48,
+    "height": 36,
+    "edgeGap": 8,
+    "endGap": 8,
     "autoHide": false,
     "perMonitor": {
       "enabled": true
     },
     "left": [
       "launcher",
+      "ai",
       "workspaces",
       "media",
-      "taskbar"
+      "tray"
     ],
     "center": [
       "clock"
     ],
     "right": [
-      "network",
-      "bluetooth",
+      "weather",
+      "connectivity",
       "audio",
-      "power",
-      "settings"
+      "battery",
+      "settings",
+      "power"
     ]
   },
   "widgets": {
@@ -117,7 +121,7 @@
   "monitors": {
     "profiles": {},
     "rules": [],
-    "workspaceMode": "dynamic"
+    "workspaceMode": "fixed"
   },
   "windowRules": [
     {
@@ -197,7 +201,8 @@
   },
   "network": {
     "wifiAutoconnectPriority": {},
-    "dnsOverride": []
+    "dnsOverride": [],
+    "mirrorCountry": "Germany"
   },
   "kdeconnect": {
     "enabled": true,
@@ -216,6 +221,8 @@
   },
   "gaming": {
     "profiles": {},
+    "protonWayland": false,
+    "hdrSession": false,
     "systemFixes": {
       "vmMaxMapCount": true,
       "fileDescriptorLimits": true,
@@ -234,6 +241,7 @@
     "_comment": "Combo strings use Hyprland's Lua hl.bind() format: 'MOD + MOD + KEY', matching docs.hypr.land's 0.55+ Lua examples (e.g. 'SUPER + SHIFT + T'). This is the table Settings > Keyboard's shortcut editor and Modules/Cheatsheet both read.",
     "launcher": "SUPER + SPACE",
     "powerMenu": "SUPER + M",
+    "controlCenter": "SUPER + L",
     "exitSession": "SUPER + SHIFT + M",
     "cheatsheet": "SUPER + K",
     "settings": "SUPER + I",
@@ -241,6 +249,7 @@
     "overview": "SUPER + TAB",
     "terminal": "SUPER + T",
     "browser": "SUPER + B",
+    "browserIncognito": "SUPER + SHIFT + B",
     "fileManager": "SUPER + E",
     "spotify": "SUPER + R",
     "closeWindow": "SUPER + Q",
@@ -277,7 +286,7 @@
     "moveToWorkspace9": "SUPER + SHIFT + 9",
     "moveToWorkspace10": "SUPER + SHIFT + 0",
     "screenshotRegion": "PRINT",
-    "screenshotWindow": "ALT + PRINT",
+    "screenshotWindow": "SHIFT + PRINT",
     "screenshotFull": "SUPER + PRINT",
     "gameMode": "SUPER + G",
     "colorPicker": "SUPER + SHIFT + C",
@@ -292,6 +301,9 @@
     }
   },
   "windows": {
-    "titlebar": true
+    "titlebar": true,
+    "opacity": 1.0,
+    "gapsIn": 5,
+    "gapsOut": 10
   }
 }

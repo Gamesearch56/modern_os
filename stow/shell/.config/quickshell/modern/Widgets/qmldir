@@ -17,6 +17,8 @@ MSectionHeader 1.0 MSectionHeader.qml
 MHint 1.0 MHint.qml
 MField 1.0 MField.qml
 MSelect 1.0 MSelect.qml
+MMultiSelect 1.0 MMultiSelect.qml
+MSegmented 1.0 MSegmented.qml
 MCheckbox 1.0 MCheckbox.qml
 MSearchField 1.0 MSearchField.qml
 MKeycap 1.0 MKeycap.qml
@@ -25,3 +27,5 @@ MEmptyState 1.0 MEmptyState.qml
 MDivider 1.0 MDivider.qml
 MImageTile 1.0 MImageTile.qml
 MAvatar 1.0 MAvatar.qml
+MWindowChrome 1.0 MWindowChrome.qml
+MTextArea 1.0 MTextArea.qml

@@ -9,9 +9,9 @@ QtObject {
         "general", "users", "power",
         "design", "displays", "windows",
         "widgets", "launcher", "screenshots",
-        "applications", "accounts", "privacy",
+        "applications", "privacy",
         "language", "keyboard",
-        "audio", "network",
+        "audio", "network", "bluetooth",
         "storage", "system", "gaming"
     ]
 
@@ -71,22 +71,22 @@ QtObject {
     readonly property var _byId: ({
         general: { icon: "preferences-system", order: 10, group: "session", keywords: ["idle", "autologin", "animation"] },
         users: { icon: "user-group-new", order: 15, group: "session", keywords: ["accounts", "passwd"] },
-        power: { icon: "system-shutdown", order: 18, group: "session", keywords: ["lid", "suspend"] },
-        design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "tint", "transparency"] },
-        displays: { icon: "video-display", order: 25, group: "appearance", keywords: ["monitors", "workspace"] },
-        windows: { icon: "preferences-system-windows", order: 28, group: "appearance", keywords: ["titlebar", "rules"] },
+        power: { icon: "battery", order: 18, group: "session", keywords: ["lid", "suspend", "energy"] },
+        design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "tint", "transparency", "type"] },
+        displays: { icon: "video-display", order: 25, group: "appearance", keywords: ["monitors", "workspace", "hdr", "scale"] },
+        windows: { icon: "preferences-system-windows", order: 28, group: "appearance", keywords: ["titlebar", "rules", "gaps"] },
         widgets: { icon: "view-grid", order: 30, group: "desktop", keywords: ["bar", "layout"] },
-        launcher: { icon: "view-app-grid-symbolic", order: 32, group: "desktop", keywords: ["frecency"] },
+        launcher: { icon: "view-app-grid-symbolic", order: 32, group: "desktop", keywords: ["frecency", "search"] },
         screenshots: { icon: "camera-photo", order: 34, group: "desktop", keywords: ["capture", "grim"] },
         applications: { icon: "applications-other", order: 40, group: "apps", keywords: ["autostart", "browser", "calendar"] },
-        accounts: { icon: "system-users", order: 42, group: "apps", keywords: ["proton", "calendar", "ai"] },
-        privacy: { icon: "security-high", order: 44, group: "apps", keywords: ["dnd", "kdeconnect"] },
+        privacy: { icon: "security-high", order: 44, group: "apps", keywords: ["dnd", "kdeconnect", "proton", "calendar", "ai"] },
         language: { icon: "preferences-desktop-locale", order: 50, group: "input", keywords: ["locale", "date", "time"] },
-        keyboard: { icon: "input-keyboard", order: 52, group: "input", keywords: ["keybinds", "layout"] },
-        audio: { icon: "audio-volume-high", order: 60, group: "devices", keywords: ["volume", "bluetooth", "speakers", "headphones", "output"] },
-        network: { icon: "network-wireless", order: 62, group: "devices", keywords: ["wifi", "dns"] },
-        storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["backup", "snapper"] },
-        system: { icon: "computer", order: 72, group: "system", keywords: ["diagnostics"] },
-        gaming: { icon: "input-gaming", order: 74, group: "system", keywords: ["optiscaler"] }
+        keyboard: { icon: "input-keyboard", order: 52, group: "input", keywords: ["keybinds", "layout", "cheatsheet"] },
+        audio: { icon: "audio-volume-high", order: 60, group: "devices", keywords: ["volume", "speakers", "headphones", "output"] },
+        network: { icon: "network-wireless", order: 62, group: "devices", keywords: ["wifi", "dns", "mirrors"] },
+        bluetooth: { icon: "bluetooth", order: 64, group: "devices", keywords: ["devices", "pair"] },
+        storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["backup", "snapper", "disk"] },
+        system: { icon: "computer", order: 72, group: "system", keywords: ["diagnostics", "update", "kernel"] },
+        gaming: { icon: "input-gaming", order: 74, group: "system", keywords: ["optiscaler", "proton", "hdr"] }
     })
 }

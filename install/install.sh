@@ -123,7 +123,7 @@ fi
 # ---------------------------------------------------------------------------
 log_phase "Phase 4/5: stow dotfiles -> $TARGET"
 
-stow_packages=(hypr shell theme kitty dolphin gtk qt bash git modern systemd xdg fastfetch)
+stow_packages=(hypr shell theme kitty dolphin gtk qt bash git modern systemd xdg fastfetch fontconfig)
 for pkg in "${stow_packages[@]}"; do
     stow_package "$pkg" "$TARGET"
 done

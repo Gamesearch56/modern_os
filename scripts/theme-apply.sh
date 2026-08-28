@@ -203,6 +203,21 @@ roundness = ${hypr_round}
 border_width = 1
 reduce_motion = ${reduce_motion}
 EOF
+
+    local gtkcss
+    for gtkcss in \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/gtk.css" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0/gtk.css"; do
+        if [ -f "$gtkcss" ]; then
+            sed -i "s|@RADIUS_MD@|${md}|g" "$gtkcss" || true
+        fi
+    done
+
+    if command -v papirus-folders >/dev/null 2>&1; then
+        papirus-folders -C paleorange --theme Papirus-Dark >/dev/null 2>&1 \
+            || papirus-folders -C orange --theme Papirus-Dark >/dev/null 2>&1 \
+            || true
+    fi
 }
 
 usage() { grep '^#' "$0" | cut -c3- | head -n26; }

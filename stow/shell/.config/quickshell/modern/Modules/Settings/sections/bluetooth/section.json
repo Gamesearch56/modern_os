@@ -1,0 +1,7 @@
+{
+  "id": "bluetooth",
+  "icon": "bluetooth",
+  "key": "settings.sections.bluetooth",
+  "order": 165,
+  "keywords": ["devices", "pair", "bluez"]
+}

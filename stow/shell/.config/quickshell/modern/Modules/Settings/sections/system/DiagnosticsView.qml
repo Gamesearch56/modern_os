@@ -1,5 +1,3 @@
-// Boot/journal snapshot embed. Sets Diagnostics.watching so the Service
-// timer runs only while this view is in the tree (Settings > System).
 import QtQuick
 import QtQuick.Layouts
 import "../../../../Commons"
@@ -14,30 +12,51 @@ ColumnLayout {
     Component.onDestruction: Diagnostics.watching = false
 
     MText {
-        key: "diagnostics.bootTime"
+        key: "diagnostics.hardware"
         styleName: "titleSmall"
         Layout.fillWidth: true
     }
-
     MText {
-        value: Diagnostics.bootSeconds
+        value: Diagnostics.hardware
         styleName: "bodyMedium"
-        familyRole: "monospace"
         wrapMode: Text.Wrap
         elide: Text.ElideNone
         Layout.fillWidth: true
     }
 
     MText {
-        key: "diagnostics.journalErrors"
+        key: "diagnostics.software"
         styleName: "titleSmall"
+        Layout.fillWidth: true
+    }
+    MText {
+        value: Diagnostics.software
+        styleName: "bodyMedium"
+        wrapMode: Text.Wrap
+        elide: Text.ElideNone
         Layout.fillWidth: true
     }
 
     MText {
-        value: Diagnostics.journalErrors
+        key: "diagnostics.bootTime"
+        styleName: "titleSmall"
+        Layout.fillWidth: true
+    }
+    Rectangle {
+        Layout.fillWidth: true
+        height: Tokens.spacing.sm
+        radius: Tokens.radius.full
+        color: Colors.color.surfaceContainerHighest
+        Rectangle {
+            width: parent.width * Diagnostics.bootChart
+            height: parent.height
+            radius: parent.radius
+            color: Colors.color.primary
+        }
+    }
+    MText {
+        value: Diagnostics.bootSeconds
         styleName: "bodySmall"
-        familyRole: "monospace"
         wrapMode: Text.Wrap
         elide: Text.ElideNone
         Layout.fillWidth: true

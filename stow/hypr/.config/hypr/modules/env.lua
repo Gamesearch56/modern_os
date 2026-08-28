@@ -19,3 +19,13 @@ hl.env("HYPRCURSOR_SIZE", tostring(config.value("design.cursorSize", 24)))
 local home = os.getenv("HOME") or ""
 local path = os.getenv("PATH") or "/usr/bin"
 hl.env("PATH", home .. "/modern_dotfile/scripts:" .. home .. "/.local/bin:" .. path)
+
+-- Gaming / HDR session flags stay off unless Settings writes them.
+-- Never export these from bashrc (docs/GAMING.md).
+if config.value("gaming.protonWayland", false) then
+    hl.env("PROTON_ENABLE_WAYLAND", "1")
+end
+if config.value("gaming.hdrSession", false) then
+    hl.env("ENABLE_HDR_WSI", "1")
+    hl.env("DXVK_HDR", "1")
+end

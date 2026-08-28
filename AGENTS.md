@@ -10,7 +10,8 @@ A from-scratch Material Design 3 desktop environment for Hyprland: a
 Quickshell (QML) shell replaces Waybar/SwayNC/Rofi, `matugen` replaces
 Wallust for colors, and everything behavioural lives in one JSON config
 file instead of scattered shell scripts. Full plan: `docs/ARCHITECTURE.md`.
-Status and milestones: `README.md`.
+Status: `README.md`. Settings is a Hyprland window (`modern.settings`);
+it still writes `config.json` only.
 
 ## The layer contract
 

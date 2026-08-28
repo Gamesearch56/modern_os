@@ -17,12 +17,21 @@ ColumnLayout {
             onToggled: (v) => ConfigWrite.set("launcher.frecencyEnabled", v)
         }
     }
+    MListItem {
+        Layout.fillWidth: true
+        titleKey: "settings.fields.showIcons"
+        MSwitch {
+            checked: Config.launcher.showIcons
+            onToggled: (v) => ConfigWrite.set("launcher.showIcons", v)
+        }
+    }
     MField {
         labelKey: "settings.fields.launcherResults"
         MSlider {
             from: 4
             to: 20
             value: model.resultCount
+            showValue: true
             onMoved: (v) => ConfigWrite.set("launcher.resultCount", Math.round(v))
         }
     }

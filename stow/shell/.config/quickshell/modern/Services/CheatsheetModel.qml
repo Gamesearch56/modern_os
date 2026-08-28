@@ -11,6 +11,7 @@ Singleton {
 
     readonly property var categoryOf: ({
         launcher: "applications", terminal: "applications", browser: "applications",
+        browserIncognito: "applications",
         fileManager: "applications", settings: "applications", wallpaperPicker: "applications",
         overview: "applications", spotify: "applications",
         closeWindow: "windowManagement", fullscreen: "windowManagement",
@@ -31,7 +32,7 @@ Singleton {
         moveToWorkspace9: "workspaces", moveToWorkspace10: "workspaces",
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
         screenshotFull: "screenshots", colorPicker: "screenshots",
-        cheatsheet: "system", powerMenu: "system", exitSession: "system",
+        cheatsheet: "system", powerMenu: "system", controlCenter: "system", exitSession: "system",
         gameMode: "system", clipboardHistory: "utilities"
     })
 

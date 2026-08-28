@@ -10,11 +10,13 @@ Item {
 
     property bool open: false
     property string titleKey: ""
+    property string titleValue: ""
     property string bodyKey: ""
     property var bodyParams: ({})
     property string confirmKey: "powerMenu.confirmTitle"
     property string cancelKey: "powerMenu.cancel"
     property bool destructive: false
+    default property alias extra: extraCol.data
 
     signal confirmed()
     signal cancelled()
@@ -70,6 +72,7 @@ Item {
 
             MText {
                 key: root.titleKey
+                value: root.titleValue
                 styleName: "headlineSmall"
                 Layout.fillWidth: true
             }
@@ -80,6 +83,12 @@ Item {
                 styleName: "bodyMedium"
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
+            }
+
+            ColumnLayout {
+                id: extraCol
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.sm
             }
 
             RowLayout {

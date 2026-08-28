@@ -1,6 +1,4 @@
-// Boot and journal snapshot for Settings > System. Owns systemd-analyze
-// and journalctl; the view only binds properties. The timer runs only
-// while a consumer sets `watching` (the diagnostics embed is visible).
+// Boot snapshot and machine identity for Settings > System.
 pragma Singleton
 
 import Quickshell
@@ -13,11 +11,14 @@ Singleton {
 
     property bool watching: false
     property string bootSeconds: ""
-    property string journalErrors: ""
+    property real bootChart: 0
+    property string hardware: ""
+    property string software: ""
 
     function refresh() {
         bootProc.running = true;
-        journalProc.running = true;
+        hwProc.running = true;
+        swProc.running = true;
     }
 
     onWatchingChanged: {
@@ -30,7 +31,11 @@ Singleton {
         command: ["systemd-analyze"]
         running: false
         stdout: StdioCollector {
-            onStreamFinished: root.bootSeconds = this.text.trim()
+            onStreamFinished: {
+                root.bootSeconds = this.text.trim();
+                const m = this.text.match(/([0-9.]+)s/);
+                root.bootChart = m ? Math.min(1, Number(m[1]) / 30) : 0;
+            }
         }
         stderr: StdioCollector {
             onStreamFinished: {
@@ -41,24 +46,20 @@ Singleton {
     }
 
     Process {
-        id: journalProc
-        command: ["journalctl", "-p", "err", "-b", "-n", "30", "--no-pager"]
+        id: hwProc
+        command: ["sh", "-c", "lscpu 2>/dev/null | awk -F: '/Model name/{print $2; exit}'; echo; cat /sys/class/dmi/id/product_name 2>/dev/null; echo; free -h | awk 'NR==2{print}'"]
         running: false
         stdout: StdioCollector {
-            onStreamFinished: root.journalErrors = this.text.trim()
-        }
-        stderr: StdioCollector {
-            onStreamFinished: {
-                if (root.journalErrors.length === 0 && this.text.trim().length > 0)
-                    root.journalErrors = this.text.trim();
-            }
+            onStreamFinished: root.hardware = this.text.trim()
         }
     }
 
-    Timer {
-        interval: Config.widgets.performance?.pollIntervalMs ?? 2000
-        running: root.watching
-        repeat: true
-        onTriggered: root.refresh()
+    Process {
+        id: swProc
+        command: ["sh", "-c", ". /etc/os-release; echo \"$PRETTY_NAME\"; uname -r; command -v hyprland >/dev/null && hyprland --version 2>/dev/null | head -1"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: root.software = this.text.trim()
+        }
     }
 }

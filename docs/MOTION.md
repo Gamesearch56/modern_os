@@ -103,6 +103,10 @@ hl.animation({ leaf = "fade", enabled = true, speed = tokens.durationShortMs / 1
 hl.animation({ leaf = "border", enabled = true, speed = tokens.durationShortMs / 100, bezier = "standard" })
 ```
 
+Overlay menus (control panel, bar popups) use `Motion.overlay*` and
+`motion.scale` from Settings → Design. Hyprland window open/close uses
+the same tokens in `animations.lua`.
+
 `modules/motion_tokens.lua` is hand-kept in sync with the numeric
 constants in `Commons/Motion.qml`'s source — a comment pointer in both
 files rather than a build step, since the values change rarely and a

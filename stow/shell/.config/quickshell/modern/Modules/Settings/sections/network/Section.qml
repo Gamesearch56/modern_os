@@ -6,7 +6,11 @@ import "../../../../Services"
 import "."
 
 ColumnLayout {
+    id: root
     spacing: Tokens.spacing.md
+
+    Component.onCompleted: Network.watching = true
+    Component.onDestruction: Network.watching = false
 
     MSectionHeader { key: "bar.network" }
     MListItem {
@@ -28,23 +32,32 @@ ColumnLayout {
         }
     }
 
-    MSectionHeader { key: "bar.bluetooth" }
-    MListItem {
+    MSectionHeader { key: "settings.fields.bitrate" }
+    MText {
+        value: Network.rxMbps.toFixed(1) + " / " + Network.txMbps.toFixed(1) + " Mbps"
+        styleName: "labelLarge"
+    }
+    Row {
         Layout.fillWidth: true
-        titleKey: "settings.fields.bluetoothPower"
-        MSwitch {
-            checked: Bluetooth.powered
-            onToggled: (v) => Bluetooth.setPowered(v)
+        spacing: 2
+        Repeater {
+            model: Network.bitrateSamples
+            Rectangle {
+                required property var modelData
+                width: Tokens.spacing.xs
+                height: Math.max(Tokens.spacing.xs, Math.min(Tokens.spacing.xxl, Number(modelData) * Tokens.spacing.md))
+                radius: Tokens.radius.full
+                color: Colors.color.primary
+                anchors.bottom: parent.bottom
+            }
         }
     }
-    Repeater {
-        model: Bluetooth.devices?.values ?? []
-        MListItem {
-            required property var modelData
-            Layout.fillWidth: true
-            titleValue: modelData.name || ""
-            selected: !!modelData.connected
-            onClicked: modelData.connected ? Bluetooth.disconnectDevice(modelData) : Bluetooth.connectDevice(modelData)
+
+    MField {
+        labelKey: "settings.fields.mirrorCountry"
+        MTextField {
+            text: Config.network?.mirrorCountry || "Germany"
+            onAccepted: ConfigWrite.set("network.mirrorCountry", text)
         }
     }
 }

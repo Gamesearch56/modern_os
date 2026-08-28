@@ -1,4 +1,4 @@
-// Settings app. Lazy-loaded when Services/Settings.open.
+// Settings as a Hyprland toplevel. Super+Q closes it as killactive.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -12,70 +12,83 @@ Scope {
     LazyLoader {
         active: Settings.open
 
-        PanelWindow {
+        FloatingWindow {
             id: win
             visible: Settings.open
-            color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            title: "modern.settings"
+            color: Colors.color.surface
+            implicitWidth: Tokens.spacing.xxl * 32 + Tokens.spacing.lg
+            implicitHeight: Tokens.spacing.xxl * 22 + Tokens.spacing.lg
 
-            MOverlay {
-                open: Settings.open
-                titleKey: "settings.title"
-                cardWidth: Tokens.spacing.xxl * 28
-                cardHeight: Tokens.spacing.xxl * 20
-                onClosed: Settings.close()
+            onVisibleChanged: {
+                if (!visible)
+                    Settings.close();
+            }
 
-                ColumnLayout {
+            Rectangle {
+                anchors.fill: parent
+                color: Colors.color.surface
+                radius: Tokens.radius.medium
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Tokens.spacing.md
+                spacing: Tokens.spacing.md
+
+                RowLayout {
+                    Layout.fillWidth: true
                     spacing: Tokens.spacing.md
 
-                    MSearchField {
-                        id: search
-                        Layout.fillWidth: true
-                        placeholderKey: "settings.search"
+                    ColumnLayout {
+                        Layout.preferredWidth: Tokens.spacing.xxl * 8
+                        spacing: Tokens.spacing.xs
+
+                        MText {
+                            key: "settings.title"
+                            styleName: "headlineSmall"
+                        }
+
+                        MText {
+                            value: User.displayName
+                            styleName: "bodySmall"
+                            color: Colors.color.onSurfaceVariant
+                        }
                     }
 
-                    RowLayout {
+                    Item { Layout.fillWidth: true }
+
+                    MIconButton {
+                        close: true
+                        iconName: "window-close"
+                        onClicked: Settings.close()
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: Tokens.spacing.lg
+
+                    Rectangle {
+                        Layout.preferredWidth: Tokens.spacing.xxl * 9
+                        Layout.fillHeight: true
+                        radius: Tokens.radius.medium
+                        color: Colors.color.surfaceContainer
+
+                        Nav {
+                            anchors.fill: parent
+                            anchors.margins: Tokens.spacing.sm
+                            catalog: catalog
+                        }
+                    }
+
+                    ColumnLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         spacing: Tokens.spacing.md
 
-                        ListView {
-                            id: nav
-                            Layout.preferredWidth: Tokens.spacing.xxl * 8
-                            Layout.fillHeight: true
-                            clip: true
-                            model: catalog.filtered(search.text)
-                            spacing: Tokens.spacing.xxs
-                            delegate: Item {
-                                required property var modelData
-                                width: nav.width
-                                height: modelData.kind === "group" ? Tokens.spacing.xl : implicitHeight
-                                implicitHeight: modelData.kind === "group" ? Tokens.spacing.xl : itemRow.implicitHeight
-
-                                MText {
-                                    visible: modelData.kind === "group"
-                                    anchors.fill: parent
-                                    key: modelData.key
-                                    styleName: "labelSmall"
-                                    color: Colors.color.onSurfaceVariant
-                                }
-
-                                MListItem {
-                                    id: itemRow
-                                    visible: modelData.kind === "item"
-                                    width: nav.width
-                                    iconName: catalog.icon(modelData.id)
-                                    titleKey: "settings.sections." + modelData.id
-                                    selected: Settings.sectionId === modelData.id
-                                    onClicked: Settings.openAt(modelData.id, "")
-                                }
-                            }
-                        }
+                        PageHeader { catalog: catalog }
 
                         Flickable {
                             id: pane

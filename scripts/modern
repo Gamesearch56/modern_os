@@ -1,20 +1,30 @@
 #!/usr/bin/env bash
 # Drive the running Quickshell session from scripts and Hyprland
-# keybinds. Thin wrapper over `qs ipc` so muscle-memory `modern launcher
-# toggle` stays stable if the IPC target names ever move.
+# keybinds. Maintenance commands (update/cleanup/pkg/mirrors/repair)
+# live here too — i18n from translations/*.json, sudo stays explicit.
 set -euo pipefail
 
-usage() {
-    cat <<'EOF'
-Usage: modern <target> <function> [args...]
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=../install/lib/i18n.sh
+source "$REPO_ROOT/install/lib/i18n.sh"
 
-Examples:
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    I18N_LANG="$(jq -r '.language.ui // "en"' "$CFG")"
+    [ "$I18N_LANG" = "de" ] || I18N_LANG="en"
+fi
+
+usage() {
+    cat <<EOF
+$(t cli.usage)
+
   modern launcher toggle
-  modern powermenu toggle
-  modern cheatsheet toggle
-  modern settings open
-  modern volume up
-  modern shell reload
+  modern update
+  modern cleanup
+  modern pkg find [q]
+  modern mirrors
+  modern repair
   modern window close
   modern config set motion.scale 1.2
 EOF
@@ -32,7 +42,73 @@ ipc() {
     exec qs -c modern ipc call "$@"
 }
 
+cfg() {
+    local path="$1" default="$2"
+    if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+        jq -r --arg p "$path" --arg d "$default" 'getpath($p | split(".")) // $d' "$CFG"
+    else
+        printf '%s\n' "$default"
+    fi
+}
+
 case "$TARGET" in
+    update)
+        if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
+            if ! command -v snapper >/dev/null 2>&1; then
+                t cli.snapperMissing >&2
+                echo "docs/BACKUP.md" >&2
+                exit 1
+            fi
+            if ! snapper list-configs >/dev/null 2>&1; then
+                t cli.snapperUnconfigured >&2
+                echo "docs/BACKUP.md" >&2
+                exit 1
+            fi
+            t cli.snapshotting
+            sudo snapper -c root create -d "modern update" || {
+                t cli.snapshotFailed >&2
+                exit 1
+            }
+        fi
+        exec yay -Syu
+        ;;
+    cleanup)
+        yay -Yc
+        paccache -r
+        ;;
+    pkg)
+        SUB="${1:-find}"
+        shift || true
+        case "$SUB" in
+            find)
+                pacman -Q | grep -i -- "${1:-.}" || true
+                ;;
+            load)
+                exec yay -S --needed -- "$@"
+                ;;
+            unload)
+                exec yay -Rns -- "$@"
+                ;;
+            *)
+                echo "$(t cli.unknown) pkg $SUB" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    mirrors)
+        country="$(cfg network.mirrorCountry Germany)"
+        t cli.mirrors "$country"
+        exec sudo reflector --country "$country" --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+        ;;
+    repair)
+        t cli.repairReset
+        systemctl reset-failed || true
+        t cli.repairScrub
+        sudo btrfs scrub start -B / || true
+        t cli.repairDmesg
+        dmesg -T 2>/dev/null | grep -Ei 'corrupt|unmount|I/O error' | tail -n 20 || true
+        t cli.repairFsck
+        ;;
     volume)
         ACTION="${1:-up}"
         case "$ACTION" in
@@ -77,7 +153,6 @@ case "$TARGET" in
         shift || true
         case "$SUB" in
             set)
-                SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
                 exec "$SCRIPT_DIR/config-set.sh" "$@"
                 ;;
             *)
@@ -95,7 +170,6 @@ case "$TARGET" in
         if qs -c modern ipc call screenshot "$MODE" >/dev/null 2>&1; then
             exit 0
         fi
-        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         exec "$SCRIPT_DIR/screenshot.sh" "$MODE"
         ;;
     *)

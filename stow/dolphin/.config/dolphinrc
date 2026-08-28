@@ -1,8 +1,26 @@
 [General]
 Version=202
 MenuBar=Disabled
-ShowFullPathInTitlebar=true
+ShowFullPathInTitlebar=false
+ShowStatusBar=true
+ViewProps_Icons=1
+ViewProps_PreviewSize=96
+
+[MainWindow]
+ToolBarsMovable=Disabled
 
 [KFileDialog Settings]
 Places Icons Auto-resize=false
-Places Icons Static Size=22
+Places Icons Static Size=24
+
+[PlacesPanel]
+IconSize=24
+
+[InformationPanel]
+Visible=false
+
+[FoldersPanel]
+Visible=false
+
+[TerminalPanel]
+Visible=false

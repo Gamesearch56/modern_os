@@ -12,6 +12,7 @@ ColumnLayout {
     property string hintKey: ""
     property string hintValue: ""
     property string styleName: "titleSmall"
+    property bool caps: false
 
     spacing: Tokens.spacing.xs
     Layout.fillWidth: true
@@ -20,7 +21,8 @@ ColumnLayout {
         key: root.key
         value: root.value
         styleName: root.styleName
-        color: Colors.color.onSurface
+        color: Colors.color.onSurfaceVariant
+        font.capitalization: root.caps ? Font.AllUppercase : Font.MixedCase
         Layout.fillWidth: true
         Layout.topMargin: Tokens.spacing.md
     }

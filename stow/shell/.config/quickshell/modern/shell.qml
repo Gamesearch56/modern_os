@@ -37,43 +37,25 @@ ShellRoot {
         target: "shell"
         function reload() { Quickshell.reload(true); }
         // SUPER+Q is a Hyprland bind (it never reaches QML Shortcuts).
-        // Return "true" when an overlay ate the close so killactive is skipped.
+        // Return "true" when a layer HUD/popup/control panel ate the close.
         function dismiss(): string {
             let closed = false;
             if (Screenshot.hudOpen) {
                 Screenshot.cancelHud();
                 closed = true;
             }
-            if (Settings.open) {
-                Settings.close();
+            if (Popups.dismiss())
                 closed = true;
-            }
-            if (Wallpaper.pickerOpen) {
-                Wallpaper.setPickerOpen(false);
-                closed = true;
-            }
             if (Plugins.open) {
                 Plugins.hide();
                 closed = true;
             }
-            if (Cheatsheet.open) {
-                Cheatsheet.hide();
-                closed = true;
-            }
-            if (PowerMenu.open) {
-                PowerMenu.hide();
-                closed = true;
-            }
-            if (Overview.open) {
-                Overview.hide();
-                closed = true;
-            }
-            if (Launcher.open) {
-                Launcher.hide();
-                closed = true;
-            }
             if (Notifications.panelOpen) {
                 Notifications.hide();
+                closed = true;
+            }
+            if (Alarm.dialogOpen) {
+                Alarm.dialogOpen = false;
                 closed = true;
             }
             return closed ? "true" : "false";

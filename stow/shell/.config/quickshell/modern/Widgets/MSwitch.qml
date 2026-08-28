@@ -1,5 +1,4 @@
-// MD3 switch. Stateless: `checked` in, `toggled(bool)` out. Track and
-// thumb colors come from Tokens/Colors; travel uses the snappy spring.
+// MD3 switch. Track filled primary when on; thumb travels with snappy spring.
 import QtQuick
 import "../Commons"
 
@@ -11,8 +10,8 @@ Item {
 
     signal toggled(bool value)
 
-    implicitWidth: Tokens.spacing.xxl + Tokens.spacing.lg
-    implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
+    implicitWidth: Tokens.spacing.xxl + Tokens.spacing.xl
+    implicitHeight: Tokens.spacing.xl + Tokens.spacing.sm
     opacity: root.enabled ? 1 : 0.38
 
     Rectangle {
@@ -21,7 +20,7 @@ Item {
         radius: Tokens.radius.full
         color: root.checked ? Colors.color.primary : Colors.color.surfaceVariant
         border.color: root.checked ? Colors.color.primary : Colors.color.outline
-        border.width: 2
+        border.width: root.checked ? 0 : 2
 
         Behavior on color {
             ColorAnimation {
@@ -33,8 +32,8 @@ Item {
 
     Rectangle {
         id: thumb
-        width: Tokens.spacing.lg
-        height: Tokens.spacing.lg
+        width: Tokens.icon.sm
+        height: Tokens.icon.sm
         radius: Tokens.radius.full
         color: root.checked ? Colors.color.onPrimary : Colors.color.outline
         anchors.verticalCenter: parent.verticalCenter

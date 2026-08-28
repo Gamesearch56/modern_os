@@ -34,6 +34,7 @@ Item {
         id: card
         anchors.fill: parent
         level: root.elevation
+        opacity: Config.design.transparency ?? 0.85
         borderWidth: popupHover.hovered ? 2 : 1
         borderColor: popupHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
 

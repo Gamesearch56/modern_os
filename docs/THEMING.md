@@ -26,8 +26,12 @@ matugen -c ~/.config/matugen/config.toml ...
         ├─▶ qt6ct/qss/modern.qss                  (Fusion stylesheet)
         ├─▶ hypr/application-style.conf           (hyprland-qt-support radii)
         └─▶ vivaldi/custom_css/00-modern.css
-            + 01-chrome.css (fonts/radii/wallpaper)
+            + 01-chrome.css (fonts/radii)
 ```
+
+Do **not** mix `design.transparency` into Vivaldi `#browser` — glass is
+for the island bar. Enable CSS mods once at `vivaldi://experiments`.
+
 
 Every *color* output in that list is written by **one** `matugen`
 invocation from **one** seed color, so nothing can drift out of sync the

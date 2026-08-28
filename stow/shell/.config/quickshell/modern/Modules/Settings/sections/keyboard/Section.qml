@@ -10,37 +10,21 @@ ColumnLayout {
     Model { id: sectionModel }
 
     MSectionHeader { key: "settings.fields.kbLayout" }
-    RowLayout {
-        spacing: Tokens.spacing.sm
-        MChip {
-            key: "settings.kbDe"
-            checked: sectionModel.kbLayout === "de"
-            onClicked: ConfigWrite.set("input.kbLayout", "de")
-        }
-        MChip {
-            key: "settings.kbUs"
-            checked: sectionModel.kbLayout === "us"
-            onClicked: ConfigWrite.set("input.kbLayout", "us")
-        }
+    MSegmented {
+        Layout.fillWidth: true
+        value: sectionModel.kbLayout
+        model: [
+            { value: "de", titleKey: "settings.kbDe" },
+            { value: "us", titleKey: "settings.kbUs" }
+        ]
+        onSelected: (v) => ConfigWrite.set("input.kbLayout", v)
     }
 
-    MSectionHeader { key: "settings.fields.keybinds" }
-    Repeater {
-        model: sectionModel.rows
-        MListItem {
-            required property var modelData
-            Layout.fillWidth: true
-            titleKey: "cheatsheet.action." + modelData.action
-            Row {
-                spacing: Tokens.spacing.xs
-                Repeater {
-                    model: String(modelData.combo).split(" + ")
-                    MKeycap {
-                        required property string modelData
-                        value: modelData
-                    }
-                }
-            }
-        }
+    MButton {
+        kind: "filled"
+        key: "settings.openCheatsheet"
+        iconName: "input-keyboard"
+        onClicked: Cheatsheet.toggle()
     }
+    MHint { key: "settings.hints.cheatsheetBind"; Layout.fillWidth: true }
 }

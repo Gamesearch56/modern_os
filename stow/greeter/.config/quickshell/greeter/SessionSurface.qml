@@ -26,6 +26,24 @@ Item {
         scrim: "#000000"
     })
 
+    property var chrome: ({ strings: { unlock: "Unlock", password: "Password" }, typography: { ui: "Inter", scale: 1 } })
+
+    FileView {
+        path: "/var/lib/modern/session/chrome.json"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                const data = JSON.parse(text());
+                if (data)
+                    root.chrome = data;
+            } catch (e) {
+                /* keep fallback */
+            }
+        }
+    }
+
     FileView {
         path: "/var/lib/modern/session/tokens.json"
         watchChanges: true
@@ -67,7 +85,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: root.color.scrim
-        opacity: 0.48
+        opacity: 0.32
     }
 
     ColumnLayout {
@@ -148,10 +166,11 @@ Item {
     }
 
     function _t(key: string): string {
+        const s = root.chrome?.strings || ({});
         if (key === "session.unlock")
-            return "Unlock";
+            return s.unlock || "Unlock";
         if (key === "session.password")
-            return "Password";
+            return s.password || "Password";
         return key;
     }
 

@@ -1,5 +1,5 @@
-// Filter/choice chip. Pill-shaped, checkable. Used by Design's theme
-// variant row and the cheatsheet category tabs.
+// Filter chip. Selected is outlined (primary stroke) rather than filled
+// grey, so it does not compete with nav pills.
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"
@@ -21,11 +21,11 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.full
-        color: root.checked ? Colors.color.primaryContainer : Colors.color.surfaceContainerHigh
-        border.color: root.checked ? Colors.color.primaryContainer : Colors.color.outlineVariant
-        border.width: 1
+        color: root.checked ? "transparent" : Colors.color.surfaceContainerHigh
+        border.color: root.checked ? Colors.color.primary : Colors.color.outlineVariant
+        border.width: root.checked ? 2 : 1
 
-        Behavior on color {
+        Behavior on border.color {
             ColorAnimation {
                 duration: Motion.short()
                 easing.bezierCurve: Motion.easingStandard
@@ -42,7 +42,7 @@ Item {
             key: root.key
             params: root.params
             styleName: "labelLarge"
-            color: root.checked ? Colors.color.onPrimaryContainer : Colors.color.onSurfaceVariant
+            color: root.checked ? Colors.color.primary : Colors.color.onSurfaceVariant
         }
     }
 

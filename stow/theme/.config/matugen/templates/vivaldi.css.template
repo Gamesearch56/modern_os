@@ -20,16 +20,25 @@
 
 #browser,
 #header,
+.toolbar-mainbar,
 .toolbar,
 .tabbar,
+.bookmark-bar,
 .newtab-page,
 #vivaldi-start-page {
-    background-color: color-mix(in srgb, var(--md-surface) var(--md-transparency, 85%), transparent) !important;
+    background-color: var(--md-surface) !important;
     color: var(--md-on-surface) !important;
-    background-image: var(--md-wallpaper, none);
-    background-size: cover;
-    background-position: center;
-    backdrop-filter: blur(var(--md-blur, 24px));
+}
+
+.tab,
+.tab-position {
+    background-color: {{colors.surface_container.default.hex}} !important;
+    color: var(--md-on-surface) !important;
+}
+
+.tab:hover,
+.tab-position:hover {
+    background-color: color-mix(in srgb, var(--md-primary) 8%, {{colors.surface_container.default.hex}}) !important;
 }
 
 .tab.active,
@@ -41,12 +50,23 @@
 
 .UrlBar-AddressField,
 .addressfield {
+    background-color: {{colors.surface_container_highest.default.hex}} !important;
     border-radius: var(--md-radius-full, 9999px) !important;
     padding: var(--md-space-sm, 8px) var(--md-space-md, 12px) !important;
 }
 
 .UrlBar-AddressField:focus-within {
     outline: 2px solid var(--md-primary) !important;
+}
+
+.panel {
+    background-color: {{colors.surface_container.default.hex}} !important;
+}
+
+.button-toolbar,
+.toolbar-mainbar button {
+    width: 24px;
+    height: 24px;
 }
 
 .startpage .speeddial,

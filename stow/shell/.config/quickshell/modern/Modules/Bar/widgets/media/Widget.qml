@@ -22,6 +22,11 @@ Item {
             source: Media.trackArtUrl
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Media.raise()
+            }
         }
 
         MText {

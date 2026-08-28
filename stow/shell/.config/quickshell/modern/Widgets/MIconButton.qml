@@ -1,6 +1,4 @@
-// Circular icon-only button. Used for bar launcher/settings/power and
-// transport controls. `checked` paints with primaryContainer so toggles
-// (mute, shuffle) share one primitive with click-to-fire buttons.
+// Circular icon-only button. Hover fades a primary state-layer.
 import QtQuick
 import "../Commons"
 
@@ -12,6 +10,7 @@ Item {
     property bool checked: false
     property bool enabled: true
     property int size: Tokens.spacing.xxl
+    property bool close: false
 
     signal clicked()
     signal middleClicked()
@@ -22,11 +21,19 @@ Item {
     implicitHeight: root.size
     opacity: root.enabled ? 1 : 0.38
 
+    readonly property color _iconColor: {
+        if (root.close)
+            return Colors.color.error;
+        if (root.checked)
+            return Colors.color.onPrimaryContainer;
+        return Colors.color.onSurface;
+    }
+
     Rectangle {
         id: bg
         anchors.fill: parent
         radius: Tokens.radius.full
-        color: root.checked ? Colors.color.primaryContainer : "transparent"
+        color: root.checked ? Chrome.tonal.bg : "transparent"
 
         Behavior on color {
             ColorAnimation {
@@ -36,14 +43,34 @@ Item {
         }
     }
 
+    Rectangle {
+        anchors.fill: parent
+        radius: Tokens.radius.full
+        color: root.close ? Colors.color.error : Colors.color.primary
+        opacity: Chrome.stateLayer(hover.hovered, ma.pressed)
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Motion.short()
+                easing.bezierCurve: Motion.easingStandard
+            }
+        }
+    }
+
+    HoverHandler {
+        id: hover
+        enabled: root.enabled
+    }
+
     MIcon {
         anchors.centerIn: parent
         name: root.iconName
-        size: Math.round(root.size * 0.55)
-        color: root.checked ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+        size: Tokens.icon.sm
+        color: root._iconColor
     }
 
     MouseArea {
+        id: ma
         anchors.fill: parent
         enabled: root.enabled
         hoverEnabled: true
@@ -58,15 +85,5 @@ Item {
                 root.clicked();
         }
         onWheel: (w) => root.wheel(w.angleDelta.y > 0 ? 1 : -1)
-        onPressed: bg.scale = 0.92
-        onReleased: bg.scale = 1
-        onCanceled: bg.scale = 1
-    }
-
-    Behavior on scale {
-        SpringAnimation {
-            spring: Motion.springSnappy.spring
-            damping: Motion.springSnappy.damping
-        }
     }
 }

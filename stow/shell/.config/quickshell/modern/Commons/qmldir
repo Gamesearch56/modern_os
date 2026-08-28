@@ -3,6 +3,7 @@ singleton Config 1.0 Config.qml
 singleton Colors 1.0 Colors.qml
 singleton Motion 1.0 Motion.qml
 singleton Tokens 1.0 Tokens.qml
+singleton Chrome 1.0 Chrome.qml
 singleton Typography 1.0 Typography.qml
 singleton I18n 1.0 I18n.qml
 singleton Logger 1.0 Logger.qml

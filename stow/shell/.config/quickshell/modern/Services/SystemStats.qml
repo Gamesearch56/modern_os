@@ -18,12 +18,13 @@ Singleton {
     property real cpuTemp: 0
     property real gpuTemp: 0
     property real diskPercent: 0
+    property int fanRpm: 0
 
     property var _prev: ({ idle: 0, total: 0 })
 
     Process {
         id: proc
-        command: ["sh", "-c", "grep -m1 '^cpu ' /proc/stat; awk '/MemTotal/{t=$2}/MemAvailable/{a=$2} END{print t,a}' /proc/meminfo; df -P -k / | awk 'NR==2{print $2,$3}'"]
+        command: ["sh", "-c", "grep -m1 '^cpu ' /proc/stat; awk '/MemTotal/{t=$2}/MemAvailable/{a=$2} END{print t,a}' /proc/meminfo; df -P -k / | awk 'NR==2{print $2,$3}'; (cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null || nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null || echo 0) | head -1; (cat /sys/class/hwmon/hwmon*/fan*_input 2>/dev/null || echo 0) | awk 'NR==1{print $1+0}'"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parse(this.text)
@@ -61,6 +62,12 @@ Singleton {
             const du = Number(disk[1]);
             if (dt > 0)
                 root.diskPercent = 100 * (du / dt);
+            const gpu = Number((lines[3] ?? "").trim().split(/\s+/)[0]);
+            if (!isNaN(gpu))
+                root.gpuPercent = gpu;
+            const fan = Number((lines[4] ?? "").trim());
+            if (!isNaN(fan))
+                root.fanRpm = fan;
         } catch (e) {
             Logger.warn("SystemStats", String(e));
         }

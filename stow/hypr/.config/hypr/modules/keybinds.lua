@@ -22,12 +22,23 @@ local function app_cmd(role, fallback)
     return hl.dsp.exec_cmd("gtk-launch " .. id)
 end
 
+local function browser_incognito()
+    local id = config.value("apps.defaults.browser", "vivaldi-stable.desktop") or "vivaldi-stable.desktop"
+    local bin = tostring(id):gsub("%.desktop$", "")
+    return hl.dsp.exec_cmd(bin .. " --incognito")
+end
+
+local function move_ws(n)
+    return hl.dsp.exec_cmd("hyprctl dispatch movetoworkspace " .. tostring(n))
+end
+
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
 -- Named config `modern` is ~/.config/quickshell/modern. Bare `qs ipc`
 -- looks for a `default` instance that this desktop never starts.
 local bindings = {
     launcher = hl.dsp.exec_cmd("qs -c modern ipc call launcher toggle"),
     powerMenu = hl.dsp.exec_cmd("qs -c modern ipc call powermenu toggle"),
+    controlCenter = hl.dsp.exec_cmd("qs -c modern ipc call notifications toggle"),
     cheatsheet = hl.dsp.exec_cmd("qs -c modern ipc call cheatsheet toggle"),
     settings = hl.dsp.exec_cmd("qs -c modern ipc call settings open"),
     wallpaperPicker = hl.dsp.exec_cmd("qs -c modern ipc call wallpaper pick"),
@@ -35,11 +46,11 @@ local bindings = {
     exitSession = hl.dsp.exit(),
     terminal = app_cmd("terminal", "kitty.desktop"),
     browser = app_cmd("browser", "vivaldi-stable.desktop"),
+    browserIncognito = browser_incognito(),
     fileManager = app_cmd("fileManager", "org.kde.dolphin.desktop"),
     spotify = hl.dsp.exec_cmd("spotify-launcher"),
-    -- Overlays (Settings, launcher, …) are layer-shell, not toplevels.
-    -- killactive would close the window behind them; modern window close
-    -- dismisses an open overlay first, then killactive.
+    -- killactive would close the window behind layer-shell HUD/popups.
+    -- modern window close dismisses those first, then killactive.
     closeWindow = hl.dsp.exec_cmd(modern .. " window close"),
     fullscreen = hl.dsp.window.fullscreen(),
     toggleFloating = hl.dsp.window.float({ action = "toggle" }),
@@ -66,16 +77,16 @@ local bindings = {
     workspace8 = hl.dsp.focus({ workspace = 8 }),
     workspace9 = hl.dsp.focus({ workspace = 9 }),
     workspace10 = hl.dsp.focus({ workspace = 10 }),
-    moveToWorkspace1 = hl.dsp.window.move({ workspace = 1 }),
-    moveToWorkspace2 = hl.dsp.window.move({ workspace = 2 }),
-    moveToWorkspace3 = hl.dsp.window.move({ workspace = 3 }),
-    moveToWorkspace4 = hl.dsp.window.move({ workspace = 4 }),
-    moveToWorkspace5 = hl.dsp.window.move({ workspace = 5 }),
-    moveToWorkspace6 = hl.dsp.window.move({ workspace = 6 }),
-    moveToWorkspace7 = hl.dsp.window.move({ workspace = 7 }),
-    moveToWorkspace8 = hl.dsp.window.move({ workspace = 8 }),
-    moveToWorkspace9 = hl.dsp.window.move({ workspace = 9 }),
-    moveToWorkspace10 = hl.dsp.window.move({ workspace = 10 }),
+    moveToWorkspace1 = move_ws(1),
+    moveToWorkspace2 = move_ws(2),
+    moveToWorkspace3 = move_ws(3),
+    moveToWorkspace4 = move_ws(4),
+    moveToWorkspace5 = move_ws(5),
+    moveToWorkspace6 = move_ws(6),
+    moveToWorkspace7 = move_ws(7),
+    moveToWorkspace8 = move_ws(8),
+    moveToWorkspace9 = move_ws(9),
+    moveToWorkspace10 = move_ws(10),
     screenshotRegion = hl.dsp.exec_cmd(modern .. " screenshot region"),
     screenshotWindow = hl.dsp.exec_cmd(modern .. " screenshot window"),
     screenshotFull = hl.dsp.exec_cmd(modern .. " screenshot full"),
@@ -91,21 +102,45 @@ for action, dispatcher in pairs(bindings) do
     end
 end
 
+-- German: Shift+1 is "!" so SUPER+SHIFT+1 may miss the number row.
+-- Physical keycodes 10–19 are the same on de/us.
+local layout = tostring(config.value("input.kbLayout", "us") or "us")
+if layout == "de" or layout:find("^de,") or layout:find(",de") then
+    for n = 1, 9 do
+        hl.bind("SUPER + code:" .. tostring(9 + n), hl.dsp.focus({ workspace = n }))
+        hl.bind("SUPER + SHIFT + code:" .. tostring(9 + n), move_ws(n))
+    end
+    hl.bind("SUPER + code:19", hl.dsp.focus({ workspace = 10 }))
+    hl.bind("SUPER + SHIFT + code:19", move_ws(10))
+end
+
 -- Power menu (SUPER+M) needs the shell. This always ends the compositor.
 if not combo("exitSession") then
     hl.bind("SUPER + SHIFT + M", hl.dsp.exit())
 end
 
+-- Mouse: drag / resize / workspace on this monitor. Not in the editor.
+if hl.dsp.window and hl.dsp.window.drag then
+    hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true })
+end
+if hl.dsp.window and hl.dsp.window.resize then
+    hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
+end
+hl.bind("SUPER + mouse_down", hl.dsp.exec_cmd("hyprctl dispatch workspace m-1"), { mouse = true })
+hl.bind("SUPER + mouse_up", hl.dsp.exec_cmd("hyprctl dispatch workspace m+1"), { mouse = true })
+
 -- Media/backlight keys are hardware-fixed X11 keysyms, not user-remapped
 -- via the shortcut editor, so they're bound directly rather than through
 -- config.json — matching the ArchWiki's documented pattern.
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { repeating = true })
-hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
-hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
-hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"))
-hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"))
-hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"))
-hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"))
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl s +5%"))
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl s 5%-"))
+local locked = { repeating = true, locked = true }
+local locked_once = { locked = true }
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), locked)
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), locked)
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), locked_once)
+hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), locked_once)
+hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), locked_once)
+hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), locked_once)
+hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), locked_once)
+hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), locked_once)
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl s +5%"), locked)
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl s 5%-"), locked)

@@ -49,7 +49,7 @@ tmpfiles.d drop-in when that phase is applied). Per-user state stays in
 
 | Surface | Owner | Notes |
 |---------|--------|------|
-| Plymouth splash | gated theme + mkinitcpio hook | never rewrite initramfs from `install.sh` |
+| Plymouth splash | gated theme + mkinitcpio hook | `plymouth-sync.sh` draws a primary progress bar on surface; never rewrite initramfs from `install.sh` |
 | greetd greeter | `stow/greeter` Quickshell | shares Session module with the shell |
 | lock screen | `Modules/Session` + `WlSessionLock` | `Power.lock` → `loginctl lock-session` |
 

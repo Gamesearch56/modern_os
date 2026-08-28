@@ -9,59 +9,30 @@ ColumnLayout {
     spacing: Tokens.spacing.md
     Model { id: model }
 
-    MSectionHeader { key: "audio.output" }
-    Repeater {
-        model: Audio.sinks
-        MListItem {
-            required property var modelData
-            Layout.fillWidth: true
-            iconName: "audio-volume-high"
-            titleValue: Audio.nodeLabel(modelData)
-            selected: Audio.sink && modelData.id === Audio.sink.id
-            onClicked: Audio.setDefaultSink(modelData)
-        }
-    }
-    MText {
-        visible: Audio.sinks.length === 0
-        key: "audio.noOutputs"
-        styleName: "bodyMedium"
-        color: Colors.color.onSurfaceVariant
-    }
-    MSlider {
-        Layout.fillWidth: true
-        from: 0
-        to: Config.audio.masterVolumeLimit ?? 100
-        value: Audio.volume
-        onMoved: (v) => Audio.setVolume(v)
+    function _sinkModel(): var {
+        const out = [];
+        const list = Audio.sinks;
+        for (let i = 0; i < list.length; i++)
+            out.push({ value: String(list[i].id), titleValue: Audio.nodeLabel(list[i]) });
+        return out;
     }
 
-    MSectionHeader { key: "audio.input" }
-    Repeater {
-        model: Audio.sources
-        MListItem {
-            required property var modelData
-            Layout.fillWidth: true
-            iconName: "audio-input-microphone"
-            titleValue: Audio.nodeLabel(modelData)
-            selected: Audio.source && modelData.id === Audio.source.id
-            onClicked: Audio.setDefaultSource(modelData)
-        }
-    }
-    MText {
-        visible: Audio.sources.length === 0
-        key: "audio.noInputs"
-        styleName: "bodyMedium"
-        color: Colors.color.onSurfaceVariant
-    }
-    MSlider {
-        Layout.fillWidth: true
-        from: 0
-        to: 100
-        value: Audio.sourceVolume
-        onMoved: (v) => Audio.setSourceVolume(v)
+    function _sourceModel(): var {
+        const out = [];
+        const list = Audio.sources;
+        for (let i = 0; i < list.length; i++)
+            out.push({ value: String(list[i].id), titleValue: Audio.nodeLabel(list[i]) });
+        return out;
     }
 
-    MHint { key: "settings.hints.audioDevices"; Layout.fillWidth: true }
+    function _find(id) {
+        const list = Audio.trackedNodes;
+        for (let i = 0; i < list.length; i++) {
+            if (String(list[i].id) === String(id))
+                return list[i];
+        }
+        return null;
+    }
 
     MSectionHeader { key: "settings.fields.masterVolumeLimit" }
     MSlider {
@@ -69,14 +40,40 @@ ColumnLayout {
         from: 10
         to: 150
         value: model.masterVolumeLimit
+        showValue: true
         onMoved: (v) => ConfigWrite.set("audio.masterVolumeLimit", Math.round(v))
     }
 
-    MSectionHeader { key: "settings.fields.autoSwitchBluetooth" }
-    RowLayout {
-        spacing: Tokens.spacing.sm
-        MChip { key: "settings.btAsk"; checked: model.autoSwitchBluetooth === "ask"; onClicked: ConfigWrite.set("audio.autoSwitchBluetooth", "ask") }
-        MChip { key: "settings.btOn"; checked: model.autoSwitchBluetooth === "on"; onClicked: ConfigWrite.set("audio.autoSwitchBluetooth", "on") }
-        MChip { key: "settings.btOff"; checked: model.autoSwitchBluetooth === "off"; onClicked: ConfigWrite.set("audio.autoSwitchBluetooth", "off") }
+    MSectionHeader { key: "audio.output" }
+    MSelect {
+        Layout.fillWidth: true
+        value: Audio.sink ? String(Audio.sink.id) : ""
+        model: _sinkModel()
+        placeholderKey: "audio.noOutputs"
+        onSelected: (v) => Audio.setDefaultSink(_find(v))
+    }
+    MSlider {
+        Layout.fillWidth: true
+        from: 0
+        to: Config.audio.masterVolumeLimit ?? 100
+        value: Audio.volume
+        showValue: true
+        onMoved: (v) => Audio.setVolume(v)
+    }
+
+    MSectionHeader { key: "audio.input" }
+    MSelect {
+        Layout.fillWidth: true
+        value: Audio.source ? String(Audio.source.id) : ""
+        model: _sourceModel()
+        placeholderKey: "audio.noInputs"
+        onSelected: (v) => Audio.setDefaultSource(_find(v))
+    }
+    MSlider {
+        Layout.fillWidth: true
+        from: 0
+        to: 100
+        value: Audio.sourceVolume
+        onMoved: (v) => Audio.setSourceVolume(v)
     }
 }

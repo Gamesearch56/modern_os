@@ -20,7 +20,10 @@
     "soundSettings": "Klangeinstellungen",
     "kdeconnect": "KDE Connect",
     "notes": "Notizen",
-    "mail": "Mail"
+    "mail": "Mail",
+    "connectivity": "Netzwerk und Bluetooth",
+    "battery": "Akku",
+    "ai": "Assistent"
   },
   "media": {
     "notPlaying": "Keine Wiedergabe",
@@ -53,7 +56,10 @@
     "connected": "{count} verbunden"
   },
   "weather": {
-    "unavailable": "Wetter nicht verfügbar"
+    "unavailable": "Wetter nicht verfügbar",
+    "detailTitle": "Wetter",
+    "condition": "Aktuelle Lage",
+    "refresh": "Aktualisieren"
   },
   "vpn": {
     "disconnected": "VPN aus",
@@ -63,7 +69,8 @@
     "cpu": "CPU",
     "ram": "RAM",
     "gpu": "GPU",
-    "disk": "Disk"
+    "disk": "Disk",
+    "fan": "Lüfter"
   },
   "notes": {
     "title": "Notizen",
@@ -72,18 +79,42 @@
   },
   "calendar": {
     "title": "Kalender",
-    "today": "Heute"
+    "today": "Heute",
+    "empty": "Keine anstehenden Termine",
+    "open": "Kalender öffnen"
   },
   "mail": {
     "open": "Mail öffnen"
   },
   "ai": {
     "title": "Assistent",
-    "placeholder": "Frag etwas..."
+    "placeholder": "Frag etwas...",
+    "you": "Du",
+    "assistant": "Assistent"
   },
   "session": {
     "unlock": "Entsperren",
-    "password": "Passwort"
+    "password": "Passwort",
+    "authFailed": "Entsperren fehlgeschlagen"
+  },
+  "alarm": {
+    "title": "Wecker",
+    "running": "Wecker läuft",
+    "start": "Start",
+    "fired": "Wecker"
+  },
+  "cli": {
+    "usage": "Aufruf: modern <Befehl>",
+    "snapperMissing": "snapper ist nicht installiert. Siehe docs/BACKUP.md",
+    "snapperUnconfigured": "snapper hat keine Configs. Siehe docs/BACKUP.md",
+    "snapshotting": "Erstelle Snapper-Snapshot…",
+    "snapshotFailed": "Snapper-Snapshot fehlgeschlagen",
+    "mirrors": "Aktualisiere Pacman-Spiegel für %s (sudo)…",
+    "repairReset": "Setze fehlgeschlagene systemd-Units zurück…",
+    "repairScrub": "Starte btrfs scrub auf / (sudo)…",
+    "repairDmesg": "Aktuelle I/O- / Corrupt- / Unmount-Meldungen:",
+    "repairFsck": "FAT/ESP-Check: ESP aushängen, dann fsck.vfat -a /dev/disk/by-label/ESP (docs/TROUBLESHOOTING.md).",
+    "unknown": "unbekanntes Unterkommando"
   },
   "wallpaper": {
     "title": "Hintergründe",
@@ -112,7 +143,8 @@
   },
   "diagnostics": {
     "bootTime": "Startzeit",
-    "journalErrors": "Journal-Fehler"
+    "hardware": "Hardware",
+    "software": "Software"
   },
   "users": {
     "title": "Benutzer"
@@ -194,7 +226,9 @@
       "screenshotFull": "Ganzen Bildschirm aufnehmen",
       "gameMode": "Spielmodus",
       "colorPicker": "Farbwähler",
-      "clipboardHistory": "Zwischenablage"
+      "clipboardHistory": "Zwischenablage",
+      "controlCenter": "Kontrollzentrum",
+      "browserIncognito": "Browser (Inkognito)"
     },
     "category": {
       "applications": "Anwendungen",
@@ -217,6 +251,21 @@
     "refresh": "Aktualisieren",
     "noResults": "Keine passenden Einstellungen",
     "loadError": "Dieser Abschnitt konnte nicht geladen werden. Siehe qs -c modern log.",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "themeCreate": "Neues Thema",
+    "themeName": "Name (Buchstaben, Zahlen, Bindestriche)",
+    "themeCreated": "Thema gespeichert",
+    "systemUpdate": "System aktualisieren",
+    "openCheatsheet": "Tastatur-Übersicht öffnen",
+    "typePreview": "Schriftvorschau",
+    "typePreviewBody": "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.",
+    "barTop": "Oben",
+    "barBottom": "Unten",
+    "barLeft": "Links",
+    "barRight": "Rechts",
+    "barFloating": "Schwebend",
+    "barAttached": "Angehängt",
     "on": "An",
     "off": "Aus",
     "cliNote": "Änderungen laufen über ConfigWrite → modern config set (jq). Nur diese App schreibt config.json.",
@@ -296,7 +345,25 @@
       "weatherLocation": "Wetterstandort",
       "openEditor": "Editor nach Aufnahme öffnen",
       "includeCursor": "Cursor einschließen",
-      "vmMaxMapCount": "vm.max_map_count erhöhen"
+      "vmMaxMapCount": "vm.max_map_count erhöhen",
+      "typeScale": "Schriftgröße",
+      "barPosition": "Leistenposition",
+      "barStyle": "Leistenstil",
+      "barHeight": "Leistenhöhe",
+      "edgeGap": "Randabstand",
+      "endGap": "Endabstand",
+      "gaps": "Fensterabstände",
+      "gapsIn": "Innere Abstände",
+      "gapsOut": "Äußere Abstände",
+      "windowOpacity": "Fensterdeckkraft",
+      "scale": "Skalierung",
+      "hdr": "HDR",
+      "vrr": "Variable Bildwiederholung",
+      "bitrate": "Bitrate",
+      "mirrorCountry": "Spiegel-Land",
+      "showIcons": "Symbole anzeigen",
+      "protonWayland": "Proton Wayland",
+      "hdrSession": "Sitzungs-HDR"
     },
     "sections": {
       "general": "Allgemein",
@@ -314,11 +381,12 @@
       "widgets": "Widgets",
       "launcher": "Starter",
       "power": "Energie",
-      "screenshots": "Bildschirmfotos und Aufnahme",
+      "screenshots": "Bildschirmfotos",
       "users": "Benutzer",
       "storage": "Speicher",
       "system": "System",
-      "gaming": "Gaming"
+      "gaming": "Gaming",
+      "bluetooth": "Bluetooth"
     },
     "addAutostart": "Autostart-App hinzufügen",
     "motionOff": "Aus",
@@ -369,7 +437,33 @@
       "gamingGated": "Kernel-Anpassungen liegen unter install/system und werden nicht automatisch angewendet.",
       "timeMerged": "Datums- und Zeitformate liegen unter Sprache & Region.",
       "weatherLocation": "Leer nutzt IP-Standort. Oder Stadt, oder Breitengrad,Längengrad.",
-      "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken."
+      "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken.",
+      "hyprbarsOn": "hyprbars-Plugin ist geladen.",
+      "hyprbarsOff": "hyprbars ist nicht geladen. scripts/doctor.sh und hyprpm prüfen.",
+      "windowRulesJson": "JSON-Array der Hyprland-Fensterregeln. Speichern prüft vor dem Schreiben.",
+      "cheatsheetBind": "Öffnet die Übersicht (Super+K)."
+    },
+    "hub": {
+      "title": "Kurzbefehle",
+      "hint": "Sprung zu den häufigsten Seiten. Die Editoren liegen dort."
+    },
+    "users": {
+      "editTitle": "Benutzer bearbeiten",
+      "displayName": "Anzeigename",
+      "all": "Benutzer auf diesem Rechner",
+      "groups": "Deine Gruppen"
+    },
+    "bluetooth": {
+      "connected": "Verbunden",
+      "available": "Verfügbar",
+      "emptyConnected": "Keine verbundenen Geräte",
+      "forget": "Vergessen",
+      "connect": "Verbinden"
+    },
+    "storage": {
+      "mounts": "Volumes",
+      "devices": "Laufwerke",
+      "eject": "Auswerfen"
     }
   },
   "onboarding": {

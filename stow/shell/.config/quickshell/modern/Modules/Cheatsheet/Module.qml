@@ -68,49 +68,53 @@ Scope {
     LazyLoader {
         active: Cheatsheet.open
 
-        PanelWindow {
+        FloatingWindow {
             visible: Cheatsheet.open
-            color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            title: "modern.cheatsheet"
+            color: Colors.color.surface
+            implicitWidth: Tokens.spacing.xxl * 24
+            implicitHeight: Tokens.spacing.xxl * 18
 
-            MOverlay {
-                open: Cheatsheet.open
-                titleKey: "cheatsheet.title"
-                cardWidth: Tokens.spacing.xxl * 22
-                cardHeight: Tokens.spacing.xxl * 18
-                onClosed: Cheatsheet.hide()
+            onVisibleChanged: {
+                if (!visible)
+                    Cheatsheet.hide();
+            }
 
-                ColumnLayout {
-                    spacing: Tokens.spacing.md
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Tokens.spacing.md
+                spacing: Tokens.spacing.sm
 
-                    MSearchField {
-                        id: search
-                        Layout.fillWidth: true
-                        placeholderKey: "cheatsheet.search"
-                    }
+                MWindowChrome {
+                    Layout.fillWidth: true
+                    titleKey: "cheatsheet.title"
+                    onClosed: Cheatsheet.hide()
+                }
 
-                    Flickable {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
-                        contentWidth: width
-                        contentHeight: cols.implicitHeight
+                MSearchField {
+                    id: search
+                    Layout.fillWidth: true
+                    Layout.topMargin: 0
+                    Layout.bottomMargin: Tokens.spacing.xs
+                    placeholderKey: "cheatsheet.search"
+                }
 
-                        RowLayout {
-                            id: cols
-                            width: parent.width
-                            spacing: Tokens.spacing.xl
-                            CategoryColumn {
-                                cats: CheatsheetModel.grouped(search.text).left
-                            }
-                            CategoryColumn {
-                                cats: CheatsheetModel.grouped(search.text).right
-                            }
+                Flickable {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    contentWidth: width
+                    contentHeight: cols.implicitHeight
+
+                    RowLayout {
+                        id: cols
+                        width: parent.width
+                        spacing: Tokens.spacing.xxl
+                        CategoryColumn {
+                            cats: CheatsheetModel.grouped(search.text).left
+                        }
+                        CategoryColumn {
+                            cats: CheatsheetModel.grouped(search.text).right
                         }
                     }
                 }

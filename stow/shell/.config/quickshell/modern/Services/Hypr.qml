@@ -4,11 +4,14 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Io
 import QtQuick
 import "../Commons"
 
 Singleton {
     id: root
+
+    property bool hyprbarsLoaded: false
 
     readonly property var monitors: Hyprland.monitors
     readonly property var workspaces: Hyprland.workspaces
@@ -116,5 +119,16 @@ Singleton {
                 out.push({ id: id, focused: false, urgent: false, synthetic: true });
         }
         return out;
+    }
+
+    Process {
+        id: pluginProc
+        command: ["hyprctl", "plugin", "list"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.hyprbarsLoaded = this.text.toLowerCase().indexOf("hyprbars") !== -1;
+            }
+        }
     }
 }

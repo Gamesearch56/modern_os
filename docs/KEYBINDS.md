@@ -11,21 +11,25 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 |-------|--------|-----|
 | `SUPER + SPACE` | Launcher | `qs -c modern ipc call launcher toggle` |
 | `SUPER + M` | Power menu | `qs -c modern ipc call powermenu toggle` |
+| `SUPER + L` | Control panel | `qs -c modern ipc call notifications toggle` |
 | `SUPER + SHIFT + M` | Exit compositor | `hyprctl dispatch "hl.dsp.exit()"` |
 | `SUPER + K` | Cheatsheet | `qs -c modern ipc call cheatsheet toggle` |
-| `SUPER + I` | Settings | `qs -c modern ipc call settings open` |
+| `SUPER + I` | Settings (Hyprland window) | `qs -c modern ipc call settings open` |
 | `SUPER + W` | Wallpaper picker | `qs -c modern ipc call wallpaper pick` |
 | `SUPER + TAB` | Overview | `qs -c modern ipc call overview toggle` |
 | `SUPER + T` | Terminal | kitty |
 | `SUPER + B` | Browser | Vivaldi |
+| `SUPER + SHIFT + B` | Browser incognito | `vivaldi-stable --incognito` (from `apps.defaults.browser`) |
 | `SUPER + E` | File manager | Dolphin |
 | `SUPER + R` | Spotify | `spotify-launcher` |
-| `SUPER + Q` | Close overlay or window | `modern window close` — dismisses Settings/launcher/control center/… if open, else `killactive` |
+| `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |
 | `SUPER + G` | Game mode | |
 | `PRINT` | Screenshot region | `modern screenshot region` → `~/Pictures/Screenshots` |
-| `ALT + PRINT` | Screenshot window | `modern screenshot window` |
+| `SHIFT + PRINT` | Screenshot window | `modern screenshot window` |
 | `SUPER + PRINT` | Screenshot full | `modern screenshot full` |
+| `SUPER + mouse 272 / 273` | Drag / resize window | |
+| `SUPER + scroll` | Next/prev workspace on this monitor | `workspace m±1` |
 | `SUPER + SHIFT + C` | Color picker | |
 | `SUPER + SHIFT + V` | Clipboard history | |
 

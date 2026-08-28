@@ -4,10 +4,19 @@ import "../../Commons"
 import "../../Services"
 
 Scope {
-    LazyLoader {
-        active: !Notifications.panelOpen && Notifications.list.length > 0
+    Connections {
+        target: Alarm
+        function onFired() {
+            Notifications.toast(I18n.t("alarm.fired"), "");
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
 
         PanelWindow {
+            required property var modelData
+            screen: modelData
             visible: !Notifications.panelOpen && Notifications.list.length > 0
             color: "transparent"
             anchors.top: true

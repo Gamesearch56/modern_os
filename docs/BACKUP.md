@@ -50,6 +50,13 @@ exists.**
 
 `scripts/doctor.sh` warns when restic is missing or unconfigured.
 
+## `modern update`
+
+If `backup.preUpdateSnapshot` is true, `modern update` runs `snapper
+create` then `yay -Syu`. It refuses when snapper is missing or has no
+configs — not Timeshift.
+
+
 ## Restore kit
 
 After a bare-metal reinstall, copy these onto the new `$HOME` **before**

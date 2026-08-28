@@ -17,97 +17,97 @@ Scope {
     }
 
     property string pending: ""
+    property int focusIndex: 0
+
+    readonly property var actions: [
+        { id: "lock", kind: "tonal", icon: "system-lock-screen" },
+        { id: "logout", kind: "tonal", icon: "system-log-out" },
+        { id: "suspend", kind: "tonal", icon: "system-suspend" },
+        { id: "restart", kind: "filled", icon: "system-reboot" },
+        { id: "poweroff", kind: "destructive", icon: "system-shutdown" }
+    ]
+
+    function _run(id: string) {
+        if (id === "lock") {
+            Session.lock();
+            PowerMenu.hide();
+            return;
+        }
+        if (id === "suspend") {
+            Power.suspend();
+            PowerMenu.hide();
+            return;
+        }
+        root._ask(id === "restart" ? "reboot" : id);
+    }
+
+    function _ask(action: string) {
+        root.pending = action;
+    }
 
     LazyLoader {
         active: PowerMenu.open
 
-        PanelWindow {
+        FloatingWindow {
             visible: PowerMenu.open
-            color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            title: "modern.powermenu"
+            color: Colors.color.surface
+            implicitWidth: Tokens.spacing.xxl * 12
+            implicitHeight: Tokens.spacing.xxl * 16
 
-            MOverlay {
-                open: PowerMenu.open
-                titleKey: "powerMenu.title"
-                cardWidth: Tokens.spacing.xxl * 12
-                cardHeight: Tokens.spacing.xxl * 16
-                onClosed: {
+            onVisibleChanged: {
+                if (!visible) {
                     root.pending = "";
                     PowerMenu.hide();
                 }
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Tokens.spacing.md
+                spacing: Tokens.spacing.md
+
+                MWindowChrome {
+                    Layout.fillWidth: true
+                    titleKey: "powerMenu.title"
+                    onClosed: PowerMenu.hide()
+                }
 
                 ColumnLayout {
-                    spacing: Tokens.spacing.lg
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: Tokens.spacing.xxs
 
-                    ColumnLayout {
+                    MAvatar {
                         Layout.alignment: Qt.AlignHCenter
-                        spacing: Tokens.spacing.sm
-
-                        MAvatar {
-                            Layout.alignment: Qt.AlignHCenter
-                            size: Tokens.spacing.xxl * 3
-                            source: User.faceUrl
-                        }
-
-                        MText {
-                            Layout.alignment: Qt.AlignHCenter
-                            value: User.displayName
-                            styleName: "titleLarge"
-                        }
+                        size: Tokens.spacing.xxl * 3
+                        source: User.faceUrl
                     }
 
-                    GridLayout {
-                        Layout.fillWidth: true
-                        columns: 2
-                        columnSpacing: Tokens.spacing.sm
-                        rowSpacing: Tokens.spacing.sm
+                    MText {
+                        Layout.alignment: Qt.AlignHCenter
+                        value: User.displayName
+                        styleName: "titleLarge"
+                    }
+                }
 
+                GridLayout {
+                    Layout.fillWidth: true
+                    columns: 2
+                    columnSpacing: Tokens.spacing.sm
+                    rowSpacing: Tokens.spacing.sm
+
+                    Repeater {
+                        model: root.actions
                         MButton {
-                            kind: "tonal"
-                            key: "powerMenu.lock"
-                            iconName: "system-lock-screen"
+                            required property var modelData
+                            required property int index
+                            kind: modelData.kind
+                            key: "powerMenu." + modelData.id
+                            iconName: modelData.icon
                             fillWidth: true
-                            onClicked: {
-                                Session.lock();
-                                PowerMenu.hide();
-                            }
-                        }
-                        MButton {
-                            kind: "tonal"
-                            key: "powerMenu.logout"
-                            iconName: "system-log-out"
-                            fillWidth: true
-                            onClicked: root._ask("logout")
-                        }
-                        MButton {
-                            kind: "tonal"
-                            key: "powerMenu.suspend"
-                            iconName: "system-suspend"
-                            fillWidth: true
-                            onClicked: {
-                                Power.suspend();
-                                PowerMenu.hide();
-                            }
-                        }
-                        MButton {
-                            kind: "filled"
-                            key: "powerMenu.restart"
-                            iconName: "system-reboot"
-                            fillWidth: true
-                            onClicked: root._ask("reboot")
-                        }
-                        MButton {
-                            kind: "destructive"
-                            key: "powerMenu.poweroff"
-                            iconName: "system-shutdown"
-                            fillWidth: true
-                            Layout.columnSpan: 2
-                            onClicked: root._ask("poweroff")
+                            Layout.columnSpan: modelData.id === "poweroff" ? 2 : 1
+                            checked: root.focusIndex === index
+                            onClicked: root._run(modelData.id)
                         }
                     }
                 }
@@ -137,14 +137,37 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 onActivated: {
-                    root.pending = "";
+                    if (root.pending.length > 0) {
+                        root.pending = "";
+                        return;
+                    }
                     PowerMenu.hide();
                 }
             }
+            Shortcut {
+                sequence: "Left"
+                onActivated: root.focusIndex = Math.max(0, root.focusIndex - 1)
+            }
+            Shortcut {
+                sequence: "Right"
+                onActivated: root.focusIndex = Math.min(root.actions.length - 1, root.focusIndex + 1)
+            }
+            Shortcut {
+                sequence: "Up"
+                onActivated: root.focusIndex = Math.max(0, root.focusIndex - 2)
+            }
+            Shortcut {
+                sequence: "Down"
+                onActivated: root.focusIndex = Math.min(root.actions.length - 1, root.focusIndex + 2)
+            }
+            Shortcut {
+                sequence: "Return"
+                onActivated: {
+                    if (root.pending.length > 0)
+                        return;
+                    root._run(root.actions[root.focusIndex].id);
+                }
+            }
         }
-    }
-
-    function _ask(action: string) {
-        root.pending = action;
     }
 }

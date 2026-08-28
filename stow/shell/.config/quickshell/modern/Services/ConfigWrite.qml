@@ -26,6 +26,19 @@ Singleton {
         }
     }
 
+    function patchMonitor(description, patch) {
+        let m = { profiles: {}, rules: [], workspaceMode: "fixed" };
+        try {
+            m = JSON.parse(JSON.stringify(Config.monitors || m));
+        } catch (e) {
+            Logger.warn("ConfigWrite", String(e));
+        }
+        if (!m.profiles)
+            m.profiles = {};
+        m.profiles[description] = Object.assign({}, m.profiles[description] || {}, patch);
+        root.set("monitors", m);
+    }
+
     Process {
         id: proc
         stdout: StdioCollector {

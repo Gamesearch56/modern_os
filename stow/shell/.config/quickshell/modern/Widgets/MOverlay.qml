@@ -114,6 +114,7 @@ Item {
 
                 MIconButton {
                     visible: root.closeVisible
+                    close: true
                     iconName: "window-close"
                     onClicked: root.closed()
                 }

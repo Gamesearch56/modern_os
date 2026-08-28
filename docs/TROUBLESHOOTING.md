@@ -188,8 +188,12 @@ Hyprland after the first `hyprpm add`, then the session autostart reload
 will succeed.
 
 Settings → Windows (`windows.titlebar`) also gates the plugin options in
-`modules/titlebar.lua`. Fullscreen windows use `hyprbars:no_bar`. Qt apps
-set `QT_WAYLAND_DISABLE_WINDOWDECORATION=1` so they do not draw a second
+`modules/titlebar.lua`. Fullscreen and overlay windows set
+`hyprbars:no_bar` only when the plugin is loaded — that effect is not a
+built-in `hl.window_rule` field, so applying it with no plugins loaded
+fills the error overlay (`unknown field 'hyprbars:no_bar'`). The dim
+effect is `dim_around`, not `dimaround`. Qt apps set
+`QT_WAYLAND_DISABLE_WINDOWDECORATION=1` so they do not draw a second
 CSD under the SSD.
 
 ## Polkit prompt is light / unthemed / tiled
@@ -209,3 +213,35 @@ pkexec true
 Radii come from `~/.config/hypr/application-style.conf` (written by
 `theme-apply.sh` from `design.cornerRounding`). The wrong-password
 label is hardcoded red in upstream QML.
+
+## Tiny crunchy UI on 1440p HDR
+
+Settings → Displays: pick the monitor **by description**, set scale to
+**1.25** (typical 27″ 1440p). Do not set `QT_SCALE_FACTOR`. Default
+theme is `tonal-spot-dark`; HDR toggle also writes `sdrsaturation` ~0.9.
+Fontconfig (`stow/fontconfig`) uses antialias + hintslight. Monitor OSD
+game/DCI-P3/HDR modes are out of repo.
+
+## Super+Q closes the wrong thing
+
+`modern window close` dismisses the screenshot HUD, bar popups, and the
+control panel first. Settings, launcher, wallpaper, cheatsheet, power
+menu, and overview are Hyprland windows — Super+Q then `killactive` on
+the focused one.
+
+## Vivaldi still looks stock
+
+Enable CSS mods once at `vivaldi://experiments`. Chrome colors come from
+`theme-apply.sh` (`00-modern.css`). Native Preferences merge is skipped
+while Vivaldi is running.
+
+## German layout: Super+Shift+1 does nothing
+
+Shift+1 is `!` on `de`. Lua also binds physical keycodes `code:10`–`19`
+when `input.kbLayout` is `de`.
+
+## HDR wallpaper looks neon
+
+Keep desktop `cm = srgb` unless Displays HDR is on. Default profile is
+tonal-spot, not expressive. `design.surfaceTint` default is 0.7.
+

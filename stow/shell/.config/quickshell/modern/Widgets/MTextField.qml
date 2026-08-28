@@ -1,5 +1,4 @@
-// Single-line text field. Placeholder is an I18n key. Used by launcher
-// search, Settings search, lock-screen password (echoMode Password).
+// Single-line filled field with a primary focus ring.
 import QtQuick
 import "../Commons"
 
@@ -23,7 +22,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Tokens.radius.small
+        radius: Tokens.radius.full
         color: Colors.color.surfaceContainerHighest
         border.color: input.activeFocus ? Colors.color.primary : Colors.color.outline
         border.width: input.activeFocus ? 2 : 1
@@ -42,7 +41,7 @@ Item {
         anchors.leftMargin: Tokens.spacing.md
         anchors.verticalCenter: parent.verticalCenter
         name: root.iconName
-        size: Tokens.spacing.lg
+        size: Tokens.icon.md
         color: Colors.color.onSurfaceVariant
         tint: true
     }
@@ -54,10 +53,12 @@ Item {
         anchors.rightMargin: Tokens.spacing.md
         verticalAlignment: TextInput.AlignVCenter
         color: Colors.color.onSurface
-        selectionColor: Colors.color.primaryContainer
-        selectedTextColor: Colors.color.onPrimaryContainer
+        selectionColor: Colors.color.primary
+        selectedTextColor: Colors.color.onPrimary
         font.family: Typography.family.ui
         font.pixelSize: Typography.style("bodyLarge").pixelSize
+        font.hintingPreference: Font.PreferNoHinting
+        renderType: TextInput.QtRendering
         echoMode: root.echoMode
         enabled: root.enabled
         clip: true

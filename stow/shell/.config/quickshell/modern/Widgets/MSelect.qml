@@ -61,7 +61,7 @@ Item {
 
         MIcon {
             name: "go-down"
-            size: Tokens.spacing.md
+            size: Tokens.icon.sm
             color: Colors.color.onSurfaceVariant
             tint: true
         }
@@ -80,7 +80,7 @@ Item {
         width: root.width
         implicitHeight: Math.min(list.contentHeight + Tokens.spacing.md * 2, Tokens.spacing.xxl * 10)
         y: root.height + Tokens.spacing.xs
-        z: 20
+        z: 80
 
         ListView {
             id: list

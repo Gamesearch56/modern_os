@@ -41,20 +41,32 @@ ColumnLayout {
             onToggled: (v) => ConfigWrite.set("kdeconnect.enabled", v)
         }
     }
+
+    MSectionHeader { key: "settings.fields.accounts" }
     MListItem {
         Layout.fillWidth: true
-        titleKey: "settings.fields.mirrorNotifications"
+        titleKey: "settings.fields.protonDrive"
         MSwitch {
-            checked: Config.kdeconnect.mirrorNotifications
-            onToggled: (v) => ConfigWrite.set("kdeconnect.mirrorNotifications", v)
+            checked: !!(Config.accounts?.protonDrive?.enabled)
+            onToggled: (v) => ConfigWrite.set("accounts.protonDrive.enabled", v)
         }
     }
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.sharedClipboard"
-        MSwitch {
-            checked: Config.kdeconnect.sharedClipboard
-            onToggled: (v) => ConfigWrite.set("kdeconnect.sharedClipboard", v)
+    MField {
+        labelKey: "settings.fields.calendarIcs"
+        MTextField {
+            text: Config.accounts?.calendarIcsUrl ?? ""
+            onAccepted: ConfigWrite.set("accounts.calendarIcsUrl", text)
         }
+    }
+
+    MSectionHeader { key: "settings.fields.aiProvider" }
+    MSegmented {
+        Layout.fillWidth: true
+        value: Config.accounts?.ai?.provider ?? "ollama"
+        model: [
+            { value: "ollama", titleKey: "settings.aiOllama" },
+            { value: "none", titleKey: "settings.aiNone" }
+        ]
+        onSelected: (v) => ConfigWrite.set("accounts.ai.provider", v)
     }
 }

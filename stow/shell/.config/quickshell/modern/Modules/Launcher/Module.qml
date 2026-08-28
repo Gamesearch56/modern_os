@@ -62,72 +62,72 @@ Scope {
     LazyLoader {
         active: Launcher.open
 
-        PanelWindow {
-            id: win
+        FloatingWindow {
             visible: Launcher.open
-            color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            title: "modern.launcher"
+            color: Colors.color.surface
+            implicitWidth: Tokens.spacing.xxl * 16
+            implicitHeight: Tokens.spacing.xxl * 14
 
-            MOverlay {
-                id: overlay
-                open: Launcher.open
-                titleKey: "bar.launcher"
-                cardWidth: Tokens.spacing.xxl * 16
-                cardHeight: Tokens.spacing.xxl * 14
-                onClosed: Launcher.hide()
+            onVisibleChanged: {
+                if (!visible)
+                    Launcher.hide();
+            }
 
-                ColumnLayout {
-                    spacing: Tokens.spacing.md
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Tokens.spacing.md
+                spacing: Tokens.spacing.md
 
-                    MSearchField {
-                        id: query
-                        Layout.fillWidth: true
-                        placeholderKey: "launcher.placeholder"
-                        Component.onCompleted: forceActiveFocus()
-                        onAccepted: root.activate(list.model[list.currentIndex] || list.model[0])
-                        onTextEdited: list.currentIndex = 0
-                        onDownPressed: list.currentIndex = Math.min(list.count - 1, list.currentIndex + 1)
-                        onUpPressed: list.currentIndex = Math.max(0, list.currentIndex - 1)
+                MWindowChrome {
+                    Layout.fillWidth: true
+                    titleKey: "bar.launcher"
+                    onClosed: Launcher.hide()
+                }
+
+                MSearchField {
+                    id: query
+                    Layout.fillWidth: true
+                    placeholderKey: "launcher.placeholder"
+                    Component.onCompleted: forceActiveFocus()
+                    onAccepted: root.activate(list.model[list.currentIndex] || list.model[0])
+                    onTextEdited: list.currentIndex = 0
+                    onDownPressed: list.currentIndex = Math.min(list.count - 1, list.currentIndex + 1)
+                    onUpPressed: list.currentIndex = Math.max(0, list.currentIndex - 1)
+                }
+
+                MText {
+                    visible: query.text.length === 0
+                    key: "launcher.mostUsed"
+                    styleName: "labelLarge"
+                    color: Colors.color.onSurfaceVariant
+                }
+
+                ListView {
+                    id: list
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    spacing: Tokens.spacing.sm
+                    model: root.resultsFor(query.text)
+                    currentIndex: 0
+                    delegate: MListItem {
+                        required property var modelData
+                        required property int index
+                        width: list.width
+                        iconName: modelData.icon || "application-x-executable"
+                        tintIcon: modelData.kind === "settings" || modelData.kind === "power"
+                        titleValue: modelData.name
+                        subtitleValue: modelData.genericName || ""
+                        selected: list.currentIndex === index
+                        onClicked: root.activate(modelData)
                     }
 
-                    MText {
-                        visible: query.text.length === 0
-                        key: "launcher.mostUsed"
-                        styleName: "labelLarge"
-                        color: Colors.color.onSurfaceVariant
-                    }
-
-                    ListView {
-                        id: list
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
-                        spacing: Tokens.spacing.sm
-                        model: root.resultsFor(query.text)
-                        currentIndex: 0
-                        delegate: MListItem {
-                            required property var modelData
-                            required property int index
-                            width: list.width
-                            iconName: modelData.icon || "application-x-executable"
-                            tintIcon: modelData.kind === "settings" || modelData.kind === "power"
-                            titleValue: modelData.name
-                            subtitleValue: modelData.genericName || ""
-                            selected: list.currentIndex === index
-                            onClicked: root.activate(modelData)
-                        }
-
-                        MEmptyState {
-                            visible: list.count === 0 && query.text.length > 0
-                            anchors.fill: parent
-                            iconName: "edit-find-symbolic"
-                            titleKey: "launcher.noResults"
-                        }
+                    MEmptyState {
+                        visible: list.count === 0 && query.text.length > 0
+                        anchors.fill: parent
+                        iconName: "edit-find-symbolic"
+                        titleKey: "launcher.noResults"
                     }
                 }
             }

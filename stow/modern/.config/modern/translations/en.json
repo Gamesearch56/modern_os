@@ -20,7 +20,10 @@
     "soundSettings": "Sound settings",
     "kdeconnect": "KDE Connect",
     "notes": "Notes",
-    "mail": "Mail"
+    "mail": "Mail",
+    "connectivity": "Network and Bluetooth",
+    "battery": "Battery",
+    "ai": "Assistant"
   },
   "media": {
     "notPlaying": "Not playing",
@@ -53,7 +56,10 @@
     "connected": "{count} connected"
   },
   "weather": {
-    "unavailable": "Weather unavailable"
+    "unavailable": "Weather unavailable",
+    "detailTitle": "Weather",
+    "condition": "Current conditions",
+    "refresh": "Refresh"
   },
   "vpn": {
     "disconnected": "VPN off",
@@ -63,7 +69,8 @@
     "cpu": "CPU",
     "ram": "RAM",
     "gpu": "GPU",
-    "disk": "Disk"
+    "disk": "Disk",
+    "fan": "Fan"
   },
   "notes": {
     "title": "Notes",
@@ -72,18 +79,42 @@
   },
   "calendar": {
     "title": "Calendar",
-    "today": "Today"
+    "today": "Today",
+    "empty": "No upcoming events",
+    "open": "Open calendar"
   },
   "mail": {
     "open": "Open mail"
   },
   "ai": {
     "title": "Assistant",
-    "placeholder": "Ask anything..."
+    "placeholder": "Ask anything...",
+    "you": "You",
+    "assistant": "Assistant"
   },
   "session": {
     "unlock": "Unlock",
-    "password": "Password"
+    "password": "Password",
+    "authFailed": "Could not unlock"
+  },
+  "alarm": {
+    "title": "Alarm",
+    "running": "Alarm running",
+    "start": "Start",
+    "fired": "Alarm"
+  },
+  "cli": {
+    "usage": "Usage: modern <command>",
+    "snapperMissing": "snapper is not installed. See docs/BACKUP.md",
+    "snapperUnconfigured": "snapper has no configs. See docs/BACKUP.md",
+    "snapshotting": "Creating snapper snapshot…",
+    "snapshotFailed": "snapper snapshot failed",
+    "mirrors": "Updating pacman mirrors for %s (sudo)…",
+    "repairReset": "Resetting failed systemd units…",
+    "repairScrub": "Starting btrfs scrub on / (sudo)…",
+    "repairDmesg": "Recent I/O / corrupt / unmount messages:",
+    "repairFsck": "FAT/ESP check: umount the ESP, then fsck.vfat -a /dev/disk/by-label/ESP (see docs/TROUBLESHOOTING.md).",
+    "unknown": "unknown subcommand"
   },
   "wallpaper": {
     "title": "Wallpapers",
@@ -112,7 +143,8 @@
   },
   "diagnostics": {
     "bootTime": "Boot time",
-    "journalErrors": "Journal errors"
+    "hardware": "Hardware",
+    "software": "Software"
   },
   "users": {
     "title": "Users"
@@ -194,7 +226,9 @@
       "screenshotFull": "Screenshot full screen",
       "gameMode": "Game mode",
       "colorPicker": "Color picker",
-      "clipboardHistory": "Clipboard history"
+      "clipboardHistory": "Clipboard history",
+      "controlCenter": "Control panel",
+      "browserIncognito": "Browser (incognito)"
     },
     "category": {
       "applications": "Applications",
@@ -217,6 +251,21 @@
     "refresh": "Refresh",
     "noResults": "No matching settings",
     "loadError": "This section failed to load. Check qs -c modern log.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "themeCreate": "New theme",
+    "themeName": "Name (letters, numbers, dashes)",
+    "themeCreated": "Theme saved",
+    "systemUpdate": "Update system",
+    "openCheatsheet": "Open keyboard cheat sheet",
+    "typePreview": "Type preview",
+    "typePreviewBody": "The quick brown fox jumps over the lazy dog.",
+    "barTop": "Top",
+    "barBottom": "Bottom",
+    "barLeft": "Left",
+    "barRight": "Right",
+    "barFloating": "Floating",
+    "barAttached": "Attached",
     "on": "On",
     "off": "Off",
     "cliNote": "Writes go through ConfigWrite → modern config set (jq). This app is the only writer of config.json.",
@@ -296,7 +345,25 @@
       "weatherLocation": "Weather location",
       "openEditor": "Open editor after capture",
       "includeCursor": "Include cursor",
-      "vmMaxMapCount": "Raise vm.max_map_count"
+      "vmMaxMapCount": "Raise vm.max_map_count",
+      "typeScale": "Type scale",
+      "barPosition": "Bar position",
+      "barStyle": "Bar style",
+      "barHeight": "Bar height",
+      "edgeGap": "Edge gap",
+      "endGap": "End gap",
+      "gaps": "Window gaps",
+      "gapsIn": "Inner gaps",
+      "gapsOut": "Outer gaps",
+      "windowOpacity": "Window opacity",
+      "scale": "Scale",
+      "hdr": "HDR",
+      "vrr": "Variable refresh",
+      "bitrate": "Link bitrate",
+      "mirrorCountry": "Mirror country",
+      "showIcons": "Show icons",
+      "protonWayland": "Proton Wayland",
+      "hdrSession": "Session HDR"
     },
     "sections": {
       "general": "General",
@@ -313,12 +380,13 @@
       "network": "Network",
       "widgets": "Widgets",
       "launcher": "Launcher",
-      "power": "Power",
-      "screenshots": "Screenshots and recording",
+      "power": "Energy",
+      "screenshots": "Screenshots",
       "users": "Users",
       "storage": "Storage",
       "system": "System",
-      "gaming": "Gaming"
+      "gaming": "Gaming",
+      "bluetooth": "Bluetooth"
     },
     "addAutostart": "Add autostart app",
     "motionOff": "Off",
@@ -369,7 +437,33 @@
       "gamingGated": "Kernel tweaks live under install/system and are not applied automatically.",
       "timeMerged": "Date and time formats live under Language & region.",
       "weatherLocation": "Empty uses IP geolocation. Or a city, or latitude,longitude.",
-      "audioDevices": "The highlighted device is the default. Click another to send sound there."
+      "audioDevices": "The highlighted device is the default. Click another to send sound there.",
+      "hyprbarsOn": "hyprbars plugin is loaded.",
+      "hyprbarsOff": "hyprbars is not loaded. Run scripts/doctor.sh and hyprpm.",
+      "windowRulesJson": "JSON array of Hyprland window rules. Save validates before writing.",
+      "cheatsheetBind": "Opens the cheat sheet (Super+K)."
+    },
+    "hub": {
+      "title": "Shortcuts",
+      "hint": "Jump to the most used pages. Editors live in those sections."
+    },
+    "users": {
+      "editTitle": "Edit user",
+      "displayName": "Display name",
+      "all": "Users on this computer",
+      "groups": "Your groups"
+    },
+    "bluetooth": {
+      "connected": "Connected",
+      "available": "Available",
+      "emptyConnected": "No connected devices",
+      "forget": "Forget",
+      "connect": "Connect"
+    },
+    "storage": {
+      "mounts": "Volumes",
+      "devices": "Disks",
+      "eject": "Eject"
     }
   },
   "onboarding": {

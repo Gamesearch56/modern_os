@@ -31,13 +31,26 @@ RowLayout {
 
     MIconButton {
         iconName: "preferences-system"
+        key: "bar.settings"
         onClicked: {
             Notifications.hide();
             Settings.openAt("general", "");
         }
     }
     MIconButton {
-        iconName: "system-shutdown"
-        onClicked: PowerMenu.toggle()
+        iconName: "folder-pictures-symbolic"
+        key: "wallpaper.title"
+        onClicked: {
+            Notifications.hide();
+            Wallpaper.pick();
+        }
+    }
+    MIconButton {
+        iconName: "input-keyboard"
+        key: "cheatsheet.title"
+        onClicked: {
+            Notifications.hide();
+            Cheatsheet.toggle();
+        }
     }
 }

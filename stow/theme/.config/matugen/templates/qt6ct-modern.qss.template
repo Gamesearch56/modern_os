@@ -40,11 +40,56 @@ QLineEdit:focus, QComboBox:focus {
 }
 
 QPushButton {
-    background-color: {{colors.primary.default.hex}};
-    color: {{colors.on_primary.default.hex}};
+    background-color: {{colors.primary_container.default.hex}};
+    color: {{colors.on_primary_container.default.hex}};
     border: none;
     border-radius: @RADIUS_FULL@px;
     padding: @SPACE_XS@px @SPACE_MD@px;
+}
+
+QPushButton:default, QPushButton:focus {
+    background-color: {{colors.primary.default.hex}};
+    color: {{colors.on_primary.default.hex}};
+}
+
+QPushButton:disabled {
+    color: {{colors.on_surface_variant.default.hex}};
+}
+
+QPushButton:hover {
+    border: 1px solid {{colors.outline.default.hex}};
+}
+
+QSlider::groove:horizontal {
+    height: 8px;
+    background: {{colors.surface_container_highest.default.hex}};
+    border-radius: @RADIUS_FULL@px;
+}
+
+QSlider::handle:horizontal {
+    width: 20px;
+    height: 20px;
+    margin: -6px 0;
+    background: {{colors.primary.default.hex}};
+    border-radius: @RADIUS_FULL@px;
+}
+
+DolphinPlacesView QListView::item:selected, QListView#placesView::item:selected {
+    background-color: {{colors.primary.default.hex}};
+    color: {{colors.on_primary.default.hex}};
+    border-radius: @RADIUS_FULL@px;
+}
+
+QLineEdit {
+    background-color: {{colors.surface_container_highest.default.hex}};
+    color: {{colors.on_surface.default.hex}};
+    border: 1px solid {{colors.outline.default.hex}};
+    border-radius: @RADIUS_FULL@px;
+    padding: @SPACE_XS@px @SPACE_MD@px;
+}
+
+QLineEdit:focus {
+    border: 2px solid {{colors.primary.default.hex}};
 }
 
 QScrollBar:vertical, QScrollBar:horizontal {
