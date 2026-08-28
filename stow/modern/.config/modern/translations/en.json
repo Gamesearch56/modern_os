@@ -84,7 +84,10 @@
   },
   "wallpaper": {
     "title": "Wallpapers",
-    "empty": "No wallpapers found"
+    "empty": "No wallpapers found",
+    "add": "Add wallpaper",
+    "alreadyInLibrary": "That file is already in the wallpaper folder",
+    "importFailed": "Could not import wallpaper"
   },
   "notifications": {
     "empty": "No notifications",
@@ -148,6 +151,7 @@
       "terminal": "Terminal",
       "browser": "Browser",
       "fileManager": "File manager",
+      "spotify": "Spotify",
       "closeWindow": "Close window",
       "fullscreen": "Fullscreen",
       "toggleFloating": "Toggle floating",
@@ -190,6 +194,8 @@
     },
     "category": {
       "applications": "Applications",
+      "system": "System",
+      "utilities": "Utilities",
       "windowManagement": "Window management",
       "workspaces": "Workspaces",
       "screenshots": "Screenshots",
@@ -213,6 +219,8 @@
     "gated": "Account changes use the gated modern-usersd helper (docs/SECURITY.md). It is not installed to /usr by default.",
     "langEn": "English",
     "langDe": "Deutsch",
+    "kbDe": "Deutsch (DE)",
+    "kbUs": "English (US)",
     "fields": {
       "motionScale": "Motion scale",
       "autologin": "Autologin",
@@ -225,6 +233,7 @@
       "transparency": "Transparency",
       "cornerRounding": "Corner rounding",
       "languageUi": "UI language",
+      "kbLayout": "Keyboard layout",
       "dateFormat": "Date format",
       "timeFormat": "Time format",
       "firstDayOfWeek": "First day of week",

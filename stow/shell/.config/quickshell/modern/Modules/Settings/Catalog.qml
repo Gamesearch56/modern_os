@@ -57,7 +57,7 @@ QtObject {
         privacy: { icon: "security-high", order: 40, keywords: ["permissions", "kdeconnect", "clipboard", "notifications", "dnd"] },
         design: { icon: "preferences-desktop-theme", order: 50, keywords: ["theme", "profile", "transparency", "rounding", "cursor"] },
         language: { icon: "preferences-desktop-locale", order: 60, keywords: ["locale", "ui", "translation", "english", "german"] },
-        keyboard: { icon: "input-keyboard", order: 70, keywords: ["keybinds", "shortcuts", "hotkeys", "cheatsheet"] },
+        keyboard: { icon: "input-keyboard", order: 70, keywords: ["keybinds", "shortcuts", "hotkeys", "cheatsheet", "layout", "de", "us"] },
         time: { icon: "preferences-system-time", order: 80, keywords: ["clock", "date", "format", "timezone", "weekday"] },
         displays: { icon: "video-display", order: 90, keywords: ["monitors", "scale", "resolution", "profile"] },
         windows: { icon: "preferences-system-windows", order: 100, keywords: ["rules", "floating", "opacity", "workspace"] },

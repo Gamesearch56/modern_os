@@ -36,12 +36,31 @@ Singleton {
     Process {
         id: listProc
         running: false
-        command: ["bash", "-lc", "pic=$(xdg-user-dir PICTURES 2>/dev/null || true); pic=${pic:-$HOME/Pictures}; extra=\"$HOME/.config/modern/wallpapers\"; find \"$extra\" \"$pic/Wallpapers\" \"$pic\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) 2>/dev/null | sort -u"]
+        command: ["bash", "-c", "HOME='" + root.home.replace(/'/g, "'\\''") + "'; export HOME; pic=$(xdg-user-dir PICTURES 2>/dev/null || true); pic=${pic:-$HOME/Pictures}; extra=\"$HOME/.config/modern/wallpapers\"; find \"$extra\" \"$pic/Wallpapers\" -maxdepth 1 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) 2>/dev/null | sort -u"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = text().trim().split("\n").filter(l => l.length > 0);
                 root.images = lines;
             }
+        }
+    }
+
+    Process {
+        id: importProc
+        running: false
+        command: [root.home + "/modern_dotfile/scripts/wallpaper-import.sh"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                text();
+            }
+        }
+        onExited: (code) => {
+            if (code === 2)
+                Logger.error("Wallpaper", I18n.t("wallpaper.alreadyInLibrary"));
+            else if (code !== 0 && code !== 1)
+                Logger.error("Wallpaper", I18n.t("wallpaper.importFailed"));
+            else if (code === 0)
+                root._refresh();
         }
     }
 
@@ -72,6 +91,15 @@ Singleton {
         listProc.running = true;
     }
 
+    function importWallpaper() {
+        try {
+            importProc.running = false;
+            importProc.running = true;
+        } catch (e) {
+            Logger.error("Wallpaper", String(e));
+        }
+    }
+
     function setWallpaper(path: string) {
         try {
             if (!path || path.length === 0) {
@@ -79,8 +107,8 @@ Singleton {
                 return;
             }
             root.currentPath = path;
-            Quickshell.execDetached(["theme-apply.sh", "--wallpaper", path]);
-            Quickshell.execDetached(["wallpaper-sync.sh", path]);
+            Quickshell.execDetached([root.home + "/modern_dotfile/scripts/theme-apply.sh", "--wallpaper", path]);
+            Quickshell.execDetached([root.home + "/modern_dotfile/scripts/wallpaper-sync.sh", path]);
             root.pickerOpen = false;
             Logger.info("Wallpaper", "applied " + path);
         } catch (e) {

@@ -29,7 +29,7 @@ Row {
                 IconImage {
                     Layout.preferredWidth: Tokens.spacing.lg
                     Layout.preferredHeight: Tokens.spacing.lg
-                    source: Quickshell.iconPath(modelData.lastIpcObject?.class ?? "application-x-executable")
+                    source: Quickshell.iconPath(modelData.lastIpcObject?.class ?? "application-x-executable", true)
                     asynchronous: true
                 }
 

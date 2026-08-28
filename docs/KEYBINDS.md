@@ -19,12 +19,13 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + T` | Terminal | kitty |
 | `SUPER + B` | Browser | Vivaldi |
 | `SUPER + E` | File manager | Dolphin |
+| `SUPER + R` | Spotify | `spotify-launcher` |
 | `SUPER + Q` | Close window | |
 | `SUPER + F` | Fullscreen | |
 | `SUPER + G` | Game mode | |
-| `PRINT` | Screenshot region | |
-| `ALT + PRINT` | Screenshot window | |
-| `SUPER + PRINT` | Screenshot full | |
+| `PRINT` | Screenshot region | `modern screenshot region` → `~/Pictures/Screenshots` |
+| `ALT + PRINT` | Screenshot window | `modern screenshot window` |
+| `SUPER + PRINT` | Screenshot full | `modern screenshot full` |
 | `SUPER + SHIFT + C` | Color picker | |
 | `SUPER + SHIFT + V` | Clipboard history | |
 

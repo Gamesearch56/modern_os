@@ -17,7 +17,7 @@ Item {
     readonly property string _source: {
         if (root.name.length === 0)
             return "";
-        const p = Quickshell.iconPath(root.name);
+        const p = Quickshell.iconPath(root.name, true);
         if (!p || p.length === 0)
             return "";
         if (p.indexOf("://") !== -1 || p.indexOf("image:") === 0)

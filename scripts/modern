@@ -72,6 +72,10 @@ case "$TARGET" in
         shift || true
         exec modern-game "$@"
         ;;
+    screenshot)
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        exec "$SCRIPT_DIR/screenshot.sh" "${1:-region}"
+        ;;
     *)
         FUNC="${1:-toggle}"
         ipc "$TARGET" "$FUNC"

@@ -40,7 +40,7 @@ Scope {
 
             MCard {
                 level: 4
-                width: Tokens.spacing.xxl * 14
+                width: Math.min(Tokens.spacing.xxl * 22, parent.width - Tokens.spacing.xxl)
                 height: Tokens.spacing.xxl * 8
                 anchors.centerIn: parent
 

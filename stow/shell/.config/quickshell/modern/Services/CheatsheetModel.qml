@@ -12,7 +12,7 @@ Singleton {
     readonly property var categoryOf: ({
         launcher: "applications", terminal: "applications", browser: "applications",
         fileManager: "applications", settings: "applications", wallpaperPicker: "applications",
-        overview: "applications",
+        overview: "applications", spotify: "applications",
         closeWindow: "windowManagement", fullscreen: "windowManagement",
         toggleFloating: "windowManagement", pseudoTile: "windowManagement",
         toggleSplit: "windowManagement",
@@ -31,8 +31,8 @@ Singleton {
         moveToWorkspace9: "workspaces", moveToWorkspace10: "workspaces",
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
         screenshotFull: "screenshots", colorPicker: "screenshots",
-        gameMode: "media", clipboardHistory: "media", powerMenu: "media",
-        cheatsheet: "media"
+        cheatsheet: "system", powerMenu: "system", exitSession: "system",
+        gameMode: "system", clipboardHistory: "utilities"
     })
 
     function rows(filter: string): var {

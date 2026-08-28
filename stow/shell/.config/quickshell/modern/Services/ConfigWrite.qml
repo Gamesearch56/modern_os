@@ -17,7 +17,7 @@ Singleton {
     function set(path, value) {
         try {
             const encoded = JSON.stringify(value);
-            proc.command = ["modern", "config", "set", path, encoded];
+            proc.command = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "config", "set", path, encoded];
             proc.running = true;
             Logger.info("ConfigWrite", path + " = " + encoded);
         } catch (e) {

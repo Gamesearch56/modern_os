@@ -66,14 +66,20 @@ this repo's Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell.
   `loginctl terminate-session <id>` from the daily-driver account, or as
   `devuser` on a TTY: `pkill -x Hyprland`.
 - After restow, autostart runs `qs -c modern` as a child of *this*
-  compositor. Bare `qs ipc` talks to a `default` config that does not
-  exist — keybinds use `qs -c modern ipc call …`. QML errors:
+  compositor and **stops** `modern-shell.service` so a leftover TTY
+  cannot steal `WAYLAND_DISPLAY`. Leave that user unit disabled on
+  TTY-started Hyprland; `scripts/doctor.sh` treats "not enabled" as
+  expected in that setup. Bare `qs ipc` talks to a `default` config that
+  does not exist — keybinds use `qs -c modern ipc call …`. QML errors:
   `qs -c modern log -t 80` or `~/.local/state/modern/quickshell.log`.
 - `TypeError: … is not a function` on a singleton: missing `qmldir`
   entry. See `docs/DECISIONS.md` #19.
-- Broken-image / empty icons: Papirus-Dark is the configured theme but
-  was missing from the package manifests. Install `papirus-icon-theme`
-  and `bibata-cursor-theme`, then restart the session.
+- Broken-image / purple-black checkerboard icons: Papirus-Dark must be
+  the active Qt/Quickshell theme, not only installed. Hyprland
+  `modules/env.lua` sets `QS_ICON_THEME` and `QT_QPA_PLATFORMTHEME=qt6ct`.
+  Confirm `//@ pragma IconTheme Papirus-Dark` in `shell.qml`. Restart
+  `qs` after restow (`modern shell reload` or kill the `qs -c modern`
+  process). Packages: `papirus-icon-theme`, `qt6-svg`, `bibata-cursor-theme`.
 
 ## `unknown config key 'misc.vfr'` / `'dwindle.pseudotile'`
 

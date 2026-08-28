@@ -23,7 +23,7 @@
   },
 
   "design": {
-    "activeProfile": "tonal-spot-auto",
+    "activeProfile": "tonal-spot-dark",
     "cornerRounding": 1.0,
     "transparency": 0.85,
     "blurStrength": 40,
@@ -40,7 +40,7 @@
   },
 
   "language": {
-    "ui": "en",
+    "ui": "de",
     "fallback": "en",
     "dateFormat": "DD.MM.YYYY",
     "timeFormat": "HH:mm",
@@ -50,7 +50,7 @@
   "bar": {
     "position": "top",
     "style": "floating",
-    "height": 40,
+    "height": 48,
     "autoHide": false,
     "perMonitor": { "enabled": true },
     "left": ["launcher", "workspaces", "tray", "taskbar"],
@@ -64,6 +64,14 @@
     "performance": { "pollIntervalMs": 2000, "showGpu": true, "showTemps": true },
     "audio": { "scrollStepPercent": 5, "scrollStepFinePercent": 1 },
     "quickSettingsOrder": ["wifi", "bluetooth", "audio", "brightness", "dnd", "calendar"]
+  },
+
+  "input": {
+    "kbLayout": "de",
+    "kbVariant": "",
+    "repeatRate": 25,
+    "repeatDelay": 600,
+    "numlockOnBoot": true
   },
 
   "monitors": {
@@ -160,6 +168,7 @@
     "terminal": "SUPER + T",
     "browser": "SUPER + B",
     "fileManager": "SUPER + E",
+    "spotify": "SUPER + R",
     "closeWindow": "SUPER + Q",
     "fullscreen": "SUPER + F",
     "toggleFloating": "SUPER + V",

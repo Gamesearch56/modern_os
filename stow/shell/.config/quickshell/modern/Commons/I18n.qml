@@ -21,11 +21,12 @@ Singleton {
     id: root
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string activeLang: Config.language.ui ?? "en"
+    readonly property string activeLang: Config.language.ui ?? "de"
     readonly property string fallbackLang: Config.language.fallback ?? "en"
 
     property var _active: ({})
     property var _fallback: ({})
+    property int _gen: 0
 
     FileView {
         id: activeFile
@@ -40,6 +41,7 @@ Singleton {
                 Logger.error("I18n", `parse failed for "${root.activeLang}.json": ${e}`);
                 root._active = ({});
             }
+            root._gen++;
         }
         onLoadFailed: (error) => {
             Logger.warn("I18n", `failed to load "${root.activeLang}.json" (${error}) — falling back to "${root.fallbackLang}" only`);
@@ -63,6 +65,7 @@ Singleton {
                 Logger.error("I18n", `parse failed for fallback "${root.fallbackLang}.json": ${e}`);
                 root._fallback = ({});
             }
+            root._gen++;
         }
         onLoadFailed: (error) => {
             Logger.warn("I18n", `failed to load fallback "${root.fallbackLang}.json" (${error})`);
@@ -87,6 +90,7 @@ Singleton {
     }
 
     function t(path: string, params: var): string {
+        void root._gen;
         let value = root._lookup(root._active, path);
         if (value === undefined)
             value = root._lookup(root._fallback, path);

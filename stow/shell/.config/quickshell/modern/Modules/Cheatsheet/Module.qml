@@ -15,11 +15,12 @@ Scope {
     }
 
     readonly property var categories: ({
-        applications: ["launcher", "terminal", "browser", "fileManager", "settings", "wallpaperPicker", "overview", "exitSession"],
-        windowManagement: ["closeWindow", "fullscreen", "toggleFloating", "pseudoTile", "toggleSplit", "moveFocusLeft", "moveFocusRight", "moveFocusUp", "moveFocusDown", "moveWindowLeft", "moveWindowRight", "moveWindowUp", "moveWindowDown"],
-        workspaces: ["workspace1", "workspace2", "workspace3", "workspace4", "workspace5", "workspace6", "workspace7", "workspace8", "workspace9", "workspace10", "moveToWorkspace1", "moveToWorkspace2", "moveToWorkspace3", "moveToWorkspace4", "moveToWorkspace5", "moveToWorkspace6", "moveToWorkspace7", "moveToWorkspace8", "moveToWorkspace9", "moveToWorkspace10"],
+        applications: ["launcher", "terminal", "browser", "fileManager", "spotify", "settings", "wallpaperPicker", "overview"],
+        system: ["cheatsheet", "powerMenu", "exitSession", "gameMode"],
+        utilities: ["clipboardHistory"],
         screenshots: ["screenshotRegion", "screenshotWindow", "screenshotFull", "colorPicker"],
-        media: ["gameMode", "clipboardHistory", "powerMenu", "cheatsheet"]
+        windowManagement: ["closeWindow", "fullscreen", "toggleFloating", "pseudoTile", "toggleSplit", "moveFocusLeft", "moveFocusRight", "moveFocusUp", "moveFocusDown", "moveWindowLeft", "moveWindowRight", "moveWindowUp", "moveWindowDown"],
+        workspaces: ["workspace1", "workspace2", "workspace3", "workspace4", "workspace5", "workspace6", "workspace7", "workspace8", "workspace9", "workspace10", "moveToWorkspace1", "moveToWorkspace2", "moveToWorkspace3", "moveToWorkspace4", "moveToWorkspace5", "moveToWorkspace6", "moveToWorkspace7", "moveToWorkspace8", "moveToWorkspace9", "moveToWorkspace10"]
     })
 
     LazyLoader {
@@ -80,6 +81,8 @@ Scope {
                             spacing: Tokens.spacing.md
 
                             Row {
+                                Layout.preferredWidth: Tokens.spacing.xxl * 8
+                                Layout.alignment: Qt.AlignVCenter
                                 spacing: Tokens.spacing.xs
                                 Repeater {
                                     model: modelData.caps

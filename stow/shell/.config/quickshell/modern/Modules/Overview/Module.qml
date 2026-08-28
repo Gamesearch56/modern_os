@@ -64,7 +64,7 @@ Scope {
                                 IconImage {
                                     Layout.preferredWidth: Tokens.spacing.xl
                                     Layout.preferredHeight: Tokens.spacing.xl
-                                    source: Quickshell.iconPath(modelData.lastIpcObject?.class ?? "application-x-executable")
+                                    source: Quickshell.iconPath(modelData.lastIpcObject?.class ?? "application-x-executable", true)
                                     asynchronous: true
                                 }
 

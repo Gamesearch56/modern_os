@@ -25,5 +25,7 @@ wl-clipboard                     # wl-copy/wl-paste, backs the clipboard service
 cliphist                         # clipboard history — see "also worth having" in docs/WIDGETS.md
 grim                             # screenshot capture backend
 slurp                            # region selection for screenshots
+brightnessctl                    # XF86 brightness keys in modules/keybinds.lua
+kdialog                          # Qt file picker (wallpaper Add); zenity is the GTK fallback
 hyprpicker                       # color picker widget backend
 wtype                            # synthetic key events, used by a couple of launcher providers

@@ -16,7 +16,7 @@ PanelWindow {
     anchors.left: true
     anchors.right: true
     implicitHeight: Config.bar.height + (Config.bar.style === "floating" ? Tokens.spacing.sm * 2 : 0)
-    exclusiveZone: Config.bar.autoHide ? 0 : Config.bar.height
+    exclusiveZone: Config.bar.autoHide ? 0 : implicitHeight
     color: "transparent"
 
     Rectangle {
@@ -31,6 +31,8 @@ PanelWindow {
             anchors.fill: parent
             anchors.leftMargin: Tokens.spacing.md
             anchors.rightMargin: Tokens.spacing.md
+            anchors.topMargin: Tokens.spacing.xs
+            anchors.bottomMargin: Tokens.spacing.xs
             spacing: Tokens.spacing.sm
 
             RowLayout {

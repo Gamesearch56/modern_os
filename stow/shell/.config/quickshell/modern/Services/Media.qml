@@ -67,7 +67,7 @@ Singleton {
         root.active?.openUri(uri);
     }
     function launchSpotify() {
-        Quickshell.execDetached(["spotify"]);
+        Quickshell.execDetached(["spotify-launcher"]);
     }
     function setActive(player: var) {
         if (player)

@@ -13,6 +13,9 @@ local function combo(action)
     return config.value("keybinds." .. action, nil)
 end
 
+-- Hyprland's own PATH often lacks ~/.bashrc. Scripts live in the checkout.
+local modern = (os.getenv("HOME") or "") .. "/modern_dotfile/scripts/modern"
+
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
 -- Named config `modern` is ~/.config/quickshell/modern. Bare `qs ipc`
 -- looks for a `default` instance that this desktop never starts.
@@ -27,6 +30,7 @@ local bindings = {
     terminal = hl.dsp.exec_cmd("kitty"),
     browser = hl.dsp.exec_cmd("vivaldi"),
     fileManager = hl.dsp.exec_cmd("dolphin"),
+    spotify = hl.dsp.exec_cmd("spotify-launcher"),
     closeWindow = hl.dsp.window.close(),
     fullscreen = hl.dsp.window.fullscreen(),
     toggleFloating = hl.dsp.window.float({ action = "toggle" }),
@@ -63,12 +67,12 @@ local bindings = {
     moveToWorkspace8 = hl.dsp.window.move({ workspace = 8 }),
     moveToWorkspace9 = hl.dsp.window.move({ workspace = 9 }),
     moveToWorkspace10 = hl.dsp.window.move({ workspace = 10 }),
-    screenshotRegion = hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"),
-    screenshotWindow = hl.dsp.exec_cmd("grim -g \"$(hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"')\" - | wl-copy"),
-    screenshotFull = hl.dsp.exec_cmd("grim - | wl-copy"),
-    gameMode = hl.dsp.exec_cmd("modern game mode toggle"),
+    screenshotRegion = hl.dsp.exec_cmd(modern .. " screenshot region"),
+    screenshotWindow = hl.dsp.exec_cmd(modern .. " screenshot window"),
+    screenshotFull = hl.dsp.exec_cmd(modern .. " screenshot full"),
+    gameMode = hl.dsp.exec_cmd(modern .. " game mode toggle"),
     colorPicker = hl.dsp.exec_cmd("hyprpicker -a"),
-    clipboardHistory = hl.dsp.exec_cmd("modern clipboard show"),
+    clipboardHistory = hl.dsp.exec_cmd(modern .. " clipboard show"),
 }
 
 for action, dispatcher in pairs(bindings) do

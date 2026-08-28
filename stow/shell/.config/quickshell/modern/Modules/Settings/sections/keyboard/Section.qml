@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "."
 
 ColumnLayout {
     spacing: Tokens.spacing.md
@@ -13,6 +14,26 @@ ColumnLayout {
         key: "settings.sections.keyboard"
         styleName: "headlineSmall"
         Layout.fillWidth: true
+    }
+
+    MText {
+        key: "settings.fields.kbLayout"
+        styleName: "titleSmall"
+        Layout.fillWidth: true
+    }
+
+    RowLayout {
+        spacing: Tokens.spacing.sm
+        MChip {
+            key: "settings.kbDe"
+            checked: sectionModel.kbLayout === "de"
+            onClicked: ConfigWrite.set("input.kbLayout", "de")
+        }
+        MChip {
+            key: "settings.kbUs"
+            checked: sectionModel.kbLayout === "us"
+            onClicked: ConfigWrite.set("input.kbLayout", "us")
+        }
     }
 
     MText {

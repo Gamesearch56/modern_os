@@ -40,9 +40,18 @@ Scope {
                     anchors.fill: parent
                     spacing: Tokens.spacing.md
 
-                    MText {
-                        key: "wallpaper.title"
-                        styleName: "headlineSmall"
+                    RowLayout {
+                        Layout.fillWidth: true
+                        MText {
+                            key: "wallpaper.title"
+                            styleName: "headlineSmall"
+                            Layout.fillWidth: true
+                        }
+                        MIconButton {
+                            iconName: "list-add"
+                            key: "wallpaper.add"
+                            onClicked: Wallpaper.importWallpaper()
+                        }
                     }
 
                     GridView {

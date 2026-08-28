@@ -84,7 +84,10 @@
   },
   "wallpaper": {
     "title": "Hintergründe",
-    "empty": "Keine Hintergründe gefunden"
+    "empty": "Keine Hintergründe gefunden",
+    "add": "Hintergrund hinzufügen",
+    "alreadyInLibrary": "Diese Datei liegt schon im Hintergrundordner",
+    "importFailed": "Hintergrund konnte nicht importiert werden"
   },
   "notifications": {
     "empty": "Keine Benachrichtigungen",
@@ -148,6 +151,7 @@
       "terminal": "Terminal",
       "browser": "Browser",
       "fileManager": "Dateimanager",
+      "spotify": "Spotify",
       "closeWindow": "Fenster schließen",
       "fullscreen": "Vollbild",
       "toggleFloating": "Schwebend umschalten",
@@ -190,6 +194,8 @@
     },
     "category": {
       "applications": "Anwendungen",
+      "system": "System",
+      "utilities": "Werkzeuge",
       "windowManagement": "Fensterverwaltung",
       "workspaces": "Arbeitsbereiche",
       "screenshots": "Bildschirmfotos",
@@ -213,6 +219,8 @@
     "gated": "Kontenänderungen nutzen den abgeschotteten Helfer modern-usersd (docs/SECURITY.md). Er wird standardmäßig nicht nach /usr installiert.",
     "langEn": "English",
     "langDe": "Deutsch",
+    "kbDe": "Deutsch (DE)",
+    "kbUs": "English (US)",
     "fields": {
       "motionScale": "Bewegungsfaktor",
       "autologin": "Automatische Anmeldung",
@@ -225,6 +233,7 @@
       "transparency": "Transparenz",
       "cornerRounding": "Eckenrundung",
       "languageUi": "UI-Sprache",
+      "kbLayout": "Tastaturlayout",
       "dateFormat": "Datumsformat",
       "timeFormat": "Zeitformat",
       "firstDayOfWeek": "Erster Wochentag",

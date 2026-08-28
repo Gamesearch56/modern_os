@@ -1,3 +1,4 @@
+//@ pragma IconTheme Papirus-Dark
 // Entry point for the modern Quickshell session. Modules are composed
 // here; none of them import each other.
 import Quickshell

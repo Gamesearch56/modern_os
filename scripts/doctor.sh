@@ -83,10 +83,12 @@ else
 fi
 
 section "user units"
-if systemctl --user is-enabled modern-shell.service >/dev/null 2>&1; then
+if pgrep -u "$USER" -x qs >/dev/null 2>&1 || pgrep -u "$USER" -f 'qs -c modern' >/dev/null 2>&1; then
+    ok "qs -c modern is running as a Hyprland child (modern-shell.service stays disabled on TTY sessions)"
+elif systemctl --user is-enabled modern-shell.service >/dev/null 2>&1; then
     ok "modern-shell.service enabled"
 else
-    warn "modern-shell.service not enabled (stow systemd + systemctl --user enable --now)"
+    warn "neither qs nor modern-shell.service is running (start Hyprland via start-hyprland)"
 fi
 
 section "PATH tools"

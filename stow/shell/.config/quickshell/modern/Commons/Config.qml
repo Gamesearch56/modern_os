@@ -64,7 +64,7 @@ Singleton {
             }
 
             property JsonObject design: JsonObject {
-                property string activeProfile: "tonal-spot-auto"
+                property string activeProfile: "tonal-spot-dark"
                 property real cornerRounding: 1.0
                 property real transparency: 0.85
                 property int blurStrength: 40
@@ -81,7 +81,7 @@ Singleton {
             }
 
             property JsonObject language: JsonObject {
-                property string ui: "en" // JSON key "ui", not "interface" — reserved QML identifier, see docs/DECISIONS.md
+                property string ui: "de" // JSON key "ui", not "interface" — reserved QML identifier, see docs/DECISIONS.md
                 property string fallback: "en"
                 property string dateFormat: "DD.MM.YYYY"
                 property string timeFormat: "HH:mm"
@@ -91,7 +91,7 @@ Singleton {
             property JsonObject bar: JsonObject {
                 property string position: "top"
                 property string style: "floating"
-                property int height: 40
+                property int height: 48
                 property bool autoHide: false
                 property JsonObject perMonitor: JsonObject {
                     property bool enabled: true
@@ -117,6 +117,14 @@ Singleton {
             property var monitors: ({ profiles: ({}), rules: [] })
 
             property var windowRules: []
+
+            property JsonObject input: JsonObject {
+                property string kbLayout: "de"
+                property string kbVariant: ""
+                property int repeatRate: 25
+                property int repeatDelay: 600
+                property bool numlockOnBoot: true
+            }
 
             property JsonObject launcher: JsonObject {
                 property var providers: ({
@@ -199,6 +207,7 @@ Singleton {
                 terminal: "SUPER + T",
                 browser: "SUPER + B",
                 fileManager: "SUPER + E",
+                spotify: "SUPER + R",
                 closeWindow: "SUPER + Q",
                 fullscreen: "SUPER + F",
                 toggleFloating: "SUPER + V",
@@ -236,6 +245,7 @@ Singleton {
     readonly property alias typography: adapter.typography
     readonly property alias design: adapter.design
     readonly property alias language: adapter.language
+    readonly property alias input: adapter.input
     readonly property alias bar: adapter.bar
     readonly property alias widgets: adapter.widgets
     readonly property alias monitors: adapter.monitors

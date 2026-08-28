@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "."
 
 ColumnLayout {
     spacing: Tokens.spacing.md
