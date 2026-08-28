@@ -14,15 +14,15 @@ local function combo(action)
 end
 
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
--- `modern` lives in the git clone, not on PATH for Hyprland keybinds.
--- `qs` is /usr/bin/qs from the quickshell package.
+-- Named config `modern` is ~/.config/quickshell/modern. Bare `qs ipc`
+-- looks for a `default` instance that this desktop never starts.
 local bindings = {
-    launcher = hl.dsp.exec_cmd("qs ipc call launcher toggle"),
-    powerMenu = hl.dsp.exec_cmd("qs ipc call powermenu toggle"),
-    cheatsheet = hl.dsp.exec_cmd("qs ipc call cheatsheet toggle"),
-    settings = hl.dsp.exec_cmd("qs ipc call settings open"),
-    wallpaperPicker = hl.dsp.exec_cmd("qs ipc call wallpaper pick"),
-    overview = hl.dsp.exec_cmd("qs ipc call overview toggle"),
+    launcher = hl.dsp.exec_cmd("qs -c modern ipc call launcher toggle"),
+    powerMenu = hl.dsp.exec_cmd("qs -c modern ipc call powermenu toggle"),
+    cheatsheet = hl.dsp.exec_cmd("qs -c modern ipc call cheatsheet toggle"),
+    settings = hl.dsp.exec_cmd("qs -c modern ipc call settings open"),
+    wallpaperPicker = hl.dsp.exec_cmd("qs -c modern ipc call wallpaper pick"),
+    overview = hl.dsp.exec_cmd("qs -c modern ipc call overview toggle"),
     exitSession = hl.dsp.exit(),
     terminal = hl.dsp.exec_cmd("kitty"),
     browser = hl.dsp.exec_cmd("vivaldi"),

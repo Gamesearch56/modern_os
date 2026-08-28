@@ -11,7 +11,7 @@ TTY: start-hyprland   →  Hyprland (stow/hypr)
 greetd (gated)        →  (same, via hyprland.desktop / UWSM)
                       │
                       ├─ modern-shell.service  (user unit)
-                      │     ExecStart=quickshell -p %h/.config/quickshell/modern
+                      │     ExecStart=quickshell -c modern
                       └─ portals (xdg-desktop-portal-hyprland + gtk/kde)
 ```
 
@@ -70,6 +70,6 @@ Screenshot and ScreenCast are Hyprland.
 
 1. Confirm you launched with `start-hyprland`, not `Hyprland`
 2. TTY login as the same user, `systemctl --user status modern-shell.service`
-3. `quickshell -p ~/.config/quickshell/modern` in a terminal — QML errors
+3. `qs -c modern log -t 80` or `quickshell -c modern` in a terminal — QML errors
    print there
 4. `scripts/doctor.sh` then `docs/TROUBLESHOOTING.md`

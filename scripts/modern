@@ -27,13 +27,17 @@ fi
 TARGET="$1"
 shift
 
+ipc() {
+    exec qs -c modern ipc call "$@"
+}
+
 case "$TARGET" in
     volume)
         ACTION="${1:-up}"
         case "$ACTION" in
-            up) exec qs ipc call audio volumeUp ;;
-            down) exec qs ipc call audio volumeDown ;;
-            mute) exec qs ipc call audio mute ;;
+            up) ipc audio volumeUp ;;
+            down) ipc audio volumeDown ;;
+            mute) ipc audio mute ;;
             *) echo "unknown volume action: $ACTION" >&2; exit 1 ;;
         esac
         ;;
@@ -42,13 +46,13 @@ case "$TARGET" in
         exit 1
         ;;
     wallpaper)
-        exec qs ipc call wallpaper "${1:-pick}"
+        ipc wallpaper "${1:-pick}"
         ;;
     shell)
-        exec qs ipc call shell "${1:-reload}"
+        ipc shell "${1:-reload}"
         ;;
     settings)
-        exec qs ipc call settings "${1:-open}"
+        ipc settings "${1:-open}"
         ;;
     config)
         SUB="${1:-}"
@@ -70,6 +74,6 @@ case "$TARGET" in
         ;;
     *)
         FUNC="${1:-toggle}"
-        exec qs ipc call "$TARGET" "$FUNC"
+        ipc "$TARGET" "$FUNC"
         ;;
 esac

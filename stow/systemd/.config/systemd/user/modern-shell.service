@@ -5,9 +5,8 @@ After=graphical-session.target
 # reaches that target, and PartOf would stop the shell immediately.
 
 [Service]
-# -p points at the stowed config dir (~/.config/quickshell/modern).
-# %h is the systemd home specifier so this unit is user-portable.
-ExecStart=quickshell -p %h/.config/quickshell/modern
+# -c modern is ~/.config/quickshell/modern (same name Hyprland IPC uses).
+ExecStart=quickshell -c modern
 Restart=always
 RestartSec=1
 

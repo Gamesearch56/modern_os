@@ -65,9 +65,10 @@ this repo's Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell.
 - Extra `devuser` sessions: `loginctl list-sessions`, then
   `loginctl terminate-session <id>` from the daily-driver account, or as
   `devuser` on a TTY: `pkill -x Hyprland`.
-- After restow, autostart runs `quickshell` as a child of *this*
-  compositor. QML errors: `~/.local/state/modern/quickshell.log` or
-  `quickshell -p ~/.config/quickshell/modern` in kitty.
+- After restow, autostart runs `qs -c modern` as a child of *this*
+  compositor. Bare `qs ipc` talks to a `default` config that does not
+  exist — keybinds use `qs -c modern ipc call …`. QML errors:
+  `qs -c modern log -t 80` or `~/.local/state/modern/quickshell.log`.
 - `TypeError: … is not a function` on a singleton: missing `qmldir`
   entry. See `docs/DECISIONS.md` #19.
 

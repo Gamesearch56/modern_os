@@ -1,7 +1,7 @@
 // Resolves a widget id from config.json to Widgets/<id>/Widget.qml.
 // Unknown ids log and collapse rather than crashing the bar.
 import QtQuick
-import "../../../Commons"
+import "../../Commons"
 
 Loader {
     id: root

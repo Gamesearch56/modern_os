@@ -18,7 +18,7 @@ hl.on("hyprland.start", function()
         .. "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP; "
         .. "systemctl --user start hyprpolkitagent || true; "
         .. "systemctl --user stop modern-shell.service 2>/dev/null || true; "
-        .. "exec quickshell -p \"$HOME/.config/quickshell/modern\" >>\"$log\" 2>&1'")
+        .. "exec qs -c modern >>\"$log\" 2>&1'")
 
     hl.exec_cmd("hypridle")
 

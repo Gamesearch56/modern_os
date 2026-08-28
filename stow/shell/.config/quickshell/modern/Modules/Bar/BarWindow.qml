@@ -7,7 +7,9 @@ import "../../Widgets"
 PanelWindow {
     id: root
 
-    required property var screen
+    // screen is PanelWindow's own property; Module.qml assigns Variants'
+    // modelData. A second `required property var screen` shadows it and
+    // the layer surface never attaches to a monitor.
 
     anchors.top: Config.bar.position !== "bottom"
     anchors.bottom: Config.bar.position === "bottom"
