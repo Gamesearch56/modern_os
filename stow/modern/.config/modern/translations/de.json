@@ -390,7 +390,9 @@
     "window": "Fenster",
     "full": "Ganzer Bildschirm",
     "dragHint": "Zum Auswählen ziehen",
-    "saved": "Screenshot gespeichert"
+    "saved": "Screenshot gespeichert",
+    "copied": "In die Zwischenablage kopiert",
+    "savedHint": "Im Screenshot-Ordner gespeichert"
   },
   "time": {
     "weekday": {

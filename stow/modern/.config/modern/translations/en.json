@@ -390,7 +390,9 @@
     "window": "Window",
     "full": "Full screen",
     "dragHint": "Drag to select",
-    "saved": "Screenshot saved"
+    "saved": "Screenshot saved",
+    "copied": "Copied to the clipboard",
+    "savedHint": "Saved to your screenshots folder"
   },
   "time": {
     "weekday": {

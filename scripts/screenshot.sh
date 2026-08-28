@@ -76,6 +76,7 @@ slurp_themed() {
 case "$MODE" in
     region)
         if [ -n "$GEOM_ARG" ]; then
+            # Compositor-global box (slurp / hyprctl monitors), not output-local.
             geom="$GEOM_ARG"
         else
             command -v slurp >/dev/null 2>&1 || { echo "screenshot: slurp not on PATH" >&2; exit 1; }

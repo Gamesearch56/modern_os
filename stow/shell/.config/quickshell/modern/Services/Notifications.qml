@@ -5,6 +5,7 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Services.Notifications
+import Quickshell.Io
 import QtQuick
 import "../Commons"
 
@@ -82,12 +83,13 @@ Singleton {
         }
     }
 
-    function toast(summary: string, body: string) {
+    function toast(summary: string, body: string, imagePath) {
         if (root.dnd)
             return;
         const item = {
             summary: summary,
             body: body || "",
+            image: imagePath || "",
             appName: "modern",
             dismissed: false,
             local: true,
@@ -128,4 +130,11 @@ Singleton {
     function toggle() { root.panelOpen = !root.panelOpen; }
     function show() { root.panelOpen = true; }
     function hide() { root.panelOpen = false; }
+
+    IpcHandler {
+        target: "notifications"
+        function toggle() { root.toggle(); }
+        function show() { root.show(); }
+        function hide() { root.hide(); }
+    }
 }
