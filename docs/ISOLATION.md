@@ -35,7 +35,7 @@ this session: **`README.md`**. Install flags: `docs/INSTALL.md`.
    (not the `Hyprland` binary). One Hyprland per user — exit the old
    one before starting another TTY.
 3. Return with `Ctrl+Alt+F1` or `F2`. End the test compositor with
-   `hyprctl dispatch exit`, then `exit` on the TTY.
+   `hyprctl dispatch "hl.dsp.exit()"`, then `exit` on the TTY.
 
 A reboot still autologins the daily-driver account as long as greetd was
 never enabled. Removing the test account (`sudo userdel -r devuser`)

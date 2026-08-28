@@ -59,7 +59,7 @@ this repo's Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell.
 - **One Hyprland per user.** A second TTY's `start-hyprland` does not get
   the shell if an older instance still owns `modern-shell.service`.
   Exit every leftover compositor before starting a new one.
-- End a session: `SUPER+T`, then `hyprctl dispatch exit`. You return to
+- End a session: `SUPER+T`, then `hyprctl dispatch "hl.dsp.exit()"`. You return to
   the TTY prompt; `exit` or Ctrl+D logs out of that TTY. Switch back to
   the daily driver with `Ctrl+Alt+F1` or `F2`.
 - Extra `devuser` sessions: `loginctl list-sessions`, then

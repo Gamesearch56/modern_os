@@ -145,7 +145,7 @@ TTY3.
 
 - **Keep both sessions:** `Ctrl+Alt+F1` or `Ctrl+Alt+F2` until you see
   the `bastianweigand` desktop. Nothing in the main home was rewritten.
-- **End the test session:** `SUPER+T`, then `hyprctl dispatch exit`
+- **End the test session:** `SUPER+T`, then `hyprctl dispatch "hl.dsp.exit()"`
   (or `SUPER+SHIFT+M` once that bind is stowed). You land back on the
   TTY prompt — `exit` or Ctrl+D logs out of that TTY. Then
   `Ctrl+Alt+F1`/`F2`. Do not open a second `start-hyprland` while the
