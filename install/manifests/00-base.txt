@@ -1,0 +1,30 @@
+# Base system — every profile installs this layer first.
+base                    # minimal Arch base group
+base-devel              # toolchain required to build AUR packages
+linux-zen               # low-latency kernel, matches the audited running system
+linux-zen-headers       # required for DKMS-style modules against linux-zen
+linux-firmware          # firmware blobs for GPU/network/etc.
+amd-ucode               # AMD CPU microcode updates
+btrfs-progs             # the root filesystem is btrfs (see docs/BACKUP.md)
+dosfstools              # mkfs.vfat for the EFI System Partition
+exfatprogs              # read/write the exfat external backup SSD
+fuse2                   # required by several AppImage-style AUR packages
+sudo                    # privilege escalation for install.sh and daily use
+git                     # clone this repo, and general dev use
+stow                    # symlinks every stow/ package into $HOME
+jq                      # JSON manipulation used throughout install/ and scripts/
+bash-completion         # completion for pacman/systemctl/etc.
+man-db                  # man pages
+bc                      # arithmetic in shell scripts (theme-apply, doctor)
+gdu                     # fast disk usage — feeds Settings > Storage
+lshw                    # hardware inventory — feeds Settings > System
+pacman-contrib          # paccache, checkupdates — used by Settings > Update
+reflector               # mirrorlist refresh, see Settings > Update
+openssh                 # remote access / git over ssh
+wget                    # fetched by install.sh and scripts/optiscaler.sh
+unzip                   # unpacking release archives (OptiScaler, fonts)
+zip                     # export/import of config.json and backups
+samba                   # LAN file sharing (kept from the audited setup)
+wsdd                    # Windows discovery for the samba share above
+zram-generator          # swap-on-zram, standard low-RAM-pressure tuning
+ufw                     # firewall — see docs/SECURITY.md and the KDE Connect port rule

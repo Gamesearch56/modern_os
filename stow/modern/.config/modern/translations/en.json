@@ -1,0 +1,86 @@
+{
+  "bar": {
+    "launcher": "Applications",
+    "workspaces": "Workspaces",
+    "tray": "Tray",
+    "clock": "Clock",
+    "volume": "Volume",
+    "muted": "Muted",
+    "media": "Media",
+    "weather": "Weather",
+    "network": "Network",
+    "microphone": "Microphone",
+    "performance": "Performance",
+    "vpn": "VPN",
+    "bluetooth": "Bluetooth",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "power": "Power"
+  },
+  "powerMenu": {
+    "title": "Power",
+    "lock": "Lock",
+    "logout": "Log out",
+    "restart": "Restart",
+    "poweroff": "Shut down",
+    "suspend": "Suspend",
+    "hibernate": "Hibernate",
+    "cancel": "Cancel",
+    "confirmTitle": "Are you sure?",
+    "confirmBody": "This will {action} in {seconds}s. Press any key to cancel."
+  },
+  "cheatsheet": {
+    "title": "Keyboard shortcuts",
+    "search": "Search shortcuts...",
+    "category": {
+      "applications": "Applications",
+      "windowManagement": "Window management",
+      "workspaces": "Workspaces",
+      "screenshots": "Screenshots",
+      "media": "Media"
+    }
+  },
+  "launcher": {
+    "placeholder": "Search apps, run a command, calculate...",
+    "mostUsed": "Most used",
+    "noResults": "No results"
+  },
+  "settings": {
+    "title": "Settings",
+    "search": "Search settings...",
+    "sections": {
+      "general": "General",
+      "applications": "Applications",
+      "accounts": "Accounts & Connections",
+      "privacy": "Privacy & Permissions",
+      "design": "Design",
+      "language": "Language",
+      "keyboard": "Keyboard",
+      "time": "Time",
+      "displays": "Displays",
+      "windows": "Windows",
+      "audio": "Audio",
+      "network": "Network",
+      "widgets": "Widgets",
+      "launcher": "Launcher",
+      "power": "Power",
+      "screenshots": "Screenshots and recording",
+      "users": "Users",
+      "storage": "Storage",
+      "system": "System",
+      "gaming": "Gaming"
+    }
+  },
+  "onboarding": {
+    "welcome": "Welcome to modern_dotfile",
+    "language": "Choose your language",
+    "monitors": "Set up your displays",
+    "wallpaper": "Pick a wallpaper",
+    "theme": "Choose a color style",
+    "accounts": "Connect accounts (optional)",
+    "finish": "You're all set",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip"
+  }
+}

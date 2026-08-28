@@ -1,0 +1,6 @@
+# Flatpak-distributed apps (M6, `full` profile). Empty by default — the
+# audited system had `flatpak` installed but nothing actually flatpaked,
+# and the old install.sh never called `flatpak install` at all (docs/DECISIONS.md
+# audit note). Add app IDs here as you adopt them, one per line, e.g.:
+#
+# com.proton_pass.ProtonPass

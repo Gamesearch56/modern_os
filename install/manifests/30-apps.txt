@@ -1,0 +1,28 @@
+# Daily-driver apps. This is the M0 bar: minimal, but enough to be
+# usable day to day without switching back to the old account.
+kitty                   # terminal — SUPER+T
+dolphin                 # file manager — SUPER+E (replaces Nautilus, Qt-first: docs/DECISIONS.md #5)
+vivaldi                 # browser — SUPER+B, themed per docs/THEMING.md
+fastfetch                # terminal banner, themed via matugen (docs/DECISIONS.md, .bashrc migration)
+imv                      # lightweight image viewer
+mpv                      # video playback
+vlc                      # video playback fallback / disc & format coverage mpv lacks
+ffmpegthumbnailer         # Dolphin video thumbnails
+gst-plugins-base          # GStreamer codecs for mpv/browser media
+gst-plugins-good
+gst-plugins-bad
+gst-plugins-ugly
+gst-libav
+libva-utils               # VA-API diagnostics for hardware video decode
+libmpeg2                  # legacy mpeg2 decode support
+neovim                    # $EDITOR, kept from the audited .bashrc
+tmux                      # terminal multiplexer, daily habit
+gnome-text-editor          # simple GUI text editor fallback
+btop                      # terminal system monitor, complements the bar's performance widget
+cmatrix                  # kept — harmless, in the audited list
+python-html2text          # dependency for a couple of personal scripts
+firefox                  # secondary browser for sites that fight Vivaldi
+qbittorrent               # torrent client
+yt-dlp                    # video downloader, used by a couple of personal scripts
+spotify-launcher          # Spotify client — MPRIS source for the media widget
+discord                  # kept from the audited list

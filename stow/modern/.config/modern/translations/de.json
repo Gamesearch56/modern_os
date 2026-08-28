@@ -1,0 +1,86 @@
+{
+  "bar": {
+    "launcher": "Anwendungen",
+    "workspaces": "Arbeitsbereiche",
+    "tray": "Ablage",
+    "clock": "Uhr",
+    "volume": "Lautstärke",
+    "muted": "Stummgeschaltet",
+    "media": "Medien",
+    "weather": "Wetter",
+    "network": "Netzwerk",
+    "microphone": "Mikrofon",
+    "performance": "Leistung",
+    "vpn": "VPN",
+    "bluetooth": "Bluetooth",
+    "notifications": "Benachrichtigungen",
+    "settings": "Einstellungen",
+    "power": "Ein/Aus"
+  },
+  "powerMenu": {
+    "title": "Ein/Aus",
+    "lock": "Sperren",
+    "logout": "Abmelden",
+    "restart": "Neu starten",
+    "poweroff": "Herunterfahren",
+    "suspend": "Ruhezustand",
+    "hibernate": "Tiefschlaf",
+    "cancel": "Abbrechen",
+    "confirmTitle": "Bist du sicher?",
+    "confirmBody": "Dies wird in {seconds}s ausgeführt: {action}. Beliebige Taste zum Abbrechen."
+  },
+  "cheatsheet": {
+    "title": "Tastenkombinationen",
+    "search": "Kombinationen durchsuchen...",
+    "category": {
+      "applications": "Anwendungen",
+      "windowManagement": "Fensterverwaltung",
+      "workspaces": "Arbeitsbereiche",
+      "screenshots": "Bildschirmfotos",
+      "media": "Medien"
+    }
+  },
+  "launcher": {
+    "placeholder": "Apps suchen, Befehl ausführen, rechnen...",
+    "mostUsed": "Meistgenutzt",
+    "noResults": "Keine Ergebnisse"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "search": "Einstellungen durchsuchen...",
+    "sections": {
+      "general": "Allgemein",
+      "applications": "Anwendungen",
+      "accounts": "Konten & Verbindungen",
+      "privacy": "Datenschutz & Berechtigungen",
+      "design": "Design",
+      "language": "Sprache",
+      "keyboard": "Tastatur",
+      "time": "Zeit",
+      "displays": "Bildschirme",
+      "windows": "Fenster",
+      "audio": "Audio",
+      "network": "Netzwerk",
+      "widgets": "Widgets",
+      "launcher": "Starter",
+      "power": "Energie",
+      "screenshots": "Bildschirmfotos und Aufnahme",
+      "users": "Benutzer",
+      "storage": "Speicher",
+      "system": "System",
+      "gaming": "Gaming"
+    }
+  },
+  "onboarding": {
+    "welcome": "Willkommen bei modern_dotfile",
+    "language": "Sprache wählen",
+    "monitors": "Bildschirme einrichten",
+    "wallpaper": "Hintergrundbild wählen",
+    "theme": "Farbstil wählen",
+    "accounts": "Konten verbinden (optional)",
+    "finish": "Fertig eingerichtet",
+    "next": "Weiter",
+    "back": "Zurück",
+    "skip": "Überspringen"
+  }
+}

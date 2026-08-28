@@ -1,0 +1,11 @@
+# Fonts, color engine, GTK/Qt theming support.
+awww                    # wallpaper daemon with animated transitions — see docs/WIDGETS.md
+inter-font              # default interface typeface (docs/DESIGN.md)
+ttf-jetbrains-mono-nerd # default monospace typeface, with icon glyphs for the bar/cheatsheet
+ttf-liberation          # metric-compatible fallback for documents expecting Arial/Times
+noto-fonts              # broad Unicode coverage fallback
+noto-fonts-cjk          # CJK fallback (kept from the audited system)
+noto-fonts-emoji        # emoji rendering everywhere, including the launcher's `:` emoji mode
+woff2-font-awesome      # icon font used by a couple of legacy-styled web views
+gnome-themes-extra      # provides Adwaita GTK assets some apps fall back to
+sassc                   # compiles the generated gtk.css theme templates

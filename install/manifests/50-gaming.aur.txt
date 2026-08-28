@@ -1,0 +1,13 @@
+# Alternative game launcher for Epic/GOG/Amazon titles.
+heroic-games-launcher-bin
+# GUI front-end for tracking/switching Proton-GE builds.
+protonup-qt
+# 32-bit extest, required by a couple of anti-cheat-free older titles
+# for synthetic input under Wine — kept from the audited system.
+lib32-extest
+# Personal: Path of Exile build planner.
+rusty-path-of-building
+# Personal: Path of Exile 2 loot filter/overlay tool.
+exiled-exchange-2-bin
+# Personal: World of Warcraft addon manager.
+wowup-cf-bin

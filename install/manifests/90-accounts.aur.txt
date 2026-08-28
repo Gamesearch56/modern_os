@@ -1,0 +1,5 @@
+# Accounts & Connections settings section (docs/ARCHITECTURE.md) surfaces
+# these as "connect" affordances. Not part of any default profile — add
+# via `--extra proton` if you want them pulled in automatically.
+proton-pass-bin
+proton-mail-bin

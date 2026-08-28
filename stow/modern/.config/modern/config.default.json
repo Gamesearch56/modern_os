@@ -1,0 +1,190 @@
+{
+  "$schema": "config.schema.json",
+  "_comment": "Shipped defaults. Tracked in git. Copied to config.json on first install; config.json is the live, gitignored, per-machine file that the Settings app edits. Never edit this file to change YOUR machine's behaviour — edit config.json.",
+
+  "general": {
+    "autostart": [],
+    "notificationTimeoutMs": 5000,
+    "dndSchedule": { "enabled": false, "from": "23:00", "to": "07:00" },
+    "idleTimings": { "dimSec": 120, "screenOffSec": 300, "lockSec": 600, "suspendSec": 1800 },
+    "autologin": false
+  },
+
+  "motion": {
+    "scale": 1.0
+  },
+
+  "typography": {
+    "ui": "Inter",
+    "document": "Inter",
+    "monospace": "JetBrainsMono Nerd Font",
+    "scale": 1.0,
+    "weight": 400
+  },
+
+  "design": {
+    "activeProfile": "tonal-spot-auto",
+    "cornerRounding": 1.0,
+    "transparency": 0.85,
+    "blurStrength": 40,
+    "iconTheme": "Papirus-Dark",
+    "cursorTheme": "Bibata-Modern-Classic",
+    "cursorSize": 24,
+    "bootScreen": {
+      "mode": "static",
+      "wallpaperOnSplash": true,
+      "wallpaperOnLock": true,
+      "wallpaperOnLogin": true,
+      "wallpaperOnVivaldi": true
+    }
+  },
+
+  "language": {
+    "ui": "en",
+    "fallback": "en",
+    "dateFormat": "DD.MM.YYYY",
+    "timeFormat": "HH:mm",
+    "firstDayOfWeek": 1
+  },
+
+  "bar": {
+    "position": "top",
+    "style": "floating",
+    "height": 40,
+    "autoHide": false,
+    "perMonitor": { "enabled": true },
+    "left": ["launcher", "workspaces", "tray", "taskbar"],
+    "center": ["clock", "media"],
+    "right": ["audio", "weather", "network", "microphone", "performance", "vpn", "bluetooth", "notifications", "settings", "power"]
+  },
+
+  "widgets": {
+    "clock": { "dateFormat": "DD.MM.YYYY", "timeFormat": "HH:mm", "showSeconds": false, "showWeekday": false },
+    "weather": { "locationMode": "auto", "manualLocation": "", "units": "metric" },
+    "performance": { "pollIntervalMs": 2000, "showGpu": true, "showTemps": true },
+    "audio": { "scrollStepPercent": 5, "scrollStepFinePercent": 1 },
+    "quickSettingsOrder": ["wifi", "bluetooth", "audio", "brightness", "dnd", "calendar"]
+  },
+
+  "monitors": {
+    "profiles": {},
+    "rules": []
+  },
+
+  "windowRules": [],
+
+  "launcher": {
+    "providers": {
+      "apps": { "enabled": true, "prefix": "" },
+      "shell": { "enabled": true, "prefix": ">" },
+      "calculator": { "enabled": true, "prefix": "=" },
+      "websearch": { "enabled": true, "prefix": "?" },
+      "emoji": { "enabled": true, "prefix": ":" },
+      "files": { "enabled": true, "prefix": "/" },
+      "windows": { "enabled": true, "prefix": "w " }
+    },
+    "frecencyEnabled": true,
+    "mostUsedGridSize": 8,
+    "resultCount": 9,
+    "showIcons": true,
+    "showDescriptions": true
+  },
+
+  "power": {
+    "buttonAction": "ask",
+    "lidActionAc": "lock",
+    "lidActionBattery": "suspend",
+    "inhibitOnFullscreen": true,
+    "inhibitOnMedia": true
+  },
+
+  "screenshots": {
+    "directory": "~/Pictures/Screenshots",
+    "filenameTemplate": "screenshot-%Y%m%d-%H%M%S",
+    "format": "png",
+    "quality": 90,
+    "copyToClipboard": true,
+    "openEditorAfterCapture": false,
+    "includeCursor": false
+  },
+
+  "audio": {
+    "autoSwitchBluetooth": "ask",
+    "perAppVolume": {},
+    "masterVolumeLimit": 100
+  },
+
+  "network": { "wifiAutoconnectPriority": {}, "dnsOverride": [] },
+
+  "kdeconnect": { "enabled": true, "mirrorNotifications": true, "sharedClipboard": true },
+
+  "accounts": {
+    "protonDrive": { "enabled": false },
+    "calendarIcsUrl": "",
+    "ai": { "provider": "ollama", "ollamaModel": "llama3" }
+  },
+
+  "gaming": {
+    "profiles": {},
+    "systemFixes": { "vmMaxMapCount": true, "fileDescriptorLimits": true, "splitLockMitigate": false },
+    "optiscaler": { "trackedGames": {} }
+  },
+
+  "backup": {
+    "snapperEnabled": false,
+    "resticEnabled": false,
+    "preUpdateSnapshot": true
+  },
+
+  "keybinds": {
+    "_comment": "Combo strings use Hyprland's Lua hl.bind() format: 'MOD + MOD + KEY', matching docs.hypr.land's 0.55+ Lua examples (e.g. 'SUPER + SHIFT + T'). This is the table Settings > Keyboard's shortcut editor and Modules/Cheatsheet both read.",
+    "launcher": "SUPER + SPACE",
+    "powerMenu": "SUPER + M",
+    "cheatsheet": "SUPER + K",
+    "settings": "SUPER + I",
+    "wallpaperPicker": "SUPER + W",
+    "overview": "SUPER + TAB",
+    "terminal": "SUPER + T",
+    "browser": "SUPER + B",
+    "fileManager": "SUPER + E",
+    "closeWindow": "SUPER + Q",
+    "fullscreen": "SUPER + F",
+    "toggleFloating": "SUPER + V",
+    "pseudoTile": "SUPER + P",
+    "toggleSplit": "SUPER + J",
+    "moveFocusLeft": "SUPER + LEFT",
+    "moveFocusRight": "SUPER + RIGHT",
+    "moveFocusUp": "SUPER + UP",
+    "moveFocusDown": "SUPER + DOWN",
+    "moveWindowLeft": "SUPER + SHIFT + LEFT",
+    "moveWindowRight": "SUPER + SHIFT + RIGHT",
+    "moveWindowUp": "SUPER + SHIFT + UP",
+    "moveWindowDown": "SUPER + SHIFT + DOWN",
+    "workspace1": "SUPER + 1",
+    "workspace2": "SUPER + 2",
+    "workspace3": "SUPER + 3",
+    "workspace4": "SUPER + 4",
+    "workspace5": "SUPER + 5",
+    "workspace6": "SUPER + 6",
+    "workspace7": "SUPER + 7",
+    "workspace8": "SUPER + 8",
+    "workspace9": "SUPER + 9",
+    "workspace10": "SUPER + 0",
+    "moveToWorkspace1": "SUPER + SHIFT + 1",
+    "moveToWorkspace2": "SUPER + SHIFT + 2",
+    "moveToWorkspace3": "SUPER + SHIFT + 3",
+    "moveToWorkspace4": "SUPER + SHIFT + 4",
+    "moveToWorkspace5": "SUPER + SHIFT + 5",
+    "moveToWorkspace6": "SUPER + SHIFT + 6",
+    "moveToWorkspace7": "SUPER + SHIFT + 7",
+    "moveToWorkspace8": "SUPER + SHIFT + 8",
+    "moveToWorkspace9": "SUPER + SHIFT + 9",
+    "moveToWorkspace10": "SUPER + SHIFT + 0",
+    "screenshotRegion": "PRINT",
+    "screenshotWindow": "ALT + PRINT",
+    "screenshotFull": "SUPER + PRINT",
+    "gameMode": "SUPER + G",
+    "colorPicker": "SUPER + SHIFT + C",
+    "clipboardHistory": "SUPER + SHIFT + V"
+  }
+}
