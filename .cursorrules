@@ -1,0 +1,11 @@
+# Environment & Tech Stack
+- OS: Arch Linux (Wayland)
+- Window Manager: Hyprland (Native Lua Configuration API)
+- Theming Engine: Wallust (Dynamic color templates)
+- Components: Waybar (CSS), SwayNC, Rofi, Kitty
+
+# Coding & Formatting Standards
+- Keep configurations strictly modular (use `dofile` imports in main entry points).
+- Do not use deprecated syntax or variables from legacy Hyprland versions.
+- For CSS styling (Waybar/SwayNC), rely strictly on Wallust template placeholders like `{{background}}`, `{{color4}}`, etc.
+- Always output clean, complete configuration snippets without conversational filler.

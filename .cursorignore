@@ -1,0 +1,7 @@
+.git/
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.tar.gz
+.cache/
