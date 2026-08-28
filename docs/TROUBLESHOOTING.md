@@ -66,6 +66,8 @@ Then pick a wallpaper: `scripts/theme-apply.sh --wallpaper /path/to/image.jpg`
 ## No colors / ugly defaults
 
 `tokens.json` is optional until the first successful matugen run.
+`install.sh` seeds it from the shipped default wallpaper
+(`~/.config/modern/wallpapers/default.jpg`). To use another image:
 
 ```bash
 scripts/theme-apply.sh --wallpaper /path/to/image

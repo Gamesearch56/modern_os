@@ -166,7 +166,6 @@ git clone git@github.com:Gamesearch56/modern_dotfile.git ~/modern_dotfile
 cd ~/modern_dotfile
 ./install/install.sh --profile m0 --dry-run
 ./install/install.sh --profile m0
-scripts/theme-apply.sh --wallpaper /path/to/image.jpg
 systemctl --user enable --now modern-shell.service
 Hyprland
 ```

@@ -149,17 +149,27 @@ if [ "$TARGET" != "$HOME" ]; then
     log_warn "  Enable modern-shell.service after logging in as the target user."
 fi
 
-# tokens.json needs a seed. The default profile (tonal-spot-auto) wants
-# a wallpaper, which a fresh account does not have. Apply the fixed MD3
-# brand seed with --no-reload (no Hyprland on this TTY yet). Failure here
-# must not abort the install — Colors.qml already ships a dark baseline.
+# tokens.json + lock/login assets come from the shipped default wallpaper
+# (stow/modern/.../wallpapers/default.jpg) so a first session is not
+# unstyled. --no-reload: no Hyprland on this TTY yet. Failure must not
+# abort the install — Colors.qml already ships a dark baseline.
+default_wp="$TARGET/.config/modern/wallpapers/default.jpg"
 wallpaper_state="${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper"
 if command -v matugen >/dev/null 2>&1; then
     if [ -f "$wallpaper_state" ]; then
         run "$REPO_ROOT/scripts/theme-apply.sh" --no-reload \
             || log_warn "theme-apply.sh failed — re-run it after Hyprland is up"
+    elif [ -f "$default_wp" ]; then
+        log_info "applying shipped default wallpaper and generating tokens"
+        run "$REPO_ROOT/scripts/theme-apply.sh" --wallpaper "$default_wp" --no-reload \
+            || log_warn "theme-apply.sh failed — the shell still starts with the Colors.qml fallback"
+        pictures="$HOME/Pictures/Wallpapers"
+        run mkdir -p "$pictures"
+        if [ ! -e "$pictures/default.jpg" ]; then
+            run cp "$default_wp" "$pictures/default.jpg"
+        fi
     else
-        log_info "no wallpaper set yet — generating tokens from the fixed-brand seed"
+        log_info "no wallpaper set — generating tokens from the fixed-brand seed"
         run "$REPO_ROOT/scripts/theme-apply.sh" --profile fixed-brand --no-reload \
             || log_warn "theme-apply.sh failed — the shell still starts with the Colors.qml fallback"
         log_info "Later: scripts/theme-apply.sh --wallpaper /path/to/image.jpg"

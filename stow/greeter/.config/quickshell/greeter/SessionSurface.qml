@@ -13,6 +13,7 @@ Item {
 
     property string mode: "greeter"
     property var color: root._fallback
+    property string wallpaperSource: "file:///var/lib/modern/session/wallpaper.jpg"
 
     readonly property var _fallback: ({
         surface: "#141218",
@@ -21,7 +22,8 @@ Item {
         primary: "#D0BCFF",
         onPrimary: "#381E72",
         surfaceContainerHighest: "#36343B",
-        outline: "#938F99"
+        outline: "#938F99",
+        scrim: "#000000"
     })
 
     FileView {
@@ -49,6 +51,23 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: root.color.surface
+    }
+
+    Image {
+        anchors.fill: parent
+        source: root.wallpaperSource
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        onStatusChanged: {
+            if (status === Image.Error && root.wallpaperSource.indexOf("default.jpg") < 0)
+                root.wallpaperSource = "file://" + Quickshell.env("HOME") + "/.config/modern/wallpapers/default.jpg";
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: root.color.scrim
+        opacity: 0.48
     }
 
     ColumnLayout {

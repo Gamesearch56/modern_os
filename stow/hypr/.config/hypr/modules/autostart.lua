@@ -15,10 +15,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
 
-    -- Wallpaper daemon. Verify awww's exact invocation once installed —
-    -- see docs/TROUBLESHOOTING.md; some wallpaper daemons need an
-    -- explicit `init`/`daemon` subcommand before accepting `awww img`.
+    -- Wallpaper daemon, then restore the last (or shipped default) image.
     hl.exec_cmd("awww-daemon")
+    hl.exec_cmd("sh -lc 'state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; default=\"$HOME/.config/modern/wallpapers/default.jpg\"; if [ -f \"$state\" ]; then img=$(cat \"$state\"); elif [ -f \"$default\" ]; then img=\"$default\"; else exit 0; fi; [ -f \"$img\" ] && awww img \"$img\"'")
 
     -- The shell itself, run as a systemd --user unit (see
     -- docs/DECISIONS.md and the shell-watchdog service) so a Quickshell

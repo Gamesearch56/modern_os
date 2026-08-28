@@ -36,7 +36,7 @@ Singleton {
     Process {
         id: listProc
         running: false
-        command: ["bash", "-lc", "pic=$(xdg-user-dir PICTURES 2>/dev/null || true); pic=${pic:-$HOME/Pictures}; find \"$pic/Wallpapers\" \"$pic\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) 2>/dev/null | sort -u"]
+        command: ["bash", "-lc", "pic=$(xdg-user-dir PICTURES 2>/dev/null || true); pic=${pic:-$HOME/Pictures}; extra=\"$HOME/.config/modern/wallpapers\"; find \"$extra\" \"$pic/Wallpapers\" \"$pic\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) 2>/dev/null | sort -u"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = text().trim().split("\n").filter(l => l.length > 0);

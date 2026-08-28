@@ -50,6 +50,11 @@ Singleton {
         { tintOpacity: 0.14, shadowOpacity: 0.16, shadowRadius: 20 }
     ]
 
+    readonly property QtObject overlay: QtObject {
+        readonly property real scrim: 0.32
+        readonly property real lock: 0.48
+    }
+
     function elevationFor(level: int): var {
         return elevation[Math.max(0, Math.min(level, elevation.length - 1))];
     }

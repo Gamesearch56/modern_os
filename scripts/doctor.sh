@@ -42,7 +42,7 @@ TOKENS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/tokens.json"
 if [ -f "$TOKENS" ]; then
     ok "tokens.json present"
 else
-    warn "tokens.json missing (run scripts/theme-apply.sh after a wallpaper is set)"
+    warn "tokens.json missing (install.sh applies the shipped default wallpaper; or run scripts/theme-apply.sh --wallpaper PATH)"
 fi
 
 SECRETS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/secrets.json"

@@ -9,3 +9,4 @@ noto-fonts-emoji        # emoji rendering everywhere, including the launcher's `
 woff2-font-awesome      # icon font used by a couple of legacy-styled web views
 gnome-themes-extra      # provides Adwaita GTK assets some apps fall back to
 sassc                   # compiles the generated gtk.css theme templates
+imagemagick             # wallpaper-sync.sh blur + boot-downscale variants

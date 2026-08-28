@@ -78,7 +78,12 @@ arch-chroot → chain `install.sh`). Disks are not wiped unless you pass
 
 ## After stow (on the **target** user)
 
-1. `scripts/theme-apply.sh --wallpaper PATH` (writes `tokens.json`)
+`install.sh` phase 5 applies `~/.config/modern/wallpapers/default.jpg`
+(tokens, GTK/Qt/kitty, lock/login copies via `wallpaper-sync.sh`). To
+use a different image later:
+
+1. `scripts/theme-apply.sh --wallpaper PATH` (writes `tokens.json` and
+   syncs lock/login assets)
 2. `systemctl --user enable --now modern-shell.service`
 3. `scripts/doctor.sh`
 4. Optional gated: sysctl, ufw KDE Connect, ESP hook, snapper — each

@@ -10,6 +10,20 @@ Item {
 
     property string mode: Session.mode
 
+    readonly property bool showWallpaper: {
+        if (root.mode === "shutdown")
+            return false;
+        if (root.mode === "lock")
+            return Config.design.bootScreen.wallpaperOnLock ?? true;
+        return Config.design.bootScreen.wallpaperOnLogin ?? true;
+    }
+
+    readonly property string wallpaperFile: {
+        if (Wallpaper.currentPath && Wallpaper.currentPath.length > 0)
+            return Wallpaper.currentPath;
+        return Quickshell.env("HOME") + "/.config/modern/wallpapers/default.jpg";
+    }
+
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
@@ -18,6 +32,21 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: Colors.color.surface
+    }
+
+    Image {
+        anchors.fill: parent
+        visible: root.showWallpaper
+        source: root.wallpaperFile.length > 0 ? "file://" + root.wallpaperFile : ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        visible: root.showWallpaper
+        color: Colors.color.scrim
+        opacity: Tokens.overlay.lock
     }
 
     ColumnLayout {

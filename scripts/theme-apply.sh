@@ -155,6 +155,10 @@ case "$SOURCE_MODE" in
         elif [ -f "$WALLPAPER_STATE" ]; then
             WALLPAPER="$(cat "$WALLPAPER_STATE")"
             [ -f "$WALLPAPER" ] || die "remembered wallpaper no longer exists: $WALLPAPER (pass --wallpaper to set a new one)"
+        elif [ -f "$MODERN_DIR/wallpapers/default.jpg" ]; then
+            WALLPAPER="$MODERN_DIR/wallpapers/default.jpg"
+            echo "$WALLPAPER" > "$WALLPAPER_STATE"
+            log "using shipped default wallpaper $WALLPAPER"
         else
             die "profile '$PROFILE' needs a wallpaper and none is set yet — pass --wallpaper /path/to/image.jpg once (Settings > Design and the wallpaper picker do this for you once built, see docs/DECISIONS.md's wallpaper-assets entry)"
         fi
@@ -188,6 +192,13 @@ fi
 log "running matugen (${MATUGEN_ARGS[*]})"
 matugen "${MATUGEN_ARGS[@]}"
 log "regenerated tokens.json, Colors.qml, kitty/GTK/Qt/KDE/Vivaldi color files"
+
+if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ]; then
+    sync_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-sync.sh"
+    if [ -f "$sync_script" ]; then
+        bash "$sync_script" "$WALLPAPER" || warn "wallpaper-sync.sh failed — lock/login may miss the new image"
+    fi
+fi
 
 # --- Record state for the future System > Diagnostics view (docs/
 # DECISIONS.md "diagnostics") — cheap to write now, useless to add later

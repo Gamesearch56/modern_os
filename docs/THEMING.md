@@ -63,12 +63,9 @@ JSON key and calling `theme-apply.sh` — it never touches matugen directly.
 
 `sourceMode: "wallpaper"` profiles need an actual image. `theme-apply.sh`
 remembers the last one used at `$XDG_STATE_HOME/modern/current-wallpaper`
-(plain text, one absolute path) so that switching *profiles* — as
-opposed to picking a new wallpaper — doesn't require re-passing
-`--wallpaper` every time. The (not yet built) wallpaper picker module and
-Settings > Design are expected to always pass `--wallpaper` explicitly
-when the user picks a new image; `theme-apply.sh` writes it to the state
-file itself in that case, so both call sites stay in sync automatically.
+(plain text, one absolute path). If that file is missing, it falls back
+to the shipped `~/.config/modern/wallpapers/default.jpg`. Switching
+*profiles* without picking a new image reuses the remembered path.
 
 `matugen image <path>` is called with `--source-color-index 0` (most
 dominant color, deterministic) rather than letting matugen prompt
