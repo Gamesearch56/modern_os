@@ -7,9 +7,10 @@ import "../../../../Services"
 RowLayout {
     spacing: Tokens.spacing.xs
     Component.onCompleted: Weather.watching = true
+    Component.onDestruction: Weather.watching = false
 
     MIcon {
-        name: "weather-few-clouds"
+        name: Weather.iconName
         size: Tokens.spacing.lg
     }
 

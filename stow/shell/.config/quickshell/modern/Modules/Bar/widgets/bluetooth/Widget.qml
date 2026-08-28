@@ -4,21 +4,26 @@ import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 
-RowLayout {
-    spacing: Tokens.spacing.xs
+Item {
+    id: root
+    implicitWidth: Tokens.spacing.xxl
+    implicitHeight: Tokens.spacing.xxl
 
-    MIcon {
-        name: Bluetooth.powered ? "bluetooth-active" : "bluetooth-disabled"
-        size: Tokens.spacing.lg
+    MIconButton {
+        anchors.centerIn: parent
+        iconName: Bluetooth.powered ? "bluetooth-active" : "bluetooth-disabled"
+        key: "bar.bluetooth"
+        onClicked: popup.open = !popup.open
     }
 
-    MText {
-        value: Bluetooth.powered ? I18n.t("bluetooth.connected", { count: Bluetooth.connectedCount }) : I18n.t("bluetooth.off")
-        styleName: "labelLarge"
-    }
+    MPopup {
+        id: popup
+        open: false
+        width: Tokens.spacing.xxl * 10
+        height: Tokens.spacing.xxl * 10
+        y: root.height + Tokens.spacing.sm
+        x: root.width - width
 
-    MouseArea {
-        anchors.fill: parent
-        onClicked: Settings.openAt("network", "bluetooth")
+        Panel {}
     }
 }

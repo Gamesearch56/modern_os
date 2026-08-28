@@ -8,11 +8,14 @@ Item {
 
     property alias text: input.text
     property string placeholderKey: ""
+    property string iconName: ""
     property int echoMode: TextInput.Normal
     property bool enabled: true
 
     signal accepted()
     signal textEdited()
+    signal upPressed()
+    signal downPressed()
 
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
@@ -33,10 +36,21 @@ Item {
         }
     }
 
+    MIcon {
+        visible: root.iconName.length > 0
+        anchors.left: parent.left
+        anchors.leftMargin: Tokens.spacing.md
+        anchors.verticalCenter: parent.verticalCenter
+        name: root.iconName
+        size: Tokens.spacing.lg
+        color: Colors.color.onSurfaceVariant
+        tint: true
+    }
+
     TextInput {
         id: input
         anchors.fill: parent
-        anchors.leftMargin: Tokens.spacing.md
+        anchors.leftMargin: root.iconName.length > 0 ? Tokens.spacing.xxl + Tokens.spacing.xs : Tokens.spacing.md
         anchors.rightMargin: Tokens.spacing.md
         verticalAlignment: TextInput.AlignVCenter
         color: Colors.color.onSurface
@@ -49,6 +63,15 @@ Item {
         clip: true
         onAccepted: root.accepted()
         onTextChanged: root.textEdited()
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_Down) {
+                root.downPressed();
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Up) {
+                root.upPressed();
+                event.accepted = true;
+            }
+        }
     }
 
     MText {

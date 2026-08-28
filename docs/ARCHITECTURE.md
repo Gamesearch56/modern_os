@@ -71,6 +71,7 @@ modern_dotfile/
 │   ARCHITECTURE.md DESIGN.md MOTION.md DECISIONS.md INSTALL.md
 │   CURSOR-SETUP.md KEYBINDS.md THEMING.md BOOT.md I18N.md WIDGETS.md
 │   ISOLATION.md BACKUP.md SECURITY.md GAMING.md TROUBLESHOOTING.md
+│   CUTOVER.md
 ├── install/
 │   ├── install.sh              phased, idempotent, set -euo pipefail
 │   ├── lib/                    log.sh ui.sh pkg.sh stow.sh i18n.sh preflight.sh

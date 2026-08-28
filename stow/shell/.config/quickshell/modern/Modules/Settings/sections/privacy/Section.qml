@@ -8,50 +8,53 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.privacy"
-        styleName: "headlineSmall"
+    MSectionHeader { key: "settings.fields.dnd" }
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.on"
+        MSwitch {
+            checked: Config.general.dndSchedule.enabled
+            onToggled: (v) => ConfigWrite.set("general.dndSchedule.enabled", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.dndFrom"
+        MTextField {
+            text: Config.general.dndSchedule.from
+            onAccepted: ConfigWrite.set("general.dndSchedule.from", text)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.dndTo"
+        MTextField {
+            text: Config.general.dndSchedule.to
+            onAccepted: ConfigWrite.set("general.dndSchedule.to", text)
+        }
     }
 
-    MText {
-        key: "settings.fields.dnd"
-        styleName: "titleSmall"
+    MSectionHeader { key: "settings.fields.kdeconnect" }
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.kdeconnectEnabled"
+        MSwitch {
+            checked: Config.kdeconnect.enabled
+            onToggled: (v) => ConfigWrite.set("kdeconnect.enabled", v)
+        }
     }
-
-    MText {
-        value: model.dndText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.mirrorNotifications"
+        MSwitch {
+            checked: Config.kdeconnect.mirrorNotifications
+            onToggled: (v) => ConfigWrite.set("kdeconnect.mirrorNotifications", v)
+        }
     }
-
-    MText {
-        key: "settings.fields.kdeconnect"
-        styleName: "titleSmall"
+    MListItem {
         Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.kdeconnectText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+        titleKey: "settings.fields.sharedClipboard"
+        MSwitch {
+            checked: Config.kdeconnect.sharedClipboard
+            onToggled: (v) => ConfigWrite.set("kdeconnect.sharedClipboard", v)
+        }
     }
 }

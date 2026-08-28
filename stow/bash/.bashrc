@@ -23,11 +23,19 @@ case $- in
 esac
 
 alias vim=nvim
-alias ls='ls -alh --color=auto'
+alias ls='ls --color=auto'
+alias ll='ls -alh --color=auto'
+alias la='ls -A --color=auto'
 alias grep='grep --color=auto'
 alias wallpaper='modern wallpaper picker'
 alias reload_ui='modern shell reload'
-alias system_language='echo use Settings'
+
+shopt -s histappend checkwinsize
+HISTSIZE=5000
+HISTFILESIZE=20000
+
+# shellcheck source=/dev/null
+[ -f /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
 
 load() { yay -S --needed -- "$@"; }
 unload() { yay -Rns -- "$@"; }
@@ -43,4 +51,5 @@ system_find() {
 
 if command -v fastfetch >/dev/null 2>&1; then
     fastfetch
+    echo ""
 fi

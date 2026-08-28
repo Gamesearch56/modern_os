@@ -60,7 +60,8 @@
   "performance": {
     "cpu": "CPU",
     "ram": "RAM",
-    "gpu": "GPU"
+    "gpu": "GPU",
+    "disk": "Disk"
   },
   "notes": {
     "title": "Notizen",
@@ -85,7 +86,7 @@
   "wallpaper": {
     "title": "Hintergründe",
     "empty": "Keine Hintergründe gefunden",
-    "add": "Hintergrund hinzufügen",
+    "add": "Hinzufügen",
     "alreadyInLibrary": "Diese Datei liegt schon im Hintergrundordner",
     "importFailed": "Hintergrund konnte nicht importiert werden"
   },
@@ -98,7 +99,8 @@
   },
   "quickSettings": {
     "title": "Schnelleinstellungen",
-    "brightness": "Helligkeit"
+    "brightness": "Helligkeit",
+    "caffeine": "Caffeine"
   },
   "overview": {
     "title": "Übersicht"
@@ -256,7 +258,43 @@
       "snapper": "Snapper",
       "restic": "Restic",
       "preUpdateSnapshot": "Snapshot vor Updates",
-      "gaming": "Spieleprofile"
+      "gaming": "Spieleprofile",
+      "defaultApps": "Standard-Apps",
+      "browser": "Browser",
+      "calendar": "Kalender",
+      "fileManager": "Dateimanager",
+      "terminal": "Terminal",
+      "idleDim": "Abdunkeln nach (Sekunden)",
+      "idleOff": "Bildschirm aus (Sekunden)",
+      "idleLock": "Sperren (Sekunden)",
+      "idleSuspend": "Bereitschaft (Sekunden)",
+      "dndFrom": "Von",
+      "dndTo": "Bis",
+      "kdeconnectEnabled": "KDE Connect",
+      "mirrorNotifications": "Benachrichtigungen spiegeln",
+      "sharedClipboard": "Geteilte Zwischenablage",
+      "protonDrive": "Proton Drive",
+      "calendarIcs": "Kalender-ICS-URL",
+      "aiProvider": "Assistent",
+      "chrome": "Chrome",
+      "wallpaperColor": "Wallpaper-Farbe",
+      "animations": "Animationen",
+      "boot": "Startbildschirme",
+      "wallpaperOnLock": "Wallpaper auf dem Sperrbildschirm",
+      "wallpaperOnVivaldi": "Wallpaper in Vivaldi",
+      "wifi": "WLAN",
+      "bluetoothPower": "Bluetooth",
+      "workspaceMode": "Workspaces",
+      "titlebar": "Titelleisten",
+      "barLeft": "Linke Insel",
+      "barCenter": "Mittlere Insel",
+      "barRight": "Rechte Insel",
+      "showSeconds": "Sekunden anzeigen",
+      "showWeekday": "Wochentag anzeigen",
+      "weatherLocation": "Wetterstandort",
+      "openEditor": "Editor nach Aufnahme öffnen",
+      "includeCursor": "Cursor einschließen",
+      "vmMaxMapCount": "vm.max_map_count erhöhen"
     },
     "sections": {
       "general": "Allgemein",
@@ -264,7 +302,7 @@
       "accounts": "Konten & Verbindungen",
       "privacy": "Datenschutz & Berechtigungen",
       "design": "Design",
-      "language": "Sprache",
+      "language": "Sprache & Region",
       "keyboard": "Tastatur",
       "time": "Zeit",
       "displays": "Bildschirme",
@@ -279,6 +317,56 @@
       "storage": "Speicher",
       "system": "System",
       "gaming": "Gaming"
+    },
+    "addAutostart": "Autostart-App hinzufügen",
+    "motionOff": "Aus",
+    "motionDefault": "Standard",
+    "motionSlow": "Langsam",
+    "overlayFade": "Einblenden",
+    "overlayZoom": "Zoom",
+    "overlayBoth": "Einblenden und Zoom",
+    "weekMon": "Montag",
+    "weekSun": "Sonntag",
+    "wsDynamic": "Dynamisch",
+    "wsFixed": "Fest 1-5 / 6-10",
+    "btAsk": "Fragen",
+    "btOn": "An",
+    "btOff": "Aus",
+    "aiOllama": "Ollama",
+    "aiNone": "Aus",
+    "powerAsk": "Fragen",
+    "weatherLocationPlaceholder": "Stadt oder lat, lon",
+    "nav": {
+      "session": "Sitzung",
+      "appearance": "Erscheinungsbild",
+      "desktop": "Desktop",
+      "apps": "Apps & Konten",
+      "input": "Eingabe & Region",
+      "devices": "Geräte",
+      "system": "System"
+    },
+    "themes": {
+      "expressive": "Expressiv",
+      "tonalSpot": "Tonal Spot",
+      "tonalSpotAuto": "Tonal Spot (auto)",
+      "fidelity": "Fidelity",
+      "monochrome": "Monochrom"
+    },
+    "empty": {
+      "autostart": "Keine Autostart-Apps",
+      "rules": "Keine Fensterregeln"
+    },
+    "hints": {
+      "defaultApps": "Browser ist SUPER+B, Kalender öffnet sich von der Uhr, Dateien SUPER+E, Terminal SUPER+T.",
+      "animations": "Wie lange Menüs, die Leiste und Fenster brauchen. Aus ist sofort.",
+      "overlayMotion": "Ein-/Ausblenden, Zoom beim Öffnen/Schließen, oder beides.",
+      "surfaceTint": "Wie stark der Wallpaper-Akzent Leisten und Panels einfärbt.",
+      "workspaceMode": "Dynamisch zeigt vorhandene Workspaces. Fest hält 1-5 links und 6-10 auf dem nächsten Bildschirm.",
+      "screenshotDir": "Speichert unter {dir}.",
+      "storageGated": "Snapshots liegen unter den abgeschotteten install/system-Helfern.",
+      "gamingGated": "Kernel-Anpassungen liegen unter install/system und werden nicht automatisch angewendet.",
+      "timeMerged": "Datums- und Zeitformate liegen unter Sprache & Region.",
+      "weatherLocation": "Leer nutzt IP-Standort. Oder Stadt, oder Breitengrad,Längengrad."
     }
   },
   "onboarding": {
@@ -292,5 +380,24 @@
     "next": "Weiter",
     "back": "Zurück",
     "skip": "Überspringen"
+  },
+  "screenshot": {
+    "capture": "Aufnahme",
+    "region": "Bereich",
+    "window": "Fenster",
+    "full": "Ganzer Bildschirm",
+    "dragHint": "Zum Auswählen ziehen",
+    "saved": "Screenshot gespeichert"
+  },
+  "time": {
+    "weekday": {
+      "sun": "So",
+      "mon": "Mo",
+      "tue": "Di",
+      "wed": "Mi",
+      "thu": "Do",
+      "fri": "Fr",
+      "sat": "Sa"
+    }
   }
 }

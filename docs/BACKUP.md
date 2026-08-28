@@ -66,3 +66,7 @@ expecting mail, git, or Proton to work. None of them belong in git:
 
 Then: `install/install.sh --profile …`, `scripts/theme-apply.sh`,
 `scripts/doctor.sh`.
+
+Switching the live `bastianweigand` account onto this desktop, and the
+later clean cut of `~/dotfiles`, is `docs/CUTOVER.md`. Phase 2 of that
+guide starts with this restore kit.

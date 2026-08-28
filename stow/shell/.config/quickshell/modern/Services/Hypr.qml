@@ -43,4 +43,78 @@ Singleton {
     function reload() {
         root.dispatch("reload");
     }
+
+    function monitorForScreen(screen: var): var {
+        if (!screen)
+            return null;
+        const list = Hyprland.monitors?.values ?? Hyprland.monitors ?? [];
+        for (let i = 0; i < list.length; i++) {
+            const m = list[i];
+            if (!m)
+                continue;
+            if (m.name && screen.name && m.name === screen.name)
+                return m;
+            if (m.description && screen.name && String(m.description).indexOf(screen.name) !== -1)
+                return m;
+        }
+        return null;
+    }
+
+    function _sortedMonitors(): var {
+        const list = Hyprland.monitors?.values ?? [];
+        const out = [];
+        for (let i = 0; i < list.length; i++)
+            out.push(list[i]);
+        out.sort((a, b) => (a.x ?? 0) - (b.x ?? 0));
+        return out;
+    }
+
+    function reservedRange(screen: var): var {
+        const mon = root.monitorForScreen(screen);
+        if (!mon)
+            return null;
+        const mons = root._sortedMonitors();
+        let idx = -1;
+        for (let i = 0; i < mons.length; i++) {
+            if (mons[i].name === mon.name)
+                idx = i;
+        }
+        if (idx === 0)
+            return ({ from: 1, to: 5 });
+        if (idx === 1)
+            return ({ from: 6, to: 10 });
+        return null;
+    }
+
+    function workspacesFor(screen: var): var {
+        const mon = root.monitorForScreen(screen);
+        const mode = Config.monitors?.workspaceMode || "dynamic";
+        const raw = Hyprland.workspaces?.values ?? [];
+        const existing = [];
+        for (let i = 0; i < raw.length; i++) {
+            const ws = raw[i];
+            if (!ws || ws.id <= 0)
+                continue;
+            if (mon && ws.monitor && ws.monitor.name && ws.monitor.name !== mon.name)
+                continue;
+            existing.push(ws);
+        }
+        existing.sort((a, b) => a.id - b.id);
+        if (mode !== "fixed")
+            return existing;
+        const range = root.reservedRange(screen);
+        if (!range)
+            return existing;
+        const byId = ({});
+        for (let j = 0; j < existing.length; j++)
+            byId[existing[j].id] = existing[j];
+        const out = [];
+        for (let id = range.from; id <= range.to; id++) {
+            if (byId[id])
+                out.push(byId[id]);
+            else
+                out.push({ id: id, focused: false, urgent: false, synthetic: true });
+        }
+        return out;
+    }
 }

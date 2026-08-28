@@ -8,56 +8,29 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.storage"
-        styleName: "headlineSmall"
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.snapper"
+        MSwitch {
+            checked: Config.backup.snapperEnabled
+            onToggled: (v) => ConfigWrite.set("backup.snapperEnabled", v)
+        }
     }
-
-    MText {
-        key: "settings.fields.snapper"
-        styleName: "titleSmall"
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.restic"
+        MSwitch {
+            checked: Config.backup.resticEnabled
+            onToggled: (v) => ConfigWrite.set("backup.resticEnabled", v)
+        }
     }
-
-    MText {
-        value: model.snapperEnabled ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.preUpdateSnapshot"
+        MSwitch {
+            checked: Config.backup.preUpdateSnapshot
+            onToggled: (v) => ConfigWrite.set("backup.preUpdateSnapshot", v)
+        }
     }
-
-    MText {
-        key: "settings.fields.restic"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.resticEnabled ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.preUpdateSnapshot"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.preUpdateSnapshot ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
+    MHint { key: "settings.hints.storageGated"; Layout.fillWidth: true }
 }

@@ -17,12 +17,13 @@ Singleton {
     property real gpuPercent: 0
     property real cpuTemp: 0
     property real gpuTemp: 0
+    property real diskPercent: 0
 
     property var _prev: ({ idle: 0, total: 0 })
 
     Process {
         id: proc
-        command: ["sh", "-c", "grep -m1 '^cpu ' /proc/stat; awk '/MemTotal/{t=$2}/MemAvailable/{a=$2} END{print t,a}' /proc/meminfo"]
+        command: ["sh", "-c", "grep -m1 '^cpu ' /proc/stat; awk '/MemTotal/{t=$2}/MemAvailable/{a=$2} END{print t,a}' /proc/meminfo; df -P -k / | awk 'NR==2{print $2,$3}'"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parse(this.text)
@@ -55,6 +56,11 @@ Singleton {
             const a = Number(mem[1]);
             if (t > 0)
                 root.ramPercent = 100 * (1 - a / t);
+            const disk = (lines[2] ?? "").trim().split(/\s+/);
+            const dt = Number(disk[0]);
+            const du = Number(disk[1]);
+            if (dt > 0)
+                root.diskPercent = 100 * (du / dt);
         } catch (e) {
             Logger.warn("SystemStats", String(e));
         }

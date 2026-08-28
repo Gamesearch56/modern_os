@@ -3,63 +3,103 @@ import QtQuick
 import QtQuick.Layouts
 import "../../Commons"
 import "../../Widgets"
+import "../../Services"
 
 PanelWindow {
     id: root
 
-    // screen is PanelWindow's own property; Module.qml assigns Variants'
-    // modelData. A second `required property var screen` shadows it and
-    // the layer surface never attaches to a monitor.
+    readonly property real _edge: Config.bar.style === "floating" ? Tokens.spacing.sm : 0
+    readonly property var _leftIds: root._without(Config.bar.left, "taskbar")
+    readonly property var _centerIds: root._without(Config.bar.center, "taskbar")
+    readonly property var _rightIds: root._without(Config.bar.right, "taskbar")
+    readonly property bool _taskbarOn: {
+        const lists = [Config.bar.left, Config.bar.center, Config.bar.right];
+        for (let i = 0; i < lists.length; i++) {
+            const arr = lists[i] || [];
+            for (let j = 0; j < arr.length; j++) {
+                if (arr[j] === "taskbar")
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    function _without(arr, id) {
+        const out = [];
+        const list = arr || [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i] !== id)
+                out.push(list[i]);
+        }
+        return out;
+    }
 
     anchors.top: Config.bar.position !== "bottom"
     anchors.bottom: Config.bar.position === "bottom"
     anchors.left: true
     anchors.right: true
-    implicitHeight: Config.bar.height + (Config.bar.style === "floating" ? Tokens.spacing.sm * 2 : 0)
+    implicitHeight: Config.bar.height + root._edge * 2
     exclusiveZone: Config.bar.autoHide ? 0 : implicitHeight
     color: "transparent"
 
-    Rectangle {
-        id: pill
+    Item {
         anchors.fill: parent
-        anchors.margins: Config.bar.style === "floating" ? Tokens.spacing.sm : 0
-        radius: Config.bar.style === "floating" ? Tokens.radius.full : 0
-        color: Colors.color.surfaceContainer
-        opacity: Config.design.transparency ?? 0.85
+        anchors.topMargin: root._edge
+        anchors.bottomMargin: root._edge
+        anchors.leftMargin: Tokens.spacing.sm
+        anchors.rightMargin: Tokens.spacing.sm
 
         RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: Tokens.spacing.md
-            anchors.rightMargin: Tokens.spacing.md
-            anchors.topMargin: Tokens.spacing.xs
-            anchors.bottomMargin: Tokens.spacing.xs
+            id: leftRow
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            height: Config.bar.height
             spacing: Tokens.spacing.sm
 
-            RowLayout {
-                spacing: Tokens.spacing.xs
+            BarIsland {
+                empty: root._leftIds.length === 0
                 Repeater {
-                    model: Config.bar.left
-                    WidgetLoader {}
+                    model: root._leftIds
+                    WidgetLoader {
+                        barScreen: root.screen
+                    }
                 }
             }
 
-            Item { Layout.fillWidth: true }
-
-            RowLayout {
-                spacing: Tokens.spacing.xs
-                Repeater {
-                    model: Config.bar.center
-                    WidgetLoader {}
+            BarIsland {
+                empty: !root._taskbarOn || taskbarLoader.item === null || taskbarLoader.item.implicitWidth < 1
+                WidgetLoader {
+                    id: taskbarLoader
+                    modelData: "taskbar"
+                    barScreen: root.screen
                 }
             }
+        }
 
-            Item { Layout.fillWidth: true }
+        BarIsland {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            height: Config.bar.height
+            empty: root._centerIds.length === 0
 
-            RowLayout {
-                spacing: Tokens.spacing.xs
-                Repeater {
-                    model: Config.bar.right
-                    WidgetLoader {}
+            Repeater {
+                model: root._centerIds
+                WidgetLoader {
+                    barScreen: root.screen
+                }
+            }
+        }
+
+        BarIsland {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            height: Config.bar.height
+            empty: root._rightIds.length === 0
+
+            Repeater {
+                model: root._rightIds
+                WidgetLoader {
+                    barScreen: root.screen
                 }
             }
         }

@@ -8,35 +8,13 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.gaming"
-        styleName: "headlineSmall"
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.vmMaxMapCount"
+        MSwitch {
+            checked: !!(Config.gaming?.systemFixes?.vmMaxMapCount)
+            onToggled: (v) => ConfigWrite.set("gaming.systemFixes.vmMaxMapCount", v)
+        }
     }
-
-    MText {
-        key: "settings.fields.gaming"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.gamingText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
+    MHint { key: "settings.hints.gamingGated"; Layout.fillWidth: true }
 }

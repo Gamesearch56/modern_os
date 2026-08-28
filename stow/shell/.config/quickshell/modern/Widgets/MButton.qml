@@ -12,6 +12,7 @@ Item {
     property var params: ({})
     property string iconName: ""
     property bool enabled: true
+    property bool fillWidth: false
 
     signal clicked()
 
@@ -23,6 +24,8 @@ Item {
             return { bg: "transparent", fg: Colors.color.primary, border: Colors.color.outline };
         case "text":
             return { bg: "transparent", fg: Colors.color.primary, border: "transparent" };
+        case "destructive":
+            return { bg: Colors.color.error, fg: Colors.color.onError, border: "transparent" };
         default:
             return { bg: Colors.color.primary, fg: Colors.color.onPrimary, border: "transparent" };
         }
@@ -30,6 +33,7 @@ Item {
 
     implicitWidth: Math.max(Tokens.spacing.xxl * 2, row.implicitWidth + Tokens.spacing.lg * 2)
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
+    Layout.fillWidth: root.fillWidth
     opacity: root.enabled ? 1 : 0.38
 
     Rectangle {

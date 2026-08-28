@@ -5,10 +5,12 @@ import "../../../../Widgets"
 import "../../../../Services"
 
 Row {
+    id: root
+    property var barScreen: null
     spacing: Tokens.spacing.xxs
 
     Repeater {
-        model: Hypr.workspaces
+        model: Hypr.workspacesFor(root.barScreen)
 
         Rectangle {
             required property var modelData

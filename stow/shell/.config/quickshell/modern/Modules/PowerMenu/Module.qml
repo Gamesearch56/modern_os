@@ -31,34 +31,84 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             focusable: true
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.45
-                MouseArea { anchors.fill: parent; onClicked: PowerMenu.hide() }
-            }
-
-            MCard {
-                level: 4
-                width: Math.min(Tokens.spacing.xxl * 22, parent.width - Tokens.spacing.xxl)
-                height: Tokens.spacing.xxl * 8
-                anchors.centerIn: parent
+            MOverlay {
+                open: PowerMenu.open
+                titleKey: "powerMenu.title"
+                cardWidth: Tokens.spacing.xxl * 12
+                cardHeight: Tokens.spacing.xxl * 16
+                onClosed: {
+                    root.pending = "";
+                    PowerMenu.hide();
+                }
 
                 ColumnLayout {
-                    anchors.fill: parent
                     spacing: Tokens.spacing.lg
 
-                    MText { key: "powerMenu.title"; styleName: "headlineSmall" }
-
-                    RowLayout {
+                    ColumnLayout {
                         Layout.alignment: Qt.AlignHCenter
-                        spacing: Tokens.spacing.lg
+                        spacing: Tokens.spacing.sm
 
-                        MButton { kind: "tonal"; key: "powerMenu.lock"; iconName: "system-lock-screen"; onClicked: { Session.lock(); PowerMenu.hide(); } }
-                        MButton { kind: "tonal"; key: "powerMenu.logout"; iconName: "system-log-out"; onClicked: root._ask("logout") }
-                        MButton { kind: "tonal"; key: "powerMenu.suspend"; iconName: "system-suspend"; onClicked: { Power.suspend(); PowerMenu.hide(); } }
-                        MButton { kind: "filled"; key: "powerMenu.restart"; iconName: "system-reboot"; onClicked: root._ask("reboot") }
-                        MButton { kind: "filled"; key: "powerMenu.poweroff"; iconName: "system-shutdown"; onClicked: root._ask("poweroff") }
+                        MAvatar {
+                            Layout.alignment: Qt.AlignHCenter
+                            size: Tokens.spacing.xxl * 3
+                            source: User.faceUrl
+                        }
+
+                        MText {
+                            Layout.alignment: Qt.AlignHCenter
+                            value: User.displayName
+                            styleName: "titleLarge"
+                        }
+                    }
+
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: 2
+                        columnSpacing: Tokens.spacing.sm
+                        rowSpacing: Tokens.spacing.sm
+
+                        MButton {
+                            kind: "tonal"
+                            key: "powerMenu.lock"
+                            iconName: "system-lock-screen"
+                            fillWidth: true
+                            onClicked: {
+                                Session.lock();
+                                PowerMenu.hide();
+                            }
+                        }
+                        MButton {
+                            kind: "tonal"
+                            key: "powerMenu.logout"
+                            iconName: "system-log-out"
+                            fillWidth: true
+                            onClicked: root._ask("logout")
+                        }
+                        MButton {
+                            kind: "tonal"
+                            key: "powerMenu.suspend"
+                            iconName: "system-suspend"
+                            fillWidth: true
+                            onClicked: {
+                                Power.suspend();
+                                PowerMenu.hide();
+                            }
+                        }
+                        MButton {
+                            kind: "filled"
+                            key: "powerMenu.restart"
+                            iconName: "system-reboot"
+                            fillWidth: true
+                            onClicked: root._ask("reboot")
+                        }
+                        MButton {
+                            kind: "destructive"
+                            key: "powerMenu.poweroff"
+                            iconName: "system-shutdown"
+                            fillWidth: true
+                            Layout.columnSpan: 2
+                            onClicked: root._ask("poweroff")
+                        }
                     }
                 }
             }
@@ -70,17 +120,27 @@ Scope {
                 bodyKey: "powerMenu.confirmBody"
                 bodyParams: ({ action: I18n.t("powerMenu." + (root.pending === "reboot" ? "restart" : root.pending)), seconds: 0 })
                 confirmKey: "powerMenu." + (root.pending === "reboot" ? "restart" : (root.pending || "poweroff"))
+                destructive: root.pending === "poweroff" || root.pending === "logout"
                 onConfirmed: {
-                    if (root.pending === "logout") Power.logout();
-                    else if (root.pending === "reboot") Power.reboot();
-                    else if (root.pending === "poweroff") Power.poweroff();
+                    if (root.pending === "logout")
+                        Power.logout();
+                    else if (root.pending === "reboot")
+                        Power.reboot();
+                    else if (root.pending === "poweroff")
+                        Power.poweroff();
                     root.pending = "";
                     PowerMenu.hide();
                 }
                 onCancelled: root.pending = ""
             }
 
-            Shortcut { sequence: "Escape"; onActivated: { root.pending = ""; PowerMenu.hide(); } }
+            Shortcut {
+                sequence: "Escape"
+                onActivated: {
+                    root.pending = "";
+                    PowerMenu.hide();
+                }
+            }
         }
     }
 

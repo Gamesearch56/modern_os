@@ -8,71 +8,45 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.general"
-        styleName: "headlineSmall"
+    MSectionHeader { key: "settings.fields.autologin" }
+    MListItem {
         Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.motionScale"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MSlider {
-        from: 0
-        to: 2
-        value: model.motionScale
-        Layout.fillWidth: true
-        onMoved: (v) => {
-            const r = Math.round(v * 10) / 10;
-            ConfigWrite.set("motion.scale", r);
+        titleKey: "settings.fields.autologin"
+        enabled: false
+        MSwitch {
+            checked: Config.general.autologin
+            enabled: false
         }
     }
+    MHint { key: "settings.gated"; Layout.fillWidth: true }
 
-    MText {
-        value: Number(model.motionScale).toFixed(1)
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
+    MSectionHeader { key: "settings.fields.idleTimings" }
+    MField {
+        labelKey: "settings.fields.idleDim"
+        MTextField {
+            text: String(Config.general.idleTimings.dimSec)
+            onAccepted: ConfigWrite.set("general.idleTimings.dimSec", Number(text))
+        }
     }
-
-    MText {
-        key: "settings.fields.autologin"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.idleOff"
+        MTextField {
+            text: String(Config.general.idleTimings.screenOffSec)
+            onAccepted: ConfigWrite.set("general.idleTimings.screenOffSec", Number(text))
+        }
     }
-
-    MText {
-        value: model.autologin ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.idleLock"
+        MTextField {
+            text: String(Config.general.idleTimings.lockSec)
+            onAccepted: ConfigWrite.set("general.idleTimings.lockSec", Number(text))
+        }
     }
-
-    MText {
-        key: "settings.fields.idleTimings"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.idleText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.idleSuspend"
+        MTextField {
+            text: String(Config.general.idleTimings.suspendSec)
+            onAccepted: ConfigWrite.set("general.idleTimings.suspendSec", Number(text))
+        }
     }
 }

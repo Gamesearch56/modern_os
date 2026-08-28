@@ -4,7 +4,9 @@
 set -euo pipefail
 
 pic="$(xdg-user-dir PICTURES 2>/dev/null || true)"
-pic="${pic:-$HOME/Pictures}"
+if [ -z "${pic:-}" ] || [ "$pic" = "$HOME" ]; then
+    pic="$HOME/Pictures"
+fi
 DEST="$pic/Wallpapers"
 mkdir -p "$DEST"
 DEST_REAL="$(realpath "$DEST")"

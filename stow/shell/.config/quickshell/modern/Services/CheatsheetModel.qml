@@ -59,4 +59,27 @@ Singleton {
         out.sort((a, b) => a.category.localeCompare(b.category) || a.action.localeCompare(b.action));
         return out;
     }
+
+    function grouped(filter: string): var {
+        const all = root.rows(filter);
+        return {
+            left: root._pack(all, ["applications", "system", "utilities", "screenshots"]),
+            right: root._pack(all, ["windowManagement", "workspaces"])
+        };
+    }
+
+    function _pack(all: var, ids: var): var {
+        const cats = [];
+        for (let i = 0; i < ids.length; i++) {
+            const id = ids[i];
+            const items = [];
+            for (let j = 0; j < all.length; j++) {
+                if (all[j].category === id)
+                    items.push(all[j]);
+            }
+            if (items.length)
+                cats.push({ id: id, items: items });
+        }
+        return cats;
+    }
 }

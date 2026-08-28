@@ -8,35 +8,43 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.accounts"
-        styleName: "headlineSmall"
+    MSectionHeader { key: "settings.fields.accounts" }
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.protonDrive"
+        MSwitch {
+            checked: !!(Config.accounts?.protonDrive?.enabled)
+            onToggled: (v) => ConfigWrite.set("accounts.protonDrive.enabled", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.calendarIcs"
+        MTextField {
+            text: Config.accounts?.calendarIcsUrl ?? ""
+            onAccepted: ConfigWrite.set("accounts.calendarIcsUrl", text)
+        }
+    }
+    MListItem {
+        Layout.fillWidth: true
+        titleKey: "settings.fields.kdeconnectEnabled"
+        MSwitch {
+            checked: Config.kdeconnect.enabled
+            onToggled: (v) => ConfigWrite.set("kdeconnect.enabled", v)
+        }
     }
 
-    MText {
-        key: "settings.fields.accounts"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.accountsText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MSectionHeader { key: "settings.fields.aiProvider" }
+    RowLayout {
+        spacing: Tokens.spacing.sm
+        MChip {
+            key: "settings.aiOllama"
+            checked: (Config.accounts?.ai?.provider ?? "ollama") === "ollama"
+            onClicked: ConfigWrite.set("accounts.ai.provider", "ollama")
+        }
+        MChip {
+            key: "settings.aiNone"
+            checked: (Config.accounts?.ai?.provider ?? "") === "none"
+            onClicked: ConfigWrite.set("accounts.ai.provider", "none")
+        }
     }
 }

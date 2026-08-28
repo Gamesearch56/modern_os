@@ -9,6 +9,7 @@ Item {
     id: root
 
     property string iconName: ""
+    property bool tintIcon: true
     property string titleKey: ""
     property string titleValue: ""
     property string subtitleKey: ""
@@ -16,17 +17,19 @@ Item {
     property bool selected: false
     property bool enabled: true
 
+    default property alias extra: trailing.data
+
     signal clicked()
     signal activated()
 
-    implicitHeight: Tokens.spacing.xxl + Tokens.spacing.sm
+    implicitHeight: Tokens.spacing.xxl + Tokens.spacing.md * 2
     implicitWidth: Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
 
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.small
-        color: root.selected ? Colors.color.secondaryContainer : "transparent"
+        color: root.selected ? Colors.color.primaryContainer : "transparent"
 
         Behavior on color {
             ColorAnimation {
@@ -36,17 +39,29 @@ Item {
         }
     }
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.enabled
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.clicked()
+        onDoubleClicked: root.activated()
+    }
+
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: Tokens.spacing.md
         anchors.rightMargin: Tokens.spacing.md
+        anchors.topMargin: Tokens.spacing.md
+        anchors.bottomMargin: Tokens.spacing.md
         spacing: Tokens.spacing.md
 
         MIcon {
             visible: root.iconName.length > 0
             name: root.iconName
             size: Tokens.spacing.xl
-            color: root.selected ? Colors.color.onSecondaryContainer : Colors.color.onSurface
+            tint: root.tintIcon
+            color: root.selected ? Colors.color.onPrimaryContainer : Colors.color.onSurface
         }
 
         ColumnLayout {
@@ -57,7 +72,7 @@ Item {
                 key: root.titleKey
                 value: root.titleValue
                 styleName: "bodyLarge"
-                color: root.selected ? Colors.color.onSecondaryContainer : Colors.color.onSurface
+                color: root.selected ? Colors.color.onPrimaryContainer : Colors.color.onSurface
                 Layout.fillWidth: true
             }
 
@@ -73,17 +88,10 @@ Item {
 
         Item {
             id: trailing
+            visible: children.length > 0
             Layout.preferredWidth: childrenRect.width
             Layout.preferredHeight: childrenRect.height
+            Layout.alignment: Qt.AlignVCenter
         }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        enabled: root.enabled
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
-        onDoubleClicked: root.activated()
     }
 }

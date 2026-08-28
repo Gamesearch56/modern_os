@@ -8,35 +8,30 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.displays"
-        styleName: "headlineSmall"
-        Layout.fillWidth: true
+    MSectionHeader { key: "settings.fields.workspaceMode" }
+    RowLayout {
+        spacing: Tokens.spacing.sm
+        MChip {
+            key: "settings.wsDynamic"
+            checked: (Config.monitors?.workspaceMode || "dynamic") === "dynamic"
+            onClicked: ConfigWrite.set("monitors.workspaceMode", "dynamic")
+        }
+        MChip {
+            key: "settings.wsFixed"
+            checked: Config.monitors?.workspaceMode === "fixed"
+            onClicked: ConfigWrite.set("monitors.workspaceMode", "fixed")
+        }
     }
+    MHint { key: "settings.hints.workspaceMode"; Layout.fillWidth: true }
 
-    MText {
-        key: "settings.fields.monitors"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.monitorsText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MSectionHeader { key: "settings.fields.monitors" }
+    Repeater {
+        model: Hypr.monitors?.values ?? []
+        MListItem {
+            required property var modelData
+            Layout.fillWidth: true
+            titleValue: modelData.description || modelData.name || ""
+            subtitleValue: (modelData.width || "") + "×" + (modelData.height || "") + " @" + (modelData.scale || 1)
+        }
     }
 }

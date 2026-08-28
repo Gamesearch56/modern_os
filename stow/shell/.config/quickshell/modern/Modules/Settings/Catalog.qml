@@ -1,6 +1,4 @@
-// Runtime search index mirroring sections/*/section.json. Modules cannot
-// FileView those descriptors, so this QtObject is the in-process copy
-// Settings search filters against. Keep keywords in sync with section.json.
+// Runtime search index mirroring sections/*/section.json.
 import QtQuick
 import "../../Commons"
 
@@ -8,11 +6,16 @@ QtObject {
     id: root
 
     readonly property var ids: [
-        "general", "applications", "accounts", "privacy", "design",
-        "language", "keyboard", "time", "displays", "windows",
-        "audio", "network", "widgets", "launcher", "power",
-        "screenshots", "users", "storage", "system", "gaming"
+        "general", "users", "power",
+        "design", "displays", "windows",
+        "widgets", "launcher", "screenshots",
+        "applications", "accounts", "privacy",
+        "language", "keyboard",
+        "audio", "network",
+        "storage", "system", "gaming"
     ]
+
+    readonly property var groupOrder: ["session", "appearance", "desktop", "apps", "input", "devices", "system"]
 
     function icon(id) {
         return root._byId[id]?.icon ?? "preferences-system";
@@ -22,19 +25,34 @@ QtObject {
         return root._byId[id]?.order ?? 99;
     }
 
+    function group(id) {
+        return root._byId[id]?.group ?? "session";
+    }
+
     function keywords(id) {
         return root._byId[id]?.keywords ?? [];
     }
 
     function filtered(needle) {
         const n = (needle || "").trim().toLowerCase();
-        const out = [];
+        const items = [];
         for (let i = 0; i < root.ids.length; i++) {
             const id = root.ids[i];
             if (n.length === 0 || root._matches(id, n))
-                out.push(id);
+                items.push(id);
         }
-        out.sort((a, b) => root.order(a) - root.order(b));
+        items.sort((a, b) => root.order(a) - root.order(b));
+        const out = [];
+        let lastGroup = "";
+        for (let j = 0; j < items.length; j++) {
+            const id = items[j];
+            const g = root.group(id);
+            if (g !== lastGroup) {
+                out.push({ kind: "group", id: g, key: "settings.nav." + g });
+                lastGroup = g;
+            }
+            out.push({ kind: "item", id: id });
+        }
         return out;
     }
 
@@ -51,25 +69,24 @@ QtObject {
     }
 
     readonly property var _byId: ({
-        general: { icon: "preferences-system", order: 10, keywords: ["motion", "scale", "idle", "dnd", "autologin", "animation"] },
-        applications: { icon: "applications-other", order: 20, keywords: ["autostart", "apps", "startup"] },
-        accounts: { icon: "system-users", order: 30, keywords: ["proton", "calendar", "ai", "ollama", "kdeconnect"] },
-        privacy: { icon: "security-high", order: 40, keywords: ["permissions", "kdeconnect", "clipboard", "notifications", "dnd"] },
-        design: { icon: "preferences-desktop-theme", order: 50, keywords: ["theme", "profile", "transparency", "rounding", "cursor"] },
-        language: { icon: "preferences-desktop-locale", order: 60, keywords: ["locale", "ui", "translation", "english", "german"] },
-        keyboard: { icon: "input-keyboard", order: 70, keywords: ["keybinds", "shortcuts", "hotkeys", "cheatsheet", "layout", "de", "us"] },
-        time: { icon: "preferences-system-time", order: 80, keywords: ["clock", "date", "format", "timezone", "weekday"] },
-        displays: { icon: "video-display", order: 90, keywords: ["monitors", "scale", "resolution", "profile"] },
-        windows: { icon: "preferences-system-windows", order: 100, keywords: ["rules", "floating", "opacity", "workspace"] },
-        audio: { icon: "audio-volume-high", order: 110, keywords: ["volume", "limit", "bluetooth", "pipewire"] },
-        network: { icon: "network-wireless", order: 120, keywords: ["wifi", "dns", "ethernet"] },
-        widgets: { icon: "view-grid", order: 130, keywords: ["bar", "layout", "left", "center", "right"] },
-        launcher: { icon: "view-app-grid-symbolic", order: 140, keywords: ["frecency", "providers", "prefix", "search"] },
-        power: { icon: "system-shutdown", order: 150, keywords: ["lid", "suspend", "inhibit", "button"] },
-        screenshots: { icon: "camera-photo", order: 160, keywords: ["capture", "png", "clipboard", "grim"] },
-        users: { icon: "user-group-new", order: 170, keywords: ["accounts", "passwd", "groups", "modern-usersd"] },
-        storage: { icon: "drive-harddisk", order: 180, keywords: ["backup", "snapper", "restic", "snapshot"] },
-        system: { icon: "computer", order: 190, keywords: ["diagnostics", "boot", "journal", "logs"] },
-        gaming: { icon: "input-gaming", order: 200, keywords: ["optiscaler", "game", "vm", "limits"] }
+        general: { icon: "preferences-system", order: 10, group: "session", keywords: ["idle", "autologin", "animation"] },
+        users: { icon: "user-group-new", order: 15, group: "session", keywords: ["accounts", "passwd"] },
+        power: { icon: "system-shutdown", order: 18, group: "session", keywords: ["lid", "suspend"] },
+        design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "tint", "transparency"] },
+        displays: { icon: "video-display", order: 25, group: "appearance", keywords: ["monitors", "workspace"] },
+        windows: { icon: "preferences-system-windows", order: 28, group: "appearance", keywords: ["titlebar", "rules"] },
+        widgets: { icon: "view-grid", order: 30, group: "desktop", keywords: ["bar", "layout"] },
+        launcher: { icon: "view-app-grid-symbolic", order: 32, group: "desktop", keywords: ["frecency"] },
+        screenshots: { icon: "camera-photo", order: 34, group: "desktop", keywords: ["capture", "grim"] },
+        applications: { icon: "applications-other", order: 40, group: "apps", keywords: ["autostart", "browser", "calendar"] },
+        accounts: { icon: "system-users", order: 42, group: "apps", keywords: ["proton", "calendar", "ai"] },
+        privacy: { icon: "security-high", order: 44, group: "apps", keywords: ["dnd", "kdeconnect"] },
+        language: { icon: "preferences-desktop-locale", order: 50, group: "input", keywords: ["locale", "date", "time"] },
+        keyboard: { icon: "input-keyboard", order: 52, group: "input", keywords: ["keybinds", "layout"] },
+        audio: { icon: "audio-volume-high", order: 60, group: "devices", keywords: ["volume", "bluetooth"] },
+        network: { icon: "network-wireless", order: 62, group: "devices", keywords: ["wifi", "dns"] },
+        storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["backup", "snapper"] },
+        system: { icon: "computer", order: 72, group: "system", keywords: ["diagnostics"] },
+        gaming: { icon: "input-gaming", order: 74, group: "system", keywords: ["optiscaler"] }
     })
 }

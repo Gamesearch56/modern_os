@@ -12,3 +12,16 @@ MTextField 1.0 MTextField.qml
 MPopup 1.0 MPopup.qml
 MDialog 1.0 MDialog.qml
 MTooltip 1.0 MTooltip.qml
+MOverlay 1.0 MOverlay.qml
+MSectionHeader 1.0 MSectionHeader.qml
+MHint 1.0 MHint.qml
+MField 1.0 MField.qml
+MSelect 1.0 MSelect.qml
+MCheckbox 1.0 MCheckbox.qml
+MSearchField 1.0 MSearchField.qml
+MKeycap 1.0 MKeycap.qml
+MTable 1.0 MTable.qml
+MEmptyState 1.0 MEmptyState.qml
+MDivider 1.0 MDivider.qml
+MImageTile 1.0 MImageTile.qml
+MAvatar 1.0 MAvatar.qml

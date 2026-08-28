@@ -18,7 +18,7 @@ Row {
             height: Tokens.spacing.xl + Tokens.spacing.xs
             width: title.implicitWidth + Tokens.spacing.xl + Tokens.spacing.md
             radius: Tokens.radius.full
-            color: modelData.activated ? Colors.color.secondaryContainer : "transparent"
+            color: modelData.activated ? Colors.color.primaryContainer : "transparent"
 
             RowLayout {
                 anchors.fill: parent

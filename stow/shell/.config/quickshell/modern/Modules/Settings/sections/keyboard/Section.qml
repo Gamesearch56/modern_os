@@ -7,21 +7,9 @@ import "."
 
 ColumnLayout {
     spacing: Tokens.spacing.md
-
     Model { id: sectionModel }
 
-    MText {
-        key: "settings.sections.keyboard"
-        styleName: "headlineSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.kbLayout"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
+    MSectionHeader { key: "settings.fields.kbLayout" }
     RowLayout {
         spacing: Tokens.spacing.sm
         MChip {
@@ -36,28 +24,23 @@ ColumnLayout {
         }
     }
 
-    MText {
-        key: "settings.fields.keybinds"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
+    MSectionHeader { key: "settings.fields.keybinds" }
     Repeater {
         model: sectionModel.rows
         MListItem {
             required property var modelData
             Layout.fillWidth: true
             titleKey: "cheatsheet.action." + modelData.action
-            subtitleValue: modelData.combo
+            Row {
+                spacing: Tokens.spacing.xs
+                Repeater {
+                    model: String(modelData.combo).split(" + ")
+                    MKeycap {
+                        required property string modelData
+                        value: modelData
+                    }
+                }
+            }
         }
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
     }
 }

@@ -2,5 +2,5 @@ import QtQuick
 import "../../../../Commons"
 
 QtObject {
-    readonly property string autostartText: JSON.stringify(Config.general.autostart || [])
+    readonly property var autostart: Config.general.autostart || []
 }

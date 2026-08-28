@@ -41,13 +41,15 @@ Singleton {
     // on the background", level5 is the highest (e.g. a modal dialog).
     // Applied via MCard's background — no other component draws its own
     // shadow (docs/DESIGN.md).
+    readonly property real surfaceTint: Config.design.surfaceTint ?? 1.0
+
     readonly property var elevation: [
         { tintOpacity: 0.0, shadowOpacity: 0.0, shadowRadius: 0 },
-        { tintOpacity: 0.05, shadowOpacity: 0.08, shadowRadius: 3 },
-        { tintOpacity: 0.08, shadowOpacity: 0.1, shadowRadius: 6 },
-        { tintOpacity: 0.11, shadowOpacity: 0.12, shadowRadius: 10 },
-        { tintOpacity: 0.12, shadowOpacity: 0.14, shadowRadius: 14 },
-        { tintOpacity: 0.14, shadowOpacity: 0.16, shadowRadius: 20 }
+        { tintOpacity: 0.10, shadowOpacity: 0.08, shadowRadius: 3 },
+        { tintOpacity: 0.16, shadowOpacity: 0.1, shadowRadius: 6 },
+        { tintOpacity: 0.22, shadowOpacity: 0.12, shadowRadius: 10 },
+        { tintOpacity: 0.24, shadowOpacity: 0.14, shadowRadius: 14 },
+        { tintOpacity: 0.28, shadowOpacity: 0.16, shadowRadius: 20 }
     ]
 
     readonly property QtObject overlay: QtObject {
@@ -56,6 +58,11 @@ Singleton {
     }
 
     function elevationFor(level: int): var {
-        return elevation[Math.max(0, Math.min(level, elevation.length - 1))];
+        const raw = elevation[Math.max(0, Math.min(level, elevation.length - 1))];
+        return {
+            tintOpacity: Math.min(1, raw.tintOpacity * root.surfaceTint),
+            shadowOpacity: raw.shadowOpacity,
+            shadowRadius: raw.shadowRadius
+        };
     }
 }

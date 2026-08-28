@@ -9,12 +9,12 @@ directory plus an id in those arrays — no central switch.
 | id | i18n key | services | role |
 |---|---|---|---|
 | `launcher` | `bar.launcher` | Launcher | Opens the application launcher |
-| `workspaces` | `bar.workspaces` | Hypr | Hyprland workspace strip |
+| `workspaces` | `bar.workspaces` | Hypr | Per-monitor strip (`Hypr.workspacesFor`); `monitors.workspaceMode` `dynamic` or `fixed` (1–5 / 6–10 by x-position) |
 | `tray` | `bar.tray` | — | Status notifier / system tray |
 | `taskbar` | `bar.taskbar` | Hypr | Open windows on the active workspace |
-| `clock` | `bar.clock` | — | Date/time from `widgets.clock` formats |
-| `media` | `bar.media` | Media | MPRIS now-playing + transport |
-| `audio` | `bar.volume` | Audio | Sink volume / mute |
+| `clock` | `bar.clock` | — | Date/time from `language.*` formats; click launches `apps.defaults.calendar` |
+| `media` | `bar.media` | Media | Capsule (art, title, transport); hidden with no MPRIS client; click raises the player |
+| `audio` | `bar.volume` | Audio | Sink volume / mute; click opens Settings → Audio |
 | `weather` | `bar.weather` | Weather | Location-based conditions |
 | `network` | `bar.network` | Network | Wi-Fi / ethernet indicator |
 | `microphone` | `bar.microphone` | Audio | Source volume / mute |
@@ -22,9 +22,15 @@ directory plus an id in those arrays — no central switch.
 | `vpn` | `bar.vpn` | Vpn | VPN connection state |
 | `bluetooth` | `bar.bluetooth` | Bluetooth | Adapter + connected devices |
 | `notifications` | `bar.notifications` | Notifications | Unread / DND affordance |
-| `settings` | `bar.settings` | Settings | Opens Settings (`Services/Settings.openAt`) |
+| `settings` | `bar.settings` | Notifications | Opens the control center (`Notifications.toggle`), not the Settings app |
 | `power` | `bar.power` | PowerMenu | Session power menu |
 
-Default layout is shipped in `stow/modern/.config/modern/config.default.json`.
-Reorder by editing those arrays in Settings > Widgets (or `config.json`);
-the bar `Repeater`s consume them directly.
+Default layout (islands) in `stow/modern/.config/modern/config.default.json`:
+
+- `bar.left`: `launcher`, `workspaces`, `media`, `taskbar`
+- `bar.center`: `clock`
+- `bar.right`: `network`, `bluetooth`, `audio`, `power`, `settings`
+
+Network and Bluetooth open a bar `MPopup` (`widgets/<id>/Panel.qml`).
+Reorder in Settings → Widgets (or `config.json`); `BarWindow` pulls
+`taskbar` into its own island when it is present in any list.

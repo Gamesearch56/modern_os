@@ -1,6 +1,4 @@
-// Settings app. Lazy-loaded when Services/Settings.open; the only UI
-// that asks ConfigWrite to mutate config.json. Sidebar is the section
-// registry; search filters Catalog keywords (mirrors section.json).
+// Settings app. Lazy-loaded when Services/Settings.open.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -10,8 +8,6 @@ import "../../Services"
 
 Scope {
     Catalog { id: catalog }
-
-    readonly property var registry: catalog.ids
 
     LazyLoader {
         active: Settings.open
@@ -27,40 +23,17 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             focusable: true
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.45
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Settings.close()
-                }
-            }
-
-            MCard {
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 28, win.width - Tokens.spacing.xxl)
-                height: Math.min(Tokens.spacing.xxl * 20, win.height - Tokens.spacing.xxl * 2)
-                anchors.centerIn: parent
+            MOverlay {
+                open: Settings.open
+                titleKey: "settings.title"
+                cardWidth: Tokens.spacing.xxl * 28
+                cardHeight: Tokens.spacing.xxl * 20
+                onClosed: Settings.close()
 
                 ColumnLayout {
-                    anchors.fill: parent
                     spacing: Tokens.spacing.md
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        MText {
-                            key: "settings.title"
-                            styleName: "headlineSmall"
-                            Layout.fillWidth: true
-                        }
-                        MIconButton {
-                            iconName: "window-close"
-                            onClicked: Settings.close()
-                        }
-                    }
-
-                    MTextField {
+                    MSearchField {
                         id: search
                         Layout.fillWidth: true
                         placeholderKey: "settings.search"
@@ -78,13 +51,29 @@ Scope {
                             clip: true
                             model: catalog.filtered(search.text)
                             spacing: Tokens.spacing.xxs
-                            delegate: MListItem {
+                            delegate: Item {
                                 required property var modelData
                                 width: nav.width
-                                iconName: catalog.icon(modelData)
-                                titleKey: "settings.sections." + modelData
-                                selected: Settings.sectionId === modelData
-                                onClicked: Settings.openAt(modelData, "")
+                                height: modelData.kind === "group" ? Tokens.spacing.xl : implicitHeight
+                                implicitHeight: modelData.kind === "group" ? Tokens.spacing.xl : itemRow.implicitHeight
+
+                                MText {
+                                    visible: modelData.kind === "group"
+                                    anchors.fill: parent
+                                    key: modelData.key
+                                    styleName: "labelSmall"
+                                    color: Colors.color.onSurfaceVariant
+                                }
+
+                                MListItem {
+                                    id: itemRow
+                                    visible: modelData.kind === "item"
+                                    width: nav.width
+                                    iconName: catalog.icon(modelData.id)
+                                    titleKey: "settings.sections." + modelData.id
+                                    selected: Settings.sectionId === modelData.id
+                                    onClicked: Settings.openAt(modelData.id, "")
+                                }
                             }
                         }
 
@@ -109,29 +98,8 @@ Scope {
                                     if (item)
                                         item.width = Qt.binding(() => sectionLoader.width);
                                 }
-                                onStatusChanged: {
-                                    if (status === Loader.Error)
-                                        Logger.error("Settings", "failed to load section '" + Settings.sectionId + "'");
-                                }
-                            }
-
-                            MText {
-                                visible: sectionLoader.status === Loader.Error
-                                width: pane.width
-                                key: "settings.loadError"
-                                styleName: "bodyMedium"
-                                color: Colors.color.error
-                                wrapMode: Text.WordWrap
-                                elide: Text.ElideNone
                             }
                         }
-                    }
-
-                    MText {
-                        visible: nav.count === 0
-                        key: "settings.noResults"
-                        styleName: "bodyMedium"
-                        color: Colors.color.onSurfaceVariant
                     }
                 }
             }

@@ -14,14 +14,56 @@ Scope {
         function hide() { Cheatsheet.hide(); }
     }
 
-    readonly property var categories: ({
-        applications: ["launcher", "terminal", "browser", "fileManager", "spotify", "settings", "wallpaperPicker", "overview"],
-        system: ["cheatsheet", "powerMenu", "exitSession", "gameMode"],
-        utilities: ["clipboardHistory"],
-        screenshots: ["screenshotRegion", "screenshotWindow", "screenshotFull", "colorPicker"],
-        windowManagement: ["closeWindow", "fullscreen", "toggleFloating", "pseudoTile", "toggleSplit", "moveFocusLeft", "moveFocusRight", "moveFocusUp", "moveFocusDown", "moveWindowLeft", "moveWindowRight", "moveWindowUp", "moveWindowDown"],
-        workspaces: ["workspace1", "workspace2", "workspace3", "workspace4", "workspace5", "workspace6", "workspace7", "workspace8", "workspace9", "workspace10", "moveToWorkspace1", "moveToWorkspace2", "moveToWorkspace3", "moveToWorkspace4", "moveToWorkspace5", "moveToWorkspace6", "moveToWorkspace7", "moveToWorkspace8", "moveToWorkspace9", "moveToWorkspace10"]
-    })
+    component CategoryColumn: ColumnLayout {
+        required property var cats
+        spacing: Tokens.spacing.sm
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignTop
+
+        Repeater {
+            model: cats
+            delegate: ColumnLayout {
+                required property var modelData
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.sm
+
+                MSectionHeader {
+                    key: "cheatsheet.category." + modelData.id
+                    styleName: "titleSmall"
+                    Layout.topMargin: Tokens.spacing.md
+                }
+
+                Repeater {
+                    model: modelData.items
+                    delegate: RowLayout {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        spacing: Tokens.spacing.md
+
+                        Row {
+                            Layout.preferredWidth: Tokens.spacing.xxl * 8
+                            spacing: Tokens.spacing.xs
+                            Repeater {
+                                model: modelData.caps
+                                MKeycap {
+                                    required property string modelData
+                                    value: modelData
+                                }
+                            }
+                        }
+
+                        MText {
+                            key: "cheatsheet.action." + modelData.action
+                            styleName: "bodyMedium"
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            elide: Text.ElideNone
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     LazyLoader {
         active: Cheatsheet.open
@@ -36,85 +78,48 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             focusable: true
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.45
-                MouseArea { anchors.fill: parent; onClicked: Cheatsheet.hide() }
-            }
-
-            MCard {
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 22, parent.width - Tokens.spacing.xxl)
-                height: Math.min(Tokens.spacing.xxl * 18, parent.height - Tokens.spacing.xxl * 2)
-                anchors.centerIn: parent
+            MOverlay {
+                open: Cheatsheet.open
+                titleKey: "cheatsheet.title"
+                cardWidth: Tokens.spacing.xxl * 22
+                cardHeight: Tokens.spacing.xxl * 18
+                onClosed: Cheatsheet.hide()
 
                 ColumnLayout {
-                    anchors.fill: parent
                     spacing: Tokens.spacing.md
 
-                    MText { key: "cheatsheet.title"; styleName: "headlineSmall" }
-
-                    MTextField {
+                    MSearchField {
                         id: search
                         Layout.fillWidth: true
                         placeholderKey: "cheatsheet.search"
                     }
 
-                    ListView {
+                    Flickable {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
-                        model: CheatsheetModel.rows(search.text)
-                        spacing: Tokens.spacing.xs
-                        section.property: "category"
-                        section.delegate: MText {
-                            required property string section
-                            key: "cheatsheet.category." + section
-                            styleName: "titleSmall"
-                            color: Colors.color.primary
-                        }
+                        contentWidth: width
+                        contentHeight: cols.implicitHeight
 
-                        delegate: RowLayout {
-                            required property var modelData
-                            width: ListView.view.width
-                            spacing: Tokens.spacing.md
-
-                            Row {
-                                Layout.preferredWidth: Tokens.spacing.xxl * 8
-                                Layout.alignment: Qt.AlignVCenter
-                                spacing: Tokens.spacing.xs
-                                Repeater {
-                                    model: modelData.caps
-                                    Rectangle {
-                                        required property string modelData
-                                        radius: Tokens.radius.small
-                                        color: Colors.color.surfaceContainerHighest
-                                        implicitWidth: cap.implicitWidth + Tokens.spacing.sm * 2
-                                        implicitHeight: cap.implicitHeight + Tokens.spacing.xs
-
-                                        MText {
-                                            id: cap
-                                            anchors.centerIn: parent
-                                            value: modelData
-                                            styleName: "labelMedium"
-                                            familyRole: "monospace"
-                                        }
-                                    }
-                                }
+                        RowLayout {
+                            id: cols
+                            width: parent.width
+                            spacing: Tokens.spacing.xl
+                            CategoryColumn {
+                                cats: CheatsheetModel.grouped(search.text).left
                             }
-
-                            MText {
-                                key: "cheatsheet.action." + modelData.action
-                                styleName: "bodyMedium"
-                                Layout.fillWidth: true
+                            CategoryColumn {
+                                cats: CheatsheetModel.grouped(search.text).right
                             }
                         }
                     }
                 }
             }
 
-            Shortcut { sequence: "Escape"; onActivated: Cheatsheet.hide() }
+            Shortcut {
+                sequence: "Escape"
+                onActivated: Cheatsheet.hide()
+            }
         }
     }
 }

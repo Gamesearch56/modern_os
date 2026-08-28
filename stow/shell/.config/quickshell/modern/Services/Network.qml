@@ -31,6 +31,15 @@ Singleton {
         return "";
     }
 
+    readonly property var networks: {
+        const w = root.wifi;
+        if (!w)
+            return [];
+        if (w.networks?.values)
+            return w.networks.values;
+        return w.networks ?? [];
+    }
+
     function setWifiEnabled(on: bool) {
         Network.wifiEnabled = on;
     }

@@ -11,6 +11,7 @@ EOF
 }
 
 MODE="${1:-}"
+GEOM_ARG="${2:-}"
 if [ "$MODE" = "-h" ] || [ "$MODE" = "--help" ] || [ -z "$MODE" ]; then
     usage
     [ -n "$MODE" ] && exit 0
@@ -59,10 +60,27 @@ if [ "$CURSOR" = "true" ]; then
 fi
 
 geom=""
+slurp_themed() {
+    local tokens="${XDG_CONFIG_HOME:-$HOME/.config}/modern/tokens.json"
+    if [ -f "$tokens" ]; then
+        local scrim primary pcont
+        scrim="$(jq -r '.color.scrim' "$tokens")"
+        primary="$(jq -r '.color.primary' "$tokens")"
+        pcont="$(jq -r '.color.primaryContainer' "$tokens")"
+        slurp -b "${scrim}88" -c "$primary" -s "${pcont}44" -w 2
+    else
+        slurp
+    fi
+}
+
 case "$MODE" in
     region)
-        command -v slurp >/dev/null 2>&1 || { echo "screenshot: slurp not on PATH" >&2; exit 1; }
-        geom="$(slurp)" || exit 1
+        if [ -n "$GEOM_ARG" ]; then
+            geom="$GEOM_ARG"
+        else
+            command -v slurp >/dev/null 2>&1 || { echo "screenshot: slurp not on PATH" >&2; exit 1; }
+            geom="$(slurp_themed)" || exit 1
+        fi
         "${GRIM[@]}" -g "$geom" "$FILE"
         ;;
     window)

@@ -7,11 +7,56 @@ import "../../Widgets"
 import "../../Services"
 
 Scope {
+    id: root
     IpcHandler {
         target: "launcher"
         function toggle() { Launcher.toggle(); }
         function show() { Launcher.show(); }
         function hide() { Launcher.hide(); }
+    }
+
+    function resultsFor(text: string): var {
+        const needle = (text || "").trim().toLowerCase();
+        const actions = [];
+        if (needle.length > 0) {
+            if (root._matchAction(needle, "settings", I18n.t("settings.title")))
+                actions.push({ id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "preferences-system", kind: "settings" });
+            if (root._matchAction(needle, "power", I18n.t("powerMenu.title")))
+                actions.push({ id: "shell:power", name: I18n.t("powerMenu.title"), genericName: "", icon: "system-shutdown", kind: "power" });
+        }
+        const apps = Launcher.query(text);
+        const out = [];
+        for (let i = 0; i < actions.length; i++)
+            out.push(actions[i]);
+        for (let j = 0; j < apps.length; j++) {
+            const a = apps[j];
+            a.kind = "app";
+            out.push(a);
+        }
+        return out;
+    }
+
+    function _matchAction(needle: string, english: string, title: string): bool {
+        const n = needle.toLowerCase();
+        const en = english.toLowerCase();
+        const t = (title || "").toLowerCase();
+        return en.indexOf(n) !== -1 || t.indexOf(n) !== -1 || n.indexOf(en) !== -1;
+    }
+
+    function activate(item: var) {
+        if (!item)
+            return;
+        if (item.kind === "settings") {
+            Settings.openAt("general", "");
+            Launcher.hide();
+            return;
+        }
+        if (item.kind === "power") {
+            PowerMenu.toggle();
+            Launcher.hide();
+            return;
+        }
+        Launcher.launch(item);
     }
 
     LazyLoader {
@@ -28,43 +73,26 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             focusable: true
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.4
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Launcher.hide()
-                }
-            }
-
-            MCard {
-                id: card
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 16, win.width - Tokens.spacing.xxl)
-                height: Tokens.spacing.xxl * 14
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: Tokens.spacing.xxl * 3
-                scale: Launcher.open ? 1 : 0.94
-
-                Behavior on scale {
-                    SpringAnimation {
-                        spring: Motion.springBouncy.spring
-                        damping: Motion.springBouncy.damping
-                    }
-                }
+            MOverlay {
+                id: overlay
+                open: Launcher.open
+                titleKey: "bar.launcher"
+                cardWidth: Tokens.spacing.xxl * 16
+                cardHeight: Tokens.spacing.xxl * 14
+                onClosed: Launcher.hide()
 
                 ColumnLayout {
-                    anchors.fill: parent
                     spacing: Tokens.spacing.md
 
-                    MTextField {
+                    MSearchField {
                         id: query
                         Layout.fillWidth: true
                         placeholderKey: "launcher.placeholder"
                         Component.onCompleted: forceActiveFocus()
-                        onAccepted: results.activateFirst()
+                        onAccepted: root.activate(list.model[list.currentIndex] || list.model[0])
+                        onTextEdited: list.currentIndex = 0
+                        onDownPressed: list.currentIndex = Math.min(list.count - 1, list.currentIndex + 1)
+                        onUpPressed: list.currentIndex = Math.max(0, list.currentIndex - 1)
                     }
 
                     MText {
@@ -75,37 +103,31 @@ Scope {
                     }
 
                     ListView {
-                        id: results
+                        id: list
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
-                        model: Launcher.query(query.text)
+                        spacing: Tokens.spacing.sm
+                        model: root.resultsFor(query.text)
                         currentIndex: 0
                         delegate: MListItem {
                             required property var modelData
                             required property int index
-                            width: results.width
+                            width: list.width
                             iconName: modelData.icon || "application-x-executable"
+                            tintIcon: modelData.kind === "settings" || modelData.kind === "power"
                             titleValue: modelData.name
                             subtitleValue: modelData.genericName || ""
-                            selected: results.currentIndex === index
-                            onClicked: Launcher.launch(modelData)
+                            selected: list.currentIndex === index
+                            onClicked: root.activate(modelData)
                         }
 
-                        function activateFirst() {
-                            if (count > 0)
-                                Launcher.launch(model[0]);
+                        MEmptyState {
+                            visible: list.count === 0 && query.text.length > 0
+                            anchors.fill: parent
+                            iconName: "edit-find-symbolic"
+                            titleKey: "launcher.noResults"
                         }
-
-                        Keys.onDownPressed: currentIndex = Math.min(count - 1, currentIndex + 1)
-                        Keys.onUpPressed: currentIndex = Math.max(0, currentIndex - 1)
-                    }
-
-                    MText {
-                        visible: results.count === 0 && query.text.length > 0
-                        key: "launcher.noResults"
-                        styleName: "bodyMedium"
-                        color: Colors.color.onSurfaceVariant
                     }
                 }
             }

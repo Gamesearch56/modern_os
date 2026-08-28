@@ -16,6 +16,8 @@ Two install paths exist:
   pass `--yes --disk`) then `install/install.sh` as the new user.
 
 Full plan: `docs/ARCHITECTURE.md`. Isolation rules: `docs/ISOLATION.md`.
+When `devuser` testing is done and this account should run the new
+desktop (with a rewind path, then a later clean cut): `docs/CUTOVER.md`.
 
 ## Status
 
@@ -152,6 +154,11 @@ TTY3.
   first is still running; one user gets one graphical session.
 - **After a reboot:** autologin is still the daily-driver account,
   because greetd was never enabled. Log in as usual.
+
+Putting **this** account on the new desktop (not `devuser`) is a
+different, two-phase procedure: reversible stow first, delete the old
+`~/dotfiles` stack only after days of use — `docs/CUTOVER.md`. Do not
+use `--allow-live-home` until that document’s Phase 1.
 
 ### 5. Cursor on `devuser`
 

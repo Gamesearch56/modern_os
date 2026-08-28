@@ -8,6 +8,9 @@ Rectangle {
     id: root
 
     property int level: 1
+    property real padding: Tokens.spacing.md
+    property color borderColor: "transparent"
+    property int borderWidth: 0
     property alias content: inner.data
     default property alias extra: inner.data
 
@@ -15,7 +18,9 @@ Rectangle {
 
     radius: Tokens.radius.medium
     color: Colors.color.surfaceContainer
-    border.width: 0
+    border.color: root.borderColor
+    border.width: root.borderWidth
+    clip: true
 
     layer.enabled: root._elev.shadowOpacity > 0
     layer.effect: null
@@ -30,6 +35,6 @@ Rectangle {
     Item {
         id: inner
         anchors.fill: parent
-        anchors.margins: Tokens.spacing.md
+        anchors.margins: root.padding
     }
 }

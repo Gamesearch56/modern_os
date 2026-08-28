@@ -6,7 +6,9 @@ until you explicitly decide the new system is ready and run the gated
 system-wide phase yourself.
 
 How to create `devuser`, start Hyprland on a second TTY, and return to
-this session: **`README.md`**. Install flags: `docs/INSTALL.md`.
+this session: **`README.md`**. Install flags: `docs/INSTALL.md`. Switching
+**this** account onto the new desktop, with rewind then a clean cut:
+**`docs/CUTOVER.md`**.
 
 ## Safe by construction
 
@@ -17,7 +19,7 @@ this session: **`README.md`**. Install flags: `docs/INSTALL.md`.
 - `install.sh` **refuses** a stow target of `/home/bastianweigand` (or any
   path under it). Override with `MODERN_PROTECT_HOME` if the protected
   path differs; override the refuse with `--allow-live-home` only for a
-  deliberate cutover (new PC that reuses this username).
+  deliberate cutover (`docs/CUTOVER.md` Phase 1 — rewind archive first).
 - `stow` therefore never runs against the daily-driver home during testing.
   Conflict backups are stored under `$TARGET/.local/state/modern/stow-backups`.
 - All runtime state this project creates lives under the **target** user's

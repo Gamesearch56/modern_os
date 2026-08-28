@@ -7,61 +7,23 @@ import "."
 
 ColumnLayout {
     spacing: Tokens.spacing.md
-
     Model { id: model }
 
-    MText {
-        key: "settings.sections.launcher"
-        styleName: "headlineSmall"
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.frecency"
+        MSwitch {
+            checked: model.frecencyEnabled
+            onToggled: (v) => ConfigWrite.set("launcher.frecencyEnabled", v)
+        }
     }
-
-    MText {
-        key: "settings.fields.launcherResults"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: String(model.resultCount)
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.frecency"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.frecencyEnabled ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.providers"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.providersText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.launcherResults"
+        MSlider {
+            from: 4
+            to: 20
+            value: model.resultCount
+            onMoved: (v) => ConfigWrite.set("launcher.resultCount", Math.round(v))
+        }
     }
 }

@@ -4,21 +4,26 @@ import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 
-RowLayout {
-    spacing: Tokens.spacing.xs
+Item {
+    id: root
+    implicitWidth: Tokens.spacing.xxl
+    implicitHeight: Tokens.spacing.xxl
 
-    MIcon {
-        name: Network.connected ? (Network.wifi?.ssid ? "network-wireless" : "network-wired") : "network-offline"
-        size: Tokens.spacing.lg
+    MIconButton {
+        anchors.centerIn: parent
+        iconName: Network.connected ? (Network.wifi?.ssid ? "network-wireless" : "network-wired") : "network-offline"
+        key: "bar.network"
+        onClicked: popup.open = !popup.open
     }
 
-    MText {
-        value: Network.connected ? (Network.primaryName === "ethernet" ? I18n.t("network.ethernet") : Network.primaryName) : I18n.t("network.disconnected")
-        styleName: "labelLarge"
-    }
+    MPopup {
+        id: popup
+        open: false
+        width: Tokens.spacing.xxl * 10
+        height: Tokens.spacing.xxl * 10
+        y: root.height + Tokens.spacing.sm
+        x: root.width - width
 
-    MouseArea {
-        anchors.fill: parent
-        onClicked: Settings.openAt("network", "")
+        Panel {}
     }
 }

@@ -20,68 +20,51 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             focusable: true
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.45
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Overview.hide()
-                }
-            }
+            MOverlay {
+                open: Overview.open
+                titleKey: "overview.title"
+                cardWidth: Tokens.spacing.xxl * 22
+                cardHeight: Tokens.spacing.xxl * 16
+                onClosed: Overview.hide()
 
-            MCard {
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 22, parent.width - Tokens.spacing.xxl)
-                height: Math.min(Tokens.spacing.xxl * 16, parent.height - Tokens.spacing.xxl * 2)
-                anchors.centerIn: parent
+                GridView {
+                    id: grid
+                    clip: true
+                    cellWidth: Tokens.spacing.xxl * 7
+                    cellHeight: Tokens.spacing.xxl * 4
+                    model: Hypr.toplevels
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: Tokens.spacing.md
+                    delegate: MCard {
+                        required property var modelData
+                        width: grid.cellWidth - Tokens.spacing.sm
+                        height: grid.cellHeight - Tokens.spacing.sm
+                        level: modelData.activated ? 3 : 1
+                        padding: Tokens.spacing.sm
 
-                    MText { key: "overview.title"; styleName: "headlineSmall" }
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: Tokens.spacing.xs
 
-                    GridView {
-                        id: grid
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
-                        cellWidth: Tokens.spacing.xxl * 7
-                        cellHeight: Tokens.spacing.xxl * 4
-                        model: Hypr.toplevels
-
-                        delegate: MCard {
-                            required property var modelData
-                            width: grid.cellWidth - Tokens.spacing.sm
-                            height: grid.cellHeight - Tokens.spacing.sm
-                            level: modelData.activated ? 3 : 1
-
-                            ColumnLayout {
-                                anchors.fill: parent
-                                spacing: Tokens.spacing.xs
-
-                                IconImage {
-                                    Layout.preferredWidth: Tokens.spacing.xl
-                                    Layout.preferredHeight: Tokens.spacing.xl
-                                    source: Quickshell.iconPath(modelData.lastIpcObject?.class ?? "application-x-executable", true)
-                                    asynchronous: true
-                                }
-
-                                MText {
-                                    value: modelData.title || ""
-                                    styleName: "labelLarge"
-                                    elide: Text.ElideRight
-                                    Layout.fillWidth: true
-                                }
+                            IconImage {
+                                Layout.preferredWidth: Tokens.spacing.xl
+                                Layout.preferredHeight: Tokens.spacing.xl
+                                source: Quickshell.iconPath(modelData.lastIpcObject?.class ?? "application-x-executable", true)
+                                asynchronous: true
                             }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    Hypr.focusWindow(modelData.address);
-                                    Overview.hide();
-                                }
+                            MText {
+                                value: modelData.title || ""
+                                styleName: "labelLarge"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                Hypr.focusWindow(modelData.address);
+                                Overview.hide();
                             }
                         }
                     }

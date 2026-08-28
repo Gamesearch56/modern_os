@@ -67,6 +67,15 @@ function extraLong(): int { return Math.round(durationExtraLong * scale); }
    `1.5` = slow-mo for demos/screenshots). Implemented once, in
    `Motion.qml`'s duration getters — nothing downstream needs to know it
    exists.
+5. **`config.json`'s `motion.overlay`** (`fade` | `zoom` | `fadeZoom`,
+   default `fadeZoom`) is how every `MOverlay` / `MPopup` / `MDialog`
+   enters and exits. Scrim always fades. The card uses
+   `Motion.overlayOpacity(open)` / `Motion.overlayScale(open)` so Modules
+   never branch on the string. Fade = opacity 0↔1; zoom = scale ~0.92↔1
+   (open zooms in, close zooms out); fadeZoom = both. Durations/easings
+   only via `Motion.medium()` with `easingEmphasizedDecelerate` (enter) and
+   `easingEmphasizedAccelerate` (exit). When `motion.scale` is 0, motion is
+   instant. Settings → Design owns the chips.
 
 ## Hyprland side
 

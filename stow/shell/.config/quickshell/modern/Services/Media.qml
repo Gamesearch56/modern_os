@@ -73,4 +73,7 @@ Singleton {
         if (player)
             player.raise();
     }
+    function raise() {
+        root.setActive(root.active);
+    }
 }

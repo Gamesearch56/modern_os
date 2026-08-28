@@ -21,8 +21,8 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.full
-        color: root.checked ? Colors.color.secondaryContainer : Colors.color.surfaceContainerHigh
-        border.color: root.checked ? Colors.color.secondaryContainer : Colors.color.outlineVariant
+        color: root.checked ? Colors.color.primaryContainer : Colors.color.surfaceContainerHigh
+        border.color: root.checked ? Colors.color.primaryContainer : Colors.color.outlineVariant
         border.width: 1
 
         Behavior on color {
@@ -42,7 +42,7 @@ Item {
             key: root.key
             params: root.params
             styleName: "labelLarge"
-            color: root.checked ? Colors.color.onSecondaryContainer : Colors.color.onSurfaceVariant
+            color: root.checked ? Colors.color.onPrimaryContainer : Colors.color.onSurfaceVariant
         }
     }
 

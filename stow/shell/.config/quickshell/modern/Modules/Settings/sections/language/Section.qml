@@ -8,73 +8,56 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.language"
-        styleName: "headlineSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.languageUi"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.ui
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
+    MSectionHeader { key: "settings.fields.languageUi" }
     RowLayout {
         spacing: Tokens.spacing.sm
         MChip {
             key: "settings.langEn"
-            checked: model.ui === "en"
+            checked: Config.language.ui === "en"
             onClicked: ConfigWrite.set("language.ui", "en")
         }
         MChip {
             key: "settings.langDe"
-            checked: model.ui === "de"
+            checked: Config.language.ui === "de"
             onClicked: ConfigWrite.set("language.ui", "de")
         }
     }
 
-    MText {
-        key: "settings.fields.dateFormat"
-        styleName: "titleSmall"
+    MSectionHeader { key: "settings.fields.dateFormat" }
+    MSelect {
         Layout.fillWidth: true
+        value: Config.language.dateFormat
+        model: [
+            { value: "DD.MM.YYYY", titleValue: "DD.MM.YYYY" },
+            { value: "YYYY-MM-DD", titleValue: "YYYY-MM-DD" },
+            { value: "MM/DD/YYYY", titleValue: "MM/DD/YYYY" }
+        ]
+        onSelected: (v) => ConfigWrite.set("language.dateFormat", v)
     }
 
-    MText {
-        value: model.dateFormat
-        styleName: "bodyMedium"
-        familyRole: "monospace"
+    MSectionHeader { key: "settings.fields.timeFormat" }
+    MSelect {
         Layout.fillWidth: true
+        value: Config.language.timeFormat
+        model: [
+            { value: "HH:mm", titleValue: "HH:mm" },
+            { value: "hh:mm a", titleValue: "hh:mm a" }
+        ]
+        onSelected: (v) => ConfigWrite.set("language.timeFormat", v)
     }
 
-    MText {
-        key: "settings.fields.timeFormat"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.timeFormat
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MSectionHeader { key: "settings.fields.firstDayOfWeek" }
+    RowLayout {
+        spacing: Tokens.spacing.sm
+        MChip {
+            key: "settings.weekMon"
+            checked: Config.language.firstDayOfWeek === 1
+            onClicked: ConfigWrite.set("language.firstDayOfWeek", 1)
+        }
+        MChip {
+            key: "settings.weekSun"
+            checked: Config.language.firstDayOfWeek === 0
+            onClicked: ConfigWrite.set("language.firstDayOfWeek", 0)
+        }
     }
 }

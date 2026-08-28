@@ -1,3 +1,8 @@
 [General]
-Version=25.04
-ViewPropsTimestamp=0
+Version=202
+MenuBar=Disabled
+ShowFullPathInTitlebar=true
+
+[KFileDialog Settings]
+Places Icons Auto-resize=false
+Places Icons Static Size=22

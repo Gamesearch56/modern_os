@@ -6,6 +6,7 @@
 local config = require("modules.config")
 
 hl.env("QT_QPA_PLATFORM", "wayland")
+hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 hl.env("QS_ICON_THEME", config.value("design.iconTheme", "Papirus-Dark"))
 hl.env("XCURSOR_THEME", config.value("design.cursorTheme", "Bibata-Modern-Classic"))

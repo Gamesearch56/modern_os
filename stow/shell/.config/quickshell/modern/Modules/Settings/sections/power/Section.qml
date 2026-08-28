@@ -6,61 +6,38 @@ import "../../../../Services"
 import "."
 
 ColumnLayout {
+    id: root
     spacing: Tokens.spacing.md
 
-    Model { id: model }
+    readonly property var lidActions: [
+        { value: "ask", titleKey: "settings.powerAsk" },
+        { value: "suspend", titleKey: "powerMenu.suspend" },
+        { value: "lock", titleKey: "powerMenu.lock" },
+        { value: "poweroff", titleKey: "powerMenu.poweroff" }
+    ]
 
-    MText {
-        key: "settings.sections.power"
-        styleName: "headlineSmall"
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.buttonAction"
+        MSelect {
+            model: root.lidActions
+            value: Config.power.buttonAction
+            onSelected: (v) => ConfigWrite.set("power.buttonAction", v)
+        }
     }
-
-    MText {
-        key: "settings.fields.buttonAction"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.lidAc"
+        MSelect {
+            model: root.lidActions
+            value: Config.power.lidActionAc
+            onSelected: (v) => ConfigWrite.set("power.lidActionAc", v)
+        }
     }
-
-    MText {
-        value: model.buttonAction
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.lidAc"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.lidActionAc
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.lidBattery"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.lidActionBattery
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.lidBattery"
+        MSelect {
+            model: root.lidActions
+            value: Config.power.lidActionBattery
+            onSelected: (v) => ConfigWrite.set("power.lidActionBattery", v)
+        }
     }
 }

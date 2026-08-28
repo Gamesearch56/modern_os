@@ -36,6 +36,7 @@ Singleton {
     readonly property int durationExtraLong: 600
 
     readonly property real scale: Config.motion.scale ?? 1.0 // 0 = off (accessibility/slow machine), 1.5 = slow-mo for demos
+    readonly property string overlay: Config.motion.overlay ?? "fadeZoom"
 
     // Always read duration through these, never the raw duration*
     // properties directly, so `config.json`'s motion.scale always applies.
@@ -43,6 +44,27 @@ Singleton {
     function medium(): int { return Math.round(durationMedium * root.scale); }
     function long(): int { return Math.round(durationLong * root.scale); }
     function extraLong(): int { return Math.round(durationExtraLong * root.scale); }
+
+    // Overlay enter/exit — Modules/Widgets call these instead of
+    // branching on motion.overlay. scale 0 is instant (opacity stays
+    // 1 while open; the loader unmounts on close).
+    function overlayOpacity(open: bool): real {
+        return open ? 1 : 0;
+    }
+
+    function overlayScale(open: bool): real {
+        if (root.scale === 0 || root.overlay === "fade")
+            return 1;
+        return open ? 1 : 0.92;
+    }
+
+    function overlayFades(): bool {
+        return root.scale !== 0 && root.overlay !== "zoom";
+    }
+
+    function overlayZooms(): bool {
+        return root.scale !== 0 && root.overlay !== "fade";
+    }
 
     // Named SpringAnimation presets — real QML SpringAnimation property
     // names are `spring` (stiffness) and `damping` (0-1, lower = faster

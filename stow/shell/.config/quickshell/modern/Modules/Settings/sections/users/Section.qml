@@ -8,34 +8,18 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.users"
-        styleName: "headlineSmall"
-        Layout.fillWidth: true
+    MAvatar {
+        Layout.alignment: Qt.AlignHCenter
+        size: Tokens.spacing.xxl * 3
+        source: User.faceUrl
     }
-
     MText {
-        key: "users.title"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignHCenter
+        value: User.displayName
+        styleName: "titleLarge"
     }
-
-    MText {
+    MHint {
         key: "settings.gated"
-        styleName: "bodyMedium"
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
         Layout.fillWidth: true
     }
 }

@@ -7,55 +7,22 @@ import "."
 
 ColumnLayout {
     spacing: Tokens.spacing.md
-
     Model { id: model }
 
-    MText {
-        key: "settings.sections.audio"
-        styleName: "headlineSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.masterVolumeLimit"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
+    MSectionHeader { key: "settings.fields.masterVolumeLimit" }
     MSlider {
+        Layout.fillWidth: true
         from: 10
         to: 150
         value: model.masterVolumeLimit
-        Layout.fillWidth: true
         onMoved: (v) => ConfigWrite.set("audio.masterVolumeLimit", Math.round(v))
     }
 
-    MText {
-        value: String(model.masterVolumeLimit)
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.autoSwitchBluetooth"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.autoSwitchBluetooth
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MSectionHeader { key: "settings.fields.autoSwitchBluetooth" }
+    RowLayout {
+        spacing: Tokens.spacing.sm
+        MChip { key: "settings.btAsk"; checked: model.autoSwitchBluetooth === "ask"; onClicked: ConfigWrite.set("audio.autoSwitchBluetooth", "ask") }
+        MChip { key: "settings.btOn"; checked: model.autoSwitchBluetooth === "on"; onClicked: ConfigWrite.set("audio.autoSwitchBluetooth", "on") }
+        MChip { key: "settings.btOff"; checked: model.autoSwitchBluetooth === "off"; onClicked: ConfigWrite.set("audio.autoSwitchBluetooth", "off") }
     }
 }

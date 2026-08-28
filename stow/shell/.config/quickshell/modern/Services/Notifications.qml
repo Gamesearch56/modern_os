@@ -82,6 +82,27 @@ Singleton {
         }
     }
 
+    function toast(summary: string, body: string) {
+        if (root.dnd)
+            return;
+        const item = {
+            summary: summary,
+            body: body || "",
+            appName: "modern",
+            dismissed: false,
+            local: true,
+            expireTimeout: Config.general.notificationTimeoutMs ?? 5000
+        };
+        const next = root.list.slice();
+        next.unshift(item);
+        root.list = next;
+        if (item.expireTimeout > 0) {
+            const timer = Qt.createQmlObject("import QtQuick; Timer { running: true; repeat: false }", root);
+            timer.interval = item.expireTimeout;
+            timer.triggered.connect(() => root.dismiss(item));
+        }
+    }
+
     function dismiss(notification: var) {
         root.list = root.list.filter(n => n !== notification);
         if (notification?.local)

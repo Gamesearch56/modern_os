@@ -11,6 +11,6 @@ Item {
         anchors.centerIn: parent
         iconName: "preferences-system"
         key: "bar.settings"
-        onClicked: Settings.openAt("general", "")
+        onClicked: Notifications.toggle()
     }
 }

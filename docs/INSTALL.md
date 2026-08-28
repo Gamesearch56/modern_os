@@ -50,7 +50,9 @@ the ESP hook. Stow conflict backups go under
 `$TARGET/.local/state/modern/stow-backups`.
 
 `--allow-live-home` disables the daily-driver home guard. Use it only
-when this account *is* the one you want to own (new PC cutover).
+when this account *is* the one you want to own, following
+`docs/CUTOVER.md` Phase 1 (rewind tarball first). Not for `devuser`
+testing.
 
 Installer log: `install/install.log` (gitignored) and
 `journalctl -t modern-install`.

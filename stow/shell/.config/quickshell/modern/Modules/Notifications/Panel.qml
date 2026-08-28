@@ -7,10 +7,22 @@ import "../../Services"
 Item {
     id: root
 
+    Binding {
+        target: SystemStats
+        property: "watching"
+        value: Notifications.panelOpen
+    }
+
+    Binding {
+        target: Brightness
+        property: "watching"
+        value: Notifications.panelOpen
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Colors.color.scrim
-        opacity: 0.32
+        opacity: Tokens.overlay.scrim
         MouseArea {
             anchors.fill: parent
             onClicked: Notifications.hide()
@@ -25,46 +37,30 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.margins: Tokens.spacing.md
+        borderWidth: cardHover.hovered ? 2 : 1
+        borderColor: cardHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
+
+        HoverHandler {
+            id: cardHover
+        }
 
         ColumnLayout {
             anchors.fill: parent
             spacing: Tokens.spacing.md
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.sm
-
-                MText {
-                    key: "quickSettings.title"
-                    styleName: "titleMedium"
-                    Layout.fillWidth: true
-                }
-
-                MText {
-                    key: "notifications.dnd"
-                    styleName: "labelMedium"
-                    color: Colors.color.onSurfaceVariant
-                }
-
-                MSwitch {
-                    checked: Notifications.dnd
-                    onToggled: (v) => Notifications.dnd = v
-                }
-            }
-
-            QuickSettings {
-                Layout.fillWidth: true
-            }
+            Header {}
+            Toggles {}
+            Sliders {}
+            Stats {}
+            MediaCard {}
 
             RowLayout {
                 Layout.fillWidth: true
-
-                MText {
+                MSectionHeader {
                     key: "bar.notifications"
                     styleName: "titleSmall"
                     Layout.fillWidth: true
                 }
-
                 MButton {
                     kind: "text"
                     key: "notifications.clearAll"
@@ -73,27 +69,37 @@ Item {
                 }
             }
 
-            ListView {
+            Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                clip: true
-                spacing: Tokens.spacing.xs
-                model: Notifications.list
-                delegate: MListItem {
-                    required property var modelData
-                    width: ListView.view.width
-                    titleValue: modelData.summary || modelData.appName || ""
-                    subtitleValue: modelData.body || ""
-                    onClicked: Notifications.dismiss(modelData)
-                }
-            }
 
-            MText {
-                visible: Notifications.list.length === 0
-                key: "notifications.empty"
-                styleName: "bodyMedium"
-                color: Colors.color.onSurfaceVariant
-                Layout.alignment: Qt.AlignHCenter
+                ListView {
+                    id: list
+                    visible: Notifications.list.length > 0
+                    anchors.fill: parent
+                    clip: true
+                    spacing: Tokens.spacing.xs
+                    model: Notifications.list
+                    delegate: MListItem {
+                        required property var modelData
+                        width: list.width
+                        iconName: "dialog-information"
+                        titleValue: modelData.summary || modelData.appName || ""
+                        subtitleValue: modelData.body || ""
+                        MIconButton {
+                            iconName: "window-close"
+                            size: Tokens.spacing.xl
+                            onClicked: Notifications.dismiss(modelData)
+                        }
+                    }
+                }
+
+                MEmptyState {
+                    visible: Notifications.list.length === 0
+                    anchors.fill: parent
+                    iconName: "preferences-system-notifications"
+                    titleKey: "notifications.empty"
+                }
             }
         }
     }

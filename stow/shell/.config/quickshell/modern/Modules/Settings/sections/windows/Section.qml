@@ -8,35 +8,30 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.windows"
-        styleName: "headlineSmall"
+    MSectionHeader { key: "settings.fields.titlebar" }
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.titlebar"
+        MSwitch {
+            checked: Config.windows?.titlebar ?? true
+            onToggled: (v) => ConfigWrite.set("windows.titlebar", v)
+        }
     }
 
-    MText {
-        key: "settings.fields.windowRules"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
+    MSectionHeader { key: "settings.fields.windowRules" }
+    Repeater {
+        model: Config.windowRules || []
+        MListItem {
+            required property var modelData
+            Layout.fillWidth: true
+            titleValue: modelData.class || modelData.title || JSON.stringify(modelData)
+        }
     }
-
-    MText {
-        value: model.rulesText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
+    MEmptyState {
+        visible: (Config.windowRules || []).length === 0
         Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+        Layout.preferredHeight: Tokens.spacing.xxl * 3
+        iconName: "preferences-system-windows"
+        titleKey: "settings.empty.rules"
     }
 }

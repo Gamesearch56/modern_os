@@ -1,8 +1,8 @@
-// Freedesktop icon by name, sized from Tokens. Widgets never pick a
-// color by hex — `color` is reserved for a future symbolic tint once
-// IconImage exposes one. Prefer `name` over a raw URL so icon-theme
-// switches apply. Empty/missing names stay blank (no Qt error texture).
+// Freedesktop icon by name, sized from Tokens. `tint` colorizes
+// symbolic icons onto a role (primary / onSurface). Full-color app
+// icons set tint: false so Papirus artwork is left alone.
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Widgets
 import "../Commons"
@@ -13,6 +13,7 @@ Item {
     property string name: ""
     property int size: Tokens.spacing.lg
     property color color: Colors.color.onSurface
+    property bool tint: true
 
     readonly property string _source: {
         if (root.name.length === 0)
@@ -29,6 +30,7 @@ Item {
     implicitHeight: root.size
 
     IconImage {
+        id: img
         visible: root._source.length > 0
         anchors.centerIn: parent
         width: root.size
@@ -37,5 +39,10 @@ Item {
         source: root._source
         mipmap: true
         asynchronous: false
+        layer.enabled: root.tint && visible
+        layer.effect: MultiEffect {
+            colorization: 1
+            colorizationColor: root.color
+        }
     }
 }

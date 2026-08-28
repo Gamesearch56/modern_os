@@ -8,60 +8,33 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.screenshots"
-        styleName: "headlineSmall"
+    MHint {
+        key: "settings.hints.screenshotDir"
+        params: ({ dir: Config.screenshots.directory || "" })
         Layout.fillWidth: true
     }
-
-    MText {
-        key: "settings.fields.screenshotDir"
-        styleName: "titleSmall"
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.copyClipboard"
+        MSwitch {
+            checked: Config.screenshots.copyToClipboard
+            onToggled: (v) => ConfigWrite.set("screenshots.copyToClipboard", v)
+        }
     }
-
-    MText {
-        value: model.directory
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
+    MListItem {
         Layout.fillWidth: true
+        titleKey: "settings.fields.openEditor"
+        MSwitch {
+            checked: Config.screenshots.openEditorAfterCapture
+            onToggled: (v) => ConfigWrite.set("screenshots.openEditorAfterCapture", v)
+        }
     }
-
-    MText {
-        key: "settings.fields.screenshotFormat"
-        styleName: "titleSmall"
+    MListItem {
         Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.format
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.copyClipboard"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.copyToClipboard ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+        titleKey: "settings.fields.includeCursor"
+        MSwitch {
+            checked: Config.screenshots.includeCursor
+            onToggled: (v) => ConfigWrite.set("screenshots.includeCursor", v)
+        }
     }
 }

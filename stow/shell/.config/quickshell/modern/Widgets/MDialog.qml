@@ -26,7 +26,7 @@ Item {
         id: scrim
         anchors.fill: parent
         color: Colors.color.scrim
-        opacity: root.open ? 0.5 : 0
+        opacity: root.open ? Tokens.overlay.scrim : 0
 
         Behavior on opacity {
             NumberAnimation {
@@ -46,19 +46,21 @@ Item {
         level: 5
         width: Math.min(parent.width - Tokens.spacing.xxl, Tokens.spacing.xxl * 12)
         anchors.centerIn: parent
-        scale: root.open ? 1 : 0.92
-        opacity: root.open ? 1 : 0
+        scale: Motion.overlayScale(root.open)
+        opacity: Motion.overlayOpacity(root.open)
 
         Behavior on opacity {
+            enabled: Motion.overlayFades()
             NumberAnimation {
                 duration: Motion.medium()
-                easing.bezierCurve: Motion.easingEmphasizedDecelerate
+                easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }
         Behavior on scale {
-            SpringAnimation {
-                spring: Motion.springGentle.spring
-                damping: Motion.springGentle.damping
+            enabled: Motion.overlayZooms()
+            NumberAnimation {
+                duration: Motion.medium()
+                easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }
 
@@ -91,7 +93,7 @@ Item {
                 }
 
                 MButton {
-                    kind: "filled"
+                    kind: root.destructive ? "destructive" : "filled"
                     key: root.confirmKey
                     onClicked: root.confirmed()
                 }

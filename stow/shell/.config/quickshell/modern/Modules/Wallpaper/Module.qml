@@ -10,7 +10,6 @@ Scope {
         active: Wallpaper.pickerOpen
 
         PanelWindow {
-            id: win
             visible: Wallpaper.pickerOpen
             color: "transparent"
             anchors.top: true
@@ -20,86 +19,40 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             focusable: true
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.4
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Wallpaper.setPickerOpen(false)
-                }
-            }
+            MOverlay {
+                open: Wallpaper.pickerOpen
+                titleKey: "wallpaper.title"
+                actionKey: "wallpaper.add"
+                actionIcon: "list-add"
+                cardWidth: Tokens.spacing.xxl * 22
+                cardHeight: Tokens.spacing.xxl * 16
+                onClosed: Wallpaper.setPickerOpen(false)
+                onActionClicked: Wallpaper.importWallpaper()
 
-            MCard {
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 22, win.width - Tokens.spacing.xxl)
-                height: Math.min(Tokens.spacing.xxl * 16, win.height - Tokens.spacing.xxl * 2)
-                anchors.centerIn: parent
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: Tokens.spacing.md
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        MText {
-                            key: "wallpaper.title"
-                            styleName: "headlineSmall"
-                            Layout.fillWidth: true
-                        }
-                        MIconButton {
-                            iconName: "list-add"
-                            key: "wallpaper.add"
-                            onClicked: Wallpaper.importWallpaper()
-                        }
-                    }
-
+                Item {
                     GridView {
                         id: grid
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        visible: Wallpaper.images.length > 0
+                        anchors.fill: parent
                         clip: true
                         cellWidth: Tokens.spacing.xxl * 8
                         cellHeight: Tokens.spacing.xxl * 6
                         model: Wallpaper.images
-                        delegate: Item {
+                        delegate: MImageTile {
                             required property var modelData
                             width: grid.cellWidth
                             height: grid.cellHeight
-
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: Tokens.spacing.xs
-                                radius: Tokens.radius.small
-                                color: Colors.color.surfaceContainerHighest
-                                border.width: modelData === Wallpaper.currentPath ? 2 : 0
-                                border.color: Colors.color.primary
-                                clip: true
-
-                                Image {
-                                    anchors.fill: parent
-                                    source: "file://" + modelData
-                                    sourceSize.width: 256
-                                    sourceSize.height: 256
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: Wallpaper.setWallpaper(modelData)
-                                }
-                            }
+                            source: "file://" + modelData
+                            selected: modelData === Wallpaper.currentPath
+                            onClicked: Wallpaper.setWallpaper(modelData)
                         }
                     }
 
-                    MText {
+                    MEmptyState {
                         visible: Wallpaper.images.length === 0
-                        key: "wallpaper.empty"
-                        styleName: "bodyMedium"
-                        color: Colors.color.onSurfaceVariant
-                        Layout.alignment: Qt.AlignHCenter
+                        anchors.fill: parent
+                        iconName: "folder-pictures-symbolic"
+                        titleKey: "wallpaper.empty"
                     }
                 }
             }

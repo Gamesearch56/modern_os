@@ -60,7 +60,8 @@
   "performance": {
     "cpu": "CPU",
     "ram": "RAM",
-    "gpu": "GPU"
+    "gpu": "GPU",
+    "disk": "Disk"
   },
   "notes": {
     "title": "Notes",
@@ -85,7 +86,7 @@
   "wallpaper": {
     "title": "Wallpapers",
     "empty": "No wallpapers found",
-    "add": "Add wallpaper",
+    "add": "Add",
     "alreadyInLibrary": "That file is already in the wallpaper folder",
     "importFailed": "Could not import wallpaper"
   },
@@ -98,7 +99,8 @@
   },
   "quickSettings": {
     "title": "Quick settings",
-    "brightness": "Brightness"
+    "brightness": "Brightness",
+    "caffeine": "Caffeine"
   },
   "overview": {
     "title": "Overview"
@@ -256,7 +258,43 @@
       "snapper": "Snapper",
       "restic": "Restic",
       "preUpdateSnapshot": "Snapshot before updates",
-      "gaming": "Gaming profiles"
+      "gaming": "Gaming profiles",
+      "defaultApps": "Default apps",
+      "browser": "Browser",
+      "calendar": "Calendar",
+      "fileManager": "File manager",
+      "terminal": "Terminal",
+      "idleDim": "Dim after (seconds)",
+      "idleOff": "Screen off (seconds)",
+      "idleLock": "Lock (seconds)",
+      "idleSuspend": "Suspend (seconds)",
+      "dndFrom": "From",
+      "dndTo": "To",
+      "kdeconnectEnabled": "KDE Connect",
+      "mirrorNotifications": "Mirror notifications",
+      "sharedClipboard": "Shared clipboard",
+      "protonDrive": "Proton Drive",
+      "calendarIcs": "Calendar ICS URL",
+      "aiProvider": "Assistant",
+      "chrome": "Chrome",
+      "wallpaperColor": "Wallpaper color",
+      "animations": "Animations",
+      "boot": "Boot screens",
+      "wallpaperOnLock": "Wallpaper on lock screen",
+      "wallpaperOnVivaldi": "Wallpaper in Vivaldi",
+      "wifi": "Wi-Fi",
+      "bluetoothPower": "Bluetooth",
+      "workspaceMode": "Workspaces",
+      "titlebar": "Title bars",
+      "barLeft": "Left island",
+      "barCenter": "Center island",
+      "barRight": "Right island",
+      "showSeconds": "Show seconds",
+      "showWeekday": "Show weekday",
+      "weatherLocation": "Weather location",
+      "openEditor": "Open editor after capture",
+      "includeCursor": "Include cursor",
+      "vmMaxMapCount": "Raise vm.max_map_count"
     },
     "sections": {
       "general": "General",
@@ -264,7 +302,7 @@
       "accounts": "Accounts & Connections",
       "privacy": "Privacy & Permissions",
       "design": "Design",
-      "language": "Language",
+      "language": "Language & region",
       "keyboard": "Keyboard",
       "time": "Time",
       "displays": "Displays",
@@ -279,6 +317,56 @@
       "storage": "Storage",
       "system": "System",
       "gaming": "Gaming"
+    },
+    "addAutostart": "Add autostart app",
+    "motionOff": "Off",
+    "motionDefault": "Default",
+    "motionSlow": "Slow",
+    "overlayFade": "Fade",
+    "overlayZoom": "Zoom",
+    "overlayBoth": "Fade and zoom",
+    "weekMon": "Monday",
+    "weekSun": "Sunday",
+    "wsDynamic": "Dynamic",
+    "wsFixed": "Fixed 1-5 / 6-10",
+    "btAsk": "Ask",
+    "btOn": "On",
+    "btOff": "Off",
+    "aiOllama": "Ollama",
+    "aiNone": "Off",
+    "powerAsk": "Ask",
+    "weatherLocationPlaceholder": "City or lat, lon",
+    "nav": {
+      "session": "Session",
+      "appearance": "Appearance",
+      "desktop": "Desktop",
+      "apps": "Apps & accounts",
+      "input": "Input & region",
+      "devices": "Devices",
+      "system": "System"
+    },
+    "themes": {
+      "expressive": "Expressive",
+      "tonalSpot": "Tonal spot",
+      "tonalSpotAuto": "Tonal spot (auto)",
+      "fidelity": "Fidelity",
+      "monochrome": "Monochrome"
+    },
+    "empty": {
+      "autostart": "No autostart apps",
+      "rules": "No window rules"
+    },
+    "hints": {
+      "defaultApps": "Browser is SUPER+B, calendar opens from the clock, files SUPER+E, terminal SUPER+T.",
+      "animations": "How long menus, the bar, and windows take to move. Off is instant.",
+      "overlayMotion": "Fade in/out, zoom in on open / zoom out on close, or both.",
+      "surfaceTint": "How strongly the wallpaper accent tints bars and panels.",
+      "workspaceMode": "Dynamic shows workspaces that exist on this monitor. Fixed keeps 1-5 on the left display and 6-10 on the next.",
+      "screenshotDir": "Saved under {dir}.",
+      "storageGated": "Snapshots are applied by the gated install/system helpers.",
+      "gamingGated": "Kernel tweaks live under install/system and are not applied automatically.",
+      "timeMerged": "Date and time formats live under Language & region.",
+      "weatherLocation": "Empty uses IP geolocation. Or a city, or latitude,longitude."
     }
   },
   "onboarding": {
@@ -292,5 +380,24 @@
     "next": "Next",
     "back": "Back",
     "skip": "Skip"
+  },
+  "screenshot": {
+    "capture": "Capture",
+    "region": "Region",
+    "window": "Window",
+    "full": "Full screen",
+    "dragHint": "Drag to select",
+    "saved": "Screenshot saved"
+  },
+  "time": {
+    "weekday": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
   }
 }
