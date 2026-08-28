@@ -1,0 +1,6 @@
+{
+  "id": "launcher",
+  "key": "bar.launcher",
+  "defaultEnabled": true,
+  "services": ["Launcher"]
+}

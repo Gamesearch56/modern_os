@@ -1,0 +1,7 @@
+{
+  "id": "displays",
+  "icon": "video-display",
+  "key": "settings.sections.displays",
+  "order": 90,
+  "keywords": ["monitors", "scale", "resolution", "profile"]
+}

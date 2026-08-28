@@ -1,0 +1,6 @@
+{
+  "id": "workspaces",
+  "key": "bar.workspaces",
+  "defaultEnabled": true,
+  "services": ["Hypr"]
+}

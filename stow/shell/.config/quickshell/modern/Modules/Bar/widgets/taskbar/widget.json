@@ -1,0 +1,6 @@
+{
+  "id": "taskbar",
+  "key": "bar.taskbar",
+  "defaultEnabled": true,
+  "services": ["Hypr"]
+}

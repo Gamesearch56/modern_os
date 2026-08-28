@@ -1,0 +1,7 @@
+{
+  "id": "audio",
+  "icon": "audio-volume-high",
+  "key": "settings.sections.audio",
+  "order": 110,
+  "keywords": ["volume", "limit", "bluetooth", "pipewire"]
+}

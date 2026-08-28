@@ -1,0 +1,7 @@
+{
+  "id": "privacy",
+  "icon": "security-high",
+  "key": "settings.sections.privacy",
+  "order": 40,
+  "keywords": ["permissions", "kdeconnect", "clipboard", "notifications", "dnd"]
+}

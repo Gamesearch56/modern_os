@@ -1,0 +1,14 @@
+module Widgets
+MText 1.0 MText.qml
+MIcon 1.0 MIcon.qml
+MButton 1.0 MButton.qml
+MIconButton 1.0 MIconButton.qml
+MSwitch 1.0 MSwitch.qml
+MSlider 1.0 MSlider.qml
+MCard 1.0 MCard.qml
+MChip 1.0 MChip.qml
+MListItem 1.0 MListItem.qml
+MTextField 1.0 MTextField.qml
+MPopup 1.0 MPopup.qml
+MDialog 1.0 MDialog.qml
+MTooltip 1.0 MTooltip.qml

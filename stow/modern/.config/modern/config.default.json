@@ -55,7 +55,7 @@
     "perMonitor": { "enabled": true },
     "left": ["launcher", "workspaces", "tray", "taskbar"],
     "center": ["clock", "media"],
-    "right": ["audio", "weather", "network", "microphone", "performance", "vpn", "bluetooth", "notifications", "settings", "power"]
+    "right": ["audio", "weather", "network", "microphone", "performance", "vpn", "bluetooth", "kdeconnect", "notifications", "settings", "power"]
   },
 
   "widgets": {
@@ -71,7 +71,19 @@
     "rules": []
   },
 
-  "windowRules": [],
+  "windowRules": [
+    {
+      "name": "steam-game",
+      "match": { "class": "steam_app_.*" },
+      "workspace": "special:game",
+      "fullscreen": true
+    },
+    {
+      "name": "jetbrains-dialogs",
+      "match": { "class": "jetbrains-.*", "title": "win0" },
+      "float": true
+    }
+  ],
 
   "launcher": {
     "providers": {

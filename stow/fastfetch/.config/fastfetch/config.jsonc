@@ -1,0 +1,4 @@
+// Colors should come from tokens.json via a matugen template later.
+// Until that template exists this file uses fastfetch defaults so the
+// tool still runs without hardcoded hex that would drift from the shell.
+{}

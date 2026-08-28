@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+# GATED — privileged local-account helper. Never copied to /usr by
+# install.sh. Polkit: install/system/polkit/link.modern.usermanager.policy.
+# JSON stdin {action, username, ...}; names go in argv arrays, never
+# interpolated into a shell string. See docs/SECURITY.md.
+set -euo pipefail
+
+fail() {
+    jq -n --arg error "$1" '{ok:false, error:$error}' >&2
+    exit 1
+}
+
+[ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ] && {
+    cat <<'EOF'
+Usage: modern-usersd < json
+  {"action":"list"}
+  {"action":"create","username":"x","groups":["wheel"],"shell":"/bin/bash"}
+  {"action":"delete","username":"x","removeHome":false}
+  {"action":"passwd","username":"x","password":"..."}
+  {"action":"groups","username":"x","groups":["wheel","audio"]}
+EOF
+    exit 0
+}
+
+if ! command -v jq >/dev/null 2>&1; then
+    echo '{"ok":false,"error":"jq is required"}' >&2
+    exit 1
+fi
+[ "$(id -u)" -eq 0 ] || fail "must run as root (pkexec)"
+
+json="$(cat)"
+[ -n "$json" ] || fail "empty stdin"
+jq -e . >/dev/null 2>&1 <<<"$json" || fail "stdin is not JSON"
+
+action="$(jq -r '.action // empty' <<<"$json")"
+username="$(jq -r '.username // empty' <<<"$json")"
+
+valid_name() { [[ "$1" =~ ^[a-z_][a-z0-9_-]*$ ]]; }
+
+require_username() {
+    [ -n "$username" ] || fail "username required"
+    valid_name "$username" || fail "invalid username"
+}
+
+require_existing() {
+    require_username
+    id -- "$username" >/dev/null 2>&1 || fail "no such user"
+}
+
+invoker_names() {
+    printf '%s\n' "$(id -un)"
+    [ -n "${SUDO_USER:-}" ] && printf '%s\n' "$SUDO_USER"
+    if [ -n "${PKEXEC_UID:-}" ]; then
+        getent passwd "$PKEXEC_UID" | cut -d: -f1 || true
+    fi
+}
+
+refuse_if_self_or_root() {
+    local target="$1" target_uid inv
+    target_uid="$(id -u -- "$target" 2>/dev/null)" || return 0
+    [ "$target_uid" -ne 0 ] || fail "refusing to modify uid 0"
+    while IFS= read -r inv; do
+        [ -n "$inv" ] && [ "$target" = "$inv" ] && fail "refusing to modify the invoking user"
+    done < <(invoker_names)
+}
+
+read_groups() {
+    _groups=()
+    mapfile -t _groups < <(jq -r '.groups[]? // empty' <<<"$json")
+    local g
+    for g in "${_groups[@]}"; do
+        valid_name "$g" || fail "invalid group"
+        getent group "$g" >/dev/null 2>&1 || fail "unknown group"
+    done
+}
+
+ok() {
+    jq -n --arg username "$username" --arg action "$1" \
+        '{ok:true, action:$action, username:$username}'
+}
+
+list_users() {
+    local name uid gid home shell groups
+    local -a rows=()
+    while IFS=: read -r name _ uid gid _ home shell; do
+        [ -z "$name" ] && continue
+        [ "$uid" -ge 1000 ] && [ "$uid" -lt 65534 ] || continue
+        groups="$(id -nG -- "$name" 2>/dev/null || true)"
+        rows+=("$(jq -n \
+            --arg username "$name" --argjson uid "$uid" --argjson gid "$gid" \
+            --arg home "$home" --arg shell "$shell" --arg groups "$groups" \
+            '{username:$username, uid:$uid, gid:$gid, home:$home, shell:$shell, groups:($groups | split(" "))}')")
+    done < <(getent passwd)
+    if [ "${#rows[@]}" -eq 0 ]; then
+        jq -n '{ok:true, users:[]}'
+        return
+    fi
+    printf '%s\n' "${rows[@]}" | jq -s '{ok:true, users:.}'
+}
+
+create_user() {
+    require_username
+    id -- "$username" >/dev/null 2>&1 && fail "user exists"
+    local shell
+    shell="$(jq -r '.shell // "/bin/bash"' <<<"$json")"
+    grep -qxF -- "$shell" /etc/shells || fail "shell is not in /etc/shells"
+    read_groups
+    local -a cmd=(useradd -m -s "$shell")
+    if [ "${#_groups[@]}" -gt 0 ]; then
+        local IFS=,
+        cmd+=(-G "${_groups[*]}")
+        unset IFS
+    fi
+    cmd+=(-- "$username")
+    "${cmd[@]}"
+    ok create
+}
+
+delete_user() {
+    require_existing
+    refuse_if_self_or_root "$username"
+    local -a cmd=(userdel)
+    [ "$(jq -r '.removeHome // false' <<<"$json")" = "true" ] && cmd+=(-r)
+    cmd+=(-- "$username")
+    "${cmd[@]}"
+    ok delete
+}
+
+passwd_user() {
+    require_existing
+    refuse_if_self_or_root "$username"
+    local password
+    password="$(jq -r '.password // empty' <<<"$json")"
+    [ -n "$password" ] || fail "password required"
+    { printf '%s:' "$username"; printf '%s\n' "$password"; } | chpasswd
+    ok passwd
+}
+
+set_groups() {
+    require_existing
+    refuse_if_self_or_root "$username"
+    read_groups
+    [ "${#_groups[@]}" -gt 0 ] || fail "groups required"
+    local IFS=,
+    local joined="${_groups[*]}"
+    unset IFS
+    local -a cmd=(usermod -G "$joined" -- "$username")
+    "${cmd[@]}"
+    jq -n --arg username "$username" --arg groups "$joined" \
+        '{ok:true, action:"groups", username:$username, groups:($groups | split(","))}'
+}
+
+case "$action" in
+    list) list_users ;;
+    create) create_user ;;
+    delete) delete_user ;;
+    passwd) passwd_user ;;
+    groups) set_groups ;;
+    *) fail "unknown action" ;;
+esac

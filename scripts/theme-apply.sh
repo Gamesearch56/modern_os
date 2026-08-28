@@ -43,6 +43,35 @@ log()  { printf '\033[36m[theme-apply]\033[0m %s\n' "$*"; }
 warn() { printf '\033[33m[theme-apply] WARN\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[31m[theme-apply] ERROR\033[0m %s\n' "$*" >&2; exit 1; }
 
+# Merge an MD3 theme object into Vivaldi's Preferences. Skipped when
+# Vivaldi is running — it rewrites that file on quit and would clobber
+# us (the CSS overlay still applies either way).
+merge_vivaldi_theme() {
+    local prefs="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi/Default/Preferences"
+    local tokens="$MODERN_DIR/tokens.json"
+    [ -f "$prefs" ] || return 0
+    [ -f "$tokens" ] || return 0
+    if pgrep -x vivaldi >/dev/null 2>&1 || pgrep -x vivaldi-bin >/dev/null 2>&1; then
+        warn "Vivaldi is running — not touching Preferences; CSS overlay is already updated"
+        return 0
+    fi
+    local primary surface on_surface
+    primary="$(jq -r '.color.primary' "$tokens")"
+    surface="$(jq -r '.color.surface' "$tokens")"
+    on_surface="$(jq -r '.color.onSurface' "$tokens")"
+    jq \
+        --arg bg "$surface" \
+        --arg fg "$on_surface" \
+        --arg accent "$primary" \
+        '.vivaldi.themes.current = "modern"
+         | .vivaldi.themes.user = ((.vivaldi.themes.user // []) | map(select(.id != "modern")))
+           + [{id:"modern", name:"modern",
+               colorBg:$bg, colorFg:$fg, colorAccentBg:$accent,
+               accentOnWindow:false, accentFromPage:false}]' \
+        "$prefs" > "$prefs.tmp" && mv "$prefs.tmp" "$prefs"
+    log "merged Vivaldi native theme (id=modern)"
+}
+
 usage() { grep '^#' "$0" | cut -c3- | head -n26; }
 
 PROFILE=""
@@ -192,8 +221,11 @@ if command -v kitty >/dev/null 2>&1; then
 fi
 
 # GTK/Qt live-reload (settings.ini re-read, running-app repaint) and the
-# Vivaldi Preferences merge are the gtk-qt-theming and vivaldi-theme
-# tasks' job (docs/DECISIONS.md) — the files above are already correct
-# on disk for the next app launch either way.
+# Vivaldi Preferences merge: CSS overlay is already on disk from matugen.
+# Native theme object is merged only while Vivaldi is not running, so we
+# never fight its Preferences writer.
+if [ "$RELOAD" -eq 1 ]; then
+    merge_vivaldi_theme || warn "vivaldi Preferences merge skipped"
+fi
 
 log "done (profile=$PROFILE)"

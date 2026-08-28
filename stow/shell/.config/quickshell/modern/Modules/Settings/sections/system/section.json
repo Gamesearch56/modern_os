@@ -1,0 +1,7 @@
+{
+  "id": "system",
+  "icon": "computer",
+  "key": "settings.sections.system",
+  "order": 190,
+  "keywords": ["diagnostics", "boot", "journal", "logs"]
+}

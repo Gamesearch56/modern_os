@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=modern
+Description=Material Design 3 boot splash for modern_dotfile. Colors come from tokens.json via scripts/plymouth-sync.sh — this file is the staged default, not applied until copied under /usr/share/plymouth/themes/.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/modern
+ScriptFile=/usr/share/plymouth/themes/modern/modern.script

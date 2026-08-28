@@ -1,0 +1,6 @@
+{
+  "id": "tray",
+  "key": "bar.tray",
+  "defaultEnabled": true,
+  "services": []
+}

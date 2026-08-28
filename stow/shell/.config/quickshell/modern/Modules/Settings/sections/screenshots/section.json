@@ -1,0 +1,7 @@
+{
+  "id": "screenshots",
+  "icon": "camera-photo",
+  "key": "settings.sections.screenshots",
+  "order": 160,
+  "keywords": ["capture", "png", "clipboard", "grim"]
+}

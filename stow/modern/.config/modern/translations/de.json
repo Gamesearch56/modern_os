@@ -15,7 +15,110 @@
     "bluetooth": "Bluetooth",
     "notifications": "Benachrichtigungen",
     "settings": "Einstellungen",
-    "power": "Ein/Aus"
+    "power": "Ein/Aus",
+    "taskbar": "Fenster",
+    "soundSettings": "Klangeinstellungen",
+    "kdeconnect": "KDE Connect",
+    "notes": "Notizen",
+    "mail": "Mail"
+  },
+  "media": {
+    "notPlaying": "Keine Wiedergabe",
+    "launch": "Spotify öffnen",
+    "play": "Wiedergeben",
+    "pause": "Pause",
+    "stop": "Stopp",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "shuffle": "Zufall",
+    "repeat": "Wiederholen"
+  },
+  "audio": {
+    "output": "Ausgabe",
+    "input": "Eingabe",
+    "applications": "Anwendungen"
+  },
+  "network": {
+    "disconnected": "Getrennt",
+    "ethernet": "Ethernet"
+  },
+  "bluetooth": {
+    "off": "Bluetooth aus",
+    "connected": "{count} verbunden"
+  },
+  "kdeconnect": {
+    "off": "Keine Geräte",
+    "connected": "{count} verbunden"
+  },
+  "weather": {
+    "unavailable": "Wetter nicht verfügbar"
+  },
+  "vpn": {
+    "disconnected": "VPN aus",
+    "connected": "VPN an"
+  },
+  "performance": {
+    "cpu": "CPU",
+    "ram": "RAM",
+    "gpu": "GPU"
+  },
+  "notes": {
+    "title": "Notizen",
+    "empty": "Noch keine Notizen",
+    "new": "Neue Notiz"
+  },
+  "calendar": {
+    "title": "Kalender",
+    "today": "Heute"
+  },
+  "mail": {
+    "open": "Mail öffnen"
+  },
+  "ai": {
+    "title": "Assistent",
+    "placeholder": "Frag etwas..."
+  },
+  "session": {
+    "unlock": "Entsperren",
+    "password": "Passwort"
+  },
+  "wallpaper": {
+    "title": "Hintergründe",
+    "empty": "Keine Hintergründe gefunden"
+  },
+  "notifications": {
+    "empty": "Keine Benachrichtigungen",
+    "clearAll": "Alle löschen",
+    "dnd": "Nicht stören"
+  },
+  "quickSettings": {
+    "title": "Schnelleinstellungen",
+    "brightness": "Helligkeit"
+  },
+  "overview": {
+    "title": "Übersicht"
+  },
+  "plugin": {
+    "title": "Erweiterungen"
+  },
+  "diagnostics": {
+    "bootTime": "Startzeit",
+    "journalErrors": "Journal-Fehler"
+  },
+  "users": {
+    "title": "Benutzer"
+  },
+  "gaming": {
+    "optiscaler": "OptiScaler",
+    "apply": "Anwenden",
+    "remove": "Entfernen"
+  },
+  "backup": {
+    "snapshotNow": "Jetzt Snapshot"
+  },
+  "extras": {
+    "ocr": "Text erkennen",
+    "annotate": "Screenshot annotieren"
   },
   "powerMenu": {
     "title": "Ein/Aus",
@@ -32,6 +135,56 @@
   "cheatsheet": {
     "title": "Tastenkombinationen",
     "search": "Kombinationen durchsuchen...",
+    "action": {
+      "launcher": "Starter öffnen",
+      "powerMenu": "Ein/Aus-Menü",
+      "cheatsheet": "Tastenkombinationen",
+      "settings": "Einstellungen öffnen",
+      "wallpaperPicker": "Hintergrund wählen",
+      "overview": "Übersicht",
+      "terminal": "Terminal",
+      "browser": "Browser",
+      "fileManager": "Dateimanager",
+      "closeWindow": "Fenster schließen",
+      "fullscreen": "Vollbild",
+      "toggleFloating": "Schwebend umschalten",
+      "pseudoTile": "Pseudo-Kachel",
+      "toggleSplit": "Teilung umschalten",
+      "moveFocusLeft": "Fokus links",
+      "moveFocusRight": "Fokus rechts",
+      "moveFocusUp": "Fokus oben",
+      "moveFocusDown": "Fokus unten",
+      "moveWindowLeft": "Fenster nach links",
+      "moveWindowRight": "Fenster nach rechts",
+      "moveWindowUp": "Fenster nach oben",
+      "moveWindowDown": "Fenster nach unten",
+      "workspace1": "Arbeitsbereich 1",
+      "workspace2": "Arbeitsbereich 2",
+      "workspace3": "Arbeitsbereich 3",
+      "workspace4": "Arbeitsbereich 4",
+      "workspace5": "Arbeitsbereich 5",
+      "workspace6": "Arbeitsbereich 6",
+      "workspace7": "Arbeitsbereich 7",
+      "workspace8": "Arbeitsbereich 8",
+      "workspace9": "Arbeitsbereich 9",
+      "workspace10": "Arbeitsbereich 10",
+      "moveToWorkspace1": "Auf Arbeitsbereich 1",
+      "moveToWorkspace2": "Auf Arbeitsbereich 2",
+      "moveToWorkspace3": "Auf Arbeitsbereich 3",
+      "moveToWorkspace4": "Auf Arbeitsbereich 4",
+      "moveToWorkspace5": "Auf Arbeitsbereich 5",
+      "moveToWorkspace6": "Auf Arbeitsbereich 6",
+      "moveToWorkspace7": "Auf Arbeitsbereich 7",
+      "moveToWorkspace8": "Auf Arbeitsbereich 8",
+      "moveToWorkspace9": "Auf Arbeitsbereich 9",
+      "moveToWorkspace10": "Auf Arbeitsbereich 10",
+      "screenshotRegion": "Bereich aufnehmen",
+      "screenshotWindow": "Fenster aufnehmen",
+      "screenshotFull": "Ganzen Bildschirm aufnehmen",
+      "gameMode": "Spielmodus",
+      "colorPicker": "Farbwähler",
+      "clipboardHistory": "Zwischenablage"
+    },
     "category": {
       "applications": "Anwendungen",
       "windowManagement": "Fensterverwaltung",
@@ -48,6 +201,50 @@
   "settings": {
     "title": "Einstellungen",
     "search": "Einstellungen durchsuchen...",
+    "refresh": "Aktualisieren",
+    "noResults": "Keine passenden Einstellungen",
+    "on": "An",
+    "off": "Aus",
+    "cliNote": "Änderungen laufen über ConfigWrite → modern config set (jq). Nur diese App schreibt config.json.",
+    "gated": "Kontenänderungen nutzen den abgeschotteten Helfer modern-usersd (docs/SECURITY.md). Er wird standardmäßig nicht nach /usr installiert.",
+    "langEn": "English",
+    "langDe": "Deutsch",
+    "fields": {
+      "motionScale": "Bewegungsfaktor",
+      "autologin": "Automatische Anmeldung",
+      "idleTimings": "Idle-Zeiten",
+      "autostart": "Autostart",
+      "accounts": "Verbundene Konten",
+      "dnd": "Nicht-stören-Zeitplan",
+      "kdeconnect": "KDE Connect",
+      "activeProfile": "Aktives Themenprofil",
+      "transparency": "Transparenz",
+      "cornerRounding": "Eckenrundung",
+      "languageUi": "UI-Sprache",
+      "dateFormat": "Datumsformat",
+      "timeFormat": "Zeitformat",
+      "firstDayOfWeek": "Erster Wochentag",
+      "keybinds": "Tastenkombinationen",
+      "monitors": "Monitorprofile",
+      "windowRules": "Fensterregeln",
+      "masterVolumeLimit": "Lautstärkegrenze",
+      "autoSwitchBluetooth": "Bluetooth automatisch wechseln",
+      "dns": "Netzwerk / DNS",
+      "barLayout": "Leistenlayout (links / mitte / rechts)",
+      "launcherResults": "Anzahl Ergebnisse",
+      "frecency": "Häufigkeitsranking",
+      "providers": "Anbieter",
+      "buttonAction": "Ein/Aus-Taste",
+      "lidAc": "Deckel schließen (Netzteil)",
+      "lidBattery": "Deckel schließen (Akku)",
+      "screenshotDir": "Screenshot-Ordner",
+      "screenshotFormat": "Format",
+      "copyClipboard": "In Zwischenablage kopieren",
+      "snapper": "Snapper",
+      "restic": "Restic",
+      "preUpdateSnapshot": "Snapshot vor Updates",
+      "gaming": "Spieleprofile"
+    },
     "sections": {
       "general": "Allgemein",
       "applications": "Anwendungen",

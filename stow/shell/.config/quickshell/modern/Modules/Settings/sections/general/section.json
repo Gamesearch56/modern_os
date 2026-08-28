@@ -1,0 +1,7 @@
+{
+  "id": "general",
+  "icon": "preferences-system",
+  "key": "settings.sections.general",
+  "order": 10,
+  "keywords": ["motion", "scale", "idle", "dnd", "autologin", "animation"]
+}

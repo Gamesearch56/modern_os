@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<!--
+  GATED — not installed by install.sh. Copy to
+  /usr/share/polkit-1/actions/ only with the matching modern-usersd
+  binary, after reading docs/SECURITY.md.
+
+  Allows an active local session to run modern-usersd via pkexec after
+  an admin authentication. Never allow_any: this mutates /etc/passwd.
+-->
+<policyconfig>
+  <vendor>modern_dotfile</vendor>
+  <vendor_url>https://github.com</vendor_url>
+  <icon_name>system-users</icon_name>
+
+  <action id="link.modern.usermanager">
+    <description>Manage local user accounts</description>
+    <description xml:lang="de">Lokale Benutzerkonten verwalten</description>
+    <message>Authentication is required to manage local user accounts</message>
+    <message xml:lang="de">Authentifizierung ist erforderlich, um lokale Benutzerkonten zu verwalten</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/modern-usersd</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>

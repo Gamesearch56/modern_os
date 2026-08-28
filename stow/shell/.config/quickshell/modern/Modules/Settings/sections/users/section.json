@@ -1,0 +1,7 @@
+{
+  "id": "users",
+  "icon": "user-group-new",
+  "key": "settings.sections.users",
+  "order": 170,
+  "keywords": ["accounts", "passwd", "groups", "modern-usersd"]
+}

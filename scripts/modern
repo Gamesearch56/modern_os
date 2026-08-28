@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Drive the running Quickshell session from scripts and Hyprland
+# keybinds. Thin wrapper over `qs ipc` so muscle-memory `modern launcher
+# toggle` stays stable if the IPC target names ever move.
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage: modern <target> <function> [args...]
+
+Examples:
+  modern launcher toggle
+  modern powermenu toggle
+  modern cheatsheet toggle
+  modern settings open
+  modern volume up
+  modern shell reload
+  modern config set motion.scale 1.2
+EOF
+}
+
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ] || [ $# -lt 1 ]; then
+    usage
+    exit 0
+fi
+
+TARGET="$1"
+shift
+
+case "$TARGET" in
+    volume)
+        ACTION="${1:-up}"
+        case "$ACTION" in
+            up) exec qs ipc call audio volumeUp ;;
+            down) exec qs ipc call audio volumeDown ;;
+            mute) exec qs ipc call audio mute ;;
+            *) echo "unknown volume action: $ACTION" >&2; exit 1 ;;
+        esac
+        ;;
+    lang)
+        echo "language switching is Settings > Language (or edit config.json language.ui)" >&2
+        exit 1
+        ;;
+    wallpaper)
+        exec qs ipc call wallpaper "${1:-pick}"
+        ;;
+    shell)
+        exec qs ipc call shell "${1:-reload}"
+        ;;
+    settings)
+        exec qs ipc call settings "${1:-open}"
+        ;;
+    config)
+        SUB="${1:-}"
+        shift || true
+        case "$SUB" in
+            set)
+                SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+                exec "$SCRIPT_DIR/config-set.sh" "$@"
+                ;;
+            *)
+                echo "Usage: modern config set PATH VALUE" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    game)
+        shift || true
+        exec modern-game "$@"
+        ;;
+    *)
+        FUNC="${1:-toggle}"
+        exec qs ipc call "$TARGET" "$FUNC"
+        ;;
+esac

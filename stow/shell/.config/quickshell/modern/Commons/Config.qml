@@ -97,7 +97,7 @@ Singleton {
                 }
                 property list<string> left: ["launcher", "workspaces", "tray", "taskbar"]
                 property list<string> center: ["clock", "media"]
-                property list<string> right: ["audio", "weather", "network", "microphone", "performance", "vpn", "bluetooth", "notifications", "settings", "power"]
+                property list<string> right: ["audio", "weather", "network", "microphone", "performance", "vpn", "bluetooth", "kdeconnect", "notifications", "settings", "power"]
             }
 
             // Per-widget settings blobs — shape varies per widget, each

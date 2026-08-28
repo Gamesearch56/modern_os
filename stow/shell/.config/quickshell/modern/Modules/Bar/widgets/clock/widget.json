@@ -1,0 +1,6 @@
+{
+  "id": "clock",
+  "key": "bar.clock",
+  "defaultEnabled": true,
+  "services": []
+}

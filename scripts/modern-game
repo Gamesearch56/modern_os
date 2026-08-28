@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Thin alias: modern-game optiscaler apply|remove|list|fetch|games
+# forwards to scripts/optiscaler.sh so `modern game ...` (scripts/modern)
+# and a dedicated binary share one implementation.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OPTI="$ROOT/scripts/optiscaler.sh"
+
+usage() {
+    cat <<'EOF'
+Usage: modern-game optiscaler <fetch|list|apply|remove|games> [args...]
+
+Examples:
+  modern-game optiscaler fetch
+  modern-game optiscaler list
+  modern-game optiscaler apply GAME_DIR [proxy]
+  modern-game optiscaler remove GAME_DIR
+  modern-game optiscaler games
+EOF
+}
+
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ] || [ $# -lt 1 ]; then
+    usage
+    exit 0
+fi
+
+case "$1" in
+    optiscaler)
+        shift
+        exec "$OPTI" "$@"
+        ;;
+    *)
+        printf 'modern-game: unknown command %s (expected optiscaler)\n' "$1" >&2
+        usage >&2
+        exit 2
+        ;;
+esac

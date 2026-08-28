@@ -1,0 +1,6 @@
+{
+  "id": "audio",
+  "key": "bar.volume",
+  "defaultEnabled": true,
+  "services": ["Audio"]
+}

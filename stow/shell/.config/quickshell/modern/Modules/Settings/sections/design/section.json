@@ -1,0 +1,7 @@
+{
+  "id": "design",
+  "icon": "preferences-desktop-theme",
+  "key": "settings.sections.design",
+  "order": 50,
+  "keywords": ["theme", "profile", "transparency", "rounding", "cursor"]
+}

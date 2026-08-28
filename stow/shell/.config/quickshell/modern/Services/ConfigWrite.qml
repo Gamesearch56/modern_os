@@ -1,0 +1,43 @@
+// The only writer of ~/.config/modern/config.json from the shell.
+// Commons/Config is read-only by design (docs/DECISIONS.md #3); Modules
+// cannot spawn processes, so this Service shells out to `modern config
+// set` (scripts/config-set.sh) which jq-merges a single dotted path.
+pragma Singleton
+
+import Quickshell
+import Quickshell.Io
+import QtQuick
+import "../Commons"
+
+Singleton {
+    id: root
+
+    property string lastError: ""
+
+    function set(path, value) {
+        const encoded = JSON.stringify(value);
+        proc.command = ["modern", "config", "set", path, encoded];
+        proc.running = true;
+        Logger.info("ConfigWrite", path + " = " + encoded);
+    }
+
+    Process {
+        id: proc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const t = this.text.trim();
+                if (t.length > 0)
+                    Logger.info("ConfigWrite", t);
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const t = this.text.trim();
+                if (t.length > 0) {
+                    root.lastError = t;
+                    Logger.error("ConfigWrite", t);
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "id": "language",
+  "icon": "preferences-desktop-locale",
+  "key": "settings.sections.language",
+  "order": 60,
+  "keywords": ["locale", "ui", "translation", "english", "german"]
+}
