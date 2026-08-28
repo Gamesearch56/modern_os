@@ -21,6 +21,14 @@ Do not enable greetd while testing. Shell `Logger.error` toasts appear
 only on the session that is running Quickshell (`devuser`), not on the
 daily-driver desktop.
 
+## Stow aborted on `.bashrc`
+
+`useradd -m` copies `/etc/skel/.bashrc` into the new home. GNU Stow
+refuses to replace that regular file. `install/lib/stow.sh` now moves
+those files to `$TARGET/.local/state/modern/stow-backups/` before
+stowing. Re-run `./install/install.sh --profile full` as `devuser`
+(idempotent — packages already installed are skipped).
+
 ## Shell does not start / black bar
 
 - `systemctl --user status modern-shell.service`

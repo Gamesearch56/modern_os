@@ -4,8 +4,37 @@
 # "desktop" package silently wiped every .desktop file on each run: we
 # never delete anything, we move conflicts to a timestamped backup
 # directory and log exactly what moved.
+#
+# Conflict detection walks the package tree rather than parsing GNU
+# Stow's English dry-run lines — 2.4+ prints "existing target .bashrc"
+# which the old `${line##*: }` split never extracted, so skel files
+# were left in place and `stow` aborted.
 
 STOW_DIR="${STOW_DIR:-$REPO_ROOT/stow}"
+
+_stow_backup_existing() {
+    local pkg="$1"
+    local pkg_dir="$2"
+    local target="$3"
+    local backup_root="$4"
+    local backup_dir=""
+    local src rel dest
+
+    while IFS= read -r -d '' src; do
+        rel="${src#"$pkg_dir"/}"
+        dest="$target/$rel"
+        if [ -e "$dest" ] && [ ! -L "$dest" ]; then
+            if [ -z "$backup_dir" ]; then
+                backup_dir="$backup_root/$(date +%Y%m%d-%H%M%S)/$pkg"
+                run mkdir -p "$backup_dir"
+                log_warn "Conflicts for '$pkg', backing up to $backup_dir:"
+            fi
+            run mkdir -p "$(dirname "$backup_dir/$rel")"
+            log_warn "  backing up $dest"
+            run mv "$dest" "$backup_dir/$rel"
+        fi
+    done < <(find "$pkg_dir" -mindepth 1 \( -type f -o -type l \) -print0)
+}
 
 stow_package() {
     local pkg="$1"
@@ -18,27 +47,17 @@ stow_package() {
     [ -d "$pkg_dir" ] || { log_warn "stow package '$pkg' not found at $pkg_dir, skipping"; return 0; }
 
     log_info "Stowing '$pkg' -> $target"
+    _stow_backup_existing "$pkg" "$pkg_dir" "$target" "$backup_root"
 
-    # Dry-run stow first to detect conflicts without touching anything.
-    local conflicts
-    conflicts="$(cd "$STOW_DIR" && stow -n -t "$target" "$pkg" 2>&1 | grep -E '^\s*\*' || true)"
-
-    if [ -n "$conflicts" ]; then
-        local backup_dir="$backup_root/$(date +%Y%m%d-%H%M%S)/$pkg"
-        run mkdir -p "$backup_dir"
-        log_warn "Conflicts for '$pkg', backing up to $backup_dir:"
-        while IFS= read -r line; do
-            # stow -n conflict lines look like: "  * existing target is neither a link nor a directory: .config/foo"
-            local rel="${line##*: }"
-            [ -e "$target/$rel" ] || continue
-            local dest="$backup_dir/$rel"
-            run mkdir -p "$(dirname "$dest")"
-            log_warn "  backing up $target/$rel"
-            run mv "$target/$rel" "$dest"
-        done <<< "$conflicts"
+    local stow_out=""
+    if [ "${DRY_RUN:-0}" -eq 1 ]; then
+        run bash -c "cd '$STOW_DIR' && stow -t '$target' '$pkg'"
+    elif ! stow_out="$(cd "$STOW_DIR" && stow -t "$target" "$pkg" 2>&1)"; then
+        log_error "stow '$pkg' failed:"
+        printf '%s\n' "$stow_out" | tee -a "${LOG_FILE:-/dev/null}" >&2
+        die "stow of '$pkg' aborted — leftover regular files in $target? See above."
     fi
-
-    run bash -c "cd '$STOW_DIR' && stow -t '$target' '$pkg'"
+    [ -n "$stow_out" ] && log_info "$stow_out"
     log_ok "Stowed '$pkg'"
 }
 
