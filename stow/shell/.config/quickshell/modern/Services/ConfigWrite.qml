@@ -13,10 +13,12 @@ Singleton {
     id: root
 
     property string lastError: ""
+    property bool _reloadHypr: false
 
     function set(path, value) {
         try {
             const encoded = JSON.stringify(value);
+            root._reloadHypr = path === "monitors" || path.indexOf("monitors.") === 0;
             proc.command = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "config", "set", path, encoded];
             proc.running = true;
             Logger.debug("ConfigWrite", path + " = " + encoded);
@@ -60,6 +62,8 @@ Singleton {
         onExited: (exitCode) => {
             if (exitCode !== 0 && root.lastError.length === 0)
                 Logger.error("ConfigWrite", "modern config set exited " + exitCode);
+            if (exitCode === 0 && root._reloadHypr)
+                Quickshell.execDetached(["hyprctl", "reload"]);
         }
     }
 }

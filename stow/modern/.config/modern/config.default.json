@@ -66,8 +66,7 @@
       "launcher",
       "ai",
       "workspaces",
-      "media",
-      "taskbar"
+      "media"
     ],
     "center": [
       "clock"
@@ -76,6 +75,7 @@
       "weather",
       "connectivity",
       "audio",
+      "taskbar",
       "battery",
       "settings",
       "power"

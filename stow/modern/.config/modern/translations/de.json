@@ -17,6 +17,12 @@
     "settings": "Einstellungen",
     "power": "Ein/Aus",
     "taskbar": "Fenster",
+    "taskbarEmpty": "Keine offenen Fenster",
+    "taskbarEmptyHint": "Laufende Programme erscheinen hier",
+    "taskbarShow": "Anzeigen",
+    "taskbarFloat": "Schwebend",
+    "taskbarFullscreen": "Vollbild",
+    "taskbarWorkspace": "Arbeitsbereich {id}",
     "soundSettings": "Klangeinstellungen",
     "kdeconnect": "KDE Connect",
     "notes": "Notizen",
@@ -25,7 +31,8 @@
     "battery": "Akku",
     "ai": "Assistent",
     "close": "Schließen",
-    "audio": "Lautstärke"
+    "audio": "Lautstärke",
+    "workspaceAdd": "Nächster Arbeitsbereich"
   },
   "media": {
     "notPlaying": "Keine Wiedergabe",
@@ -471,6 +478,7 @@
       "overlayMotion": "Ein-/Ausblenden, Zoom beim Öffnen/Schließen, oder beides.",
       "surfaceTint": "Wie stark der Wallpaper-Akzent Leisten und Panels einfärbt.",
       "workspaceMode": "Dynamisch zeigt vorhandene Workspaces. Fest hält 1-5 links und 6-10 auf dem nächsten Bildschirm.",
+      "hdr": "Wide-Gamut-HDR-Panels (QD-OLED) brauchen das. Hyprland mappt sRGB-Sättigung nur im HDR-Modus; 10-Bit-PQ.",
       "screenshotDir": "Speichert unter {dir}.",
       "storageGated": "Snapshots liegen unter den abgeschotteten install/system-Helfern.",
       "gamingGated": "Kernel-Anpassungen liegen unter install/system und werden nicht automatisch angewendet.",

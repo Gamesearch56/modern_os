@@ -19,8 +19,14 @@ Scope {
     Variants {
         model: Quickshell.screens
 
-        Hud {
+        LazyLoader {
+            id: hudLoader
             required property var modelData
+            active: Screenshot.hudOpen
+
+            Hud {
+                screen: hudLoader.modelData
+            }
         }
     }
 }

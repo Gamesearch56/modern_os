@@ -1,7 +1,6 @@
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
@@ -13,8 +12,6 @@ import "../../Services"
 PanelWindow {
     id: root
 
-    required property var modelData
-    screen: modelData
     visible: Screenshot.hudOpen
     color: "transparent"
     anchors.top: true
@@ -40,7 +37,7 @@ PanelWindow {
         readonly property real selH: Math.abs(hud.y1 - hud.y0)
 
         function outputName() {
-            const scr = root.modelData || root.screen;
+            const scr = root.screen;
             const mon = Hypr.monitorForScreen(scr);
             if (mon && mon.name)
                 return String(mon.name);
@@ -126,37 +123,31 @@ PanelWindow {
             radius: Tokens.radius.small
         }
 
-        MText {
+        Rectangle {
+            visible: !hud.dragging
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Tokens.spacing.xl
-            key: "screenshot.dragHint"
-            styleName: "labelLarge"
-            color: Colors.color.onSurface
+            width: hintLabel.implicitWidth + Tokens.spacing.md * 2
+            height: hintLabel.implicitHeight + Tokens.spacing.sm * 2
+            color: Colors.color.surface
+            radius: Tokens.radius.full
+            border.color: Colors.color.outlineVariant
+            border.width: Tokens.stroke.hairline
+            opacity: Config.design.transparency ?? 0.85
+
+            MText {
+                id: hintLabel
+                anchors.centerIn: parent
+                key: "screenshot.dragHint"
+                styleName: "labelLarge"
+            }
         }
 
-        RowLayout {
-            z: 1
+        Toolbar {
+            z: 2
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
-            anchors.topMargin: Tokens.spacing.xl
-            spacing: Tokens.spacing.sm
-
-            MChip {
-                key: "screenshot.region"
-                checked: Screenshot.mode === "region"
-                onClicked: Screenshot.mode = "region"
-            }
-            MChip {
-                key: "screenshot.window"
-                checked: Screenshot.mode === "window"
-                onClicked: Screenshot.capture("window")
-            }
-            MChip {
-                key: "screenshot.full"
-                checked: Screenshot.mode === "full"
-                onClicked: Screenshot.capture("full")
-            }
         }
     }
 

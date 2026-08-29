@@ -53,6 +53,7 @@ ColumnLayout {
             value: String(root._profile().scale || 1)
             model: [
                 { value: "1", titleValue: "100%" },
+                { value: "1.1", titleValue: "110%" },
                 { value: "1.25", titleValue: "125%" },
                 { value: "1.5", titleValue: "150%" },
                 { value: "2", titleValue: "200%" }
@@ -66,13 +67,30 @@ ColumnLayout {
         titleKey: "settings.fields.hdr"
         MSwitch {
             checked: !!(root._profile().hdr)
-            onToggled: (v) => ConfigWrite.patchMonitor(root.selectedDesc, {
-                hdr: v,
-                bitdepth: v ? 10 : 8,
-                sdrsaturation: v ? 0.9 : 1,
-                sdrbrightness: v ? 1 : 1
+            onToggled: (v) => ConfigWrite.patchMonitor(root.selectedDesc, v ? {
+                hdr: true,
+                bitdepth: 10,
+                cm: "hdr",
+                sdrbrightness: 1,
+                sdrsaturation: 0.9,
+                sdr_eotf: "srgb",
+                sdr_min_luminance: 0.005,
+                sdr_max_luminance: 250,
+                min_luminance: 0,
+                supports_hdr: 1,
+                supports_wide_color: 1
+            } : {
+                hdr: false,
+                bitdepth: 8,
+                cm: "srgb",
+                supports_hdr: 0
             })
         }
+    }
+    MHint {
+        visible: root.selectedDesc.length > 0
+        key: "settings.hints.hdr"
+        Layout.fillWidth: true
     }
     MListItem {
         visible: root.selectedDesc.length > 0

@@ -86,7 +86,10 @@ Singleton {
     function _interpolate(str: string, params: var): string {
         if (!params)
             return str;
-        return str.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
+        return str.replace(/\{(\w+)\}/g, (match, name) => {
+            const v = params[name];
+            return v === undefined || v === null ? match : String(v);
+        });
     }
 
     function t(path: string, params: var): string {

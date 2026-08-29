@@ -12,7 +12,10 @@ Item {
     function send() {
         if (root._off || Ai.busy)
             return;
-        Ai.chat(field.text);
+        const t = field.text.trim();
+        if (!t.length)
+            return;
+        Ai.chat(t);
         field.text = "";
         Qt.callLater(root._scrollEnd);
     }
@@ -23,24 +26,32 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: Tokens.spacing.sm
+        spacing: Tokens.spacing.md
 
         RowLayout {
             Layout.fillWidth: true
+            spacing: Tokens.spacing.sm
+
             MText {
                 key: "ai.title"
-                styleName: "headlineSmall"
+                styleName: "headlineMedium"
                 Layout.fillWidth: true
             }
-            MIconButton {
-                iconName: "edit-clear-symbolic"
+            MButton {
+                kind: "text"
                 key: "ai.clear"
                 enabled: Ai.history.length > 0
                 onClicked: Ai.clear()
             }
+            MIconButton {
+                close: true
+                iconName: "window-close"
+                key: "bar.close"
+                onClicked: Popups.dismiss()
+            }
         }
 
-        Item {
+        MPane {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -56,7 +67,7 @@ Item {
                 ColumnLayout {
                     id: col
                     width: flick.width
-                    spacing: Tokens.spacing.sm
+                    spacing: Tokens.spacing.xxs
 
                     Repeater {
                         model: Ai.history.length
@@ -71,38 +82,23 @@ Item {
                                 key: mine ? "ai.you" : "ai.assistant"
                                 styleName: "labelSmall"
                                 color: Colors.color.onSurfaceVariant
-                                Layout.alignment: mine ? Qt.AlignRight : Qt.AlignLeft
-                            }
-
-                            Rectangle {
+                                font.capitalization: Font.AllUppercase
                                 Layout.fillWidth: true
-                                Layout.maximumWidth: flick.width
-                                implicitHeight: body.implicitHeight + Tokens.spacing.sm * 2
-                                radius: Tokens.radius.medium
-                                color: mine ? Chrome.tonal.bg : Colors.color.surfaceContainerHighest
-
-                                MText {
-                                    id: body
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.top: parent.top
-                                    anchors.margins: Tokens.spacing.sm
-                                    value: row.text || ""
-                                    styleName: "bodyMedium"
-                                    color: mine ? Chrome.tonal.fg : Colors.color.onSurface
-                                    wrapMode: Text.WordWrap
-                                    elide: Text.ElideNone
-                                    lineHeightMode: Text.ProportionalHeight
-                                }
+                            }
+                            MText {
+                                value: row.text || ""
+                                styleName: "bodyMedium"
+                                wrapMode: Text.WordWrap
+                                elide: Text.ElideNone
+                                lineHeightMode: Text.ProportionalHeight
+                                Layout.fillWidth: true
                             }
                         }
                     }
 
-                    MText {
+                    MHint {
                         visible: Ai.busy
                         key: "ai.thinking"
-                        styleName: "bodySmall"
-                        color: Colors.color.onSurfaceVariant
                     }
                 }
             }
@@ -110,7 +106,7 @@ Item {
             MEmptyState {
                 visible: root._off || Ai.history.length === 0
                 anchors.fill: parent
-                iconName: "mail-message-new-symbolic"
+                iconName: "help-about-symbolic"
                 titleKey: root._off ? "ai.disabled" : "ai.empty"
                 hintKey: root._off ? "ai.enableHint" : "ai.hint"
             }
@@ -118,7 +114,7 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: Tokens.spacing.xs
+            spacing: Tokens.spacing.sm
 
             MTextField {
                 id: field
@@ -127,8 +123,8 @@ Item {
                 placeholderKey: "ai.placeholder"
                 onAccepted: root.send()
             }
-            MIconButton {
-                iconName: "document-send"
+            MButton {
+                kind: "filled"
                 key: "ai.send"
                 enabled: !root._off && !Ai.busy && field.text.trim().length > 0
                 onClicked: root.send()

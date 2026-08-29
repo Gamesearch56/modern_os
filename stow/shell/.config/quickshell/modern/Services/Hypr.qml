@@ -30,18 +30,97 @@ Singleton {
     }
 
     // Hyprland 0.55+ Lua IPC ignores hyprlang strings like "workspace 3".
+    // Fixed mode jumps to the assigned monitor; dynamic stays on this one.
+    function _monitorSelectorForWorkspace(id: int): string {
+        const mons = root._sortedMonitors();
+        let mon = null;
+        if (id >= 1 && id <= 5)
+            mon = mons[0];
+        else if (id >= 6 && id <= 10)
+            mon = mons[1];
+        if (!mon)
+            return "";
+        const desc = String(mon.description || "");
+        return desc.length ? ("desc:" + desc) : String(mon.name || "");
+    }
+
     function focusWorkspace(id: int) {
-        if (root._lua)
-            root.dispatch("hl.dsp.focus({ workspace = " + id + " })");
-        else
+        const mode = Config.monitors?.workspaceMode || "fixed";
+        if (mode === "fixed") {
+            const sel = root._monitorSelectorForWorkspace(id);
+            if (sel.length > 0) {
+                if (root._lua)
+                    root.dispatch("hl.dsp.workspace.move({ workspace = \"" + id + "\", monitor = \"" + sel + "\" })");
+                else
+                    root.dispatch("moveworkspacetomonitor " + id + " " + sel);
+            }
+        }
+        if (root._lua) {
+            if (mode === "fixed")
+                root.dispatch("hl.dsp.focus({ workspace = " + id + " })");
+            else
+                root.dispatch("hl.dsp.focus({ workspace = " + id + ", on_current_monitor = true })");
+        } else if (mode === "fixed") {
             root.dispatch("workspace " + id);
+        } else {
+            root.dispatch("focusworkspaceoncurrentmonitor " + id);
+        }
     }
 
     function moveToWorkspace(id: int) {
+        const mode = Config.monitors?.workspaceMode || "fixed";
+        if (mode === "fixed") {
+            const sel = root._monitorSelectorForWorkspace(id);
+            if (sel.length > 0) {
+                if (root._lua)
+                    root.dispatch("hl.dsp.workspace.move({ workspace = \"" + id + "\", monitor = \"" + sel + "\" })");
+                else
+                    root.dispatch("moveworkspacetomonitor " + id + " " + sel);
+            }
+        }
         if (root._lua)
             root.dispatch("hl.dsp.window.move({ workspace = " + id + " })");
         else
             root.dispatch("movetoworkspace " + id);
+    }
+
+    function _rangeForId(id: int): var {
+        if (id >= 1 && id <= 5)
+            return ({ from: 1, to: 5 });
+        if (id >= 6 && id <= 10)
+            return ({ from: 6, to: 10 });
+        return null;
+    }
+
+    function closeWorkspace(id: int) {
+        const n = Number(id);
+        if (n <= 0)
+            return;
+        const mons = Hyprland.monitors?.values ?? [];
+        let active = false;
+        for (let i = 0; i < mons.length; i++) {
+            const aw = mons[i]?.activeWorkspace;
+            if (aw && Number(aw.id ?? aw) === n)
+                active = true;
+        }
+        const range = root._rangeForId(n);
+        const fallback = range ? (n > range.from ? n - 1 : (n < range.to ? n + 1 : 0)) : 0;
+        if (active && fallback > 0)
+            root.focusWorkspace(fallback);
+        const list = Hyprland.toplevels?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            const t = list[i];
+            const ws = t?.workspace ? Number(t.workspace.id) : 0;
+            if (ws !== n)
+                continue;
+            const addr = String(t.address || "");
+            if (!addr.length)
+                continue;
+            if (root._lua)
+                root.dispatch("hl.dsp.window.close({ window = \"address:" + addr + "\" })");
+            else
+                root.dispatch("closewindow address:" + addr);
+        }
     }
 
     function focusWindow(address: string) {
@@ -66,6 +145,46 @@ Singleton {
             root.dispatch("closewindow address:" + addr);
         else
             root.dispatch("killactive");
+    }
+
+    function windowOnScreen(toplevel: var, screen: var): bool {
+        const mon = root.monitorForScreen(screen);
+        if (!mon || !toplevel)
+            return true;
+        const ipc = toplevel.lastIpcObject;
+        if (ipc && ipc.monitor !== undefined && ipc.monitor !== null && ipc.monitor !== "") {
+            const mid = Number(ipc.monitor);
+            if (!Number.isNaN(mid) && mon.id !== undefined && Number(mon.id) === mid)
+                return true;
+            if (String(ipc.monitor) === String(mon.name))
+                return true;
+            return false;
+        }
+        return root._onMonitor(toplevel.workspace, mon);
+    }
+
+    function toggleFloating(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        if (root._lua) {
+            root.focusWindow(addr);
+            root.dispatch("hl.dsp.window.float({ action = \"toggle\" })");
+            return;
+        }
+        root.dispatch("togglefloating address:" + addr);
+    }
+
+    function toggleFullscreen(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        if (root._lua) {
+            root.focusWindow(addr);
+            root.dispatch("hl.dsp.window.fullscreen()");
+            return;
+        }
+        root.dispatch("fullscreen 0,address:" + addr);
     }
 
     function reload() {
@@ -167,8 +286,7 @@ Singleton {
         const list = Hyprland.toplevels?.values ?? [];
         let n = 0;
         for (let i = 0; i < list.length; i++) {
-            const id = list[i]?.workspace ? Number(list[i].workspace.id) : 0;
-            if (id > 0 && root.isActiveOnScreen(screen, id))
+            if (root.windowOnScreen(list[i], screen))
                 n++;
         }
         return n;

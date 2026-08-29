@@ -37,8 +37,9 @@ Item {
     BarPopup {
         id: popup
         open: false
-        width: Tokens.spacing.xxl * 12
-        height: Tokens.spacing.xxl * 12
+        anchorItem: root
+        implicitWidth: Tokens.spacing.xxl * 12
+        implicitHeight: Tokens.spacing.xxl * 12
         hAlign: Qt.AlignHCenter
 
         ColumnLayout {

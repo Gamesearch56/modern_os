@@ -9,8 +9,29 @@
 -- then falls through to the catch-all "preferred/auto" rule below, which
 -- is exactly what makes M0 usable on any hardware without per-machine
 -- edits.
+--
+-- Color management follows wiki.hypr.land Configuring/Basics/Monitors:
+-- sdrsaturation / sdrbrightness only apply in HDR (cm=hdr, 10-bit).
+-- Wide-gamut HDR OLEDs must use that path; SDR cm=srgb/dp3/edid leaves
+-- sRGB samples on P3 primaries (oversaturated).
 
 local config = require("modules.config")
+
+local passthrough = {
+    "vrr",
+    "bitdepth",
+    "sdrbrightness",
+    "sdrsaturation",
+    "sdr_eotf",
+    "sdr_min_luminance",
+    "sdr_max_luminance",
+    "min_luminance",
+    "max_luminance",
+    "max_avg_luminance",
+    "supports_hdr",
+    "supports_wide_color",
+    "icc",
+}
 
 local profiles = config.value("monitors.profiles", {})
 
@@ -20,19 +41,23 @@ for description, p in pairs(profiles) do
         mode = p.mode or "preferred",
         position = p.position or "auto",
         scale = p.scale or 1,
-        cm = p.cm or (p.hdr and "hdr" or "srgb"),
     }
-    if p.vrr ~= nil then
-        spec.vrr = p.vrr
-    end
-    if p.sdrbrightness ~= nil then
-        spec.sdrbrightness = p.sdrbrightness
-    end
-    if p.sdrsaturation ~= nil then
-        spec.sdrsaturation = p.sdrsaturation
+    for _, key in ipairs(passthrough) do
+        if p[key] ~= nil then
+            spec[key] = p[key]
+        end
     end
     if p.hdr then
-        spec.bitdepth = 10
+        spec.cm = "hdr"
+        if spec.bitdepth == nil then
+            spec.bitdepth = 10
+        end
+    else
+        local cm = p.cm
+        if cm == "hdr" or cm == "hdredid" then
+            cm = "srgb"
+        end
+        spec.cm = cm or "srgb"
     end
     hl.monitor(spec)
 end

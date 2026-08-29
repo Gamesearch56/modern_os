@@ -13,6 +13,10 @@ Singleton {
     property bool hudOpen: false
     property string mode: "region"
     property string _lastPath: ""
+    property bool _exited: false
+    property bool _outDone: false
+    property bool _done: false
+    property int _code: 0
 
     readonly property string home: Quickshell.env("HOME")
     readonly property string script: root.home + "/modern_dotfile/scripts/screenshot.sh"
@@ -30,7 +34,12 @@ Singleton {
     Process {
         id: cap
         stdout: StdioCollector {
-            onStreamFinished: root._lastPath = this.text.trim()
+            id: capOut
+            onStreamFinished: {
+                root._lastPath = this.text.trim();
+                root._outDone = true;
+                root._tryFinish();
+            }
         }
         stderr: StdioCollector {
             onStreamFinished: {
@@ -40,13 +49,31 @@ Singleton {
             }
         }
         onExited: (code) => {
-            if (code === 0 && root._lastPath.length > 0) {
-                root.captured(root._lastPath);
-                return;
-            }
-            if (code !== 0)
-                Logger.error("Screenshot", I18n.t("screenshot.failed"));
+            root._code = code;
+            root._exited = true;
+            Qt.callLater(root._tryFinish);
         }
+    }
+
+    function _resetCap() {
+        root._done = false;
+        root._exited = false;
+        root._outDone = false;
+        root._lastPath = "";
+        cap.running = false;
+    }
+
+    function _tryFinish() {
+        if (root._done || !root._exited || !root._outDone)
+            return;
+        root._done = true;
+        const path = capOut.text.trim();
+        if (root._code === 0 && path.length > 0) {
+            root.captured(path);
+            return;
+        }
+        if (root._code !== 0)
+            Logger.error("Screenshot", I18n.t("screenshot.failed"));
     }
 
     function pick(which: string) {
@@ -60,7 +87,7 @@ Singleton {
 
     function capture(which: string) {
         root.hudOpen = false;
-        cap.running = false;
+        root._resetCap();
         cap.command = [root.script, which || "region"];
         cap.running = true;
     }
@@ -69,7 +96,7 @@ Singleton {
         root.hudOpen = false;
         if (!geom || geom.length === 0)
             return;
-        cap.running = false;
+        root._resetCap();
         if (output && output.length > 0)
             cap.command = [root.script, "region", geom, output];
         else

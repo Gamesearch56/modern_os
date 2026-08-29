@@ -33,8 +33,10 @@ ColumnLayout {
             Layout.preferredHeight: preview.length > 0
                 ? Tokens.spacing.xxl * 4
                 : Tokens.spacing.xxl * 3
-            level: 2
-            borderWidth: toastHover.hovered ? 2 : 1
+            level: 0
+            color: Colors.color.surface
+            opacity: Config.design.transparency ?? 0.85
+            borderWidth: toastHover.hovered ? Tokens.stroke.focus : Tokens.stroke.hairline
             borderColor: toastHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
 
             HoverHandler {

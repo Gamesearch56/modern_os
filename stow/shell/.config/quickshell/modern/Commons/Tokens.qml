@@ -58,6 +58,7 @@ Singleton {
     }
 
     readonly property QtObject icon: QtObject {
+        readonly property real xs: 16
         readonly property real sm: 20
         readonly property real md: 24
         readonly property real lg: 40

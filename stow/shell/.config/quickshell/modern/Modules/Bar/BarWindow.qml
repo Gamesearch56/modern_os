@@ -10,31 +10,6 @@ PanelWindow {
     readonly property bool vertical: Config.bar.position === "left" || Config.bar.position === "right"
     readonly property real _edge: Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0
     readonly property real _end: Config.bar.endGap ?? Tokens.spacing.sm
-    readonly property var _leftIds: root._without(Config.bar.left, "taskbar")
-    readonly property var _centerIds: root._without(Config.bar.center, "taskbar")
-    readonly property var _rightIds: root._without(Config.bar.right, "taskbar")
-    readonly property bool _taskbarOn: {
-        const lists = [Config.bar.left, Config.bar.center, Config.bar.right];
-        for (let i = 0; i < lists.length; i++) {
-            const arr = lists[i] || [];
-            for (let j = 0; j < arr.length; j++) {
-                if (arr[j] === "taskbar")
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    function _without(arr, id) {
-        const out = [];
-        const list = arr || [];
-        for (let i = 0; i < list.length; i++) {
-            if (list[i] !== id)
-                out.push(list[i]);
-        }
-        return out;
-    }
-
     anchors.top: Config.bar.position !== "bottom"
     anchors.bottom: Config.bar.position !== "top"
     anchors.left: Config.bar.position !== "right"
@@ -76,31 +51,22 @@ PanelWindow {
                 spacing: Tokens.spacing.sm
 
                 IslandRow {
-                    ids: root._leftIds
+                    ids: Config.bar.left
                     barScreen: root.screen
-                }
-
-                BarIsland {
-                    empty: !root._taskbarOn || Hypr.taskbarCount(root.screen) === 0
-                    WidgetLoader {
-                        id: taskbarLoader
-                        modelData: "taskbar"
-                        barScreen: root.screen
-                    }
                 }
             }
 
             IslandRow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                ids: root._centerIds
+                ids: Config.bar.center
                 barScreen: root.screen
             }
 
             IslandRow {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                ids: root._rightIds
+                ids: Config.bar.right
                 barScreen: root.screen
             }
         }
@@ -119,18 +85,8 @@ PanelWindow {
 
                 IslandRow {
                     vertical: true
-                    ids: root._leftIds
+                    ids: Config.bar.left
                     barScreen: root.screen
-                }
-
-                BarIsland {
-                    vertical: true
-                    empty: !root._taskbarOn || Hypr.taskbarCount(root.screen) === 0
-                    WidgetLoader {
-                        id: vTaskbar
-                        modelData: "taskbar"
-                        barScreen: root.screen
-                    }
                 }
             }
 
@@ -138,7 +94,7 @@ PanelWindow {
                 vertical: true
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
-                ids: root._centerIds
+                ids: Config.bar.center
                 barScreen: root.screen
             }
 
@@ -146,7 +102,7 @@ PanelWindow {
                 vertical: true
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
-                ids: root._rightIds
+                ids: Config.bar.right
                 barScreen: root.screen
             }
         }

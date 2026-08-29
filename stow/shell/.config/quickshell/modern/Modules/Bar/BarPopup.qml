@@ -1,6 +1,7 @@
 // Bar menu as a real xdg popup. Child Items inside the panel are
 // clipped to bar height, which is why clock/weather/volume showed a
-// one-pixel line instead of the card.
+// one-pixel line instead of the card. PopupWindow has no visual
+// parent, so callers pass the island/button as `anchorItem`.
 import Quickshell
 import QtQuick
 import "../../Commons"
@@ -14,28 +15,31 @@ PopupWindow {
     property int elevation: 2
     property bool grab: true
     property int hAlign: Qt.AlignLeft
+    property Item anchorItem: null
     default property alias content: card.content
 
+    readonly property real _popupW: root.implicitWidth
     readonly property real _originX: {
-        const p = root.parent;
+        const p = root.anchorItem;
         if (!p)
             return 0;
         if (root.hAlign === Qt.AlignRight)
-            return p.width - root.width;
+            return p.width - root._popupW;
         if (root.hAlign === Qt.AlignHCenter)
-            return (p.width - root.width) / 2;
+            return (p.width - root._popupW) / 2;
         return 0;
     }
 
+    visible: false
     color: "transparent"
     grabFocus: root.grab
 
-    anchor.item: root.parent
+    anchor.item: root.anchorItem
     anchor.edges: Edges.Top | Edges.Left
     anchor.gravity: Edges.Bottom | Edges.Right
     anchor.adjustment: PopupAdjustment.Slide | PopupAdjustment.Flip
     anchor.rect.x: root._originX
-    anchor.rect.y: (root.parent ? root.parent.height : 0) + Tokens.spacing.sm
+    anchor.rect.y: (root.anchorItem ? root.anchorItem.height : 0) + Tokens.spacing.sm
     anchor.rect.width: 1
     anchor.rect.height: 1
 
@@ -69,20 +73,10 @@ PopupWindow {
         color: Colors.color.surface
         opacity: Config.design.transparency ?? 0.85
         borderWidth: Tokens.stroke.hairline
-        borderColor: popupHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
+        borderColor: Colors.color.outlineVariant
         scale: Motion.overlayScale(root.open)
         transformOrigin: Item.Top
 
-        HoverHandler {
-            id: popupHover
-        }
-
-        Behavior on borderColor {
-            ColorAnimation {
-                duration: Motion.short()
-                easing.bezierCurve: Motion.easingStandard
-            }
-        }
         Behavior on scale {
             enabled: Motion.overlayZooms()
             NumberAnimation {

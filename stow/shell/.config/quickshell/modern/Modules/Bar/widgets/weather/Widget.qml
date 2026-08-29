@@ -38,8 +38,9 @@ Item {
     BarPopup {
         id: popup
         open: false
-        width: Tokens.spacing.xxl * 10
-        height: Tokens.spacing.xxl * 14
+        anchorItem: root
+        implicitWidth: Tokens.spacing.xxl * 10
+        implicitHeight: Tokens.spacing.xxl * 14
         hAlign: Qt.AlignRight
 
         ColumnLayout {

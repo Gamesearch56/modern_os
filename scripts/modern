@@ -167,7 +167,8 @@ case "$TARGET" in
         ;;
     screenshot)
         MODE="${1:-region}"
-        if qs -c modern ipc call screenshot "$MODE" >/dev/null 2>&1; then
+        reply="$(qs -c modern ipc call screenshot "$MODE" 2>&1)" || true
+        if ! printf '%s' "$reply" | grep -qiE 'not ready|unknown|error'; then
             exit 0
         fi
         exec "$SCRIPT_DIR/screenshot.sh" "$MODE"

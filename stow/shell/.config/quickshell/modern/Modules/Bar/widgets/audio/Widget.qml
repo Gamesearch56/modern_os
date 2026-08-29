@@ -64,8 +64,9 @@ Item {
         id: sliderPopup
         open: false
         grab: false
-        width: Tokens.spacing.xxl * 8
-        height: Tokens.spacing.xxl * 2
+        anchorItem: root
+        implicitWidth: Tokens.spacing.xxl * 8
+        implicitHeight: Tokens.spacing.xxl * 2
 
         HoverHandler {
             id: popupHover

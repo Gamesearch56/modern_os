@@ -17,14 +17,18 @@ Item {
     property bool selected: false
     property bool enabled: true
     property string variant: "row"
+    property bool destructive: false
 
     default property alias extra: trailing.data
 
     signal clicked()
+    signal rightClicked()
     signal activated()
 
     readonly property bool _nav: root.variant === "nav"
     readonly property color _fg: {
+        if (root.destructive)
+            return Colors.color.error;
         if (!root.selected)
             return Colors.color.onSurface;
         return root._nav ? Chrome.navSelected.fg : Chrome.tonal.fg;
@@ -80,10 +84,14 @@ Item {
         anchors.fill: parent
         enabled: root.enabled
         hoverEnabled: true
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
+        onClicked: (mouse) => {
             root.forceActiveFocus();
-            root.clicked();
+            if (mouse.button === Qt.RightButton)
+                root.rightClicked();
+            else
+                root.clicked();
         }
         onDoubleClicked: root.activated()
     }

@@ -100,9 +100,9 @@ Singleton {
                 property JsonObject perMonitor: JsonObject {
                     property bool enabled: true
                 }
-                property list<string> left: ["launcher", "ai", "workspaces", "media", "taskbar"]
+                property list<string> left: ["launcher", "ai", "workspaces", "media"]
                 property list<string> center: ["clock"]
-                property list<string> right: ["weather", "connectivity", "audio", "battery", "settings", "power"]
+                property list<string> right: ["weather", "connectivity", "audio", "taskbar", "battery", "settings", "power"]
             }
 
             // Per-widget settings blobs — shape varies per widget, each

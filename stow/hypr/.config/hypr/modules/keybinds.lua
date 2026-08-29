@@ -32,14 +32,20 @@ local function browser_incognito()
     return hl.dsp.exec_cmd(bin .. " --incognito")
 end
 
--- Native 0.56 dispatcher (hyprctl movetoworkspace often no-ops from
--- exec_cmd: Hyprland's PATH may not include hyprctl). follow defaults
--- on — same as classic `movetoworkspace`, not silent.
-local function move_ws(n)
-    if hl.dsp.window and hl.dsp.window.move then
-        return hl.dsp.window.move({ workspace = n })
+local workspaces = require("modules.workspaces")
+
+-- Pin-then-focus so SUPER+N in fixed mode jumps to the assigned
+-- monitor instead of spawning that workspace on the focused display.
+local function focus_ws(n)
+    return function()
+        workspaces.focus(n)
     end
-    return hl.dsp.exec_cmd("hyprctl dispatch movetoworkspace " .. tostring(n))
+end
+
+local function move_ws(n)
+    return function()
+        workspaces.move_window(n)
+    end
 end
 
 -- Number-row keycodes 10–19 are the same on de/us. Shift+1 is "!" on
@@ -94,16 +100,16 @@ local bindings = {
     moveWindowRight = hl.dsp.exec_cmd("hyprctl dispatch movewindow r"),
     moveWindowUp = hl.dsp.exec_cmd("hyprctl dispatch movewindow u"),
     moveWindowDown = hl.dsp.exec_cmd("hyprctl dispatch movewindow d"),
-    workspace1 = hl.dsp.focus({ workspace = 1 }),
-    workspace2 = hl.dsp.focus({ workspace = 2 }),
-    workspace3 = hl.dsp.focus({ workspace = 3 }),
-    workspace4 = hl.dsp.focus({ workspace = 4 }),
-    workspace5 = hl.dsp.focus({ workspace = 5 }),
-    workspace6 = hl.dsp.focus({ workspace = 6 }),
-    workspace7 = hl.dsp.focus({ workspace = 7 }),
-    workspace8 = hl.dsp.focus({ workspace = 8 }),
-    workspace9 = hl.dsp.focus({ workspace = 9 }),
-    workspace10 = hl.dsp.focus({ workspace = 10 }),
+    workspace1 = focus_ws(1),
+    workspace2 = focus_ws(2),
+    workspace3 = focus_ws(3),
+    workspace4 = focus_ws(4),
+    workspace5 = focus_ws(5),
+    workspace6 = focus_ws(6),
+    workspace7 = focus_ws(7),
+    workspace8 = focus_ws(8),
+    workspace9 = focus_ws(9),
+    workspace10 = focus_ws(10),
     moveToWorkspace1 = move_ws(1),
     moveToWorkspace2 = move_ws(2),
     moveToWorkspace3 = move_ws(3),

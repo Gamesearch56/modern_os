@@ -47,6 +47,10 @@ end
 
 local cache = nil
 
+function M.invalidate()
+    cache = nil
+end
+
 -- config.get() returns the fully merged config table (default <- live).
 -- Cached per Hyprland config reload (ConfigWatcher re-requires this
 -- module, resetting the cache).

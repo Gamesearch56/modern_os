@@ -3,7 +3,6 @@ import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 import "../../"
-import "."
 
 Item {
     id: root
@@ -12,7 +11,7 @@ Item {
 
     MIconButton {
         anchors.centerIn: parent
-        iconName: "mail-message-new-symbolic"
+        iconName: "help-about-symbolic"
         key: "ai.title"
         onClicked: popup.open = !popup.open
     }
@@ -20,11 +19,14 @@ Item {
     BarPopup {
         id: popup
         open: false
-        width: Tokens.spacing.xxl * 14
-        height: Tokens.spacing.xxl * 16
+        anchorItem: root
+        elevation: 0
+        implicitWidth: Tokens.spacing.xxl * 16
+        implicitHeight: Tokens.spacing.xxl * 14
 
-        Panel {
+        Loader {
             anchors.fill: parent
+            source: Qt.resolvedUrl("Panel.qml")
         }
     }
 }

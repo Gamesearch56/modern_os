@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 import "../../Commons"
 import "../../Services"
@@ -15,21 +16,39 @@ Scope {
         model: Quickshell.screens
 
         PanelWindow {
+            id: toastWin
             required property var modelData
             screen: modelData
             visible: !Notifications.panelOpen && Notifications.list.length > 0
             color: "transparent"
-            anchors.top: true
-            anchors.right: true
+            anchors.top: Config.bar.position !== "bottom"
+            anchors.bottom: Config.bar.position === "bottom"
+            anchors.right: Config.bar.position !== "left"
+            anchors.left: Config.bar.position === "left"
             implicitWidth: Tokens.spacing.xxl * 12
             implicitHeight: Tokens.spacing.xxl * 16
             exclusionMode: ExclusionMode.Ignore
-            margins.top: Tokens.spacing.xl
-            margins.right: Tokens.spacing.xl
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
+            margins.top: toastWin._edgeMargin(Config.bar.position === "top")
+            margins.bottom: toastWin._edgeMargin(Config.bar.position === "bottom")
+            margins.right: toastWin._edgeMargin(Config.bar.position === "right")
+            margins.left: toastWin._edgeMargin(Config.bar.position === "left")
+
+            function _edgeMargin(onBarEdge: bool): real {
+                const gap = Tokens.spacing.sm;
+                if (!onBarEdge)
+                    return Tokens.spacing.xl;
+                const h = Config.bar.height || Tokens.spacing.xxl;
+                const edge = Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0;
+                return h + edge * 2 + gap;
+            }
 
             Toasts {
-                anchors.top: parent.top
-                anchors.right: parent.right
+                anchors.top: Config.bar.position === "bottom" ? undefined : parent.top
+                anchors.bottom: Config.bar.position === "bottom" ? parent.bottom : undefined
+                anchors.right: Config.bar.position === "left" ? undefined : parent.right
+                anchors.left: Config.bar.position === "left" ? parent.left : undefined
             }
         }
     }

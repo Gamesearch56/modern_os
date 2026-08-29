@@ -126,8 +126,9 @@ No hardcoded output names anywhere. `Services/Hypr` enumerates monitors
 via the Hyprland IPC socket and keys everything on `description + serial`
 (via `hyprctl monitors -j`), because connector names (`DP-1`, `DP-2`)
 shuffle across reboots and cable changes. Unknown monitors fall back to
-`preferred`/`auto`. Workspace-to-monitor mapping is a rule in
-`config.json` (`monitors.rules`), not a fixed split.
+`preferred`/`auto`. `monitors.workspaceMode` `fixed` keeps 1–5 on the
+leftmost display and 6–10 on the next (by x); `dynamic` is per-monitor.
+Optional `monitors.rules` pin extra workspaces by description.
 
 ## i18n
 

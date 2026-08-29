@@ -52,8 +52,6 @@ Item {
             return !Media.hasPlayer;
         if (group[0] === "battery")
             return !Battery.onBattery;
-        if (group[0] === "taskbar")
-            return Hypr.taskbarCount(root.barScreen) === 0;
         if (group[0] === "workspaces")
             return Hypr.workspaceIdsFor(root.barScreen).length === 0;
         return false;
