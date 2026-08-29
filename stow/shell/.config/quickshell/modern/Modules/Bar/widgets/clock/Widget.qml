@@ -9,16 +9,22 @@ import "../../"
 Item {
     id: root
     implicitWidth: label.implicitWidth + Tokens.spacing.md * 2
-    implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
+    implicitHeight: Config.bar.height
 
     SystemClock {
         id: clock
         precision: (Config.widgets.clock?.showSeconds ?? false) ? SystemClock.Seconds : SystemClock.Minutes
     }
 
+    BarIslandHit {
+        checked: popup.open
+        onClicked: popup.open = !popup.open
+    }
+
     MText {
         id: label
         anchors.centerIn: parent
+        z: 1
         value: DateTime.clockLabel(
             clock.date,
             Config.language.dateFormat || "DD.MM.YYYY",
@@ -26,12 +32,7 @@ Item {
             Config.widgets.clock?.showSeconds ?? false,
             Config.widgets.clock?.showWeekday ?? false)
         styleName: "labelLarge"
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: popup.open = !popup.open
+        color: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
     }
 
     BarPopup {
@@ -42,34 +43,33 @@ Item {
         implicitHeight: Tokens.spacing.xxl * 12
         hAlign: Qt.AlignHCenter
 
-        ColumnLayout {
+        BarPanelChrome {
             anchors.fill: parent
-            spacing: Tokens.spacing.sm
+            titleKey: "calendar.title"
 
-            MText {
-                key: "calendar.title"
-                styleName: "headlineSmall"
-            }
-
-            ListView {
+            MPane {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                clip: true
-                model: Calendar.events.length
 
-                delegate: MListItem {
-                    required property int index
-                    readonly property var row: Calendar.events[index] || ({})
-                    width: ListView.view.width
-                    titleValue: row.summary || ""
-                    subtitleValue: row.when || ""
-                }
-
-                MEmptyState {
-                    visible: Calendar.events.length === 0
+                ListView {
                     anchors.fill: parent
-                    iconName: "office-calendar"
-                    titleKey: "calendar.empty"
+                    clip: true
+                    model: Calendar.events.length
+
+                    delegate: MListItem {
+                        required property int index
+                        readonly property var row: Calendar.events[index] || ({})
+                        width: ListView.view.width
+                        titleValue: row.summary || ""
+                        subtitleValue: row.when || ""
+                    }
+
+                    MEmptyState {
+                        visible: Calendar.events.length === 0
+                        anchors.fill: parent
+                        iconName: "x-office-calendar-symbolic"
+                        titleKey: "calendar.empty"
+                    }
                 }
             }
 
@@ -79,7 +79,8 @@ Item {
                 fillWidth: true
                 onClicked: {
                     popup.open = false;
-                    Apps.launch("calendar");
+                    if (!Apps.launch("calendar"))
+                        Settings.openAt("applications", "");
                 }
             }
         }

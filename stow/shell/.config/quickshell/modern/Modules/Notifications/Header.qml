@@ -11,15 +11,14 @@ RowLayout {
 
     SystemClock {
         id: clock
-        precision: SystemClock.Minutes
+        precision: SystemClock.Seconds
     }
 
     ColumnLayout {
         spacing: Tokens.spacing.xxs
-        Layout.fillWidth: true
 
         MText {
-            value: DateTime.formatTime(clock.date, Config.language.timeFormat || "HH:mm", false)
+            value: DateTime.formatTime(clock.date, Config.language.timeFormat || "HH:mm", true)
             styleName: "headlineMedium"
         }
 
@@ -30,34 +29,45 @@ RowLayout {
         }
     }
 
-    MIconButton {
-        iconName: "preferences-system-symbolic"
-        key: "bar.settings"
-        onClicked: {
-            Notifications.hide();
-            Settings.openAt("general", "");
-        }
+    Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
     }
-    MIconButton {
-        iconName: "folder-pictures-symbolic"
-        key: "wallpaper.title"
-        onClicked: {
-            Notifications.hide();
-            Wallpaper.pick();
+
+    RowLayout {
+        spacing: Tokens.spacing.xs
+        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+
+        MIconButton {
+            iconName: "input-keyboard-symbolic"
+            key: "cheatsheet.title"
+            onClicked: {
+                Notifications.hide();
+                Cheatsheet.toggle();
+            }
         }
-    }
-    MIconButton {
-        iconName: "input-keyboard-symbolic"
-        key: "cheatsheet.title"
-        onClicked: {
-            Notifications.hide();
-            Cheatsheet.toggle();
+        MIconButton {
+            iconName: "focus-windows-symbolic"
+            key: "bar.taskbar"
+            checked: Taskbar.open
+            onClicked: {
+                Notifications.hide();
+                Taskbar.toggle(null);
+            }
         }
-    }
-    MIconButton {
-        close: true
-        iconName: "window-close"
-        key: "bar.close"
-        onClicked: Notifications.hide()
+        MIconButton {
+            iconName: "preferences-system-symbolic"
+            key: "bar.settings"
+            onClicked: {
+                Notifications.hide();
+                Settings.openAt("general", "");
+            }
+        }
+        MIconButton {
+            close: true
+            iconName: "window-close"
+            key: "bar.close"
+            onClicked: Notifications.hide()
+        }
     }
 }

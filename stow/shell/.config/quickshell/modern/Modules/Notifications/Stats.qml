@@ -6,61 +6,52 @@ import "../../Services"
 
 ColumnLayout {
     Layout.fillWidth: true
-    spacing: Tokens.spacing.xxs
+    spacing: Tokens.spacing.sm
 
     MText {
         key: "bar.performance"
-        styleName: "labelSmall"
-        color: Colors.color.onSurfaceVariant
-        font.capitalization: Font.AllUppercase
+        styleName: "titleSmall"
         Layout.fillWidth: true
     }
 
-    MListItem {
+    GridLayout {
         Layout.fillWidth: true
-        titleKey: "performance.cpu"
-        MText {
-            value: Math.round(SystemStats.cpuPercent) + "%"
-            styleName: "labelLarge"
-            familyRole: "monospace"
+        Layout.topMargin: Tokens.spacing.xs
+        columns: 2
+        columnSpacing: Tokens.spacing.xs
+        rowSpacing: Tokens.spacing.xs
+
+        MPercentTile {
+            Layout.fillWidth: true
+            titleKey: "performance.cpu"
+            valueText: Math.round(SystemStats.cpuPercent) + "%"
+            percent: SystemStats.cpuPercent
         }
-    }
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "performance.ram"
-        MText {
-            value: Math.round(SystemStats.ramPercent) + "%"
-            styleName: "labelLarge"
-            familyRole: "monospace"
+        MPercentTile {
+            Layout.fillWidth: true
+            titleKey: "performance.ram"
+            valueText: Math.round(SystemStats.ramPercent) + "%"
+            percent: SystemStats.ramPercent
         }
-    }
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "performance.disk"
-        MText {
-            value: Math.round(SystemStats.diskPercent) + "%"
-            styleName: "labelLarge"
-            familyRole: "monospace"
+        MPercentTile {
+            Layout.fillWidth: true
+            titleKey: "performance.disk"
+            valueText: Math.round(SystemStats.diskPercent) + "%"
+            percent: SystemStats.diskPercent
         }
-    }
-    MListItem {
-        visible: Config.widgets.performance?.showGpu ?? true
-        Layout.fillWidth: true
-        titleKey: "performance.gpu"
-        MText {
-            value: Math.round(SystemStats.gpuPercent) + "%"
-            styleName: "labelLarge"
-            familyRole: "monospace"
+        MPercentTile {
+            visible: Config.widgets.performance?.showGpu ?? true
+            Layout.fillWidth: true
+            titleKey: "performance.gpu"
+            valueText: Math.round(SystemStats.gpuPercent) + "%"
+            percent: SystemStats.gpuPercent
         }
-    }
-    MListItem {
-        visible: SystemStats.fanRpm > 0
-        Layout.fillWidth: true
-        titleKey: "performance.fan"
-        MText {
-            value: String(SystemStats.fanRpm)
-            styleName: "labelLarge"
-            familyRole: "monospace"
+        MPercentTile {
+            Layout.fillWidth: true
+            Layout.columnSpan: 2
+            titleKey: "performance.fan"
+            valueText: String(SystemStats.fanRpm)
+            percent: SystemStats.fanPercent
         }
     }
 }

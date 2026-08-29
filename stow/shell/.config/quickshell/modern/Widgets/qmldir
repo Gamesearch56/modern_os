@@ -31,3 +31,6 @@ MWindowChrome 1.0 MWindowChrome.qml
 MPane 1.0 MPane.qml
 MTextArea 1.0 MTextArea.qml
 MFocusRing 1.0 MFocusRing.qml
+MPercentTile 1.0 MPercentTile.qml
+MQuickTile 1.0 MQuickTile.qml
+MRobotIcon 1.0 MRobotIcon.qml

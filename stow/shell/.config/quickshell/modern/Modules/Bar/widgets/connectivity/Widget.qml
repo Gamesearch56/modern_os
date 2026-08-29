@@ -6,8 +6,8 @@ import "../../../../Services"
 
 Item {
     id: root
-    implicitWidth: row.implicitWidth + Tokens.spacing.sm
-    implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
+    implicitWidth: row.implicitWidth
+    implicitHeight: Config.bar.height
 
     readonly property string _wifiIcon: Network.connected ? (Network.wifi?.ssid ? "network-wireless-symbolic" : "network-wired-symbolic") : "network-offline-symbolic"
     readonly property string _ssid: Network.wifi?.ssid || ""
@@ -22,13 +22,20 @@ Item {
 
     RowLayout {
         id: row
-        anchors.centerIn: parent
-        spacing: Tokens.spacing.xs
+        anchors.fill: parent
+        spacing: 0
 
         MIconButton {
             iconName: root._wifiIcon
             key: "bar.network"
-            onClicked: Settings.openAt("network", "")
+            size: Config.bar.height
+            checked: Settings.open && Settings.sectionId === "network"
+            onClicked: {
+                if (Settings.open && Settings.sectionId === "network")
+                    Settings.close();
+                else
+                    Settings.openAt("network", "");
+            }
         }
 
         MText {
@@ -42,7 +49,14 @@ Item {
         MIconButton {
             iconName: Bluetooth.powered ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
             key: "bar.bluetooth"
-            onClicked: Settings.openAt("bluetooth", "")
+            size: Config.bar.height
+            checked: Settings.open && Settings.sectionId === "bluetooth"
+            onClicked: {
+                if (Settings.open && Settings.sectionId === "bluetooth")
+                    Settings.close();
+                else
+                    Settings.openAt("bluetooth", "");
+            }
         }
 
         MText {

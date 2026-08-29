@@ -3,10 +3,14 @@ import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 
-Row {
+Item {
     id: root
     property var barScreen: null
-    spacing: Tokens.spacing.sm
+    implicitWidth: row.implicitWidth + root._inset * 2
+    implicitHeight: Config.bar.height
+
+    readonly property real _inset: Tokens.spacing.xs
+    readonly property real _chip: Config.bar.height - root._inset * 2
 
     readonly property var ids: {
         void Hypr.workspaces;
@@ -39,80 +43,101 @@ Row {
     }
 
     Row {
-        spacing: Tokens.spacing.xxs
+        id: row
+        anchors.centerIn: parent
+        spacing: Tokens.spacing.xs
 
-        Repeater {
-            model: root.ids.length
+        Row {
+            anchors.verticalCenter: parent.verticalCenter
+            height: root._chip
+            spacing: Tokens.spacing.xs
 
-            Item {
-                id: chip
-                required property int index
-                readonly property int wsId: root.ids[index] || 0
-                readonly property var ws: Hypr.workspaceById(chip.wsId)
-                readonly property bool current: Hypr.isActiveOnScreen(root.barScreen, chip.wsId)
-                readonly property bool urgent: !!(chip.ws && chip.ws.urgent)
+            Repeater {
+                model: root.ids.length
 
-                width: Math.max(Tokens.spacing.xl, label.implicitWidth + Tokens.spacing.sm * 2)
-                height: Tokens.spacing.xl
+                Item {
+                    id: chip
+                    required property int index
+                    readonly property int wsId: root.ids[index] || 0
+                    readonly property var ws: Hypr.workspaceById(chip.wsId)
+                    readonly property bool current: Hypr.isActiveOnScreen(root.barScreen, chip.wsId)
+                    readonly property bool urgent: !!(chip.ws && chip.ws.urgent)
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Tokens.radius.full
-                    color: {
-                        if (chip.current)
-                            return Chrome.navSelected.bg;
-                        if (chip.urgent)
-                            return Colors.color.error;
-                        return Chrome.navIdle.bg;
+                    width: root._chip
+                    height: root._chip
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Tokens.radius.full
+                        color: {
+                            if (chip.current)
+                                return Chrome.navSelected.bg;
+                            if (chip.urgent)
+                                return Colors.color.error;
+                            return Chrome.navIdle.bg;
+                        }
                     }
-                }
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Tokens.radius.full
-                    color: Colors.color.primary
-                    opacity: chip.current ? 0 : Chrome.stateLayer(hit.containsMouse, false)
-                }
-
-                MText {
-                    id: label
-                    anchors.centerIn: parent
-                    value: String(chip.wsId)
-                    styleName: "labelSmall"
-                    color: {
-                        if (chip.current)
-                            return Chrome.navSelected.fg;
-                        if (chip.urgent)
-                            return Colors.color.onError;
-                        return Chrome.navIdle.fg;
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Tokens.radius.full
+                        color: Colors.color.primary
+                        opacity: chip.current ? 0 : Chrome.stateLayer(hit.containsMouse, false)
                     }
-                }
 
-                MouseArea {
-                    id: hit
-                    anchors.fill: parent
-                    z: 2
-                    hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: (mouse) => {
-                        if (mouse.button === Qt.RightButton)
-                            Hypr.closeWorkspace(chip.wsId);
-                        else
-                            Hypr.focusWorkspace(chip.wsId);
+                    MText {
+                        id: label
+                        anchors.centerIn: parent
+                        value: String(chip.wsId)
+                        styleName: "labelSmall"
+                        color: {
+                            if (chip.current)
+                                return Chrome.navSelected.fg;
+                            if (chip.urgent)
+                                return Colors.color.onError;
+                            return Chrome.navIdle.fg;
+                        }
+                    }
+
+                    MouseArea {
+                        id: hit
+                        anchors.fill: parent
+                        z: 2
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: (mouse) => {
+                            if (mouse.button === Qt.RightButton)
+                                Hypr.closeWorkspace(chip.wsId);
+                            else
+                                Hypr.focusWorkspace(chip.wsId);
+                        }
                     }
                 }
             }
         }
-    }
 
-    MIconButton {
-        visible: root.nextId > 0
-        anchors.verticalCenter: parent.verticalCenter
-        iconName: "list-add-symbolic"
-        key: "bar.workspaceAdd"
-        size: Tokens.spacing.lg
-        iconSize: Tokens.icon.xs
-        onClicked: Hypr.focusWorkspace(root.nextId)
+        Item {
+            visible: root.nextId > 0
+            width: Tokens.spacing.xs
+            height: 1
+        }
+
+        MIconButton {
+            visible: root.nextId > 0
+            anchors.verticalCenter: parent.verticalCenter
+            iconName: "list-add-symbolic"
+            key: "bar.workspaceAdd"
+            size: Tokens.spacing.xl
+            iconSize: Tokens.icon.sm - Tokens.spacing.xxs
+            checked: false
+            onClicked: Hypr.focusWorkspace(root.nextId)
+        }
+
+        Item {
+            visible: root.nextId > 0
+            width: Tokens.spacing.xs
+            height: 1
+        }
     }
 }

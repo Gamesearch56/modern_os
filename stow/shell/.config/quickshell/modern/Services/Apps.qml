@@ -31,7 +31,33 @@ Singleton {
     }
 
     function entryFor(role: string): var {
-        const id = root.desktopId(role);
+        const configured = root._entryById(root.desktopId(role));
+        if (configured)
+            return configured;
+        return root._entryFromIds(root._fallbackIds(role));
+    }
+
+    function launch(role: string): bool {
+        try {
+            const e = root.entryFor(role);
+            if (e?.execute) {
+                e.execute();
+                return true;
+            }
+            const fallback = root._fallback(role);
+            if (fallback) {
+                Quickshell.execDetached(fallback);
+                return true;
+            }
+            Logger.warn("Apps", "no desktop entry for role " + role);
+            return false;
+        } catch (err) {
+            Logger.error("Apps", String(err));
+            return false;
+        }
+    }
+
+    function _entryById(id: string): var {
         if (!id)
             return null;
         const entries = DesktopEntries.applications.values;
@@ -45,21 +71,20 @@ Singleton {
         return null;
     }
 
-    function launch(role: string) {
-        try {
-            const e = root.entryFor(role);
-            if (e?.execute) {
-                e.execute();
-                return;
-            }
-            const fallback = root._fallback(role);
-            if (fallback)
-                Quickshell.execDetached(fallback);
-            else
-                Logger.warn("Apps", "no desktop entry for role " + role);
-        } catch (err) {
-            Logger.error("Apps", String(err));
+    function _entryFromIds(ids: var): var {
+        const list = ids || [];
+        for (let i = 0; i < list.length; i++) {
+            const e = root._entryById(list[i]);
+            if (e)
+                return e;
         }
+        return null;
+    }
+
+    function _fallbackIds(role: string): var {
+        if (role === "calendar")
+            return ["gnome-calendar.desktop", "org.gnome.Calendar.desktop", "kalendar.desktop", "org.kde.kalendar.desktop", "org.kde.korganizer.desktop"];
+        return [];
     }
 
     function _fallback(role: string): var {

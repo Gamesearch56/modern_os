@@ -10,9 +10,11 @@ Item {
     property string iconName: ""
     property int echoMode: TextInput.Normal
     property bool enabled: true
+    property bool escapeCloses: false
 
     signal accepted()
     signal textEdited()
+    signal escaped()
     signal upPressed()
     signal downPressed()
 
@@ -64,6 +66,11 @@ Item {
         clip: true
         onAccepted: root.accepted()
         onTextChanged: root.textEdited()
+        Keys.priority: Keys.BeforeItem
+        Keys.onEscapePressed: (event) => {
+            root.escaped();
+            event.accepted = root.escapeCloses;
+        }
         Keys.onPressed: (event) => {
             if (event.key === Qt.Key_Down) {
                 root.downPressed();

@@ -9,12 +9,6 @@ Item {
 
     readonly property bool _barBottom: Config.bar.position === "bottom"
     readonly property bool _barLeft: Config.bar.position === "left"
-    readonly property bool _barRight: Config.bar.position === "right"
-    readonly property real _barReserve: {
-        const h = Config.bar.height || Tokens.spacing.xxl;
-        const edge = Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0;
-        return h + edge * 2;
-    }
 
     Binding {
         target: SystemStats
@@ -37,7 +31,7 @@ Item {
         id: card
         width: Tokens.spacing.xxl * 16
         implicitHeight: inner.implicitHeight + Tokens.spacing.md * 2
-        height: Math.min(implicitHeight, parent.height - root._barReserve - Tokens.spacing.xl)
+        height: Math.min(implicitHeight, parent.height - Tokens.spacing.xl)
         color: Colors.color.surface
         radius: Tokens.radius.medium
         border.color: Colors.color.outlineVariant
@@ -46,11 +40,11 @@ Item {
         opacity: Config.design.transparency ?? 0.85
         anchors.right: !root._barLeft ? parent.right : undefined
         anchors.left: root._barLeft ? parent.left : undefined
-        anchors.rightMargin: root._barRight ? (root._barReserve + Tokens.spacing.sm) : (Config.bar.endGap ?? Tokens.spacing.md)
-        anchors.leftMargin: root._barLeft ? (root._barReserve + Tokens.spacing.sm) : (Config.bar.endGap ?? Tokens.spacing.md)
+        anchors.rightMargin: Config.bar.endGap ?? Tokens.spacing.md
+        anchors.leftMargin: Config.bar.endGap ?? Tokens.spacing.md
         y: root._barBottom
-            ? (parent.height - root._barReserve - height - Tokens.spacing.sm)
-            : (root._barReserve + Tokens.spacing.sm)
+            ? (parent.height - height - Tokens.spacing.sm)
+            : Tokens.spacing.sm
         scale: Motion.overlayScale(Notifications.panelOpen)
 
         Behavior on scale {
@@ -80,9 +74,7 @@ Item {
                 Layout.fillWidth: true
                 MText {
                     key: "bar.notifications"
-                    styleName: "labelSmall"
-                    color: Colors.color.onSurfaceVariant
-                    font.capitalization: Font.AllUppercase
+                    styleName: "titleSmall"
                     Layout.fillWidth: true
                 }
                 MButton {
@@ -96,15 +88,15 @@ Item {
             MPane {
                 Layout.fillWidth: true
                 Layout.preferredHeight: list.visible
-                    ? Math.min(list.contentHeight + Tokens.spacing.sm * 2, Tokens.spacing.xxl * 8)
-                    : Tokens.spacing.xxl * 4
+                    ? Math.min(list.contentHeight + Tokens.spacing.sm * 2, Tokens.spacing.xxl * 16)
+                    : Tokens.spacing.xxl * 6
 
                 ListView {
                     id: list
                     visible: Notifications.list.length > 0
                     anchors.fill: parent
                     clip: true
-                    spacing: Tokens.spacing.xxs
+                    spacing: Tokens.spacing.sm
                     model: Notifications.list
                     delegate: MListItem {
                         required property var modelData

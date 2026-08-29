@@ -7,55 +7,57 @@ import "../../"
 
 Item {
     id: root
-    implicitWidth: row.implicitWidth + Tokens.spacing.sm
-    implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
+    implicitWidth: row.implicitWidth + Tokens.spacing.xs * 2
+    implicitHeight: Config.bar.height
 
     readonly property string _icon: Audio.muted ? "audio-volume-muted-symbolic" : (Audio.volume < 34 ? "audio-volume-low-symbolic" : (Audio.volume < 67 ? "audio-volume-medium-symbolic" : "audio-volume-high-symbolic"))
+    readonly property color _fg: sliderPopup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
 
-    RowLayout {
-        id: row
-        anchors.centerIn: parent
-        spacing: Tokens.spacing.xs
-
-        MIcon {
-            name: root._icon
-            size: Tokens.icon.md
-        }
-
-        MText {
-            value: String(Audio.volume) + "%"
-            styleName: "labelLarge"
-        }
-    }
-
-    MouseArea {
-        id: pill
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-        cursorShape: Qt.PointingHandCursor
+    BarIslandHit {
+        checked: sliderPopup.open || (Settings.open && Settings.sectionId === "audio")
         onEntered: {
             hideSlider.stop();
             sliderPopup.open = true;
         }
         onExited: hideSlider.restart()
-        onClicked: (m) => {
-            if (m.button === Qt.MiddleButton)
-                Audio.toggleMute();
+        onClicked: {
+            if (Settings.open && Settings.sectionId === "audio")
+                Settings.close();
             else
                 Settings.openAt("audio", "");
         }
-        onWheel: (w) => {
+        onMiddleClicked: Audio.toggleMute()
+        onRightClicked: Audio.toggleMute()
+        onWheel: (steps) => {
             const step = Config.widgets.audio?.scrollStepPercent ?? 5;
-            Audio.adjustVolume(w.angleDelta.y > 0 ? step : -step);
+            Audio.adjustVolume(steps > 0 ? step : -step);
+        }
+    }
+
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        z: 1
+        spacing: Tokens.spacing.xs
+
+        MIcon {
+            name: root._icon
+            size: Tokens.icon.md
+            color: root._fg
+        }
+
+        MText {
+            value: String(Audio.volume) + "%"
+            styleName: "labelLarge"
+            color: root._fg
         }
     }
 
     Timer {
         id: hideSlider
-        interval: Motion.short()
+        interval: Motion.medium()
         onTriggered: {
-            if (!popupHover.hovered)
+            if (!sliderPopup.bodyHovered)
                 sliderPopup.open = false;
         }
     }
@@ -64,20 +66,17 @@ Item {
         id: sliderPopup
         open: false
         grab: false
+        hoverBridge: true
+        barIslandChrome: true
+        hAlign: Qt.AlignHCenter
         anchorItem: root
-        implicitWidth: Tokens.spacing.xxl * 8
-        implicitHeight: Tokens.spacing.xxl * 2
-
-        HoverHandler {
-            id: popupHover
-            onHoveredChanged: {
-                if (hovered) {
-                    hideSlider.stop();
-                    sliderPopup.open = true;
-                } else {
-                    hideSlider.restart();
-                }
-            }
+        implicitWidth: Tokens.spacing.xxl * 7
+        implicitHeight: Tokens.slider.thumb + Tokens.spacing.md * 3
+        onBodyHoveredChanged: {
+            if (sliderPopup.bodyHovered)
+                hideSlider.stop();
+            else
+                hideSlider.restart();
         }
 
         MSlider {

@@ -7,7 +7,7 @@ import "../../../../Services"
 Item {
     id: root
     visible: Battery.onBattery
-    implicitWidth: visible ? row.implicitWidth + Tokens.spacing.sm : 0
+    implicitWidth: visible ? row.implicitWidth : 0
     implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
 
     Component.onCompleted: Battery.watching = true

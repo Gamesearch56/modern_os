@@ -23,6 +23,7 @@ PanelWindow {
     Shortcut {
         sequence: "Escape"
         enabled: Popups.openCount > 0
+        context: Qt.WindowShortcut
         onActivated: Popups.dismiss()
     }
 

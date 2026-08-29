@@ -34,6 +34,7 @@ singleton Screenshot 1.0 Screenshot.qml
 singleton Popups 1.0 Popups.qml
 singleton Battery 1.0 Battery.qml
 singleton Alarm 1.0 Alarm.qml
+singleton Taskbar 1.0 Taskbar.qml
 singleton Theme 1.0 Theme.qml
 singleton Passwd 1.0 Passwd.qml
 singleton Storage 1.0 Storage.qml

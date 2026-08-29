@@ -25,9 +25,11 @@ MANUAL="$(jq -r '.widgets.weather.manualLocation // ""' <<<"$CFG")"
 UNITS="$(jq -r '.widgets.weather.units // "metric"' <<<"$CFG")"
 TEMP_UNIT="celsius"
 WIND_UNIT="kmh"
+PRECIP_UNIT="mm"
 if [ "$UNITS" = "imperial" ]; then
     TEMP_UNIT="fahrenheit"
     WIND_UNIT="mph"
+    PRECIP_UNIT="inch"
 fi
 
 curl_json() {
@@ -62,4 +64,4 @@ if [ -z "${lat:-}" ] || [ -z "${lon:-}" ] || [ "$lat" = "null" ] || [ "$lon" = "
     exit 1
 fi
 
-curl_json "https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,relative_humidity_2m,wind_speed_10m,apparent_temperature&temperature_unit=${TEMP_UNIT}&wind_speed_unit=${WIND_UNIT}"
+curl_json "https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,relative_humidity_2m,wind_speed_10m,apparent_temperature,precipitation,cloud_cover,pressure_msl&hourly=temperature_2m,weather_code,precipitation_probability,wind_speed_10m,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,uv_index_max,sunrise,sunset&forecast_days=7&timezone=auto&temperature_unit=${TEMP_UNIT}&wind_speed_unit=${WIND_UNIT}&precipitation_unit=${PRECIP_UNIT}"

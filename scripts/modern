@@ -118,6 +118,24 @@ case "$TARGET" in
             *) t cli.volumeUnknown "$ACTION" >&2; exit 1 ;;
         esac
         ;;
+    brightness)
+        ACTION="${1:-get}"
+        case "$ACTION" in
+            up | down)
+                if qs -c modern ipc call brightness "$ACTION" >/dev/null 2>&1; then
+                    exit 0
+                fi
+                exec "$SCRIPT_DIR/brightness.sh" "$ACTION"
+                ;;
+            get | set)
+                exec "$SCRIPT_DIR/brightness.sh" "$@"
+                ;;
+            *)
+                echo "usage: modern brightness up|down|get|set PERCENT" >&2
+                exit 1
+                ;;
+        esac
+        ;;
     lang)
         t cli.languageViaSettings >&2
         exit 1

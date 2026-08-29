@@ -5,8 +5,9 @@ import "../../Widgets"
 import "../../Services"
 
 ColumnLayout {
+    id: toggles
     Layout.fillWidth: true
-    spacing: Tokens.spacing.xxs
+    spacing: Tokens.spacing.sm
 
     readonly property string _remaining: {
         const s = Alarm.remainingSec;
@@ -15,76 +16,68 @@ ColumnLayout {
         return m + ":" + (r < 10 ? "0" : "") + r;
     }
 
-    MListItem {
+    GridLayout {
         Layout.fillWidth: true
-        iconName: "network-wireless-symbolic"
-        titleKey: "bar.network"
-        onClicked: {
-            Notifications.hide();
-            Settings.openAt("network", "");
-        }
-    }
-    MListItem {
-        Layout.fillWidth: true
-        iconName: "bluetooth-symbolic"
-        titleKey: "bar.bluetooth"
-        onClicked: {
-            Notifications.hide();
-            Settings.openAt("bluetooth", "");
-        }
-    }
-    MListItem {
-        Layout.fillWidth: true
-        iconName: "notifications-disabled-symbolic"
-        titleKey: "notifications.dnd"
-        onClicked: Notifications.toggleDnd()
-        MSwitch {
-            checked: Notifications.dnd
-            onToggled: (v) => Notifications.dnd = v
-        }
-    }
-    MListItem {
-        Layout.fillWidth: true
-        iconName: "alarm-symbolic"
-        titleKey: Alarm.running ? "alarm.running" : "alarm.title"
-        subtitleValue: Alarm.running ? _remaining : ""
-        onClicked: {
-            if (Alarm.running)
-                Alarm.cancel();
-            else
-                Alarm.toggleDialog();
-        }
-    }
+        columns: 2
+        columnSpacing: Tokens.spacing.xs
+        rowSpacing: Tokens.spacing.xs
 
-    RowLayout {
-        visible: Alarm.dialogOpen
-        Layout.fillWidth: true
-        spacing: Tokens.spacing.sm
-
-        MIconButton {
-            iconName: "list-remove-symbolic"
-            onClicked: Alarm.durationMin = Math.max(1, Alarm.durationMin - 1)
-        }
-        MTextField {
+        MQuickTile {
             Layout.fillWidth: true
-            text: String(Alarm.durationMin)
-            onAccepted: Alarm.durationMin = Math.max(1, Number(text) || 1)
+            iconName: "network-wireless-symbolic"
+            titleKey: "bar.network"
+            checked: Network.connected
+            onClicked: {
+                Notifications.hide();
+                Settings.openAt("network", "");
+            }
         }
-        MIconButton {
-            iconName: "list-add-symbolic"
-            onClicked: Alarm.durationMin = Alarm.durationMin + 1
+        MQuickTile {
+            Layout.fillWidth: true
+            iconName: "bluetooth-symbolic"
+            titleKey: "bar.bluetooth"
+            checked: Bluetooth.powered
+            onClicked: {
+                Notifications.hide();
+                Settings.openAt("bluetooth", "");
+            }
         }
-        MButton {
-            kind: "filled"
-            key: "alarm.start"
-            onClicked: Alarm.start(Alarm.durationMin)
+        MQuickTile {
+            Layout.fillWidth: true
+            iconName: Notifications.dnd ? "notifications-disabled-symbolic" : "notifications-symbolic"
+            titleKey: "notifications.dnd"
+            checked: Notifications.dnd
+            tintIcon: false
+            onClicked: Notifications.toggleDnd()
         }
-    }
+        MQuickTile {
+            id: alarmTile
+            Layout.fillWidth: true
+            iconName: "alarm-symbolic"
+            titleKey: "alarm.title"
+            subtitleValue: Alarm.running ? toggles._remaining : ""
+            checked: Alarm.running || Alarm.dialogOpen
+            onClicked: {
+                if (Alarm.running)
+                    Alarm.cancel();
+                else
+                    Alarm.toggleDialog();
+            }
 
-    MListItem {
-        Layout.fillWidth: true
-        iconName: "camera-photo-symbolic"
-        titleKey: "screenshot.capture"
-        onClicked: Screenshot.pick("region")
+            AlarmPicker {
+                anchorItem: alarmTile
+            }
+        }
+        MQuickTile {
+            Layout.fillWidth: true
+            Layout.columnSpan: 2
+            iconName: "camera-photo-symbolic"
+            titleKey: "screenshot.capture"
+            centerAlign: true
+            onClicked: {
+                Notifications.hide();
+                Screenshot.pick("region");
+            }
+        }
     }
 }

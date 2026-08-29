@@ -23,6 +23,7 @@
     "taskbarFloat": "Float",
     "taskbarFullscreen": "Fullscreen",
     "taskbarWorkspace": "Workspace {id}",
+    "taskbarBackground": "Background",
     "soundSettings": "Sound settings",
     "kdeconnect": "KDE Connect",
     "notes": "Notes",
@@ -81,7 +82,19 @@
     "humidity": "Humidity",
     "wind": "Wind",
     "windKmh": "{speed} km/h",
-    "windMph": "{speed} mph"
+    "windMph": "{speed} mph",
+    "today": "Today",
+    "hourly": "Hourly",
+    "next7": "7 days",
+    "high": "High / low",
+    "precip": "Precipitation",
+    "uv": "UV",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "pressure": "Pressure",
+    "precipMm": "{amount} mm",
+    "precipIn": "{amount} in",
+    "pressureHpa": "{hpa} hPa"
   },
   "vpn": {
     "disconnected": "VPN off",
@@ -120,7 +133,11 @@
     "clear": "Clear chat",
     "send": "Send",
     "thinking": "Thinking…",
-    "error": "The assistant could not reply."
+    "error": "The assistant could not reply.",
+    "errorMissing": "Ollama is not installed or not on PATH.",
+    "errorModel": "That model is not available. Pull it with ollama, or pick another in Settings → Accounts.",
+    "errorStderr": "The assistant reported: {detail}",
+    "errorEmpty": "The assistant returned an empty reply."
   },
   "session": {
     "unlock": "Unlock",
@@ -169,6 +186,8 @@
   "quickSettings": {
     "title": "Quick settings",
     "brightness": "Brightness",
+    "brightnessUnavailable": "No backlight or DDC display found",
+    "brightnessFailed": "Could not set brightness",
     "caffeine": "Caffeine"
   },
   "overview": {
@@ -215,6 +234,7 @@
     "noResults": "No matching shortcuts",
     "action": {
       "launcher": "Open launcher",
+      "aiChat": "Assistant chat",
       "powerMenu": "Power menu",
       "exitSession": "Exit Hyprland",
       "cheatsheet": "Keyboard shortcuts",

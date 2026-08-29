@@ -3,6 +3,7 @@
 // `modelData` is required so Qt 6 Repeaters actually instantiate us
 // (a required `widgetId` is never filled from a string-list model).
 import QtQuick
+import QtQuick.Layouts
 import "../../Commons"
 
 Loader {

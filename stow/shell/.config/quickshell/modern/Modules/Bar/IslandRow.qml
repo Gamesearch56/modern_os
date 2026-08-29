@@ -43,6 +43,13 @@ Item {
         return out;
     }
 
+    function _singleHit(group: var): bool {
+        if (!group || group.length !== 1)
+            return false;
+        const id = group[0];
+        return id !== "workspaces" && id !== "connectivity" && id !== "media";
+    }
+
     function _empty(group: var): bool {
         if (!group || group.length === 0)
             return true;
@@ -68,14 +75,18 @@ Item {
         Repeater {
             model: root.groups
             delegate: BarIsland {
+                id: island
                 required property var modelData
                 vertical: root.vertical
                 empty: root._empty(modelData)
+                singleHit: root._singleHit(modelData)
 
                 Repeater {
-                    model: modelData
+                    model: island.modelData
                     WidgetLoader {
                         barScreen: root.barScreen
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
                     }
                 }
             }

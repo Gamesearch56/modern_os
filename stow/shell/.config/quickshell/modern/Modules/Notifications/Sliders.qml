@@ -6,7 +6,9 @@ import "../../Services"
 
 ColumnLayout {
     Layout.fillWidth: true
-    spacing: Tokens.spacing.md
+    Layout.topMargin: Tokens.spacing.sm
+    Layout.bottomMargin: Tokens.spacing.sm
+    spacing: Tokens.spacing.lg
 
     MField {
         labelKey: "bar.volume"
@@ -20,13 +22,14 @@ ColumnLayout {
     }
 
     MField {
-        visible: Brightness.available
         labelKey: "quickSettings.brightness"
+        hintKey: Brightness.available ? "" : "quickSettings.brightnessUnavailable"
         MSlider {
             enabled: Brightness.available
             from: 1
             to: 100
             value: Brightness.percent
+            showValue: true
             onMoved: (v) => Brightness.setPercent(v)
         }
     }

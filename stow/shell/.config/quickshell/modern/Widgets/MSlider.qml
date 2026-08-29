@@ -80,7 +80,8 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 enabled: root.enabled
-                cursorShape: Qt.PointingHandCursor
+                hoverEnabled: root.enabled
+                cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onPressed: (mouse) => {
                     root.forceActiveFocus();
                     root._setFromX(mouse.x);
@@ -88,6 +89,14 @@ Item {
                 onPositionChanged: (mouse) => {
                     if (pressed)
                         root._setFromX(mouse.x);
+                }
+                onWheel: (w) => {
+                    const step = root._span / 20;
+                    const dy = w.angleDelta.y;
+                    if (dy === 0)
+                        return;
+                    root.moved(Math.max(root.from, Math.min(root.to, root.value + (dy > 0 ? step : -step))));
+                    w.accepted = true;
                 }
             }
         }

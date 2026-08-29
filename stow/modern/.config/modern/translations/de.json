@@ -23,6 +23,7 @@
     "taskbarFloat": "Schwebend",
     "taskbarFullscreen": "Vollbild",
     "taskbarWorkspace": "Arbeitsbereich {id}",
+    "taskbarBackground": "Hintergrund",
     "soundSettings": "Klangeinstellungen",
     "kdeconnect": "KDE Connect",
     "notes": "Notizen",
@@ -81,7 +82,19 @@
     "humidity": "Luftfeuchtigkeit",
     "wind": "Wind",
     "windKmh": "{speed} km/h",
-    "windMph": "{speed} mph"
+    "windMph": "{speed} mph",
+    "today": "Heute",
+    "hourly": "Stündlich",
+    "next7": "7 Tage",
+    "high": "Max / Min",
+    "precip": "Niederschlag",
+    "uv": "UV",
+    "sunrise": "Sonnenaufgang",
+    "sunset": "Sonnenuntergang",
+    "pressure": "Luftdruck",
+    "precipMm": "{amount} mm",
+    "precipIn": "{amount} in",
+    "pressureHpa": "{hpa} hPa"
   },
   "vpn": {
     "disconnected": "VPN aus",
@@ -120,7 +133,11 @@
     "clear": "Chat leeren",
     "send": "Senden",
     "thinking": "Denkt nach…",
-    "error": "Der Assistent konnte nicht antworten."
+    "error": "Der Assistent konnte nicht antworten.",
+    "errorMissing": "Ollama ist nicht installiert oder nicht im PATH.",
+    "errorModel": "Dieses Modell ist nicht verfügbar. Mit ollama laden oder unter Einstellungen → Konten ein anderes wählen.",
+    "errorStderr": "Der Assistent meldete: {detail}",
+    "errorEmpty": "Der Assistent hat eine leere Antwort geliefert."
   },
   "session": {
     "unlock": "Entsperren",
@@ -169,6 +186,8 @@
   "quickSettings": {
     "title": "Schnelleinstellungen",
     "brightness": "Helligkeit",
+    "brightnessUnavailable": "Kein Display mit Helligkeitsregelung gefunden",
+    "brightnessFailed": "Helligkeit konnte nicht gesetzt werden",
     "caffeine": "Caffeine"
   },
   "overview": {
@@ -215,6 +234,7 @@
     "noResults": "Keine passenden Tastenkombinationen",
     "action": {
       "launcher": "Starter öffnen",
+      "aiChat": "Assistent-Chat",
       "powerMenu": "Ein/Aus-Menü",
       "exitSession": "Hyprland beenden",
       "cheatsheet": "Tastenkombinationen",

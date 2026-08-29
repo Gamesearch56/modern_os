@@ -4,13 +4,14 @@ import "../../../../Services"
 import "../../../../Commons"
 
 Item {
-    implicitWidth: Tokens.spacing.xxl
-    implicitHeight: Tokens.spacing.xxl
+    implicitWidth: Config.bar.height
+    implicitHeight: Config.bar.height
 
     MIconButton {
-        anchors.centerIn: parent
-        iconName: "preferences-system-symbolic"
+        anchors.fill: parent
+        iconName: "org.gnome.Settings-symbolic"
         key: "bar.settings"
+        checked: Notifications.panelOpen
         onClicked: Notifications.toggle()
     }
 }

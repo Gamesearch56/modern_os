@@ -8,8 +8,10 @@ Item {
     id: root
 
     property string iconName: "dialog-information"
+    property url iconSource: ""
     property string titleKey: ""
     property string hintKey: ""
+    property bool tintIcon: true
 
     ColumnLayout {
         anchors.centerIn: parent
@@ -19,9 +21,10 @@ Item {
         MIcon {
             Layout.alignment: Qt.AlignHCenter
             name: root.iconName
+            source: root.iconSource
             size: Tokens.spacing.xxl
             color: Colors.color.primary
-            tint: true
+            tint: root.tintIcon
         }
 
         MText {

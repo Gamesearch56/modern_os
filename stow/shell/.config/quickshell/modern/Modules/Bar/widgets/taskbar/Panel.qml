@@ -10,6 +10,9 @@ Item {
 
     property var barScreen: null
     property int menuIndex: -1
+    property string menuAddress: ""
+    property real menuRowY: 0
+    property real menuRowH: 0
 
     readonly property int count: Hypr.taskbarCount(root.barScreen)
 
@@ -21,28 +24,12 @@ Item {
 
     function closeMenu() {
         root.menuIndex = -1;
+        root.menuAddress = "";
     }
 
-    ColumnLayout {
+    BarPanelChrome {
         anchors.fill: parent
-        spacing: Tokens.spacing.md
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Tokens.spacing.sm
-
-            MText {
-                key: "bar.taskbar"
-                styleName: "headlineMedium"
-                Layout.fillWidth: true
-            }
-            MIconButton {
-                close: true
-                iconName: "window-close"
-                key: "bar.close"
-                onClicked: Popups.dismiss()
-            }
-        }
+        titleKey: "bar.taskbar"
 
         MPane {
             Layout.fillWidth: true
@@ -60,112 +47,54 @@ Item {
                 ColumnLayout {
                     id: col
                     width: flick.width
-                    spacing: Tokens.spacing.xxs
+                    spacing: Tokens.spacing.sm
 
                     Repeater {
                         model: Hypr.toplevels
 
-                        Item {
-                            id: row
+                        MListItem {
+                            id: item
                             required property var modelData
                             required property int index
-                            readonly property bool onScreen: Hypr.windowOnScreen(modelData, root.barScreen)
+                            readonly property string address: String(modelData.address || "")
                             readonly property int wsId: modelData.workspace ? Number(modelData.workspace.id) : 0
                             readonly property string cls: modelData.lastIpcObject?.class ?? "application-x-executable"
-
-                            visible: row.onScreen
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: visible ? item.implicitHeight : 0
-
-                            MListItem {
-                                id: item
-                                width: row.width
-                                iconName: row.cls
-                                tintIcon: false
-                                titleValue: modelData.title || row.cls
-                                subtitleValue: row.wsId > 0 ? root.workspaceLabel(row.wsId) : ""
-                                selected: modelData.activated === true
-                                onClicked: {
-                                    root.closeMenu();
-                                    Hypr.focusWindow(modelData.address);
-                                    Popups.dismiss();
-                                }
-                                onRightClicked: {
-                                    const next = root.menuIndex !== row.index;
-                                    root.closeMenu();
-                                    if (next)
-                                        root.menuIndex = row.index;
-                                }
+                            readonly property bool background: {
+                                const ipc = modelData.lastIpcObject;
+                                return item.wsId < 0 || !!(ipc && (ipc.hidden === true || ipc.mapped === false));
                             }
 
-                            BarPopup {
-                                id: menu
-                                open: false
-                                grab: true
-                                elevation: 0
-                                anchorItem: item
-                                implicitWidth: Tokens.spacing.xxl * 8
-                                implicitHeight: Tokens.spacing.xxl * 9
-                                onOpenChanged: {
-                                    if (!open && root.menuIndex === row.index)
-                                        root.menuIndex = -1;
+                            Layout.fillWidth: true
+                            iconName: item.cls
+                            tintIcon: false
+                            titleValue: modelData.title || item.cls
+                            subtitleValue: item.background ? I18n.t("bar.taskbarBackground") : (item.wsId > 0 ? root.workspaceLabel(item.wsId) : "")
+                            selected: modelData.activated === true || root.menuIndex === item.index
+                            onClicked: {
+                                root.closeMenu();
+                                Hypr.activateWindow(item.address);
+                                Popups.dismiss();
+                                Taskbar.hide();
+                            }
+                            onRightClicked: {
+                                if (root.menuIndex === item.index) {
+                                    root.closeMenu();
+                                    return;
                                 }
+                                const p = item.mapToItem(root, 0, 0);
+                                root.menuRowY = p.y;
+                                root.menuRowH = item.height;
+                                root.menuAddress = item.address;
+                                root.menuIndex = item.index;
+                            }
 
-                                Connections {
-                                    target: root
-                                    function onMenuIndexChanged() {
-                                        menu.open = root.menuIndex === row.index;
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    spacing: 0
-
-                                    MListItem {
-                                        Layout.fillWidth: true
-                                        iconName: "focus-windows-symbolic"
-                                        titleKey: "bar.taskbarShow"
-                                        onClicked: {
-                                            root.closeMenu();
-                                            Hypr.focusWindow(modelData.address);
-                                            Popups.dismiss();
-                                        }
-                                    }
-                                    MListItem {
-                                        Layout.fillWidth: true
-                                        iconName: "view-restore-symbolic"
-                                        titleKey: "bar.taskbarFloat"
-                                        onClicked: {
-                                            root.closeMenu();
-                                            Hypr.toggleFloating(modelData.address);
-                                        }
-                                    }
-                                    MListItem {
-                                        Layout.fillWidth: true
-                                        iconName: "view-fullscreen-symbolic"
-                                        titleKey: "bar.taskbarFullscreen"
-                                        onClicked: {
-                                            root.closeMenu();
-                                            Hypr.toggleFullscreen(modelData.address);
-                                        }
-                                    }
-                                    MDivider {
-                                        Layout.fillWidth: true
-                                        Layout.topMargin: Tokens.spacing.xs
-                                        Layout.bottomMargin: Tokens.spacing.xs
-                                    }
-                                    MListItem {
-                                        Layout.fillWidth: true
-                                        iconName: "window-close-symbolic"
-                                        titleKey: "bar.close"
-                                        destructive: true
-                                        onClicked: {
-                                            root.closeMenu();
-                                            Hypr.closeWindow(modelData.address);
-                                        }
-                                    }
-                                }
+                            MIconButton {
+                                close: true
+                                iconName: "window-close-symbolic"
+                                key: "bar.close"
+                                size: Tokens.spacing.xl
+                                iconSize: Tokens.icon.xs
+                                onClicked: Hypr.closeWindow(item.address)
                             }
                         }
                     }
@@ -178,6 +107,90 @@ Item {
                 iconName: "focus-windows-symbolic"
                 titleKey: "bar.taskbarEmpty"
                 hintKey: "bar.taskbarEmptyHint"
+            }
+        }
+    }
+
+    MouseArea {
+        z: 20
+        anchors.fill: parent
+        visible: root.menuIndex >= 0
+        onClicked: root.closeMenu()
+    }
+
+    Item {
+        id: menuCard
+        z: 21
+        visible: root.menuIndex >= 0
+        width: parent.width - Tokens.spacing.md * 2
+        height: menuCol.implicitHeight + Tokens.spacing.sm * 2
+        x: Tokens.spacing.md
+        y: {
+            const h = menuCard.height;
+            const below = root.menuRowY + root.menuRowH;
+            if (below + h <= root.height)
+                return below;
+            return Math.max(0, root.menuRowY - h);
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Tokens.radius.medium
+            color: Colors.color.surface
+            border.width: Tokens.stroke.focus
+            border.color: Colors.color.outlineVariant
+        }
+
+        ColumnLayout {
+            id: menuCol
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: Tokens.spacing.xs
+            spacing: 0
+
+            MListItem {
+                Layout.fillWidth: true
+                iconName: "focus-windows-symbolic"
+                titleKey: "bar.taskbarShow"
+                onClicked: {
+                    const addr = root.menuAddress;
+                    root.closeMenu();
+                    Hypr.activateWindow(addr);
+                    Popups.dismiss();
+                    Taskbar.hide();
+                }
+            }
+            MListItem {
+                Layout.fillWidth: true
+                iconName: "view-restore-symbolic"
+                titleKey: "bar.taskbarFloat"
+                onClicked: {
+                    const addr = root.menuAddress;
+                    root.closeMenu();
+                    Hypr.toggleFloating(addr);
+                }
+            }
+            MListItem {
+                Layout.fillWidth: true
+                iconName: "view-fullscreen-symbolic"
+                titleKey: "bar.taskbarFullscreen"
+                onClicked: {
+                    const addr = root.menuAddress;
+                    root.closeMenu();
+                    Hypr.toggleFullscreen(addr);
+                }
+            }
+            MListItem {
+                Layout.fillWidth: true
+                iconName: "window-close-symbolic"
+                titleKey: "bar.close"
+                destructive: true
+                onClicked: {
+                    const addr = root.menuAddress;
+                    root.closeMenu();
+                    Hypr.closeWindow(addr);
+                }
             }
         }
     }

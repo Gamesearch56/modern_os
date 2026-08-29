@@ -57,6 +57,7 @@ Scope {
         active: Notifications.panelOpen
 
         PanelWindow {
+            id: overlay
             visible: Notifications.panelOpen
             color: "transparent"
             anchors.top: true
@@ -65,6 +66,16 @@ Scope {
             anchors.bottom: true
             exclusionMode: ExclusionMode.Ignore
             focusable: true
+            margins.top: Config.bar.position === "top" ? overlay._barReserve : 0
+            margins.bottom: Config.bar.position === "bottom" ? overlay._barReserve : 0
+            margins.left: Config.bar.position === "left" ? overlay._barReserve : 0
+            margins.right: Config.bar.position === "right" ? overlay._barReserve : 0
+
+            readonly property real _barReserve: {
+                const h = Config.bar.height || Tokens.spacing.xxl;
+                const edge = Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0;
+                return h + edge * 2;
+            }
 
             Panel {
                 anchors.fill: parent

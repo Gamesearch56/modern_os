@@ -133,18 +133,40 @@ Singleton {
             root.dispatch("focuswindow address:" + addr);
     }
 
+    function activateWindow(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        const t = root.toplevelByAddress(addr);
+        const wsId = t && t.workspace ? Number(t.workspace.id) : 0;
+        if (wsId > 0)
+            root.focusWorkspace(wsId);
+        root.focusWindow(addr);
+    }
+
+    function toplevelByAddress(address: string): var {
+        const addr = String(address || "");
+        const list = Hyprland.toplevels?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i] && String(list[i].address || "") === addr)
+                return list[i];
+        }
+        return null;
+    }
+
     function closeWindow(address: string) {
         const addr = String(address || "");
-        if (root._lua) {
-            if (addr.length)
-                root.focusWindow(addr);
-            root.dispatch("hl.dsp.window.close()");
+        if (!addr.length) {
+            if (root._lua)
+                root.dispatch("hl.dsp.window.close()");
+            else
+                root.dispatch("killactive");
             return;
         }
-        if (addr.length)
-            root.dispatch("closewindow address:" + addr);
+        if (root._lua)
+            root.dispatch("hl.dsp.window.close({ window = \"address:" + addr + "\" })");
         else
-            root.dispatch("killactive");
+            root.dispatch("closewindow address:" + addr);
     }
 
     function windowOnScreen(toplevel: var, screen: var): bool {
@@ -152,26 +174,35 @@ Singleton {
         if (!mon || !toplevel)
             return true;
         const ipc = toplevel.lastIpcObject;
+        const wsId = toplevel.workspace ? Number(toplevel.workspace.id) : 0;
+        const hidden = !!(ipc && (ipc.hidden === true || ipc.mapped === false));
+        const special = wsId < 0;
         if (ipc && ipc.monitor !== undefined && ipc.monitor !== null && ipc.monitor !== "") {
             const mid = Number(ipc.monitor);
+            if (!Number.isNaN(mid) && mid < 0)
+                return root._taskbarOnFocused(screen);
             if (!Number.isNaN(mid) && mon.id !== undefined && Number(mon.id) === mid)
                 return true;
             if (String(ipc.monitor) === String(mon.name))
                 return true;
             return false;
         }
+        if (hidden || special)
+            return root._taskbarOnFocused(screen);
         return root._onMonitor(toplevel.workspace, mon);
+    }
+
+    function _taskbarOnFocused(screen: var): bool {
+        const name = screen && screen.name ? String(screen.name) : "";
+        if (!name.length)
+            return true;
+        return name === root.focusedMonitorName();
     }
 
     function toggleFloating(address: string) {
         const addr = String(address || "");
         if (!addr.length)
             return;
-        if (root._lua) {
-            root.focusWindow(addr);
-            root.dispatch("hl.dsp.window.float({ action = \"toggle\" })");
-            return;
-        }
         root.dispatch("togglefloating address:" + addr);
     }
 
@@ -179,11 +210,6 @@ Singleton {
         const addr = String(address || "");
         if (!addr.length)
             return;
-        if (root._lua) {
-            root.focusWindow(addr);
-            root.dispatch("hl.dsp.window.fullscreen()");
-            return;
-        }
         root.dispatch("fullscreen 0,address:" + addr);
     }
 
@@ -192,6 +218,24 @@ Singleton {
             root.dispatch("hl.reload()");
         else
             root.dispatch("reload");
+    }
+
+    function focusedMonitorName(): string {
+        void root.focusedWorkspace;
+        void root.monitors;
+        try {
+            const fm = Hyprland.focusedMonitor;
+            if (fm && fm.name)
+                return String(fm.name);
+        } catch (e) {
+        }
+        const fw = root.focusedWorkspace;
+        const wm = fw ? fw.monitor : null;
+        if (typeof wm === "string")
+            return wm;
+        if (wm && wm.name)
+            return String(wm.name);
+        return "";
     }
 
     function monitorForScreen(screen: var): var {
@@ -284,12 +328,7 @@ Singleton {
         void root.monitors;
         void root.focusedWorkspace;
         const list = Hyprland.toplevels?.values ?? [];
-        let n = 0;
-        for (let i = 0; i < list.length; i++) {
-            if (root.windowOnScreen(list[i], screen))
-                n++;
-        }
-        return n;
+        return list.length;
     }
 
     function _workspaceHasWindows(id: int): bool {

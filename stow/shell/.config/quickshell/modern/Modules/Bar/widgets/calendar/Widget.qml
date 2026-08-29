@@ -9,7 +9,7 @@ Item {
 
     MIconButton {
         anchors.centerIn: parent
-        iconName: "x-office-calendar"
+        iconName: "x-office-calendar-symbolic"
         key: "calendar.title"
         onClicked: Settings.openAt("accounts", "calendar")
     }

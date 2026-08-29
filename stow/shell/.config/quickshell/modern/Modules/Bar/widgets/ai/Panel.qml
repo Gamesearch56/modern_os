@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "../../"
 
 Item {
     id: root
@@ -17,38 +18,43 @@ Item {
             return;
         Ai.chat(t);
         field.text = "";
-        Qt.callLater(root._scrollEnd);
+        Qt.callLater(() => {
+            root._scrollEnd();
+            root.focusInput();
+        });
     }
 
     function _scrollEnd() {
         flick.contentY = Math.max(0, col.implicitHeight - flick.height);
     }
 
-    ColumnLayout {
+    function focusInput() {
+        if (root._off)
+            return;
+        field.forceActiveFocus();
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: Ai.panelOpen
+        context: Qt.ApplicationShortcut
+        onActivated: root._close()
+    }
+
+    function _close() {
+        Ai.hide();
+        Popups.dismiss();
+    }
+
+    BarPanelChrome {
         anchors.fill: parent
-        spacing: Tokens.spacing.md
+        titleKey: "ai.title"
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Tokens.spacing.sm
-
-            MText {
-                key: "ai.title"
-                styleName: "headlineMedium"
-                Layout.fillWidth: true
-            }
-            MButton {
-                kind: "text"
-                key: "ai.clear"
-                enabled: Ai.history.length > 0
-                onClicked: Ai.clear()
-            }
-            MIconButton {
-                close: true
-                iconName: "window-close"
-                key: "bar.close"
-                onClicked: Popups.dismiss()
-            }
+        actions: MButton {
+            kind: "text"
+            key: "ai.clear"
+            enabled: Ai.history.length > 0
+            onClicked: Ai.clear()
         }
 
         MPane {
@@ -106,7 +112,7 @@ Item {
             MEmptyState {
                 visible: root._off || Ai.history.length === 0
                 anchors.fill: parent
-                iconName: "help-about-symbolic"
+                iconName: "robot"
                 titleKey: root._off ? "ai.disabled" : "ai.empty"
                 hintKey: root._off ? "ai.enableHint" : "ai.hint"
             }
@@ -121,7 +127,9 @@ Item {
                 Layout.fillWidth: true
                 enabled: !root._off && !Ai.busy
                 placeholderKey: "ai.placeholder"
+                escapeCloses: true
                 onAccepted: root.send()
+                onEscaped: root._close()
             }
             MButton {
                 kind: "filled"
@@ -137,5 +145,11 @@ Item {
         function onHistoryChanged() {
             Qt.callLater(root._scrollEnd);
         }
+        function onBusyChanged() {
+            if (!Ai.busy)
+                Qt.callLater(root.focusInput);
+        }
     }
+
+    Component.onCompleted: Qt.callLater(root.focusInput)
 }

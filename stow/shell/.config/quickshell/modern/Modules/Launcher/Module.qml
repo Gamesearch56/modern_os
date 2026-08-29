@@ -86,7 +86,7 @@ Scope {
                     root.query = "";
                     root.currentIndex = 0;
                     win.requestActivate();
-                } else {
+                } else if (Launcher.open) {
                     Launcher.hide();
                 }
             }

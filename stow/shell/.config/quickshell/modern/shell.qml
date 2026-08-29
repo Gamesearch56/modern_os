@@ -33,6 +33,50 @@ ShellRoot {
     WallpaperMod.Module {}
     ScreenshotMod.Module {}
 
+    Connections {
+        target: Popups
+        function onExclusive(keeper) {
+            if (!keeper)
+                return;
+            Launcher.hide();
+            Notifications.hide();
+            PowerMenu.hide();
+        }
+    }
+
+    Connections {
+        target: Launcher
+        function onOpenChanged() {
+            if (!Launcher.open)
+                return;
+            Popups.dismiss();
+            Notifications.hide();
+            PowerMenu.hide();
+        }
+    }
+
+    Connections {
+        target: Notifications
+        function onPanelOpenChanged() {
+            if (!Notifications.panelOpen)
+                return;
+            Popups.dismiss();
+            Launcher.hide();
+            PowerMenu.hide();
+        }
+    }
+
+    Connections {
+        target: PowerMenu
+        function onOpenChanged() {
+            if (!PowerMenu.open)
+                return;
+            Popups.dismiss();
+            Launcher.hide();
+            Notifications.hide();
+        }
+    }
+
     IpcHandler {
         target: "shell"
         function reload() { Quickshell.reload(true); }
@@ -62,5 +106,8 @@ ShellRoot {
         }
     }
 
-    Component.onCompleted: Logger.info("shell", "session started")
+    Component.onCompleted: {
+        Logger.info("shell", "session started");
+        Brightness.refresh();
+    }
 }

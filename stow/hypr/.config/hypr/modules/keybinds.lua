@@ -70,6 +70,7 @@ end
 -- looks for a `default` instance that this desktop never starts.
 local bindings = {
     launcher = hl.dsp.exec_cmd("qs -c modern ipc call launcher toggle"),
+    aiChat = hl.dsp.exec_cmd("qs -c modern ipc call ai toggle"),
     powerMenu = hl.dsp.exec_cmd("qs -c modern ipc call powermenu toggle"),
     controlCenter = hl.dsp.exec_cmd("qs -c modern ipc call notifications toggle"),
     cheatsheet = hl.dsp.exec_cmd("qs -c modern ipc call cheatsheet toggle"),
@@ -141,6 +142,13 @@ for action, dispatcher in pairs(bindings) do
                 skip = true
             end
         end
+        -- Same as the number row: letter names can fail to register
+        -- (hyprctl binds showed no SUPER+A). Evdev KEY_A is code 38
+        -- on both us and de.
+        if action == "aiChat" and key == "SUPER + A" then
+            hl.bind("SUPER + code:38", dispatcher)
+            skip = true
+        end
         if not skip then
             hl.bind(key, dispatcher)
         end
@@ -175,5 +183,5 @@ hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), locked_once)
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), locked_once)
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), locked_once)
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), locked_once)
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl s +5%"), locked)
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl s 5%-"), locked)
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(modern .. " brightness up"), locked)
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(modern .. " brightness down"), locked)

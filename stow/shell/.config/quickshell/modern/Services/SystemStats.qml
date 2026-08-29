@@ -19,6 +19,8 @@ Singleton {
     property real gpuTemp: 0
     property real diskPercent: 0
     property int fanRpm: 0
+    property int fanRpmPeak: 1
+    readonly property real fanPercent: 100 * root.fanRpm / Math.max(1, root.fanRpmPeak)
 
     property var _prev: ({ idle: 0, total: 0 })
 
@@ -66,8 +68,11 @@ Singleton {
             if (!isNaN(gpu))
                 root.gpuPercent = gpu;
             const fan = Number((lines[4] ?? "").trim());
-            if (!isNaN(fan))
+            if (!isNaN(fan)) {
                 root.fanRpm = fan;
+                if (fan > root.fanRpmPeak)
+                    root.fanRpmPeak = fan;
+            }
         } catch (e) {
             Logger.warn("SystemStats", String(e));
         }

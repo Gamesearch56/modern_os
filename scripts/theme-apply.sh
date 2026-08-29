@@ -180,13 +180,13 @@ EOF
 
     # hyprpolkitagent (and other hypr* Qt Quick apps) read chrome from
     # ~/.config/hypr/application-style.conf — QSS never reaches that QML
-    # style. Enum steps are 0/4/8/16 px; Tokens.radius.small is 8 * rounding.
+    # style. Enum steps are 0/4/8/16 px; Tokens.radius.medium is 16 * rounding.
     local hypr_round=2
-    if [ "$sm" -le 2 ]; then
+    if [ "$md" -le 2 ]; then
         hypr_round=0
-    elif [ "$sm" -le 6 ]; then
+    elif [ "$md" -le 6 ]; then
         hypr_round=1
-    elif [ "$sm" -le 12 ]; then
+    elif [ "$md" -le 12 ]; then
         hypr_round=2
     else
         hypr_round=3

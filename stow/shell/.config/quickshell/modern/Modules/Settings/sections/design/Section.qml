@@ -134,6 +134,15 @@ ColumnLayout {
         }
     }
 
+    MField {
+        labelKey: "wallpaper.title"
+        MButton {
+            kind: "tonal"
+            key: "wallpaper.add"
+            onClicked: Wallpaper.pick()
+        }
+    }
+
     MSectionHeader {
         key: "settings.fields.wallpaperColor"
         hintKey: "settings.hints.surfaceTint"

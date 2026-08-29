@@ -16,7 +16,7 @@
 set -euo pipefail
 
 USERNAME="${1:-devuser}"
-GROUPS="wheel,video,input,audio,render,seat"
+GROUPS="wheel,video,input,audio,render,seat,i2c"
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "Run as root: sudo $0 [username]" >&2

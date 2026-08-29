@@ -3,6 +3,7 @@
 // one-pixel line instead of the card. PopupWindow has no visual
 // parent, so callers pass the island/button as `anchorItem`.
 import Quickshell
+import Quickshell.Hyprland
 import QtQuick
 import "../../Commons"
 import "../../Widgets"
@@ -12,13 +13,19 @@ PopupWindow {
     id: root
 
     property bool open: false
-    property int elevation: 2
-    property bool grab: true
+    property int elevation: 0
+    property bool grab: false
     property int hAlign: Qt.AlignLeft
     property Item anchorItem: null
+    property bool hoverBridge: false
+    property bool bodyHovered: false
+    property bool barIslandChrome: false
     default property alias content: card.content
 
+    signal grabReady()
+
     readonly property real _popupW: root.implicitWidth
+    readonly property real _gap: Tokens.spacing.sm
     readonly property real _originX: {
         const p = root.anchorItem;
         if (!p)
@@ -32,14 +39,14 @@ PopupWindow {
 
     visible: false
     color: "transparent"
-    grabFocus: root.grab
+    grabFocus: root.open && !root.hoverBridge
 
     anchor.item: root.anchorItem
     anchor.edges: Edges.Top | Edges.Left
     anchor.gravity: Edges.Bottom | Edges.Right
     anchor.adjustment: PopupAdjustment.Slide | PopupAdjustment.Flip
     anchor.rect.x: root._originX
-    anchor.rect.y: (root.anchorItem ? root.anchorItem.height : 0) + Tokens.spacing.sm
+    anchor.rect.y: (root.anchorItem ? root.anchorItem.height : 0) + (root.hoverBridge ? 0 : root._gap)
     anchor.rect.width: 1
     anchor.rect.height: 1
 
@@ -48,9 +55,19 @@ PopupWindow {
             root.visible = root.open;
         if (root.open) {
             root.anchor.updateAnchor();
-            Popups.opened();
+            Popups.opened(root);
+            if (!root.hoverBridge) {
+                Qt.callLater(() => {
+                    if (!root.open)
+                        return;
+                    keyGrab.active = true;
+                    root.grabReady();
+                });
+            }
         } else {
-            Popups.closed();
+            root.bodyHovered = false;
+            keyGrab.active = false;
+            Popups.closed(root);
         }
     }
 
@@ -64,24 +81,81 @@ PopupWindow {
         function onCloseRequested() {
             root.open = false;
         }
+        function onExclusive(keeper) {
+            if (root !== keeper && root.open)
+                root.open = false;
+        }
     }
 
-    MCard {
-        id: card
-        anchors.fill: parent
-        level: root.elevation
-        color: Colors.color.surface
-        opacity: Config.design.transparency ?? 0.85
-        borderWidth: Tokens.stroke.hairline
-        borderColor: Colors.color.outlineVariant
-        scale: Motion.overlayScale(root.open)
-        transformOrigin: Item.Top
+    HyprlandFocusGrab {
+        id: keyGrab
+        windows: [root]
+        onCleared: {
+            if (root.open)
+                root.open = false;
+        }
+        onActiveChanged: {
+            if (keyGrab.active)
+                root.grabReady();
+        }
+    }
 
-        Behavior on scale {
-            enabled: Motion.overlayZooms()
-            NumberAnimation {
-                duration: Motion.medium()
-                easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.open && !root.hoverBridge
+        context: Qt.ApplicationShortcut
+        onActivated: root.open = false
+    }
+
+    Item {
+        id: inner
+        anchors.fill: parent
+
+        Item {
+            id: bridge
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: root.hoverBridge ? root._gap : 0
+
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+
+                HoverHandler {
+                    id: bridgeHover
+                    enabled: root.hoverBridge
+                    onHoveredChanged: root.bodyHovered = hovered || cardHover.hovered
+                }
+            }
+        }
+
+        MCard {
+            id: card
+            anchors.top: bridge.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            level: root.elevation
+            color: Colors.color.surface
+            radius: root.barIslandChrome ? Tokens.radius.full : Tokens.radius.medium
+            opacity: Config.design.transparency ?? 0.85
+            borderWidth: root.barIslandChrome ? Tokens.stroke.hairline : (root.open ? Tokens.stroke.focus : Tokens.stroke.hairline)
+            borderColor: root.barIslandChrome ? Colors.color.outlineVariant : (root.open ? Colors.color.primary : Colors.color.outlineVariant)
+            scale: Motion.overlayScale(root.open)
+            transformOrigin: Item.Top
+
+            HoverHandler {
+                id: cardHover
+                onHoveredChanged: root.bodyHovered = hovered || bridgeHover.hovered
+            }
+
+            Behavior on scale {
+                enabled: Motion.overlayZooms()
+                NumberAnimation {
+                    duration: Motion.medium()
+                    easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
+                }
             }
         }
     }

@@ -220,6 +220,7 @@ Singleton {
             // same object to render the SUPER+K overlay.
             property var keybinds: ({
                 launcher: "SUPER + SPACE",
+                aiChat: "SUPER + A",
                 powerMenu: "SUPER + M",
                 controlCenter: "SUPER + L",
                 cheatsheet: "SUPER + K",
