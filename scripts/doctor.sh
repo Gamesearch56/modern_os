@@ -86,7 +86,7 @@ section "user units"
 if systemctl --user is-enabled modern-shell.service >/dev/null 2>&1; then
     ok "modern-shell.service enabled"
 else
-    warn "modern-shell.service not enabled (stow systemd + systemctl --user enable --now)"
+    warn "modern-shell.service not enabled (stow systemd + systemctl --user enable; autostart restarts it after WAYLAND_DISPLAY is imported)"
 fi
 
 section "PATH tools"

@@ -178,6 +178,15 @@ else
     log_warn "matugen not found — run scripts/theme-apply.sh once it is installed"
 fi
 
+kitty_colors="$TARGET/.config/kitty/colors.conf"
+kitty_stub="$REPO_ROOT/stow/kitty/.config/kitty/colors.conf"
+if [ ! -f "$kitty_colors" ] && [ -f "$kitty_stub" ]; then
+    run mkdir -p "$TARGET/.config/kitty"
+    run rm -f "$kitty_colors"
+    run cp "$kitty_stub" "$kitty_colors"
+    log_info "seeded kitty colors.conf so SUPER+T can open a window before theme-apply"
+fi
+
 log_ok "Install complete for profile '$PROFILE'."
 log_info "Start the session with start-hyprland (not Hyprland) — see README.md; a second TTY keeps the daily-driver session."
 log_info "From the daily-driver account, run scripts/check-isolation.sh to confirm nothing leaked."

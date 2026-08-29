@@ -86,7 +86,9 @@ use a different image later:
 1. `scripts/theme-apply.sh --wallpaper PATH` (writes `tokens.json` and
    syncs lock/login assets)
 2. `systemctl --user enable modern-shell.service` then
-   `start-hyprland` on a TTY (not the `Hyprland` binary)
+   `start-hyprland` on a TTY (not the `Hyprland` binary). Autostart
+   imports compositor env and restarts that unit; it does not start a
+   second one-shot `qs` child (`docs/BOOT.md`).
 3. `scripts/doctor.sh`
 4. Optional gated: sysctl, ufw KDE Connect, ESP hook, snapper — each
    file's header comment has the copy command

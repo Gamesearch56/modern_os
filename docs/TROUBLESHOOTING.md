@@ -53,21 +53,45 @@ Then pick a wallpaper: `scripts/theme-apply.sh --wallpaper /path/to/image.jpg`
 
 ## Shell does not start / no top bar
 
-Wallpaper plus `SUPER+T` / `SUPER+B` / `SUPER+Q` means Hyprland loaded
-this repo's Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell.
+Wallpaper plus `SUPER+B` / `SUPER+Q` means Hyprland loaded this repo's
+Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell. `SUPER+T` /
+`SUPER+RETURN` always open kitty; if they do nothing, see
+`~/.config/kitty/colors.conf` and `docs/THEMING.md`.
+
+If you cannot open a terminal **inside** the session, diagnose from
+another TTY (`docs/BOOT.md`):
+
+```bash
+loginctl list-sessions
+# optional, from the daily-driver account:
+# loginctl terminate-session <devuser-tty3-id>
+```
+
+On a text login as `devuser` (`Ctrl+Alt+F4`):
+
+```bash
+pgrep -a qs; pgrep -a quickshell; pgrep -a Hyprland
+systemctl --user status modern-shell.service
+tail -n 80 ~/.local/state/modern/quickshell.log
+qs -c modern log -t 80
+ls -l ~/.config/kitty/colors.conf
+python -c "import json; print(json.load(open('$HOME/.config/modern/config.json'))['keybinds'])"
+```
 
 - **One Hyprland per user.** A second TTY's `start-hyprland` does not get
   the shell if an older instance still owns `modern-shell.service`.
   Exit every leftover compositor before starting a new one.
-- End a session: `SUPER+T`, then `hyprctl dispatch "hl.dsp.exit()"`. You return to
-  the TTY prompt; `exit` or Ctrl+D logs out of that TTY. Switch back to
-  the daily driver with `Ctrl+Alt+F1` or `F2`.
+- End a session: `SUPER+SHIFT+M`, or `loginctl terminate-session <id>`
+  from another TTY. If the bar is up: `hyprctl dispatch "hl.dsp.exit()"`.
+  You return to the TTY prompt; `exit` or Ctrl+D logs out. Switch back
+  to the daily driver with `Ctrl+Alt+F1` or `F2`.
 - Extra `devuser` sessions: `loginctl list-sessions`, then
   `loginctl terminate-session <id>` from the daily-driver account, or as
   `devuser` on a TTY: `pkill -x Hyprland`.
-- After restow, autostart runs `qs -c modern` as a child of *this*
-  compositor. Bare `qs ipc` talks to a `default` config that does not
-  exist — keybinds use `qs -c modern ipc call …`. QML errors:
+- Autostart imports `WAYLAND_DISPLAY` then **restarts**
+  `modern-shell.service` (`Restart=always`). It does not `stop` the unit
+  and `exec qs` once. Bare `qs ipc` talks to a `default` config that does
+  not exist — keybinds use `qs -c modern ipc call …`. QML errors:
   `qs -c modern log -t 80` or `~/.local/state/modern/quickshell.log`.
 - `TypeError: … is not a function` on a singleton: missing `qmldir`
   entry. See `docs/DECISIONS.md` #19.

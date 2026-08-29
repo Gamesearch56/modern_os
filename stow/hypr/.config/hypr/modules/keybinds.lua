@@ -1,8 +1,8 @@
 -- Every keybind's COMBO comes from config.json's keybinds table
--- (Settings > Keyboard's shortcut editor and Modules/Cheatsheet both
--- read the exact same table — see docs/WIDGETS.md's cheatsheet section
--- and docs/DECISIONS.md). What each action DOES is fixed here, in code,
--- since that's an architectural decision, not a per-user preference.
+-- (Settings > Keyboard lists the table; Modules/Cheatsheet reads the
+-- same object — see docs/WIDGETS.md). What each action DOES is fixed
+-- here. SUPER+T / SUPER+RETURN always open kitty so a missing
+-- keybinds.terminal cannot leave the session without a terminal.
 --
 -- hl.bind(combo, dispatcher_descriptor) — dispatcher descriptors come
 -- from hl.dsp.*, per wiki.hypr.land's 0.55+ Lua dispatcher reference.
@@ -12,6 +12,16 @@ local config = require("modules.config")
 local function combo(action)
     return config.value("keybinds." .. action, nil)
 end
+
+-- Seed colors.conf if missing so a hard include in an unrestowed
+-- kitty.conf cannot abort with no window.
+local kitty = hl.dsp.exec_cmd("sh -lc '"
+    .. "f=\"$HOME/.config/kitty/colors.conf\"; "
+    .. "if [ ! -f \"$f\" ]; then "
+    .. "mkdir -p \"$HOME/.config/kitty\"; rm -f \"$f\"; "
+    .. "printf \"background #141218\\nforeground #E6E0E9\\n\" >\"$f\"; "
+    .. "fi; "
+    .. "exec /usr/bin/kitty'")
 
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
 -- Named config `modern` is ~/.config/quickshell/modern. Bare `qs ipc`
@@ -24,7 +34,7 @@ local bindings = {
     wallpaperPicker = hl.dsp.exec_cmd("qs -c modern ipc call wallpaper pick"),
     overview = hl.dsp.exec_cmd("qs -c modern ipc call overview toggle"),
     exitSession = hl.dsp.exit(),
-    terminal = hl.dsp.exec_cmd("kitty"),
+    terminal = kitty,
     browser = hl.dsp.exec_cmd("vivaldi"),
     fileManager = hl.dsp.exec_cmd("dolphin"),
     closeWindow = hl.dsp.window.close(),
@@ -71,20 +81,29 @@ local bindings = {
     clipboardHistory = hl.dsp.exec_cmd("modern clipboard show"),
 }
 
+local emergency_terminal = {
+    ["SUPER + T"] = true,
+    ["SUPER + RETURN"] = true,
+}
+
 for action, dispatcher in pairs(bindings) do
     local key = combo(action)
     if key then
-        hl.bind(key, dispatcher)
+        if not (action == "terminal" and emergency_terminal[key]) then
+            hl.bind(key, dispatcher)
+        end
     end
 end
+
+hl.bind("SUPER + T", kitty)
+hl.bind("SUPER + RETURN", kitty)
 
 -- Power menu (SUPER+M) needs the shell. This always ends the compositor.
 if not combo("exitSession") then
     hl.bind("SUPER + SHIFT + M", hl.dsp.exit())
 end
 
--- Media/backlight keys are hardware-fixed X11 keysyms, not user-remapped
--- via the shortcut editor, so they're bound directly rather than through
+-- Media/backlight keys are hardware-fixed X11 keysyms, not listed in
 -- config.json — matching the ArchWiki's documented pattern.
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { repeating = true })
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { repeating = true })

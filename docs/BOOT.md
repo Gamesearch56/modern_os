@@ -10,7 +10,11 @@ what is shared with an unprivileged greeter. Plymouth and greetd are
 TTY: start-hyprland   →  Hyprland (stow/hypr)
 greetd (gated)        →  (same, via hyprland.desktop / UWSM)
                       │
-                      ├─ modern-shell.service  (user unit)
+                      ├─ autostart.lua
+                      │     import WAYLAND_DISPLAY
+                      │     systemctl --user restart modern-shell.service
+                      │     (fallback: respawning qs -c modern child)
+                      ├─ modern-shell.service  (user unit, Restart=always)
                       │     ExecStart=quickshell -c modern
                       └─ portals (xdg-desktop-portal-hyprland + gtk/kde)
 ```
@@ -20,22 +24,27 @@ Hyprland ≥ 0.53’s wrapper sets up crash recovery and the user session;
 without it, systemd units (the bar) start with no `WAYLAND_DISPLAY`.
 Optional: `uwsm start hyprland-uwsm.desktop`.
 
-The watchdog unit is `stow/systemd/.config/systemd/user/modern-shell.service`:
-`Restart=always` / `RestartSec=1`, `After=graphical-session.target`.
-It is **not** `PartOf=` that target — a TTY start without UWSM never
-reaches it, and `PartOf` would stop the shell immediately. Enable on
-the **devuser** account only:
+The shell unit is `stow/systemd/.config/systemd/user/modern-shell.service`:
+`Restart=always` / `RestartSec=1`, `After=graphical-session.target`,
+`ConditionEnvironment=WAYLAND_DISPLAY`. It is **not** `PartOf=` that
+target — a TTY start without UWSM never reaches it, and `PartOf` would
+stop the shell immediately. Enable on the **devuser** account only:
 
 ```bash
 systemctl --user enable modern-shell.service
 ```
 
-`modules/autostart.lua` starts Quickshell as a child of this compositor
-(logs: `~/.local/state/modern/quickshell.log`) so a second TTY cannot
-steal the bar via the user unit. `modern-shell.service` remains the
-watchdog for a later UWSM/greetd session.
+`WantedBy=graphical-session.target` may fire before the compositor has
+exported `WAYLAND_DISPLAY`; the condition makes that start a no-op
+instead of a crash loop. `modules/autostart.lua` is the only owner that
+starts Quickshell for a TTY session: it imports compositor env, then
+`systemctl --user restart modern-shell.service`. If the unit is not
+active after that, it falls back to a respawning `qs -c modern` child
+(logs: `~/.local/state/modern/quickshell.log`). Do not also `exec qs` as
+a one-shot alongside the enabled unit — that was the reboot race that
+left wallpaper with no bar.
 
-Do not enable it on the daily-driver account while isolation is in
+Do not enable the unit on the daily-driver account while isolation is in
 force.
 
 ## Shared session state
@@ -66,10 +75,24 @@ Preferred backends are in both:
 FileChooser is KDE (Dolphin/Qt-first, `docs/DECISIONS.md` #5);
 Screenshot and ScreenCast are Hyprland.
 
-## Troubleshooting a black session
+## Troubleshooting a black session / no bar
 
-1. Confirm you launched with `start-hyprland`, not `Hyprland`
-2. TTY login as the same user, `systemctl --user status modern-shell.service`
-3. `qs -c modern log -t 80` or `quickshell -c modern` in a terminal — QML errors
-   print there
-4. `scripts/doctor.sh` then `docs/TROUBLESHOOTING.md`
+If the graphical session is up (wallpaper, `SUPER+B`) but you have no
+terminal, do **not** wait on `SUPER+T`. From the daily-driver TTY:
+
+1. `loginctl list-sessions` — note the `devuser` / `tty3` id
+2. Optional: `loginctl terminate-session <id>`
+3. `Ctrl+Alt+F4`, text login as `devuser` (not Hyprland)
+
+Then:
+
+```bash
+pgrep -a qs; pgrep -a quickshell; pgrep -a Hyprland
+systemctl --user status modern-shell.service
+tail -n 80 ~/.local/state/modern/quickshell.log
+qs -c modern log -t 80
+ls -l ~/.config/kitty/colors.conf
+```
+
+Confirm you originally launched with `start-hyprland`, not `Hyprland`.
+`scripts/doctor.sh` then `docs/TROUBLESHOOTING.md`.

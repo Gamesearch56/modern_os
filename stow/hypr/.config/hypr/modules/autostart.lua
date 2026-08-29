@@ -7,18 +7,20 @@
 local config = require("modules.config")
 
 hl.on("hyprland.start", function()
-    -- Import compositor env, then start the shell as a child of this
-    -- compositor. systemd --user is one instance per login, so a leftover
-    -- Hyprland on another TTY would keep modern-shell.service pointed at
-    -- the old WAYLAND_DISPLAY and this session would get wallpaper only.
+    -- Import compositor env, then restart the user unit (Restart=always).
+    -- Do not also exec a one-shot qs child: that raced the unit after
+    -- reboot (docs/BOOT.md). If the unit is missing or skipped, fall
+    -- back to a respawning child of this compositor.
     hl.exec_cmd("sh -lc '"
         .. "mkdir -p \"${XDG_STATE_HOME:-$HOME/.local/state}/modern\"; "
         .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
         .. "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE; "
-        .. "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP; "
+        .. "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE; "
         .. "systemctl --user start hyprpolkitagent || true; "
-        .. "systemctl --user stop modern-shell.service 2>/dev/null || true; "
-        .. "exec qs -c modern >>\"$log\" 2>&1'")
+        .. "systemctl --user reset-failed modern-shell.service 2>/dev/null || true; "
+        .. "systemctl --user restart modern-shell.service 2>/dev/null || true; "
+        .. "if systemctl --user is-active --quiet modern-shell.service; then exit 0; fi; "
+        .. "while true; do qs -c modern >>\"$log\" 2>&1 || true; sleep 1; done'")
 
     hl.exec_cmd("hypridle")
 

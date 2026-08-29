@@ -135,8 +135,9 @@ Stay logged in as `bastianweigand`. On another virtual terminal:
    (no bar, no shell). Optional UWSM:
    `uwsm start hyprland-uwsm.desktop`.
 4. Once, as `devuser`: `systemctl --user enable modern-shell.service`
-   (autostart starts it; `--now` before a compositor is running does nothing
-   useful).
+   so the unit is installed. Autostart **restarts** it after importing
+   `WAYLAND_DISPLAY` (`docs/BOOT.md`). `--now` before a compositor is
+   running is skipped (`ConditionEnvironment=WAYLAND_DISPLAY`).
 
 You now have two sessions: the old desktop on TTY1/TTY2, the new one on
 TTY3.
@@ -145,11 +146,12 @@ TTY3.
 
 - **Keep both sessions:** `Ctrl+Alt+F1` or `Ctrl+Alt+F2` until you see
   the `bastianweigand` desktop. Nothing in the main home was rewritten.
-- **End the test session:** `SUPER+T`, then `hyprctl dispatch "hl.dsp.exit()"`
-  (or `SUPER+SHIFT+M` once that bind is stowed). You land back on the
-  TTY prompt — `exit` or Ctrl+D logs out of that TTY. Then
-  `Ctrl+Alt+F1`/`F2`. Do not open a second `start-hyprland` while the
-  first is still running; one user gets one graphical session.
+- **End the test session:** `SUPER+SHIFT+M`, or from another TTY
+  `loginctl terminate-session <id>` (`docs/BOOT.md`). If the bar is
+  up, `SUPER+T` then `hyprctl dispatch "hl.dsp.exit()"` also works.
+  You land back on the TTY prompt — `exit` or Ctrl+D logs out of that
+  TTY. Then `Ctrl+Alt+F1`/`F2`. Do not open a second `start-hyprland`
+  while the first is still running; one user gets one graphical session.
 - **After a reboot:** autologin is still the daily-driver account,
   because greetd was never enabled. Log in as usual.
 
@@ -175,6 +177,10 @@ cd ~/modern_dotfile
 systemctl --user enable modern-shell.service
 start-hyprland
 ```
+
+`enable` installs the unit (`Restart=always`). Autostart imports
+`WAYLAND_DISPLAY` and restarts it; it does not start a second one-shot
+`qs` (`docs/BOOT.md`).
 
 If that user is named `bastianweigand` **and** `/home/bastianweigand`
 exists (this machine, or a restore of this username), the live-home
@@ -249,7 +255,8 @@ modern_dotfile/
 | `SUPER` + `I` | Settings |
 | `SUPER` + `W` | Wallpaper picker |
 | `SUPER` + `Tab` | Overview |
-| `SUPER` + `T` | Terminal (kitty) |
+| `SUPER` + `T` | Terminal (kitty; always bound) |
+| `SUPER` + `Return` | Terminal (always bound) |
 | `SUPER` + `B` | Browser (Vivaldi) |
 | `SUPER` + `E` | File manager (Dolphin) |
 | `SUPER` + `Q` | Close window |
