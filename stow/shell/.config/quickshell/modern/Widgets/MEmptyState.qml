@@ -9,6 +9,7 @@ Item {
 
     property string iconName: "dialog-information"
     property url iconSource: ""
+    property int iconSize: Tokens.spacing.xxl
     property string titleKey: ""
     property string hintKey: ""
     property bool tintIcon: true
@@ -22,7 +23,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             name: root.iconName
             source: root.iconSource
-            size: Tokens.spacing.xxl
+            size: root.iconSize
             color: Colors.color.primary
             tint: root.tintIcon
         }

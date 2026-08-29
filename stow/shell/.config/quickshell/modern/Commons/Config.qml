@@ -36,7 +36,7 @@ Singleton {
 
             property JsonObject general: JsonObject {
                 property list<string> autostart: []
-                property int notificationTimeoutMs: 5000
+                property int notificationTimeoutMs: 6000
                 property JsonObject dndSchedule: JsonObject {
                     property bool enabled: false
                     property string from: "23:00"

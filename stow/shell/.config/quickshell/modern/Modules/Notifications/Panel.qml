@@ -101,13 +101,20 @@ Item {
                     delegate: MListItem {
                         required property var modelData
                         width: list.width
-                        iconName: "dialog-information-symbolic"
+                        tintIcon: (modelData.image || "").length === 0
+                        iconName: {
+                            const a = String(modelData.appIcon || "");
+                            if (a.length && a.indexOf("/") === -1 && a.indexOf(":") === -1)
+                                return a;
+                            return "dialog-information-symbolic";
+                        }
                         imageSource: {
                             const img = modelData.image || "";
                             if (!img.length)
                                 return "";
                             return String(img).indexOf("://") !== -1 ? String(img) : ("file://" + img);
                         }
+                        imageSize: Tokens.icon.lg
                         titleValue: modelData.summary || modelData.appName || ""
                         subtitleValue: modelData.body || ""
                         MIconButton {
@@ -115,6 +122,7 @@ Item {
                             iconName: "window-close"
                             key: "bar.close"
                             size: Tokens.spacing.xl
+                            iconSize: Tokens.icon.sm
                             onClicked: Notifications.dismiss(modelData)
                         }
                     }

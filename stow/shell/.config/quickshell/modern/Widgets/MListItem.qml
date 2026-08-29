@@ -9,6 +9,7 @@ Item {
 
     property string iconName: ""
     property string imageSource: ""
+    property real imageSize: Tokens.icon.lg
     property bool tintIcon: true
     property string titleKey: ""
     property string titleValue: ""
@@ -35,7 +36,7 @@ Item {
     }
 
     implicitHeight: root.imageSource.length > 0
-        ? Tokens.spacing.xxl * 2 + Tokens.spacing.md * 2
+        ? root.imageSize + Tokens.spacing.md * 2
         : Tokens.spacing.xxl + Tokens.spacing.md * 2
     implicitWidth: Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
@@ -106,8 +107,8 @@ Item {
 
         Rectangle {
             visible: root.imageSource.length > 0
-            Layout.preferredWidth: Tokens.spacing.xxl * 2
-            Layout.preferredHeight: Tokens.spacing.xxl * 2
+            Layout.preferredWidth: root.imageSize
+            Layout.preferredHeight: root.imageSize
             radius: Tokens.radius.small
             color: Colors.color.surfaceContainerHighest
             clip: true
@@ -117,8 +118,8 @@ Item {
                 source: root.imageSource
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
-                sourceSize.width: Tokens.spacing.xxl * 2
-                sourceSize.height: Tokens.spacing.xxl * 2
+                sourceSize.width: root.imageSize
+                sourceSize.height: root.imageSize
             }
         }
 

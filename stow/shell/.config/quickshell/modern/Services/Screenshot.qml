@@ -52,10 +52,23 @@ Singleton {
             root._code = code;
             root._exited = true;
             Qt.callLater(root._tryFinish);
+            finishGrace.restart();
+        }
+    }
+
+    Timer {
+        id: finishGrace
+        interval: Motion.short()
+        onTriggered: {
+            if (!root._done && root._exited) {
+                root._outDone = true;
+                root._tryFinish();
+            }
         }
     }
 
     function _resetCap() {
+        finishGrace.stop();
         root._done = false;
         root._exited = false;
         root._outDone = false;
@@ -64,10 +77,13 @@ Singleton {
     }
 
     function _tryFinish() {
-        if (root._done || !root._exited || !root._outDone)
+        if (root._done || !root._exited)
+            return;
+        const path = (root._lastPath || capOut.text.trim());
+        if (root._code === 0 && path.length === 0 && !root._outDone)
             return;
         root._done = true;
-        const path = capOut.text.trim();
+        finishGrace.stop();
         if (root._code === 0 && path.length > 0) {
             root.captured(path);
             return;

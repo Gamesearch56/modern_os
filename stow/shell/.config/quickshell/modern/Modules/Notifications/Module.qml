@@ -19,14 +19,14 @@ Scope {
             id: toastWin
             required property var modelData
             screen: modelData
-            visible: !Notifications.panelOpen && Notifications.list.length > 0
+            visible: !Notifications.panelOpen && Notifications.toasts.length > 0
             color: "transparent"
+            implicitWidth: Tokens.spacing.xxl * 12
+            implicitHeight: Tokens.spacing.xxl * 16
             anchors.top: Config.bar.position !== "bottom"
             anchors.bottom: Config.bar.position === "bottom"
             anchors.right: Config.bar.position !== "left"
             anchors.left: Config.bar.position === "left"
-            implicitWidth: Tokens.spacing.xxl * 12
-            implicitHeight: Tokens.spacing.xxl * 16
             exclusionMode: ExclusionMode.Ignore
             aboveWindows: true
             WlrLayershell.layer: WlrLayer.Overlay
@@ -36,15 +36,17 @@ Scope {
             margins.left: toastWin._edgeMargin(Config.bar.position === "left")
 
             function _edgeMargin(onBarEdge: bool): real {
-                const gap = Tokens.spacing.sm;
-                if (!onBarEdge)
-                    return Tokens.spacing.xl;
-                const h = Config.bar.height || Tokens.spacing.xxl;
-                const edge = Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0;
-                return h + edge * 2 + gap;
+                if (onBarEdge) {
+                    const h = Config.bar.height || Tokens.spacing.xxl;
+                    const edge = Config.bar.style === "floating"
+                        ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0;
+                    return h + edge * 2 + Tokens.spacing.sm;
+                }
+                return Config.bar.endGap ?? Tokens.spacing.sm;
             }
 
             Toasts {
+                id: toastStack
                 anchors.top: Config.bar.position === "bottom" ? undefined : parent.top
                 anchors.bottom: Config.bar.position === "bottom" ? parent.bottom : undefined
                 anchors.right: Config.bar.position === "left" ? undefined : parent.right

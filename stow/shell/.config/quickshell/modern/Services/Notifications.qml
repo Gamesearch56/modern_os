@@ -1,6 +1,5 @@
-// Notification server. Replaces SwayNC. Modules/Notifications renders
-// toasts and the drawer from `list`; this owns the protocol.
-// Local shell errors arrive via Logger.logged (Commons cannot import us).
+// Notification server. Replaces SwayNC. Banners are `toasts`; `list` is
+// history until the user dismisses. Timeout hides the banner only.
 pragma Singleton
 
 import Quickshell
@@ -13,29 +12,38 @@ Singleton {
     id: root
 
     property var list: []
-    readonly property int unread: root.list.filter(n => n && !n.dismissed).length
+    property var toasts: []
+    readonly property int unread: root.list.filter(n => n && !n.read).length
     property bool dnd: false
     property bool panelOpen: false
     property var _lastLocal: ({ key: "", at: 0 })
 
+    onPanelOpenChanged: {
+        if (!root.panelOpen)
+            return;
+        for (const n of root.list)
+            n.read = true;
+        root.list = root.list.slice();
+    }
+
     NotificationServer {
         id: server
+        keepOnReload: true
+        persistenceSupported: true
+        bodySupported: true
+        imageSupported: true
+        actionsSupported: true
         onNotification: (notification) => {
             try {
-                notification.tracked = true;
-                if (root.dnd)
+                if (root.dnd) {
+                    notification.tracked = true;
                     return;
-                const next = root.list.slice();
-                next.unshift(notification);
-                root.list = next;
-                const timeout = Config.general.notificationTimeoutMs ?? 5000;
-                if (timeout > 0 && notification.expireTimeout !== 0) {
-                    const timer = Qt.createQmlObject("import QtQuick; Timer { running: true; repeat: false }", root);
-                    timer.interval = timeout;
-                    timer.triggered.connect(() => root.dismiss(notification));
                 }
+                const item = root._wrap(notification);
+                notification.tracked = true;
+                root._push(item);
             } catch (e) {
-                Logger.error("Notifications", String(e));
+                console.error("Notifications: " + e);
             }
         }
     }
@@ -43,15 +51,99 @@ Singleton {
     Connections {
         target: Logger
         function onLogged(level, tag, message) {
-            try {
-                if (level === "error")
-                    root.postLocal(level, tag, message);
-                else if (level === "warn" && Logger.notifyOnWarn)
-                    root.postLocal(level, tag, message);
-            } catch (e) {
-                console.error("Notifications: failed to toast a log event: " + e);
-            }
+            if (level === "error")
+                root.postLocal(level, tag, message);
+            else if (level === "warn" && Logger.notifyOnWarn)
+                root.postLocal(level, tag, message);
         }
+    }
+
+    function _str(v) {
+        if (v === undefined || v === null)
+            return "";
+        const s = String(v);
+        return (!s.length || s === "undefined") ? "" : s;
+    }
+
+    function _timeoutMs() {
+        return Config.general.notificationTimeoutMs ?? 6000;
+    }
+
+    function _wrap(n) {
+        const protocol = n.expireTimeout;
+        const resident = n.resident === true || protocol === 0;
+        return {
+            raw: n,
+            summary: root._str(n.summary),
+            body: root._str(n.body),
+            appName: root._str(n.appName),
+            appIcon: root._str(n.appIcon),
+            image: root._str(n.image),
+            local: false,
+            toastVisible: true,
+            read: false,
+            expireTimeout: resident ? 0 : root._timeoutMs(),
+            shownAt: Date.now()
+        };
+    }
+
+    function _local(summary, body, image, expireTimeout) {
+        return {
+            raw: null,
+            summary: summary,
+            body: body || "",
+            appName: "modern",
+            appIcon: "",
+            image: image || "",
+            local: true,
+            toastVisible: true,
+            read: false,
+            expireTimeout: expireTimeout,
+            shownAt: Date.now()
+        };
+    }
+
+    function _push(item) {
+        const next = root.list.slice();
+        next.unshift(item);
+        root.list = next;
+        root._syncToasts();
+        root._armHide(item);
+    }
+
+    function _syncToasts() {
+        const shown = [];
+        for (const n of root.list) {
+            if (n && n.toastVisible)
+                shown.push(n);
+            if (shown.length >= 3)
+                break;
+        }
+        root.toasts = shown;
+    }
+
+    function _armHide(item) {
+        if (!item.expireTimeout || item.expireTimeout <= 0)
+            return;
+        const timer = Qt.createQmlObject("import QtQuick; Timer { running: true; repeat: false }", root);
+        timer.interval = item.expireTimeout;
+        timer.triggered.connect(() => { item._timer = null; timer.destroy(); root.hideToast(item); });
+        item._timer = timer;
+    }
+
+    function _stopTimer(item) {
+        if (!item?._timer)
+            return;
+        item._timer.stop();
+        item._timer.destroy();
+        item._timer = null;
+    }
+
+    function hideToast(item) {
+        if (!item || !item.toastVisible)
+            return;
+        item.toastVisible = false;
+        root._syncToasts();
     }
 
     function postLocal(level, tag, message) {
@@ -60,73 +152,38 @@ Singleton {
         if (root._lastLocal.key === key && (now - root._lastLocal.at) < 8000)
             return;
         root._lastLocal = { key: key, at: now };
-
         if (root.dnd && level !== "error")
             return;
-
         const summaryKey = level === "error" ? "notifications.shellError" : "notifications.shellWarning";
-        const item = {
-            summary: I18n.t(summaryKey) + " · " + tag,
-            body: message,
-            appName: "modern",
-            dismissed: false,
-            local: true,
-            expireTimeout: level === "error" ? 0 : (Config.general.notificationTimeoutMs ?? 5000)
-        };
-        const next = root.list.slice();
-        next.unshift(item);
-        root.list = next;
-        if (item.expireTimeout > 0) {
-            const timer = Qt.createQmlObject("import QtQuick; Timer { running: true; repeat: false }", root);
-            timer.interval = item.expireTimeout;
-            timer.triggered.connect(() => root.dismiss(item));
-        }
+        const expire = level === "error" ? 0 : root._timeoutMs();
+        root._push(root._local(I18n.t(summaryKey) + " · " + tag, message, "", expire));
     }
 
     function toast(summary: string, body: string, imagePath) {
         if (root.dnd)
             return;
-        const item = {
-            summary: summary,
-            body: body || "",
-            image: imagePath || "",
-            appName: "modern",
-            dismissed: false,
-            local: true,
-            expireTimeout: Config.general.notificationTimeoutMs ?? 5000
-        };
-        const next = root.list.slice();
-        next.unshift(item);
-        root.list = next;
-        if (item.expireTimeout > 0) {
-            const timer = Qt.createQmlObject("import QtQuick; Timer { running: true; repeat: false }", root);
-            timer.interval = item.expireTimeout;
-            timer.triggered.connect(() => root.dismiss(item));
-        }
+        root._push(root._local(summary, body || "", imagePath || "", root._timeoutMs()));
     }
 
-    function dismiss(notification: var) {
-        root.list = root.list.filter(n => n !== notification);
-        if (notification?.local)
-            return;
-        if (notification?.dismiss)
-            notification.dismiss();
+    function dismiss(item) {
+        root._stopTimer(item);
+        root.list = root.list.filter(n => n !== item);
+        root._syncToasts();
+        if (item?.raw?.dismiss)
+            item.raw.dismiss();
     }
 
     function dismissAll() {
         for (const n of root.list) {
-            if (n?.local)
-                continue;
-            if (n?.dismiss)
-                n.dismiss();
+            root._stopTimer(n);
+            if (n?.raw?.dismiss)
+                n.raw.dismiss();
         }
         root.list = [];
+        root.toasts = [];
     }
 
-    function toggleDnd() {
-        root.dnd = !root.dnd;
-    }
-
+    function toggleDnd() { root.dnd = !root.dnd; }
     function toggle() { root.panelOpen = !root.panelOpen; }
     function show() { root.panelOpen = true; }
     function hide() { root.panelOpen = false; }
@@ -136,5 +193,6 @@ Singleton {
         function toggle() { root.toggle(); }
         function show() { root.show(); }
         function hide() { root.hide(); }
+        function toast(summary: string, body: string) { root.toast(summary, body, ""); }
     }
 }

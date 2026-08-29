@@ -3,7 +3,7 @@
   "_comment": "Shipped defaults. Tracked in git. Copied to config.json on first install; config.json is the live, gitignored, per-machine file that the Settings app edits. Never edit this file to change YOUR machine's behaviour — edit config.json.",
   "general": {
     "autostart": [],
-    "notificationTimeoutMs": 5000,
+    "notificationTimeoutMs": 6000,
     "dndSchedule": {
       "enabled": false,
       "from": "23:00",

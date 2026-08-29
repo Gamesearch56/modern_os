@@ -9,6 +9,7 @@ Item {
     visible: Media.hasPlayer
     implicitWidth: visible ? row.implicitWidth + Tokens.spacing.md * 2 : 0
     implicitHeight: Config.bar.height
+    clip: true
 
     readonly property real _art: Tokens.spacing.xl - Tokens.spacing.xxs
     readonly property string _label: {
@@ -54,8 +55,12 @@ Item {
             value: root._label
             styleName: "titleSmall"
             elide: Text.ElideRight
+            wrapMode: Text.NoWrap
+            clip: true
             Layout.alignment: Qt.AlignVCenter
             Layout.maximumWidth: Tokens.spacing.xxl * 10
+            Layout.preferredHeight: root._art
+            Layout.maximumHeight: root._art
         }
 
         MIconButton {
