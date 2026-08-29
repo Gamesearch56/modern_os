@@ -18,14 +18,25 @@ Scope {
             implicitHeight: Tokens.spacing.xxl * 20
 
             onVisibleChanged: {
-                if (!visible)
+                if (visible) {
+                    grid._pendingSync = true;
+                    grid.syncFromCurrent();
+                    win.requestActivate();
+                } else {
                     Wallpaper.setPickerOpen(false);
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                color: Colors.color.surface
+                radius: Tokens.radius.medium
             }
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Tokens.spacing.md
-                spacing: Tokens.spacing.sm
+                spacing: Tokens.spacing.md
 
                 MWindowChrome {
                     Layout.fillWidth: true
@@ -36,55 +47,58 @@ Scope {
                     onActionClicked: Wallpaper.importWallpaper()
                 }
 
-                GridView {
-                    id: grid
-                    visible: Wallpaper.images.length > 0
+                MPane {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
-                    cellWidth: Math.floor(width / 2)
-                    cellHeight: Tokens.spacing.xxl * 7
-                    model: Wallpaper.images
-                    currentIndex: 0
-                    keyNavigationWraps: true
-                    focus: true
-                    delegate: MImageTile {
-                        required property var modelData
-                        required property int index
-                        width: grid.cellWidth
-                        height: grid.cellHeight
-                        source: "file://" + modelData
-                        selected: grid.currentIndex === index
-                        onClicked: {
-                            grid.currentIndex = index;
-                            Wallpaper.setWallpaper(modelData);
-                        }
+
+                    PickerGrid {
+                        id: grid
+                        anchors.fill: parent
+                        visible: Wallpaper.images.length > 0
                     }
 
-                    Keys.onReturnPressed: {
-                        const path = Wallpaper.images[grid.currentIndex];
-                        if (path)
-                            Wallpaper.setWallpaper(path);
+                    MEmptyState {
+                        visible: Wallpaper.images.length === 0
+                        anchors.fill: parent
+                        iconName: "folder-pictures-symbolic"
+                        titleKey: "wallpaper.empty"
                     }
-                    Keys.onEnterPressed: {
-                        const path = Wallpaper.images[grid.currentIndex];
-                        if (path)
-                            Wallpaper.setWallpaper(path);
-                    }
-                }
-
-                MEmptyState {
-                    visible: Wallpaper.images.length === 0
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    iconName: "folder-pictures-symbolic"
-                    titleKey: "wallpaper.empty"
                 }
             }
 
             Shortcut {
                 sequence: "Escape"
                 onActivated: Wallpaper.setPickerOpen(false)
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0
+                sequence: "Left"
+                onActivated: grid.moveBy(-1)
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0
+                sequence: "Right"
+                onActivated: grid.moveBy(1)
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0
+                sequence: "Up"
+                onActivated: grid.moveBy(-grid.columns)
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0
+                sequence: "Down"
+                onActivated: grid.moveBy(grid.columns)
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0
+                sequence: "Return"
+                onActivated: grid.activate()
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0
+                sequence: "Enter"
+                onActivated: grid.activate()
             }
         }
     }

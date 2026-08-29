@@ -8,11 +8,22 @@ import "../../Services"
 
 Scope {
     id: root
+
+    property string query: ""
+    property int currentIndex: 0
+
     IpcHandler {
         target: "launcher"
         function toggle() { Launcher.toggle(); }
         function show() { Launcher.show(); }
         function hide() { Launcher.hide(); }
+    }
+
+    readonly property var results: root.resultsFor(root.query)
+    readonly property var current: {
+        if (root.currentIndex < 0 || root.currentIndex >= root.results.length)
+            return null;
+        return root.results[root.currentIndex];
     }
 
     function resultsFor(text: string): var {
@@ -63,15 +74,27 @@ Scope {
         active: Launcher.open
 
         FloatingWindow {
+            id: win
             visible: Launcher.open
             title: "modern.launcher"
             color: Colors.color.surface
-            implicitWidth: Tokens.spacing.xxl * 16
-            implicitHeight: Tokens.spacing.xxl * 14
+            implicitWidth: Tokens.spacing.xxl * 32 + Tokens.spacing.lg
+            implicitHeight: Tokens.spacing.xxl * 22 + Tokens.spacing.lg
 
             onVisibleChanged: {
-                if (!visible)
+                if (visible) {
+                    root.query = "";
+                    root.currentIndex = 0;
+                    win.requestActivate();
+                } else {
                     Launcher.hide();
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                color: Colors.color.surface
+                radius: Tokens.radius.medium
             }
 
             ColumnLayout {
@@ -82,52 +105,42 @@ Scope {
                 MWindowChrome {
                     Layout.fillWidth: true
                     titleKey: "bar.launcher"
+                    subtitleValue: User.displayName
+                    titleColumnWidth: Tokens.spacing.xxl * 9
                     onClosed: Launcher.hide()
                 }
 
-                MSearchField {
-                    id: query
-                    Layout.fillWidth: true
-                    placeholderKey: "launcher.placeholder"
-                    Component.onCompleted: forceActiveFocus()
-                    onAccepted: root.activate(list.model[list.currentIndex] || list.model[0])
-                    onTextEdited: list.currentIndex = 0
-                    onDownPressed: list.currentIndex = Math.min(list.count - 1, list.currentIndex + 1)
-                    onUpPressed: list.currentIndex = Math.max(0, list.currentIndex - 1)
-                }
-
-                MText {
-                    visible: query.text.length === 0
-                    key: "launcher.mostUsed"
-                    styleName: "labelLarge"
-                    color: Colors.color.onSurfaceVariant
-                }
-
-                ListView {
-                    id: list
+                RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
-                    spacing: Tokens.spacing.sm
-                    model: root.resultsFor(query.text)
-                    currentIndex: 0
-                    delegate: MListItem {
-                        required property var modelData
-                        required property int index
-                        width: list.width
-                        iconName: modelData.icon || "application-x-executable"
-                        tintIcon: modelData.kind === "settings" || modelData.kind === "power"
-                        titleValue: modelData.name
-                        subtitleValue: modelData.genericName || ""
-                        selected: list.currentIndex === index
-                        onClicked: root.activate(modelData)
+                    spacing: Tokens.spacing.lg
+
+                    MPane {
+                        Layout.preferredWidth: Tokens.spacing.xxl * 9
+                        Layout.fillHeight: true
+
+                        Nav {
+                            anchors.fill: parent
+                            model: root.results
+                            currentIndex: root.currentIndex
+                            onQueryEdited: (t) => {
+                                root.query = t;
+                                root.currentIndex = 0;
+                            }
+                            onPicked: (i) => root.currentIndex = i
+                            onActivated: (i) => {
+                                root.currentIndex = i;
+                                root.activate(root.results[i]);
+                            }
+                        }
                     }
 
-                    MEmptyState {
-                        visible: list.count === 0 && query.text.length > 0
-                        anchors.fill: parent
-                        iconName: "edit-find-symbolic"
-                        titleKey: "launcher.noResults"
+                    Detail {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        item: root.current
+                        searching: root.query.trim().length > 0
+                        onConfirmed: root.activate(root.current)
                     }
                 }
             }

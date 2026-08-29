@@ -60,7 +60,10 @@ ColumnLayout {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: ConfigWrite.set("design.activeProfile", modelData)
+                    onClicked: {
+                        ConfigWrite.set("design.activeProfile", modelData);
+                        Theme.apply("", String(modelData));
+                    }
                 }
             }
         }

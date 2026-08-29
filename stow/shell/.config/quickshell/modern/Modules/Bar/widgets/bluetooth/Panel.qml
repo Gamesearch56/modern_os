@@ -9,7 +9,7 @@ ColumnLayout {
 
     MSectionHeader {
         key: "bar.bluetooth"
-        styleName: "titleSmall"
+        styleName: "headlineSmall"
     }
 
     MListItem {

@@ -207,6 +207,27 @@ hyprpolkitagent is Qt Quick, not Fusion+QSS. It needs
 ```bash
 systemctl --user daemon-reload
 systemctl --user restart hyprpolkitagent
+```
+
+## Dolphin is light / has a File menu / ignores the wallpaper palette
+
+`hl.env` only applies when Hyprland *starts*. After a reload, SUPER+E
+was launching Dolphin without `qt6ct`, so Fusion fell back to a light
+palette. SUPER+E now goes through `scripts/modern-launch`. Fully quit
+Dolphin (not only the window) and open it again. `theme-apply.sh` writes
+absolute paths into `qt6ct.conf` (qt6ct does not expand `~`). The menu
+bar is hidden from `[MainWindow] MenuBar=Disabled` in `dolphinrc`.
+
+
+hyprpolkitagent is Qt Quick, not Fusion+QSS. It needs
+`QT_QPA_PLATFORMTHEME=qt6ct` (drop-in under
+`~/.config/systemd/user/hyprpolkitagent.service.d/` plus Hyprland
+`import-environment`) and a current `qt6ct/colors/modern.conf`. After
+`theme-apply.sh`, the agent is restarted automatically. By hand:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user restart hyprpolkitagent
 pkexec true
 ```
 

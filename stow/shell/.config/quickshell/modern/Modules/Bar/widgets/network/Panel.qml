@@ -9,7 +9,7 @@ ColumnLayout {
 
     MSectionHeader {
         key: "bar.network"
-        styleName: "titleSmall"
+        styleName: "headlineSmall"
     }
 
     MListItem {

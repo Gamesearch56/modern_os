@@ -49,17 +49,27 @@ Scope {
         active: PowerMenu.open
 
         FloatingWindow {
+            id: win
             visible: PowerMenu.open
             title: "modern.powermenu"
             color: Colors.color.surface
-            implicitWidth: Tokens.spacing.xxl * 12
-            implicitHeight: Tokens.spacing.xxl * 16
+            implicitWidth: Tokens.spacing.xxl * 24 + Tokens.spacing.lg
+            implicitHeight: Tokens.spacing.xxl * 16 + Tokens.spacing.lg
 
             onVisibleChanged: {
-                if (!visible) {
+                if (visible) {
+                    root.focusIndex = 0;
+                    win.requestActivate();
+                } else {
                     root.pending = "";
                     PowerMenu.hide();
                 }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                color: Colors.color.surface
+                radius: Tokens.radius.medium
             }
 
             ColumnLayout {
@@ -70,45 +80,36 @@ Scope {
                 MWindowChrome {
                     Layout.fillWidth: true
                     titleKey: "powerMenu.title"
+                    subtitleValue: User.displayName
+                    titleColumnWidth: Tokens.spacing.xxl * 9
                     onClosed: PowerMenu.hide()
                 }
 
-                ColumnLayout {
-                    Layout.alignment: Qt.AlignHCenter
-                    spacing: Tokens.spacing.xxs
-
-                    MAvatar {
-                        Layout.alignment: Qt.AlignHCenter
-                        size: Tokens.spacing.xxl * 3
-                        source: User.faceUrl
-                    }
-
-                    MText {
-                        Layout.alignment: Qt.AlignHCenter
-                        value: User.displayName
-                        styleName: "titleLarge"
-                    }
-                }
-
-                GridLayout {
+                RowLayout {
                     Layout.fillWidth: true
-                    columns: 2
-                    columnSpacing: Tokens.spacing.sm
-                    rowSpacing: Tokens.spacing.sm
+                    Layout.fillHeight: true
+                    spacing: Tokens.spacing.lg
 
-                    Repeater {
-                        model: root.actions
-                        MButton {
-                            required property var modelData
-                            required property int index
-                            kind: modelData.kind
-                            key: "powerMenu." + modelData.id
-                            iconName: modelData.icon
-                            fillWidth: true
-                            Layout.columnSpan: modelData.id === "poweroff" ? 2 : 1
-                            checked: root.focusIndex === index
-                            onClicked: root._run(modelData.id)
+                    MPane {
+                        Layout.preferredWidth: Tokens.spacing.xxl * 9
+                        Layout.fillHeight: true
+
+                        Nav {
+                            anchors.fill: parent
+                            actions: root.actions
+                            focusIndex: root.focusIndex
+                            onChosen: (i) => {
+                                root.focusIndex = i;
+                                root._run(root.actions[i].id);
+                            }
                         }
+                    }
+
+                    Detail {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        action: root.actions[root.focusIndex]
+                        onConfirmed: root._run(root.actions[root.focusIndex].id)
                     }
                 }
             }
@@ -118,7 +119,7 @@ Scope {
                 open: root.pending.length > 0
                 titleKey: "powerMenu.confirmTitle"
                 bodyKey: "powerMenu.confirmBody"
-                bodyParams: ({ action: I18n.t("powerMenu." + (root.pending === "reboot" ? "restart" : root.pending)), seconds: 0 })
+                bodyParams: ({ action: I18n.t("powerMenu." + (root.pending === "reboot" ? "restart" : root.pending)) })
                 confirmKey: "powerMenu." + (root.pending === "reboot" ? "restart" : (root.pending || "poweroff"))
                 destructive: root.pending === "poweroff" || root.pending === "logout"
                 onConfirmed: {
@@ -145,20 +146,12 @@ Scope {
                 }
             }
             Shortcut {
-                sequence: "Left"
+                sequence: "Up"
                 onActivated: root.focusIndex = Math.max(0, root.focusIndex - 1)
             }
             Shortcut {
-                sequence: "Right"
-                onActivated: root.focusIndex = Math.min(root.actions.length - 1, root.focusIndex + 1)
-            }
-            Shortcut {
-                sequence: "Up"
-                onActivated: root.focusIndex = Math.max(0, root.focusIndex - 2)
-            }
-            Shortcut {
                 sequence: "Down"
-                onActivated: root.focusIndex = Math.min(root.actions.length - 1, root.focusIndex + 2)
+                onActivated: root.focusIndex = Math.min(root.actions.length - 1, root.focusIndex + 1)
             }
             Shortcut {
                 sequence: "Return"

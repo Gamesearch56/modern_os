@@ -116,6 +116,7 @@ Item {
                     visible: root.closeVisible
                     close: true
                     iconName: "window-close"
+                    key: "bar.close"
                     onClicked: root.closed()
                 }
             }

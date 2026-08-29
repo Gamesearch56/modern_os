@@ -1,5 +1,5 @@
-// Image tile with a selected primary ring. Wallpaper picker and
-// overview thumbnails share this so selection chrome is not copied.
+// Image tile. Keyboard `current` and pointer hover share a primary
+// ring drawn above the photo (a plate border sits under the Image).
 import QtQuick
 import "../Commons"
 
@@ -8,24 +8,19 @@ Item {
 
     property url source: ""
     property bool selected: false
+    property bool current: false
+
+    readonly property bool _ring: root.current || ma.containsMouse
 
     signal clicked()
+    signal hovered()
 
     Rectangle {
         anchors.fill: parent
-        anchors.margins: Tokens.spacing.xs
         radius: Tokens.radius.small
         color: Colors.color.surfaceContainerHighest
-        border.width: root.selected ? 2 : 1
-        border.color: root.selected ? Colors.color.primary : Colors.color.outlineVariant
         clip: true
-
-        Behavior on border.color {
-            ColorAnimation {
-                duration: Motion.short()
-                easing.bezierCurve: Motion.easingStandard
-            }
-        }
+        layer.enabled: true
 
         Image {
             anchors.fill: parent
@@ -36,10 +31,50 @@ Item {
             asynchronous: true
         }
 
-        MouseArea {
+        Rectangle {
             anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.clicked()
+            color: Colors.color.primary
+            opacity: root.selected ? Tokens.interaction.focus : 0
         }
+
+        Rectangle {
+            visible: root.selected
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: Tokens.spacing.xs
+            width: Tokens.spacing.xl
+            height: Tokens.spacing.xl
+            radius: Tokens.radius.full
+            color: Colors.color.primary
+
+            MIcon {
+                anchors.centerIn: parent
+                name: "object-select-symbolic"
+                size: Tokens.icon.sm
+                color: Colors.color.onPrimary
+            }
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: Tokens.radius.small
+        color: "transparent"
+        border.width: root._ring ? 0 : Tokens.stroke.hairline
+        border.color: Colors.color.outlineVariant
+    }
+
+    MouseArea {
+        id: ma
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.clicked()
+        onEntered: root.hovered()
+    }
+
+    MFocusRing {
+        radius: Tokens.radius.small
+        active: root._ring
     }
 }

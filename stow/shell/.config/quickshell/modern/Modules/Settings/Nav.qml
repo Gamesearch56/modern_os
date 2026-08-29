@@ -10,6 +10,7 @@ Item {
 
     property var catalog
     property string query: ""
+    readonly property var rows: root.catalog ? root.catalog.filtered(root.query) : []
 
     ColumnLayout {
         anchors.fill: parent
@@ -22,36 +23,50 @@ Item {
             onTextEdited: root.query = text
         }
 
-        ListView {
-            id: nav
+        Flickable {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            spacing: Tokens.spacing.xxs
-            model: root.catalog.filtered(root.query)
-            delegate: Item {
-                required property var modelData
-                width: nav.width
-                height: modelData.kind === "group" ? Tokens.spacing.xl : itemRow.implicitHeight
+            contentWidth: width
+            contentHeight: col.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
 
-                MText {
-                    visible: modelData.kind === "group"
-                    anchors.fill: parent
-                    key: modelData.key
-                    styleName: "labelSmall"
-                    color: Colors.color.onSurfaceVariant
-                    font.capitalization: Font.AllUppercase
-                }
+            ColumnLayout {
+                id: col
+                width: parent.width
+                spacing: Tokens.spacing.xxs
 
-                MListItem {
-                    id: itemRow
-                    visible: modelData.kind === "item"
-                    width: nav.width
-                    variant: "nav"
-                    iconName: root.catalog.icon(modelData.id)
-                    titleKey: "settings.sections." + modelData.id
-                    selected: Settings.sectionId === modelData.id
-                    onClicked: Settings.openAt(modelData.id, "")
+                Repeater {
+                    model: root.rows
+
+                    delegate: Item {
+                        id: row
+                        Layout.fillWidth: true
+                        implicitHeight: (modelData.kind === "group")
+                            ? Tokens.spacing.xl
+                            : navItem.implicitHeight
+                        Layout.preferredHeight: implicitHeight
+
+                        MText {
+                            visible: modelData.kind === "group"
+                            anchors.fill: parent
+                            key: modelData.key || ""
+                            styleName: "labelSmall"
+                            color: Colors.color.onSurfaceVariant
+                            font.capitalization: Font.AllUppercase
+                        }
+
+                        MListItem {
+                            id: navItem
+                            visible: modelData.kind === "item"
+                            width: row.width
+                            variant: "nav"
+                            iconName: root.catalog.icon(modelData.id)
+                            titleKey: "settings.sections." + modelData.id
+                            selected: Settings.sectionId === modelData.id
+                            onClicked: Settings.openAt(modelData.id, "")
+                        }
+                    }
                 }
             }
         }

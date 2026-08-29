@@ -35,6 +35,17 @@ Item {
         : Tokens.spacing.xxl + Tokens.spacing.md * 2
     implicitWidth: Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
+    activeFocusOnTab: root.enabled
+    Accessible.role: Accessible.Button
+    Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey) : root.titleValue
+    Accessible.onPressAction: root.clicked()
+
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            root.clicked();
+            event.accepted = true;
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -70,7 +81,10 @@ Item {
         enabled: root.enabled
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onClicked: {
+            root.forceActiveFocus();
+            root.clicked();
+        }
         onDoubleClicked: root.activated()
     }
 
@@ -137,5 +151,11 @@ Item {
             Layout.preferredHeight: childrenRect.height
             Layout.alignment: Qt.AlignVCenter
         }
+    }
+
+    MFocusRing {
+        radius: root._nav ? Tokens.radius.full : Tokens.radius.small
+        active: root.selected || root.activeFocus || hover.hovered
+        ringColor: root.selected && root._nav ? Colors.color.onPrimary : Colors.color.primary
     }
 }

@@ -69,6 +69,12 @@ Singleton {
         readonly property real focus: 0.12
     }
 
+    // Hairline rest stroke vs MD3 2dp focus/hover indicator.
+    readonly property QtObject stroke: QtObject {
+        readonly property real hairline: 1
+        readonly property real focus: 2
+    }
+
     readonly property QtObject slider: QtObject {
         readonly property real trackHeight: 8
         readonly property real thumb: 20

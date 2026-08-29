@@ -23,7 +23,9 @@
     "mail": "Mail",
     "connectivity": "Network and Bluetooth",
     "battery": "Battery",
-    "ai": "Assistant"
+    "ai": "Assistant",
+    "close": "Close",
+    "audio": "Volume"
   },
   "media": {
     "notPlaying": "Not playing",
@@ -45,7 +47,8 @@
   },
   "network": {
     "disconnected": "Disconnected",
-    "ethernet": "Ethernet"
+    "ethernet": "Ethernet",
+    "bitrateValue": "{rx} / {tx} Mbit/s"
   },
   "bluetooth": {
     "off": "Bluetooth off",
@@ -59,7 +62,19 @@
     "unavailable": "Weather unavailable",
     "detailTitle": "Weather",
     "condition": "Current conditions",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "clear": "Clear",
+    "partlyCloudy": "Partly cloudy",
+    "overcast": "Overcast",
+    "fog": "Fog",
+    "rain": "Rain",
+    "snow": "Snow",
+    "storm": "Thunderstorm",
+    "feelsLike": "Feels like",
+    "humidity": "Humidity",
+    "wind": "Wind",
+    "windKmh": "{speed} km/h",
+    "windMph": "{speed} mph"
   },
   "vpn": {
     "disconnected": "VPN off",
@@ -90,7 +105,15 @@
     "title": "Assistant",
     "placeholder": "Ask anything...",
     "you": "You",
-    "assistant": "Assistant"
+    "assistant": "Assistant",
+    "empty": "No messages yet",
+    "hint": "Ask a question. Replies come from the local Ollama model.",
+    "disabled": "Assistant is off",
+    "enableHint": "Turn it on in Settings → Accounts.",
+    "clear": "Clear chat",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "error": "The assistant could not reply."
   },
   "session": {
     "unlock": "Unlock",
@@ -114,14 +137,20 @@
     "repairScrub": "Starting btrfs scrub on / (sudo)…",
     "repairDmesg": "Recent I/O / corrupt / unmount messages:",
     "repairFsck": "FAT/ESP check: umount the ESP, then fsck.vfat -a /dev/disk/by-label/ESP (see docs/TROUBLESHOOTING.md).",
-    "unknown": "unknown subcommand"
+    "unknown": "unknown subcommand",
+    "languageViaSettings": "Switch language in Settings → Language, or set language.ui in config.json",
+    "volumeUnknown": "unknown volume action: %s"
   },
   "wallpaper": {
     "title": "Wallpapers",
     "empty": "No wallpapers found",
     "add": "Add",
     "alreadyInLibrary": "That file is already in the wallpaper folder",
-    "importFailed": "Could not import wallpaper"
+    "importFailed": "Could not import wallpaper",
+    "importTitle": "Add wallpaper",
+    "importImages": "Images",
+    "importAll": "All files",
+    "needChooser": "Need zenity or kdialog to pick a wallpaper"
   },
   "notifications": {
     "empty": "No notifications",
@@ -171,11 +200,12 @@
     "hibernate": "Hibernate",
     "cancel": "Cancel",
     "confirmTitle": "Are you sure?",
-    "confirmBody": "This will {action} in {seconds}s. Press any key to cancel."
+    "confirmBody": "This will {action}."
   },
   "cheatsheet": {
     "title": "Keyboard shortcuts",
     "search": "Search shortcuts...",
+    "noResults": "No matching shortcuts",
     "action": {
       "launcher": "Open launcher",
       "powerMenu": "Power menu",
@@ -243,6 +273,8 @@
   "launcher": {
     "placeholder": "Search apps, run a command, calculate...",
     "mostUsed": "Most used",
+    "results": "Results",
+    "open": "Open",
     "noResults": "No results"
   },
   "settings": {
@@ -327,6 +359,7 @@
       "protonDrive": "Proton Drive",
       "calendarIcs": "Calendar ICS URL",
       "aiProvider": "Assistant",
+      "ollamaModel": "Ollama model",
       "chrome": "Chrome",
       "wallpaperColor": "Wallpaper color",
       "animations": "Animations",
@@ -406,6 +439,8 @@
     "aiNone": "Off",
     "powerAsk": "Ask",
     "weatherLocationPlaceholder": "City or lat, lon",
+    "weatherMetric": "Celsius",
+    "weatherImperial": "Fahrenheit",
     "nav": {
       "session": "Session",
       "appearance": "Appearance",
@@ -426,6 +461,10 @@
       "autostart": "No autostart apps",
       "rules": "No window rules"
     },
+    "windows": {
+      "rulesNotArray": "Window rules must be a JSON array.",
+      "rulesInvalid": "That JSON is not valid."
+    },
     "hints": {
       "defaultApps": "Browser is SUPER+B, calendar opens from the clock, files SUPER+E, terminal SUPER+T.",
       "animations": "How long menus, the bar, and windows take to move. Off is instant.",
@@ -437,6 +476,7 @@
       "gamingGated": "Kernel tweaks live under install/system and are not applied automatically.",
       "timeMerged": "Date and time formats live under Language & region.",
       "weatherLocation": "Empty uses IP geolocation. Or a city, or latitude,longitude.",
+      "ollamaModel": "Pulled locally with ollama pull. Used by the bar assistant.",
       "audioDevices": "The highlighted device is the default. Click another to send sound there.",
       "hyprbarsOn": "hyprbars plugin is loaded.",
       "hyprbarsOff": "hyprbars is not loaded. Run scripts/doctor.sh and hyprpm.",
@@ -486,7 +526,8 @@
     "dragHint": "Drag to select",
     "saved": "Screenshot saved",
     "copied": "Copied to the clipboard",
-    "savedHint": "Saved to your screenshots folder"
+    "savedHint": "Saved to your screenshots folder",
+    "failed": "Screenshot failed"
   },
   "time": {
     "weekday": {
@@ -498,5 +539,16 @@
       "fri": "Fri",
       "sat": "Sat"
     }
+  },
+  "units": {
+    "tb": "{n} TB",
+    "gb": "{n} GB",
+    "mb": "{n} MB",
+    "kb": "{n} KB",
+    "b": "{n} B"
+  },
+  "theme": {
+    "applyFailed": "Could not apply the theme",
+    "invalidSlug": "Theme name can only use letters, numbers, and dashes"
   }
 }

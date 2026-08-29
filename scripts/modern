@@ -115,11 +115,11 @@ case "$TARGET" in
             up) ipc audio volumeUp ;;
             down) ipc audio volumeDown ;;
             mute) ipc audio mute ;;
-            *) echo "unknown volume action: $ACTION" >&2; exit 1 ;;
+            *) t cli.volumeUnknown "$ACTION" >&2; exit 1 ;;
         esac
         ;;
     lang)
-        echo "language switching is Settings > Language (or edit config.json language.ui)" >&2
+        t cli.languageViaSettings >&2
         exit 1
         ;;
     wallpaper)

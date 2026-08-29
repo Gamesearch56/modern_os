@@ -1,6 +1,7 @@
 // Freedesktop icon by name, sized from Tokens. `tint` colorizes
-// symbolic icons onto a role (primary / onSurface). Full-color app
-// icons set tint: false so Papirus artwork is left alone.
+// symbolic icons onto a role. Papirus action SVGs are dark while
+// status SVGs are already light — colorize from a full-bright source
+// so both land on the same onSurface (or caller) role.
 import QtQuick
 import QtQuick.Effects
 import Quickshell
@@ -39,10 +40,17 @@ Item {
         source: root._source
         mipmap: true
         asynchronous: false
-        layer.enabled: root.tint && visible
-        layer.effect: MultiEffect {
-            colorization: 1
-            colorizationColor: root.color
-        }
+        opacity: root.tint ? 0 : 1
+        layer.enabled: root.tint
+    }
+
+    MultiEffect {
+        anchors.fill: img
+        visible: root.tint && img.visible
+        source: img
+        colorization: 1
+        colorizationColor: root.color
+        brightness: 1
+        saturation: 0
     }
 }

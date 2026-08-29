@@ -23,7 +23,9 @@
     "mail": "Mail",
     "connectivity": "Netzwerk und Bluetooth",
     "battery": "Akku",
-    "ai": "Assistent"
+    "ai": "Assistent",
+    "close": "Schließen",
+    "audio": "Lautstärke"
   },
   "media": {
     "notPlaying": "Keine Wiedergabe",
@@ -45,7 +47,8 @@
   },
   "network": {
     "disconnected": "Getrennt",
-    "ethernet": "Ethernet"
+    "ethernet": "Ethernet",
+    "bitrateValue": "{rx} / {tx} Mbit/s"
   },
   "bluetooth": {
     "off": "Bluetooth aus",
@@ -59,7 +62,19 @@
     "unavailable": "Wetter nicht verfügbar",
     "detailTitle": "Wetter",
     "condition": "Aktuelle Lage",
-    "refresh": "Aktualisieren"
+    "refresh": "Aktualisieren",
+    "clear": "Klar",
+    "partlyCloudy": "Teilweise bewölkt",
+    "overcast": "Bedeckt",
+    "fog": "Nebel",
+    "rain": "Regen",
+    "snow": "Schnee",
+    "storm": "Gewitter",
+    "feelsLike": "Gefühlt",
+    "humidity": "Luftfeuchtigkeit",
+    "wind": "Wind",
+    "windKmh": "{speed} km/h",
+    "windMph": "{speed} mph"
   },
   "vpn": {
     "disconnected": "VPN aus",
@@ -90,7 +105,15 @@
     "title": "Assistent",
     "placeholder": "Frag etwas...",
     "you": "Du",
-    "assistant": "Assistent"
+    "assistant": "Assistent",
+    "empty": "Noch keine Nachrichten",
+    "hint": "Stell eine Frage. Antworten kommen vom lokalen Ollama-Modell.",
+    "disabled": "Assistent ist aus",
+    "enableHint": "Einschalten unter Einstellungen → Konten.",
+    "clear": "Chat leeren",
+    "send": "Senden",
+    "thinking": "Denkt nach…",
+    "error": "Der Assistent konnte nicht antworten."
   },
   "session": {
     "unlock": "Entsperren",
@@ -114,14 +137,20 @@
     "repairScrub": "Starte btrfs scrub auf / (sudo)…",
     "repairDmesg": "Aktuelle I/O- / Corrupt- / Unmount-Meldungen:",
     "repairFsck": "FAT/ESP-Check: ESP aushängen, dann fsck.vfat -a /dev/disk/by-label/ESP (docs/TROUBLESHOOTING.md).",
-    "unknown": "unbekanntes Unterkommando"
+    "unknown": "unbekanntes Unterkommando",
+    "languageViaSettings": "Sprache umstellen unter Einstellungen → Sprache, oder language.ui in config.json setzen",
+    "volumeUnknown": "unbekannte Lautstärke-Aktion: %s"
   },
   "wallpaper": {
     "title": "Hintergründe",
     "empty": "Keine Hintergründe gefunden",
     "add": "Hinzufügen",
     "alreadyInLibrary": "Diese Datei liegt schon im Hintergrundordner",
-    "importFailed": "Hintergrund konnte nicht importiert werden"
+    "importFailed": "Hintergrund konnte nicht importiert werden",
+    "importTitle": "Hintergrund hinzufügen",
+    "importImages": "Bilder",
+    "importAll": "Alle Dateien",
+    "needChooser": "Zum Auswählen wird zenity oder kdialog benötigt"
   },
   "notifications": {
     "empty": "Keine Benachrichtigungen",
@@ -171,11 +200,12 @@
     "hibernate": "Tiefschlaf",
     "cancel": "Abbrechen",
     "confirmTitle": "Bist du sicher?",
-    "confirmBody": "Dies wird in {seconds}s ausgeführt: {action}. Beliebige Taste zum Abbrechen."
+    "confirmBody": "Das führt aus: {action}."
   },
   "cheatsheet": {
     "title": "Tastenkombinationen",
     "search": "Kombinationen durchsuchen...",
+    "noResults": "Keine passenden Tastenkombinationen",
     "action": {
       "launcher": "Starter öffnen",
       "powerMenu": "Ein/Aus-Menü",
@@ -243,6 +273,8 @@
   "launcher": {
     "placeholder": "Apps suchen, Befehl ausführen, rechnen...",
     "mostUsed": "Meistgenutzt",
+    "results": "Ergebnisse",
+    "open": "Öffnen",
     "noResults": "Keine Ergebnisse"
   },
   "settings": {
@@ -327,6 +359,7 @@
       "protonDrive": "Proton Drive",
       "calendarIcs": "Kalender-ICS-URL",
       "aiProvider": "Assistent",
+      "ollamaModel": "Ollama-Modell",
       "chrome": "Chrome",
       "wallpaperColor": "Wallpaper-Farbe",
       "animations": "Animationen",
@@ -406,6 +439,8 @@
     "aiNone": "Aus",
     "powerAsk": "Fragen",
     "weatherLocationPlaceholder": "Stadt oder lat, lon",
+    "weatherMetric": "Celsius",
+    "weatherImperial": "Fahrenheit",
     "nav": {
       "session": "Sitzung",
       "appearance": "Erscheinungsbild",
@@ -426,6 +461,10 @@
       "autostart": "Keine Autostart-Apps",
       "rules": "Keine Fensterregeln"
     },
+    "windows": {
+      "rulesNotArray": "Fensterregeln müssen ein JSON-Array sein.",
+      "rulesInvalid": "Dieses JSON ist ungültig."
+    },
     "hints": {
       "defaultApps": "Browser ist SUPER+B, Kalender öffnet sich von der Uhr, Dateien SUPER+E, Terminal SUPER+T.",
       "animations": "Wie lange Menüs, die Leiste und Fenster brauchen. Aus ist sofort.",
@@ -437,6 +476,7 @@
       "gamingGated": "Kernel-Anpassungen liegen unter install/system und werden nicht automatisch angewendet.",
       "timeMerged": "Datums- und Zeitformate liegen unter Sprache & Region.",
       "weatherLocation": "Leer nutzt IP-Standort. Oder Stadt, oder Breitengrad,Längengrad.",
+      "ollamaModel": "Lokal mit ollama pull. Nutzt der Leisten-Assistent.",
       "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken.",
       "hyprbarsOn": "hyprbars-Plugin ist geladen.",
       "hyprbarsOff": "hyprbars ist nicht geladen. scripts/doctor.sh und hyprpm prüfen.",
@@ -486,7 +526,8 @@
     "dragHint": "Zum Auswählen ziehen",
     "saved": "Screenshot gespeichert",
     "copied": "In die Zwischenablage kopiert",
-    "savedHint": "Im Screenshot-Ordner gespeichert"
+    "savedHint": "Im Screenshot-Ordner gespeichert",
+    "failed": "Screenshot fehlgeschlagen"
   },
   "time": {
     "weekday": {
@@ -498,5 +539,16 @@
       "fri": "Fr",
       "sat": "Sa"
     }
+  },
+  "units": {
+    "tb": "{n} TB",
+    "gb": "{n} GB",
+    "mb": "{n} MB",
+    "kb": "{n} KB",
+    "b": "{n} B"
+  },
+  "theme": {
+    "applyFailed": "Thema konnte nicht angewendet werden",
+    "invalidSlug": "Themenname nur Buchstaben, Zahlen und Bindestriche"
   }
 }

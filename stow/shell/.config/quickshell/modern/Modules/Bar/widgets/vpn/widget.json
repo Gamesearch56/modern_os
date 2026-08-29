@@ -1,1 +1,1 @@
-{"id":"vpn","key":"bar.vpn","defaultEnabled":true,"services":["Vpn"]}
+{"id":"vpn","key":"bar.vpn","defaultEnabled":true,"bubble":true,"services":["Vpn"]}

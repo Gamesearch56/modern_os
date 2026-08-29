@@ -32,9 +32,20 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: root._lastPath = this.text.trim()
         }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const t = this.text.trim();
+                if (t.length > 0)
+                    Logger.warn("Screenshot", t);
+            }
+        }
         onExited: (code) => {
-            if (code === 0 && root._lastPath.length > 0)
+            if (code === 0 && root._lastPath.length > 0) {
                 root.captured(root._lastPath);
+                return;
+            }
+            if (code !== 0)
+                Logger.error("Screenshot", I18n.t("screenshot.failed"));
         }
     }
 
@@ -54,12 +65,15 @@ Singleton {
         cap.running = true;
     }
 
-    function finishRegion(geom: string) {
+    function finishRegion(geom: string, output: string) {
         root.hudOpen = false;
         if (!geom || geom.length === 0)
             return;
         cap.running = false;
-        cap.command = [root.script, "region", geom];
+        if (output && output.length > 0)
+            cap.command = [root.script, "region", geom, output];
+        else
+            cap.command = [root.script, "region", geom];
         cap.running = true;
     }
 

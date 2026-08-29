@@ -28,4 +28,6 @@ MDivider 1.0 MDivider.qml
 MImageTile 1.0 MImageTile.qml
 MAvatar 1.0 MAvatar.qml
 MWindowChrome 1.0 MWindowChrome.qml
+MPane 1.0 MPane.qml
 MTextArea 1.0 MTextArea.qml
+MFocusRing 1.0 MFocusRing.qml

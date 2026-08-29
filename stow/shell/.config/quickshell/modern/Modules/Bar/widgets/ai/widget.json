@@ -1,1 +1,1 @@
-{"id":"ai","key":"ai.title","defaultEnabled":true,"services":["Ai"]}
+{"id":"ai","key":"ai.title","defaultEnabled":true,"bubble":true,"services":["Ai"]}

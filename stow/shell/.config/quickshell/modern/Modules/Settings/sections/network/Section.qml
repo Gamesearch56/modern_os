@@ -34,12 +34,16 @@ ColumnLayout {
 
     MSectionHeader { key: "settings.fields.bitrate" }
     MText {
-        value: Network.rxMbps.toFixed(1) + " / " + Network.txMbps.toFixed(1) + " Mbps"
+        key: "network.bitrateValue"
+        params: ({
+            rx: Network.rxMbps.toFixed(1),
+            tx: Network.txMbps.toFixed(1)
+        })
         styleName: "labelLarge"
     }
     Row {
         Layout.fillWidth: true
-        spacing: 2
+        spacing: Tokens.spacing.xxs
         Repeater {
             model: Network.bitrateSamples
             Rectangle {
@@ -56,7 +60,7 @@ ColumnLayout {
     MField {
         labelKey: "settings.fields.mirrorCountry"
         MTextField {
-            text: Config.network?.mirrorCountry || "Germany"
+            text: Config.network?.mirrorCountry ?? ""
             onAccepted: ConfigWrite.set("network.mirrorCountry", text)
         }
     }

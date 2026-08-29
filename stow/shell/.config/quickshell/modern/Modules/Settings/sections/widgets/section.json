@@ -3,5 +3,5 @@
   "icon": "view-grid",
   "key": "settings.sections.widgets",
   "order": 130,
-  "keywords": ["bar", "layout", "left", "center", "right"]
+  "keywords": ["bar", "layout", "left", "center", "right", "clock", "weather"]
 }

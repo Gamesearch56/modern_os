@@ -19,7 +19,7 @@ Singleton {
             const encoded = JSON.stringify(value);
             proc.command = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "config", "set", path, encoded];
             proc.running = true;
-            Logger.info("ConfigWrite", path + " = " + encoded);
+            Logger.debug("ConfigWrite", path + " = " + encoded);
         } catch (e) {
             root.lastError = String(e);
             Logger.error("ConfigWrite", String(e));

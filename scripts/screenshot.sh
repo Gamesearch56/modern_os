@@ -6,12 +6,13 @@ set -euo pipefail
 
 usage() {
     cat <<'EOF'
-Usage: screenshot.sh <region|window|full>
+Usage: screenshot.sh <region|window|full> [geometry] [output]
 EOF
 }
 
 MODE="${1:-}"
 GEOM_ARG="${2:-}"
+OUTPUT_ARG="${3:-}"
 if [ "$MODE" = "-h" ] || [ "$MODE" = "--help" ] || [ -z "$MODE" ]; then
     usage
     [ -n "$MODE" ] && exit 0
@@ -73,11 +74,51 @@ slurp_themed() {
     fi
 }
 
+# HUD mouse coords are output-local. grim -g is compositor-global
+# (hyprctl monitors x/y). -o and -g cannot be combined.
+region_to_global() {
+    local geom="$1"
+    local output="$2"
+    local xy size x y w h pos ox oy
+    xy="${geom%% *}"
+    size="${geom#* }"
+    x="${xy%%,*}"
+    y="${xy#*,}"
+    w="${size%%x*}"
+    h="${size#*x}"
+    if [ -z "$output" ]; then
+        printf '%s\n' "$geom"
+        return
+    fi
+    pos="$(hyprctl monitors -j | jq -r --arg o "$output" '
+        .[] | select(.name == $o or .description == $o) | "\(.x) \(.y)"
+    ' | head -n1)"
+    if [ -z "$pos" ] || [ "$pos" = "null" ]; then
+        printf '%s\n' "$geom"
+        return
+    fi
+    ox="${pos%% *}"
+    oy="${pos#* }"
+    printf '%s,%s %sx%s\n' "$((x + ox))" "$((y + oy))" "$w" "$h"
+}
+
+wait_hud_gone() {
+    local i
+    for i in 1 2 3 4 5 6 7 8; do
+        if ! hyprctl layers -j 2>/dev/null | jq -e '
+            [.. | objects | select(.namespace? == "modern-screenshot")] | length > 0
+        ' >/dev/null; then
+            return 0
+        fi
+        sleep 0.05
+    done
+}
+
 case "$MODE" in
     region)
         if [ -n "$GEOM_ARG" ]; then
-            # Compositor-global box (slurp / hyprctl monitors), not output-local.
-            geom="$GEOM_ARG"
+            geom="$(region_to_global "$GEOM_ARG" "$OUTPUT_ARG")"
+            wait_hud_gone
         else
             command -v slurp >/dev/null 2>&1 || { echo "screenshot: slurp not on PATH" >&2; exit 1; }
             geom="$(slurp_themed)" || exit 1

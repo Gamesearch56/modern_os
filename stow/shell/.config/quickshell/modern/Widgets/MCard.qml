@@ -11,6 +11,7 @@ Rectangle {
     property real padding: Tokens.spacing.md
     property color borderColor: "transparent"
     property int borderWidth: 0
+    property bool highlighted: false
     property alias content: inner.data
     default property alias extra: inner.data
 
@@ -36,5 +37,10 @@ Rectangle {
         id: inner
         anchors.fill: parent
         anchors.margins: root.padding
+    }
+
+    MFocusRing {
+        radius: root.radius
+        active: root.highlighted
     }
 }

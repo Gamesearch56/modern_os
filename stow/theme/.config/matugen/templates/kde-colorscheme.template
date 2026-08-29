@@ -8,6 +8,27 @@ ColorScheme=modern
 Name=modern
 shadeSortColumn=true
 
+[ColorEffects:Disabled]
+Enable=false
+Color={{colors.on_surface_variant.default.red}},{{colors.on_surface_variant.default.green}},{{colors.on_surface_variant.default.blue}}
+ColorAmount=0
+ColorEffect=0
+ContrastAmount=0.65
+ContrastEffect=1
+IntensityAmount=0.1
+IntensityEffect=2
+
+[ColorEffects:Inactive]
+Enable=false
+ChangeSelectionColor=true
+Color={{colors.surface_container.default.red}},{{colors.surface_container.default.green}},{{colors.surface_container.default.blue}}
+ColorAmount=0
+ColorEffect=0
+ContrastAmount=0
+ContrastEffect=0
+IntensityAmount=0
+IntensityEffect=0
+
 [WM]
 activeBackground={{colors.surface_container.default.red}},{{colors.surface_container.default.green}},{{colors.surface_container.default.blue}}
 inactiveBackground={{colors.surface.default.red}},{{colors.surface.default.green}},{{colors.surface.default.blue}}

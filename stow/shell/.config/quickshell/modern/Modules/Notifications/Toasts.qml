@@ -86,6 +86,7 @@ ColumnLayout {
 
                 MIconButton {
                     iconName: "window-close"
+                    key: "bar.close"
                     onClicked: Notifications.dismiss(modelData)
                 }
             }

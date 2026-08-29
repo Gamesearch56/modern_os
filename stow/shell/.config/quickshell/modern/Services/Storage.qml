@@ -46,14 +46,14 @@ Singleton {
     function formatBytes(n: real): string {
         const v = Number(n) || 0;
         if (v >= 1e12)
-            return (v / 1e12).toFixed(1) + " TB";
+            return I18n.t("units.tb", { n: (v / 1e12).toFixed(1) });
         if (v >= 1e9)
-            return (v / 1e9).toFixed(1) + " GB";
+            return I18n.t("units.gb", { n: (v / 1e9).toFixed(1) });
         if (v >= 1e6)
-            return (v / 1e6).toFixed(1) + " MB";
+            return I18n.t("units.mb", { n: (v / 1e6).toFixed(1) });
         if (v >= 1e3)
-            return (v / 1e3).toFixed(1) + " KB";
-        return String(Math.round(v)) + " B";
+            return I18n.t("units.kb", { n: (v / 1e3).toFixed(1) });
+        return I18n.t("units.b", { n: Math.round(v) });
     }
 
     function eject(name: string) {

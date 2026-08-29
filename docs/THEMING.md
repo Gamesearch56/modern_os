@@ -107,7 +107,10 @@ already-running apps) and the Vivaldi `Preferences` merge are out of
 scope of a running-app live-reload: CSS overlay + `01-chrome.css` are
 always rewritten; the native theme object is merged only while Vivaldi is
 **not** running (so we do not fight its Preferences writer). Dolphin does
-not reload QSS live — restart it after `theme-apply.sh`. **hyprpolkitagent**
+not reload QSS live — restart it after `theme-apply.sh`. Keybind launches
+use `scripts/modern-launch` so `qt6ct` is in the environment even when
+Hyprland was only reloaded (not restarted). `theme-apply.sh` writes
+absolute paths into `qt6ct.conf` because qt6ct does not expand `~`. **hyprpolkitagent**
 is QML (`org.hyprland.style`): colors come from the qt6ct `SystemPalette`
 (not QSS), radii/motion from `~/.config/hypr/application-style.conf`.
 `theme-apply.sh` restarts the user unit so a new palette is picked up;

@@ -19,6 +19,8 @@ Singleton {
     readonly property var focusedWorkspace: Hyprland.focusedWorkspace
     readonly property var focusedToplevel: Hyprland.focusedToplevel
 
+    readonly property bool _lua: Hyprland.usingLua === true
+
     function dispatch(cmd: string) {
         try {
             Hyprland.dispatch(cmd);
@@ -27,29 +29,61 @@ Singleton {
         }
     }
 
+    // Hyprland 0.55+ Lua IPC ignores hyprlang strings like "workspace 3".
     function focusWorkspace(id: int) {
-        root.dispatch("workspace " + id);
+        if (root._lua)
+            root.dispatch("hl.dsp.focus({ workspace = " + id + " })");
+        else
+            root.dispatch("workspace " + id);
     }
 
     function moveToWorkspace(id: int) {
-        root.dispatch("movetoworkspace " + id);
+        if (root._lua)
+            root.dispatch("hl.dsp.window.move({ workspace = " + id + " })");
+        else
+            root.dispatch("movetoworkspace " + id);
     }
 
     function focusWindow(address: string) {
-        root.dispatch("focuswindow address:" + address);
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        if (root._lua)
+            root.dispatch("hl.dsp.focus({ window = \"address:" + addr + "\" })");
+        else
+            root.dispatch("focuswindow address:" + addr);
     }
 
     function closeWindow(address: string) {
-        root.dispatch("closewindow address:" + address);
+        const addr = String(address || "");
+        if (root._lua) {
+            if (addr.length)
+                root.focusWindow(addr);
+            root.dispatch("hl.dsp.window.close()");
+            return;
+        }
+        if (addr.length)
+            root.dispatch("closewindow address:" + addr);
+        else
+            root.dispatch("killactive");
     }
 
     function reload() {
-        root.dispatch("reload");
+        if (root._lua)
+            root.dispatch("hl.reload()");
+        else
+            root.dispatch("reload");
     }
 
     function monitorForScreen(screen: var): var {
         if (!screen)
             return null;
+        try {
+            const hit = Hyprland.monitorFor(screen);
+            if (hit)
+                return hit;
+        } catch (e) {
+        }
         const list = Hyprland.monitors?.values ?? Hyprland.monitors ?? [];
         for (let i = 0; i < list.length; i++) {
             const m = list[i];
@@ -79,8 +113,10 @@ Singleton {
         const mons = root._sortedMonitors();
         let idx = -1;
         for (let i = 0; i < mons.length; i++) {
-            if (mons[i].name === mon.name)
+            if (mons[i].name === mon.name) {
                 idx = i;
+                break;
+            }
         }
         if (idx === 0)
             return ({ from: 1, to: 5 });
@@ -89,36 +125,99 @@ Singleton {
         return null;
     }
 
-    function workspacesFor(screen: var): var {
-        const mon = root.monitorForScreen(screen);
-        const mode = Config.monitors?.workspaceMode || "dynamic";
+    function _onMonitor(ws: var, mon: var): bool {
+        if (!ws || !mon)
+            return true;
+        const wm = ws.monitor;
+        if (!wm)
+            return true;
+        if (typeof wm === "string")
+            return wm === mon.name;
+        if (wm.name)
+            return wm.name === mon.name;
+        return true;
+    }
+
+    function workspaceById(id: int): var {
         const raw = Hyprland.workspaces?.values ?? [];
-        const existing = [];
         for (let i = 0; i < raw.length; i++) {
-            const ws = raw[i];
-            if (!ws || ws.id <= 0)
-                continue;
-            if (mon && ws.monitor && ws.monitor.name && ws.monitor.name !== mon.name)
-                continue;
-            existing.push(ws);
+            if (raw[i] && Number(raw[i].id) === id)
+                return raw[i];
         }
-        existing.sort((a, b) => a.id - b.id);
-        if (mode !== "fixed")
-            return existing;
-        const range = root.reservedRange(screen);
-        if (!range)
-            return existing;
-        const byId = ({});
-        for (let j = 0; j < existing.length; j++)
-            byId[existing[j].id] = existing[j];
-        const out = [];
-        for (let id = range.from; id <= range.to; id++) {
-            if (byId[id])
-                out.push(byId[id]);
-            else
-                out.push({ id: id, focused: false, urgent: false, synthetic: true });
+        return null;
+    }
+
+    function isActiveOnScreen(screen: var, id: int): bool {
+        const mon = root.monitorForScreen(screen);
+        if (!mon)
+            return false;
+        const aw = mon.activeWorkspace ?? mon.lastIpcObject?.activeWorkspace;
+        if (aw && Number(aw.id ?? aw) === id)
+            return true;
+        const fw = Hyprland.focusedWorkspace;
+        if (fw && Number(fw.id) === id && root._onMonitor(fw, mon))
+            return true;
+        return false;
+    }
+
+    function taskbarCount(screen: var): int {
+        void root.toplevels;
+        void root.monitors;
+        void root.focusedWorkspace;
+        const list = Hyprland.toplevels?.values ?? [];
+        let n = 0;
+        for (let i = 0; i < list.length; i++) {
+            const id = list[i]?.workspace ? Number(list[i].workspace.id) : 0;
+            if (id > 0 && root.isActiveOnScreen(screen, id))
+                n++;
         }
-        return out;
+        return n;
+    }
+
+    function _workspaceHasWindows(id: int): bool {
+        const list = Hyprland.toplevels?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i]?.workspace && Number(list[i].workspace.id) === id)
+                return true;
+        }
+        const ws = root.workspaceById(id);
+        return Number(ws?.windows ?? ws?.lastIpcObject?.windows ?? 0) > 0;
+    }
+
+    function workspaceIdsFor(screen: var): var {
+        void root.workspaces;
+        void root.monitors;
+        void root.toplevels;
+        void root.focusedWorkspace;
+        const mode = Config.monitors?.workspaceMode || "fixed";
+        const ids = [];
+        if (mode === "fixed") {
+            const range = root.reservedRange(screen);
+            if (range) {
+                for (let id = range.from; id <= range.to; id++)
+                    ids.push(id);
+            }
+        }
+        if (ids.length === 0) {
+            const mon = root.monitorForScreen(screen);
+            const raw = Hyprland.workspaces?.values ?? [];
+            for (let i = 0; i < raw.length; i++) {
+                const ws = raw[i];
+                if (!ws || ws.id <= 0)
+                    continue;
+                if (mon && !root._onMonitor(ws, mon))
+                    continue;
+                ids.push(Number(ws.id));
+            }
+            ids.sort((a, b) => a - b);
+        }
+        const shown = [];
+        for (let i = 0; i < ids.length; i++) {
+            const id = ids[i];
+            if (root.isActiveOnScreen(screen, id) || root._workspaceHasWindows(id))
+                shown.push(id);
+        }
+        return shown;
     }
 
     Process {

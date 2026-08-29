@@ -16,10 +16,14 @@ end
 -- Hyprland's own PATH often lacks ~/.bashrc. Scripts live in the checkout.
 local modern = (os.getenv("HOME") or "") .. "/modern_dotfile/scripts/modern"
 
+-- gtk-launch inherits Hyprland's environ; hl.env() does not stick on
+-- reload, so prefix the Qt theme or Dolphin/Vivaldi open unthemed.
+local modern_launch = (os.getenv("HOME") or "") .. "/modern_dotfile/scripts/modern-launch"
+
 local function app_cmd(role, fallback)
     local id = config.value("apps.defaults." .. role, fallback) or fallback
     id = tostring(id):gsub("%.desktop$", "")
-    return hl.dsp.exec_cmd("gtk-launch " .. id)
+    return hl.dsp.exec_cmd(modern_launch .. " " .. id)
 end
 
 local function browser_incognito()
@@ -28,8 +32,31 @@ local function browser_incognito()
     return hl.dsp.exec_cmd(bin .. " --incognito")
 end
 
+-- Native 0.56 dispatcher (hyprctl movetoworkspace often no-ops from
+-- exec_cmd: Hyprland's PATH may not include hyprctl). follow defaults
+-- on — same as classic `movetoworkspace`, not silent.
 local function move_ws(n)
+    if hl.dsp.window and hl.dsp.window.move then
+        return hl.dsp.window.move({ workspace = n })
+    end
     return hl.dsp.exec_cmd("hyprctl dispatch movetoworkspace " .. tostring(n))
+end
+
+-- Number-row keycodes 10–19 are the same on de/us. Shift+1 is "!" on
+-- German, so "SUPER + SHIFT + 1" never matches the physical key.
+local function number_row_code(n)
+    if n == 10 then
+        return "code:19"
+    end
+    return "code:" .. tostring(9 + n)
+end
+
+local function default_number_combo(n, shift)
+    local digit = (n == 10) and "0" or tostring(n)
+    if shift then
+        return "SUPER + SHIFT + " .. digit
+    end
+    return "SUPER + " .. digit
 end
 
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
@@ -98,20 +125,20 @@ local bindings = {
 for action, dispatcher in pairs(bindings) do
     local key = combo(action)
     if key then
-        hl.bind(key, dispatcher)
+        local skip = false
+        for n = 1, 10 do
+            if action == ("workspace" .. n) and key == default_number_combo(n, false) then
+                hl.bind("SUPER + " .. number_row_code(n), dispatcher)
+                skip = true
+            elseif action == ("moveToWorkspace" .. n) and key == default_number_combo(n, true) then
+                hl.bind("SUPER + SHIFT + " .. number_row_code(n), dispatcher)
+                skip = true
+            end
+        end
+        if not skip then
+            hl.bind(key, dispatcher)
+        end
     end
-end
-
--- German: Shift+1 is "!" so SUPER+SHIFT+1 may miss the number row.
--- Physical keycodes 10–19 are the same on de/us.
-local layout = tostring(config.value("input.kbLayout", "us") or "us")
-if layout == "de" or layout:find("^de,") or layout:find(",de") then
-    for n = 1, 9 do
-        hl.bind("SUPER + code:" .. tostring(9 + n), hl.dsp.focus({ workspace = n }))
-        hl.bind("SUPER + SHIFT + code:" .. tostring(9 + n), move_ws(n))
-    end
-    hl.bind("SUPER + code:19", hl.dsp.focus({ workspace = 10 }))
-    hl.bind("SUPER + SHIFT + code:19", move_ws(10))
 end
 
 -- Power menu (SUPER+M) needs the shell. This always ends the compositor.

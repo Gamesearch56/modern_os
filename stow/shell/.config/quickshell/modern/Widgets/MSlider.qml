@@ -18,6 +18,22 @@ Item {
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.slider.thumb + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
+    activeFocusOnTab: root.enabled
+    Accessible.role: Accessible.Slider
+    Accessible.value: root.value
+    Accessible.onIncreaseAction: root.moved(Math.min(root.to, root.value + root._span / 20))
+    Accessible.onDecreaseAction: root.moved(Math.max(root.from, root.value - root._span / 20))
+
+    Keys.onPressed: (event) => {
+        const step = root._span / 20;
+        if (event.key === Qt.Key_Left || event.key === Qt.Key_Down) {
+            root.moved(Math.max(root.from, root.value - step));
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Up) {
+            root.moved(Math.min(root.to, root.value + step));
+            event.accepted = true;
+        }
+    }
 
     readonly property real _span: Math.max(0.0001, root.to - root.from)
     readonly property real _ratio: Math.max(0, Math.min(1, (root.value - root.from) / root._span))
@@ -37,7 +53,7 @@ Item {
                 anchors.right: parent.right
                 height: Tokens.slider.trackHeight
                 radius: Tokens.radius.full
-                color: Colors.color.surfaceVariant
+                color: Colors.color.primaryContainer
             }
 
             Rectangle {
@@ -55,6 +71,8 @@ Item {
                 height: Tokens.slider.thumb
                 radius: Tokens.radius.full
                 color: Colors.color.primary
+                border.width: Tokens.stroke.hairline
+                border.color: Colors.color.onPrimary
                 anchors.verticalCenter: track.verticalCenter
                 x: (track.width - width) * root._ratio
             }
@@ -63,7 +81,10 @@ Item {
                 anchors.fill: parent
                 enabled: root.enabled
                 cursorShape: Qt.PointingHandCursor
-                onPressed: (mouse) => root._setFromX(mouse.x)
+                onPressed: (mouse) => {
+                    root.forceActiveFocus();
+                    root._setFromX(mouse.x);
+                }
                 onPositionChanged: (mouse) => {
                     if (pressed)
                         root._setFromX(mouse.x);
@@ -78,6 +99,10 @@ Item {
             color: Colors.color.onSurfaceVariant
             Layout.preferredWidth: Tokens.spacing.xxl + Tokens.spacing.sm
         }
+    }
+
+    MFocusRing {
+        radius: Tokens.radius.full
     }
 
     function _setFromX(px: real) {

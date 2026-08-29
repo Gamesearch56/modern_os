@@ -1,6 +1,1 @@
-{
-  "id": "tray",
-  "key": "bar.tray",
-  "defaultEnabled": true,
-  "services": []
-}
+{"id":"tray","key":"bar.tray","defaultEnabled":true,"bubble":true,"services":[]}

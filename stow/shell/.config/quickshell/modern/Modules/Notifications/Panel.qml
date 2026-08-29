@@ -7,6 +7,15 @@ import "../../Services"
 Item {
     id: root
 
+    readonly property bool _barBottom: Config.bar.position === "bottom"
+    readonly property bool _barLeft: Config.bar.position === "left"
+    readonly property bool _barRight: Config.bar.position === "right"
+    readonly property real _barReserve: {
+        const h = Config.bar.height || Tokens.spacing.xxl;
+        const edge = Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0;
+        return h + edge * 2;
+    }
+
     Binding {
         target: SystemStats
         property: "watching"
@@ -19,35 +28,29 @@ Item {
         value: Notifications.panelOpen
     }
 
-    Rectangle {
+    MouseArea {
         anchors.fill: parent
-        color: Colors.color.scrim
-        opacity: Notifications.panelOpen ? Tokens.overlay.scrim : 0
-        MouseArea {
-            anchors.fill: parent
-            onClicked: Notifications.hide()
-        }
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Motion.medium()
-                easing.bezierCurve: Motion.easingEmphasizedDecelerate
-            }
-        }
+        onClicked: Notifications.hide()
     }
 
-    MCard {
+    Rectangle {
         id: card
-        level: 3
-        width: Math.min(Tokens.spacing.xxl * 12, parent.width - Tokens.spacing.lg)
+        width: Tokens.spacing.xxl * 16
         implicitHeight: inner.implicitHeight + Tokens.spacing.md * 2
-        height: Math.min(implicitHeight, parent.height - Tokens.spacing.xl * 2)
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.margins: Tokens.spacing.md
+        height: Math.min(implicitHeight, parent.height - root._barReserve - Tokens.spacing.xl)
+        color: Colors.color.surface
+        radius: Tokens.radius.medium
+        border.color: Colors.color.outlineVariant
+        border.width: Tokens.stroke.hairline
+        clip: true
         opacity: Config.design.transparency ?? 0.85
-        radius: Tokens.radius.large
-        borderWidth: cardHover.hovered ? 2 : 1
-        borderColor: cardHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
+        anchors.right: !root._barLeft ? parent.right : undefined
+        anchors.left: root._barLeft ? parent.left : undefined
+        anchors.rightMargin: root._barRight ? (root._barReserve + Tokens.spacing.sm) : (Config.bar.endGap ?? Tokens.spacing.md)
+        anchors.leftMargin: root._barLeft ? (root._barReserve + Tokens.spacing.sm) : (Config.bar.endGap ?? Tokens.spacing.md)
+        y: root._barBottom
+            ? (parent.height - root._barReserve - height - Tokens.spacing.sm)
+            : (root._barReserve + Tokens.spacing.sm)
         scale: Motion.overlayScale(Notifications.panelOpen)
 
         Behavior on scale {
@@ -56,20 +59,16 @@ Item {
                 easing.bezierCurve: Motion.easingEmphasizedDecelerate
             }
         }
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Motion.medium()
-                easing.bezierCurve: Motion.easingEmphasizedDecelerate
-            }
-        }
 
-        HoverHandler {
-            id: cardHover
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {}
         }
 
         ColumnLayout {
             id: inner
             anchors.fill: parent
+            anchors.margins: Tokens.spacing.md
             spacing: Tokens.spacing.md
 
             Header {}
@@ -79,9 +78,11 @@ Item {
 
             RowLayout {
                 Layout.fillWidth: true
-                MSectionHeader {
+                MText {
                     key: "bar.notifications"
-                    styleName: "titleSmall"
+                    styleName: "labelSmall"
+                    color: Colors.color.onSurfaceVariant
+                    font.capitalization: Font.AllUppercase
                     Layout.fillWidth: true
                 }
                 MButton {
@@ -92,41 +93,47 @@ Item {
                 }
             }
 
-            ListView {
-                id: list
-                visible: Notifications.list.length > 0
+            MPane {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.min(contentHeight, Tokens.spacing.xxl * 8)
-                clip: true
-                spacing: Tokens.spacing.xs
-                model: Notifications.list
-                delegate: MListItem {
-                    required property var modelData
-                    width: list.width
-                    iconName: "dialog-information"
-                    imageSource: {
-                        const img = modelData.image || "";
-                        if (!img.length)
-                            return "";
-                        return String(img).indexOf("://") !== -1 ? String(img) : ("file://" + img);
-                    }
-                    titleValue: modelData.summary || modelData.appName || ""
-                    subtitleValue: modelData.body || ""
-                    MIconButton {
-                        close: true
-                        iconName: "window-close"
-                        size: Tokens.spacing.xl
-                        onClicked: Notifications.dismiss(modelData)
+                Layout.preferredHeight: list.visible
+                    ? Math.min(list.contentHeight + Tokens.spacing.sm * 2, Tokens.spacing.xxl * 8)
+                    : Tokens.spacing.xxl * 4
+
+                ListView {
+                    id: list
+                    visible: Notifications.list.length > 0
+                    anchors.fill: parent
+                    clip: true
+                    spacing: Tokens.spacing.xxs
+                    model: Notifications.list
+                    delegate: MListItem {
+                        required property var modelData
+                        width: list.width
+                        iconName: "dialog-information-symbolic"
+                        imageSource: {
+                            const img = modelData.image || "";
+                            if (!img.length)
+                                return "";
+                            return String(img).indexOf("://") !== -1 ? String(img) : ("file://" + img);
+                        }
+                        titleValue: modelData.summary || modelData.appName || ""
+                        subtitleValue: modelData.body || ""
+                        MIconButton {
+                            close: true
+                            iconName: "window-close"
+                            key: "bar.close"
+                            size: Tokens.spacing.xl
+                            onClicked: Notifications.dismiss(modelData)
+                        }
                     }
                 }
-            }
 
-            MEmptyState {
-                visible: Notifications.list.length === 0
-                Layout.fillWidth: true
-                Layout.preferredHeight: Tokens.spacing.xxl * 4
-                iconName: "preferences-system-notifications"
-                titleKey: "notifications.empty"
+                MEmptyState {
+                    visible: Notifications.list.length === 0
+                    anchors.fill: parent
+                    iconName: "preferences-system-notifications-symbolic"
+                    titleKey: "notifications.empty"
+                }
             }
         }
     }

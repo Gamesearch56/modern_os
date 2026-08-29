@@ -36,33 +36,12 @@ Scope {
                 anchors.margins: Tokens.spacing.md
                 spacing: Tokens.spacing.md
 
-                RowLayout {
+                MWindowChrome {
                     Layout.fillWidth: true
-                    spacing: Tokens.spacing.md
-
-                    ColumnLayout {
-                        Layout.preferredWidth: Tokens.spacing.xxl * 8
-                        spacing: Tokens.spacing.xs
-
-                        MText {
-                            key: "settings.title"
-                            styleName: "headlineSmall"
-                        }
-
-                        MText {
-                            value: User.displayName
-                            styleName: "bodySmall"
-                            color: Colors.color.onSurfaceVariant
-                        }
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    MIconButton {
-                        close: true
-                        iconName: "window-close"
-                        onClicked: Settings.close()
-                    }
+                    titleKey: "settings.title"
+                    subtitleValue: User.displayName
+                    titleColumnWidth: Tokens.spacing.xxl * 9
+                    onClosed: Settings.close()
                 }
 
                 RowLayout {
@@ -70,15 +49,12 @@ Scope {
                     Layout.fillHeight: true
                     spacing: Tokens.spacing.lg
 
-                    Rectangle {
+                    MPane {
                         Layout.preferredWidth: Tokens.spacing.xxl * 9
                         Layout.fillHeight: true
-                        radius: Tokens.radius.medium
-                        color: Colors.color.surfaceContainer
 
                         Nav {
                             anchors.fill: parent
-                            anchors.margins: Tokens.spacing.sm
                             catalog: catalog
                         }
                     }
@@ -119,7 +95,24 @@ Scope {
 
             Shortcut {
                 sequence: "Escape"
-                onActivated: Settings.close()
+                onActivated: {
+                    const it = sectionLoader.item;
+                    if (it) {
+                        if (it.createOpen) {
+                            it.createOpen = false;
+                            return;
+                        }
+                        if (it.editorOpen) {
+                            it.editorOpen = false;
+                            return;
+                        }
+                        if (it.dialogDevice) {
+                            it.dialogDevice = null;
+                            return;
+                        }
+                    }
+                    Settings.close();
+                }
             }
         }
     }

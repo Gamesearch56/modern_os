@@ -9,7 +9,7 @@ Item {
 
     MIconButton {
         anchors.centerIn: parent
-        iconName: "preferences-system"
+        iconName: "preferences-system-symbolic"
         key: "bar.settings"
         onClicked: Notifications.toggle()
     }

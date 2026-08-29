@@ -91,6 +91,26 @@ ColumnLayout {
         }
     }
 
+    MSectionHeader { key: "settings.fields.weatherLocation" }
+    MField {
+        labelKey: "settings.fields.weatherLocation"
+        hintKey: "settings.hints.weatherLocation"
+        MTextField {
+            text: Config.widgets?.weather?.manualLocation ?? ""
+            placeholderKey: "settings.weatherLocationPlaceholder"
+            onAccepted: ConfigWrite.set("widgets.weather.manualLocation", text)
+        }
+    }
+    MSegmented {
+        Layout.fillWidth: true
+        value: Config.widgets?.weather?.units ?? "metric"
+        model: [
+            { value: "metric", titleKey: "settings.weatherMetric" },
+            { value: "imperial", titleKey: "settings.weatherImperial" }
+        ]
+        onSelected: (v) => ConfigWrite.set("widgets.weather.units", v)
+    }
+
     MSectionHeader { key: "settings.fields.barLeft" }
     Repeater {
         model: root.catalog

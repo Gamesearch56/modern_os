@@ -55,7 +55,10 @@ Add it to `Widgets/qmldir`.
 **A new bar widget.** Create a directory under
 `Modules/Bar/widgets/<id>/` with `Widget.qml` (the mini bar representation)
 and optionally `Panel.qml` (the popup). Add a `widget.json` descriptor
-(`id`, translation key, default enabled, required Services). Add the id to
+(`id`, translation key, default enabled, required Services). Set
+`"bubble": true` if the widget should be its own pill (launcher, media,
+volume) instead of grouping with neighbours. Wi-Fi/Bluetooth and
+battery/control/power are the grouped clusters. Add the id to
 `bar.left` / `bar.center` / `bar.right` in `config.default.json`. Nothing
 else changes — no central switch statement to edit.
 

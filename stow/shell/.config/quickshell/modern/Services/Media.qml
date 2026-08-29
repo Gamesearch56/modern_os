@@ -77,6 +77,12 @@ Singleton {
         root.setActive(root.active);
     }
 
+    function _isSpotify(player: var): bool {
+        const ident = String(player?.identity || "").toLowerCase();
+        const dbus = String(player?.dbusName || "").toLowerCase();
+        return ident.indexOf("spotify") !== -1 || dbus.indexOf("spotify") !== -1;
+    }
+
     function _pickActive(): var {
         const vals = Mpris.players.values;
         if (!vals || vals.length === 0)
@@ -86,8 +92,7 @@ Singleton {
         let playingAny = null;
         for (let i = 0; i < vals.length; i++) {
             const p = vals[i];
-            const ident = String(p.identity || p.dbusName || "").toLowerCase();
-            const isSpotify = ident.indexOf("spotify") !== -1;
+            const isSpotify = root._isSpotify(p);
             if (isSpotify)
                 spotify = p;
             const playing = !!p.isPlaying;
@@ -102,6 +107,6 @@ Singleton {
             return playingAny;
         if (spotify)
             return spotify;
-        return vals[0];
+        return null;
     }
 }

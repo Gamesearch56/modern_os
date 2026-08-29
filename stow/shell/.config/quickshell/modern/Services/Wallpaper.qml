@@ -106,7 +106,7 @@ Singleton {
                 return;
             }
             root.currentPath = path;
-            Quickshell.execDetached([root.home + "/modern_dotfile/scripts/theme-apply.sh", "--wallpaper", path]);
+            Theme.apply(path, "");
             Quickshell.execDetached([root.home + "/modern_dotfile/scripts/wallpaper-sync.sh", path]);
             root.pickerOpen = false;
             Logger.info("Wallpaper", "applied " + path);

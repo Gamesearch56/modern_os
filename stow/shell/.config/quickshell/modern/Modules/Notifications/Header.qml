@@ -1,6 +1,6 @@
+import Quickshell
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
@@ -15,22 +15,23 @@ RowLayout {
     }
 
     ColumnLayout {
+        spacing: Tokens.spacing.xxs
         Layout.fillWidth: true
-        spacing: 0
 
         MText {
             value: DateTime.formatTime(clock.date, Config.language.timeFormat || "HH:mm", false)
-            styleName: "headlineSmall"
+            styleName: "headlineMedium"
         }
+
         MText {
             value: DateTime.formatDate(clock.date, Config.language.dateFormat || "DD.MM.YYYY")
-            styleName: "bodySmall"
+            styleName: "bodyMedium"
             color: Colors.color.onSurfaceVariant
         }
     }
 
     MIconButton {
-        iconName: "preferences-system"
+        iconName: "preferences-system-symbolic"
         key: "bar.settings"
         onClicked: {
             Notifications.hide();
@@ -46,11 +47,17 @@ RowLayout {
         }
     }
     MIconButton {
-        iconName: "input-keyboard"
+        iconName: "input-keyboard-symbolic"
         key: "cheatsheet.title"
         onClicked: {
             Notifications.hide();
             Cheatsheet.toggle();
         }
+    }
+    MIconButton {
+        close: true
+        iconName: "window-close"
+        key: "bar.close"
+        onClicked: Notifications.hide()
     }
 }

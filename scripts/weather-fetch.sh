@@ -24,8 +24,10 @@ MODE="$(jq -r '.widgets.weather.locationMode // "auto"' <<<"$CFG")"
 MANUAL="$(jq -r '.widgets.weather.manualLocation // ""' <<<"$CFG")"
 UNITS="$(jq -r '.widgets.weather.units // "metric"' <<<"$CFG")"
 TEMP_UNIT="celsius"
+WIND_UNIT="kmh"
 if [ "$UNITS" = "imperial" ]; then
     TEMP_UNIT="fahrenheit"
+    WIND_UNIT="mph"
 fi
 
 curl_json() {
@@ -60,4 +62,4 @@ if [ -z "${lat:-}" ] || [ -z "${lon:-}" ] || [ "$lat" = "null" ] || [ "$lon" = "
     exit 1
 fi
 
-curl_json "https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&temperature_unit=${TEMP_UNIT}"
+curl_json "https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,relative_humidity_2m,wind_speed_10m,apparent_temperature&temperature_unit=${TEMP_UNIT}&wind_speed_unit=${WIND_UNIT}"

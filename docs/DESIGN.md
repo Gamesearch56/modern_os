@@ -83,10 +83,13 @@ token-only, listed in `Widgets/qmldir`):
 `MSearchField`, `MKeycap`, `MTable`, `MEmptyState`, `MDivider`,
 `MImageTile`, `MAvatar`.
 
-Chrome contract: bar groups are `BarIsland` pills (`surfaceContainer`,
-`radius.full`, equal `Tokens.spacing.sm` vertical margin). Menus are
-`MOverlay` / `MPopup` (title row, close, `MDivider`, hover border
-`primary`). Settings uses that overlay; section bodies are
+Chrome contract: bar **bubbles** are `BarIsland` pills (`surfaceContainer`,
+primary tint, `radius.full`, hover state-layer, equal `Tokens.spacing.sm`
+vertical margin). Each widget is its own pill except the wifi/bluetooth
+cluster and the battery/control/power cluster. Workspace and taskbar
+chips use the same filled-primary nav as Settings (`Chrome.navSelected`).
+Menus are `MOverlay` / `MPopup` (title row, close, `MDivider`, hover
+border `primary`). Settings uses that overlay; section bodies are
 `MSectionHeader` + `MField` rows. Empty = `MEmptyState` centered.
 Destructive = `error`. Overlay enter/exit only through `Motion.overlay*`
 (`docs/MOTION.md`).
@@ -97,15 +100,14 @@ Transparent `PanelWindow` with **islands**, not one full-width pill.
 Equal top/bottom margin (`Tokens.spacing.sm` when floating). Defaults in
 `config.default.json`:
 
-- **Left island:** launcher, workspaces, media (media only while an MPRIS
-  player exists)
-- **Taskbar island:** pulled out of the left list; shown when that
-  workspace has windows
-- **Center island:** clock
-- **Right island:** network, bluetooth, audio, power, settings (gear opens
-  the control center, not the Settings app)
+- **Left:** own bubbles for launcher, AI, workspaces, media (only while
+  something is playing, or Spotify is open), and taskbar
+- **Center:** clock bubble
+- **Right:** own bubbles for weather, connectivity (wifi + bluetooth),
+  and audio; battery (on battery only) + control-center gear + power
+  share one pill. Gear opens the control center, not the Settings app
 
-Tray, weather, mic, performance, vpn, kdeconnect, and the notification
+Tray, mic, performance, vpn, kdeconnect, and the notification
 bell stay available in Settings → Widgets. See `docs/WIDGETS.md`.
 
 ## Cross-toolkit consistency
@@ -115,8 +117,10 @@ bell stay available in Settings → Widgets. See `docs/WIDGETS.md`.
   from `primary` (not hardcoded `#FFFFFF` as the old Wallust setup did).
 - **Qt / Dolphin** — `kdeglobals` + `modern.colors` with full KColorScheme
   roles, Fusion via qt6ct, and generated `qt6ct/qss/modern.qss` (radii and
-  fonts patched after matugen from `config.json`). Restart Dolphin after
-  `theme-apply.sh`. No `QT_QPA_PLATFORM=xcb`.
+  fonts patched after matugen from `config.json`). SUPER+E launches Dolphin
+  through `scripts/modern-launch` so `QT_QPA_PLATFORMTHEME=qt6ct` actually
+  reaches the process (Hyprland `hl.env` does not stick after reload).
+  Restart Dolphin after `theme-apply.sh`. No `QT_QPA_PLATFORM=xcb`.
 - **hyprpolkitagent** — same qt6ct palette (QML `SystemPalette`) plus
   `~/.config/hypr/application-style.conf` mapped from
   `design.cornerRounding` / `motion.scale`. Not QSS. See `docs/THEMING.md`.

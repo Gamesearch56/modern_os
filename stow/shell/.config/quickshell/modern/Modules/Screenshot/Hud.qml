@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons"
@@ -6,7 +7,9 @@ import "../../Widgets"
 import "../../Services"
 
 // One region overlay per output. Mouse coords are local to this
-// surface; grim wants Hyprland layout coords, so we add the monitor origin.
+// surface. screenshot.sh adds hyprctl's monitor x/y so grim -g is
+// compositor-global (grim forbids combining -o and -g).
+// Namespace is not "quickshell" so decoration.blur does not frost the crop.
 PanelWindow {
     id: root
 
@@ -20,6 +23,7 @@ PanelWindow {
     anchors.bottom: true
     exclusionMode: ExclusionMode.Ignore
     focusable: Screenshot.hudOpen
+    WlrLayershell.namespace: "modern-screenshot"
 
     Item {
         id: hud
@@ -30,21 +34,52 @@ PanelWindow {
         property real x1: 0
         property real y1: 0
         property bool dragging: false
+        readonly property real selX: Math.min(hud.x0, hud.x1)
+        readonly property real selY: Math.min(hud.y0, hud.y1)
+        readonly property real selW: Math.abs(hud.x1 - hud.x0)
+        readonly property real selH: Math.abs(hud.y1 - hud.y0)
 
-        function origin() {
-            const mon = Hypr.monitorForScreen(root.screen);
-            if (mon)
-                return ({ x: Number(mon.x) || 0, y: Number(mon.y) || 0 });
-            return ({
-                x: Number(root.screen?.x) || 0,
-                y: Number(root.screen?.y) || 0
-            });
+        function outputName() {
+            const scr = root.modelData || root.screen;
+            const mon = Hypr.monitorForScreen(scr);
+            if (mon && mon.name)
+                return String(mon.name);
+            if (scr && scr.name)
+                return String(scr.name);
+            return "";
         }
 
-        Rectangle {
-            anchors.fill: parent
+        component DimBand: Rectangle {
             color: Colors.color.scrim
             opacity: Tokens.overlay.scrim
+        }
+
+        DimBand {
+            x: 0
+            y: 0
+            width: hud.width
+            height: hud.dragging ? hud.selY : hud.height
+        }
+        DimBand {
+            visible: hud.dragging
+            x: 0
+            y: hud.selY
+            width: hud.selX
+            height: hud.selH
+        }
+        DimBand {
+            visible: hud.dragging
+            x: hud.selX + hud.selW
+            y: hud.selY
+            width: hud.width - hud.selX - hud.selW
+            height: hud.selH
+        }
+        DimBand {
+            visible: hud.dragging
+            x: 0
+            y: hud.selY + hud.selH
+            width: hud.width
+            height: hud.height - hud.selY - hud.selH
         }
 
         MouseArea {
@@ -64,28 +99,27 @@ PanelWindow {
             }
             onReleased: {
                 hud.dragging = false;
-                const x = Math.round(Math.min(hud.x0, hud.x1));
-                const y = Math.round(Math.min(hud.y0, hud.y1));
-                const w = Math.round(Math.abs(hud.x1 - hud.x0));
-                const h = Math.round(Math.abs(hud.y1 - hud.y0));
+                const x = Math.round(hud.selX);
+                const y = Math.round(hud.selY);
+                const w = Math.round(hud.selW);
+                const h = Math.round(hud.selH);
                 if (w < Tokens.spacing.xxs || h < Tokens.spacing.xxs) {
                     Screenshot.cancelHud();
                     return;
                 }
-                const o = hud.origin();
                 Screenshot.finishRegion(
-                    Math.round(o.x + x) + "," + Math.round(o.y + y)
-                    + " " + w + "x" + h
+                    x + "," + y + " " + w + "x" + h,
+                    hud.outputName()
                 );
             }
         }
 
         Rectangle {
             visible: hud.dragging
-            x: Math.min(hud.x0, hud.x1)
-            y: Math.min(hud.y0, hud.y1)
-            width: Math.abs(hud.x1 - hud.x0)
-            height: Math.abs(hud.y1 - hud.y0)
+            x: hud.selX
+            y: hud.selY
+            width: hud.selW
+            height: hud.selH
             color: "transparent"
             border.color: Colors.color.primary
             border.width: Tokens.spacing.xxs

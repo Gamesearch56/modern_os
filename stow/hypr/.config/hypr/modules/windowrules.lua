@@ -89,9 +89,9 @@ apply({
 
 local overlay_windows = {
     { name = "modern-wallpaper", title = "modern.wallpaper", size = { 920, 640 } },
-    { name = "modern-cheatsheet", title = "modern.cheatsheet", size = { 980, 680 } },
-    { name = "modern-powermenu", title = "modern.powermenu", size = { 420, 560 } },
-    { name = "modern-launcher", title = "modern.launcher", size = { 560, 520 } },
+    { name = "modern-cheatsheet", title = "modern.cheatsheet", size = { 1040, 720 } },
+    { name = "modern-powermenu", title = "modern.powermenu", size = { 800, 560 } },
+    { name = "modern-launcher", title = "modern.launcher", size = { 1040, 720 } },
     { name = "modern-overview", title = "modern.overview", size = { 920, 640 } },
 }
 

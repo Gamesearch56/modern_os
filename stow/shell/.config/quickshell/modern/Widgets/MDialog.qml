@@ -23,6 +23,14 @@ Item {
 
     visible: root.open || scrim.opacity > 0
     z: 100
+    activeFocusOnTab: root.open
+    Accessible.role: Accessible.Dialog
+    Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey) : root.titleValue
+
+    onOpenChanged: {
+        if (root.open)
+            root.forceActiveFocus();
+    }
 
     Rectangle {
         id: scrim

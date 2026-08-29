@@ -69,6 +69,24 @@ Singleton {
         };
     }
 
+    function categoryIds(): var {
+        return ["applications", "system", "utilities", "screenshots", "windowManagement", "workspaces"];
+    }
+
+    function categories(filter: string): var {
+        return root._pack(root.rows(filter), root.categoryIds());
+    }
+
+    function itemsFor(category: string, filter: string): var {
+        const all = root.rows(filter);
+        const out = [];
+        for (let i = 0; i < all.length; i++) {
+            if (all[i].category === category)
+                out.push(all[i]);
+        }
+        return out;
+    }
+
     function _pack(all: var, ids: var): var {
         const cats = [];
         for (let i = 0; i < ids.length; i++) {

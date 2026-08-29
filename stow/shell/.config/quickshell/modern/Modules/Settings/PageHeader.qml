@@ -1,45 +1,29 @@
-// Settings page chrome: caps group, title, user, close.
+// Settings page chrome: group cap + section title. Close lives on the
+// window header once — a second X here stacked with hyprbars/SSD.
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
 
-RowLayout {
+ColumnLayout {
     id: root
 
     property var catalog
 
-    spacing: Tokens.spacing.sm
+    spacing: Tokens.spacing.xxs
     Layout.fillWidth: true
 
-    ColumnLayout {
-        Layout.fillWidth: true
-        spacing: Tokens.spacing.xxs
-
-        MText {
-            key: "settings.nav." + (root.catalog.group(Settings.sectionId) || "session")
-            styleName: "labelSmall"
-            color: Colors.color.onSurfaceVariant
-            font.capitalization: Font.AllUppercase
-        }
-
-        MText {
-            key: "settings.sections." + Settings.sectionId
-            styleName: "headlineSmall"
-            Layout.fillWidth: true
-        }
+    MText {
+        key: "settings.nav." + (root.catalog.group(Settings.sectionId) || "session")
+        styleName: "labelSmall"
+        color: Colors.color.onSurfaceVariant
+        font.capitalization: Font.AllUppercase
     }
 
     MText {
-        value: User.displayName
-        styleName: "labelLarge"
-        color: Colors.color.onSurfaceVariant
-    }
-
-    MIconButton {
-        close: true
-        iconName: "window-close"
-        onClicked: Settings.close()
+        key: "settings.sections." + Settings.sectionId
+        styleName: "headlineSmall"
+        Layout.fillWidth: true
     }
 }

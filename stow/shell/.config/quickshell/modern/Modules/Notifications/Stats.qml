@@ -4,34 +4,63 @@ import "../../Commons"
 import "../../Widgets"
 import "../../Services"
 
-RowLayout {
+ColumnLayout {
     Layout.fillWidth: true
-    spacing: Tokens.spacing.sm
+    spacing: Tokens.spacing.xxs
 
     MText {
+        key: "bar.performance"
         styleName: "labelSmall"
+        color: Colors.color.onSurfaceVariant
+        font.capitalization: Font.AllUppercase
         Layout.fillWidth: true
-        value: I18n.t("performance.cpu") + " " + Math.round(SystemStats.cpuPercent) + "%"
     }
-    MText {
-        styleName: "labelSmall"
+
+    MListItem {
         Layout.fillWidth: true
-        value: I18n.t("performance.ram") + " " + Math.round(SystemStats.ramPercent) + "%"
+        titleKey: "performance.cpu"
+        MText {
+            value: Math.round(SystemStats.cpuPercent) + "%"
+            styleName: "labelLarge"
+            familyRole: "monospace"
+        }
     }
-    MText {
-        styleName: "labelSmall"
+    MListItem {
         Layout.fillWidth: true
-        value: I18n.t("performance.disk") + " " + Math.round(SystemStats.diskPercent) + "%"
+        titleKey: "performance.ram"
+        MText {
+            value: Math.round(SystemStats.ramPercent) + "%"
+            styleName: "labelLarge"
+            familyRole: "monospace"
+        }
     }
-    MText {
-        styleName: "labelSmall"
+    MListItem {
         Layout.fillWidth: true
-        value: I18n.t("performance.gpu") + " " + Math.round(SystemStats.gpuPercent) + "%"
+        titleKey: "performance.disk"
+        MText {
+            value: Math.round(SystemStats.diskPercent) + "%"
+            styleName: "labelLarge"
+            familyRole: "monospace"
+        }
     }
-    MText {
+    MListItem {
+        visible: Config.widgets.performance?.showGpu ?? true
+        Layout.fillWidth: true
+        titleKey: "performance.gpu"
+        MText {
+            value: Math.round(SystemStats.gpuPercent) + "%"
+            styleName: "labelLarge"
+            familyRole: "monospace"
+        }
+    }
+    MListItem {
         visible: SystemStats.fanRpm > 0
-        styleName: "labelSmall"
         Layout.fillWidth: true
-        value: I18n.t("performance.fan") + " " + SystemStats.fanRpm
+        titleKey: "performance.fan"
+        MText {
+            value: String(SystemStats.fanRpm)
+            styleName: "labelLarge"
+            familyRole: "monospace"
+        }
     }
 }

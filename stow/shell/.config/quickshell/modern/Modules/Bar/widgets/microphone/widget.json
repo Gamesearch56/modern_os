@@ -1,1 +1,1 @@
-{"id":"microphone","key":"bar.microphone","defaultEnabled":true,"services":["Audio"]}
+{"id":"microphone","key":"bar.microphone","defaultEnabled":true,"bubble":true,"services":["Audio"]}

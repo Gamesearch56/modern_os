@@ -100,7 +100,7 @@ Singleton {
                 property JsonObject perMonitor: JsonObject {
                     property bool enabled: true
                 }
-                property list<string> left: ["launcher", "ai", "workspaces", "media", "tray"]
+                property list<string> left: ["launcher", "ai", "workspaces", "media", "taskbar"]
                 property list<string> center: ["clock"]
                 property list<string> right: ["weather", "connectivity", "audio", "battery", "settings", "power"]
             }

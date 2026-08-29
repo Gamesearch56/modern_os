@@ -1,26 +1,31 @@
+[FoldersPanel]
+Visible=false
+
 [General]
+FilterBar=false
+GlobalViewProps=true
+LockPanels=true
+ShowFullPathInTitlebar=true
+ShowSelectionToggle=false
+ShowStatusBar=0
 Version=202
-MenuBar=Disabled
-ShowFullPathInTitlebar=false
-ShowStatusBar=true
-ViewProps_Icons=1
-ViewProps_PreviewSize=96
 
-[MainWindow]
-ToolBarsMovable=Disabled
-
-[KFileDialog Settings]
-Places Icons Auto-resize=false
-Places Icons Static Size=24
-
-[PlacesPanel]
-IconSize=24
+[IconsMode]
+IconSize=80
+PreviewSize=96
 
 [InformationPanel]
 Visible=false
 
-[FoldersPanel]
-Visible=false
+[KFileDialog Settings]
+Places Icons Auto-resize=false
+Places Icons Static Size=32
+
+[MainWindow]
+MenuBar=Disabled
+
+[PlacesPanel]
+IconSize=32
 
 [TerminalPanel]
 Visible=false

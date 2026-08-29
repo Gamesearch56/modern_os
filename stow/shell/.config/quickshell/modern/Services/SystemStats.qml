@@ -24,7 +24,7 @@ Singleton {
 
     Process {
         id: proc
-        command: ["sh", "-c", "grep -m1 '^cpu ' /proc/stat; awk '/MemTotal/{t=$2}/MemAvailable/{a=$2} END{print t,a}' /proc/meminfo; df -P -k / | awk 'NR==2{print $2,$3}'; (cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null || nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null || echo 0) | head -1; (cat /sys/class/hwmon/hwmon*/fan*_input 2>/dev/null || echo 0) | awk 'NR==1{print $1+0}'"]
+        command: ["sh", "-c", "grep -m1 '^cpu ' /proc/stat; awk '/MemTotal/{t=$2}/MemAvailable/{a=$2} END{print t,a}' /proc/meminfo; df -P -k / | awk 'NR==2{print $2,$3}'; (cat /sys/class/drm/card*/device/gpu_busy_percent /sys/class/drm/card*/gt/gt0/busy_percent 2>/dev/null | head -1; nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null; echo 0) | awk 'NF{print $1; exit}'; (cat /sys/class/hwmon/hwmon*/fan*_input 2>/dev/null || echo 0) | awk 'NR==1{print $1+0}'"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parse(this.text)

@@ -6,52 +6,53 @@ import "../../Services"
 
 ColumnLayout {
     Layout.fillWidth: true
-    spacing: Tokens.spacing.sm
+    spacing: Tokens.spacing.xxs
 
-    GridLayout {
+    readonly property string _remaining: {
+        const s = Alarm.remainingSec;
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return m + ":" + (r < 10 ? "0" : "") + r;
+    }
+
+    MListItem {
         Layout.fillWidth: true
-        columns: 2
-        columnSpacing: Tokens.spacing.sm
-        rowSpacing: Tokens.spacing.sm
-
-        MButton {
-            kind: "tonal"
-            key: "bar.network"
-            iconName: "network-wireless"
-            fillWidth: true
-            onClicked: {
-                Notifications.hide();
-                Settings.openAt("network", "");
-            }
+        iconName: "network-wireless-symbolic"
+        titleKey: "bar.network"
+        onClicked: {
+            Notifications.hide();
+            Settings.openAt("network", "");
         }
-        MButton {
-            kind: "tonal"
-            key: "bar.bluetooth"
-            iconName: "bluetooth-active"
-            fillWidth: true
-            onClicked: {
-                Notifications.hide();
-                Settings.openAt("bluetooth", "");
-            }
+    }
+    MListItem {
+        Layout.fillWidth: true
+        iconName: "bluetooth-symbolic"
+        titleKey: "bar.bluetooth"
+        onClicked: {
+            Notifications.hide();
+            Settings.openAt("bluetooth", "");
         }
-        MButton {
-            kind: Notifications.dnd ? "filled" : "tonal"
-            key: "notifications.dnd"
-            iconName: "notifications-disabled"
-            fillWidth: true
-            onClicked: Notifications.toggleDnd()
+    }
+    MListItem {
+        Layout.fillWidth: true
+        iconName: "notifications-disabled-symbolic"
+        titleKey: "notifications.dnd"
+        onClicked: Notifications.toggleDnd()
+        MSwitch {
+            checked: Notifications.dnd
+            onToggled: (v) => Notifications.dnd = v
         }
-        MButton {
-            kind: Alarm.running ? "filled" : "tonal"
-            key: Alarm.running ? "alarm.running" : "alarm.title"
-            iconName: "alarm-symbolic"
-            fillWidth: true
-            onClicked: {
-                if (Alarm.running)
-                    Alarm.cancel();
-                else
-                    Alarm.toggleDialog();
-            }
+    }
+    MListItem {
+        Layout.fillWidth: true
+        iconName: "alarm-symbolic"
+        titleKey: Alarm.running ? "alarm.running" : "alarm.title"
+        subtitleValue: Alarm.running ? _remaining : ""
+        onClicked: {
+            if (Alarm.running)
+                Alarm.cancel();
+            else
+                Alarm.toggleDialog();
         }
     }
 
@@ -61,7 +62,7 @@ ColumnLayout {
         spacing: Tokens.spacing.sm
 
         MIconButton {
-            iconName: "list-remove"
+            iconName: "list-remove-symbolic"
             onClicked: Alarm.durationMin = Math.max(1, Alarm.durationMin - 1)
         }
         MTextField {
@@ -70,7 +71,7 @@ ColumnLayout {
             onAccepted: Alarm.durationMin = Math.max(1, Number(text) || 1)
         }
         MIconButton {
-            iconName: "list-add"
+            iconName: "list-add-symbolic"
             onClicked: Alarm.durationMin = Alarm.durationMin + 1
         }
         MButton {
@@ -80,11 +81,10 @@ ColumnLayout {
         }
     }
 
-    MButton {
-        kind: "tonal"
-        key: "screenshot.capture"
-        iconName: "camera-photo"
-        fillWidth: true
+    MListItem {
+        Layout.fillWidth: true
+        iconName: "camera-photo-symbolic"
+        titleKey: "screenshot.capture"
         onClicked: Screenshot.pick("region")
     }
 }

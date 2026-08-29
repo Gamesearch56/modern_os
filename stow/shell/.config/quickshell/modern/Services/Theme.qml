@@ -12,6 +12,7 @@ Singleton {
     property var slugs: []
     property string lastPath: ""
     property string lastError: ""
+    property string _pendingSlug: ""
 
     signal created(string path)
 
@@ -39,6 +40,9 @@ Singleton {
                     root.lastPath = t;
                     root.created(t);
                     listProc.running = true;
+                    if (root._pendingSlug.length > 0)
+                        root.apply("", root._pendingSlug);
+                    root._pendingSlug = "";
                 }
             }
         }
@@ -60,7 +64,7 @@ Singleton {
     function create(name: string) {
         const slug = String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
         if (!/^[a-z0-9-]+$/.test(slug)) {
-            Logger.error("Theme", "invalid theme slug");
+            Logger.error("Theme", I18n.t("theme.invalidSlug"));
             return;
         }
         const body = JSON.stringify({
@@ -71,8 +75,40 @@ Singleton {
             fixedSeed: null
         });
         root.lastError = "";
+        root._pendingSlug = slug;
         writeProc.command = [Quickshell.env("HOME") + "/modern_dotfile/scripts/theme-create.sh", slug, body];
         writeProc.running = true;
         ConfigWrite.set("design.activeProfile", slug);
+    }
+
+    function apply(wallpaperPath: string, profile: string) {
+        const cmd = [Quickshell.env("HOME") + "/modern_dotfile/scripts/theme-apply.sh"];
+        if (profile && profile.length > 0) {
+            cmd.push("--profile");
+            cmd.push(profile);
+        }
+        if (wallpaperPath && wallpaperPath.length > 0) {
+            cmd.push("--wallpaper");
+            cmd.push(wallpaperPath);
+        }
+        root.lastError = "";
+        applyProc.command = cmd;
+        applyProc.running = true;
+    }
+
+    Process {
+        id: applyProc
+        running: false
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const t = this.text.trim();
+                if (t.length > 0)
+                    root.lastError = t;
+            }
+        }
+        onExited: (code) => {
+            if (code !== 0)
+                Logger.error("Theme", root.lastError.length > 0 ? root.lastError : I18n.t("theme.applyFailed"));
+        }
     }
 }

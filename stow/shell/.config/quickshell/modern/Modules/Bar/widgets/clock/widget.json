@@ -2,5 +2,6 @@
   "id": "clock",
   "key": "bar.clock",
   "defaultEnabled": true,
+  "bubble": true,
   "services": []
 }

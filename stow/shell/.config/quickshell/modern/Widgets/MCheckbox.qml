@@ -13,6 +13,18 @@ Item {
     implicitWidth: Tokens.spacing.lg + Tokens.spacing.xs
     implicitHeight: Tokens.spacing.lg + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
+    activeFocusOnTab: root.enabled
+    Accessible.role: Accessible.CheckBox
+    Accessible.checkable: true
+    Accessible.checked: root.checked
+    Accessible.onToggleAction: root.toggled(!root.checked)
+
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            root.toggled(!root.checked);
+            event.accepted = true;
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -42,6 +54,13 @@ Item {
         anchors.fill: parent
         enabled: root.enabled
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.toggled(!root.checked)
+        onClicked: {
+            root.forceActiveFocus();
+            root.toggled(!root.checked);
+        }
+    }
+
+    MFocusRing {
+        radius: Tokens.radius.small / 2
     }
 }

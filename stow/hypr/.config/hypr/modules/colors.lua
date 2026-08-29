@@ -7,14 +7,14 @@
 
 hl.config({
     general = {
-        ["col.active_border"] = "rgba(acd284ff)",
-        ["col.inactive_border"] = "rgba(acd28466)",
+        ["col.active_border"] = "rgba(74d7caff)",
+        ["col.inactive_border"] = "rgba(4e4350ff)",
     },
 })
 
 return {
     hyprbars = {
-        bar_color = "rgba(1d1f27d9)",
-        ["col.text"] = "rgb(e1e2ec)",
+        bar_color = "rgba(241d25d9)",
+        ["col.text"] = "rgb(ebdfe9)",
     },
 }

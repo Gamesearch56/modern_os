@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
@@ -9,27 +8,68 @@ Row {
     property var barScreen: null
     spacing: Tokens.spacing.xxs
 
-    Repeater {
-        model: Hypr.workspacesFor(root.barScreen)
+    readonly property var ids: {
+        void Hypr.workspaces;
+        void Hypr.monitors;
+        void Hypr.focusedWorkspace;
+        void Hypr.toplevels;
+        return Hypr.workspaceIdsFor(root.barScreen);
+    }
 
-        Rectangle {
-            required property var modelData
-            width: Tokens.spacing.xl
+    Repeater {
+        model: root.ids.length
+
+        Item {
+            id: chip
+            required property int index
+            readonly property int wsId: root.ids[index] || 0
+            readonly property var ws: Hypr.workspaceById(chip.wsId)
+            readonly property bool current: Hypr.isActiveOnScreen(root.barScreen, chip.wsId)
+            readonly property bool urgent: !!(chip.ws && chip.ws.urgent)
+
+            width: Math.max(Tokens.spacing.xl, label.implicitWidth + Tokens.spacing.sm * 2)
             height: Tokens.spacing.xl
-            radius: Tokens.radius.full
-            color: modelData.focused ? Colors.color.primary : (modelData.urgent ? Colors.color.error : Colors.color.surfaceContainerHighest)
+
+            Rectangle {
+                anchors.fill: parent
+                radius: Tokens.radius.full
+                color: {
+                    if (chip.current)
+                        return Chrome.navSelected.bg;
+                    if (chip.urgent)
+                        return Colors.color.error;
+                    return Chrome.navIdle.bg;
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: Tokens.radius.full
+                color: Colors.color.primary
+                opacity: chip.current ? 0 : Chrome.stateLayer(hit.containsMouse, false)
+            }
 
             MText {
+                id: label
                 anchors.centerIn: parent
-                value: String(modelData.id)
+                value: String(chip.wsId)
                 styleName: "labelSmall"
-                color: modelData.focused ? Colors.color.onPrimary : Colors.color.onSurface
+                color: {
+                    if (chip.current)
+                        return Chrome.navSelected.fg;
+                    if (chip.urgent)
+                        return Colors.color.onError;
+                    return Chrome.navIdle.fg;
+                }
             }
 
             MouseArea {
+                id: hit
                 anchors.fill: parent
-                onClicked: Hypr.focusWorkspace(modelData.id)
+                z: 2
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
+                onClicked: Hypr.focusWorkspace(chip.wsId)
             }
         }
     }

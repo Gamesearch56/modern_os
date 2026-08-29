@@ -80,13 +80,15 @@ ColumnLayout {
             onClicked: {
                 try {
                     const parsed = JSON.parse(root.draftRules);
-                    if (!Array.isArray(parsed))
-                        throw "not an array";
+                    if (!Array.isArray(parsed)) {
+                        root.rulesError = I18n.t("settings.windows.rulesNotArray");
+                        return;
+                    }
                     ConfigWrite.set("windowRules", parsed);
                     root.rulesError = "";
                 } catch (e) {
-                    root.rulesError = String(e);
-                    Logger.error("Windows", String(e));
+                    root.rulesError = I18n.t("settings.windows.rulesInvalid");
+                    Logger.error("Windows", I18n.t("settings.windows.rulesInvalid"));
                 }
             }
         }

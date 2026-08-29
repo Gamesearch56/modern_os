@@ -15,6 +15,25 @@ Item {
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     implicitWidth: row.implicitWidth + Tokens.spacing.xs * 2
     opacity: root.enabled ? 1 : 0.38
+    activeFocusOnTab: root.enabled
+    Accessible.role: Accessible.Grouping
+
+    Keys.onPressed: (event) => {
+        if (event.key !== Qt.Key_Left && event.key !== Qt.Key_Right)
+            return;
+        const list = root.model || [];
+        let i = 0;
+        for (; i < list.length; i++) {
+            if (String(list[i].value) === String(root.value))
+                break;
+        }
+        if (i >= list.length)
+            i = 0;
+        const n = event.key === Qt.Key_Left ? Math.max(0, i - 1) : Math.min(list.length - 1, i + 1);
+        if (list[n])
+            root.selected(list[n].value);
+        event.accepted = true;
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -57,9 +76,16 @@ Item {
                     anchors.fill: parent
                     enabled: root.enabled
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.selected(modelData.value)
+                    onClicked: {
+                        root.forceActiveFocus();
+                        root.selected(modelData.value);
+                    }
                 }
             }
         }
+    }
+
+    MFocusRing {
+        radius: Tokens.radius.full
     }
 }

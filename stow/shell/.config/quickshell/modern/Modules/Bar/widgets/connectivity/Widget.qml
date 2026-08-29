@@ -9,7 +9,8 @@ Item {
     implicitWidth: row.implicitWidth + Tokens.spacing.sm
     implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
 
-    readonly property string _wifiIcon: Network.connected ? (Network.wifi?.ssid ? "network-wireless" : "network-wired") : "network-offline"
+    readonly property string _wifiIcon: Network.connected ? (Network.wifi?.ssid ? "network-wireless-symbolic" : "network-wired-symbolic") : "network-offline-symbolic"
+    readonly property string _ssid: Network.wifi?.ssid || ""
     readonly property string _btName: {
         const list = Bluetooth.devices?.values ?? [];
         for (let i = 0; i < list.length; i++) {
@@ -30,8 +31,16 @@ Item {
             onClicked: Settings.openAt("network", "")
         }
 
+        MText {
+            visible: root._ssid.length > 0
+            value: root._ssid
+            styleName: "labelSmall"
+            elide: Text.ElideRight
+            Layout.maximumWidth: Tokens.spacing.xxl * 4
+        }
+
         MIconButton {
-            iconName: Bluetooth.powered ? "bluetooth-active" : "bluetooth-disabled"
+            iconName: Bluetooth.powered ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
             key: "bar.bluetooth"
             onClicked: Settings.openAt("bluetooth", "")
         }

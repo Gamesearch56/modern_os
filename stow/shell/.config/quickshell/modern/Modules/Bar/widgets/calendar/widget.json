@@ -1,1 +1,1 @@
-{"id":"calendar","key":"calendar.title","defaultEnabled":false,"services":["Calendar"]}
+{"id":"calendar","key":"calendar.title","defaultEnabled":false,"bubble":true,"services":["Calendar"]}

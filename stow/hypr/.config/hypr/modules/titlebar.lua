@@ -68,3 +68,21 @@ hl.window_rule({
     match = { fullscreen = true },
     ["hyprbars:no_bar"] = true,
 })
+
+-- Settings and picker windows draw their own close; a hyprbars button
+-- on top of that is a second X. Applied here so the plugin is loaded.
+local chrome = {
+    "modern.settings",
+    "modern.wallpaper",
+    "modern.cheatsheet",
+    "modern.powermenu",
+    "modern.launcher",
+    "modern.overview",
+}
+for _, title in ipairs(chrome) do
+    hl.window_rule({
+        name = "hyprbars-nobar-" .. title,
+        match = { title = title },
+        ["hyprbars:no_bar"] = true,
+    })
+end

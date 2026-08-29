@@ -10,6 +10,7 @@ Item {
     property bool checked: false
     property bool enabled: true
     property int size: Tokens.spacing.xxl
+    property int iconSize: Tokens.icon.md
     property bool close: false
 
     signal clicked()
@@ -20,6 +21,17 @@ Item {
     implicitWidth: root.size
     implicitHeight: root.size
     opacity: root.enabled ? 1 : 0.38
+    activeFocusOnTab: root.enabled
+    Accessible.role: Accessible.Button
+    Accessible.name: root.key.length > 0 ? I18n.t(root.key) : root.iconName
+    Accessible.onPressAction: root.clicked()
+
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            root.clicked();
+            event.accepted = true;
+        }
+    }
 
     readonly property color _iconColor: {
         if (root.close)
@@ -65,8 +77,9 @@ Item {
     MIcon {
         anchors.centerIn: parent
         name: root.iconName
-        size: Tokens.icon.sm
+        size: root.iconSize
         color: root._iconColor
+        tint: true
     }
 
     MouseArea {
@@ -77,6 +90,7 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
         onClicked: (mouse) => {
+            root.forceActiveFocus();
             if (mouse.button === Qt.MiddleButton)
                 root.middleClicked();
             else if (mouse.button === Qt.RightButton)
@@ -85,5 +99,9 @@ Item {
                 root.clicked();
         }
         onWheel: (w) => root.wheel(w.angleDelta.y > 0 ? 1 : -1)
+    }
+
+    MFocusRing {
+        radius: Tokens.radius.full
     }
 }

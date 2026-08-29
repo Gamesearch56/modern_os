@@ -36,6 +36,17 @@ Item {
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     Layout.fillWidth: root.fillWidth
     opacity: root.enabled ? 1 : 0.38
+    activeFocusOnTab: root.enabled
+    Accessible.role: Accessible.Button
+    Accessible.name: root.key.length > 0 ? I18n.t(root.key, root.params) : ""
+    Accessible.onPressAction: root.clicked()
+
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            root.clicked();
+            event.accepted = true;
+        }
+    }
 
     Rectangle {
         id: bg
@@ -91,10 +102,17 @@ Item {
         enabled: root.enabled
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onClicked: {
+            root.forceActiveFocus();
+            root.clicked();
+        }
         onPressed: bg.scale = 0.97
         onReleased: bg.scale = 1
         onCanceled: bg.scale = 1
+    }
+
+    MFocusRing {
+        radius: Tokens.radius.full
     }
 
     Behavior on scale {

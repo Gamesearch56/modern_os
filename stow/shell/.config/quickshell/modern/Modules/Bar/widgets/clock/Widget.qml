@@ -39,8 +39,7 @@ Item {
         open: false
         width: Tokens.spacing.xxl * 12
         height: Tokens.spacing.xxl * 12
-        y: root.height + Tokens.spacing.sm
-        x: root.width / 2 - width / 2
+        hAlign: Qt.AlignHCenter
 
         ColumnLayout {
             anchors.fill: parent
@@ -48,19 +47,21 @@ Item {
 
             MText {
                 key: "calendar.title"
-                styleName: "titleSmall"
+                styleName: "headlineSmall"
             }
 
             ListView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                model: Calendar.events
+                model: Calendar.events.length
+
                 delegate: MListItem {
-                    required property var modelData
+                    required property int index
+                    readonly property var row: Calendar.events[index] || ({})
                     width: ListView.view.width
-                    titleValue: modelData.summary || ""
-                    subtitleValue: modelData.when || ""
+                    titleValue: row.summary || ""
+                    subtitleValue: row.when || ""
                 }
 
                 MEmptyState {

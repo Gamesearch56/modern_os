@@ -5,21 +5,28 @@ import "../../../../Widgets"
 import "../../../../Services"
 import "../../"
 
-RowLayout {
+Item {
     id: root
-    spacing: Tokens.spacing.xs
+    implicitWidth: row.implicitWidth + Tokens.spacing.sm
+    implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
     Component.onCompleted: Weather.watching = true
     Component.onDestruction: Weather.watching = false
 
-    MIcon {
-        name: Weather.iconName
-        size: Tokens.icon.md
-    }
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        spacing: Tokens.spacing.xs
 
-    MText {
-        key: Weather.available ? "" : "weather.unavailable"
-        value: Weather.display
-        styleName: "labelLarge"
+        MIcon {
+            name: Weather.iconName
+            size: Tokens.icon.md
+        }
+
+        MText {
+            key: Weather.available ? "" : "weather.unavailable"
+            value: Weather.display
+            styleName: "labelLarge"
+        }
     }
 
     MouseArea {
@@ -32,9 +39,8 @@ RowLayout {
         id: popup
         open: false
         width: Tokens.spacing.xxl * 10
-        height: Tokens.spacing.xxl * 8
-        y: root.height + Tokens.spacing.sm
-        x: root.width - width
+        height: Tokens.spacing.xxl * 14
+        hAlign: Qt.AlignRight
 
         ColumnLayout {
             anchors.fill: parent
@@ -42,21 +48,49 @@ RowLayout {
 
             MText {
                 key: "weather.detailTitle"
-                styleName: "titleSmall"
+                styleName: "headlineSmall"
             }
             MText {
                 value: Weather.display
                 styleName: "headlineSmall"
             }
             MText {
-                key: Weather.available ? "weather.condition" : "weather.unavailable"
+                key: Weather.conditionKey
                 styleName: "bodyMedium"
                 color: Colors.color.onSurfaceVariant
+            }
+            MListItem {
+                visible: Weather.available
+                Layout.fillWidth: true
+                titleKey: "weather.feelsLike"
+                MText {
+                    value: Weather.available ? (Math.round(Weather.feelsLike) + "°") : ""
+                    styleName: "labelLarge"
+                }
+            }
+            MListItem {
+                visible: Weather.available
+                Layout.fillWidth: true
+                titleKey: "weather.humidity"
+                MText {
+                    value: Weather.available ? (Math.round(Weather.humidity) + "%") : ""
+                    styleName: "labelLarge"
+                }
+            }
+            MListItem {
+                visible: Weather.available
+                Layout.fillWidth: true
+                titleKey: "weather.wind"
+                MText {
+                    key: Weather.imperial ? "weather.windMph" : "weather.windKmh"
+                    params: { speed: Math.round(Weather.windSpeed) }
+                    styleName: "labelLarge"
+                }
             }
             MButton {
                 kind: "tonal"
                 key: "weather.refresh"
-                onClicked: Weather.refresh()
+                onClicked: Weather.refresh(true)
             }
         }
     }

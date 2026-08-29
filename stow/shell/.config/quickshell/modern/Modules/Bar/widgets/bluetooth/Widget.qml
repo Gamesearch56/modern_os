@@ -6,24 +6,35 @@ import "../../../../Services"
 
 Item {
     id: root
-    implicitWidth: Tokens.spacing.xxl
+    implicitWidth: row.implicitWidth + Tokens.spacing.xs
     implicitHeight: Tokens.spacing.xxl
 
-    MIconButton {
-        anchors.centerIn: parent
-        iconName: Bluetooth.powered ? "bluetooth-active" : "bluetooth-disabled"
-        key: "bar.bluetooth"
-        onClicked: popup.open = !popup.open
+    readonly property string _device: {
+        const list = Bluetooth.devices?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].connected)
+                return list[i].name || "";
+        }
+        return "";
     }
 
-    MPopup {
-        id: popup
-        open: false
-        width: Tokens.spacing.xxl * 10
-        height: Tokens.spacing.xxl * 10
-        y: root.height + Tokens.spacing.sm
-        x: root.width - width
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        spacing: Tokens.spacing.xs
 
-        Panel {}
+        MIconButton {
+            iconName: Bluetooth.powered ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
+            key: "bar.bluetooth"
+            onClicked: Settings.openAt("bluetooth", "")
+        }
+
+        MText {
+            visible: root._device.length > 0
+            value: root._device
+            styleName: "labelSmall"
+            elide: Text.ElideRight
+            Layout.maximumWidth: Tokens.spacing.xxl * 4
+        }
     }
 }

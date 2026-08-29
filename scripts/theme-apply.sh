@@ -135,9 +135,11 @@ EOF
             -e "s|@RADIUS_SM@|${sm}|g" \
             -e "s|@RADIUS_MD@|${md}|g" \
             -e "s|@RADIUS_FULL@|9999|g" \
+            -e "s|@SPACE_XXS@|2|g" \
             -e "s|@SPACE_XS@|4|g" \
             -e "s|@SPACE_SM@|8|g" \
             -e "s|@SPACE_MD@|12|g" \
+            -e "s|@SPACE_LG@|16|g" \
             "$qss" > "$tmp" && mv "$tmp" "$qss"
     fi
     local kde="${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals"
@@ -161,15 +163,18 @@ EOF
     fi
     local qtconf="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qt6ct.conf"
     if [ -f "$qtconf" ]; then
-        local icon
+        local icon qss_abs scheme_abs
         icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
-        awk -v icon="$icon" '
+        qss_abs="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qss/modern.qss"
+        scheme_abs="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/colors/modern.conf"
+        awk -v icon="$icon" -v qss="$qss_abs" -v scheme="$scheme_abs" '
             /^icon_theme=/ { print "icon_theme=" icon; next }
-            /^stylesheets=/ { print "stylesheets=~/.config/qt6ct/qss/modern.qss"; next }
+            /^stylesheets=/ { print "stylesheets=" qss; next }
+            /^color_scheme_path=/ { print "color_scheme_path=" scheme; next }
             { print }
         ' "$qtconf" > "$qtconf.tmp" && mv "$qtconf.tmp" "$qtconf"
         if ! grep -q '^stylesheets=' "$qtconf"; then
-            printf '\n[Interface]\nstylesheets=~/.config/qt6ct/qss/modern.qss\n' >> "$qtconf"
+            printf '\n[Interface]\nstylesheets=%s\n' "$qss_abs" >> "$qtconf"
         fi
     fi
 

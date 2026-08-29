@@ -14,12 +14,14 @@ Singleton {
     property var history: []
     property bool busy: false
     property string lastError: ""
+    property bool _awaiting: false
+    property string _stdout: ""
 
     Process {
         id: proc
         running: false
         stdout: StdioCollector {
-            onStreamFinished: root._onReply(this.text)
+            onStreamFinished: root._stdout = this.text
         }
         stderr: StdioCollector {
             onStreamFinished: {
@@ -29,21 +31,27 @@ Singleton {
                 }
             }
         }
+        onExited: Qt.callLater(() => root._onReply(root._stdout))
     }
 
     function chat(text: string) {
         const q = (text || "").trim();
         if (!q || root.busy)
             return;
+        if ((Config.accounts?.ai?.provider ?? "ollama") === "none")
+            return;
         try {
             root.history = root.history.concat([{ role: "user", text: q }]);
             const model = Config.accounts?.ai?.ollamaModel ?? "llama3";
             root.busy = true;
+            root._awaiting = true;
             root.lastError = "";
+            root._stdout = "";
             proc.command = ["ollama", "run", model, q];
             proc.running = true;
         } catch (e) {
             root.busy = false;
+            root._awaiting = false;
             Logger.error("Ai", String(e));
         }
     }
@@ -54,12 +62,14 @@ Singleton {
     }
 
     function _onReply(text: string) {
-        root.busy = false;
-        const reply = text.trim();
-        if (reply.length === 0) {
-            root.history = root.history.concat([{ role: "assistant", text: root.lastError || "…" }]);
+        if (!root._awaiting)
             return;
-        }
-        root.history = root.history.concat([{ role: "assistant", text: reply }]);
+        root._awaiting = false;
+        root.busy = false;
+        const reply = (text || "").trim();
+        const out = reply.length > 0 ? reply : I18n.t("ai.error");
+        if (reply.length === 0 && root.lastError.length > 0)
+            Logger.error("Ai", root.lastError);
+        root.history = root.history.concat([{ role: "assistant", text: out }]);
     }
 }

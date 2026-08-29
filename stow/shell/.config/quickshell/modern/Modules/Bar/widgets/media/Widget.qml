@@ -15,13 +15,21 @@ Item {
         anchors.centerIn: parent
         spacing: Tokens.spacing.xs
 
-        Image {
+        Rectangle {
             visible: Media.trackArtUrl.length > 0
             Layout.preferredWidth: Tokens.spacing.lg
             Layout.preferredHeight: Tokens.spacing.lg
-            source: Media.trackArtUrl
-            fillMode: Image.PreserveAspectCrop
-            asynchronous: true
+            radius: Tokens.radius.small
+            color: Colors.color.surfaceContainerHighest
+            clip: true
+
+            Image {
+                anchors.fill: parent
+                source: Media.trackArtUrl
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+            }
+
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
@@ -37,19 +45,22 @@ Item {
         }
 
         MIconButton {
-            iconName: "media-skip-backward"
+            iconName: "media-skip-backward-symbolic"
             size: Tokens.spacing.xl
+            iconSize: Tokens.icon.sm
             enabled: Media.canGoPrevious
             onClicked: Media.previous()
         }
         MIconButton {
-            iconName: Media.playing ? "media-playback-pause" : "media-playback-start"
+            iconName: Media.playing ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
             size: Tokens.spacing.xl
+            iconSize: Tokens.icon.sm
             onClicked: Media.togglePlaying()
         }
         MIconButton {
-            iconName: "media-skip-forward"
+            iconName: "media-skip-forward-symbolic"
             size: Tokens.spacing.xl
+            iconSize: Tokens.icon.sm
             enabled: Media.canGoNext
             onClicked: Media.next()
         }

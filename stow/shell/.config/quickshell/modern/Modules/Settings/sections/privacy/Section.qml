@@ -69,4 +69,13 @@ ColumnLayout {
         ]
         onSelected: (v) => ConfigWrite.set("accounts.ai.provider", v)
     }
+    MField {
+        visible: (Config.accounts?.ai?.provider ?? "ollama") === "ollama"
+        labelKey: "settings.fields.ollamaModel"
+        hintKey: "settings.hints.ollamaModel"
+        MTextField {
+            text: Config.accounts?.ai?.ollamaModel ?? "llama3"
+            onAccepted: ConfigWrite.set("accounts.ai.ollamaModel", text)
+        }
+    }
 }

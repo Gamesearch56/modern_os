@@ -9,11 +9,11 @@ directory plus an id in those arrays — no central switch.
 | id | i18n key | services | role |
 |---|---|---|---|
 | `launcher` | `bar.launcher` | Launcher | Opens the application launcher |
-| `workspaces` | `bar.workspaces` | Hypr | Per-monitor strip (`Hypr.workspacesFor`); `monitors.workspaceMode` `dynamic` or `fixed` (1–5 / 6–10 by x-position) |
+| `workspaces` | `bar.workspaces` | Hypr | Per-monitor strip (`Hypr.workspaceIdsFor`); `monitors.workspaceMode` `dynamic` or `fixed` (1–5 / 6–10 by x-position) |
 | `tray` | `bar.tray` | — | Status notifier / system tray |
 | `taskbar` | `bar.taskbar` | Hypr | Open windows on the active workspace |
-| `clock` | `bar.clock` | — | Date/time from `language.*` formats; click launches `apps.defaults.calendar` |
-| `media` | `bar.media` | Media | Capsule (art, title, transport); hidden with no MPRIS client; click raises the player |
+| `clock` | `bar.clock` | — | Date/time from `language.*` formats; click opens a calendar popup (`apps.defaults.calendar`) |
+| `media` | `bar.media` | Media | Capsule (art, title, transport); shown while playing or Spotify is open; click raises the player |
 | `audio` | `bar.volume` | Audio | Sink volume / mute; click opens Settings → Audio |
 | `weather` | `bar.weather` | Weather | Location-based conditions |
 | `network` | `bar.network` | Network | Wi-Fi / ethernet indicator |
@@ -25,17 +25,20 @@ directory plus an id in those arrays — no central switch.
 | `settings` | `bar.settings` | Notifications | Opens the control center (`Notifications.toggle`), not the Settings app |
 | `power` | `bar.power` | PowerMenu | Session power menu |
 
-| `ai` | `ai.title` | Ai | Assistant chat popup |
+| `ai` | `ai.title` | Ai | Assistant chat popup (Ollama); empty state when history is empty |
 | `connectivity` | `bar.connectivity` | Network, Bluetooth | Combined wifi + BT; click opens Settings |
 | `battery` | `bar.battery` | Battery | Shown only on battery |
 
-Default layout (islands) in `stow/modern/.config/modern/config.default.json`:
+Default layout (bubbles) in `stow/modern/.config/modern/config.default.json`:
 
-- `bar.left`: `launcher`, `ai`, `workspaces`, `media`, `tray`
+- `bar.left`: `launcher`, `ai`, `workspaces`, `media`, `taskbar`
 - `bar.center`: `clock` (calendar popup)
 - `bar.right`: `weather`, `connectivity`, `audio`, `battery`, `settings`, `power`
 
-`bar.position` is `top` / `bottom` / `left` / `right`. Default height is 36.
-Wi-Fi and Bluetooth on the bar open Settings, not a popup. AI, weather, and
-clock use `MPopup`. Reorder in Settings → Widgets.
+A **bubble** is a widget (or small cluster) with its own background
+pill. `widget.json` `"bubble": true` marks a standalone pill. Wi-Fi and
+Bluetooth share a pill; battery + control-center gear + power share
+another. `bar.position` is `top` / `bottom` / `left` / `right`. Default
+height is 36. Wi-Fi and Bluetooth on the bar open Settings, not a popup.
+AI, weather, and clock use `MPopup`. Reorder in Settings → Widgets.
 

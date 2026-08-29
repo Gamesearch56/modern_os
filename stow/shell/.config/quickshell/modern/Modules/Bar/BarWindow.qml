@@ -2,7 +2,6 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons"
-import "../../Widgets"
 import "../../Services"
 
 PanelWindow {
@@ -44,6 +43,13 @@ PanelWindow {
     implicitWidth: root.vertical ? (Config.bar.height + root._edge * 2) : 0
     exclusiveZone: Config.bar.autoHide ? 0 : (root.vertical ? implicitWidth : implicitHeight)
     color: "transparent"
+    focusable: Popups.openCount > 0
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: Popups.openCount > 0
+        onActivated: Popups.dismiss()
+    }
 
     Item {
         anchors.fill: parent
@@ -69,18 +75,13 @@ PanelWindow {
                 height: Config.bar.height
                 spacing: Tokens.spacing.sm
 
-                BarIsland {
-                    empty: root._leftIds.length === 0
-                    Repeater {
-                        model: root._leftIds
-                        WidgetLoader {
-                            barScreen: root.screen
-                        }
-                    }
+                IslandRow {
+                    ids: root._leftIds
+                    barScreen: root.screen
                 }
 
                 BarIsland {
-                    empty: !root._taskbarOn || taskbarLoader.item === null || taskbarLoader.item.implicitWidth < 1
+                    empty: !root._taskbarOn || Hypr.taskbarCount(root.screen) === 0
                     WidgetLoader {
                         id: taskbarLoader
                         modelData: "taskbar"
@@ -89,30 +90,18 @@ PanelWindow {
                 }
             }
 
-            BarIsland {
+            IslandRow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                height: Config.bar.height
-                empty: root._centerIds.length === 0
-                Repeater {
-                    model: root._centerIds
-                    WidgetLoader {
-                        barScreen: root.screen
-                    }
-                }
+                ids: root._centerIds
+                barScreen: root.screen
             }
 
-            BarIsland {
+            IslandRow {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                height: Config.bar.height
-                empty: root._rightIds.length === 0
-                Repeater {
-                    model: root._rightIds
-                    WidgetLoader {
-                        barScreen: root.screen
-                    }
-                }
+                ids: root._rightIds
+                barScreen: root.screen
             }
         }
     }
@@ -128,44 +117,37 @@ PanelWindow {
                 width: Config.bar.height
                 spacing: Tokens.spacing.sm
 
+                IslandRow {
+                    vertical: true
+                    ids: root._leftIds
+                    barScreen: root.screen
+                }
+
                 BarIsland {
                     vertical: true
-                    empty: root._leftIds.length === 0
-                    Repeater {
-                        model: root._leftIds
-                        WidgetLoader {
-                            barScreen: root.screen
-                        }
+                    empty: !root._taskbarOn || Hypr.taskbarCount(root.screen) === 0
+                    WidgetLoader {
+                        id: vTaskbar
+                        modelData: "taskbar"
+                        barScreen: root.screen
                     }
                 }
             }
 
-            BarIsland {
+            IslandRow {
                 vertical: true
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: Config.bar.height
-                empty: root._centerIds.length === 0
-                Repeater {
-                    model: root._centerIds
-                    WidgetLoader {
-                        barScreen: root.screen
-                    }
-                }
+                ids: root._centerIds
+                barScreen: root.screen
             }
 
-            BarIsland {
+            IslandRow {
                 vertical: true
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: Config.bar.height
-                empty: root._rightIds.length === 0
-                Repeater {
-                    model: root._rightIds
-                    WidgetLoader {
-                        barScreen: root.screen
-                    }
-                }
+                ids: root._rightIds
+                barScreen: root.screen
             }
         }
     }

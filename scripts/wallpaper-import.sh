@@ -3,6 +3,17 @@
 # Refuses a pick whose realpath already lives in that destination folder.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=../install/lib/i18n.sh
+source "$REPO_ROOT/install/lib/i18n.sh"
+
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    I18N_LANG="$(jq -r '.language.ui // "en"' "$CFG")"
+    [ "$I18N_LANG" = "de" ] || I18N_LANG="en"
+fi
+
 pic="$(xdg-user-dir PICTURES 2>/dev/null || true)"
 if [ -z "${pic:-}" ] || [ "$pic" = "$HOME" ]; then
     pic="$HOME/Pictures"
@@ -13,14 +24,14 @@ DEST_REAL="$(realpath "$DEST")"
 
 chosen=""
 if command -v zenity >/dev/null 2>&1; then
-    chosen="$(zenity --file-selection --title="Add wallpaper" --filename="$HOME/" \
-        --file-filter='Images | *.jpg *.jpeg *.png *.webp *.JPG *.JPEG *.PNG *.WEBP' \
-        --file-filter='All files | *' || true)"
+    chosen="$(zenity --file-selection --title="$(t wallpaper.importTitle)" --filename="$HOME/" \
+        --file-filter="$(t wallpaper.importImages) | *.jpg *.jpeg *.png *.webp *.JPG *.JPEG *.PNG *.WEBP" \
+        --file-filter="$(t wallpaper.importAll) | *" || true)"
 elif command -v kdialog >/dev/null 2>&1; then
     chosen="$(kdialog --getopenfilename "$HOME/" \
-        'Image files (*.jpg *.jpeg *.png *.webp)' || true)"
+        "$(t wallpaper.importImages) (*.jpg *.jpeg *.png *.webp)" || true)"
 else
-    echo "wallpaper-import: need zenity or kdialog" >&2
+    t wallpaper.needChooser >&2
     exit 3
 fi
 
