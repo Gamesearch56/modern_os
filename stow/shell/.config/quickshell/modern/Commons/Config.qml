@@ -78,7 +78,7 @@ Singleton {
                     property bool wallpaperOnSplash: true
                     property bool wallpaperOnLock: true
                     property bool wallpaperOnLogin: true
-                    property bool wallpaperOnVivaldi: false
+                    property bool wallpaperOnVivaldi: true
                 }
             }
 

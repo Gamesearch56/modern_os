@@ -41,7 +41,7 @@
       "wallpaperOnSplash": true,
       "wallpaperOnLock": true,
       "wallpaperOnLogin": true,
-      "wallpaperOnVivaldi": false
+      "wallpaperOnVivaldi": true
     },
     "surfaceTint": 0.7
   },
