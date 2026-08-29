@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Regenerates every theme output file (tokens.json, Colors.qml, kitty
-# colors, fastfetch, Hyprland border colors, plus the GTK/Qt/KDE/Vivaldi
+# Regenerates every theme output file (tokens.json, kitty colors,
+# fastfetch, Hyprland border colors, plus the GTK/Qt/KDE/Vivaldi
 # templates — see stow/theme/.config/matugen/config.toml) from the active
 # theme profile, then reloads the apps that can pick the change up live.
+# Quickshell reads tokens.json directly (Commons/Colors.qml FileView).
 #
 # tokens.json is the single source of truth: everything else in this
 # list is generated from the same matugen run, so nothing can drift out
@@ -395,7 +396,7 @@ fi
 
 log "running matugen (${MATUGEN_ARGS[*]})"
 matugen "${MATUGEN_ARGS[@]}"
-log "regenerated tokens.json, Colors.qml, kitty/fastfetch/GTK/Qt/KDE/Vivaldi color files"
+log "regenerated tokens.json, kitty/fastfetch/GTK/Qt/KDE/Vivaldi color files"
 patch_toolkit_chrome || warn "toolkit chrome patch skipped"
 
 if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ]; then

@@ -11,9 +11,9 @@ directory plus an id in those arrays — no central switch.
 | `launcher` | `bar.launcher` | Launcher | Opens the application launcher |
 | `workspaces` | `bar.workspaces` | Hypr | Per-monitor strip (`Hypr.workspaceIdsFor`); `monitors.workspaceMode` `dynamic` or `fixed` (1–5 / 6–10 by x-position) |
 | `tray` | `bar.tray` | — | Status notifier / system tray |
-| `taskbar` | `bar.taskbar` | Hypr | Open windows on the active workspace |
-| `clock` | `bar.clock` | — | Date/time from `language.*` formats; click opens a calendar popup (`apps.defaults.calendar`) |
-| `media` | `bar.media` | Media | Capsule (art, title, transport); shown while playing or Spotify is open; click raises the player |
+| `taskbar` | `bar.taskbar` | Hypr | Open windows (`Hypr.toplevelList`; refreshes when the popup opens) |
+| `clock` | `bar.clock` | Calendar | Date/time; click opens Calendar / Events tabs (month grid + today's ICS events) |
+| `media` | `bar.media` | Media | Capsule (art, title, transport); playing app wins, then Spotify if it is open |
 | `audio` | `bar.volume` | Audio | Sink volume / mute; click opens Settings → Audio |
 | `weather` | `bar.weather` | Weather | Location-based conditions |
 | `network` | `bar.network` | Network | Wi-Fi / ethernet indicator |
@@ -25,7 +25,7 @@ directory plus an id in those arrays — no central switch.
 | `settings` | `bar.settings` | Notifications | Opens the control center (`Notifications.toggle`), not the Settings app |
 | `power` | `bar.power` | PowerMenu | Session power menu |
 
-| `ai` | `ai.title` | Ai | Assistant chat popup (Ollama); empty state when history is empty |
+| `ai` | `ai.title` | Ai | Assistant chip + chat popup (Ollama); empty state explains setup |
 | `connectivity` | `bar.connectivity` | Network, Bluetooth | Combined wifi + BT; click opens Settings |
 | `battery` | `bar.battery` | Battery | Shown only on battery |
 

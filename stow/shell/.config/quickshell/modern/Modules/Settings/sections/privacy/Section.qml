@@ -53,6 +53,7 @@ ColumnLayout {
     }
     MField {
         labelKey: "settings.fields.calendarIcs"
+        hintKey: "settings.hints.calendarIcs"
         MTextField {
             text: Config.accounts?.calendarIcsUrl ?? ""
             onAccepted: ConfigWrite.set("accounts.calendarIcsUrl", text)
@@ -72,7 +73,7 @@ ColumnLayout {
     MField {
         visible: (Config.accounts?.ai?.provider ?? "ollama") === "ollama"
         labelKey: "settings.fields.ollamaModel"
-        hintKey: "settings.hints.ollamaModel"
+        hintKey: "settings.hints.ollamaSetup"
         MTextField {
             text: Config.accounts?.ai?.ollamaModel ?? "llama3"
             onAccepted: ConfigWrite.set("accounts.ai.ollamaModel", text)

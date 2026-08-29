@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
@@ -7,7 +8,7 @@ import "../../"
 Item {
     id: root
     property var barScreen: null
-    implicitWidth: Config.bar.height
+    implicitWidth: row.implicitWidth + Tokens.spacing.md * 2
     implicitHeight: Config.bar.height
 
     readonly property bool _mine: {
@@ -15,13 +16,29 @@ Item {
         void Ai.hostScreenName;
         return Ai.openOn(root.barScreen);
     }
+    readonly property color _fg: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
 
-    MIconButton {
-        anchors.fill: parent
-        iconName: "robot"
-        key: "ai.title"
+    BarIslandHit {
         checked: popup.open
         onClicked: Ai.toggle(root.barScreen)
+    }
+
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        z: 1
+        spacing: Tokens.spacing.xs
+
+        MIcon {
+            name: "robot"
+            size: Tokens.icon.md
+            color: root._fg
+        }
+        MText {
+            key: "ai.title"
+            styleName: "labelLarge"
+            color: root._fg
+        }
     }
 
     BarPopup {

@@ -49,6 +49,18 @@ Singleton {
         return I18n.t("time.weekday." + keys[d.getDay()]);
     }
 
+    function weekdayIndex(i: int): string {
+        const keys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+        const k = keys[((i % 7) + 7) % 7];
+        return I18n.t("time.weekday." + k);
+    }
+
+    function monthTitle(year: int, month: int): string {
+        const keys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+        const name = I18n.t("time.month." + keys[((month % 12) + 12) % 12]);
+        return name + " " + year;
+    }
+
     function clockLabel(d: var, dateFmt: string, timeFmt: string, showSeconds: bool, showWeekday: bool): string {
         const dateStr = root.formatDate(d, dateFmt);
         const timeStr = root.formatTime(d, timeFmt, showSeconds);

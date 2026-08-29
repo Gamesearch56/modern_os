@@ -72,7 +72,7 @@ Item {
 
             Repeater {
                 id: tiles
-                model: Hypr.toplevels
+                model: Hypr.toplevelList
                 delegate: MCard {
                     required property var modelData
                     required property int index

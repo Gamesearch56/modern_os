@@ -146,6 +146,7 @@ PanelWindow {
 
         Toolbar {
             z: 2
+            visible: !hud.dragging
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
         }

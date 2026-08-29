@@ -52,7 +52,7 @@ Item {
                     spacing: Tokens.spacing.sm
 
                     Repeater {
-                        model: Hypr.toplevels
+                        model: Hypr.toplevelList
 
                         MListItem {
                             id: item

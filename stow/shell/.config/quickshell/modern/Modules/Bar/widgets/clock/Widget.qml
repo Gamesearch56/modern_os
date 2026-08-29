@@ -39,51 +39,27 @@ Item {
         id: popup
         open: false
         anchorItem: root
-        implicitWidth: Tokens.spacing.xxl * 12
-        implicitHeight: Tokens.spacing.xxl * 12
+        implicitWidth: Tokens.spacing.xxl * 14
+        implicitHeight: (panelLoader.item ? panelLoader.item.implicitHeight : Tokens.spacing.xxl * 12) + Tokens.spacing.md * 2
         hAlign: Qt.AlignHCenter
-
-        BarPanelChrome {
-            anchors.fill: parent
-            titleKey: "calendar.title"
-
-            MPane {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                ListView {
-                    anchors.fill: parent
-                    clip: true
-                    model: Calendar.events.length
-
-                    delegate: MListItem {
-                        required property int index
-                        readonly property var row: Calendar.events[index] || ({})
-                        width: ListView.view.width
-                        titleValue: row.summary || ""
-                        subtitleValue: row.when || ""
-                    }
-
-                    MEmptyState {
-                        visible: Calendar.events.length === 0
-                        anchors.fill: parent
-                        iconName: "x-office-calendar-symbolic"
-                        titleKey: "calendar.empty"
-                    }
-                }
+        onOpenChanged: {
+            Calendar.watching = popup.open;
+            if (popup.open) {
+                Calendar.resetView();
+                Calendar.refresh();
             }
+        }
 
-            MButton {
-                kind: "filled"
-                key: "calendar.open"
-                fillWidth: true
-                onClicked: {
-                    popup.open = false;
-                    const e = Apps.entryFor("calendar");
-                    const id = (e && (e.id || e.name)) || Apps.desktopId("calendar");
-                    if (!Hypr.raiseDesktop(String(id || "")) && !Apps.launch("calendar"))
-                        Settings.openAt("applications", "");
-                }
+        Loader {
+            id: panelLoader
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            height: item ? item.implicitHeight : parent.height
+            source: Qt.resolvedUrl("Panel.qml")
+            onLoaded: {
+                if (item)
+                    item.width = Qt.binding(() => panelLoader.width);
             }
         }
     }

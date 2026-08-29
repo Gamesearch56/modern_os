@@ -79,12 +79,12 @@ Item {
             id: card
             width: Tokens.spacing.xxl * 24
             height: Math.min(Tokens.spacing.xxl * 20, root.height - Tokens.spacing.xl)
-            color: Colors.color.surface
+            color: Colors.color.surfaceContainer
             radius: Tokens.radius.medium
             border.color: Colors.color.outlineVariant
             border.width: Tokens.stroke.hairline
             clip: true
-            opacity: Config.design.transparency ?? 0.85
+            opacity: 1
 
             MIconButton {
                 z: 1

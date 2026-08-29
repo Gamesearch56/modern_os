@@ -16,6 +16,16 @@ Singleton {
     readonly property var monitors: Hyprland.monitors
     readonly property var workspaces: Hyprland.workspaces
     readonly property var toplevels: Hyprland.toplevels
+    readonly property var toplevelList: {
+        void root.toplevels;
+        const t = Hyprland.toplevels;
+        if (!t)
+            return [];
+        const vals = t.values;
+        if (vals && vals.length !== undefined)
+            return vals;
+        return [];
+    }
     readonly property var focusedWorkspace: Hyprland.focusedWorkspace
     readonly property var focusedToplevel: Hyprland.focusedToplevel
 
@@ -389,11 +399,16 @@ Singleton {
     }
 
     function taskbarCount(screen: var): int {
-        void root.toplevels;
-        void root.monitors;
-        void root.focusedWorkspace;
-        const list = Hyprland.toplevels?.values ?? [];
-        return list.length;
+        void root.toplevelList;
+        return (root.toplevelList || []).length;
+    }
+
+    function refreshToplevels() {
+        try {
+            Hyprland.refreshToplevels();
+        } catch (e) {
+            Logger.warn("Hypr", "refreshToplevels: " + e);
+        }
     }
 
     function _workspaceHasWindows(id: int): bool {
@@ -441,6 +456,8 @@ Singleton {
         }
         return shown;
     }
+
+    Component.onCompleted: root.refreshToplevels()
 
     Process {
         id: pluginProc

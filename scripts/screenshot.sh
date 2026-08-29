@@ -104,7 +104,7 @@ region_to_global() {
 
 wait_hud_gone() {
     local i
-    for i in 1 2 3 4 5 6 7 8; do
+    for i in $(seq 1 24); do
         if ! hyprctl layers -j 2>/dev/null | jq -e '
             [.. | objects | select(.namespace? == "modern-screenshot")] | length > 0
         ' >/dev/null; then

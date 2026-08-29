@@ -116,8 +116,13 @@
   "calendar": {
     "title": "Calendar",
     "today": "Today",
-    "empty": "No upcoming events",
-    "open": "Open calendar"
+    "empty": "No events today",
+    "open": "Open calendar",
+    "monthTab": "Calendar",
+    "eventsTab": "Events",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "icsHint": "Add a secret ICS URL in Settings → Accounts to show Proton Calendar events here."
   },
   "mail": {
     "open": "Open mail"
@@ -129,8 +134,9 @@
     "assistant": "Assistant",
     "empty": "No messages yet",
     "hint": "Ask a question. Replies come from the local Ollama model.",
+    "setupHint": "Install Ollama, start it with ollama serve, then ollama pull llama3 (or the model in Settings). Click the Assistant chip in the bar and type a question.",
     "disabled": "Assistant is off",
-    "enableHint": "Turn it on in Settings → Accounts.",
+    "enableHint": "Turn it on in Settings → Accounts & Connections.",
     "clear": "Clear chat",
     "send": "Send",
     "thinking": "Thinking…",
@@ -518,6 +524,8 @@
       "timeMerged": "Date and time formats live under Language & region.",
       "weatherLocation": "Empty uses IP geolocation. Or a city, or latitude,longitude.",
       "ollamaModel": "Pulled locally with ollama pull. Used by the bar assistant.",
+      "ollamaSetup": "Install ollama, run ollama serve, then ollama pull llama3 (or this name). The Assistant chip on the bar opens the chat.",
+      "calendarIcs": "Proton Calendar → Settings → Calendars → secret iCal feed. Pasted here, the clock popup shows those events.",
       "audioDevices": "The highlighted device is the default. Click another to send sound there.",
       "hyprbarsOn": "hyprbars plugin is loaded.",
       "hyprbarsOff": "hyprbars is not loaded. Run scripts/doctor.sh and hyprpm.",
@@ -579,6 +587,20 @@
       "thu": "Thu",
       "fri": "Fri",
       "sat": "Sat"
+    },
+    "month": {
+      "jan": "January",
+      "feb": "February",
+      "mar": "March",
+      "apr": "April",
+      "may": "May",
+      "jun": "June",
+      "jul": "July",
+      "aug": "August",
+      "sep": "September",
+      "oct": "October",
+      "nov": "November",
+      "dec": "December"
     }
   },
   "units": {

@@ -17,7 +17,7 @@ scripts/theme-apply.sh  ── resolves the profile + wallpaper/seed,
 matugen -c ~/.config/matugen/config.toml ...
         │
         ├─▶ tokens.json                          (SINGLE SOURCE OF TRUTH)
-        ├─▶ Colors.qml                           (Quickshell shell)
+        │     └─▶ Colors.qml FileView            (Quickshell live)
         ├─▶ hypr/modules/colors.lua               (Hyprland borders)
         ├─▶ kitty/colors.conf
         ├─▶ gtk-3.0/gtk.css, gtk-4.0/gtk.css
@@ -60,7 +60,11 @@ via `jq`, or the future Settings > Diagnostics color preview).
   for the live system. Resolves which profile to use (from
   `config.json`'s `design.activeProfile`, or `--profile`), resolves the
   wallpaper/seed, runs matugen, then does what live-reload it can
-  (`hyprctl reload`, `kitty @ load-config`).
+  (`hyprctl reload`, `kitty @ load-config`). Quickshell watches
+`tokens.json` and restyles the bar/overlays immediately. GTK apps pick
+up `gtk.css` on restart. Vivaldi's CSS overlay is already on disk
+(reload the tab); the native theme object is merged only while Vivaldi
+is not running. Dolphin must be fully quit after `theme-apply.sh`.
 
 ## Profile resolution
 

@@ -19,11 +19,13 @@ Singleton {
             root.hide();
             return;
         }
+        Hypr.refreshToplevels();
         root.hostScreenName = name;
         root.open = true;
     }
 
     function show(screen: var) {
+        Hypr.refreshToplevels();
         root.hostScreenName = root._nameOf(screen) || root._focusedName();
         root.open = true;
     }

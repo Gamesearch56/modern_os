@@ -116,8 +116,13 @@
   "calendar": {
     "title": "Kalender",
     "today": "Heute",
-    "empty": "Keine anstehenden Termine",
-    "open": "Kalender öffnen"
+    "empty": "Heute keine Termine",
+    "open": "Kalender öffnen",
+    "monthTab": "Kalender",
+    "eventsTab": "Termine",
+    "prevMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "icsHint": "Lege in Einstellungen → Konten eine geheime ICS-URL an, damit Proton-Calendar-Termine hier erscheinen."
   },
   "mail": {
     "open": "Mail öffnen"
@@ -129,8 +134,9 @@
     "assistant": "Assistent",
     "empty": "Noch keine Nachrichten",
     "hint": "Stell eine Frage. Antworten kommen vom lokalen Ollama-Modell.",
+    "setupHint": "Ollama installieren, mit ollama serve starten, dann ollama pull llama3 (oder das Modell in den Einstellungen). Assistent in der Leiste anklicken und fragen.",
     "disabled": "Assistent ist aus",
-    "enableHint": "Einschalten unter Einstellungen → Konten.",
+    "enableHint": "Einschalten unter Einstellungen → Konten & Verbindungen.",
     "clear": "Chat leeren",
     "send": "Senden",
     "thinking": "Denkt nach…",
@@ -518,6 +524,8 @@
       "timeMerged": "Datums- und Zeitformate liegen unter Sprache & Region.",
       "weatherLocation": "Leer nutzt IP-Standort. Oder Stadt, oder Breitengrad,Längengrad.",
       "ollamaModel": "Lokal mit ollama pull. Nutzt der Leisten-Assistent.",
+      "ollamaSetup": "Ollama installieren, ollama serve starten, dann ollama pull llama3 (oder diesen Namen). Der Assistent-Chip in der Leiste öffnet den Chat.",
+      "calendarIcs": "Proton Calendar → Einstellungen → Kalender → geheimer iCal-Feed. Hier eingefügt, zeigt das Uhr-Popup die Termine.",
       "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken.",
       "hyprbarsOn": "hyprbars-Plugin ist geladen.",
       "hyprbarsOff": "hyprbars ist nicht geladen. scripts/doctor.sh und hyprpm prüfen.",
@@ -579,6 +587,20 @@
       "thu": "Do",
       "fri": "Fr",
       "sat": "Sa"
+    },
+    "month": {
+      "jan": "Januar",
+      "feb": "Februar",
+      "mar": "März",
+      "apr": "April",
+      "may": "Mai",
+      "jun": "Juni",
+      "jul": "Juli",
+      "aug": "August",
+      "sep": "September",
+      "oct": "Oktober",
+      "nov": "November",
+      "dec": "Dezember"
     }
   },
   "units": {

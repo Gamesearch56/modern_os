@@ -56,6 +56,9 @@ Singleton {
         }
     }
 
+    property string _pendingGeom: ""
+    property string _pendingOutput: ""
+
     Timer {
         id: finishGrace
         interval: Motion.short()
@@ -65,6 +68,12 @@ Singleton {
                 root._tryFinish();
             }
         }
+    }
+
+    Timer {
+        id: hudGone
+        interval: Motion.short()
+        onTriggered: root._runRegion()
     }
 
     function _resetCap() {
@@ -112,8 +121,20 @@ Singleton {
         root.hudOpen = false;
         if (!geom || geom.length === 0)
             return;
+        root._pendingGeom = geom;
+        root._pendingOutput = output || "";
+        hudGone.restart();
+    }
+
+    function _runRegion() {
+        const geom = root._pendingGeom;
+        const output = root._pendingOutput;
+        root._pendingGeom = "";
+        root._pendingOutput = "";
+        if (!geom || geom.length === 0)
+            return;
         root._resetCap();
-        if (output && output.length > 0)
+        if (output.length > 0)
             cap.command = [root.script, "region", geom, output];
         else
             cap.command = [root.script, "region", geom];

@@ -17,9 +17,8 @@
 input_path = "~/.config/matugen/templates/tokens.json.template"
 output_path = "~/.config/modern/tokens.json"
 
-[templates.colors_qml]
-input_path = "~/.config/matugen/templates/Colors.qml.template"
-output_path = "~/.config/quickshell/modern/Commons/Colors.qml"
+# Colors.qml FileView-watches tokens.json (not generated) so the bar
+# and overlays pick up a new wallpaper without restarting Quickshell.
 
 [templates.hyprland_colors]
 input_path = "~/.config/matugen/templates/hyprland-colors.lua.template"

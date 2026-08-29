@@ -9,8 +9,26 @@ import QtQuick
 Singleton {
     id: root
 
+    property int _gen: 0
+
+    readonly property string _playKey: {
+        const vals = Mpris.players.values;
+        if (!vals)
+            return "";
+        let s = String(vals.length);
+        for (let i = 0; i < vals.length; i++) {
+            const p = vals[i];
+            s += "|" + String(p?.dbusName || "") + ":" + String(p?.isPlaying) + ":"
+                + String(p?.playbackState) + ":" + String(p?.trackTitle || "");
+        }
+        return s;
+    }
     readonly property var players: Mpris.players
-    readonly property var active: root._pickActive()
+    readonly property var active: {
+        void root._playKey;
+        void root._gen;
+        return root._pickActive();
+    }
     readonly property bool hasPlayer: root.active !== null
     readonly property string identity: root.active?.identity ?? ""
     readonly property string trackTitle: root.active?.trackTitle ?? ""
@@ -27,6 +45,22 @@ Singleton {
     readonly property bool canSeek: root.active?.canSeek ?? false
     readonly property int loopState: root.active?.loopState ?? 0
     readonly property bool shuffle: root.active?.shuffle ?? false
+
+    Instantiator {
+        model: Mpris.players
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            function onIsPlayingChanged() { root._bump(); }
+            function onPlaybackStateChanged() { root._bump(); }
+            function onIdentityChanged() { root._bump(); }
+            function onTrackTitleChanged() { root._bump(); }
+        }
+    }
+
+    function _bump() {
+        root._gen++;
+    }
 
     function play() {
         root.active?.play();
@@ -80,7 +114,20 @@ Singleton {
     function _isSpotify(player: var): bool {
         const ident = String(player?.identity || "").toLowerCase();
         const dbus = String(player?.dbusName || "").toLowerCase();
-        return ident.indexOf("spotify") !== -1 || dbus.indexOf("spotify") !== -1;
+        const desk = String(player?.desktopEntry || "").toLowerCase();
+        return ident.indexOf("spotify") !== -1 || dbus.indexOf("spotify") !== -1
+            || desk.indexOf("spotify") !== -1;
+    }
+
+    function _isPlaying(player: var): bool {
+        if (!player)
+            return false;
+        if (!player.isPlaying)
+            return false;
+        const state = player.playbackState;
+        if (state === 2 || String(state).toLowerCase() === "paused")
+            return false;
+        return true;
     }
 
     function _pickActive(): var {
@@ -90,16 +137,19 @@ Singleton {
         let spotify = null;
         let playingOther = null;
         let playingAny = null;
+        let other = null;
         for (let i = 0; i < vals.length; i++) {
             const p = vals[i];
             const isSpotify = root._isSpotify(p);
             if (isSpotify)
                 spotify = p;
-            const playing = !!p.isPlaying;
-            if (playing)
+            else if (!other)
+                other = p;
+            if (root._isPlaying(p)) {
                 playingAny = p;
-            if (playing && !isSpotify)
-                playingOther = p;
+                if (!isSpotify)
+                    playingOther = p;
+            }
         }
         if (playingOther)
             return playingOther;
@@ -107,6 +157,6 @@ Singleton {
             return playingAny;
         if (spotify)
             return spotify;
-        return null;
+        return other;
     }
 }

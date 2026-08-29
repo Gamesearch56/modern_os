@@ -109,13 +109,13 @@ Item {
                 }
             }
 
-            MEmptyState {
-                visible: root._off || Ai.history.length === 0
-                anchors.fill: parent
-                iconName: "robot"
-                titleKey: root._off ? "ai.disabled" : "ai.empty"
-                hintKey: root._off ? "ai.enableHint" : "ai.hint"
-            }
+                MEmptyState {
+                    visible: root._off || Ai.history.length === 0
+                    anchors.fill: parent
+                    iconName: "robot"
+                    titleKey: root._off ? "ai.disabled" : "ai.empty"
+                    hintKey: root._off ? "ai.enableHint" : "ai.setupHint"
+                }
         }
 
         RowLayout {
