@@ -9,13 +9,17 @@ Item {
 
     property int currentIndex: 0
     property bool _pendingSync: true
-    readonly property int columns: 2
+    readonly property int columns: 3
+    readonly property real contentHeight: layout.implicitHeight
 
     function moveBy(delta: int) {
         const n = Wallpaper.images.length;
         if (n <= 0)
             return;
-        root.currentIndex = ((root.currentIndex + delta) % n + n) % n;
+        const next = root.currentIndex + delta;
+        if (next < 0 || next >= n)
+            return;
+        root.currentIndex = next;
         root._ensureVisible();
     }
 
@@ -27,6 +31,19 @@ Item {
 
     function syncFromCurrent() {
         const paths = Wallpaper.images;
+        const pending = Wallpaper.pendingSelect || "";
+        if (pending.length > 0) {
+            for (let i = 0; i < paths.length; i++) {
+                if (paths[i] === pending) {
+                    root.currentIndex = i;
+                    root._pendingSync = false;
+                    Wallpaper.clearPendingSelect();
+                    root._ensureVisible();
+                    return;
+                }
+            }
+            return;
+        }
         const cur = Wallpaper.currentPath;
         for (let i = 0; i < paths.length; i++) {
             if (paths[i] === cur) {
@@ -69,7 +86,7 @@ Item {
         target: Wallpaper
         function onImagesChanged() {
             root._clamp();
-            if (root._pendingSync)
+            if (root._pendingSync || (Wallpaper.pendingSelect || "").length > 0)
                 root.syncFromCurrent();
         }
     }

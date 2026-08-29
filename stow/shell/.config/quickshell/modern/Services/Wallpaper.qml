@@ -15,9 +15,11 @@ Singleton {
     property string currentPath: ""
     property bool pickerOpen: false
     property var images: []
+    property string pendingSelect: ""
     property string sharedDir: "/var/lib/modern/session"
 
     readonly property string home: Quickshell.env("HOME")
+    readonly property string libraryDir: root.home + "/Pictures/Wallpapers"
     readonly property string stateHome: {
         const env = Quickshell.env("XDG_STATE_HOME");
         return (env && env.length > 0) ? env : (root.home + "/.local/state");
@@ -49,13 +51,19 @@ Singleton {
         id: importProc
         running: false
         command: [root.home + "/modern_dotfile/scripts/wallpaper-import.sh"]
+        stdout: StdioCollector {
+            id: importOut
+        }
         onExited: (code) => {
             if (code === 2)
                 Logger.error("Wallpaper", I18n.t("wallpaper.alreadyInLibrary"));
             else if (code !== 0 && code !== 1)
                 Logger.error("Wallpaper", I18n.t("wallpaper.importFailed"));
-            else if (code === 0)
-                root._refresh();
+            else if (code === 0) {
+                const lines = importOut.text.trim().split("\n").filter(l => l.length > 0);
+                root.pendingSelect = lines.length > 0 ? lines[lines.length - 1] : "";
+                root.setPickerOpen(true);
+            }
         }
     }
 
@@ -83,6 +91,8 @@ Singleton {
 
     function hide() { root.setPickerOpen(false); }
 
+    function clearPendingSelect() { root.pendingSelect = ""; }
+
     function _refresh() {
         listProc.running = false;
         Qt.callLater(() => {
@@ -92,8 +102,11 @@ Singleton {
 
     function importWallpaper() {
         try {
-            importProc.running = false;
-            importProc.running = true;
+            root.pickerOpen = false;
+            Qt.callLater(() => {
+                importProc.running = false;
+                importProc.running = true;
+            });
         } catch (e) {
             Logger.error("Wallpaper", String(e));
         }

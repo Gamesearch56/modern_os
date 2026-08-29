@@ -96,4 +96,44 @@ Singleton {
             return ["kitty"];
         return null;
     }
+
+    function openFolder(dir: string): bool {
+        try {
+            if (!dir || dir.length === 0)
+                return false;
+            Quickshell.execDetached(["mkdir", "-p", dir]);
+            const id = String(root.desktopId("fileManager") || "").replace(/\.desktop$/, "");
+            const lower = id.toLowerCase();
+            if (lower.indexOf("dolphin") !== -1) {
+                Quickshell.execDetached(["dolphin", "--new-window", dir]);
+                return true;
+            }
+            if (lower.indexOf("nautilus") !== -1) {
+                Quickshell.execDetached(["nautilus", dir]);
+                return true;
+            }
+            if (lower.indexOf("thunar") !== -1) {
+                Quickshell.execDetached(["thunar", dir]);
+                return true;
+            }
+            if (lower.indexOf("nemo") !== -1) {
+                Quickshell.execDetached(["nemo", dir]);
+                return true;
+            }
+            if (id.length > 0) {
+                Quickshell.execDetached(["gtk-launch", id, dir]);
+                return true;
+            }
+            const fb = root._fallback("fileManager");
+            if (fb) {
+                Quickshell.execDetached(fb.concat([dir]));
+                return true;
+            }
+            Quickshell.execDetached(["xdg-open", dir]);
+            return true;
+        } catch (err) {
+            Logger.error("Apps", String(err));
+            return false;
+        }
+    }
 }

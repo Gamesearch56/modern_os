@@ -169,6 +169,8 @@
     "title": "Wallpapers",
     "empty": "No wallpapers found",
     "add": "Add",
+    "openFolder": "Open folder",
+    "hint": "Use the arrow keys to choose a wallpaper and Enter to apply it, or add a new image.",
     "alreadyInLibrary": "That file is already in the wallpaper folder",
     "importFailed": "Could not import wallpaper",
     "importTitle": "Add wallpaper",

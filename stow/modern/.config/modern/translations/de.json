@@ -169,6 +169,8 @@
     "title": "Hintergründe",
     "empty": "Keine Hintergründe gefunden",
     "add": "Hinzufügen",
+    "openFolder": "Ordner öffnen",
+    "hint": "Wähle ein Hintergrundbild mit den Pfeiltasten und übernimm es mit Enter, oder füge ein neues Bild hinzu.",
     "alreadyInLibrary": "Diese Datei liegt schon im Hintergrundordner",
     "importFailed": "Hintergrund konnte nicht importiert werden",
     "importTitle": "Hintergrund hinzufügen",

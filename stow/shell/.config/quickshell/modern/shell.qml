@@ -41,6 +41,7 @@ ShellRoot {
             Launcher.hide();
             Notifications.hide();
             PowerMenu.hide();
+            Wallpaper.hide();
         }
     }
 
@@ -52,6 +53,7 @@ ShellRoot {
             Popups.dismiss();
             Notifications.hide();
             PowerMenu.hide();
+            Wallpaper.hide();
         }
     }
 
@@ -63,6 +65,7 @@ ShellRoot {
             Popups.dismiss();
             Launcher.hide();
             PowerMenu.hide();
+            Wallpaper.hide();
         }
     }
 
@@ -74,6 +77,19 @@ ShellRoot {
             Popups.dismiss();
             Launcher.hide();
             Notifications.hide();
+            Wallpaper.hide();
+        }
+    }
+
+    Connections {
+        target: Wallpaper
+        function onPickerOpenChanged() {
+            if (!Wallpaper.pickerOpen)
+                return;
+            Popups.dismiss();
+            Launcher.hide();
+            Notifications.hide();
+            PowerMenu.hide();
         }
     }
 
@@ -96,6 +112,10 @@ ShellRoot {
             }
             if (Notifications.panelOpen) {
                 Notifications.hide();
+                closed = true;
+            }
+            if (Wallpaper.pickerOpen) {
+                Wallpaper.hide();
                 closed = true;
             }
             if (Alarm.dialogOpen) {

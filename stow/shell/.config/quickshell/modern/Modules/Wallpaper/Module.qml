@@ -1,104 +1,98 @@
 import Quickshell
+import Quickshell.Hyprland
+import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
-import "../../Widgets"
 import "../../Services"
 
 Scope {
+    id: root
+
+    function _focusedScreen(): var {
+        const n = Hypr.focusedMonitorName();
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === n)
+                return screens[i];
+        }
+        return screens.length ? screens[0] : null;
+    }
+
     LazyLoader {
         active: Wallpaper.pickerOpen
 
-        FloatingWindow {
+        PanelWindow {
             id: win
             visible: Wallpaper.pickerOpen
-            title: "modern.wallpaper"
-            color: Colors.color.surface
-            implicitWidth: Tokens.spacing.xxl * 28
-            implicitHeight: Tokens.spacing.xxl * 20
+            screen: root._focusedScreen()
+            color: "transparent"
+            anchors.top: true
+            anchors.left: true
+            anchors.right: true
+            anchors.bottom: true
+            exclusionMode: ExclusionMode.Ignore
+            focusable: true
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
 
-            onVisibleChanged: {
-                if (visible) {
-                    grid._pendingSync = true;
-                    grid.syncFromCurrent();
-                    win.requestActivate();
-                } else {
-                    Wallpaper.setPickerOpen(false);
-                }
+            Overlay {
+                id: overlay
+                anchors.fill: parent
+                onClosed: Wallpaper.hide()
             }
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.surface
-                radius: Tokens.radius.medium
-            }
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Tokens.spacing.md
-                spacing: Tokens.spacing.md
-
-                MWindowChrome {
-                    Layout.fillWidth: true
-                    titleKey: "wallpaper.title"
-                    actionKey: "wallpaper.add"
-                    actionIcon: "list-add"
-                    onClosed: Wallpaper.setPickerOpen(false)
-                    onActionClicked: Wallpaper.importWallpaper()
-                }
-
-                MPane {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-
-                    PickerGrid {
-                        id: grid
-                        anchors.fill: parent
-                        visible: Wallpaper.images.length > 0
-                    }
-
-                    MEmptyState {
-                        visible: Wallpaper.images.length === 0
-                        anchors.fill: parent
-                        iconName: "folder-pictures-symbolic"
-                        titleKey: "wallpaper.empty"
-                    }
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: [win]
+                onCleared: {
+                    if (Wallpaper.pickerOpen)
+                        Wallpaper.hide();
                 }
             }
 
             Shortcut {
                 sequence: "Escape"
-                onActivated: Wallpaper.setPickerOpen(false)
+                context: Qt.ApplicationShortcut
+                onActivated: Wallpaper.hide()
             }
             Shortcut {
                 enabled: Wallpaper.images.length > 0
                 sequence: "Left"
-                onActivated: grid.moveBy(-1)
+                onActivated: overlay.moveBy(-1)
             }
             Shortcut {
                 enabled: Wallpaper.images.length > 0
                 sequence: "Right"
-                onActivated: grid.moveBy(1)
+                onActivated: overlay.moveBy(1)
             }
             Shortcut {
                 enabled: Wallpaper.images.length > 0
                 sequence: "Up"
-                onActivated: grid.moveBy(-grid.columns)
+                onActivated: overlay.moveBy(-overlay.columns)
             }
             Shortcut {
                 enabled: Wallpaper.images.length > 0
                 sequence: "Down"
-                onActivated: grid.moveBy(grid.columns)
+                onActivated: overlay.moveBy(overlay.columns)
             }
             Shortcut {
                 enabled: Wallpaper.images.length > 0
                 sequence: "Return"
-                onActivated: grid.activate()
+                onActivated: overlay.activate()
             }
             Shortcut {
                 enabled: Wallpaper.images.length > 0
                 sequence: "Enter"
-                onActivated: grid.activate()
+                onActivated: overlay.activate()
+            }
+
+            Component.onCompleted: {
+                Qt.callLater(() => {
+                    if (!Wallpaper.pickerOpen)
+                        return;
+                    keyGrab.active = true;
+                });
             }
         }
     }
