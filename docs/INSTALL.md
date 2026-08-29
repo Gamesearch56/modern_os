@@ -85,10 +85,11 @@ use a different image later:
 
 1. `scripts/theme-apply.sh --wallpaper PATH` (writes `tokens.json` and
    syncs lock/login assets)
-2. `systemctl --user enable modern-shell.service` then
-   `start-hyprland` on a TTY (not the `Hyprland` binary). Autostart
-   imports compositor env and restarts that unit; it does not start a
-   second one-shot `qs` child (`docs/BOOT.md`).
+2. `start-hyprland` on a TTY (not the `Hyprland` binary). Autostart
+   imports compositor env and restarts `modern-shell.service`. Enable
+   that unit from kitty inside the session if you want it lingered —
+   `systemctl --user` on a text TTY often fails with `$XDG_RUNTIME_DIR
+   not defined` (`docs/BOOT.md`).
 3. `scripts/doctor.sh`
 4. Optional gated: sysctl, ufw KDE Connect, ESP hook, snapper — each
    file's header comment has the copy command

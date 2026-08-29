@@ -71,12 +71,22 @@ On a text login as `devuser` (`Ctrl+Alt+F4`):
 
 ```bash
 pgrep -a qs; pgrep -a quickshell; pgrep -a Hyprland
+echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR-unset}"
+ls -ld /run/user/$(id -u)
+# only if /run/user/$(id -u) exists:
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
 systemctl --user status modern-shell.service
 tail -n 80 ~/.local/state/modern/quickshell.log
 qs -c modern log -t 80
 ls -l ~/.config/kitty/colors.conf
 python -c "import json; print(json.load(open('$HOME/.config/modern/config.json'))['keybinds'])"
 ```
+
+`systemctl --user` without those two variables fails with
+`$DBUS_SESSION_BUS_ADDRESS and $XDG_RUNTIME_DIR not defined`. Skip
+`enable` / `daemon-reload` on that TTY and run `start-hyprland`; enable
+from kitty after the bar is up.
 
 - **One Hyprland per user.** A second TTY's `start-hyprland` does not get
   the shell if an older instance still owns `modern-shell.service`.
