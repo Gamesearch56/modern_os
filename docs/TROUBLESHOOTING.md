@@ -98,11 +98,11 @@ from kitty after the bar is up.
 - Extra `devuser` sessions: `loginctl list-sessions`, then
   `loginctl terminate-session <id>` from the daily-driver account, or as
   `devuser` on a TTY: `pkill -x Hyprland`.
-- Autostart imports `WAYLAND_DISPLAY` then **restarts**
-  `modern-shell.service` (`Restart=always`). It does not `stop` the unit
-  and `exec qs` once. Bare `qs ipc` talks to a `default` config that does
-  not exist — keybinds use `qs -c modern ipc call …`. QML errors:
-  `qs -c modern log -t 80` or `~/.local/state/modern/quickshell.log`.
+- Autostart runs `qs -c modern` as a child of this compositor, in a
+  respawn loop. It does not wait on `systemctl --user`. Bare `qs ipc`
+  talks to a `default` config that does not exist — keybinds use
+  `qs -c modern ipc call …`. QML errors: `qs -c modern log -t 80` or
+  `~/.local/state/modern/quickshell.log`.
 - `TypeError: … is not a function` on a singleton: missing `qmldir`
   entry. See `docs/DECISIONS.md` #19.
 - Broken-image / empty icons: Papirus-Dark is the configured theme but

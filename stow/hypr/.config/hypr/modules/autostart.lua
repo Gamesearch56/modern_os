@@ -7,20 +7,20 @@
 local config = require("modules.config")
 
 hl.on("hyprland.start", function()
-    -- Import compositor env, then restart the user unit (Restart=always).
-    -- Do not also exec a one-shot qs child: that raced the unit after
-    -- reboot (docs/BOOT.md). If the unit is missing or skipped, fall
-    -- back to a respawning child of this compositor.
+    -- qs as a compositor child, with a respawn loop. Do not call
+    -- systemctl --user in this command: a TTY session often has no
+    -- user bus, and a hanging restart skips the bar entirely.
     hl.exec_cmd("sh -lc '"
         .. "mkdir -p \"${XDG_STATE_HOME:-$HOME/.local/state}/modern\"; "
         .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
-        .. "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE; "
-        .. "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE; "
-        .. "systemctl --user start hyprpolkitagent || true; "
-        .. "systemctl --user reset-failed modern-shell.service 2>/dev/null || true; "
-        .. "systemctl --user restart modern-shell.service 2>/dev/null || true; "
-        .. "if systemctl --user is-active --quiet modern-shell.service; then exit 0; fi; "
         .. "while true; do qs -c modern >>\"$log\" 2>&1 || true; sleep 1; done'")
+
+    -- Best-effort; timeout so a missing bus cannot stall the session.
+    hl.exec_cmd("sh -lc '"
+        .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE || true; "
+        .. "timeout 2 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP || true; "
+        .. "timeout 2 systemctl --user stop modern-shell.service || true; "
+        .. "timeout 2 systemctl --user start hyprpolkitagent || true'")
 
     hl.exec_cmd("hypridle")
 
@@ -34,6 +34,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("sh -lc 'state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; default=\"$HOME/.config/modern/wallpapers/default.jpg\"; if [ -f \"$state\" ]; then img=$(cat \"$state\"); elif [ -f \"$default\" ]; then img=\"$default\"; else exit 0; fi; [ -f \"$img\" ] && awww img \"$img\"'")
 
     if config.value("kdeconnect.enabled", true) then
-        hl.exec_cmd("systemctl --user start kdeconnect.service")
+        hl.exec_cmd("sh -lc 'timeout 2 systemctl --user start kdeconnect.service || true'")
     end
 end)

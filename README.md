@@ -134,11 +134,10 @@ Stay logged in as `bastianweigand`. On another virtual terminal:
    shows a warning, and leaves `systemd --user` without `WAYLAND_DISPLAY`
    (no bar, no shell). Optional UWSM:
    `uwsm start hyprland-uwsm.desktop`.
-   Autostart imports compositor env and restarts `modern-shell.service`
-   (`docs/BOOT.md`). Skip `systemctl --user enable` on this TTY — a
-   text login often has no `$XDG_RUNTIME_DIR` / session bus. Enable
-   once from kitty after the bar is up, if you want the unit lingered
-   across boots.
+   Autostart starts `qs -c modern` as a child of this compositor
+   (`docs/BOOT.md`). Skip `systemctl --user enable` — a text login
+   often has no `$XDG_RUNTIME_DIR` / session bus, and the bar does not
+   need that unit.
 
 You now have two sessions: the old desktop on TTY1/TTY2, the new one on
 TTY3.
@@ -178,11 +177,9 @@ cd ~/modern_dotfile
 start-hyprland
 ```
 
-Autostart imports `WAYLAND_DISPLAY` and restarts `modern-shell.service`;
-it does not start a second one-shot `qs` (`docs/BOOT.md`). Enable the
-unit from a terminal **inside** that session (`systemctl --user enable
-modern-shell.service`) — a TTY before `start-hyprland` often has no
-user bus, so `systemctl --user` fails with `$XDG_RUNTIME_DIR not defined`.
+Autostart starts `qs -c modern` as a compositor child (`docs/BOOT.md`).
+Do not run `systemctl --user enable` before `start-hyprland` — a TTY
+often has no user bus, so that command fails and is not required.
 
 If that user is named `bastianweigand` **and** `/home/bastianweigand`
 exists (this machine, or a restore of this username), the live-home

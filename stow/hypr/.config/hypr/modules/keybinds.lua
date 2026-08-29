@@ -13,15 +13,9 @@ local function combo(action)
     return config.value("keybinds." .. action, nil)
 end
 
--- Seed colors.conf if missing so a hard include in an unrestowed
--- kitty.conf cannot abort with no window.
-local kitty = hl.dsp.exec_cmd("sh -lc '"
-    .. "f=\"$HOME/.config/kitty/colors.conf\"; "
-    .. "if [ ! -f \"$f\" ]; then "
-    .. "mkdir -p \"$HOME/.config/kitty\"; rm -f \"$f\"; "
-    .. "printf \"background #141218\\nforeground #E6E0E9\\n\" >\"$f\"; "
-    .. "fi; "
-    .. "exec /usr/bin/kitty'")
+-- Bare `kitty` — a wrapped sh -lc here broke SUPER+T. colors.conf is
+-- globincluded from kitty.conf so a missing theme file is not fatal.
+local kitty = hl.dsp.exec_cmd("/usr/bin/kitty")
 
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
 -- Named config `modern` is ~/.config/quickshell/modern. Bare `qs ipc`
