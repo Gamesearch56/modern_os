@@ -6,6 +6,7 @@ stow/kitty/.config/kitty/colors.conf
 stow/qt/.config/qt6ct/qss/modern.qss
 stow/qt/.config/qt6ct/colors/modern.conf
 stow/hypr/.config/hypr/application-style.conf
+stow/hypr/.config/hypr/hyprtoolkit.conf
 **/.cache/
 
 # Live config, not the shipped default

@@ -198,16 +198,20 @@ CSD under the SSD.
 
 ## Polkit prompt is light / unthemed / tiled
 
-hyprpolkitagent is Qt Quick, not Fusion+QSS. It needs
-`QT_QPA_PLATFORMTHEME=qt6ct` (drop-in under
-`~/.config/systemd/user/hyprpolkitagent.service.d/` plus Hyprland
-`import-environment`) and a current `qt6ct/colors/modern.conf`. After
-`theme-apply.sh`, the agent is restarted automatically. By hand:
+hyprpolkitagent is hyprtoolkit, not Fusion+QSS. Colors live in
+`~/.config/hypr/hyprtoolkit.conf` (written by `theme-apply.sh`). After
+`theme-apply.sh`, Hyprland reloads (glass opacity) and the agent is
+restarted. By hand:
 
 ```bash
-systemctl --user daemon-reload
-systemctl --user restart hyprpolkitagent
+scripts/theme-apply.sh
+pkexec true
 ```
+
+Radii and type come from that toolkit conf (`rounding_large` =
+`Tokens.radius.medium`). The wrong-password label is hardcoded red in
+upstream. A missing `hyprtoolkit.conf` falls back to hyprtoolkit defaults
+(near-black + cyan), which will not match the overlay chrome.
 
 ## Dolphin is light / has a File menu / ignores the wallpaper palette
 
@@ -217,23 +221,6 @@ palette. SUPER+E now goes through `scripts/modern-launch`. Fully quit
 Dolphin (not only the window) and open it again. `theme-apply.sh` writes
 absolute paths into `qt6ct.conf` (qt6ct does not expand `~`). The menu
 bar is hidden from `[MainWindow] MenuBar=Disabled` in `dolphinrc`.
-
-
-hyprpolkitagent is Qt Quick, not Fusion+QSS. It needs
-`QT_QPA_PLATFORMTHEME=qt6ct` (drop-in under
-`~/.config/systemd/user/hyprpolkitagent.service.d/` plus Hyprland
-`import-environment`) and a current `qt6ct/colors/modern.conf`. After
-`theme-apply.sh`, the agent is restarted automatically. By hand:
-
-```bash
-systemctl --user daemon-reload
-systemctl --user restart hyprpolkitagent
-pkexec true
-```
-
-Radii come from `~/.config/hypr/application-style.conf` (written by
-`theme-apply.sh` from `design.cornerRounding`). The wrong-password
-label is hardcoded red in upstream QML.
 
 ## Tiny crunchy UI on 1440p HDR
 

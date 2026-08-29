@@ -121,9 +121,9 @@ bell stay available in Settings → Widgets. See `docs/WIDGETS.md`.
   through `scripts/modern-launch` so `QT_QPA_PLATFORMTHEME=qt6ct` actually
   reaches the process (Hyprland `hl.env` does not stick after reload).
   Restart Dolphin after `theme-apply.sh`. No `QT_QPA_PLATFORM=xcb`.
-- **hyprpolkitagent** — same qt6ct palette (QML `SystemPalette`) plus
-  `~/.config/hypr/application-style.conf` mapped from
-  `design.cornerRounding` / `motion.scale`. Not QSS. See `docs/THEMING.md`.
+- **hyprpolkitagent** — hyprtoolkit palette in `hyprtoolkit.conf`
+  (surface / primary / Inter / radius.medium), plus a Hyprland window
+  rule for glass opacity and `dim_around`. Not QSS. See `docs/THEMING.md`.
 - **Vivaldi** — native theme object plus CSS overlay and a copied wallpaper
   at `~/.config/vivaldi/custom_css/wallpaper` when
   `design.bootScreen.wallpaperOnVivaldi` is on. CSS mods need

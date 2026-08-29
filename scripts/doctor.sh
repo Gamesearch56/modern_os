@@ -104,11 +104,17 @@ if systemctl --user is-active hyprpolkitagent.service >/dev/null 2>&1; then
 else
     warn "hyprpolkitagent.service is not active — pkexec prompts will not render"
 fi
+TOOLKIT_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprtoolkit.conf"
+if [ -f "$TOOLKIT_CONF" ]; then
+    ok "hyprtoolkit.conf present (hyprpolkitagent chrome)"
+else
+    warn "hyprtoolkit.conf missing — run scripts/theme-apply.sh so hyprpolkitagent matches overlay chrome"
+fi
 STYLE_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/application-style.conf"
 if [ -f "$STYLE_CONF" ]; then
-    ok "application-style.conf present (hyprpolkitagent chrome)"
+    ok "application-style.conf present (hyprland-qt-support radii)"
 else
-    warn "application-style.conf missing — run scripts/theme-apply.sh so hyprpolkitagent gets MD3 radii"
+    warn "application-style.conf missing — run scripts/theme-apply.sh so hypr Qt Quick apps get MD3 radii"
 fi
 
 section "PATH tools"

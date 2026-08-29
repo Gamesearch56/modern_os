@@ -68,13 +68,17 @@ apply({
 })
 
 -- hyprpolkitagent has no .desktop file; Wayland app_id is the binary
--- name or the QApplication name. Float+center so the prompt is not
--- tiled behind the requesting window. Rounding follows decoration.
+-- name or the QApplication name. Glass like the wallpaper overlay:
+-- float+center, dim_around as scrim, design.transparency, no hyprbars.
 apply({
     name = "polkit-auth-dialog",
     match = { class = "hyprpolkitagent|hyprland-polkit-agent" },
     float = true,
     center = true,
+    dim_around = true,
+    border_size = 1,
+    opacity = config.value("design.transparency", 0.85),
+    ["hyprbars:no_bar"] = true,
 })
 
 apply({

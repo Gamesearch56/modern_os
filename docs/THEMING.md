@@ -21,10 +21,11 @@ matugen -c ~/.config/matugen/config.toml ...
         ├─▶ hypr/modules/colors.lua               (Hyprland borders)
         ├─▶ kitty/colors.conf
         ├─▶ gtk-3.0/gtk.css, gtk-4.0/gtk.css
-        ├─▶ qt6ct/colors/modern.conf              (QPalette; hyprpolkitagent)
+        ├─▶ qt6ct/colors/modern.conf              (QPalette; Fusion / Dolphin)
         ├─▶ kdeglobals                            (Dolphin, other KDE apps)
         ├─▶ qt6ct/qss/modern.qss                  (Fusion stylesheet)
         ├─▶ hypr/application-style.conf           (hyprland-qt-support radii)
+        ├─▶ hypr/hyprtoolkit.conf                 (hyprpolkitagent chrome)
         └─▶ vivaldi/custom_css/00-modern.css
             + 01-chrome.css (fonts/radii)
 ```
@@ -37,7 +38,7 @@ Every *color* output in that list is written by **one** `matugen`
 invocation from **one** seed color, so nothing can drift out of sync the
 way hand-rolled per-app Wallust templates could. Radii, fonts, and
 motion for toolkit chrome (`01-chrome.css`, QSS placeholders,
-`application-style.conf`) are patched afterwards from `config.json`.
+`application-style.conf`, `hyprtoolkit.conf`) are patched afterwards from `config.json`.
 `tokens.json` is also readable directly
 by anything that isn't a matugen template consumer (e.g. a shell script
 via `jq`, or the future Settings > Diagnostics color preview).
@@ -110,12 +111,17 @@ always rewritten; the native theme object is merged only while Vivaldi is
 not reload QSS live — restart it after `theme-apply.sh`. Keybind launches
 use `scripts/modern-launch` so `qt6ct` is in the environment even when
 Hyprland was only reloaded (not restarted). `theme-apply.sh` writes
-absolute paths into `qt6ct.conf` because qt6ct does not expand `~`. **hyprpolkitagent**
-is QML (`org.hyprland.style`): colors come from the qt6ct `SystemPalette`
-(not QSS), radii/motion from `~/.config/hypr/application-style.conf`.
-`theme-apply.sh` restarts the user unit so a new palette is picked up;
-the style conf live-reloads on its own. The agent's error string is
-hardcoded `"red"` upstream and cannot follow `error`. The files these
+absolute paths into `qt6ct.conf` because qt6ct does not expand `~`.
+
+**hyprpolkitagent** is hyprtoolkit (not Qt Quick / QSS). Colors, Inter,
+and `Tokens.radius.medium`/`small` are written to
+`~/.config/hypr/hyprtoolkit.conf` from `tokens.json` + `config.json`.
+The compositor applies `design.transparency` and `dim_around` via the
+`polkit-auth-dialog` window rule so the prompt reads as glass over a
+scrim, like Super+W. The next dialog picks up toolkit colors without a
+restart; `theme-apply.sh` still restarts the user unit after a palette
+swap. The agent's error string is hardcoded `"red"` upstream and cannot
+follow `error`. The files these
 templates write are always correct on disk, so a restarted app always
 picks up the current theme.
 
