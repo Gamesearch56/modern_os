@@ -1,4 +1,5 @@
-// Opens Proton Mail. Modules must not call execDetached (layer rule).
+// Opens Proton Mail in the browser when no desktop mail app is set.
+// Prefer Apps.launch("mail") from Modules so fallbacks apply.
 pragma Singleton
 
 import Quickshell

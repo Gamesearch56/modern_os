@@ -78,7 +78,7 @@ QtObject {
         widgets: { icon: "view-grid", order: 30, group: "desktop", keywords: ["bar", "layout"] },
         launcher: { icon: "view-app-grid-symbolic", order: 32, group: "desktop", keywords: ["frecency", "search"] },
         screenshots: { icon: "camera-photo", order: 34, group: "desktop", keywords: ["capture", "grim"] },
-        applications: { icon: "applications-other", order: 40, group: "apps", keywords: ["autostart", "browser", "calendar"] },
+        applications: { icon: "applications-other", order: 40, group: "apps", keywords: ["autostart", "browser", "calendar", "mail", "whatsapp", "proton"] },
         privacy: { icon: "security-high", order: 44, group: "apps", keywords: ["dnd", "kdeconnect", "proton", "calendar", "ai"] },
         language: { icon: "preferences-desktop-locale", order: 50, group: "input", keywords: ["locale", "date", "time"] },
         keyboard: { icon: "input-keyboard", order: 52, group: "input", keywords: ["keybinds", "layout", "cheatsheet"] },

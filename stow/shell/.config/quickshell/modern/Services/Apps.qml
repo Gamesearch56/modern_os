@@ -1,6 +1,6 @@
 // Default-app launcher. Roles come from config apps.defaults
-// (browser, calendar, fileManager, terminal). DesktopEntries lookup
-// lives here so Modules never spawn processes.
+// (browser, calendar, mail, communication, fileManager, terminal).
+// DesktopEntries lookup lives here so Modules never spawn processes.
 pragma Singleton
 
 import Quickshell
@@ -83,7 +83,11 @@ Singleton {
 
     function _fallbackIds(role: string): var {
         if (role === "calendar")
-            return ["gnome-calendar.desktop", "org.gnome.Calendar.desktop", "kalendar.desktop", "org.kde.kalendar.desktop", "org.kde.korganizer.desktop"];
+            return ["proton-calendar.desktop", "proton-calendar", "gnome-calendar.desktop", "org.gnome.Calendar.desktop", "kalendar.desktop", "org.kde.kalendar.desktop", "org.kde.korganizer.desktop"];
+        if (role === "mail")
+            return ["proton-mail.desktop", "proton-mail", "org.proton.Mail.desktop", "thunderbird.desktop", "org.mozilla.Thunderbird.desktop"];
+        if (role === "communication")
+            return ["whatsapp-desktop.desktop", "whatsapp-for-linux.desktop", "com.rtg.whatsapp.desktop", "io.github.mimbrero.WhatsAppDesktop.desktop", "wasistlos.desktop", "zapzap.desktop", "whatsapp.desktop"];
         return [];
     }
 
@@ -94,7 +98,18 @@ Singleton {
             return ["dolphin"];
         if (role === "terminal")
             return ["kitty"];
+        if (role === "mail")
+            return ["xdg-open", "https://mail.proton.me"];
         return null;
+    }
+
+    function launchBackground(desktopId: string): bool {
+        const name = String(desktopId || "").replace(/\.desktop$/, "");
+        if (!name.length)
+            return false;
+        const home = Quickshell.env("HOME");
+        Quickshell.execDetached([home + "/modern_dotfile/scripts/modern-launch", "--background", name]);
+        return true;
     }
 
     function openFolder(dir: string): bool {

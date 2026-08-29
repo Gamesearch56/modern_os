@@ -132,6 +132,8 @@ Singleton {
                 property JsonObject defaults: JsonObject {
                     property string browser: "vivaldi-stable.desktop"
                     property string calendar: "org.kde.korganizer.desktop"
+                    property string mail: ""
+                    property string communication: ""
                     property string fileManager: "org.kde.dolphin.desktop"
                     property string terminal: "kitty.desktop"
                 }

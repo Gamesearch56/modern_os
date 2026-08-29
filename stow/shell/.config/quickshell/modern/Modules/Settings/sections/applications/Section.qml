@@ -6,9 +6,30 @@ import "../../../../Services"
 import "."
 
 ColumnLayout {
+    id: root
     spacing: Tokens.spacing.md
 
     Model { id: model }
+
+    function setBackgroundApp(role, v) {
+        const id = String(v || "");
+        ConfigWrite.set("apps.defaults." + role, id);
+        const cur = Config.general.autostart || [];
+        let found = false;
+        for (let i = 0; i < cur.length; i++) {
+            if (String(cur[i]) === id) {
+                found = true;
+                break;
+            }
+        }
+        if (!found && id.length > 0) {
+            const next = cur.slice();
+            next.push(id);
+            ConfigWrite.set("general.autostart", next);
+        }
+        if (!Hypr.raiseDesktop(id))
+            Apps.launchBackground(id);
+    }
 
     MSectionHeader {
         key: "settings.fields.defaultApps"
@@ -28,7 +49,23 @@ ColumnLayout {
         MSelect {
             model: Apps.allEntries()
             value: Config.apps.defaults.calendar
-            onSelected: (v) => ConfigWrite.set("apps.defaults.calendar", v)
+            onSelected: (v) => root.setBackgroundApp("calendar", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.mail"
+        MSelect {
+            model: Apps.allEntries()
+            value: Config.apps.defaults.mail
+            onSelected: (v) => root.setBackgroundApp("mail", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.communication"
+        MSelect {
+            model: Apps.allEntries()
+            value: Config.apps.defaults.communication
+            onSelected: (v) => root.setBackgroundApp("communication", v)
         }
     }
     MField {

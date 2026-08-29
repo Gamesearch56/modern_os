@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 # Launch a .desktop app with the Qt theme env Hyprland's own process
 # does not keep after display-server init (hl.env only applies at start).
+# --background parks the next window on special:background so mail/chat
+# keep running (and notifying) without occupying a workspace.
 set -euo pipefail
 export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
 export QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}"
 export QT_WAYLAND_DISABLE_WINDOWDECORATION="${QT_WAYLAND_DISABLE_WINDOWDECORATION:-1}"
+if [[ "${1:-}" == "--background" ]]; then
+    shift
+    inner=$(printf '%q ' "$0" "$@")
+    exec hyprctl dispatch exec "[workspace special:background silent] ${inner% }"
+fi
 exec gtk-launch "$@"

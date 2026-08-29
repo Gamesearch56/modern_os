@@ -11,6 +11,7 @@ Item {
     property var barScreen: null
     property int menuIndex: -1
     property string menuAddress: ""
+    property bool menuBackground: false
     property real menuRowY: 0
     property real menuRowH: 0
 
@@ -25,6 +26,7 @@ Item {
     function closeMenu() {
         root.menuIndex = -1;
         root.menuAddress = "";
+        root.menuBackground = false;
     }
 
     BarPanelChrome {
@@ -85,6 +87,7 @@ Item {
                                 root.menuRowY = p.y;
                                 root.menuRowH = item.height;
                                 root.menuAddress = item.address;
+                                root.menuBackground = item.background;
                                 root.menuIndex = item.index;
                             }
 
@@ -111,87 +114,13 @@ Item {
         }
     }
 
-    MouseArea {
-        z: 20
+    Menu {
         anchors.fill: parent
         visible: root.menuIndex >= 0
-        onClicked: root.closeMenu()
-    }
-
-    Item {
-        id: menuCard
-        z: 21
-        visible: root.menuIndex >= 0
-        width: parent.width - Tokens.spacing.md * 2
-        height: menuCol.implicitHeight + Tokens.spacing.sm * 2
-        x: Tokens.spacing.md
-        y: {
-            const h = menuCard.height;
-            const below = root.menuRowY + root.menuRowH;
-            if (below + h <= root.height)
-                return below;
-            return Math.max(0, root.menuRowY - h);
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            radius: Tokens.radius.medium
-            color: Colors.color.surface
-            border.width: Tokens.stroke.focus
-            border.color: Colors.color.outlineVariant
-        }
-
-        ColumnLayout {
-            id: menuCol
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Tokens.spacing.xs
-            spacing: 0
-
-            MListItem {
-                Layout.fillWidth: true
-                iconName: "focus-windows-symbolic"
-                titleKey: "bar.taskbarShow"
-                onClicked: {
-                    const addr = root.menuAddress;
-                    root.closeMenu();
-                    Hypr.activateWindow(addr);
-                    Popups.dismiss();
-                    Taskbar.hide();
-                }
-            }
-            MListItem {
-                Layout.fillWidth: true
-                iconName: "view-restore-symbolic"
-                titleKey: "bar.taskbarFloat"
-                onClicked: {
-                    const addr = root.menuAddress;
-                    root.closeMenu();
-                    Hypr.toggleFloating(addr);
-                }
-            }
-            MListItem {
-                Layout.fillWidth: true
-                iconName: "view-fullscreen-symbolic"
-                titleKey: "bar.taskbarFullscreen"
-                onClicked: {
-                    const addr = root.menuAddress;
-                    root.closeMenu();
-                    Hypr.toggleFullscreen(addr);
-                }
-            }
-            MListItem {
-                Layout.fillWidth: true
-                iconName: "window-close-symbolic"
-                titleKey: "bar.close"
-                destructive: true
-                onClicked: {
-                    const addr = root.menuAddress;
-                    root.closeMenu();
-                    Hypr.closeWindow(addr);
-                }
-            }
-        }
+        menuAddress: root.menuAddress
+        menuBackground: root.menuBackground
+        menuRowY: root.menuRowY
+        menuRowH: root.menuRowH
+        onClosed: root.closeMenu()
     }
 }

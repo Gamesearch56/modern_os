@@ -79,7 +79,9 @@ Item {
                 fillWidth: true
                 onClicked: {
                     popup.open = false;
-                    if (!Apps.launch("calendar"))
+                    const e = Apps.entryFor("calendar");
+                    const id = (e && (e.id || e.name)) || Apps.desktopId("calendar");
+                    if (!Hypr.raiseDesktop(String(id || "")) && !Apps.launch("calendar"))
                         Settings.openAt("applications", "");
                 }
             }

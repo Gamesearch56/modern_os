@@ -10,6 +10,11 @@ RowLayout {
     MIconButton {
         iconName: "mail-unread"
         key: "bar.mail"
-        onClicked: Mail.openMail()
+        onClicked: {
+            const e = Apps.entryFor("mail");
+            const id = (e && (e.id || e.name)) || Apps.desktopId("mail");
+            if (!Hypr.raiseDesktop(String(id || "")))
+                Apps.launch("mail");
+        }
     }
 }

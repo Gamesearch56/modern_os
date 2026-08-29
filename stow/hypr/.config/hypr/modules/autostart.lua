@@ -49,11 +49,33 @@ hl.on("hyprland.start", function()
     end
 
     local autostart = config.value("general.autostart", {})
+    local modern_launch = (os.getenv("HOME") or "") .. "/modern_dotfile/scripts/modern-launch"
+
+    local function stem(id)
+        return tostring(id or ""):gsub("%.desktop$", "")
+    end
+
+    local function is_background(name)
+        if name == "" then
+            return false
+        end
+        for _, role in ipairs({ "calendar", "mail", "communication" }) do
+            if stem(config.value("apps.defaults." .. role, "")) == name then
+                return true
+            end
+        end
+        return false
+    end
+
     if type(autostart) == "table" then
         for _, id in ipairs(autostart) do
-            local name = tostring(id):gsub("%.desktop$", "")
+            local name = stem(id)
             if name ~= "" then
-                hl.exec_cmd("gtk-launch " .. name)
+                if is_background(name) then
+                    hl.exec_cmd(modern_launch .. " --background " .. name)
+                else
+                    hl.exec_cmd("gtk-launch " .. name)
+                end
             end
         end
     end

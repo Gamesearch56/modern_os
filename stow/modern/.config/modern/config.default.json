@@ -297,6 +297,8 @@
     "defaults": {
       "browser": "vivaldi-stable.desktop",
       "calendar": "org.kde.korganizer.desktop",
+      "mail": "",
+      "communication": "",
       "fileManager": "org.kde.dolphin.desktop",
       "terminal": "kitty.desktop"
     }

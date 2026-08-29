@@ -139,9 +139,74 @@ Singleton {
             return;
         const t = root.toplevelByAddress(addr);
         const wsId = t && t.workspace ? Number(t.workspace.id) : 0;
-        if (wsId > 0)
+        const ipc = t ? t.lastIpcObject : null;
+        const hidden = !!(ipc && (ipc.hidden === true || ipc.mapped === false));
+        if (wsId < 0 || hidden)
+            root.moveToCurrentWorkspace(addr);
+        else if (wsId > 0)
             root.focusWorkspace(wsId);
         root.focusWindow(addr);
+    }
+
+    function moveToCurrentWorkspace(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        const fw = root.focusedWorkspace;
+        const id = (fw && Number(fw.id) > 0) ? Number(fw.id) : 1;
+        if (root._lua)
+            root.dispatch("hl.dsp.window.move({ workspace = " + id + ", window = \"address:" + addr + "\" })");
+        else
+            root.dispatch("movetoworkspace " + id + ",address:" + addr);
+    }
+
+    function moveToBackground(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        if (root._lua)
+            root.dispatch("hl.dsp.window.move({ workspace = \"special:background\", silent = true, window = \"address:" + addr + "\" })");
+        else
+            root.dispatch("movetoworkspacesilent special:background,address:" + addr);
+    }
+
+    function raiseDesktop(desktopId: string): bool {
+        const id = String(desktopId || "");
+        if (!id.length)
+            return false;
+        const list = Hyprland.toplevels?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            const t = list[i];
+            if (!t || !root._windowMatchesDesktop(t, id))
+                continue;
+            root.activateWindow(String(t.address || ""));
+            return true;
+        }
+        return false;
+    }
+
+    function _normId(s: string): string {
+        return String(s || "").replace(/\.desktop$/i, "").toLowerCase().replace(/[\s._-]+/g, "");
+    }
+
+    function _windowMatchesDesktop(toplevel: var, desktopId: string): bool {
+        const needle = root._normId(desktopId);
+        if (!needle.length)
+            return false;
+        const ipc = toplevel.lastIpcObject || ({});
+        const fields = [ipc.class, ipc.initialClass, toplevel.class, toplevel.initialClass, ipc.title, toplevel.title];
+        for (let i = 0; i < fields.length; i++) {
+            const n = root._normId(String(fields[i] || ""));
+            if (!n.length)
+                continue;
+            if (n === needle)
+                return true;
+            if (needle.length >= 5 && n.indexOf(needle) !== -1)
+                return true;
+            if (n.length >= 5 && needle.indexOf(n) !== -1)
+                return true;
+        }
+        return false;
     }
 
     function toplevelByAddress(address: string): var {
