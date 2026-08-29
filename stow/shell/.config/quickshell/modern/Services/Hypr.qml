@@ -426,34 +426,34 @@ Singleton {
         void root.monitors;
         void root.toplevels;
         void root.focusedWorkspace;
-        const mode = Config.monitors?.workspaceMode || "fixed";
-        const ids = [];
-        if (mode === "fixed") {
-            const range = root.reservedRange(screen);
-            if (range) {
-                for (let id = range.from; id <= range.to; id++)
-                    ids.push(id);
-            }
-        }
-        if (ids.length === 0) {
-            const mon = root.monitorForScreen(screen);
-            const raw = Hyprland.workspaces?.values ?? [];
-            for (let i = 0; i < raw.length; i++) {
-                const ws = raw[i];
-                if (!ws || ws.id <= 0)
-                    continue;
-                if (mon && !root._onMonitor(ws, mon))
-                    continue;
-                ids.push(Number(ws.id));
-            }
-            ids.sort((a, b) => a - b);
-        }
+        const seen = ({});
         const shown = [];
-        for (let i = 0; i < ids.length; i++) {
-            const id = ids[i];
-            if (root.isActiveOnScreen(screen, id) || root._workspaceHasWindows(id))
-                shown.push(id);
+        function add(id) {
+            const n = Number(id);
+            if (n <= 0 || seen[n])
+                return;
+            seen[n] = true;
+            shown.push(n);
         }
+        const mon = root.monitorForScreen(screen);
+        const raw = Hyprland.workspaces?.values ?? [];
+        for (let i = 0; i < raw.length; i++) {
+            const ws = raw[i];
+            if (!ws || Number(ws.id) <= 0)
+                continue;
+            if (mon && !root._onMonitor(ws, mon))
+                continue;
+            const id = Number(ws.id);
+            if (root.isActiveOnScreen(screen, id) || root._workspaceHasWindows(id))
+                add(id);
+        }
+        if (mon) {
+            const aw = mon.activeWorkspace ?? mon.lastIpcObject?.activeWorkspace;
+            const awId = Number(aw && aw.id !== undefined ? aw.id : aw);
+            if (awId > 0)
+                add(awId);
+        }
+        shown.sort((a, b) => a - b);
         return shown;
     }
 

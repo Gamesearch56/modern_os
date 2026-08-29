@@ -1,0 +1,7 @@
+{
+  "id": "ai",
+  "icon": "computer",
+  "key": "settings.sections.ai",
+  "order": 34,
+  "keywords": ["ollama", "assistant", "chat"]
+}

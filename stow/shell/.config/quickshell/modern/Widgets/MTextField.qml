@@ -7,6 +7,7 @@ Item {
 
     property alias text: input.text
     readonly property alias focused: input.activeFocus
+    property alias editor: input
     property string placeholderKey: ""
     property string iconName: ""
     property int echoMode: TextInput.Normal
@@ -64,6 +65,7 @@ Item {
         renderType: TextInput.QtRendering
         echoMode: root.echoMode
         enabled: root.enabled
+        activeFocusOnPress: true
         clip: true
         onAccepted: root.accepted()
         onTextChanged: root.textEdited()
@@ -89,6 +91,10 @@ Item {
         key: root.placeholderKey
         styleName: "bodyLarge"
         color: Colors.color.onSurfaceVariant
+    }
+
+    function focusInput() {
+        input.forceActiveFocus();
     }
 
     function forceActiveFocus() {

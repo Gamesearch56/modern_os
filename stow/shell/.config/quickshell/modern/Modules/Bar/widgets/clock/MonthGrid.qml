@@ -73,37 +73,38 @@ ColumnLayout {
         }
 
         Repeater {
-            model: root.cells
+            model: root.cells.length
             Item {
-                required property var modelData
+                required property int index
+                readonly property var cell: root.cells[index] || ({ day: 0, ymd: "", today: false, marked: false })
                 Layout.fillWidth: true
                 Layout.preferredHeight: Tokens.spacing.xl + Tokens.spacing.xs
 
                 Rectangle {
                     anchors.fill: parent
                     radius: Tokens.radius.full
-                    color: modelData.today ? Colors.color.primaryContainer : "transparent"
-                    visible: modelData.day > 0
+                    color: cell.today ? Colors.color.primaryContainer : "transparent"
+                    visible: cell.day > 0
                 }
 
                 MText {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     anchors.topMargin: Tokens.spacing.xxs
-                    value: modelData.day > 0 ? String(modelData.day) : ""
+                    value: cell.day > 0 ? String(cell.day) : ""
                     styleName: "labelLarge"
-                    color: modelData.today ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+                    color: cell.today ? Colors.color.onPrimaryContainer : Colors.color.onSurface
                 }
 
                 Rectangle {
-                    visible: modelData.marked
+                    visible: cell.marked
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: Tokens.spacing.xxs
                     width: Tokens.spacing.xs
                     height: Tokens.spacing.xs
                     radius: Tokens.radius.full
-                    color: modelData.today ? Colors.color.onPrimaryContainer : Colors.color.primary
+                    color: cell.today ? Colors.color.onPrimaryContainer : Colors.color.primary
                 }
             }
         }

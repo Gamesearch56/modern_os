@@ -48,15 +48,16 @@ Item {
         spacing: Tokens.spacing.xxs
 
         Repeater {
-            model: root.model
+            model: (root.model || []).length
 
             Item {
-                required property var modelData
+                required property int index
+                readonly property var opt: (root.model || [])[index] || ({})
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 implicitWidth: Tokens.spacing.xxl * 3
 
-                readonly property bool on: String(modelData.value) === String(root.value)
+                readonly property bool on: String(opt.value) === String(root.value)
 
                 Rectangle {
                     anchors.fill: parent
@@ -66,8 +67,8 @@ Item {
 
                 MText {
                     anchors.centerIn: parent
-                    key: modelData.titleKey || ""
-                    value: modelData.titleValue || ""
+                    key: opt.titleKey || ""
+                    value: opt.titleValue || ""
                     styleName: "labelLarge"
                     color: parent.on ? Chrome.filled.fg : Colors.color.onSurface
                 }
@@ -78,7 +79,7 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         root.forceActiveFocus();
-                        root.selected(modelData.value);
+                        root.selected(opt.value);
                     }
                 }
             }

@@ -67,4 +67,17 @@ Singleton {
         const head = showWeekday ? (root.weekday(d) + " ") : "";
         return head + dateStr + "  " + timeStr;
     }
+
+    function displayDate(real: var): var {
+        const p = Config.language.previewDate || "";
+        if (!p || String(p).length < 10)
+            return real;
+        const d = new Date(String(p).slice(0, 10) + "T12:00:00");
+        if (isNaN(d.getTime()))
+            return real;
+        if (real) {
+            d.setHours(real.getHours(), real.getMinutes(), real.getSeconds());
+        }
+        return d;
+    }
 }

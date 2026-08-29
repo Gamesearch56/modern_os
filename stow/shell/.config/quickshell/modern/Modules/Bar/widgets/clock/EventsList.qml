@@ -11,19 +11,20 @@ ColumnLayout {
         Layout.fillWidth: true
         implicitHeight: Tokens.spacing.xxl * 8
 
-        ListView {
-            anchors.fill: parent
-            clip: true
-            model: Calendar.todayEvents
-            visible: Calendar.todayEvents.length > 0
+            ListView {
+                anchors.fill: parent
+                clip: true
+                model: Calendar.todayEvents.length
+                visible: Calendar.todayEvents.length > 0
 
-            delegate: MListItem {
-                required property var modelData
-                width: ListView.view.width
-                titleValue: modelData.summary || ""
-                subtitleValue: modelData.when || modelData.ymd || ""
+                delegate: MListItem {
+                    required property int index
+                    readonly property var ev: (Calendar.todayEvents || [])[index] || ({})
+                    width: ListView.view.width
+                    titleValue: ev.summary || ""
+                    subtitleValue: ev.when || ev.ymd || ""
+                }
             }
-        }
 
         MEmptyState {
             visible: Calendar.todayEvents.length === 0

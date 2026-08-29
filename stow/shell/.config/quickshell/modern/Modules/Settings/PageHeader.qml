@@ -15,7 +15,7 @@ ColumnLayout {
     Layout.fillWidth: true
 
     MText {
-        key: "settings.nav." + (root.catalog.group(Settings.sectionId) || "session")
+        key: "settings.nav." + ((root.catalog && root.catalog.group(Settings.sectionId)) || "general")
         styleName: "labelSmall"
         color: Colors.color.onSurfaceVariant
         font.capitalization: Font.AllUppercase

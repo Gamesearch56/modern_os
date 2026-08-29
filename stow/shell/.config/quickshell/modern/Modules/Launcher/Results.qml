@@ -48,24 +48,24 @@ Item {
             clip: true
             spacing: Tokens.spacing.xxs
             boundsBehavior: Flickable.StopAtBounds
-            model: root.model
+            model: root._count
             currentIndex: root.currentIndex
             highlightFollowsCurrentItem: true
             highlightMoveDuration: Motion.short()
 
             delegate: MListItem {
-                required property var modelData
                 required property int index
+                readonly property var hit: root.model[index] || ({})
                 width: list.width
                 iconName: {
                     if (!(Config.launcher.showIcons ?? true))
                         return "";
-                    return modelData.icon || "application-x-executable";
+                    return hit.icon || "application-x-executable";
                 }
-                tintIcon: modelData.kind === "settings" || modelData.kind === "power"
-                titleValue: modelData.name
+                tintIcon: hit.kind === "settings" || hit.kind === "power"
+                titleValue: hit.name
                 subtitleValue: (Config.launcher.showDescriptions ?? true)
-                    ? (modelData.genericName || "")
+                    ? (hit.genericName || "")
                     : ""
                 selected: root.currentIndex === index
                 onClicked: {

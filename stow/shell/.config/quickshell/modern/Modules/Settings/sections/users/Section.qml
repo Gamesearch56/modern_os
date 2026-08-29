@@ -95,4 +95,13 @@ ColumnLayout {
             iconName: "dialog-ok"
         }
     }
+
+    MListItem {
+        Layout.fillWidth: true
+        titleKey: "settings.fields.autologin"
+        MSwitch {
+            checked: !!(Config.general.autologin)
+            onToggled: (v) => ConfigWrite.set("general.autologin", v)
+        }
+    }
 }

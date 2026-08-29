@@ -8,3 +8,4 @@ singleton Typography 1.0 Typography.qml
 singleton I18n 1.0 I18n.qml
 singleton Logger 1.0 Logger.qml
 singleton DateTime 1.0 DateTime.qml
+singleton SelectMenus 1.0 SelectMenus.qml

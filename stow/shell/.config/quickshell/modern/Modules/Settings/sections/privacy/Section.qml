@@ -59,24 +59,4 @@ ColumnLayout {
             onAccepted: ConfigWrite.set("accounts.calendarIcsUrl", text)
         }
     }
-
-    MSectionHeader { key: "settings.fields.aiProvider" }
-    MSegmented {
-        Layout.fillWidth: true
-        value: Config.accounts?.ai?.provider ?? "ollama"
-        model: [
-            { value: "ollama", titleKey: "settings.aiOllama" },
-            { value: "none", titleKey: "settings.aiNone" }
-        ]
-        onSelected: (v) => ConfigWrite.set("accounts.ai.provider", v)
-    }
-    MField {
-        visible: (Config.accounts?.ai?.provider ?? "ollama") === "ollama"
-        labelKey: "settings.fields.ollamaModel"
-        hintKey: "settings.hints.ollamaSetup"
-        MTextField {
-            text: Config.accounts?.ai?.ollamaModel ?? "llama3"
-            onAccepted: ConfigWrite.set("accounts.ai.ollamaModel", text)
-        }
-    }
 }

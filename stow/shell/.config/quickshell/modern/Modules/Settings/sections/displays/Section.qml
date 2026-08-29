@@ -40,7 +40,7 @@ ColumnLayout {
             required property var modelData
             Layout.fillWidth: true
             titleValue: modelData.description || modelData.name || ""
-            subtitleValue: (modelData.width || "") + "×" + (modelData.height || "") + " @" + (modelData.scale || 1)
+            subtitleValue: (modelData.width || "") + "×" + (modelData.height || "") + " @" + (modelData.scale || 1) + (modelData.refreshRate ? (" · " + Math.round(modelData.refreshRate) + " Hz") : "")
             selected: (modelData.description || "") === root.selectedDesc
             onClicked: root.selectedDesc = modelData.description || ""
         }

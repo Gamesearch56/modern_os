@@ -50,7 +50,9 @@
     "fallback": "en",
     "dateFormat": "DD.MM.YYYY",
     "timeFormat": "HH:mm",
-    "firstDayOfWeek": 1
+    "firstDayOfWeek": 1,
+    "previewDate": "",
+    "timezone": ""
   },
   "bar": {
     "position": "top",

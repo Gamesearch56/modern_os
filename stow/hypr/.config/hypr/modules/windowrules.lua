@@ -106,8 +106,8 @@ apply({
     float = true,
     center = true,
     size = { 1040, 720 },
+    dim_around = true,
     ["hyprbars:no_bar"] = true,
-    opaque = true,
 })
 
 local overlay_windows = {

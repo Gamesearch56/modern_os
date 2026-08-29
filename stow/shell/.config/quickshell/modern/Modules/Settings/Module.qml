@@ -7,8 +7,6 @@ import "../../Widgets"
 import "../../Services"
 
 Scope {
-    Catalog { id: catalog }
-
     LazyLoader {
         active: Settings.open
 
@@ -16,9 +14,11 @@ Scope {
             id: win
             visible: Settings.open
             title: "modern.settings"
-            color: Colors.color.surface
+            color: "transparent"
             implicitWidth: Tokens.spacing.xxl * 32 + Tokens.spacing.lg
             implicitHeight: Tokens.spacing.xxl * 22 + Tokens.spacing.lg
+
+            Catalog { id: catalog }
 
             onVisibleChanged: {
                 if (!visible)
@@ -26,65 +26,67 @@ Scope {
             }
 
             Rectangle {
+                id: card
                 anchors.fill: parent
                 color: Colors.color.surface
                 radius: Tokens.radius.medium
-            }
+                border.color: Colors.color.outlineVariant
+                border.width: Tokens.stroke.hairline
+                clip: true
+                opacity: Config.design.transparency ?? 0.85
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Tokens.spacing.md
-                spacing: Tokens.spacing.md
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Tokens.spacing.md
+                    spacing: Tokens.spacing.md
 
-                MWindowChrome {
-                    Layout.fillWidth: true
-                    titleKey: "settings.title"
-                    titleColumnWidth: Tokens.spacing.xxl * 9
-                    onClosed: Settings.close()
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: Tokens.spacing.lg
-
-                    MPane {
-                        Layout.preferredWidth: Tokens.spacing.xxl * 9
-                        Layout.fillHeight: true
-
-                        Nav {
-                            anchors.fill: parent
-                            catalog: catalog
-                        }
+                    MWindowChrome {
+                        Layout.fillWidth: true
+                        titleKey: "settings.title"
+                        titleColumnWidth: Tokens.spacing.xxl * 9
+                        onClosed: Settings.close()
                     }
 
-                    ColumnLayout {
+                    RowLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        spacing: Tokens.spacing.md
+                        spacing: Tokens.spacing.lg
 
-                        PageHeader { catalog: catalog }
+                        MPane {
+                            Layout.preferredWidth: Tokens.spacing.xxl * 9
+                            Layout.fillHeight: true
 
-                        Flickable {
-                            id: pane
+                            Nav {
+                                anchors.fill: parent
+                                catalog: catalog
+                            }
+                        }
+
+                        ColumnLayout {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            clip: true
-                            contentWidth: width
-                            contentHeight: {
-                                const it = sectionLoader.item;
-                                if (!it)
-                                    return 0;
-                                return Math.max(it.implicitHeight, it.childrenRect.height);
-                            }
+                            spacing: Tokens.spacing.md
 
-                            Loader {
-                                id: sectionLoader
-                                width: pane.width
-                                source: Qt.resolvedUrl("sections/" + Settings.sectionId + "/Section.qml")
-                                onLoaded: {
-                                    if (item)
-                                        item.width = Qt.binding(() => sectionLoader.width);
+                            PageHeader { catalog: catalog }
+
+                            Flickable {
+                                id: pane
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                clip: true
+                                contentWidth: width
+                                contentHeight: sectionLoader.item
+                                    ? sectionLoader.item.implicitHeight
+                                    : 0
+
+                                Loader {
+                                    id: sectionLoader
+                                    width: pane.width
+                                    source: Qt.resolvedUrl("sections/" + Settings.sectionId + "/Section.qml")
+                                    onLoaded: {
+                                        if (item)
+                                            item.width = Qt.binding(() => sectionLoader.width);
+                                    }
                                 }
                             }
                         }
@@ -96,13 +98,21 @@ Scope {
                 sequence: "Escape"
                 onActivated: {
                     const it = sectionLoader.item;
+                    if (Update.open) {
+                        Update.close();
+                        return;
+                    }
                     if (it) {
                         if (it.createOpen) {
                             it.createOpen = false;
                             return;
                         }
                         if (it.editorOpen) {
-                            it.editorOpen = false;
+                            it.editorId = "";
+                            return;
+                        }
+                        if (it.passwordOpen) {
+                            it.pendingNet = null;
                             return;
                         }
                         if (it.dialogDevice) {
@@ -111,6 +121,57 @@ Scope {
                         }
                     }
                     Settings.close();
+                }
+            }
+
+            Loader {
+                anchors.fill: card
+                z: 20
+                active: Settings.sectionId === "bar" && sectionLoader.item
+                    && !!sectionLoader.item.editorOpen
+                source: Qt.resolvedUrl("sections/bar/WidgetForm.qml")
+                onLoaded: {
+                    item.widgetId = Qt.binding(() => sectionLoader.item ? sectionLoader.item.editorId : "");
+                    item.closed.connect(() => {
+                        if (sectionLoader.item)
+                            sectionLoader.item.editorId = "";
+                    });
+                }
+            }
+
+            Loader {
+                anchors.fill: card
+                z: 21
+                active: Update.open
+                source: Qt.resolvedUrl("sections/system/UpdateOverlay.qml")
+            }
+
+            Loader {
+                anchors.fill: card
+                z: 22
+                active: Settings.sectionId === "network" && sectionLoader.item
+                    && !!sectionLoader.item.passwordOpen
+                source: Qt.resolvedUrl("sections/network/PasswordOverlay.qml")
+                onLoaded: {
+                    item.net = Qt.binding(() => sectionLoader.item ? sectionLoader.item.pendingNet : null);
+                    item.closed.connect(() => {
+                        if (sectionLoader.item)
+                            sectionLoader.item.pendingNet = null;
+                    });
+                }
+            }
+            Loader {
+                anchors.fill: card
+                z: 23
+                active: Settings.sectionId === "bluetooth" && sectionLoader.item
+                    && !!sectionLoader.item.dialogDevice
+                source: Qt.resolvedUrl("sections/bluetooth/DeviceOverlay.qml")
+                onLoaded: {
+                    item.device = Qt.binding(() => sectionLoader.item ? sectionLoader.item.dialogDevice : null);
+                    item.closed.connect(() => {
+                        if (sectionLoader.item)
+                            sectionLoader.item.dialogDevice = null;
+                    });
                 }
             }
         }

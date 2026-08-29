@@ -8,10 +8,23 @@ import "."
 ColumnLayout {
     spacing: Tokens.spacing.md
 
-    DiagnosticsView {
+    MSectionHeader { key: "settings.fields.gaming" }
+    Loader {
         Layout.fillWidth: true
+        Layout.preferredHeight: item ? item.implicitHeight : 0
+        source: Qt.resolvedUrl("Gaming.qml")
+        onLoaded: {
+            if (item)
+                item.width = Qt.binding(() => width);
+        }
     }
 
+    MButton {
+        kind: "tonal"
+        key: "settings.mirrorsUpdate"
+        iconName: "view-refresh"
+        onClicked: Update.refreshMirrors()
+    }
     MButton {
         kind: "filled"
         key: "settings.systemUpdate"
@@ -19,26 +32,10 @@ ColumnLayout {
         onClicked: Update.start()
     }
 
-    MCard {
-        visible: Update.open
+    Loader {
+        active: Update.open
         Layout.fillWidth: true
-        level: 2
-
-        ColumnLayout {
-            spacing: Tokens.spacing.sm
-            MWindowChrome {
-                Layout.fillWidth: true
-                titleKey: "settings.systemUpdate"
-                onClosed: Update.close()
-            }
-            MText {
-                value: Update.log
-                styleName: "bodySmall"
-                familyRole: "monospace"
-                wrapMode: Text.Wrap
-                elide: Text.ElideNone
-                Layout.fillWidth: true
-            }
-        }
+        Layout.preferredHeight: item ? item.implicitHeight : 0
+        source: Qt.resolvedUrl("UpdateOverlay.qml")
     }
 }

@@ -3,7 +3,7 @@
     "launcher": "Anwendungen",
     "workspaces": "Arbeitsbereiche",
     "tray": "Ablage",
-    "clock": "Uhr",
+    "calendar": "Kalender",
     "volume": "Lautstärke",
     "muted": "Stummgeschaltet",
     "media": "Medien",
@@ -122,7 +122,7 @@
     "eventsTab": "Termine",
     "prevMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
-    "icsHint": "Lege in Einstellungen → Konten eine geheime ICS-URL an, damit Proton-Calendar-Termine hier erscheinen."
+    "icsHint": "Lege in Einstellungen → Datenschutz eine geheime ICS-URL an, damit Proton-Calendar-Termine hier erscheinen."
   },
   "mail": {
     "open": "Mail öffnen"
@@ -322,8 +322,10 @@
     "noResults": "Keine Ergebnisse"
   },
   "settings": {
-    "title": "Einstellungen",
+    "title": "Systemeinstellungen",
     "search": "Einstellungen durchsuchen...",
+    "selectSearch": "Suchen",
+    "selectNone": "Keine",
     "refresh": "Aktualisieren",
     "noResults": "Keine passenden Einstellungen",
     "loadError": "Dieser Abschnitt konnte nicht geladen werden. Siehe qs -c modern log.",
@@ -442,30 +444,58 @@
       "mirrorCountry": "Spiegel-Land",
       "showIcons": "Symbole anzeigen",
       "protonWayland": "Proton Wayland",
-      "hdrSession": "Sitzungs-HDR"
+      "hdrSession": "Sitzungs-HDR",
+      "autoHide": "Leiste automatisch ausblenden",
+      "cursorTheme": "Cursor-Thema",
+      "cursorSize": "Cursor-Größe",
+      "previewDate": "Vorschaudatum",
+      "timezone": "Zeitzone",
+      "repeatRate": "Wiederholrate",
+      "repeatDelay": "Wiederholverzögerung",
+      "numlockOnBoot": "Num-Lock beim Start",
+      "showDescriptions": "Beschreibungen anzeigen",
+      "inhibitFullscreen": "Idle bei Vollbild unterdrücken",
+      "inhibitMedia": "Idle bei Wiedergabe unterdrücken",
+      "dnsOverride": "DNS-Override",
+      "currentWallpaper": "Hintergrundbild",
+      "windowsChrome": "Fenster",
+      "speedTest": "Geschwindigkeitstest",
+      "ethernet": "Ethernet",
+      "wifiPassword": "WLAN-Passwort",
+      "perAppVolume": "App-Lautstärke",
+      "pollInterval": "Abfrageintervall (ms)",
+      "showGpu": "GPU anzeigen",
+      "showTemps": "Temperaturen anzeigen",
+      "scrollStep": "Scrollschritt",
+      "scrollStepFine": "Feiner Scrollschritt",
+      "providerPrefix": "Präfix"
     },
     "sections": {
-      "general": "Allgemein",
+      "overview": "Übersicht",
+      "general": "Übersicht",
       "applications": "Anwendungen",
-      "accounts": "Konten & Verbindungen",
-      "privacy": "Datenschutz & Berechtigungen",
+      "accounts": "Datenschutz",
+      "privacy": "Datenschutz",
       "design": "Design",
       "language": "Sprache & Region",
       "keyboard": "Tastatur",
-      "time": "Zeit",
-      "displays": "Bildschirme",
-      "windows": "Fenster",
+      "time": "Sprache & Region",
+      "displays": "Anzeige",
+      "windows": "Design",
       "audio": "Audio",
       "network": "Netzwerk",
-      "widgets": "Widgets",
+      "widgets": "Leiste",
+      "bar": "Leiste",
       "launcher": "Starter",
       "power": "Energie",
-      "screenshots": "Bildschirmfotos",
+      "screenshots": "Bildschirmfoto",
       "users": "Benutzer",
       "storage": "Speicher",
+      "backup": "Sicherung",
       "system": "System",
-      "gaming": "Gaming",
-      "bluetooth": "Bluetooth"
+      "gaming": "System",
+      "bluetooth": "Bluetooth",
+      "ai": "KI"
     },
     "addAutostart": "Autostart-App hinzufügen",
     "motionOff": "Aus",
@@ -487,11 +517,24 @@
     "weatherLocationPlaceholder": "Stadt oder lat, lon",
     "weatherMetric": "Celsius",
     "weatherImperial": "Fahrenheit",
+    "disconnect": "Trennen",
+    "connectWifi": "Verbinden",
+    "speedTestRun": "Geschwindigkeitstest",
+    "speedTestResult": "{n} Mbit/s",
+    "mirrorsUpdate": "Spiegel aktualisieren",
+    "updateStep": "Aktualisiere…",
+    "restoreHint": "Wiederherstellen ist abgeschottet. Siehe docs/BACKUP.md.",
+    "snapshotDelete": "Löschen",
+    "snapshotEmpty": "Noch keine Snapshots",
+    "energyNow": "Verbrauch",
+    "energyBattery": "{n} %",
+    "previewDatePlaceholder": "JJJJ-MM-TT",
+    "providerPrefixPlaceholder": ">",
     "nav": {
-      "session": "Sitzung",
+      "general": "Allgemein",
+      "session": "Allgemein",
       "appearance": "Erscheinungsbild",
-      "desktop": "Desktop",
-      "apps": "Apps & Konten",
+      "apps": "Apps",
       "input": "Eingabe & Region",
       "devices": "Geräte",
       "system": "System"
@@ -530,7 +573,11 @@
       "hyprbarsOn": "hyprbars-Plugin ist geladen.",
       "hyprbarsOff": "hyprbars ist nicht geladen. scripts/doctor.sh und hyprpm prüfen.",
       "windowRulesJson": "JSON-Array der Hyprland-Fensterregeln. Speichern prüft vor dem Schreiben.",
-      "cheatsheetBind": "Öffnet die Übersicht (Super+K)."
+      "cheatsheetBind": "Öffnet die Übersicht (Super+K).",
+      "previewDate": "Nur die Oberfläche. Kalender und Uhr nutzen dieses Datum; die Systemzeit bleibt.",
+      "timezone": "IANA-Name wie Europe/Berlin. Wird mit timedatectl gesetzt (kann nachfragen).",
+      "restoreGated": "Ein Snapshot-Rollback ist abgeschottet. Siehe docs/BACKUP.md.",
+      "speedTest": "Kurzer curl-Download vom Arch-Geo-Spiegel. Keine Speedtest-Website."
     },
     "hub": {
       "title": "Kurzbefehle",
@@ -547,12 +594,30 @@
       "available": "Verfügbar",
       "emptyConnected": "Keine verbundenen Geräte",
       "forget": "Vergessen",
-      "connect": "Verbinden"
+      "connect": "Verbinden",
+      "disconnect": "Trennen"
     },
     "storage": {
       "mounts": "Volumes",
       "devices": "Laufwerke",
       "eject": "Auswerfen"
+    },
+    "backup": {
+      "snapshots": "Snapshots"
+    },
+    "overview": {
+      "stats": "Live-Werte"
+    },
+    "bar": {
+      "available": "Verfügbare Widgets",
+      "editWidget": "Widget"
+    },
+    "audio": {
+      "emptyStreams": "Gerade keine App-Streams"
+    },
+    "network": {
+      "ethernetOn": "Verbunden",
+      "ethernetOff": "Nicht verbunden"
     }
   },
   "onboarding": {

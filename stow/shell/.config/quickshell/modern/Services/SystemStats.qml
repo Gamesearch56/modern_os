@@ -23,6 +23,9 @@ Singleton {
     readonly property real fanPercent: 100 * root.fanRpm / Math.max(1, root.fanRpmPeak)
 
     property var _prev: ({ idle: 0, total: 0 })
+    property var cpuSamples: []
+    property var ramSamples: []
+    property var diskSamples: []
 
     Process {
         id: proc
@@ -73,8 +76,19 @@ Singleton {
                 if (fan > root.fanRpmPeak)
                     root.fanRpmPeak = fan;
             }
+            root.cpuSamples = root._push(root.cpuSamples, root.cpuPercent);
+            root.ramSamples = root._push(root.ramSamples, root.ramPercent);
+            root.diskSamples = root._push(root.diskSamples, root.diskPercent);
         } catch (e) {
             Logger.warn("SystemStats", String(e));
         }
+    }
+
+    function _push(arr: var, v: real): var {
+        const next = (arr || []).slice();
+        next.push(v);
+        if (next.length > 32)
+            next.shift();
+        return next;
     }
 }

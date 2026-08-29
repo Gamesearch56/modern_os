@@ -14,6 +14,8 @@ ColumnLayout {
     function setBackgroundApp(role, v) {
         const id = String(v || "");
         ConfigWrite.set("apps.defaults." + role, id);
+        if (id.length === 0)
+            return;
         const cur = Config.general.autostart || [];
         let found = false;
         for (let i = 0; i < cur.length; i++) {
@@ -22,7 +24,7 @@ ColumnLayout {
                 break;
             }
         }
-        if (!found && id.length > 0) {
+        if (!found) {
             const next = cur.slice();
             next.push(id);
             ConfigWrite.set("general.autostart", next);
@@ -41,6 +43,7 @@ ColumnLayout {
         MSelect {
             model: Apps.allEntries()
             value: Config.apps.defaults.browser
+            allowEmpty: true
             onSelected: (v) => ConfigWrite.set("apps.defaults.browser", v)
         }
     }
@@ -49,6 +52,7 @@ ColumnLayout {
         MSelect {
             model: Apps.allEntries()
             value: Config.apps.defaults.calendar
+            allowEmpty: true
             onSelected: (v) => root.setBackgroundApp("calendar", v)
         }
     }
@@ -57,6 +61,7 @@ ColumnLayout {
         MSelect {
             model: Apps.allEntries()
             value: Config.apps.defaults.mail
+            allowEmpty: true
             onSelected: (v) => root.setBackgroundApp("mail", v)
         }
     }
@@ -65,6 +70,7 @@ ColumnLayout {
         MSelect {
             model: Apps.allEntries()
             value: Config.apps.defaults.communication
+            allowEmpty: true
             onSelected: (v) => root.setBackgroundApp("communication", v)
         }
     }
@@ -73,6 +79,7 @@ ColumnLayout {
         MSelect {
             model: Apps.allEntries()
             value: Config.apps.defaults.fileManager
+            allowEmpty: true
             onSelected: (v) => ConfigWrite.set("apps.defaults.fileManager", v)
         }
     }
@@ -81,6 +88,7 @@ ColumnLayout {
         MSelect {
             model: Apps.allEntries()
             value: Config.apps.defaults.terminal
+            allowEmpty: true
             onSelected: (v) => ConfigWrite.set("apps.defaults.terminal", v)
         }
     }

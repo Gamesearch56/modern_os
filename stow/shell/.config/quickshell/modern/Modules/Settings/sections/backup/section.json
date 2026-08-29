@@ -1,0 +1,7 @@
+{
+  "id": "backup",
+  "icon": "drive-harddisk",
+  "key": "settings.sections.backup",
+  "order": 72,
+  "keywords": ["snapper", "snapshot", "restore", "restic"]
+}

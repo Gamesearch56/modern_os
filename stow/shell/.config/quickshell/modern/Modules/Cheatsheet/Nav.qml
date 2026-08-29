@@ -60,15 +60,16 @@ Item {
                 spacing: Tokens.spacing.xxs
 
                 Repeater {
-                    model: root.cats
+                    model: root.cats.length
                     delegate: MListItem {
-                        required property var modelData
+                        required property int index
+                        readonly property var cat: root.cats[index] || ({})
                         Layout.fillWidth: true
                         variant: "nav"
-                        iconName: root.iconFor(modelData.id)
-                        titleKey: "cheatsheet.category." + modelData.id
-                        selected: root.categoryId === modelData.id
-                        onClicked: root.picked(modelData.id)
+                        iconName: root.iconFor(cat.id)
+                        titleKey: "cheatsheet.category." + cat.id
+                        selected: root.categoryId === cat.id
+                        onClicked: root.picked(cat.id)
                     }
                 }
             }

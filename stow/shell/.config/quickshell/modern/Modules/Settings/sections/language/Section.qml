@@ -60,4 +60,42 @@ ColumnLayout {
             onClicked: ConfigWrite.set("language.firstDayOfWeek", 0)
         }
     }
+
+    MListItem {
+        Layout.fillWidth: true
+        titleKey: "settings.fields.showWeekday"
+        MSwitch {
+            checked: !!(Config.widgets?.clock?.showWeekday)
+            onToggled: (v) => ConfigWrite.set("widgets.clock.showWeekday", v)
+        }
+    }
+    MListItem {
+        Layout.fillWidth: true
+        titleKey: "settings.fields.showSeconds"
+        MSwitch {
+            checked: !!(Config.widgets?.clock?.showSeconds)
+            onToggled: (v) => ConfigWrite.set("widgets.clock.showSeconds", v)
+        }
+    }
+
+    MField {
+        labelKey: "settings.fields.timezone"
+        hintKey: "settings.hints.timezone"
+        MTextField {
+            text: Locale.timezone || Config.language.timezone || ""
+            onAccepted: {
+                ConfigWrite.set("language.timezone", text);
+                Locale.setTimezone(text);
+            }
+        }
+    }
+    MField {
+        labelKey: "settings.fields.previewDate"
+        hintKey: "settings.hints.previewDate"
+        MTextField {
+            text: Config.language.previewDate ?? ""
+            placeholderKey: "settings.previewDatePlaceholder"
+            onAccepted: ConfigWrite.set("language.previewDate", text)
+        }
+    }
 }

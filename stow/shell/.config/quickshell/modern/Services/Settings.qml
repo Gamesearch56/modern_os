@@ -10,17 +10,38 @@ Singleton {
     id: root
 
     property bool open: false
-    property string sectionId: "general"
+    property string sectionId: "overview"
     property string subsectionId: ""
 
-    function openAt(section: string, subsection: string) {
-        let id = section || "general";
+    function resolve(section: string): string {
+        const id = section || "overview";
+        if (id === "general")
+            return "overview";
         if (id === "time")
-            id = "language";
+            return "language";
         if (id === "accounts")
-            id = "privacy";
+            return "privacy";
+        if (id === "widgets")
+            return "bar";
+        if (id === "windows")
+            return "design";
+        if (id === "gaming")
+            return "system";
+        if (id === "display")
+            return "displays";
+        if (id === "screenshot")
+            return "screenshots";
+        return id;
+    }
+
+    function openAt(section: string, subsection: string) {
+        const id = root.resolve(section);
         root.sectionId = id;
         root.subsectionId = subsection || "";
+        if (id === "design" && (section === "windows" || subsection === "windows"))
+            root.subsectionId = "windows";
+        if (id === "system" && (section === "gaming" || subsection === "gaming"))
+            root.subsectionId = "gaming";
         root.open = true;
     }
 
@@ -30,7 +51,7 @@ Singleton {
 
     IpcHandler {
         target: "settings"
-        function open() { root.openAt("general", ""); }
+        function open() { root.openAt("overview", ""); }
         function openAt(section: string) { root.openAt(section, ""); }
         function close() { root.close(); }
     }

@@ -52,26 +52,26 @@ Item {
                     spacing: Tokens.spacing.sm
 
                     Repeater {
-                        model: Hypr.toplevelList
+                        model: root.count
 
                         MListItem {
                             id: item
-                            required property var modelData
                             required property int index
-                            readonly property string address: String(modelData.address || "")
-                            readonly property int wsId: modelData.workspace ? Number(modelData.workspace.id) : 0
-                            readonly property string cls: modelData.lastIpcObject?.class ?? "application-x-executable"
+                            readonly property var win: (Hypr.toplevelList || [])[index]
+                            readonly property string address: String(item.win?.address || "")
+                            readonly property int wsId: item.win?.workspace ? Number(item.win.workspace.id) : 0
+                            readonly property string cls: item.win?.lastIpcObject?.class ?? "application-x-executable"
                             readonly property bool background: {
-                                const ipc = modelData.lastIpcObject;
+                                const ipc = item.win?.lastIpcObject;
                                 return item.wsId < 0 || !!(ipc && (ipc.hidden === true || ipc.mapped === false));
                             }
 
                             Layout.fillWidth: true
                             iconName: item.cls
                             tintIcon: false
-                            titleValue: modelData.title || item.cls
+                            titleValue: item.win?.title || item.cls
                             subtitleValue: item.background ? I18n.t("bar.taskbarBackground") : (item.wsId > 0 ? root.workspaceLabel(item.wsId) : "")
-                            selected: modelData.activated === true || root.menuIndex === item.index
+                            selected: item.win?.activated === true || root.menuIndex === item.index
                             onClicked: {
                                 root.closeMenu();
                                 Hypr.activateWindow(item.address);
@@ -114,13 +114,18 @@ Item {
         }
     }
 
-    Menu {
+    Loader {
         anchors.fill: parent
-        visible: root.menuIndex >= 0
-        menuAddress: root.menuAddress
-        menuBackground: root.menuBackground
-        menuRowY: root.menuRowY
-        menuRowH: root.menuRowH
-        onClosed: root.closeMenu()
+        active: root.menuIndex >= 0
+        source: Qt.resolvedUrl("Menu.qml")
+        onLoaded: {
+            if (!item)
+                return;
+            item.menuAddress = Qt.binding(() => root.menuAddress);
+            item.menuBackground = Qt.binding(() => root.menuBackground);
+            item.menuRowY = Qt.binding(() => root.menuRowY);
+            item.menuRowH = Qt.binding(() => root.menuRowH);
+            item.closed.connect(root.closeMenu);
+        }
     }
 }

@@ -38,27 +38,4 @@ ColumnLayout {
             }
         }
     }
-
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.snapper"
-        MSwitch {
-            checked: Config.backup.snapperEnabled
-            onToggled: (v) => ConfigWrite.set("backup.snapperEnabled", v)
-        }
-    }
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.preUpdateSnapshot"
-        MSwitch {
-            checked: Config.backup.preUpdateSnapshot
-            onToggled: (v) => ConfigWrite.set("backup.preUpdateSnapshot", v)
-        }
-    }
-    MButton {
-        kind: "filled"
-        key: "settings.systemUpdate"
-        onClicked: Settings.openAt("system", "update")
-    }
-    MHint { key: "settings.hints.storageGated"; Layout.fillWidth: true }
 }

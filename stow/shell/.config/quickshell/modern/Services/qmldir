@@ -40,3 +40,5 @@ singleton Theme 1.0 Theme.qml
 singleton Passwd 1.0 Passwd.qml
 singleton Storage 1.0 Storage.qml
 singleton Update 1.0 Update.qml
+singleton Locale 1.0 Locale.qml
+singleton Snapshots 1.0 Snapshots.qml

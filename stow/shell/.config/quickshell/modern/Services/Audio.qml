@@ -46,6 +46,16 @@ Singleton {
         }
         return out;
     }
+    readonly property list<PwNode> streams: {
+        const vals = root.nodes.values;
+        const out = [];
+        for (let i = 0; i < vals.length; i++) {
+            const n = vals[i];
+            if (n && n.isStream === true)
+                out.push(n);
+        }
+        return out;
+    }
 
     readonly property real volume: {
         const n = root.sink;
@@ -64,6 +74,9 @@ Singleton {
 
     PwObjectTracker {
         objects: root.trackedNodes
+    }
+    PwObjectTracker {
+        objects: root.streams
     }
 
     function nodeLabel(n: var): string {
@@ -118,6 +131,12 @@ Singleton {
 
     function setDefaultSource(node: var) {
         Pipewire.preferredDefaultAudioSource = node;
+    }
+
+    function setStreamVolume(node: var, percent: real) {
+        if (!node?.audio)
+            return;
+        node.audio.volume = Math.max(0, Math.min(100, percent)) / 100;
     }
 
     IpcHandler {

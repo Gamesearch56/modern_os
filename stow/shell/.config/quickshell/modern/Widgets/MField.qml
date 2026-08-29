@@ -14,6 +14,7 @@ ColumnLayout {
 
     spacing: Tokens.spacing.xs
     Layout.fillWidth: true
+    clip: false
 
     MText {
         visible: root.labelKey.length > 0

@@ -1,0 +1,7 @@
+{
+  "id": "bar",
+  "icon": "view-grid",
+  "key": "settings.sections.bar",
+  "order": 22,
+  "keywords": ["widgets", "layout", "topbar", "clock", "weather"]
+}

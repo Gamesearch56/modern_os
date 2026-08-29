@@ -27,7 +27,9 @@ directory plus an id in those arrays — no central switch.
 
 | `ai` | `ai.title` | Ai | Assistant chip + chat popup (Ollama); empty state explains setup |
 | `connectivity` | `bar.connectivity` | Network, Bluetooth | Combined wifi + BT; click opens Settings |
-| `battery` | `bar.battery` | Battery | Shown only on battery |
+| `calendar` | `calendar.title` | Calendar | Month grid (optional bar chip) |
+| `mail` | `bar.mail` | Apps, Hypr | Mail launcher |
+| `kdeconnect` | `bar.kdeconnect` | KdeConnect | Phone pairing |
 
 Default layout (bubbles) in `stow/modern/.config/modern/config.default.json`:
 
@@ -40,5 +42,6 @@ pill. `widget.json` `"bubble": true` marks a standalone pill. Wi-Fi and
 Bluetooth share a pill; battery + control-center gear + power share
 another. `bar.position` is `top` / `bottom` / `left` / `right`. Default
 height is 36. Wi-Fi and Bluetooth on the bar open Settings, not a popup.
-AI, weather, and clock use `MPopup`. Reorder in Settings → Widgets.
+AI, weather, and clock use `MPopup`. Reorder and per-widget forms in
+Settings → Bar (`docs/SETTINGS.md`).
 

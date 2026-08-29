@@ -101,6 +101,9 @@ Singleton {
     property real rxMbps: 0
     property real txMbps: 0
     property var _prevBytes: ({ rx: 0, tx: 0, at: 0 })
+    property bool speedTesting: false
+    property real speedMbps: 0
+    readonly property bool wiredConnected: root._wiredUp()
 
     readonly property var networks: {
         const w = root.wifi;
@@ -131,6 +134,40 @@ Singleton {
     function disconnect() {
         if (root.wifi?.disconnect)
             root.wifi.disconnect();
+    }
+
+    function needsPassword(network: var): bool {
+        if (!network || network.active)
+            return false;
+        if (network.isSecure === true)
+            return true;
+        const s = String(network.security || network.flags || "").toLowerCase();
+        if (s.length === 0)
+            return false;
+        return s.indexOf("open") === -1 && s.indexOf("none") === -1;
+    }
+
+    function speedTest() {
+        if (root.speedTesting)
+            return;
+        root.speedTesting = true;
+        root.speedMbps = 0;
+        speedProc.running = true;
+    }
+
+    Process {
+        id: speedProc
+        command: ["curl", "-L", "--max-time", "8", "-o", "/dev/null", "-s", "-w", "%{speed_download}", "https://geo.mirror.pkgbuild.com/iso/latest/archlinux-x86_64.iso"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const bps = Number((this.text || "").trim());
+                if (!isNaN(bps) && bps > 0)
+                    root.speedMbps = bps * 8 / 1000000;
+                root.speedTesting = false;
+            }
+        }
+        onExited: root.speedTesting = false
     }
 
     Process {

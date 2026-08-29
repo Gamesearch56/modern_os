@@ -14,6 +14,7 @@ Singleton {
     property int percent: 100
     property bool charging: false
     property string iconName: "battery"
+    property var percentSamples: []
 
     Process {
         id: proc
@@ -57,5 +58,10 @@ Singleton {
             root.iconName = "battery";
         if (!t.match(/native-path:.*(BAT|battery)/i) && t.indexOf("line-power") !== -1)
             root.onBattery = false;
+        const next = (root.percentSamples || []).slice();
+        next.push(root.percent);
+        if (next.length > 32)
+            next.shift();
+        root.percentSamples = next;
     }
 }

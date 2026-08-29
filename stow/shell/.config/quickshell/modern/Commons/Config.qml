@@ -88,6 +88,8 @@ Singleton {
                 property string dateFormat: "DD.MM.YYYY"
                 property string timeFormat: "HH:mm"
                 property int firstDayOfWeek: 1
+                property string previewDate: ""
+                property string timezone: ""
             }
 
             property JsonObject bar: JsonObject {

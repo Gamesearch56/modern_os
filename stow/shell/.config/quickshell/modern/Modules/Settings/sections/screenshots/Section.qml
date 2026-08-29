@@ -37,4 +37,21 @@ ColumnLayout {
             onToggled: (v) => ConfigWrite.set("screenshots.includeCursor", v)
         }
     }
+    MField {
+        labelKey: "settings.fields.screenshotDir"
+        MTextField {
+            text: Config.screenshots.directory || ""
+            onAccepted: ConfigWrite.set("screenshots.directory", text)
+        }
+    }
+    MSegmented {
+        Layout.fillWidth: true
+        value: Config.screenshots.format || "png"
+        model: [
+            { value: "png", titleValue: "PNG" },
+            { value: "jpeg", titleValue: "JPEG" },
+            { value: "webp", titleValue: "WebP" }
+        ]
+        onSelected: (v) => ConfigWrite.set("screenshots.format", v)
+    }
 }

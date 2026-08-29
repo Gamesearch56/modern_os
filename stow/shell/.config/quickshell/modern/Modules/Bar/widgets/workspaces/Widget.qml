@@ -36,9 +36,18 @@ Item {
                 break;
             }
         }
-        const next = active + 1;
-        if (next >= range.from && next <= range.to)
-            return next;
+        if (active > 0) {
+            const next = active + 1;
+            if (next >= range.from && next <= range.to)
+                return next;
+            return 0;
+        }
+        for (let id = range.from; id <= range.to; id++) {
+            const ws = Hypr.workspaceById(id);
+            const n = Number(ws?.windows ?? ws?.lastIpcObject?.windows ?? 0);
+            if (n === 0)
+                return id;
+        }
         return 0;
     }
 

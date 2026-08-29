@@ -10,11 +10,16 @@ Item {
 
     property var catalog
     property string query: ""
-    readonly property var rows: root.catalog ? root.catalog.filtered(root.query) : []
+    readonly property var rows: {
+        const c = root.catalog;
+        if (!c || typeof c.filtered !== "function")
+            return [];
+        return c.filtered(root.query);
+    }
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: Tokens.spacing.sm
+        spacing: Tokens.spacing.md
 
         MSearchField {
             id: search
@@ -37,20 +42,27 @@ Item {
                 spacing: Tokens.spacing.xxs
 
                 Repeater {
-                    model: root.rows
+                    model: root.rows.length
 
                     delegate: Item {
                         id: row
+                        required property int index
+                        readonly property var rowData: root.rows[index] || ({})
+                        readonly property bool _group: row.rowData.kind === "group"
                         Layout.fillWidth: true
-                        implicitHeight: (modelData.kind === "group")
+                        implicitHeight: row._group
                             ? Tokens.spacing.xl
                             : navItem.implicitHeight
                         Layout.preferredHeight: implicitHeight
+                        Layout.topMargin: row._group && row.index > 0
+                            ? Tokens.spacing.md
+                            : 0
+                        Layout.bottomMargin: row._group ? Tokens.spacing.xs : 0
 
                         MText {
-                            visible: modelData.kind === "group"
+                            visible: row._group
                             anchors.fill: parent
-                            key: modelData.key || ""
+                            key: row.rowData.key || ""
                             styleName: "labelSmall"
                             color: Colors.color.onSurfaceVariant
                             font.capitalization: Font.AllUppercase
@@ -58,13 +70,13 @@ Item {
 
                         MListItem {
                             id: navItem
-                            visible: modelData.kind === "item"
+                            visible: !row._group
                             width: row.width
                             variant: "nav"
-                            iconName: root.catalog.icon(modelData.id)
-                            titleKey: "settings.sections." + modelData.id
-                            selected: Settings.sectionId === modelData.id
-                            onClicked: Settings.openAt(modelData.id, "")
+                            iconName: root.catalog.icon(row.rowData.id)
+                            titleKey: row._group ? "" : ("settings.sections." + row.rowData.id)
+                            selected: Settings.sectionId === row.rowData.id
+                            onClicked: Settings.openAt(row.rowData.id, "")
                         }
                     }
                 }

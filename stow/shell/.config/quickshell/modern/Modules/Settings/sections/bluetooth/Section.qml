@@ -25,13 +25,14 @@ ColumnLayout {
 
     MSectionHeader { key: "settings.bluetooth.connected" }
     Repeater {
-        model: Bluetooth.connectedDevices
+        model: Bluetooth.connectedDevices.length
         MListItem {
-            required property var modelData
+            required property int index
+            readonly property var dev: Bluetooth.connectedDevices[index]
             Layout.fillWidth: true
-            titleValue: modelData.name || ""
-            subtitleValue: modelData.address || ""
-            onClicked: root.dialogDevice = modelData
+            titleValue: (dev && dev.name) ? dev.name : ""
+            subtitleValue: (dev && dev.address) ? dev.address : ""
+            onClicked: root.dialogDevice = dev
         }
     }
     MEmptyState {
@@ -44,33 +45,13 @@ ColumnLayout {
 
     MSectionHeader { key: "settings.bluetooth.available" }
     Repeater {
-        model: Bluetooth.availableDevices
+        model: Bluetooth.availableDevices.length
         MListItem {
-            required property var modelData
+            required property int index
+            readonly property var dev: Bluetooth.availableDevices[index]
             Layout.fillWidth: true
-            titleValue: modelData.name || ""
-            onClicked: root.dialogDevice = modelData
+            titleValue: (dev && dev.name) ? dev.name : ""
+            onClicked: root.dialogDevice = dev
         }
-    }
-
-    MDialog {
-        anchors.fill: parent
-        open: root.dialogDevice !== null
-        titleValue: root.dialogDevice ? (root.dialogDevice.name || "") : ""
-        confirmKey: root.dialogDevice && root.dialogDevice.connected ? "settings.bluetooth.forget" : "settings.bluetooth.connect"
-        destructive: !!(root.dialogDevice && root.dialogDevice.connected)
-        onConfirmed: {
-            const d = root.dialogDevice;
-            if (!d) {
-                root.dialogDevice = null;
-                return;
-            }
-            if (d.connected)
-                Bluetooth.forgetDevice(d);
-            else
-                Bluetooth.connectDevice(d);
-            root.dialogDevice = null;
-        }
-        onCancelled: root.dialogDevice = null
     }
 }

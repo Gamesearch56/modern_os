@@ -65,9 +65,9 @@ else changes — no central switch statement to edit.
 **A new Settings section.** Create `Modules/Settings/sections/<id>/` with
 `Section.qml`, `section.json` (id, icon, translation key, order, search
 keywords) and `Model.qml` that reads only `config.<id>` from
-`Commons/Config.qml`. Add the id to the section registry array in
-`Modules/Settings/Module.qml`. It is picked up by global search
-automatically via its `section.json` keywords.
+`Commons/Config.qml`. Add the id to **`Modules/Settings/Catalog.qml`**
+(`ids` and `_byId`; `groupOrder` if you add a nav group). Search uses
+the catalog — a folder alone is not enough. See `docs/SETTINGS.md`.
 
 **A new launcher provider.** Add a file under
 `Modules/Launcher/providers/<name>.qml` implementing `query(text) -> results[]`

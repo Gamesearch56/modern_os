@@ -32,7 +32,7 @@ Singleton {
             return root.home + root.icsUrl.slice(1);
         return root.icsUrl;
     }
-    readonly property string todayYmd: Ics.ymd(new Date())
+    readonly property string todayYmd: Ics.ymd(DateTime.displayDate(new Date()))
 
     FileView {
         id: icsFile

@@ -30,7 +30,7 @@ Item {
 
         Loader {
             Layout.fillWidth: true
-            implicitHeight: item ? item.implicitHeight : Tokens.spacing.xxl * 8
+            Layout.preferredHeight: item ? item.implicitHeight : Tokens.spacing.xxl * 8
             source: Qt.resolvedUrl(root.range === "events" ? "EventsList.qml" : "MonthGrid.qml")
         }
 

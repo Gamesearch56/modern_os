@@ -23,11 +23,13 @@ graph TD
 
 Two flows, deliberately kept separate: **colors** derive from the
 wallpaper and the active theme profile; **behaviour** derives from
-`config.json`. The Settings app is a Hyprland `FloatingWindow` (title
-`modern.settings`) and writes JSON only, never Lua or QML —
-`hyprland.lua` and the shell parse `config.json` at load/reload. This
-one rule is what makes a GUI monitor and keybind editor safe to build:
-there is no code generation step that can produce invalid Lua.
+`config.json`. The Settings app (**System Settings**) is a Hyprland
+`FloatingWindow` (title `modern.settings`) and writes JSON only, never
+Lua or QML — `hyprland.lua` and the shell parse `config.json` at
+load/reload. Page map, aliases, and how to add a section:
+`docs/SETTINGS.md`. This one rule is what makes a GUI monitor and
+keybind editor safe to build: there is no code generation step that can
+produce invalid Lua.
 
 ## QML layer pattern
 
@@ -36,7 +38,7 @@ Commons/   Tokens.qml Typography.qml Motion.qml Config.qml I18n.qml Logger.qml
            — depends on nothing.
 
 Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media
-           Wallpaper SystemStats Vpn Weather Calendar Notes Drive Ai Games
+           Wallpaper SystemStats Locale Snapshots Update Weather Calendar Notes Drive Ai
            Users KdeConnect Diagnostics
            — imports Commons only. Owns ALL process spawning, IPC, D-Bus and
            filesystem access. Each file is `pragma Singleton` with a
@@ -44,7 +46,8 @@ Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media
            `qmldir` (docs/DECISIONS.md #19).
 
 Widgets/   MButton MIconButton MSwitch MSlider MCard MChip MListItem
-           MTextField MPopup MIcon MText MDialog MTooltip
+           MTextField MPopup MIcon MText MDialog MTooltip MOverlay
+           MSparkline MLinearProgress MReorderList
            — MD3 primitives. Stateless, token-driven, zero system access.
 
 Modules/   Bar/ Launcher/ Panels/ PowerMenu/ Notifications/ Wallpaper/
@@ -72,7 +75,7 @@ modern_dotfile/
 │   ARCHITECTURE.md DESIGN.md MOTION.md DECISIONS.md INSTALL.md
 │   CURSOR-SETUP.md KEYBINDS.md THEMING.md BOOT.md I18N.md WIDGETS.md
 │   ISOLATION.md BACKUP.md SECURITY.md GAMING.md TROUBLESHOOTING.md
-│   CUTOVER.md
+│   CUTOVER.md SETTINGS.md
 ├── install/
 │   ├── install.sh              phased, idempotent, set -euo pipefail
 │   ├── lib/                    log.sh ui.sh pkg.sh stow.sh i18n.sh preflight.sh

@@ -72,16 +72,16 @@ Item {
 
             Repeater {
                 id: tiles
-                model: Hypr.toplevelList
+                model: root.count
                 delegate: MCard {
-                    required property var modelData
                     required property int index
-                    readonly property string address: modelData.address || ""
+                    readonly property var win: (Hypr.toplevelList || [])[index]
+                    readonly property string address: win?.address || ""
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: (layout.width - layout.columnSpacing * Math.max(0, root.columns - 1)) / root.columns
                     Layout.preferredHeight: Tokens.spacing.xxl * 4
-                    level: (modelData.activated || root.currentIndex === index) ? 3 : 1
+                    level: (win?.activated || root.currentIndex === index) ? 3 : 1
                     padding: Tokens.spacing.sm
                     highlighted: root.currentIndex === index
 
@@ -92,12 +92,12 @@ Item {
                         IconImage {
                             Layout.preferredWidth: Tokens.spacing.xl
                             Layout.preferredHeight: Tokens.spacing.xl
-                            source: Quickshell.iconPath(modelData.lastIpcObject?.class ?? "application-x-executable", true)
+                            source: Quickshell.iconPath(win?.lastIpcObject?.class ?? "application-x-executable", true)
                             asynchronous: true
                         }
 
                         MText {
-                            value: modelData.title || ""
+                            value: win?.title || ""
                             styleName: "labelLarge"
                             elide: Text.ElideRight
                             Layout.fillWidth: true
@@ -111,7 +111,7 @@ Item {
                         onEntered: root.currentIndex = index
                         onClicked: {
                             root.currentIndex = index;
-                            Hypr.focusWindow(modelData.address);
+                            Hypr.focusWindow(address);
                             Overview.hide();
                         }
                     }

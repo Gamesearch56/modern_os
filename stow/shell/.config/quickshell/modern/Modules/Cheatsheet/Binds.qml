@@ -37,19 +37,20 @@ ColumnLayout {
                 spacing: Tokens.spacing.xxs
 
                 Repeater {
-                    model: root.items
+                    model: root.items.length
                     delegate: MListItem {
-                        required property var modelData
+                        required property int index
+                        readonly property var bind: root.items[index] || ({})
                         Layout.fillWidth: true
-                        titleKey: "cheatsheet.action." + modelData.action
+                        titleKey: "cheatsheet.action." + bind.action
 
                         Row {
                             spacing: Tokens.spacing.xs
                             Repeater {
-                                model: modelData.caps
+                                model: bind.caps || []
                                 MKeycap {
-                                    required property string modelData
-                                    value: modelData
+                                    required property int index
+                                    value: (bind.caps || [])[index] || ""
                                 }
                             }
                         }

@@ -1,4 +1,4 @@
-// Boot snapshot and machine identity for Settings > System.
+// Boot snapshot and machine identity for Settings > Overview.
 pragma Singleton
 
 import Quickshell

@@ -26,7 +26,7 @@ Item {
         anchors.centerIn: parent
         z: 1
         value: DateTime.clockLabel(
-            clock.date,
+            DateTime.displayDate(clock.date),
             Config.language.dateFormat || "DD.MM.YYYY",
             Config.language.timeFormat || "HH:mm",
             Config.widgets.clock?.showSeconds ?? false,

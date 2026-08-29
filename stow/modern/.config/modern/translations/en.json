@@ -3,7 +3,7 @@
     "launcher": "Applications",
     "workspaces": "Workspaces",
     "tray": "Tray",
-    "clock": "Clock",
+    "calendar": "Calendar",
     "volume": "Volume",
     "muted": "Muted",
     "media": "Media",
@@ -122,7 +122,7 @@
     "eventsTab": "Events",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
-    "icsHint": "Add a secret ICS URL in Settings → Accounts to show Proton Calendar events here."
+    "icsHint": "Add a secret ICS URL in Settings → Privacy to show Proton Calendar events here."
   },
   "mail": {
     "open": "Open mail"
@@ -322,8 +322,10 @@
     "noResults": "No results"
   },
   "settings": {
-    "title": "Settings",
+    "title": "System Settings",
     "search": "Search settings...",
+    "selectSearch": "Search",
+    "selectNone": "None",
     "refresh": "Refresh",
     "noResults": "No matching settings",
     "loadError": "This section failed to load. Check qs -c modern log.",
@@ -442,30 +444,58 @@
       "mirrorCountry": "Mirror country",
       "showIcons": "Show icons",
       "protonWayland": "Proton Wayland",
-      "hdrSession": "Session HDR"
+      "hdrSession": "Session HDR",
+      "autoHide": "Auto-hide bar",
+      "cursorTheme": "Cursor theme",
+      "cursorSize": "Cursor size",
+      "previewDate": "Preview date",
+      "timezone": "Timezone",
+      "repeatRate": "Repeat rate",
+      "repeatDelay": "Repeat delay",
+      "numlockOnBoot": "Num lock on boot",
+      "showDescriptions": "Show descriptions",
+      "inhibitFullscreen": "Inhibit idle on fullscreen",
+      "inhibitMedia": "Inhibit idle while media plays",
+      "dnsOverride": "DNS override",
+      "currentWallpaper": "Wallpaper",
+      "windowsChrome": "Windows",
+      "speedTest": "Speed test",
+      "ethernet": "Ethernet",
+      "wifiPassword": "Wi-Fi password",
+      "perAppVolume": "App volume",
+      "pollInterval": "Poll interval (ms)",
+      "showGpu": "Show GPU",
+      "showTemps": "Show temperatures",
+      "scrollStep": "Scroll step",
+      "scrollStepFine": "Fine scroll step",
+      "providerPrefix": "Prefix"
     },
     "sections": {
-      "general": "General",
+      "overview": "Overview",
+      "general": "Overview",
       "applications": "Applications",
-      "accounts": "Accounts & Connections",
-      "privacy": "Privacy & Permissions",
+      "accounts": "Privacy",
+      "privacy": "Privacy",
       "design": "Design",
       "language": "Language & region",
       "keyboard": "Keyboard",
-      "time": "Time",
-      "displays": "Displays",
-      "windows": "Windows",
+      "time": "Language & region",
+      "displays": "Display",
+      "windows": "Design",
       "audio": "Audio",
       "network": "Network",
-      "widgets": "Widgets",
+      "widgets": "Bar",
+      "bar": "Bar",
       "launcher": "Launcher",
       "power": "Energy",
-      "screenshots": "Screenshots",
+      "screenshots": "Screenshot",
       "users": "Users",
       "storage": "Storage",
+      "backup": "Backup",
       "system": "System",
-      "gaming": "Gaming",
-      "bluetooth": "Bluetooth"
+      "gaming": "System",
+      "bluetooth": "Bluetooth",
+      "ai": "AI"
     },
     "addAutostart": "Add autostart app",
     "motionOff": "Off",
@@ -487,11 +517,24 @@
     "weatherLocationPlaceholder": "City or lat, lon",
     "weatherMetric": "Celsius",
     "weatherImperial": "Fahrenheit",
+    "disconnect": "Disconnect",
+    "connectWifi": "Connect",
+    "speedTestRun": "Run speed test",
+    "speedTestResult": "{n} Mbps",
+    "mirrorsUpdate": "Update mirrors",
+    "updateStep": "Updating…",
+    "restoreHint": "Restore is gated. See docs/BACKUP.md.",
+    "snapshotDelete": "Delete",
+    "snapshotEmpty": "No snapshots yet",
+    "energyNow": "Consumption",
+    "energyBattery": "{n}%",
+    "previewDatePlaceholder": "YYYY-MM-DD",
+    "providerPrefixPlaceholder": ">",
     "nav": {
-      "session": "Session",
+      "general": "General",
+      "session": "General",
       "appearance": "Appearance",
-      "desktop": "Desktop",
-      "apps": "Apps & accounts",
+      "apps": "Apps",
       "input": "Input & region",
       "devices": "Devices",
       "system": "System"
@@ -530,7 +573,11 @@
       "hyprbarsOn": "hyprbars plugin is loaded.",
       "hyprbarsOff": "hyprbars is not loaded. Run scripts/doctor.sh and hyprpm.",
       "windowRulesJson": "JSON array of Hyprland window rules. Save validates before writing.",
-      "cheatsheetBind": "Opens the cheat sheet (Super+K)."
+      "cheatsheetBind": "Opens the cheat sheet (Super+K).",
+      "previewDate": "UI-only. Calendar and clock previews use this date; the system clock is unchanged.",
+      "timezone": "IANA name such as Europe/Berlin. Applied with timedatectl (may prompt).",
+      "restoreGated": "Restoring a snapshot needs a gated snapper rollback. See docs/BACKUP.md.",
+      "speedTest": "Downloads a short sample from the Arch geo mirror via curl. Not a third-party speed-test site."
     },
     "hub": {
       "title": "Shortcuts",
@@ -547,12 +594,30 @@
       "available": "Available",
       "emptyConnected": "No connected devices",
       "forget": "Forget",
-      "connect": "Connect"
+      "connect": "Connect",
+      "disconnect": "Disconnect"
     },
     "storage": {
       "mounts": "Volumes",
       "devices": "Disks",
       "eject": "Eject"
+    },
+    "backup": {
+      "snapshots": "Snapshots"
+    },
+    "overview": {
+      "stats": "Live stats"
+    },
+    "bar": {
+      "available": "Available widgets",
+      "editWidget": "Widget"
+    },
+    "audio": {
+      "emptyStreams": "No app streams right now"
+    },
+    "network": {
+      "ethernetOn": "Connected",
+      "ethernetOff": "Not connected"
     }
   },
   "onboarding": {
