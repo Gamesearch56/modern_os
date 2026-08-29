@@ -13,6 +13,10 @@ Item {
     signal queryEdited(string text)
     signal picked(string id)
 
+    function focusSearch() {
+        search.forceActiveFocus();
+    }
+
     function iconFor(id: string): string {
         switch (id) {
         case "system":

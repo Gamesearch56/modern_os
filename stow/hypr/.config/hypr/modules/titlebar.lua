@@ -73,7 +73,6 @@ hl.window_rule({
 -- on top of that is a second X. Applied here so the plugin is loaded.
 local chrome = {
     "modern.settings",
-    "modern.cheatsheet",
     "modern.overview",
 }
 for _, title in ipairs(chrome) do

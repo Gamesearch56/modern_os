@@ -39,7 +39,6 @@ Scope {
                 MWindowChrome {
                     Layout.fillWidth: true
                     titleKey: "settings.title"
-                    subtitleValue: User.displayName
                     titleColumnWidth: Tokens.spacing.xxl * 9
                     onClosed: Settings.close()
                 }

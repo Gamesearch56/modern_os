@@ -1,9 +1,9 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
-import "../../Widgets"
 import "../../Services"
 
 Scope {
@@ -43,77 +43,68 @@ Scope {
         root.categoryId = cats.length > 0 ? cats[0].id : "applications";
     }
 
+    function _focusedScreen(): var {
+        const n = Hypr.focusedMonitorName();
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === n)
+                return screens[i];
+        }
+        return screens.length ? screens[0] : null;
+    }
+
+    Connections {
+        target: Cheatsheet
+        function onOpenChanged() {
+            if (Cheatsheet.open)
+                return;
+            root.query = "";
+            root.categoryId = "applications";
+        }
+    }
+
     LazyLoader {
         active: Cheatsheet.open
 
-        FloatingWindow {
+        PanelWindow {
             id: win
             visible: Cheatsheet.open
-            title: "modern.cheatsheet"
-            color: Colors.color.surface
-            implicitWidth: Tokens.spacing.xxl * 32 + Tokens.spacing.lg
-            implicitHeight: Tokens.spacing.xxl * 22 + Tokens.spacing.lg
+            screen: root._focusedScreen()
+            color: "transparent"
+            anchors.top: true
+            anchors.left: true
+            anchors.right: true
+            anchors.bottom: true
+            exclusionMode: ExclusionMode.Ignore
+            focusable: true
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
 
-            onVisibleChanged: {
-                if (visible) {
-                    win.requestActivate();
-                } else {
-                    root.query = "";
-                    root.categoryId = "applications";
-                    Cheatsheet.hide();
+            Overlay {
+                id: overlay
+                anchors.fill: parent
+                query: root.query
+                categoryId: root.categoryId
+                onQueryEdited: (t) => {
+                    root.query = t;
+                    root._syncCategory();
                 }
+                onPicked: (id) => root.categoryId = id
+                onClosed: Cheatsheet.hide()
             }
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.surface
-                radius: Tokens.radius.medium
-            }
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Tokens.spacing.md
-                spacing: Tokens.spacing.md
-
-                MWindowChrome {
-                    Layout.fillWidth: true
-                    titleKey: "cheatsheet.title"
-                    subtitleValue: User.displayName
-                    titleColumnWidth: Tokens.spacing.xxl * 9
-                    onClosed: Cheatsheet.hide()
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: Tokens.spacing.lg
-
-                    MPane {
-                        Layout.preferredWidth: Tokens.spacing.xxl * 9
-                        Layout.fillHeight: true
-
-                        Nav {
-                            anchors.fill: parent
-                            categoryId: root.categoryId
-                            onQueryEdited: (t) => {
-                                root.query = t;
-                                root._syncCategory();
-                            }
-                            onPicked: (id) => root.categoryId = id
-                        }
-                    }
-
-                    Binds {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        query: root.query
-                        categoryId: root.categoryId
-                    }
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: [win]
+                onCleared: {
+                    if (Cheatsheet.open)
+                        Cheatsheet.hide();
                 }
             }
 
             Shortcut {
                 sequence: "Escape"
+                context: Qt.ApplicationShortcut
                 onActivated: Cheatsheet.hide()
             }
             Shortcut {
@@ -123,6 +114,15 @@ Scope {
             Shortcut {
                 sequence: "Down"
                 onActivated: root._moveCategory(1)
+            }
+
+            Component.onCompleted: {
+                Qt.callLater(() => {
+                    if (!Cheatsheet.open)
+                        return;
+                    keyGrab.active = true;
+                    overlay.focusSearch();
+                });
             }
         }
     }

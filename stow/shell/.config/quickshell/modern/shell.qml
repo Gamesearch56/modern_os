@@ -42,6 +42,7 @@ ShellRoot {
             Notifications.hide();
             PowerMenu.hide();
             Wallpaper.hide();
+            Cheatsheet.hide();
         }
     }
 
@@ -54,6 +55,7 @@ ShellRoot {
             Notifications.hide();
             PowerMenu.hide();
             Wallpaper.hide();
+            Cheatsheet.hide();
         }
     }
 
@@ -66,6 +68,7 @@ ShellRoot {
             Launcher.hide();
             PowerMenu.hide();
             Wallpaper.hide();
+            Cheatsheet.hide();
         }
     }
 
@@ -78,6 +81,7 @@ ShellRoot {
             Launcher.hide();
             Notifications.hide();
             Wallpaper.hide();
+            Cheatsheet.hide();
         }
     }
 
@@ -90,6 +94,20 @@ ShellRoot {
             Launcher.hide();
             Notifications.hide();
             PowerMenu.hide();
+            Cheatsheet.hide();
+        }
+    }
+
+    Connections {
+        target: Cheatsheet
+        function onOpenChanged() {
+            if (!Cheatsheet.open)
+                return;
+            Popups.dismiss();
+            Launcher.hide();
+            Notifications.hide();
+            PowerMenu.hide();
+            Wallpaper.hide();
         }
     }
 
@@ -116,6 +134,10 @@ ShellRoot {
             }
             if (Wallpaper.pickerOpen) {
                 Wallpaper.hide();
+                closed = true;
+            }
+            if (Cheatsheet.open) {
+                Cheatsheet.hide();
                 closed = true;
             }
             if (Alarm.dialogOpen) {

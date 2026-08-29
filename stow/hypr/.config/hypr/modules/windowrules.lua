@@ -88,7 +88,6 @@ apply({
 })
 
 local overlay_windows = {
-    { name = "modern-cheatsheet", title = "modern.cheatsheet", size = { 1040, 720 } },
     { name = "modern-overview", title = "modern.overview", size = { 920, 640 } },
 }
 

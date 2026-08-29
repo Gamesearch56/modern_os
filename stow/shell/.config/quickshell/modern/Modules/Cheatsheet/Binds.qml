@@ -14,13 +14,6 @@ ColumnLayout {
     spacing: Tokens.spacing.md
 
     MText {
-        key: "settings.nav.input"
-        styleName: "labelSmall"
-        color: Colors.color.onSurfaceVariant
-        font.capitalization: Font.AllUppercase
-    }
-
-    MText {
         key: "cheatsheet.category." + root.categoryId
         styleName: "headlineSmall"
         Layout.fillWidth: true
