@@ -1,7 +1,8 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
@@ -20,21 +21,15 @@ Scope {
     property int focusIndex: 0
 
     readonly property var actions: [
-        { id: "lock", kind: "tonal", icon: "system-lock-screen" },
-        { id: "logout", kind: "tonal", icon: "system-log-out" },
-        { id: "suspend", kind: "tonal", icon: "system-suspend" },
-        { id: "restart", kind: "filled", icon: "system-reboot" },
-        { id: "poweroff", kind: "destructive", icon: "system-shutdown" }
+        { id: "lock", icon: "system-lock-screen-symbolic" },
+        { id: "logout", icon: "system-log-out-symbolic" },
+        { id: "restart", icon: "system-reboot-symbolic" },
+        { id: "poweroff", icon: "system-shutdown-symbolic" }
     ]
 
     function _run(id: string) {
         if (id === "lock") {
             Session.lock();
-            PowerMenu.hide();
-            return;
-        }
-        if (id === "suspend") {
-            Power.suspend();
             PowerMenu.hide();
             return;
         }
@@ -45,72 +40,52 @@ Scope {
         root.pending = action;
     }
 
+    function _move(delta: int) {
+        const n = root.actions.length;
+        root.focusIndex = Math.max(0, Math.min(n - 1, root.focusIndex + delta));
+    }
+
+    function _focusedScreen(): var {
+        const n = Hypr.focusedMonitorName();
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === n)
+                return screens[i];
+        }
+        return screens.length ? screens[0] : null;
+    }
+
     LazyLoader {
         active: PowerMenu.open
 
-        FloatingWindow {
+        PanelWindow {
             id: win
             visible: PowerMenu.open
-            title: "modern.powermenu"
-            color: Colors.color.surface
-            implicitWidth: Tokens.spacing.xxl * 24 + Tokens.spacing.lg
-            implicitHeight: Tokens.spacing.xxl * 16 + Tokens.spacing.lg
+            screen: root._focusedScreen()
+            color: "transparent"
+            anchors.top: true
+            anchors.left: true
+            anchors.right: true
+            anchors.bottom: true
+            exclusionMode: ExclusionMode.Ignore
+            focusable: true
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
 
-            onVisibleChanged: {
-                if (visible) {
-                    root.focusIndex = 0;
-                    win.requestActivate();
-                } else {
-                    root.pending = "";
-                    PowerMenu.hide();
-                }
-            }
-
-            Rectangle {
+            Overlay {
+                id: overlay
                 anchors.fill: parent
-                color: Colors.color.surface
-                radius: Tokens.radius.medium
-            }
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Tokens.spacing.md
-                spacing: Tokens.spacing.md
-
-                MWindowChrome {
-                    Layout.fillWidth: true
-                    titleKey: "powerMenu.title"
-                    subtitleValue: User.displayName
-                    titleColumnWidth: Tokens.spacing.xxl * 9
-                    onClosed: PowerMenu.hide()
+                actions: root.actions
+                focusIndex: root.focusIndex
+                onChosen: (i) => {
+                    root.focusIndex = i;
+                    root._run(root.actions[i].id);
                 }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: Tokens.spacing.lg
-
-                    MPane {
-                        Layout.preferredWidth: Tokens.spacing.xxl * 9
-                        Layout.fillHeight: true
-
-                        Nav {
-                            anchors.fill: parent
-                            actions: root.actions
-                            focusIndex: root.focusIndex
-                            onChosen: (i) => {
-                                root.focusIndex = i;
-                                root._run(root.actions[i].id);
-                            }
-                        }
-                    }
-
-                    Detail {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        action: root.actions[root.focusIndex]
-                        onConfirmed: root._run(root.actions[root.focusIndex].id)
-                    }
+                onClosed: {
+                    if (root.pending.length > 0)
+                        root.pending = "";
+                    else
+                        PowerMenu.hide();
                 }
             }
 
@@ -135,8 +110,18 @@ Scope {
                 onCancelled: root.pending = ""
             }
 
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: [win]
+                onCleared: {
+                    if (PowerMenu.open)
+                        PowerMenu.hide();
+                }
+            }
+
             Shortcut {
                 sequence: "Escape"
+                context: Qt.ApplicationShortcut
                 onActivated: {
                     if (root.pending.length > 0) {
                         root.pending = "";
@@ -146,20 +131,39 @@ Scope {
                 }
             }
             Shortcut {
+                sequence: "Left"
+                enabled: root.pending.length === 0
+                onActivated: root._move(-1)
+            }
+            Shortcut {
+                sequence: "Right"
+                enabled: root.pending.length === 0
+                onActivated: root._move(1)
+            }
+            Shortcut {
                 sequence: "Up"
-                onActivated: root.focusIndex = Math.max(0, root.focusIndex - 1)
+                enabled: root.pending.length === 0
+                onActivated: root._move(-2)
             }
             Shortcut {
                 sequence: "Down"
-                onActivated: root.focusIndex = Math.min(root.actions.length - 1, root.focusIndex + 1)
+                enabled: root.pending.length === 0
+                onActivated: root._move(2)
             }
             Shortcut {
                 sequence: "Return"
-                onActivated: {
-                    if (root.pending.length > 0)
+                enabled: root.pending.length === 0
+                onActivated: root._run(root.actions[root.focusIndex].id)
+            }
+
+            Component.onCompleted: {
+                root.focusIndex = 0;
+                root.pending = "";
+                Qt.callLater(() => {
+                    if (!PowerMenu.open)
                         return;
-                    root._run(root.actions[root.focusIndex].id);
-                }
+                    keyGrab.active = true;
+                });
             }
         }
     }

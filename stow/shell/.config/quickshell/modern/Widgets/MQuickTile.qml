@@ -12,11 +12,14 @@ Item {
     property bool checked: false
     property bool enabled: true
     property bool centerAlign: false
+    property bool stacked: false
     property bool tintIcon: true
 
     signal clicked()
 
-    implicitHeight: Tokens.spacing.xxl * 2 + Tokens.spacing.xs
+    implicitHeight: root.stacked
+        ? Tokens.spacing.xxl * 3 + Tokens.spacing.sm
+        : Tokens.spacing.xxl * 2 + Tokens.spacing.xs
     implicitWidth: Tokens.spacing.xxl * 6
     opacity: root.enabled ? 1 : 0.38
     Accessible.role: Accessible.Button
@@ -39,7 +42,52 @@ Item {
         opacity: Chrome.stateLayer(ma.containsMouse, ma.pressed)
     }
 
+    ColumnLayout {
+        visible: root.stacked
+        anchors.fill: parent
+        anchors.margins: Tokens.spacing.md
+        spacing: Tokens.spacing.xs
+
+        Item {
+            Layout.fillHeight: true
+        }
+
+        MIcon {
+            Layout.alignment: Qt.AlignHCenter
+            name: root.iconName
+            size: Tokens.icon.lg
+            color: root.tintIcon ? root._fg : Colors.color.onSurface
+        }
+
+        MText {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            key: root.titleKey
+            styleName: "labelLarge"
+            color: root._fg
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            elide: Text.ElideRight
+            maximumLineCount: 2
+        }
+
+        MText {
+            visible: root.subtitleValue.length > 0
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            value: root.subtitleValue
+            styleName: "labelSmall"
+            color: root.checked ? Chrome.tonal.fg : Colors.color.onSurfaceVariant
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        Item {
+            Layout.fillHeight: true
+        }
+    }
+
     RowLayout {
+        visible: !root.stacked
         anchors.fill: parent
         anchors.margins: Tokens.spacing.sm
         spacing: Tokens.spacing.sm
