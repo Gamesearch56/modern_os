@@ -29,6 +29,11 @@ Item {
         precision: SystemClock.Minutes
     }
 
+    property bool _entered: false
+    readonly property bool _shown: root._entered
+
+    Component.onCompleted: root._entered = true
+
     Rectangle {
         anchors.fill: parent
         color: Colors.color.surface
@@ -46,86 +51,121 @@ Item {
         anchors.fill: parent
         visible: root.showWallpaper
         color: Colors.color.scrim
-        opacity: Tokens.overlay.lock
+        opacity: root._shown ? Tokens.overlay.lock : 0
+
+        Behavior on opacity {
+            enabled: Motion.overlayFades()
+            NumberAnimation {
+                duration: Motion.extraLong()
+                easing.bezierCurve: Motion.easingEmphasized
+            }
+        }
     }
 
-    ColumnLayout {
-        anchors.centerIn: parent
-        width: Math.min(parent.width - Tokens.spacing.xxl * 2, Tokens.spacing.xxl * 12)
-        spacing: Tokens.spacing.xl
+    Item {
+        id: chrome
+        anchors.fill: parent
+        scale: Motion.overlayScale(root._shown)
+        opacity: Motion.overlayOpacity(root._shown)
+        transformOrigin: Item.Center
 
-        MAvatar {
-            Layout.alignment: Qt.AlignHCenter
-            size: Tokens.spacing.xxl * 3
-            source: User.faceUrl
+        Behavior on opacity {
+            enabled: Motion.overlayFades()
+            NumberAnimation {
+                duration: Motion.extraLong()
+                easing.bezierCurve: root._shown
+                    ? Motion.easingEmphasizedDecelerate
+                    : Motion.easingEmphasizedAccelerate
+            }
+        }
+        Behavior on scale {
+            enabled: Motion.overlayZooms()
+            NumberAnimation {
+                duration: Motion.extraLong()
+                easing.bezierCurve: root._shown
+                    ? Motion.easingEmphasizedDecelerate
+                    : Motion.easingEmphasizedAccelerate
+            }
         }
 
-        MText {
-            Layout.alignment: Qt.AlignHCenter
-            value: User.displayName
-            styleName: "titleMedium"
-        }
+        ColumnLayout {
+            anchors.centerIn: parent
+            width: Math.min(parent.width - Tokens.spacing.xxl * 2, Tokens.spacing.xxl * 12)
+            spacing: Tokens.spacing.xl
 
-        MText {
-            Layout.alignment: Qt.AlignHCenter
-            value: DateTime.formatTime(clock.date, Config.language.timeFormat || "HH:mm", false)
-            styleName: "displayLarge"
-        }
+            MAvatar {
+                Layout.alignment: Qt.AlignHCenter
+                size: Tokens.spacing.xxl * 3
+                source: User.faceUrl
+            }
 
-        MText {
-            Layout.alignment: Qt.AlignHCenter
-            value: DateTime.formatDate(clock.date, Config.language.dateFormat || "DD.MM.YYYY")
-            styleName: "titleMedium"
-            color: Colors.color.onSurfaceVariant
-        }
+            MText {
+                Layout.alignment: Qt.AlignHCenter
+                value: User.displayName
+                styleName: "titleMedium"
+            }
 
-        MTextField {
-            id: password
-            visible: root.mode !== "shutdown"
-            Layout.fillWidth: true
-            placeholderKey: "session.password"
-            echoMode: TextInput.Password
-            onAccepted: Session.authenticate(text)
-            Component.onCompleted: forceActiveFocus()
-        }
+            MText {
+                Layout.alignment: Qt.AlignHCenter
+                value: DateTime.formatTime(clock.date, Config.language.timeFormat || "HH:mm", false)
+                styleName: "displayLarge"
+            }
 
-        MText {
-            visible: Session.lastError.length > 0
-            Layout.alignment: Qt.AlignHCenter
-            key: "session.authFailed"
-            styleName: "bodySmall"
-            color: Colors.color.error
-        }
+            MText {
+                Layout.alignment: Qt.AlignHCenter
+                value: DateTime.formatDate(clock.date, Config.language.dateFormat || "DD.MM.YYYY")
+                styleName: "titleMedium"
+                color: Colors.color.onSurfaceVariant
+            }
 
-        MButton {
-            visible: root.mode !== "shutdown"
-            Layout.alignment: Qt.AlignHCenter
-            kind: "filled"
-            key: "session.unlock"
-            onClicked: Session.authenticate(password.text)
-        }
+            MTextField {
+                id: password
+                visible: root.mode !== "shutdown"
+                Layout.fillWidth: true
+                placeholderKey: "session.password"
+                echoMode: TextInput.Password
+                onAccepted: Session.authenticate(text)
+                Component.onCompleted: forceActiveFocus()
+            }
 
-        RowLayout {
-            visible: root.mode === "shutdown"
-            Layout.alignment: Qt.AlignHCenter
-            spacing: Tokens.spacing.md
-
-            MButton {
-                kind: "text"
-                key: "powerMenu.cancel"
-                onClicked: Session.unlock()
+            MText {
+                visible: Session.lastError.length > 0
+                Layout.alignment: Qt.AlignHCenter
+                key: "session.authFailed"
+                styleName: "bodySmall"
+                color: Colors.color.error
             }
 
             MButton {
+                visible: root.mode !== "shutdown"
+                Layout.alignment: Qt.AlignHCenter
                 kind: "filled"
-                key: "powerMenu." + (Session.pendingAction === "reboot" ? "restart" : (Session.pendingAction || "poweroff"))
-                onClicked: {
-                    if (Session.pendingAction === "reboot")
-                        Power.reboot();
-                    else if (Session.pendingAction === "logout")
-                        Power.logout();
-                    else
-                        Power.poweroff();
+                key: "session.unlock"
+                onClicked: Session.authenticate(password.text)
+            }
+
+            RowLayout {
+                visible: root.mode === "shutdown"
+                Layout.alignment: Qt.AlignHCenter
+                spacing: Tokens.spacing.md
+
+                MButton {
+                    kind: "text"
+                    key: "powerMenu.cancel"
+                    onClicked: Session.unlock()
+                }
+
+                MButton {
+                    kind: "filled"
+                    key: "powerMenu." + (Session.pendingAction === "reboot" ? "restart" : (Session.pendingAction || "poweroff"))
+                    onClicked: {
+                        if (Session.pendingAction === "reboot")
+                            Power.reboot();
+                        else if (Session.pendingAction === "logout")
+                            Power.logout();
+                        else
+                            Power.poweroff();
+                    }
                 }
             }
         }

@@ -92,20 +92,28 @@ in deciseconds (1ds = 100ms):
 ```lua
 -- modules/animations.lua (excerpt)
 local tokens = require("modules.motion_tokens") -- hand-kept in sync with Motion.qml
+local scale = config.value("motion.scale", 1.0)
+local function speed(ms) return (ms * scale) / 100.0 end
 
 for name, p in pairs(tokens.bezier) do
     hl.curve(name, { type = "bezier", points = { { p[1], p[2] }, { p[3], p[4] } } })
 end
 
-hl.animation({ leaf = "windows", enabled = true, speed = tokens.durationMediumMs / 100, bezier = "emphasized" })
-hl.animation({ leaf = "workspaces", enabled = true, speed = tokens.durationLongMs / 100, bezier = "emphasizedDecelerate", style = "slide" })
-hl.animation({ leaf = "fade", enabled = true, speed = tokens.durationShortMs / 100, bezier = "standard" })
-hl.animation({ leaf = "border", enabled = true, speed = tokens.durationShortMs / 100, bezier = "standard" })
+hl.animation({ leaf = "windowsIn", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedDecelerate", style = "popin 92%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedAccelerate", style = "popin 92%" })
+hl.animation({ leaf = "fade", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasized" })
+hl.animation({ leaf = "workspaces", enabled = true, speed = speed(tokens.durationLongMs), bezier = "emphasizedDecelerate", style = "slide" })
+hl.animation({ leaf = "border", enabled = true, speed = speed(tokens.durationShortMs), bezier = "standard" })
 ```
 
+`popin 92%` is the same closed floor as `Motion.overlayScale(false)`.
+`motion.scale <= 0` disables the `global` leaf instead of animating at
+zero speed.
+
 Overlay menus (control panel, bar popups) use `Motion.overlay*` and
-`motion.scale` from Settings → Design. Hyprland window open/close uses
-the same tokens in `animations.lua`.
+`motion.scale` from Settings → Design. Hyprland window open/close and
+awww wallpaper fades use the same tokens in `animations.lua` /
+`theme-apply.sh`. Session lock enter uses `Motion.extraLong()`.
 
 `modules/motion_tokens.lua` is hand-kept in sync with the numeric
 constants in `Commons/Motion.qml`'s source — a comment pointer in both

@@ -332,11 +332,17 @@ esac
 # every configured template from the same seed in one pass ---
 if [ "$SOURCE_MODE" = "wallpaper" ] && [ "$RELOAD" -eq 1 ]; then
     if command -v awww >/dev/null 2>&1 && pgrep -x awww-daemon >/dev/null 2>&1; then
-        # Default transition — Settings > Design will expose per-call
-        # overrides once the wallpaper picker module (docs/DECISIONS.md
-        # "wallpaper-assets") lands; today every call gets the same feel.
-        awww img "$WALLPAPER" --transition-type wipe --transition-duration 0.8 --transition-fps 60 \
-            || warn "awww img failed — is awww-daemon running? (autostart.lua starts it on Hyprland launch)"
+        # extraLong (600ms) from Motion.qml / motion_tokens.lua — session-scale
+        # surfaces. Fade matches overlay scrim language; motion.scale 0 is instant.
+        motion_scale="$(merged_config | jq -r '.motion.scale // 1')"
+        if awk -v s="$motion_scale" 'BEGIN { exit !(s + 0 > 0) }'; then
+            dur="$(awk -v s="$motion_scale" 'BEGIN { printf "%.3f", 0.6 * s }')"
+            awww img "$WALLPAPER" --transition-type fade --transition-duration "$dur" --transition-fps 60 \
+                || warn "awww img failed — is awww-daemon running? (autostart.lua starts it on Hyprland launch)"
+        else
+            awww img "$WALLPAPER" \
+                || warn "awww img failed — is awww-daemon running? (autostart.lua starts it on Hyprland launch)"
+        fi
     else
         warn "awww-daemon not running — skipping live wallpaper set, only regenerating colors"
     fi
