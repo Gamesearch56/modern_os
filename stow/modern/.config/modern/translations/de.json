@@ -179,6 +179,13 @@
     "importAll": "Alle Dateien",
     "needChooser": "Zum Auswählen wird zenity oder kdialog benötigt"
   },
+  "filePreview": {
+    "title": "Schnellansicht",
+    "hint": "Leertaste oder Esc schließt",
+    "unsupported": "Vorschau für diesen Dateityp nicht möglich",
+    "noSelection": "Keine Datei ausgewählt",
+    "loadFailed": "Datei konnte nicht geladen werden"
+  },
   "notifications": {
     "empty": "Keine Benachrichtigungen",
     "clearAll": "Alle löschen",
@@ -288,7 +295,8 @@
       "colorPicker": "Farbwähler",
       "clipboardHistory": "Zwischenablage",
       "controlCenter": "Kontrollzentrum",
-      "browserIncognito": "Browser (Inkognito)"
+      "browserIncognito": "Browser (Inkognito)",
+      "filePreview": "Schnellansicht"
     },
     "category": {
       "applications": "Anwendungen",

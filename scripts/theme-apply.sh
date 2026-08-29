@@ -140,6 +140,7 @@ EOF
             -e "s|@SPACE_SM@|8|g" \
             -e "s|@SPACE_MD@|12|g" \
             -e "s|@SPACE_LG@|16|g" \
+            -e "s|@SPACE_XL@|24|g" \
             "$qss" > "$tmp" && mv "$tmp" "$qss"
     fi
     local kde="${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals"
@@ -154,6 +155,7 @@ EOF
             BEGIN { g=0; i=0 }
             /^\[General\]/ { print; print "font=" font "," pt ",-1,5,50,0,0,0,0,0"; print "fixed=" mono "," pt ",-1,5,50,0,0,0,0,0"; g=1; next }
             /^\[Icons\]/ { print; print "Theme=" icon; i=1; next }
+            /^widgetStyle=/ { print "widgetStyle=qt6ct-style"; next }
             { print }
             END {
               if (!g) { print "[General]"; print "font=" font "," pt ",-1,5,50,0,0,0,0,0" }
@@ -163,19 +165,16 @@ EOF
     fi
     local qtconf="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qt6ct.conf"
     if [ -f "$qtconf" ]; then
-        local icon qss_abs scheme_abs
+        local icon scheme_abs
         icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
-        qss_abs="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qss/modern.qss"
         scheme_abs="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/colors/modern.conf"
-        awk -v icon="$icon" -v qss="$qss_abs" -v scheme="$scheme_abs" '
+        awk -v icon="$icon" -v scheme="$scheme_abs" '
             /^icon_theme=/ { print "icon_theme=" icon; next }
-            /^stylesheets=/ { print "stylesheets=" qss; next }
+            /^style=/ { print "style=qt6ct-style"; next }
+            /^stylesheets=/ { print "stylesheets="; next }
             /^color_scheme_path=/ { print "color_scheme_path=" scheme; next }
             { print }
         ' "$qtconf" > "$qtconf.tmp" && mv "$qtconf.tmp" "$qtconf"
-        if ! grep -q '^stylesheets=' "$qtconf"; then
-            printf '\n[Interface]\nstylesheets=%s\n' "$qss_abs" >> "$qtconf"
-        fi
     fi
 
     # Other hypr* Qt Quick apps still read chrome from

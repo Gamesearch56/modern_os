@@ -6,27 +6,27 @@
         "source": "arch",
         "padding": { "top": 1 },
         "color": {
-            "1": "#acd284",
-            "2": "#e8b9d4"
+            "1": "#74d7ca",
+            "2": "#ecb8ce"
         }
     },
     "display": {
         "separator": "  ",
         "brightColor": false,
         "color": {
-            "keys": "#acd284",
-            "title": "#b3c6f9",
-            "output": "#e1e2ec",
-            "separator": "#8c909f"
+            "keys": "#74d7ca",
+            "title": "#e7b7e8",
+            "output": "#ebdfe9",
+            "separator": "#9b8c9b"
         }
     },
     "modules": [
         {
             "type": "title",
             "color": {
-                "user": "#acd284",
-                "at": "#8c909f",
-                "host": "#b3c6f9"
+                "user": "#74d7ca",
+                "at": "#9b8c9b",
+                "host": "#e7b7e8"
             }
         },
         "separator",

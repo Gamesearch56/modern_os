@@ -115,12 +115,15 @@ bell stay available in Settings → Widgets. See `docs/WIDGETS.md`.
 - **GTK 3/4** — `gtk.css` generated from `tokens.json` (see
   `stow/theme/.config/matugen/templates/gtk.css`), selection color derived
   from `primary` (not hardcoded `#FFFFFF` as the old Wallust setup did).
-- **Qt / Dolphin** — `kdeglobals` + `modern.colors` with full KColorScheme
-  roles, Fusion via qt6ct, and generated `qt6ct/qss/modern.qss` (radii and
-  fonts patched after matugen from `config.json`). SUPER+E launches Dolphin
-  through `scripts/modern-launch` so `QT_QPA_PLATFORMTHEME=qt6ct` actually
-  reaches the process (Hyprland `hl.env` does not stick after reload).
-  Restart Dolphin after `theme-apply.sh`. No `QT_QPA_PLATFORM=xcb`.
+- **Qt / Dolphin** — `kdeglobals` `[UiSettings] ColorScheme=modern` plus
+  `modern.colors` (KF6 KColorSchemeManager; qt6ct reports
+  `ColorScheme::Unknown` and otherwise applies a light Active palette),
+  qt6ct-style, and generated `qt6ct` palette (`#AARRGGBB`). SUPER+E
+  launches Dolphin through `scripts/modern-launch` so
+  `QT_QPA_PLATFORMTHEME=qt6ct` actually reaches the process (Hyprland
+  `hl.env` does not stick after reload). Restart Dolphin after
+  `theme-apply.sh`. The window is opaque (wallpaper in the gaps, not
+  through the view). No `QT_QPA_PLATFORM=xcb`.
 - **hyprpolkitagent** — hyprtoolkit palette in `hyprtoolkit.conf`
   (surface / primary / Inter / radius.medium), plus a Hyprland window
   rule for glass opacity and `dim_around`. Not QSS. See `docs/THEMING.md`.

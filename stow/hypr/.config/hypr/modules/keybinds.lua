@@ -127,6 +127,7 @@ local bindings = {
     gameMode = hl.dsp.exec_cmd(modern .. " game mode toggle"),
     colorPicker = hl.dsp.exec_cmd("hyprpicker -a"),
     clipboardHistory = hl.dsp.exec_cmd(modern .. " clipboard show"),
+    filePreview = hl.dsp.exec_cmd(modern .. " filepreview"),
 }
 
 for action, dispatcher in pairs(bindings) do

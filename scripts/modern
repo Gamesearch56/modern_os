@@ -20,6 +20,7 @@ usage() {
 $(t cli.usage)
 
   modern launcher toggle
+  modern filepreview
   modern update
   modern cleanup
   modern pkg find [q]
@@ -190,6 +191,11 @@ case "$TARGET" in
             exit 0
         fi
         exec "$SCRIPT_DIR/screenshot.sh" "$MODE"
+        ;;
+    filepreview)
+        # shellcheck source=lib/filepreview.sh
+        source "$SCRIPT_DIR/lib/filepreview.sh"
+        filepreview_run
         ;;
     *)
         FUNC="${1:-toggle}"

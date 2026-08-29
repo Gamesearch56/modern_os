@@ -18,6 +18,7 @@ import "Modules/Plugins" as PluginsMod
 import "Modules/Session" as SessionMod
 import "Modules/Wallpaper" as WallpaperMod
 import "Modules/Screenshot" as ScreenshotMod
+import "Modules/FilePreview" as FilePreviewMod
 
 ShellRoot {
     Bar.Module {}
@@ -32,6 +33,7 @@ ShellRoot {
     SessionMod.Module {}
     WallpaperMod.Module {}
     ScreenshotMod.Module {}
+    FilePreviewMod.Module {}
 
     Connections {
         target: Popups
@@ -43,6 +45,7 @@ ShellRoot {
             PowerMenu.hide();
             Wallpaper.hide();
             Cheatsheet.hide();
+            FilePreview.hide();
         }
     }
 
@@ -56,6 +59,7 @@ ShellRoot {
             PowerMenu.hide();
             Wallpaper.hide();
             Cheatsheet.hide();
+            FilePreview.hide();
         }
     }
 
@@ -69,6 +73,7 @@ ShellRoot {
             PowerMenu.hide();
             Wallpaper.hide();
             Cheatsheet.hide();
+            FilePreview.hide();
         }
     }
 
@@ -82,6 +87,7 @@ ShellRoot {
             Notifications.hide();
             Wallpaper.hide();
             Cheatsheet.hide();
+            FilePreview.hide();
         }
     }
 
@@ -95,6 +101,7 @@ ShellRoot {
             Notifications.hide();
             PowerMenu.hide();
             Cheatsheet.hide();
+            FilePreview.hide();
         }
     }
 
@@ -108,6 +115,21 @@ ShellRoot {
             Notifications.hide();
             PowerMenu.hide();
             Wallpaper.hide();
+            FilePreview.hide();
+        }
+    }
+
+    Connections {
+        target: FilePreview
+        function onOpenChanged() {
+            if (!FilePreview.open)
+                return;
+            Popups.dismiss();
+            Launcher.hide();
+            Notifications.hide();
+            PowerMenu.hide();
+            Wallpaper.hide();
+            Cheatsheet.hide();
         }
     }
 
@@ -138,6 +160,10 @@ ShellRoot {
             }
             if (Cheatsheet.open) {
                 Cheatsheet.hide();
+                closed = true;
+            }
+            if (FilePreview.open) {
+                FilePreview.hide();
                 closed = true;
             }
             if (Alarm.dialogOpen) {

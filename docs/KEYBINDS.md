@@ -21,6 +21,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + B` | Browser | Vivaldi |
 | `SUPER + SHIFT + B` | Browser incognito | `vivaldi-stable --incognito` (from `apps.defaults.browser`) |
 | `SUPER + E` | File manager | Dolphin |
+| `SPACE` | Quick Look (Dolphin selection; else types Space) | `modern filepreview` |
 | `SUPER + R` | Spotify | `spotify-launcher` |
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |

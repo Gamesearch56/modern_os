@@ -261,7 +261,8 @@ Singleton {
                 screenshotFull: "SUPER + PRINT",
                 gameMode: "SUPER + G",
                 colorPicker: "SUPER + SHIFT + C",
-                clipboardHistory: "SUPER + SHIFT + V"
+                clipboardHistory: "SUPER + SHIFT + V",
+                filePreview: "SPACE"
             })
         }
     }

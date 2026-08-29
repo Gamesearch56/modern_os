@@ -81,6 +81,25 @@ apply({
     ["hyprbars:no_bar"] = true,
 })
 
+-- Dolphin is a tiled app window, not a HUD. Punching wallpaper through
+-- the icon view (design.transparency) washed out labels and toolbar
+-- icons. Opaque surface; wallpaper stays in the compositor gaps.
+apply({
+    name = "dolphin-opaque",
+    match = { class = "org.kde.dolphin|dolphin" },
+    opaque = true,
+})
+
+-- Spacebar Quick Look video (mpv). Image/text previews are a QML overlay.
+apply({
+    name = "modern-quicklook",
+    match = { class = "modern.quicklook" },
+    float = true,
+    center = true,
+    dim_around = true,
+    ["hyprbars:no_bar"] = true,
+})
+
 apply({
     name = "modern-settings",
     match = { title = "modern.settings" },

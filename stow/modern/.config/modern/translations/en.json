@@ -179,6 +179,13 @@
     "importAll": "All files",
     "needChooser": "Need zenity or kdialog to pick a wallpaper"
   },
+  "filePreview": {
+    "title": "Quick Look",
+    "hint": "Space or Esc to close",
+    "unsupported": "Can't preview this file type",
+    "noSelection": "No file selected",
+    "loadFailed": "Could not load file"
+  },
   "notifications": {
     "empty": "No notifications",
     "clearAll": "Clear all",
@@ -288,7 +295,8 @@
       "colorPicker": "Color picker",
       "clipboardHistory": "Clipboard history",
       "controlCenter": "Control panel",
-      "browserIncognito": "Browser (incognito)"
+      "browserIncognito": "Browser (incognito)",
+      "filePreview": "Quick Look"
     },
     "category": {
       "applications": "Applications",

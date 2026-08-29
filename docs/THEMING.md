@@ -108,10 +108,20 @@ already-running apps) and the Vivaldi `Preferences` merge are out of
 scope of a running-app live-reload: CSS overlay + `01-chrome.css` are
 always rewritten; the native theme object is merged only while Vivaldi is
 **not** running (so we do not fight its Preferences writer). Dolphin does
-not reload QSS live — restart it after `theme-apply.sh`. Keybind launches
-use `scripts/modern-launch` so `qt6ct` is in the environment even when
-Hyprland was only reloaded (not restarted). `theme-apply.sh` writes
-absolute paths into `qt6ct.conf` because qt6ct does not expand `~`.
+not reload QSS live — fully quit it after `theme-apply.sh` and reopen with
+Super+E (`scripts/modern-launch` so `qt6ct` is in the environment even
+when Hyprland was only reloaded). qt6ct must **not** load `modern.qss`:
+an application stylesheet makes Fusion ignore the custom **Active**
+palette. Colors come from `qt6ct/colors/modern.conf` (`#AARRGGBB`) plus
+kdeglobals. KF6 apps (Dolphin) ignore that QPalette: KColorSchemeManager
+treats qt6ct's `ColorScheme::Unknown` as light, so a focused window goes
+white. `kdeglobals` `[UiSettings] ColorScheme=modern` pins
+`~/.local/share/color-schemes/modern.colors`. Widget style is
+`qt6ct-style`. Dolphin is an opaque overlay card (`dolphin-opaque`).
+Fully quit Dolphin after `theme-apply.sh`. Wallpaper stays in the
+compositor gaps around the window. `hyprctl reload` picks up the rule.
+`theme-apply.sh` writes absolute paths into `qt6ct.conf` because qt6ct
+does not expand `~`.
 
 **hyprpolkitagent** is hyprtoolkit (not Qt Quick / QSS). Colors, Inter,
 and `Tokens.radius.medium`/`small` are written to

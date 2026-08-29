@@ -33,7 +33,7 @@ Singleton {
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
         screenshotFull: "screenshots", colorPicker: "screenshots",
         cheatsheet: "system", powerMenu: "system", controlCenter: "system", exitSession: "system",
-        gameMode: "system", clipboardHistory: "utilities"
+        gameMode: "system", clipboardHistory: "utilities", filePreview: "utilities"
     })
 
     function rows(filter: string): var {
