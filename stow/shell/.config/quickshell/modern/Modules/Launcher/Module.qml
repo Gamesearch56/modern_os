@@ -1,9 +1,9 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
-import "../../Widgets"
 import "../../Services"
 
 Scope {
@@ -70,84 +70,75 @@ Scope {
         Launcher.launch(item);
     }
 
+    function _focusedScreen(): var {
+        const n = Hypr.focusedMonitorName();
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === n)
+                return screens[i];
+        }
+        return screens.length ? screens[0] : null;
+    }
+
     LazyLoader {
         active: Launcher.open
 
-        FloatingWindow {
+        PanelWindow {
             id: win
             visible: Launcher.open
-            title: "modern.launcher"
-            color: Colors.color.surface
-            implicitWidth: Tokens.spacing.xxl * 32 + Tokens.spacing.lg
-            implicitHeight: Tokens.spacing.xxl * 22 + Tokens.spacing.lg
+            screen: root._focusedScreen()
+            color: "transparent"
+            anchors.top: true
+            anchors.left: true
+            anchors.right: true
+            anchors.bottom: true
+            exclusionMode: ExclusionMode.Ignore
+            focusable: true
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
 
-            onVisibleChanged: {
-                if (visible) {
-                    root.query = "";
+            Overlay {
+                id: overlay
+                anchors.fill: parent
+                query: root.query
+                results: root.results
+                currentIndex: root.currentIndex
+                onQueryEdited: (t) => {
+                    root.query = t;
                     root.currentIndex = 0;
-                    win.requestActivate();
-                } else if (Launcher.open) {
-                    Launcher.hide();
                 }
+                onPicked: (i) => root.currentIndex = i
+                onActivated: (i) => {
+                    root.currentIndex = i;
+                    root.activate(root.results[i]);
+                }
+                onClosed: Launcher.hide()
             }
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.surface
-                radius: Tokens.radius.medium
-            }
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Tokens.spacing.md
-                spacing: Tokens.spacing.md
-
-                MWindowChrome {
-                    Layout.fillWidth: true
-                    titleKey: "bar.launcher"
-                    subtitleValue: User.displayName
-                    titleColumnWidth: Tokens.spacing.xxl * 9
-                    onClosed: Launcher.hide()
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: Tokens.spacing.lg
-
-                    MPane {
-                        Layout.preferredWidth: Tokens.spacing.xxl * 9
-                        Layout.fillHeight: true
-
-                        Nav {
-                            anchors.fill: parent
-                            model: root.results
-                            currentIndex: root.currentIndex
-                            onQueryEdited: (t) => {
-                                root.query = t;
-                                root.currentIndex = 0;
-                            }
-                            onPicked: (i) => root.currentIndex = i
-                            onActivated: (i) => {
-                                root.currentIndex = i;
-                                root.activate(root.results[i]);
-                            }
-                        }
-                    }
-
-                    Detail {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        item: root.current
-                        searching: root.query.trim().length > 0
-                        onConfirmed: root.activate(root.current)
-                    }
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: [win]
+                onCleared: {
+                    if (Launcher.open)
+                        Launcher.hide();
                 }
             }
 
             Shortcut {
                 sequence: "Escape"
+                context: Qt.ApplicationShortcut
                 onActivated: Launcher.hide()
+            }
+
+            Component.onCompleted: {
+                root.query = "";
+                root.currentIndex = 0;
+                Qt.callLater(() => {
+                    if (!Launcher.open)
+                        return;
+                    keyGrab.active = true;
+                    overlay.focusSearch();
+                });
             }
         }
     }

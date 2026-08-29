@@ -66,6 +66,14 @@ Singleton {
         return root.scale !== 0 && root.overlay !== "fade";
     }
 
+    // Inverse of the closed overlay scale (~0.92 → ~1.087). Search
+    // fields use this as a focused bump so motion.overlay still owns
+    // the number; fade-only / scale-0 stays at 1.
+    function overlayFocusScale(): real {
+        const closed = root.overlayScale(false);
+        return closed > 0 ? 1 / closed : 1;
+    }
+
     // Named SpringAnimation presets — real QML SpringAnimation property
     // names are `spring` (stiffness) and `damping` (0-1, lower = faster
     // settle), not the stiffness/tension naming other motion libraries

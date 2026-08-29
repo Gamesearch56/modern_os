@@ -6,6 +6,7 @@ Item {
     id: root
 
     property alias text: input.text
+    readonly property alias focused: input.activeFocus
     property string placeholderKey: ""
     property string iconName: ""
     property int echoMode: TextInput.Normal
