@@ -20,7 +20,7 @@ Item {
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
     Accessible.role: Accessible.Slider
-    Accessible.value: root.value
+    Accessible.description: String(Math.round(root.value))
     Accessible.onIncreaseAction: root.moved(Math.min(root.to, root.value + root._span / 20))
     Accessible.onDecreaseAction: root.moved(Math.max(root.from, root.value - root._span / 20))
 
