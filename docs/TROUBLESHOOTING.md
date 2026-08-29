@@ -98,8 +98,8 @@ from kitty after the bar is up.
 - Extra `devuser` sessions: `loginctl list-sessions`, then
   `loginctl terminate-session <id>` from the daily-driver account, or as
   `devuser` on a TTY: `pkill -x Hyprland`.
-- Autostart runs `qs -c modern` as a child of this compositor, in a
-  respawn loop. It does not wait on `systemctl --user`. Bare `qs ipc`
+- Autostart **exec**s `qs -c modern` as a child of this compositor (not
+  a `while` wrapper, not `systemctl --user restart`). Bare `qs ipc`
   talks to a `default` config that does not exist — keybinds use
   `qs -c modern ipc call …`. QML errors: `qs -c modern log -t 80` or
   `~/.local/state/modern/quickshell.log`.

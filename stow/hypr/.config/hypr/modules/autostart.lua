@@ -7,13 +7,13 @@
 local config = require("modules.config")
 
 hl.on("hyprland.start", function()
-    -- qs as a compositor child, with a respawn loop. Do not call
-    -- systemctl --user in this command: a TTY session often has no
-    -- user bus, and a hanging restart skips the bar entirely.
+    -- exec qs so Hyprland tracks the Quickshell process, not a wrapper
+    -- shell. A while-loop left sh as the child; that never stayed up
+    -- (no qs in the destuser session). Same start as the working TTY.
     hl.exec_cmd("sh -lc '"
         .. "mkdir -p \"${XDG_STATE_HOME:-$HOME/.local/state}/modern\"; "
         .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
-        .. "while true; do qs -c modern >>\"$log\" 2>&1 || true; sleep 1; done'")
+        .. "exec qs -c modern >>\"$log\" 2>&1'")
 
     -- Best-effort; timeout so a missing bus cannot stall the session.
     hl.exec_cmd("sh -lc '"

@@ -11,7 +11,7 @@ TTY: start-hyprland   →  Hyprland (stow/hypr)
 greetd (gated)        →  (same, via hyprland.desktop / UWSM)
                       │
                       ├─ autostart.lua
-                      │     qs -c modern  (child, respawn loop)
+                      │     exec qs -c modern  (compositor child)
                       │     timeout systemctl --user … (polkit, optional stop)
                       ├─ modern-shell.service  (optional UWSM watchdog)
                       │     ExecStart=quickshell -c modern
@@ -30,12 +30,11 @@ target — a TTY start without UWSM never reaches it, and `PartOf` would
 stop the shell immediately. TTY testing does **not** need this unit
 enabled.
 
-`modules/autostart.lua` starts `qs -c modern` as a **child of this
-compositor**, in a respawn loop, writing `~/.local/state/modern/quickshell.log`.
-That path does not talk to `systemd --user`. A hanging `systemctl --user
-restart` was skipping the bar on TTY sessions with no user bus. systemd
-calls (import-environment, stop the leftover unit, polkit) run separately
-with `timeout 2`.
+`modules/autostart.lua` **exec**s `qs -c modern` as a child of this
+compositor (logs: `~/.local/state/modern/quickshell.log`). Do not wrap
+it in a `while` loop: Hyprland then tracks `sh` instead of Quickshell,
+and the bar never appears. systemd calls (import-environment, stop a
+leftover unit, polkit) run separately with `timeout 2`.
 
 Enable the unit only from **inside** a running session if you want a
 UWSM/greetd watchdog — not from a text TTY, and not as a requirement
