@@ -32,6 +32,8 @@ ColumnLayout {
             iconName: "x-office-calendar-symbolic"
             titleKey: "calendar.empty"
             hintKey: Calendar.icsUrl.length === 0 ? "calendar.icsHint" : ""
+            actionKey: Calendar.icsUrl.length === 0 ? "calendar.setupFeed" : ""
+            onActionClicked: Settings.openAt("privacy", "calendar")
         }
     }
 }

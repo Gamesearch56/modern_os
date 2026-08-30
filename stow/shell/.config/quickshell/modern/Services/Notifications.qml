@@ -17,6 +17,41 @@ Singleton {
     property bool dnd: false
     property bool panelOpen: false
     property var _lastLocal: ({ key: "", at: 0 })
+    property int _minute: 0
+
+    readonly property bool scheduledDnd: {
+        void root._minute;
+        const s = Config.general.dndSchedule;
+        if (!s || !s.enabled)
+            return false;
+        const a = root._hm(s.from);
+        const b = root._hm(s.to);
+        if (a < 0 || b < 0 || a === b)
+            return false;
+        const t = root._minute;
+        return a < b ? (t >= a && t < b) : (t >= a || t < b);
+    }
+    readonly property bool effectiveDnd: root.dnd || root.scheduledDnd
+
+    Timer {
+        interval: 60000
+        running: !!(Config.general.dndSchedule && Config.general.dndSchedule.enabled)
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            const n = new Date();
+            root._minute = n.getHours() * 60 + n.getMinutes();
+        }
+    }
+
+    function _hm(s: string): int {
+        const p = String(s || "").split(":");
+        const h = Number(p[0]);
+        const m = Number(p[1] || 0);
+        if (h !== h || m !== m || h < 0 || h > 23 || m < 0 || m > 59)
+            return -1;
+        return h * 60 + m;
+    }
 
     onPanelOpenChanged: {
         if (!root.panelOpen)
@@ -35,7 +70,7 @@ Singleton {
         actionsSupported: true
         onNotification: (notification) => {
             try {
-                if (root.dnd) {
+                if (root.effectiveDnd) {
                     notification.tracked = true;
                     return;
                 }
@@ -152,7 +187,7 @@ Singleton {
         if (root._lastLocal.key === key && (now - root._lastLocal.at) < 8000)
             return;
         root._lastLocal = { key: key, at: now };
-        if (root.dnd && level !== "error")
+        if (root.effectiveDnd && level !== "error")
             return;
         const summaryKey = level === "error" ? "notifications.shellError" : "notifications.shellWarning";
         const expire = level === "error" ? 0 : root._timeoutMs();
@@ -160,7 +195,7 @@ Singleton {
     }
 
     function toast(summary: string, body: string, imagePath) {
-        if (root.dnd)
+        if (root.effectiveDnd)
             return;
         root._push(root._local(summary, body || "", imagePath || "", root._timeoutMs()));
     }

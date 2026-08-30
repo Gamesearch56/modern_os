@@ -12,7 +12,10 @@ Item {
     property int iconSize: Tokens.spacing.xxl
     property string titleKey: ""
     property string hintKey: ""
+    property string actionKey: ""
     property bool tintIcon: true
+
+    signal actionClicked()
 
     ColumnLayout {
         anchors.centerIn: parent
@@ -37,9 +40,18 @@ Item {
         }
 
         MHint {
+            visible: root.hintKey.length > 0
             key: root.hintKey
             horizontalAlignment: Text.AlignHCenter
             Layout.fillWidth: true
+        }
+
+        MButton {
+            visible: root.actionKey.length > 0
+            Layout.alignment: Qt.AlignHCenter
+            kind: "tonal"
+            key: root.actionKey
+            onClicked: root.actionClicked()
         }
     }
 }

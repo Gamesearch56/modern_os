@@ -122,7 +122,8 @@
     "eventsTab": "Termine",
     "prevMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
-    "icsHint": "Lege in Einstellungen → Datenschutz eine geheime ICS-URL an, damit Proton-Calendar-Termine hier erscheinen."
+    "icsHint": "Die Kalender-Feed-URL muss eingerichtet werden, damit Termine hier erscheinen.",
+    "setupFeed": "Kalender-Feed-URL einrichten"
   },
   "mail": {
     "open": "Mail öffnen"
@@ -405,7 +406,7 @@
       "mirrorNotifications": "Benachrichtigungen spiegeln",
       "sharedClipboard": "Geteilte Zwischenablage",
       "protonDrive": "Proton Drive",
-      "calendarIcs": "Kalender-ICS-URL",
+      "calendarIcs": "Kalender-Feed-URL",
       "aiProvider": "Assistent",
       "ollamaModel": "Ollama-Modell",
       "chrome": "Chrome",
@@ -568,7 +569,7 @@
       "weatherLocation": "Leer nutzt IP-Standort. Oder Stadt, oder Breitengrad,Längengrad.",
       "ollamaModel": "Lokal mit ollama pull. Nutzt der Leisten-Assistent.",
       "ollamaSetup": "Ollama installieren, ollama serve starten, dann ollama pull llama3 (oder diesen Namen). Der Assistent-Chip in der Leiste öffnet den Chat.",
-      "calendarIcs": "Proton Calendar → Einstellungen → Kalender → geheimer iCal-Feed. Hier eingefügt, zeigt das Uhr-Popup die Termine.",
+      "calendarIcs": "Proton Calendar → Einstellungen → Kalender → Freigabelink erstellen und hier einfügen.",
       "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken.",
       "hyprbarsOn": "hyprbars-Plugin ist geladen.",
       "hyprbarsOff": "hyprbars ist nicht geladen. scripts/doctor.sh und hyprpm prüfen.",
@@ -603,6 +604,16 @@
       "changePassword": "Passwort ändern",
       "members": "Mitglieder",
       "memberCount": "{n} Mitglieder"
+    },
+    "privacy": {
+      "notifications": "Benachrichtigungen",
+      "connectedServices": "Verbundene Dienste",
+      "calendar": "Kalender-Widget",
+      "quietHours": "Ruhezeiten",
+      "bannerDuration": "Banner-Dauer (Sekunden)",
+      "calendarTitle": "Termine an der Uhr",
+      "calendarBody": "Füge einen geheimen iCal-Feed ein. In Proton Calendar: Einstellungen → Kalender → geheimer iCal-Link. Das Uhr-Popup in der Leiste zeigt die Termine und markiert Tage im Monatsraster.",
+      "icsPlaceholder": "https://calendar.example/secret.ics"
     },
     "bluetooth": {
       "connected": "Verbunden",

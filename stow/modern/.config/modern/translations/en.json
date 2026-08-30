@@ -122,7 +122,8 @@
     "eventsTab": "Events",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
-    "icsHint": "Add a secret ICS URL in Settings → Privacy to show Proton Calendar events here."
+    "icsHint": "The Calendar Feed URL has to be set up to show events here.",
+    "setupFeed": "Set up Calendar Feed URL"
   },
   "mail": {
     "open": "Open mail"
@@ -405,7 +406,7 @@
       "mirrorNotifications": "Mirror notifications",
       "sharedClipboard": "Shared clipboard",
       "protonDrive": "Proton Drive",
-      "calendarIcs": "Calendar ICS URL",
+      "calendarIcs": "Calendar Feed URL",
       "aiProvider": "Assistant",
       "ollamaModel": "Ollama model",
       "chrome": "Chrome",
@@ -568,7 +569,7 @@
       "weatherLocation": "Empty uses IP geolocation. Or a city, or latitude,longitude.",
       "ollamaModel": "Pulled locally with ollama pull. Used by the bar assistant.",
       "ollamaSetup": "Install ollama, run ollama serve, then ollama pull llama3 (or this name). The Assistant chip on the bar opens the chat.",
-      "calendarIcs": "Proton Calendar → Settings → Calendars → secret iCal feed. Pasted here, the clock popup shows those events.",
+      "calendarIcs": "Proton Calendar → Settings → Calendars → Create a share link and paste it here.",
       "audioDevices": "The highlighted device is the default. Click another to send sound there.",
       "hyprbarsOn": "hyprbars plugin is loaded.",
       "hyprbarsOff": "hyprbars is not loaded. Run scripts/doctor.sh and hyprpm.",
@@ -603,6 +604,16 @@
       "changePassword": "Change password",
       "members": "Members",
       "memberCount": "{n} members"
+    },
+    "privacy": {
+      "notifications": "Notifications",
+      "connectedServices": "Connected Services",
+      "calendar": "Calendar widget",
+      "quietHours": "Quiet hours",
+      "bannerDuration": "Banner duration (seconds)",
+      "calendarTitle": "Events on the clock",
+      "calendarBody": "Paste a secret iCal feed. In Proton Calendar: Settings → Calendars → secret iCal URL. The clock popup on the bar shows those events and marks days on the month grid.",
+      "icsPlaceholder": "https://calendar.example/secret.ics"
     },
     "bluetooth": {
       "connected": "Connected",

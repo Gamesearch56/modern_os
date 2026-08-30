@@ -74,10 +74,21 @@ Scope {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 clip: true
+                                focus: true
                                 contentWidth: width
                                 contentHeight: sectionLoader.item
                                     ? sectionLoader.item.implicitHeight
                                     : 0
+
+                                MouseArea {
+                                    z: -1
+                                    width: pane.width
+                                    height: Math.max(pane.height, pane.contentHeight)
+                                    onPressed: (mouse) => {
+                                        pane.forceActiveFocus();
+                                        mouse.accepted = false;
+                                    }
+                                }
 
                                 Loader {
                                     id: sectionLoader

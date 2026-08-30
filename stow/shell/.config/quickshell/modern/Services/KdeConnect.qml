@@ -1,6 +1,6 @@
 // KDE Connect device list. D-Bus bindings are not assumed here —
 // kdeconnect-cli is the stable CLI and is owned by this Service so
-// Modules never spawn a process.
+// Modules never spawn a process. enabled starts/stops kdeconnectd.
 pragma Singleton
 
 import Quickshell
@@ -14,6 +14,9 @@ Singleton {
     property var devices: []
     property bool watching: false
     readonly property int connectedCount: root.devices.length
+    readonly property bool enabled: Config.kdeconnect.enabled
+
+    onEnabledChanged: root.apply()
 
     Process {
         id: proc
@@ -25,19 +28,26 @@ Singleton {
     }
 
     Timer {
-        interval: Config.kdeconnect.enabled ? 15000 : 60000
-        running: root.watching && Config.kdeconnect.enabled
+        interval: 15000
+        running: root.watching && root.enabled
         repeat: true
         onTriggered: root.refresh()
     }
 
-    Component.onCompleted: {
-        if (Config.kdeconnect.enabled)
-            root.refresh();
+    Component.onCompleted: root.apply()
+
+    function apply() {
+        if (root.enabled) {
+            Quickshell.execDetached(["sh", "-lc", "pgrep -u \"$USER\" -x kdeconnectd >/dev/null || kdeconnectd &"]);
+            Qt.callLater(() => root.refresh());
+            return;
+        }
+        Quickshell.execDetached(["sh", "-lc", "pkill -u \"$USER\" -x kdeconnectd || true"]);
+        root.devices = [];
     }
 
     function refresh() {
-        if (!Config.kdeconnect.enabled)
+        if (!root.enabled)
             return;
         proc.running = true;
     }

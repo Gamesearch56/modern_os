@@ -20,7 +20,11 @@ Singleton {
     property int viewMonth: new Date().getMonth()
 
     readonly property string home: Quickshell.env("HOME")
+    property string pendingUrl: ""
+
     readonly property string icsUrl: {
+        if (root.pendingUrl.length > 0)
+            return root.pendingUrl;
         const u = Config.accounts?.calendarIcsUrl;
         return typeof u === "string" ? u.trim() : "";
     }
@@ -73,6 +77,14 @@ Singleton {
     }
     onViewYearChanged: root._recompute()
     onViewMonthChanged: root._recompute()
+
+    function commitUrl(url: string) {
+        const u = String(url || "").trim();
+        const prev = root.icsUrl;
+        root.pendingUrl = u;
+        if (u === prev)
+            root.refresh();
+    }
 
     function refresh() {
         if (root._http) {

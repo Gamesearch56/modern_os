@@ -91,12 +91,7 @@ Item {
                         root._setFromX(mouse.x);
                 }
                 onWheel: (w) => {
-                    const step = root._span / 20;
-                    const dy = w.angleDelta.y;
-                    if (dy === 0)
-                        return;
-                    root.moved(Math.max(root.from, Math.min(root.to, root.value + (dy > 0 ? step : -step))));
-                    w.accepted = true;
+                    w.accepted = false;
                 }
             }
         }
