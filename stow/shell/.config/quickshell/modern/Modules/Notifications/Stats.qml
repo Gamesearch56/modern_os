@@ -14,44 +14,14 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
-    GridLayout {
+    MPerfGrid {
         Layout.fillWidth: true
         Layout.topMargin: Tokens.spacing.xs
-        columns: 2
-        columnSpacing: Tokens.spacing.xs
-        rowSpacing: Tokens.spacing.xs
-
-        MPercentTile {
-            Layout.fillWidth: true
-            titleKey: "performance.cpu"
-            valueText: Math.round(SystemStats.cpuPercent) + "%"
-            percent: SystemStats.cpuPercent
-        }
-        MPercentTile {
-            Layout.fillWidth: true
-            titleKey: "performance.ram"
-            valueText: Math.round(SystemStats.ramPercent) + "%"
-            percent: SystemStats.ramPercent
-        }
-        MPercentTile {
-            Layout.fillWidth: true
-            titleKey: "performance.disk"
-            valueText: Math.round(SystemStats.diskPercent) + "%"
-            percent: SystemStats.diskPercent
-        }
-        MPercentTile {
-            visible: Config.widgets.performance?.showGpu ?? true
-            Layout.fillWidth: true
-            titleKey: "performance.gpu"
-            valueText: Math.round(SystemStats.gpuPercent) + "%"
-            percent: SystemStats.gpuPercent
-        }
-        MPercentTile {
-            Layout.fillWidth: true
-            Layout.columnSpan: 2
-            titleKey: "performance.fan"
-            valueText: String(SystemStats.fanRpm)
-            percent: SystemStats.fanPercent
-        }
+        cpuPercent: SystemStats.cpuPercent
+        gpuPercent: SystemStats.gpuPercent
+        ramPercent: SystemStats.ramPercent
+        diskPercent: SystemStats.diskPercent
+        fanPercent: SystemStats.fanPercent
+        fanRpm: SystemStats.fanRpm
     }
 }

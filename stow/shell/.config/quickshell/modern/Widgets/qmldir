@@ -32,6 +32,7 @@ MPane 1.0 MPane.qml
 MTextArea 1.0 MTextArea.qml
 MFocusRing 1.0 MFocusRing.qml
 MPercentTile 1.0 MPercentTile.qml
+MPerfGrid 1.0 MPerfGrid.qml
 MQuickTile 1.0 MQuickTile.qml
 MRobotIcon 1.0 MRobotIcon.qml
 MSparkline 1.0 MSparkline.qml
