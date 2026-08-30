@@ -44,7 +44,7 @@ Six groups, 19 pages. Catalog lives in
 | Devices | Audio | `audio` | `audio.masterVolumeLimit`; `audio.autoSwitchBluetooth` (on/off, default on) trusts and connects paired Bluetooth audio, then sets the PipeWire default sink/source when a BlueZ endpoint appears. Per-app streams with icon and mute via `Audio`. |
 | Devices | Network | `network` | Wi-Fi radio, nearby networks, ethernet status, curl speed test (`Network`). Mirror country stays on Update / `modern mirrors`; DNS override is not applied. |
 | Devices | Bluetooth | `bluetooth` | Adapter power, nearby/connected lists, connect/disconnect/forget via `Bluetooth` (BlueZ). |
-| System | Storage | `storage` | `Storage` |
+| System | Storage | `storage` | Internal and external drive cards via `Storage` (`lsblk`, sysfs link speed). Eject uses `udisksctl` unmount + power-off. |
 | System | Backup | `backup` | `backup.*`; `Snapshots` (snapper list/delete) |
 | System | Update | `system` | `gaming.*`; `Update` (`modern update`, `modern mirrors`) |
 

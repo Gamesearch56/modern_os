@@ -686,9 +686,20 @@
       "remembered": "Gemerkt"
     },
     "storage": {
-      "mounts": "Volumes",
-      "devices": "Laufwerke",
-      "eject": "Auswerfen"
+      "internal": "Intern",
+      "external": "Extern",
+      "emptyInternal": "Keine internen Laufwerke",
+      "emptyExternal": "Keine externen Laufwerke",
+      "eject": "Auswerfen",
+      "space": "{used} / {total} · {free} frei",
+      "ssd": "SSD",
+      "hdd": "HDD",
+      "usb": "USB",
+      "nvme": "NVMe",
+      "sata": "SATA",
+      "pcie": "PCIe {gen} ×{n}",
+      "gbps": "{n} Gbit/s",
+      "mbps": "{n} Mbit/s"
     },
     "backup": {
       "snapshots": "Snapshots"

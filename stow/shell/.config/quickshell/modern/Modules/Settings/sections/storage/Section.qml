@@ -6,36 +6,47 @@ import "../../../../Services"
 import "."
 
 ColumnLayout {
-    spacing: Tokens.spacing.md
+    id: root
+    spacing: Tokens.spacing.lg
 
     Component.onCompleted: Storage.watching = true
     Component.onDestruction: Storage.watching = false
 
-    MSectionHeader { key: "settings.storage.mounts" }
+    MSectionHeader {
+        key: "settings.storage.internal"
+        topMargin: 0
+    }
     Repeater {
-        model: Storage.mounts
-        MListItem {
-            required property var modelData
-            Layout.fillWidth: true
-            titleValue: modelData.target
-            subtitleValue: modelData.usedLabel + " / " + modelData.sizeLabel + " · " + modelData.freeLabel
+        model: Storage.internal.length
+        DriveCard {
+            required property int index
+            drive: Storage.internal[index]
         }
     }
+    MEmptyState {
+        visible: Storage.internal.length === 0
+        Layout.fillWidth: true
+        Layout.preferredHeight: Tokens.spacing.xxl * 4
+        iconName: "drive-harddisk"
+        titleKey: "settings.storage.emptyInternal"
+    }
 
-    MSectionHeader { key: "settings.storage.devices" }
+    MSectionHeader {
+        key: "settings.storage.external"
+        topMargin: Tokens.spacing.xl
+    }
     Repeater {
-        model: Storage.devices
-        MListItem {
-            required property var modelData
-            Layout.fillWidth: true
-            titleValue: (modelData.model || modelData.name || "") + (modelData.tran ? " · " + modelData.tran : "")
-            subtitleValue: modelData.size || ""
-            MButton {
-                visible: !!(modelData.rm)
-                kind: "tonal"
-                key: "settings.storage.eject"
-                onClicked: Storage.eject(modelData.name)
-            }
+        model: Storage.external.length
+        DriveCard {
+            required property int index
+            drive: Storage.external[index]
         }
+    }
+    MEmptyState {
+        visible: Storage.external.length === 0
+        Layout.fillWidth: true
+        Layout.preferredHeight: Tokens.spacing.xxl * 4
+        iconName: "drive-removable-media"
+        titleKey: "settings.storage.emptyExternal"
     }
 }
