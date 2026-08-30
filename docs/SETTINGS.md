@@ -34,7 +34,7 @@ Six groups, 19 pages. Catalog lives in
 | General | Energy | `power` | Live `Battery` hero. Power button (`ask` = power menu) and lid actions via `modern power`. `hypridle` listeners from `general.idleTimings`. Fullscreen/media idle inhibit via `systemd-inhibit`. |
 | Appearance | Design | `design` | Wallpaper gallery + four derived theme profiles (`Theme`, `Wallpaper`). `design.*`, `typography`, `motion`, `windows.*` (no title-bar toggle), `windowRules`. Animations and cursor theme are selects; cursor list comes from installed `cursors/` themes. Changing a knob writes `config.json` then applies live: shell chrome (transparency, rounding, type scale, motion), Hyprland (`hyprctl keyword` / reload for animations), cursor (`cursor-apply.sh` + GTK/Qt), and toolkit chrome (`theme-apply.sh --chrome-only` for GTK/Qt/KDE/Vivaldi radii and fonts). |
 | Appearance | Bar | `bar` | `bar.position`, `bar.style`, `bar.height`, `bar.edgeGap`, `bar.endGap`, `bar.autoHide`, `bar.left\|center\|right`, `widgets.*`. Islands drag across left/middle/right (`MSlotBoard`); enabling a widget appends to `bar.left`. Auto-hide slides the bar to an edge strip. |
-| Appearance | Launcher | `launcher` | `launcher.*` |
+| Appearance | Launcher | `launcher` | `launcher.frecencyEnabled`, `launcher.showIcons`, `launcher.showDescriptions`, `launcher.resultCount`, `launcher.mostUsedGridSize`. Prefixes in `launcher.providers` stay in config for a future provider layer; Settings does not edit them. |
 | Apps | Applications | `applications` | `apps.defaults`, `general.autostart` |
 | Apps | Screenshot | `screenshots` | `screenshots.*` |
 | Apps | AI | `ai` | `accounts.ai` |

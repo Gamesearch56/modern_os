@@ -19,7 +19,12 @@ Scope {
         function hide() { Launcher.hide(); }
     }
 
-    readonly property var results: root.resultsFor(root.query)
+    readonly property var results: {
+        void Config.launcher.frecencyEnabled;
+        void Config.launcher.resultCount;
+        void Config.launcher.mostUsedGridSize;
+        return root.resultsFor(root.query);
+    }
     readonly property var current: {
         if (root.currentIndex < 0 || root.currentIndex >= root.results.length)
             return null;

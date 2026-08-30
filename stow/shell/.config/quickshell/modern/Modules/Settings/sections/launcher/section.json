@@ -3,5 +3,5 @@
   "icon": "view-app-grid-symbolic",
   "key": "settings.sections.launcher",
   "order": 140,
-  "keywords": ["frecency", "providers", "prefix", "search"]
+  "keywords": ["frecency", "icons", "results", "search"]
 }
