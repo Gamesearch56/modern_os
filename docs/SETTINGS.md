@@ -29,7 +29,7 @@ Six groups, 19 pages. Catalog lives in
 | Group | Page | Id | Config / Services |
 |-------|------|----|-------------------|
 | General | Overview | `overview` | `Diagnostics`, `SystemStats`, `Battery` |
-| General | Users | `users` | `general.autologin`; `Passwd`, `User` |
+| General | Users | `users` | `general.autologin` preference plus a gated-boot hint (not applied from Settings). `Passwd`, `User`, `Apps.runInTerminal` for confirmed terminal login. Groups are read-only; no usersd edit overlays. |
 | General | Privacy | `privacy` | `general.dndSchedule`, `kdeconnect`, `accounts.protonDrive`, `accounts.calendarIcsUrl` |
 | General | Energy | `power` | `power.*`, `general.idleTimings`; `Battery`, `SystemStats` |
 | Appearance | Design | `design` | `design.*`, `typography`, `motion`, `windows.*`, `windowRules`; `Theme`, `Wallpaper` |

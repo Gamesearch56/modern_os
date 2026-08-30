@@ -577,7 +577,8 @@
       "previewDate": "Nur die Oberfläche. Kalender und Uhr nutzen dieses Datum; die Systemzeit bleibt.",
       "timezone": "IANA-Name wie Europe/Berlin. Wird mit timedatectl gesetzt (kann nachfragen).",
       "restoreGated": "Ein Snapshot-Rollback ist abgeschottet. Siehe docs/BACKUP.md.",
-      "speedTest": "Kurzer curl-Download vom Arch-Geo-Spiegel. Keine Speedtest-Website."
+      "speedTest": "Kurzer curl-Download vom Arch-Geo-Spiegel. Keine Speedtest-Website.",
+      "autologin": "Die Einstellung wird in config.json gespeichert. Die Anmeldung am Boot (getty/greetd) ist abgeschottet (docs/ISOLATION.md) und wird von diesem Schalter nicht gesetzt."
     },
     "hub": {
       "title": "Kurzbefehle",
@@ -586,8 +587,22 @@
     "users": {
       "editTitle": "Benutzer bearbeiten",
       "displayName": "Anzeigename",
+      "username": "Benutzername",
       "all": "Benutzer auf diesem Rechner",
-      "groups": "Deine Gruppen"
+      "settings": "Einstellungen",
+      "others": "Andere Benutzer auf diesem System",
+      "groups": "Deine Gruppen",
+      "groupsAll": "Gruppen",
+      "colAdmin": "Admin",
+      "adminYes": "Ja",
+      "adminNo": "Nein",
+      "login": "Anmelden",
+      "terminalLogin": "Anmelden",
+      "terminalConfirmTitle": "Terminal als {user} öffnen?",
+      "terminalConfirmBody": "Öffnet das Standardterminal und führt su zu {user} aus. Du wirst nach dem Passwort dieses Kontos gefragt.",
+      "changePassword": "Passwort ändern",
+      "members": "Mitglieder",
+      "memberCount": "{n} Mitglieder"
     },
     "bluetooth": {
       "connected": "Verbunden",

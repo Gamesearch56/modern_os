@@ -107,7 +107,11 @@ Scope {
                             it.createOpen = false;
                             return;
                         }
-                        if (it.editorOpen) {
+                        if (it.pendingLogin && String(it.pendingLogin).length > 0) {
+                            it.pendingLogin = "";
+                            return;
+                        }
+                        if (it.editorId !== undefined && String(it.editorId).length > 0) {
                             it.editorId = "";
                             return;
                         }

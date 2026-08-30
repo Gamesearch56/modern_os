@@ -354,7 +354,7 @@
     "kbUs": "English (US)",
     "fields": {
       "motionScale": "Motion scale",
-      "autologin": "Autologin",
+      "autologin": "Auto login",
       "idleTimings": "Idle timings",
       "autostart": "Autostart",
       "accounts": "Connected accounts",
@@ -577,7 +577,8 @@
       "previewDate": "UI-only. Calendar and clock previews use this date; the system clock is unchanged.",
       "timezone": "IANA name such as Europe/Berlin. Applied with timedatectl (may prompt).",
       "restoreGated": "Restoring a snapshot needs a gated snapper rollback. See docs/BACKUP.md.",
-      "speedTest": "Downloads a short sample from the Arch geo mirror via curl. Not a third-party speed-test site."
+      "speedTest": "Downloads a short sample from the Arch geo mirror via curl. Not a third-party speed-test site.",
+      "autologin": "This saves the preference in config.json. Graphical boot autologin is gated (docs/ISOLATION.md) and is not applied from this switch."
     },
     "hub": {
       "title": "Shortcuts",
@@ -586,8 +587,22 @@
     "users": {
       "editTitle": "Edit user",
       "displayName": "Display name",
+      "username": "Username",
       "all": "Users on this computer",
-      "groups": "Your groups"
+      "settings": "Settings",
+      "others": "Other users on this system",
+      "groups": "Your groups",
+      "groupsAll": "Groups",
+      "colAdmin": "Admin",
+      "adminYes": "Yes",
+      "adminNo": "No",
+      "login": "Login",
+      "terminalLogin": "Login",
+      "terminalConfirmTitle": "Open a terminal as {user}?",
+      "terminalConfirmBody": "This opens the default terminal and runs su to {user}. You will be asked for that account's password.",
+      "changePassword": "Change password",
+      "members": "Members",
+      "memberCount": "{n} members"
     },
     "bluetooth": {
       "connected": "Connected",

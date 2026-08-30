@@ -10,6 +10,7 @@ Item {
 
     property bool open: false
     property string titleKey: ""
+    property var titleParams: ({})
     property string titleValue: ""
     property string bodyKey: ""
     property var bodyParams: ({})
@@ -25,7 +26,7 @@ Item {
     z: 100
     activeFocusOnTab: root.open
     Accessible.role: Accessible.Dialog
-    Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey) : root.titleValue
+    Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
 
     onOpenChanged: {
         if (root.open)
@@ -55,6 +56,7 @@ Item {
         id: card
         level: 5
         width: Math.min(parent.width - Tokens.spacing.xxl, Tokens.spacing.xxl * 12)
+        implicitHeight: dialogCol.implicitHeight + padding * 2
         anchors.centerIn: parent
         scale: Motion.overlayScale(root.open)
         opacity: Motion.overlayOpacity(root.open)
@@ -75,13 +77,16 @@ Item {
         }
 
         ColumnLayout {
-            anchors.fill: parent
+            id: dialogCol
+            width: parent.width
             spacing: Tokens.spacing.md
 
             MText {
                 key: root.titleKey
+                params: root.titleParams
                 value: root.titleValue
                 styleName: "headlineSmall"
+                wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
 

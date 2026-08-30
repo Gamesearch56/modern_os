@@ -117,6 +117,29 @@ Singleton {
         return true;
     }
 
+    function runInTerminal(argv: var): bool {
+        const args = argv || [];
+        if (args.length === 0)
+            return false;
+        try {
+            const id = String(root.desktopId("terminal") || "").replace(/\.desktop$/, "").toLowerCase();
+            let cmd = [];
+            if (id.indexOf("foot") !== -1)
+                cmd = ["foot"].concat(args);
+            else if (id.indexOf("alacritty") !== -1)
+                cmd = ["alacritty", "-e"].concat(args);
+            else if (id.indexOf("wezterm") !== -1)
+                cmd = ["wezterm", "start", "--"].concat(args);
+            else
+                cmd = ["kitty", "-e"].concat(args);
+            Quickshell.execDetached(cmd);
+            return true;
+        } catch (err) {
+            Logger.error("Apps", String(err));
+            return false;
+        }
+    }
+
     function openFolder(dir: string): bool {
         try {
             if (!dir || dir.length === 0)
