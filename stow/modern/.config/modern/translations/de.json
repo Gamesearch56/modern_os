@@ -718,6 +718,21 @@
       "deleteTitle": "Snapshot löschen?",
       "deleteBody": "Snapshot {n} von {date} löschen?"
     },
+    "update": {
+      "available": "{n} Updates verfügbar",
+      "upToDate": "Auf dem neuesten Stand",
+      "checking": "Suche nach Updates…",
+      "packages": "Systempakete",
+      "otherPackages": "Andere Pakete",
+      "headline": "Paketupdate",
+      "fromTo": "{from} → {to}",
+      "empty": "Keine Updates",
+      "checkFailed": "Updates konnten nicht geprüft werden",
+      "success": "Systemupdate abgeschlossen",
+      "failed": "Systemupdate fehlgeschlagen",
+      "mirrorsDone": "Spiegelliste aktualisiert",
+      "mirrorsFailed": "Spiegelliste konnte nicht aktualisiert werden"
+    },
     "overview": {
       "stats": "Live-Werte",
       "os": "Betriebssystem",

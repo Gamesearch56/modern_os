@@ -8,6 +8,7 @@ MOverlay {
     open: Update.open
     titleKey: "settings.systemUpdate"
     cardHeight: Tokens.spacing.xxl * 16
+    closeVisible: !Update.running
     onClosed: Update.close()
 
     ColumnLayout {
@@ -21,7 +22,7 @@ MOverlay {
         }
         MLinearProgress {
             Layout.fillWidth: true
-            indeterminate: Update.indeterminate || Update.mirrorsRunning
+            indeterminate: Update.indeterminate
             value: Update.progress < 0 ? 0 : Update.progress
         }
         Flickable {

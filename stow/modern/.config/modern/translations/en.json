@@ -718,6 +718,21 @@
       "deleteTitle": "Delete snapshot?",
       "deleteBody": "Delete snapshot {n} from {date}?"
     },
+    "update": {
+      "available": "{n} updates available",
+      "upToDate": "Up to date",
+      "checking": "Checking for updates…",
+      "packages": "System packages",
+      "otherPackages": "Other packages",
+      "headline": "Package Update",
+      "fromTo": "{from} → {to}",
+      "empty": "No updates",
+      "checkFailed": "Could not check for updates",
+      "success": "System update finished",
+      "failed": "System update failed",
+      "mirrorsDone": "Mirror list updated",
+      "mirrorsFailed": "Could not update mirrors"
+    },
     "overview": {
       "stats": "Live stats",
       "os": "OS",

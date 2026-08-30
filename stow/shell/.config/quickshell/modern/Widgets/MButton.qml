@@ -14,6 +14,7 @@ Item {
     property bool enabled: true
     property bool fillWidth: false
     property bool highlighted: false
+    property bool busy: false
 
     signal clicked()
 
@@ -35,14 +36,17 @@ Item {
     implicitWidth: Math.max(Tokens.spacing.xxl * 2, row.implicitWidth + Tokens.spacing.lg * 2)
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     Layout.fillWidth: root.fillWidth
-    opacity: root.enabled ? 1 : 0.38
-    activeFocusOnTab: root.enabled
+    opacity: (root.enabled && !root.busy) ? 1 : 0.38
+    activeFocusOnTab: root.enabled && !root.busy
     Accessible.role: Accessible.Button
     Accessible.name: root.key.length > 0 ? I18n.t(root.key, root.params) : ""
-    Accessible.onPressAction: root.clicked()
+    Accessible.onPressAction: {
+        if (root.enabled && !root.busy)
+            root.clicked();
+    }
 
     Keys.onPressed: (event) => {
-        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+        if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) && root.enabled && !root.busy) {
             root.clicked();
             event.accepted = true;
         }
@@ -73,7 +77,7 @@ Item {
 
     HoverHandler {
         id: hover
-        enabled: root.enabled
+        enabled: root.enabled && !root.busy
     }
 
     RowLayout {
@@ -82,10 +86,17 @@ Item {
         spacing: Tokens.spacing.sm
 
         MIcon {
-            visible: root.iconName.length > 0
-            name: root.iconName
+            visible: root.iconName.length > 0 || root.busy
+            name: root.busy ? (root.iconName.length > 0 ? root.iconName : "view-refresh") : root.iconName
             size: Tokens.icon.sm
             color: root._colors.fg
+            RotationAnimation on rotation {
+                running: root.busy
+                from: 0
+                to: 360
+                duration: Motion.extraLongMs
+                loops: Animation.Infinite
+            }
         }
 
         MText {
@@ -99,7 +110,7 @@ Item {
     MouseArea {
         id: ma
         anchors.fill: parent
-        enabled: root.enabled
+        enabled: root.enabled && !root.busy
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {

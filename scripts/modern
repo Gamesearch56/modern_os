@@ -53,26 +53,32 @@ cfg() {
     fi
 }
 
+priv() {
+    if [ -t 0 ]; then
+        sudo "$@"
+    else
+        pkexec "$@"
+    fi
+}
+
 case "$TARGET" in
     update)
         if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
-            if ! command -v snapper >/dev/null 2>&1; then
-                t cli.snapperMissing >&2
-                echo "docs/BACKUP.md" >&2
-                exit 1
+            if command -v snapper >/dev/null 2>&1 && snapper list-configs >/dev/null 2>&1 \
+                && snapper list-configs 2>/dev/null | grep -q root; then
+                t cli.snapshotting
+                priv /usr/bin/snapper -c root create --description "modern update" || {
+                    t cli.snapshotFailed >&2
+                    exit 1
+                }
+            else
+                t cli.snapperUnconfigured >&2 || true
             fi
-            if ! snapper list-configs >/dev/null 2>&1; then
-                t cli.snapperUnconfigured >&2
-                echo "docs/BACKUP.md" >&2
-                exit 1
-            fi
-            t cli.snapshotting
-            sudo snapper -c root create -d "modern update" || {
-                t cli.snapshotFailed >&2
-                exit 1
-            }
         fi
-        exec yay -Syu
+        if [ -t 0 ]; then
+            exec yay -Syu
+        fi
+        exec pkexec /usr/bin/pacman -Syu --noconfirm
         ;;
     cleanup)
         yay -Yc
@@ -100,7 +106,7 @@ case "$TARGET" in
     mirrors)
         country="$(cfg network.mirrorCountry Germany)"
         t cli.mirrors "$country"
-        exec sudo reflector --country "$country" --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+        priv /usr/bin/reflector --country "$country" --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
         ;;
     repair)
         t cli.repairReset

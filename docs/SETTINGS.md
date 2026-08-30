@@ -46,7 +46,7 @@ Six groups, 19 pages. Catalog lives in
 | Devices | Bluetooth | `bluetooth` | Adapter power, nearby/connected lists, connect/disconnect/forget via `Bluetooth` (BlueZ). |
 | System | Storage | `storage` | Internal and external drive cards via `Storage` (`lsblk`, sysfs link speed). Eject uses `udisksctl` unmount + power-off. |
 | System | Backup | `backup` | Live Snapper status (`Snapshots`). `backup.preUpdateSnapshot` drives `modern update`. Create/delete via `pkexec snapper`. Restore is gated. |
-| System | Update | `system` | `gaming.*`; `Update` (`modern update`, `modern mirrors`) |
+| System | Update | `system` | Pending packages via `checkupdates` (`Update`). `modern update` / `modern mirrors` (pkexec from Settings). |
 
 ## Restore defaults
 
@@ -73,8 +73,8 @@ a bar popup is showing.
 
 | Action | CLI | Notes |
 |--------|-----|--------|
-| System update | `modern update` | Overlay: current step + log. Snapshot-before-update if `backup.preUpdateSnapshot`. |
-| Mirrorlist | `modern mirrors` | `reflector` using `network.mirrorCountry`. Also a button on Update. |
+| System update | `modern update` | Overlay with live log and progress. Auto-closes on success and posts a notification. Snapshot-before-update if `backup.preUpdateSnapshot` and Snapper is ready; otherwise the update still runs. |
+| Mirrorlist | `modern mirrors` | `reflector` using `network.mirrorCountry`. Button on Update shows a spinner while it runs. |
 | Snapshots | `snapper -c root list` / `create` / `delete` | Settings lists snapshots with timestamps, can create (pkexec), and can request delete. **Restore** is gated (`docs/BACKUP.md`). The Snapper/Restic enable toggles were removed: they did not write `/etc/snapper` or configure a restic repo. |
 
 ## How to add a page

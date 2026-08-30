@@ -6,36 +6,71 @@ import "../../../../Services"
 import "."
 
 ColumnLayout {
-    spacing: Tokens.spacing.md
+    id: root
+    spacing: Tokens.spacing.lg
 
-    MSectionHeader { key: "settings.fields.gaming" }
-    Loader {
+    Component.onCompleted: Update.watching = true
+    Component.onDestruction: Update.watching = false
+
+    Status {
         Layout.fillWidth: true
-        Layout.preferredHeight: item ? item.implicitHeight : 0
-        source: Qt.resolvedUrl("Gaming.qml")
-        onLoaded: {
-            if (item)
-                item.width = Qt.binding(() => width);
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MButton {
+            kind: "filled"
+            key: "settings.systemUpdate"
+            iconName: "system-software-update"
+            Layout.fillWidth: true
+            enabled: Update.pending.length > 0 && !Update.running && !Update.mirrorsRunning
+            onClicked: Update.start()
+        }
+        MIconButton {
+            iconName: "view-refresh"
+            key: "settings.refresh"
+            iconSize: Tokens.icon.sm
+            enabled: !Update.checking && !Update.running
+            onClicked: Update.refresh()
         }
     }
 
-    MButton {
-        kind: "tonal"
-        key: "settings.mirrorsUpdate"
-        iconName: "view-refresh"
-        onClicked: Update.refreshMirrors()
-    }
-    MButton {
-        kind: "filled"
-        key: "settings.systemUpdate"
-        iconName: "system-software-update"
-        onClicked: Update.start()
+    MText {
+        visible: Update.error.length > 0 && !Update.running && !Update.mirrorsRunning
+        value: Update.error
+        styleName: "bodySmall"
+        color: Colors.color.error
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        elide: Text.ElideNone
     }
 
-    Loader {
-        active: Update.open
+    MSectionHeader {
+        visible: Update.pending.length > 0
+        key: "settings.update.headline"
+        styleName: "titleLarge"
+        topMargin: Tokens.spacing.xxl
+    }
+
+    PkgGroup {
+        visible: Update.pending.length > 0
+        titleKey: "settings.update.packages"
+        packages: Update.systemPkgs
+        expanded: false
+    }
+    PkgGroup {
+        visible: Update.pending.length > 0
+        titleKey: "settings.update.otherPackages"
+        packages: Update.otherPkgs
+        expanded: false
+    }
+
+    MEmptyState {
+        visible: Update.pending.length === 0 && !Update.checking
         Layout.fillWidth: true
-        Layout.preferredHeight: item ? item.implicitHeight : 0
-        source: Qt.resolvedUrl("UpdateOverlay.qml")
+        Layout.preferredHeight: Tokens.spacing.xxl * 4
+        iconName: "system-software-update"
+        titleKey: "settings.update.empty"
     }
 }
