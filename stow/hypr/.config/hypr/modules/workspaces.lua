@@ -1,7 +1,7 @@
--- Workspace-to-monitor assignment. monitors.workspaceMode = fixed
--- reserves 1-5 on the leftmost display and 6-10 on the next (by x),
--- never by connector name. SUPER+N must jump to that monitor rather
--- than creating the workspace on whichever display has focus.
+-- Workspace-to-monitor assignment. monitors.workspaceMode default is
+-- dynamic. `fixed` reserves 1-5 on the leftmost display and 6-10 on
+-- the next (by x), never by connector name. SUPER+N must jump to that
+-- monitor rather than creating the workspace on whichever display has focus.
 
 local config = require("modules.config")
 
@@ -82,7 +82,7 @@ local function bind_range(mon, from, to)
 end
 
 local function apply_fixed()
-    if config.value("monitors.workspaceMode", "fixed") ~= "fixed" then
+    if config.value("monitors.workspaceMode", "dynamic") ~= "fixed" then
         return
     end
     local monitors = list_monitors()
@@ -95,7 +95,7 @@ function M.focus(n)
         config.invalidate()
     end
     apply_fixed()
-    if config.value("monitors.workspaceMode", "fixed") == "fixed" then
+    if config.value("monitors.workspaceMode", "dynamic") == "fixed" then
         pin(n)
         hl.dispatch(hl.dsp.focus({ workspace = n }))
         return
@@ -108,7 +108,7 @@ function M.move_window(n)
         config.invalidate()
     end
     apply_fixed()
-    if config.value("monitors.workspaceMode", "fixed") == "fixed" then
+    if config.value("monitors.workspaceMode", "dynamic") == "fixed" then
         pin(n)
     end
     if hl.dsp.window and hl.dsp.window.move then

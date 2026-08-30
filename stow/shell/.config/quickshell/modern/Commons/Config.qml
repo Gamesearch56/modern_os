@@ -131,7 +131,7 @@ Singleton {
             // Per-monitor profiles (keyed by "description + serial") and
             // workspace-assignment rules — see docs/ARCHITECTURE.md
             // "Monitors". Free-form since the key set is per-machine.
-            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "fixed" })
+            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "dynamic" })
 
             property var windowRules: []
 
@@ -158,7 +158,7 @@ Singleton {
                 property string kbVariant: ""
                 property int repeatRate: 25
                 property int repeatDelay: 600
-                property bool numlockOnBoot: true
+                property bool numlockOnBoot: false
             }
 
             property JsonObject launcher: JsonObject {

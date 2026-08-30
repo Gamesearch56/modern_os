@@ -76,7 +76,7 @@ Singleton {
     }
 
     function patchMonitor(description, patch) {
-        let m = { profiles: {}, rules: [], workspaceMode: "fixed" };
+        let m = { profiles: {}, rules: [], workspaceMode: "dynamic" };
         try {
             m = JSON.parse(JSON.stringify(Config.monitors || m));
         } catch (e) {

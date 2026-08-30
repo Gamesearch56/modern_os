@@ -53,6 +53,10 @@ clamp() {
 set_pct() {
     local v disp
     v="$(clamp "$1")"
+    if [ -n "${2:-}" ]; then
+        ddcutil setvcp 10 "${v}" --display "$2"
+        return 0
+    fi
     if backlight_pct >/dev/null; then
         brightnessctl -c backlight set "${v}%"
         return 0
@@ -74,7 +78,70 @@ case "${cmd}" in
         ;;
     set)
         [[ "${2:-}" =~ ^[0-9]+$ ]] || exit 2
-        set_pct "$2"
+        if [ -n "${3:-}" ]; then
+            [[ "${3}" =~ ^[0-9]+$ ]] || exit 2
+            set_pct "$2" "$3"
+        else
+            set_pct "$2"
+        fi
+        ;;
+    list)
+        python3 - <<'PY'
+import json, re, shutil, subprocess
+
+def run(cmd):
+    try:
+        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL, text=True, timeout=8)
+    except Exception:
+        return ""
+
+displays = []
+line = run(["brightnessctl", "-m", "-c", "backlight"]).splitlines()
+if line:
+    parts = line[0].split(",")
+    if len(parts) >= 4 and parts[1] == "backlight":
+        pct = parts[3].replace("%", "")
+        if pct.isdigit():
+            displays.append({
+                "id": 0, "model": "", "serial": "",
+                "percent": int(pct), "backend": "brightnessctl"
+            })
+
+if shutil.which("ddcutil"):
+    text = run(["ddcutil", "detect"])
+    current = None
+
+    def flush(cur):
+        if not cur:
+            return
+        out = run(["ddcutil", "getvcp", "10", "--brief", "--display", str(cur["id"])])
+        m = re.search(r"VCP\s+\S+\s+\S+\s+(\d+)", out)
+        if m:
+            cur["percent"] = int(m.group(1))
+        displays.append(cur)
+
+    for raw in text.splitlines():
+        line = raw.strip()
+        m = re.match(r"Display\s+(\d+)\b", line)
+        if m:
+            flush(current)
+            current = {
+                "id": int(m.group(1)), "model": "", "serial": "",
+                "percent": 0, "backend": "ddcutil"
+            }
+            continue
+        if not current:
+            continue
+        mm = re.search(r"^Model:\s+(.+)$", line)
+        if mm:
+            current["model"] = mm.group(1).strip()
+        sm = re.search(r"^Serial number:\s+(.+)$", line)
+        if sm:
+            current["serial"] = sm.group(1).strip()
+    flush(current)
+
+print(json.dumps({"displays": displays}))
+PY
         ;;
     up)
         if pct="$(backlight_pct)"; then
@@ -116,7 +183,7 @@ case "${cmd}" in
         fi
         ;;
     *)
-        echo "usage: brightness.sh get|set PERCENT|up|down|dim|undim" >&2
+        echo "usage: brightness.sh get|set PERCENT [DISPLAY]|up|down|dim|undim|list" >&2
         exit 2
         ;;
 esac

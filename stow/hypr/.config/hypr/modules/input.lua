@@ -11,7 +11,7 @@ hl.config({
         kb_variant = config.value("input.kbVariant", ""),
         repeat_rate = config.value("input.repeatRate", 25),
         repeat_delay = config.value("input.repeatDelay", 600),
-        numlock_by_default = config.value("input.numlockOnBoot", true),
+        numlock_by_default = config.value("input.numlockOnBoot", false),
         follow_mouse = 1,
         sensitivity = 0,
         touchpad = {

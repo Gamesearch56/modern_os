@@ -39,8 +39,8 @@ Six groups, 19 pages. Catalog lives in
 | Apps | Screenshot | `screenshots` | `screenshots.format` (PNG/JPEG/WebP), `quality` for JPEG/WebP, `directory`, `copyToClipboard`, `openEditorAfterCapture`, `includeCursor`. Capture is `scripts/screenshot.sh` (grim, then ImageMagick for WebP). |
 | Apps | AI | `ai` | `accounts.ai` (Ollama or Off). Model list comes from a running Ollama daemon. If Ollama is missing or stopped, Settings defaults the assistant to Off and shows the install steps. |
 | Keyboard & Region | Language & Time | `language` | `language.ui`, `firstDayOfWeek`, `dateFormat`, `timeFormat`. Clock weekday/seconds live under Settings → Bar. |
-| Keyboard & Region | Keyboard | `keyboard` | `input.*`, `keybinds`; `Cheatsheet` |
-| Devices | Display | `displays` | `monitors.*`; `Hypr` |
+| Keyboard & Region | Keyboard | `keyboard` | `input.kbLayout`, `repeatRate`, `repeatDelay`, `numlockOnBoot` (off by default) applied live (`hyprctl eval`). Cheat sheet button opens `Cheatsheet` (Super+K). |
+| Devices | Display | `displays` | `monitors.workspaceMode` (default **dynamic**; two-monitor `fixed` keeps 1–5 / 6–10). Per-profile `scale`, `mode` (resolution + refresh), `cm`, `hdr`, `vrr` on the selected display (`desc:` + serial). Brightness via `Brightness` when DDC/backlight matches that panel. |
 | Devices | Audio | `audio` | `audio.*`; `Audio` (PipeWire streams when present) |
 | Devices | Network | `network` | `network.*`; `Network` (Wi-Fi password overlay, curl speed test) |
 | Devices | Bluetooth | `bluetooth` | `Bluetooth` |

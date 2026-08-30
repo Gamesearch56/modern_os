@@ -118,12 +118,12 @@
     "kbVariant": "",
     "repeatRate": 25,
     "repeatDelay": 600,
-    "numlockOnBoot": true
+    "numlockOnBoot": false
   },
   "monitors": {
     "profiles": {},
     "rules": [],
-    "workspaceMode": "fixed"
+    "workspaceMode": "dynamic"
   },
   "windowRules": [
     {

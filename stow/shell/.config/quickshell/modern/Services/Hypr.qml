@@ -69,7 +69,7 @@ Singleton {
     }
 
     function focusWorkspace(id: int) {
-        const mode = Config.monitors?.workspaceMode || "fixed";
+        const mode = Config.monitors?.workspaceMode || "dynamic";
         if (mode === "fixed") {
             const sel = root._monitorSelectorForWorkspace(id);
             if (sel.length > 0) {
@@ -92,7 +92,7 @@ Singleton {
     }
 
     function moveToWorkspace(id: int) {
-        const mode = Config.monitors?.workspaceMode || "fixed";
+        const mode = Config.monitors?.workspaceMode || "dynamic";
         if (mode === "fixed") {
             const sel = root._monitorSelectorForWorkspace(id);
             if (sel.length > 0) {
@@ -313,7 +313,21 @@ Singleton {
         const k = String(key || "");
         if (!k.length)
             return;
-        Quickshell.execDetached(["hyprctl", "keyword", k, String(value)]);
+        const v = String(value);
+        if (root._lua) {
+            const parts = k.split(":");
+            if (parts.length !== 2)
+                return;
+            let lit = v;
+            if (v !== "true" && v !== "false" && !/^-?\d+(\.\d+)?$/.test(v))
+                lit = JSON.stringify(v);
+            Quickshell.execDetached([
+                "hyprctl", "eval",
+                "hl.config({ " + parts[0] + " = { " + parts[1] + " = " + lit + " } })"
+            ]);
+            return;
+        }
+        Quickshell.execDetached(["hyprctl", "keyword", k, v]);
     }
 
     function setCursor(theme: string, size: int) {
@@ -327,8 +341,26 @@ Singleton {
         ]);
     }
 
+    function syncInput(path: string, value: var) {
+        const p = String(path || "");
+        const input = Config.input || {};
+        if (p === "input.kbLayout")
+            root.keyword("input:kb_layout", String(value || input.kbLayout || "de"));
+        else if (p === "input.repeatRate")
+            root.keyword("input:repeat_rate", String(Math.round(Number(value ?? input.repeatRate ?? 25))));
+        else if (p === "input.repeatDelay")
+            root.keyword("input:repeat_delay", String(Math.round(Number(value ?? input.repeatDelay ?? 600))));
+        else if (p === "input.numlockOnBoot")
+            root.keyword("input:numlock_by_default", value ? "true" : "false");
+    }
+
     function syncAppearance(path: string, value: var) {
         const p = String(path || "");
+        if (p === "input.kbLayout" || p === "input.repeatRate"
+                || p === "input.repeatDelay" || p === "input.numlockOnBoot") {
+            root.syncInput(p, value);
+            return;
+        }
         const win = (p === "windows" && value && typeof value === "object")
             ? value : (Config.windows || {});
         const design = (p === "design" && value && typeof value === "object")
@@ -535,7 +567,158 @@ Singleton {
         return shown;
     }
 
-    Component.onCompleted: root.refreshToplevels()
+    property var monitorDump: []
+    property int monitorGen: 0
+
+    function refreshMonitorDump() {
+        dumpProc.running = false;
+        Qt.callLater(() => {
+            dumpProc.running = true;
+        });
+    }
+
+    function _ipc(mon: var): var {
+        if (!mon)
+            return ({});
+        const desc = String(mon.description || "");
+        const dump = root.monitorDump || [];
+        for (let i = 0; i < dump.length; i++) {
+            if (String(dump[i].description || "") === desc)
+                return dump[i];
+        }
+        const ipc = mon.lastIpcObject;
+        if (ipc && typeof ipc === "object")
+            return ipc;
+        return ({});
+    }
+
+    function parseMode(spec: string): var {
+        const s = String(spec || "");
+        const m = s.match(/^(\d+)x(\d+)@([\d.]+)/);
+        if (!m)
+            return null;
+        return {
+            w: Number(m[1]),
+            h: Number(m[2]),
+            hz: Number(m[3]),
+            mode: m[1] + "x" + m[2] + "@" + m[3]
+        };
+    }
+
+    function hzFor(mon: var): int {
+        const ipc = root._ipc(mon);
+        let hz = Number(ipc.refreshRate ?? 0);
+        if (!(hz > 1))
+            hz = Number(mon?.refreshRate ?? 0);
+        if (hz > 1)
+            return Math.round(hz);
+        const modes = root._modesRaw(mon);
+        if (modes.length) {
+            const p = root.parseMode(modes[0]);
+            return p ? Math.round(p.hz) : 0;
+        }
+        return 0;
+    }
+
+    function _modesRaw(mon: var): var {
+        const ipc = root._ipc(mon);
+        if (ipc.availableModes && ipc.availableModes.length)
+            return ipc.availableModes;
+        if (mon && mon.availableModes && mon.availableModes.length)
+            return mon.availableModes;
+        return [];
+    }
+
+    function resolutionsFor(mon: var): var {
+        const seen = ({});
+        const out = [];
+        const modes = root._modesRaw(mon);
+        for (let i = 0; i < modes.length; i++) {
+            const p = root.parseMode(modes[i]);
+            if (!p)
+                continue;
+            const key = p.w + "x" + p.h;
+            if (seen[key])
+                continue;
+            seen[key] = true;
+            out.push({ value: key, titleValue: p.w + " × " + p.h, w: p.w, h: p.h });
+        }
+        return out;
+    }
+
+    function ratesFor(mon: var, w: int, h: int): var {
+        const seen = ({});
+        const out = [];
+        const modes = root._modesRaw(mon);
+        for (let i = 0; i < modes.length; i++) {
+            const p = root.parseMode(modes[i]);
+            if (!p || p.w !== w || p.h !== h)
+                continue;
+            const key = String(p.hz);
+            if (seen[key])
+                continue;
+            seen[key] = true;
+            out.push({
+                value: key,
+                titleValue: Math.round(p.hz) + " Hz",
+                hz: p.hz,
+                mode: p.mode
+            });
+        }
+        out.sort((a, b) => b.hz - a.hz);
+        return out;
+    }
+
+    function bestMode(mon: var, w: int, h: int, preferHz: real): string {
+        const rates = root.ratesFor(mon, w, h);
+        if (!rates.length)
+            return "";
+        const want = Number(preferHz);
+        for (let i = 0; i < rates.length; i++) {
+            if (Math.abs(rates[i].hz - want) < 0.6)
+                return rates[i].mode;
+        }
+        return rates[0].mode;
+    }
+
+    function monitorByDesc(desc: string): var {
+        const want = String(desc || "");
+        const list = root.monitors?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            if (String(list[i].description || "") === want)
+                return list[i];
+        }
+        return null;
+    }
+
+    readonly property int monitorCount: {
+        void root.monitors;
+        return (root.monitors?.values ?? []).length;
+    }
+
+    onMonitorCountChanged: root.refreshMonitorDump()
+
+    Component.onCompleted: {
+        root.refreshToplevels();
+        root.refreshMonitorDump();
+    }
+
+    Process {
+        id: dumpProc
+        running: false
+        command: ["hyprctl", "-j", "monitors"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const j = JSON.parse(this.text);
+                    root.monitorDump = Array.isArray(j) ? j : [];
+                } catch (e) {
+                    root.monitorDump = [];
+                }
+                root.monitorGen++;
+            }
+        }
+    }
 
     Process {
         id: pluginProc
