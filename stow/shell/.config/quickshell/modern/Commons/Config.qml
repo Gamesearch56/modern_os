@@ -194,6 +194,9 @@ Singleton {
                 property bool copyToClipboard: true
                 property bool openEditorAfterCapture: false
                 property bool includeCursor: false
+                property string videoDirectory: "~/Videos/Recordings"
+                property string videoFilenameTemplate: "recording-%Y%m%d-%H%M%S"
+                property bool recordAudio: true
             }
 
             property JsonObject audio: JsonObject {

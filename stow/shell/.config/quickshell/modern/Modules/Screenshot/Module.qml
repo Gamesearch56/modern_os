@@ -16,16 +16,51 @@ Scope {
         }
     }
 
+    Connections {
+        target: Recording
+        function onSaved(path) {
+            Notifications.toast(
+                I18n.t("recording.saved"),
+                I18n.t("recording.savedHint"),
+                path
+            );
+        }
+        function onFailed() {
+            Notifications.toast(I18n.t("recording.failed"), "");
+        }
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        context: Qt.ApplicationShortcut
+        enabled: Recording.active
+        onActivated: Recording.stop()
+    }
+
     Variants {
         model: Quickshell.screens
 
         LazyLoader {
             id: hudLoader
             required property var modelData
-            active: Screenshot.hudOpen
+            active: Screenshot.hudOpen && !Recording.active
 
             Hud {
                 screen: hudLoader.modelData
+            }
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        LazyLoader {
+            id: recLoader
+            required property var modelData
+            active: Recording.active
+
+            RecordingBar {
+                screen: recLoader.modelData
             }
         }
     }

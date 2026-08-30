@@ -8,4 +8,6 @@ QtObject {
     readonly property bool copyToClipboard: Config.screenshots.copyToClipboard ?? true
     readonly property bool openEditorAfterCapture: Config.screenshots.openEditorAfterCapture ?? false
     readonly property bool includeCursor: Config.screenshots.includeCursor ?? false
+    readonly property string videoDirectory: Config.screenshots.videoDirectory ?? ""
+    readonly property bool recordAudio: Config.screenshots.recordAudio ?? true
 }

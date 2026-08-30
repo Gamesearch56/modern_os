@@ -13,10 +13,11 @@ Singleton {
     readonly property string home: Quickshell.env("HOME")
     readonly property string script: root.home + "/modern_dotfile/scripts/pick-directory.sh"
 
-    signal directoryPicked(string path)
+    signal directoryPicked(string path, string key)
     signal pickFinished(string section)
 
     property string _restoreSection: ""
+    property string _configKey: ""
 
     Timer {
         id: startPick
@@ -38,21 +39,23 @@ Singleton {
             if (code === 0) {
                 const path = pickOut.text.trim().split("\n").filter(l => l.length > 0).pop() || "";
                 if (path.length)
-                    root.directoryPicked(path);
+                    root.directoryPicked(path, root._configKey);
             } else if (code !== 1) {
                 const err = pickErr.text.trim();
                 Logger.error("FilePick", err.length ? err : I18n.t("folderPicker.needChooser"));
             }
             const section = root._restoreSection;
             root._restoreSection = "";
+            root._configKey = "";
             if (section.length)
                 root.pickFinished(section);
         }
     }
 
-    function pickDirectory(startPath: string, restoreSection: string) {
+    function pickDirectory(startPath: string, restoreSection: string, configKey: string) {
         try {
             root._restoreSection = restoreSection || "";
+            root._configKey = configKey || "";
             pick.running = false;
             pick.command = [root.script, root._expand(startPath)];
             startPick.restart();
@@ -60,6 +63,7 @@ Singleton {
             Logger.error("FilePick", String(e));
             const section = root._restoreSection;
             root._restoreSection = "";
+            root._configKey = "";
             if (section.length)
                 root.pickFinished(section);
         }

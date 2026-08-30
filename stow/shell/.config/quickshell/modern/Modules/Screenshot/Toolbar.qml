@@ -47,6 +47,18 @@ Item {
             anchors.centerIn: parent
             spacing: Tokens.spacing.sm
 
+            MIconButton {
+                iconName: "camera-photo"
+                key: "screenshot.capture"
+                checked: Screenshot.tool === "screenshot"
+                onClicked: Screenshot.tool = "screenshot"
+            }
+            MIconButton {
+                iconSource: Qt.resolvedUrl("video-camera.svg")
+                key: "recording.start"
+                checked: Screenshot.tool === "recording"
+                onClicked: Screenshot.tool = "recording"
+            }
             MButton {
                 kind: Screenshot.mode === "region" ? "tonal" : "text"
                 key: "screenshot.region"
@@ -55,12 +67,28 @@ Item {
             MButton {
                 kind: Screenshot.mode === "window" ? "tonal" : "text"
                 key: "screenshot.window"
-                onClicked: Screenshot.capture("window")
+                onClicked: {
+                    Screenshot.mode = "window";
+                    if (Screenshot.tool === "recording") {
+                        Screenshot.cancelHud();
+                        Recording.start("window", "", "");
+                        return;
+                    }
+                    Screenshot.capture("window");
+                }
             }
             MButton {
                 kind: Screenshot.mode === "full" ? "tonal" : "text"
                 key: "screenshot.full"
-                onClicked: Screenshot.capture("full")
+                onClicked: {
+                    Screenshot.mode = "full";
+                    if (Screenshot.tool === "recording") {
+                        Screenshot.cancelHud();
+                        Recording.start("full", "", "");
+                        return;
+                    }
+                    Screenshot.capture("full");
+                }
             }
             MIconButton {
                 close: true

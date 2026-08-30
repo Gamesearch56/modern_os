@@ -27,6 +27,7 @@ cliphist                         # clipboard history — see "also worth having"
 grim                             # screenshot capture backend
 slurp                            # region selection for screenshots
 swappy                           # screenshot annotation (GTK, follows token gtk.css)
+wf-recorder                      # screen recording backend (Services/Recording)
 ddcutil                         # DDC/CI brightness for external displays — see Services/Brightness
 brightnessctl                    # XF86 brightness keys in modules/keybinds.lua
 kdialog                          # Qt file picker (wallpaper Add); zenity is the GTK fallback

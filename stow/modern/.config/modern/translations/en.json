@@ -321,7 +321,7 @@
       "utilities": "Utilities",
       "windowManagement": "Window management",
       "workspaces": "Workspaces",
-      "screenshots": "Screenshots",
+      "screenshots": "Recording",
       "media": "Media"
     }
   },
@@ -451,6 +451,8 @@
       "weatherLocation": "Weather location",
       "openEditor": "Open editor after capture",
       "includeCursor": "Include cursor",
+      "videoDir": "Recordings directory",
+      "recordAudio": "Record audio",
       "vmMaxMapCount": "Raise vm.max_map_count",
       "typeScale": "Font size",
       "barPosition": "Bar position",
@@ -515,7 +517,7 @@
       "bar": "Bar",
       "launcher": "Launcher",
       "power": "Energy",
-      "screenshots": "Screenshot",
+      "screenshots": "Recording",
       "users": "Users",
       "storage": "Storage",
       "backup": "Backup",
@@ -661,6 +663,10 @@
       "changePassword": "Change password",
       "members": "Members",
       "memberCount": "{n} members"
+    },
+    "screenshots": {
+      "stills": "Screenshot",
+      "video": "Video"
     },
     "privacy": {
       "notifications": "Notifications",
@@ -858,6 +864,14 @@
     "copied": "Copied to the clipboard",
     "savedHint": "Saved to your screenshots folder",
     "failed": "Screenshot failed"
+  },
+  "recording": {
+    "start": "Record",
+    "stop": "Stop",
+    "stopHint": "Escape or Super+Print to stop",
+    "saved": "Recording saved",
+    "savedHint": "Saved to your recordings folder",
+    "failed": "Recording failed"
   },
   "time": {
     "weekday": {

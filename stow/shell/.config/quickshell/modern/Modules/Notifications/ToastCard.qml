@@ -109,7 +109,7 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: Tokens.spacing.md
-        spacing: Tokens.spacing.sm
+        spacing: Tokens.spacing.md
 
         Rectangle {
             visible: root._thumb.length > 0

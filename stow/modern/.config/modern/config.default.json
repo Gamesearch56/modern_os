@@ -194,7 +194,10 @@
     "quality": 90,
     "copyToClipboard": true,
     "openEditorAfterCapture": false,
-    "includeCursor": false
+    "includeCursor": false,
+    "videoDirectory": "~/Videos/Recordings",
+    "videoFilenameTemplate": "recording-%Y%m%d-%H%M%S",
+    "recordAudio": true
   },
   "audio": {
     "autoSwitchBluetooth": "on",

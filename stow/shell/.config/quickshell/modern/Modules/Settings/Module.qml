@@ -9,8 +9,11 @@ import "../../Services"
 Scope {
     Connections {
         target: FilePick
-        function onDirectoryPicked(path) {
-            ConfigWrite.set("screenshots.directory", path);
+        function onDirectoryPicked(path, key) {
+            if (key === "screenshots.videoDirectory")
+                ConfigWrite.set("screenshots.videoDirectory", path);
+            else
+                ConfigWrite.set("screenshots.directory", path);
         }
         function onPickFinished(section) {
             Settings.openAt(section || "screenshots", "");

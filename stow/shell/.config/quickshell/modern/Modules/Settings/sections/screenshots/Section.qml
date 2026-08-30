@@ -11,6 +11,11 @@ ColumnLayout {
     readonly property string format: Config.screenshots.format || "png"
     readonly property bool lossy: root.format === "jpeg" || root.format === "webp"
 
+    MSectionHeader {
+        key: "settings.screenshots.stills"
+        topMargin: 0
+    }
+
     MField {
         labelKey: "settings.fields.screenshotFormat"
         MSegmented {
@@ -86,7 +91,39 @@ ColumnLayout {
             onBrowse: {
                 const dir = Config.screenshots.directory || "";
                 Settings.close();
-                FilePick.pickDirectory(dir, "screenshots");
+                FilePick.pickDirectory(dir, "screenshots", "screenshots.directory");
+            }
+        }
+    }
+
+    MSectionHeader {
+        key: "settings.screenshots.video"
+        topMargin: Tokens.spacing.xxl
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.recordAudio"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: !!(Config.screenshots.recordAudio)
+            onToggled: (v) => ConfigWrite.set("screenshots.recordAudio", v)
+        }
+    }
+
+    MField {
+        labelKey: "settings.fields.videoDir"
+        MFolderField {
+            path: Config.screenshots.videoDirectory || ""
+            onBrowse: {
+                const dir = Config.screenshots.videoDirectory || "";
+                Settings.close();
+                FilePick.pickDirectory(dir, "screenshots", "screenshots.videoDirectory");
             }
         }
     }

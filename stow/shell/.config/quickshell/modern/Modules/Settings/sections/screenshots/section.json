@@ -1,7 +1,7 @@
 {
   "id": "screenshots",
-  "icon": "camera-photo",
+  "icon": "video-x-generic",
   "key": "settings.sections.screenshots",
   "order": 160,
-  "keywords": ["capture", "png", "jpeg", "webp", "clipboard", "grim", "format", "directory"]
+  "keywords": ["capture", "png", "jpeg", "webp", "clipboard", "grim", "format", "directory", "video", "mp4", "wf-recorder"]
 }

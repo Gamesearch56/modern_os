@@ -12,14 +12,14 @@ import "../../Services"
 PanelWindow {
     id: root
 
-    visible: Screenshot.hudOpen
+    visible: Screenshot.hudOpen && !Recording.active
     color: "transparent"
     anchors.top: true
     anchors.left: true
     anchors.right: true
     anchors.bottom: true
     exclusionMode: ExclusionMode.Ignore
-    focusable: Screenshot.hudOpen
+    focusable: Screenshot.hudOpen && !Recording.active
     WlrLayershell.namespace: "modern-screenshot"
 
     Item {
@@ -104,10 +104,14 @@ PanelWindow {
                     Screenshot.cancelHud();
                     return;
                 }
-                Screenshot.finishRegion(
-                    x + "," + y + " " + w + "x" + h,
-                    hud.outputName()
-                );
+                const geom = x + "," + y + " " + w + "x" + h;
+                const output = hud.outputName();
+                if (Screenshot.tool === "recording") {
+                    Screenshot.cancelHud();
+                    Recording.start("region", geom, output);
+                    return;
+                }
+                Screenshot.finishRegion(geom, output);
             }
         }
 
@@ -154,7 +158,7 @@ PanelWindow {
 
     Shortcut {
         sequence: "Escape"
-        enabled: Screenshot.hudOpen
+        enabled: Screenshot.hudOpen && !Recording.active
         onActivated: Screenshot.cancelHud()
     }
 }

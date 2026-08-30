@@ -35,6 +35,7 @@ singleton Apps 1.0 Apps.qml
 singleton IdleInhibit 1.0 IdleInhibit.qml
 singleton IdleDaemon 1.0 IdleDaemon.qml
 singleton Screenshot 1.0 Screenshot.qml
+singleton Recording 1.0 Recording.qml
 singleton Popups 1.0 Popups.qml
 singleton Battery 1.0 Battery.qml
 singleton Alarm 1.0 Alarm.qml

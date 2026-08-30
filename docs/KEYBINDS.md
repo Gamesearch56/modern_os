@@ -26,9 +26,9 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |
 | `SUPER + G` | Game mode | |
-| `PRINT` | Screenshot region | `modern screenshot region` → `~/Pictures/Screenshots` |
+| `PRINT` | Screenshot region (HUD: still or video) | `modern screenshot region` → stills `~/Pictures/Screenshots`, recordings `~/Videos/Recordings` |
 | `SHIFT + PRINT` | Screenshot window | `modern screenshot window` |
-| `SUPER + PRINT` | Screenshot full | `modern screenshot full` |
+| `SUPER + PRINT` | Screenshot full; stops an active recording | `modern screenshot full` |
 | `SUPER + mouse 272 / 273` | Drag / resize window | |
 | `SUPER + scroll` | Next/prev workspace on this monitor | `workspace m±1` |
 | `SUPER + SHIFT + C` | Color picker | |

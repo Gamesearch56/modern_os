@@ -12,6 +12,7 @@ Singleton {
 
     property bool hudOpen: false
     property string mode: "region"
+    property string tool: "screenshot"
     property string _lastPath: ""
     property bool _exited: false
     property bool _outDone: false
@@ -102,6 +103,7 @@ Singleton {
     }
 
     function pick(which: string) {
+        root.tool = "screenshot";
         const m = which || "region";
         root.mode = m;
         if (m === "region")
@@ -111,6 +113,7 @@ Singleton {
     }
 
     function capture(which: string) {
+        root.tool = "screenshot";
         root.hudOpen = false;
         root._resetCap();
         cap.command = [root.script, which || "region"];

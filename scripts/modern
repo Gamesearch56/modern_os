@@ -196,11 +196,50 @@ case "$TARGET" in
         ;;
     screenshot)
         MODE="${1:-region}"
+        PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/modern/screencast.pid"
+        if [ -f "$PIDFILE" ]; then
+            pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+            if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                qs -c modern ipc call recording stop 2>/dev/null \
+                    || "$SCRIPT_DIR/screencast.sh" stop
+                exit 0
+            fi
+            rm -f "$PIDFILE"
+        fi
         reply="$(qs -c modern ipc call screenshot "$MODE" 2>&1)" || true
         if ! printf '%s' "$reply" | grep -qiE 'not ready|unknown|error'; then
             exit 0
         fi
         exec "$SCRIPT_DIR/screenshot.sh" "$MODE"
+        ;;
+    recording)
+        ACTION="${1:-stop}"
+        rec_ipc() {
+            local reply
+            reply="$(qs -c modern ipc call recording "$1" 2>&1)" || true
+            if ! printf '%s' "$reply" | grep -qiE 'not ready|unknown|error'; then
+                return 0
+            fi
+            return 1
+        }
+        case "$ACTION" in
+            start | region | startRegion)
+                rec_ipc startRegion && exit 0
+                exec "$SCRIPT_DIR/screencast.sh" region
+                ;;
+            window)
+                rec_ipc window && exit 0
+                exec "$SCRIPT_DIR/screencast.sh" window
+                ;;
+            full)
+                rec_ipc full && exit 0
+                exec "$SCRIPT_DIR/screencast.sh" full
+                ;;
+            stop | *)
+                rec_ipc stop || "$SCRIPT_DIR/screencast.sh" stop
+                exit 0
+                ;;
+        esac
         ;;
     power)
         ACTION="${1:-button}"

@@ -321,7 +321,7 @@
       "utilities": "Werkzeuge",
       "windowManagement": "Fensterverwaltung",
       "workspaces": "Arbeitsbereiche",
-      "screenshots": "Bildschirmfotos",
+      "screenshots": "Aufnahme",
       "media": "Medien"
     }
   },
@@ -451,6 +451,8 @@
       "weatherLocation": "Wetterstandort",
       "openEditor": "Editor nach Aufnahme öffnen",
       "includeCursor": "Cursor einschließen",
+      "videoDir": "Aufnahmeordner",
+      "recordAudio": "Audio aufnehmen",
       "vmMaxMapCount": "vm.max_map_count erhöhen",
       "typeScale": "Schriftgröße",
       "barPosition": "Leistenposition",
@@ -515,7 +517,7 @@
       "bar": "Leiste",
       "launcher": "Starter",
       "power": "Energie",
-      "screenshots": "Bildschirmfoto",
+      "screenshots": "Aufnahme",
       "users": "Benutzer",
       "storage": "Speicher",
       "backup": "Sicherung",
@@ -661,6 +663,10 @@
       "changePassword": "Passwort ändern",
       "members": "Mitglieder",
       "memberCount": "{n} Mitglieder"
+    },
+    "screenshots": {
+      "stills": "Bildschirmfoto",
+      "video": "Video"
     },
     "privacy": {
       "notifications": "Benachrichtigungen",
@@ -858,6 +864,14 @@
     "copied": "In die Zwischenablage kopiert",
     "savedHint": "Im Screenshot-Ordner gespeichert",
     "failed": "Screenshot fehlgeschlagen"
+  },
+  "recording": {
+    "start": "Aufnehmen",
+    "stop": "Stopp",
+    "stopHint": "Escape oder Super+Druck zum Beenden",
+    "saved": "Aufnahme gespeichert",
+    "savedHint": "Im Aufnahmeordner gespeichert",
+    "failed": "Aufnahme fehlgeschlagen"
   },
   "time": {
     "weekday": {

@@ -76,7 +76,10 @@ ColumnLayout {
             centerAlign: true
             onClicked: {
                 Notifications.hide();
-                Screenshot.pick("region");
+                if (Recording.active)
+                    Recording.stop();
+                else
+                    Screenshot.pick("region");
             }
         }
     }

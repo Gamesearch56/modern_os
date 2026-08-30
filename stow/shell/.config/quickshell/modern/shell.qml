@@ -144,6 +144,10 @@ ShellRoot {
                 Screenshot.cancelHud();
                 closed = true;
             }
+            if (Recording.active) {
+                Recording.stop();
+                closed = true;
+            }
             if (Popups.dismiss())
                 closed = true;
             if (Plugins.open) {
