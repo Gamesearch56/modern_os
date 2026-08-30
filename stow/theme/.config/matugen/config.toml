@@ -59,3 +59,7 @@ output_path = "~/.config/vivaldi/custom_css/00-modern.css"
 [templates.qt6ct_qss]
 input_path = "~/.config/matugen/templates/qt6ct-modern.qss.template"
 output_path = "~/.config/qt6ct/qss/modern.qss"
+
+[templates.folder_svg]
+input_path = "~/.config/matugen/templates/folder.svg.template"
+output_path = "~/.local/share/icons/modern-folders/scalable/places/folder.svg"

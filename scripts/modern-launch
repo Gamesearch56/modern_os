@@ -22,6 +22,23 @@ fi
 shift
 desktop="${desktop%.desktop}"
 
+# Breeze reads ColorScheme=modern and rounds widgets; qt6ct QSS must stay
+# unloaded (Fusion would drop the Active palette). Other apps keep qt6ct-style.
+case "$desktop" in
+    org.kde.dolphin|dolphin)
+        for breeze_so in \
+            /usr/lib/qt6/plugins/styles/breeze6.so \
+            /usr/lib/qt6/plugins/styles/libbreeze6.so \
+            /usr/lib/qt6/plugins/styles/breeze.so
+        do
+            if [ -e "$breeze_so" ]; then
+                export QT_STYLE_OVERRIDE=Breeze
+                break
+            fi
+        done
+        ;;
+esac
+
 if [[ $# -eq 0 ]]; then
     exec gtk-launch "$desktop"
 fi

@@ -81,6 +81,8 @@ Item {
                     iconName: "view-refresh"
                     key: "settings.refresh"
                     iconSize: Tokens.icon.sm
+                    busy: Bluetooth.refreshing
+                    enabled: Bluetooth.powered && !Bluetooth.refreshing
                     onClicked: Bluetooth.refresh()
                 }
             }

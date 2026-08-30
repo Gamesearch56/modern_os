@@ -88,6 +88,44 @@ merge_vivaldi_theme() {
     log "merged Vivaldi native theme (id=modern)"
 }
 
+# Apple-tab folders from matugen tokens. Own theme name so we Inherits=
+# Papirus-Dark instead of shadowing it (same-name inherit is a no-op).
+overlay_folder_icons() {
+    local inherit="$1"
+    local dest="${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders"
+    local src="$dest/scalable/places/folder.svg"
+    mkdir -p "$dest/scalable/places" "$dest/64x64/places"
+    [ -f "$src" ] || return 0
+    cat > "$dest/index.theme" <<EOF
+[Icon Theme]
+Name=modern-folders
+Comment=Papirus with ModernOS folders
+Inherits=${inherit},hicolor
+Directories=scalable/places,64x64/places
+
+[scalable/places]
+Size=64
+Context=Places
+Type=Scalable
+MinSize=16
+MaxSize=256
+
+[64x64/places]
+Size=64
+Context=Places
+Type=Fixed
+EOF
+    local name
+    for name in folder folder-open inode-directory user-home folder-download \
+        folder-pictures folder-documents folder-music folder-videos; do
+        if [ "$name" != folder ]; then
+            cp -f -- "$src" "$dest/scalable/places/${name}.svg"
+        fi
+        cp -f -- "$src" "$dest/64x64/places/${name}.svg"
+    done
+    gtk-update-icon-cache -f -t "$dest" >/dev/null 2>&1 || true
+}
+
 patch_toolkit_chrome() {
     local cfg radius font mono blur trans
     cfg="$(merged_config)"
@@ -103,6 +141,13 @@ patch_toolkit_chrome() {
     cursor_theme="$(jq -r '.design.cursorTheme // "Bibata-Modern-Classic"' <<<"$cfg")"
     cursor_size="$(jq -r '.design.cursorSize // 24' <<<"$cfg")"
     icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
+    overlay_folder_icons "$icon"
+    local kde_icon="$icon"
+    if [ -f "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places/folder.svg" ]; then
+        case "$icon" in
+            Papirus|Papirus-Dark|Papirus-Light) kde_icon=modern-folders ;;
+        esac
+    fi
     local sm md lg
     sm="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 8*r }')"
     md="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 16*r }')"
@@ -160,7 +205,7 @@ EOF
     fi
     local kde="${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals"
     if [ -f "$kde" ]; then
-        awk -v font="$font" -v mono="$mono" -v pt="$pt" -v icon="$icon" '
+        awk -v font="$font" -v mono="$mono" -v pt="$pt" -v icon="$kde_icon" '
             BEGIN { g=0; i=0 }
             /^\[General\]/ { print; print "font=" font "," pt ",-1,5,50,0,0,0,0,0"; print "fixed=" mono "," pt ",-1,5,50,0,0,0,0,0"; g=1; next }
             /^\[Icons\]/ { print; print "Theme=" icon; i=1; next }
@@ -294,12 +339,6 @@ EOF
         gsettings set org.gnome.desktop.interface cursor-size "$cursor_size" >/dev/null 2>&1 || true
         gsettings set org.gnome.desktop.interface icon-theme "$icon" >/dev/null 2>&1 || true
     fi
-
-    if command -v papirus-folders >/dev/null 2>&1; then
-        papirus-folders -C paleorange --theme Papirus-Dark >/dev/null 2>&1 \
-            || papirus-folders -C orange --theme Papirus-Dark >/dev/null 2>&1 \
-            || true
-    fi
 }
 
 usage() { grep '^#' "$0" | cut -c3- | head -n26; }
@@ -432,6 +471,7 @@ if [ "$SOURCE_MODE" = "wallpaper" ] && [ "$RELOAD" -eq 1 ] && [ "$SKIP_WALLPAPER
 fi
 
 log "running matugen (${MATUGEN_ARGS[*]})"
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places"
 matugen "${MATUGEN_ARGS[@]}"
 log "regenerated tokens.json, kitty/fastfetch/GTK/Qt/KDE/Vivaldi color files"
 patch_toolkit_chrome || warn "toolkit chrome patch skipped"

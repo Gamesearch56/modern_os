@@ -9,6 +9,7 @@ noto-fonts-emoji        # emoji rendering everywhere, including the launcher's `
 woff2-font-awesome      # icon font used by a couple of legacy-styled web views
 qt6-svg                 # SVG decode for Papirus/Adwaita icons in Quickshell IconImage
 papirus-icon-theme      # gtk-icon-theme-name / qt6ct / config.json design.iconTheme
+breeze                  # Dolphin widget style (modern-launch QT_STYLE_OVERRIDE); ColorScheme=modern, no QSS
 adwaita-icon-theme      # fallback names when Papirus has no match
 hicolor-icon-theme      # freedesktop icon fallback
 gnome-themes-extra      # provides Adwaita GTK assets some apps fall back to

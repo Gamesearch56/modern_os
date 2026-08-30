@@ -31,6 +31,13 @@ Singleton {
     }
 
     property var _connectTried: ({})
+    property bool refreshing: false
+
+    Timer {
+        id: refreshBusy
+        interval: Math.max(Motion.extraLongMs, 1)
+        onTriggered: root.refreshing = false
+    }
 
     on_DevSigChanged: root._syncAutoAudio()
     onAutoAudioChanged: {
@@ -71,6 +78,8 @@ Singleton {
         const a = root.adapter;
         if (!a || !root.powered)
             return;
+        root.refreshing = true;
+        refreshBusy.restart();
         if (a.discovering) {
             a.discovering = false;
             Qt.callLater(() => {
