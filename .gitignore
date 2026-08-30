@@ -3,16 +3,20 @@ stow/modern/.config/modern/tokens.json
 stow/gtk/.config/gtk-3.0/gtk.css
 stow/gtk/.config/gtk-4.0/gtk.css
 stow/kitty/.config/kitty/colors.conf
+stow/fastfetch/.config/fastfetch/config.jsonc
 stow/qt/.config/qt6ct/qss/modern.qss
 stow/qt/.config/qt6ct/colors/modern.conf
 stow/hypr/.config/hypr/application-style.conf
 stow/hypr/.config/hypr/hyprtoolkit.conf
+stow/hypr/.config/hypr/modules/colors.lua
 **/.cache/
 
 # Live config, not the shipped default
 stow/modern/.config/modern/config.json
 # mktemp leftovers from config-set.sh / config-restore.sh (same-dir atomic write)
 stow/modern/.config/modern/config.json.*
+# Written by Services/IdleDaemon from general.idleTimings
+stow/hypr/.config/hypr/hypridle.conf
 
 # Secrets — never commit
 **/secrets.json
