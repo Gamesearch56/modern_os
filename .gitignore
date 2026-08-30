@@ -11,6 +11,8 @@ stow/hypr/.config/hypr/hyprtoolkit.conf
 
 # Live config, not the shipped default
 stow/modern/.config/modern/config.json
+# mktemp leftovers from config-set.sh / config-restore.sh (same-dir atomic write)
+stow/modern/.config/modern/config.json.*
 
 # Secrets — never commit
 **/secrets.json
