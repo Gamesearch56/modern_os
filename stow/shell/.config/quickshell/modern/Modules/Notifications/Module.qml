@@ -45,12 +45,8 @@ Scope {
             margins.left: toastWin._edgeMargin(Config.bar.position === "left")
 
             function _edgeMargin(onBarEdge: bool): real {
-                if (onBarEdge) {
-                    const h = Config.bar.height || Tokens.spacing.xxl;
-                    const edge = Config.bar.style === "floating"
-                        ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0;
-                    return h + edge * 2 + Tokens.spacing.sm;
-                }
+                if (onBarEdge)
+                    return BarLayout.windowInset;
                 return Config.bar.endGap ?? Tokens.spacing.sm;
             }
 
@@ -82,11 +78,7 @@ Scope {
             margins.left: Config.bar.position === "left" ? overlay._barReserve : 0
             margins.right: Config.bar.position === "right" ? overlay._barReserve : 0
 
-            readonly property real _barReserve: {
-                const h = Config.bar.height || Tokens.spacing.xxl;
-                const edge = Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0;
-                return h + edge * 2;
-            }
+            readonly property real _barReserve: BarLayout.windowInset
 
             Panel {
                 anchors.fill: parent

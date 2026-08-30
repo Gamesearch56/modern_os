@@ -42,9 +42,7 @@ Item {
         anchors.left: root._barLeft ? parent.left : undefined
         anchors.rightMargin: Config.bar.endGap ?? Tokens.spacing.md
         anchors.leftMargin: Config.bar.endGap ?? Tokens.spacing.md
-        y: root._barBottom
-            ? (parent.height - height - Tokens.spacing.sm)
-            : Tokens.spacing.sm
+        y: root._barBottom ? (parent.height - height) : 0
         scale: Motion.overlayScale(Notifications.panelOpen)
 
         Behavior on scale {

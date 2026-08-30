@@ -8,7 +8,7 @@ PanelWindow {
     id: root
 
     readonly property bool vertical: Config.bar.position === "left" || Config.bar.position === "right"
-    readonly property real _edge: Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0
+    readonly property real _edge: BarLayout.edge
     readonly property real _end: Config.bar.endGap ?? Tokens.spacing.sm
     readonly property bool _auto: !!(Config.bar.autoHide)
     readonly property real _strip: Tokens.spacing.xs
@@ -16,8 +16,8 @@ PanelWindow {
     readonly property bool _shown: !root._auto || root._peek || root._hold
     readonly property bool _expanded: !root._auto || root._shown || root._slidingOut
     readonly property string _layoutKey: String(Config.bar.position || "top")
-    readonly property real _fullH: Config.bar.height + root._edge * 2
-    readonly property real _fullW: Config.bar.height + root._edge * 2
+    readonly property real _fullH: BarLayout.strip
+    readonly property real _fullW: BarLayout.strip
     property bool _peek: false
     property bool _slidingOut: false
     property real _slide: 0
@@ -28,7 +28,7 @@ PanelWindow {
     anchors.right: Config.bar.position !== "left"
     implicitHeight: root.vertical ? 0 : (root._expanded ? root._fullH : root._strip)
     implicitWidth: root.vertical ? (root._expanded ? root._fullW : root._strip) : 0
-    exclusiveZone: root._auto ? 0 : (root.vertical ? implicitWidth : implicitHeight)
+    exclusiveZone: BarLayout.exclusive
     color: "transparent"
     focusable: Popups.active !== null
 

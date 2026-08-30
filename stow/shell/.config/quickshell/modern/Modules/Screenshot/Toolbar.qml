@@ -10,13 +10,8 @@ import "../../Services"
 Item {
     id: root
 
-    readonly property real _barReserve: {
-        if (Config.bar.position !== "top")
-            return Tokens.spacing.xl;
-        const h = Config.bar.height || Tokens.spacing.xxl;
-        const edge = Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0;
-        return h + edge * 2 + Tokens.spacing.sm;
-    }
+    readonly property real _barReserve: Config.bar.position !== "top"
+        ? Tokens.spacing.xl : BarLayout.windowInset
 
     implicitWidth: card.width
     implicitHeight: card.height + root._barReserve

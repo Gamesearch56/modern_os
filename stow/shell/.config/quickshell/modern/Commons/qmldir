@@ -1,5 +1,6 @@
 module Commons
 singleton Config 1.0 Config.qml
+singleton BarLayout 1.0 BarLayout.qml
 singleton Colors 1.0 Colors.qml
 singleton Motion 1.0 Motion.qml
 singleton Tokens 1.0 Tokens.qml

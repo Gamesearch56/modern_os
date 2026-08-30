@@ -26,7 +26,7 @@ PopupWindow {
     signal grabReady()
 
     readonly property real _popupW: root.implicitWidth
-    readonly property real _gap: Tokens.spacing.sm
+    readonly property real _gap: BarLayout.popupGap
     readonly property real _originX: {
         const p = root.anchorItem;
         if (!p)
