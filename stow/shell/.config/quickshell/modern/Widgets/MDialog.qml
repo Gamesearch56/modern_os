@@ -18,6 +18,7 @@ Item {
     property string cancelKey: "powerMenu.cancel"
     property string destructiveKey: ""
     property bool destructive: false
+    property bool confirmEnabled: true
     default property alias extra: extraCol.data
 
     signal confirmed()
@@ -144,6 +145,7 @@ Item {
                 MButton {
                     kind: root.destructive ? "destructive" : "filled"
                     key: root.confirmKey
+                    enabled: root.confirmEnabled
                     onClicked: root.confirmed()
                 }
             }

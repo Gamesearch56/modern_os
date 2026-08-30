@@ -15,6 +15,7 @@ Item {
     property bool fillWidth: false
     property bool highlighted: false
     property bool busy: false
+    property bool iconAfter: false
 
     signal clicked()
 
@@ -84,6 +85,7 @@ Item {
         id: row
         anchors.centerIn: parent
         spacing: Tokens.spacing.sm
+        layoutDirection: root.iconAfter ? Qt.RightToLeft : Qt.LeftToRight
 
         MIcon {
             visible: root.iconName.length > 0 || root.busy
@@ -104,6 +106,7 @@ Item {
             params: root.params
             styleName: "labelLarge"
             color: root._colors.fg
+            LayoutMirroring.enabled: false
         }
     }
 

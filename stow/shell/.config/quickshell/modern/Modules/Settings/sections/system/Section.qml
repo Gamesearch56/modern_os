@@ -27,12 +27,13 @@ ColumnLayout {
             enabled: Update.pending.length > 0 && !Update.running && !Update.mirrorsRunning
             onClicked: Update.start()
         }
-        MIconButton {
+        MButton {
+            kind: "tonal"
+            key: "settings.mirrorsUpdate"
             iconName: "view-refresh"
-            key: "settings.refresh"
-            iconSize: Tokens.icon.sm
-            enabled: !Update.checking && !Update.running
-            onClicked: Update.refresh()
+            busy: Update.mirrorsRunning
+            enabled: !Update.running && !Update.checking
+            onClicked: Update.refreshMirrors()
         }
     }
 

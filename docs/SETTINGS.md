@@ -22,7 +22,7 @@ Deep links: `Settings.openAt(section, subsection)` in
 
 ## Nav map
 
-Six groups, 19 pages. Catalog lives in
+Six groups, 20 pages. Catalog lives in
 `Modules/Settings/Catalog.qml` (`groupOrder` + `_byId`). Search uses
 `section.json` keywords **and** that catalog.
 
@@ -46,6 +46,7 @@ Six groups, 19 pages. Catalog lives in
 | Devices | Bluetooth | `bluetooth` | Adapter power, nearby/connected lists, connect/disconnect/forget via `Bluetooth` (BlueZ). |
 | System | Storage | `storage` | Internal and external drive cards via `Storage` (`lsblk`, sysfs link speed). Eject uses `udisksctl` unmount + power-off. |
 | System | Backup | `backup` | Live Snapper status (`Snapshots`). `backup.preUpdateSnapshot` drives `modern update`. Create/delete via `pkexec snapper`. Restore is gated. |
+| System | Firewall | `firewall` | Live UFW (`Firewall`). Enable/disable and allow/deny rules via `pkexec /usr/bin/ufw`. Rules persist in `/etc/ufw`. Enable forces deny incoming, allow outgoing, deny routed. No `config.json` keys, no Restore, no `ufw reset`. |
 | System | Update | `system` | Pending packages via `checkupdates` (`Update`). `modern update` / `modern mirrors` (pkexec from Settings). |
 
 ## Restore defaults
@@ -55,7 +56,7 @@ Language & Time, and Keyboard show **Restore** on the page header.
 Confirm copies that page’s keys from `config.default.json` via
 `modern config restore` (one jq write). Privacy also clears session
 DND. Design re-runs `theme-apply.sh` so the palette matches the
-restored profile. Overview, Users, AI, devices, Storage, Backup, and
+restored profile. Overview, Users, AI, devices, Storage, Backup, Firewall, and
 Update have no Restore control.
 
 
@@ -74,8 +75,9 @@ a bar popup is showing.
 | Action | CLI | Notes |
 |--------|-----|--------|
 | System update | `modern update` | Overlay with live log and progress. Auto-closes on success and posts a notification. Snapshot-before-update if `backup.preUpdateSnapshot` and Snapper is ready; otherwise the update still runs. |
-| Mirrorlist | `modern mirrors` | `reflector` using `network.mirrorCountry`. Button on Update shows a spinner while it runs. |
+| Mirrorlist | `modern mirrors` | `reflector` using `network.mirrorCountry`. **Update mirrors** sits next to **Update system**. **Search for Updates** on the status card re-runs `checkupdates` and shows a spinner while it runs. |
 | Snapshots | `snapper -c root list` / `create` / `delete` | Settings lists snapshots with timestamps, can create (pkexec), and can request delete. **Restore** is gated (`docs/BACKUP.md`). The Snapper/Restic enable toggles were removed: they did not write `/etc/snapper` or configure a restic repo. |
+| Firewall | `ufw status numbered` / `enable` / `disable` / `allow` / `deny` / `delete NUM` | Settings lists numbered allow/deny rules, can add (port required) and delete. Enable sets deny incoming, allow outgoing, deny routed, then `--force enable`. Disable asks for confirmation. No `reset`, no default-allow, no config.json copy of rules. |
 
 ## How to add a page
 

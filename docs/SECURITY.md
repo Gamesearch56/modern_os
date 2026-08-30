@@ -57,3 +57,14 @@ sudo ufw allow 1714:1764/udp comment kdeconnect
 A user who can already authenticate as admin can create extra local
 accounts. That is equivalent to `useradd` via sudo. Rollback: remove
 the binary and the `.policy` file; existing accounts are untouched.
+
+## Settings → Firewall (UFW)
+
+Settings talks to `/usr/bin/ufw` through `pkexec` after admin
+authentication, the same way Backup talks to snapper. The Service
+builds argv itself: no shell, no `reset`, no `default allow incoming`.
+Enable always applies **deny incoming / allow outgoing / deny routed**
+before `--force enable`. Add requires a port (or a range of at most
+512 ports); From is IP/CIDR only. Rules live in `/etc/ufw` and survive
+reboot. KDE Connect ports stay staged and are not opened from this
+page.

@@ -45,12 +45,13 @@ MCard {
             }
             MButton {
                 kind: "tonal"
-                key: "settings.mirrorsUpdate"
+                key: "settings.update.search"
                 iconName: "view-refresh"
-                busy: Update.mirrorsRunning
-                enabled: !Update.running
+                iconAfter: true
+                busy: Update.checking
+                enabled: !Update.running && !Update.mirrorsRunning
                 Layout.alignment: Qt.AlignVCenter
-                onClicked: Update.refreshMirrors()
+                onClicked: Update.refresh()
             }
         }
 
