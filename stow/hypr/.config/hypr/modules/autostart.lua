@@ -8,21 +8,22 @@ local config = require("modules.config")
 local paths = require("modules.paths")
 
 hl.on("hyprland.start", function()
-    -- Import compositor env, then start the shell as a child of this
-    -- compositor. systemd --user is one instance per login, so a leftover
-    -- Hyprland on another TTY would keep modern-shell.service pointed at
-    -- the old WAYLAND_DISPLAY and this session would get wallpaper only.
+    -- Lean exec so Hyprland tracks qs, not a wrapper shell. Env for the
+    -- shell process stays here; systemd/dbus/polkit use separate timeouts
+    -- so a stuck bus cannot block Quickshell startup.
     hl.exec_cmd("sh -lc '"
         .. "mkdir -p \"${XDG_STATE_HOME:-$HOME/.local/state}/modern\"; "
         .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
         .. "export QT_QPA_PLATFORM=wayland QT_QPA_PLATFORMTHEME=qt6ct "
         .. "QS_ICON_THEME=\"${QS_ICON_THEME:-Papirus-Dark}\"; "
-        .. "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME; "
-        .. "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION; "
         .. "gsettings set org.gnome.desktop.interface color-scheme prefer-dark 2>/dev/null || true; "
-        .. "systemctl --user start hyprpolkitagent || true; "
-        .. "systemctl --user stop modern-shell.service 2>/dev/null || true; "
         .. "exec qs -c modern >>\"$log\" 2>&1'")
+
+    hl.exec_cmd("sh -lc '"
+        .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true; "
+        .. "timeout 2 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true; "
+        .. "timeout 2 systemctl --user stop modern-shell.service || true; "
+        .. "timeout 2 systemctl --user start hyprpolkitagent || true'")
 
     hl.exec_cmd("hypridle")
     -- hyprpm stores plugins in /var/cache/hyprpm/$USER and needs pkexec

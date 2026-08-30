@@ -476,6 +476,21 @@ matugen "${MATUGEN_ARGS[@]}"
 log "regenerated tokens.json, kitty/fastfetch/GTK/Qt/KDE/Vivaldi color files"
 patch_toolkit_chrome || warn "toolkit chrome patch skipped"
 
+kitty_colors="${XDG_CONFIG_HOME:-$HOME/.config}/kitty/colors.conf"
+if [ ! -f "$kitty_colors" ]; then
+    mkdir -p "$(dirname "$kitty_colors")"
+    rm -f "$kitty_colors"
+    warn "matugen did not write $kitty_colors — seeding MD3 dark stub"
+    cat > "$kitty_colors" <<'EOF'
+# Shipped MD3 dark baseline (same seed as Commons/Colors.qml).
+background #141218
+foreground #E6E0E9
+cursor #D0BCFF
+selection_background #4A4458
+selection_foreground #E8DEF8
+EOF
+fi
+
 if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ]; then
     sync_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-sync.sh"
     if [ -f "$sync_script" ]; then

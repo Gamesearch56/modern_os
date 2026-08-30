@@ -1,9 +1,10 @@
 # Keybinds
 
 Combos are strings in `config.json` → `keybinds`, in Hyprland Lua
-`hl.bind()` form (`SUPER + SHIFT + T`). The System Settings keyboard
-page and `Modules/Cheatsheet` read that object; Hyprland's Lua reader
-binds them. System Settings never rewrites Lua.
+`hl.bind()` form (`SUPER + SHIFT + T`). Settings > Keyboard **lists**
+that object; it does not write combos. `Modules/Cheatsheet` reads the
+same table. Hyprland's Lua reader binds them. The Settings app never
+rewrites Lua.
 
 Defaults (also in `stow/modern/.config/modern/config.default.json`):
 
@@ -20,6 +21,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + DELETE` | Applications (taskbar) | `qs -c modern ipc call taskbar toggle` |
 | `SUPER + TAB` | Overview | `qs -c modern ipc call overview toggle` |
 | `SUPER + T` | Terminal | Configured `apps.defaults.terminal` via `modern-launch` |
+| `SUPER + RETURN` | Emergency terminal | `/usr/bin/kitty` (always bound; not in `config.json`) |
 | `SUPER + B` | Browser | Configured `apps.defaults.browser` via `modern-launch` |
 | `SUPER + SHIFT + B` | Browser private window | Same desktop id, with `--incognito` or `--private-window` |
 | `SUPER + E` | File manager | Configured `apps.defaults.fileManager` via `modern-launch` |

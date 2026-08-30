@@ -54,15 +54,48 @@ Then pick a wallpaper: `scripts/theme-apply.sh --wallpaper /path/to/image.jpg`
 
 ## Shell does not start / no top bar
 
-Wallpaper plus `SUPER+T` / `SUPER+B` / `SUPER+Q` means Hyprland loaded
-this repo's Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell.
+Wallpaper plus `SUPER+B` / `SUPER+Q` means Hyprland loaded this repo's
+Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell. `SUPER+T` /
+`SUPER+RETURN` always open kitty; if they do nothing, see
+`~/.config/kitty/colors.conf` and `docs/THEMING.md`.
+
+If you cannot open a terminal **inside** the session, diagnose from
+another TTY (`docs/BOOT.md`):
+
+```bash
+loginctl list-sessions
+# optional, from the daily-driver account:
+# loginctl terminate-session <devuser-tty3-id>
+```
+
+On a text login as `devuser` (`Ctrl+Alt+F4`):
+
+```bash
+pgrep -a qs; pgrep -a quickshell; pgrep -a Hyprland
+echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR-unset}"
+ls -ld /run/user/$(id -u)
+# only if /run/user/$(id -u) exists:
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+systemctl --user status modern-shell.service
+tail -n 80 ~/.local/state/modern/quickshell.log
+qs -c modern log -t 80
+ls -l ~/.config/kitty/colors.conf
+python -c "import json; print(json.load(open('$HOME/.config/modern/config.json'))['keybinds'])"
+```
+
+`systemctl --user` without those two variables fails with
+`$DBUS_SESSION_BUS_ADDRESS and $XDG_RUNTIME_DIR not defined`. Skip
+`enable` / `daemon-reload` on that TTY and run `start-hyprland`; enable
+from kitty after the bar is up.
 
 - **One Hyprland per user.** A second TTY's `start-hyprland` does not get
   the shell if an older instance still owns `modern-shell.service`.
   Exit every leftover compositor before starting a new one.
-- End a session: `SUPER+T`, then `hyprctl dispatch "hl.dsp.exit()"`. You return to
-  the TTY prompt; `exit` or Ctrl+D logs out of that TTY. Switch back to
-  the daily driver with `Ctrl+Alt+F1` or `F2`.
+- End a session: `SUPER+SHIFT+M`, or `loginctl terminate-session <id>`
+  from another TTY. If the bar is up: `hyprctl dispatch "hl.dsp.exit()"`.
+  You return to the TTY prompt; `exit` or Ctrl+D logs out. Switch back
+  to the daily driver with `Ctrl+Alt+F1` or `F2`.
 - Extra `devuser` sessions: `loginctl list-sessions`, then
   `loginctl terminate-session <id>` from the daily-driver account, or as
   `devuser` on a TTY: `pkill -x Hyprland`.

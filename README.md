@@ -141,9 +141,10 @@ Stay logged in as `bastianweigand`. On another virtual terminal:
    shows a warning, and leaves `systemd --user` without `WAYLAND_DISPLAY`
    (no bar, no shell). Optional UWSM:
    `uwsm start hyprland-uwsm.desktop`.
-4. Once, as `devuser`: `systemctl --user enable modern-shell.service`
-   (autostart starts it; `--now` before a compositor is running does nothing
-   useful).
+   Autostart starts `qs -c modern` as a child of this compositor
+   (`docs/BOOT.md`). Skip `systemctl --user enable` — a text login
+   often has no `$XDG_RUNTIME_DIR` / session bus, and the bar does not
+   need that unit.
 
 You now have two sessions: the old desktop on TTY1/TTY2, the new one on
 TTY3.
@@ -152,11 +153,12 @@ TTY3.
 
 - **Keep both sessions:** `Ctrl+Alt+F1` or `Ctrl+Alt+F2` until you see
   the `bastianweigand` desktop. Nothing in the main home was rewritten.
-- **End the test session:** `SUPER+T`, then `hyprctl dispatch "hl.dsp.exit()"`
-  (or `SUPER+SHIFT+M` once that bind is stowed). You land back on the
-  TTY prompt — `exit` or Ctrl+D logs out of that TTY. Then
-  `Ctrl+Alt+F1`/`F2`. Do not open a second `start-hyprland` while the
-  first is still running; one user gets one graphical session.
+- **End the test session:** `SUPER+SHIFT+M`, or from another TTY
+  `loginctl terminate-session <id>` (`docs/BOOT.md`). If the bar is
+  up, `SUPER+T` then `hyprctl dispatch "hl.dsp.exit()"` also works.
+  You land back on the TTY prompt — `exit` or Ctrl+D logs out of that
+  TTY. Then `Ctrl+Alt+F1`/`F2`. Do not open a second `start-hyprland`
+  while the first is still running; one user gets one graphical session.
 - **After a reboot:** autologin is still the daily-driver account,
   because greetd was never enabled. Log in as usual.
 
@@ -185,9 +187,12 @@ git clone git@github.com:Gamesearch56/modern_dotfile.git ~/modern_dotfile
 cd ~/modern_dotfile
 ./install/install.sh --profile m0 --dry-run
 ./install/install.sh --profile m0
-systemctl --user enable modern-shell.service
 start-hyprland
 ```
+
+Autostart starts `qs -c modern` as a compositor child (`docs/BOOT.md`).
+Do not run `systemctl --user enable` before `start-hyprland` — a TTY
+often has no user bus, so that command fails and is not required.
 
 If that user is named `bastianweigand` **and** `/home/bastianweigand`
 exists (this machine, or a restore of this username), the live-home
@@ -260,7 +265,8 @@ modern_dotfile/
 | `SUPER` + `W` | Wallpaper picker |
 | `SUPER` + `DELETE` | Applications (taskbar) |
 | `SUPER` + `Tab` | Overview |
-| `SUPER` + `T` | Terminal (kitty) |
+| `SUPER` + `T` | Terminal (kitty; always bound) |
+| `SUPER` + `Return` | Terminal (always bound) |
 | `SUPER` + `B` | Browser (Vivaldi) |
 | `SUPER` + `E` | File manager (Dolphin) |
 | `SUPER` + `Q` | Close window |

@@ -95,9 +95,10 @@ in a graphical session (`docs/TROUBLESHOOTING.md`).
 To use a different image later:
 
 1. `scripts/theme-apply.sh --wallpaper PATH` (writes `tokens.json` and
-   syncs lock assets)
-2. `systemctl --user enable modern-shell.service` then
-   `start-hyprland` on a TTY (not the `Hyprland` binary)
+   syncs lock/login assets)
+2. `start-hyprland` on a TTY (not the `Hyprland` binary). Autostart
+   starts `qs -c modern` as a child of Hyprland. Skip
+   `systemctl --user enable` on a text TTY (`docs/BOOT.md`).
 3. `scripts/doctor.sh`
 4. Optional gated files that **exist**: Plymouth README, sysctl, ufw
    KDE Connect, tmpfiles, ESP hook, snapper, `create-devuser.sh` —

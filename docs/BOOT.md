@@ -9,7 +9,10 @@ what is shared with an unprivileged greeter. Plymouth and greetd are
 ```
 TTY: start-hyprland   →  Hyprland (stow/hypr)
                       │     (greetd is not shipped; future path only)
-                      ├─ modern-shell.service  (user unit, watchdog)
+                      ├─ autostart.lua
+                      │     exec qs -c modern  (compositor child)
+                      │     timeout 2 systemctl/dbus/polkit/stop
+                      ├─ modern-shell.service  (optional UWSM watchdog)
                       │     ExecStart=quickshell -c modern
                       └─ portals (xdg-desktop-portal-hyprland + gtk/kde)
 ```
@@ -24,18 +27,40 @@ Hyprland ≥ 0.53’s wrapper sets up crash recovery and the user session;
 without it, systemd units (the bar) start with no `WAYLAND_DISPLAY`.
 Optional: `uwsm start hyprland-uwsm.desktop`.
 
-The watchdog unit is `stow/systemd/.config/systemd/user/modern-shell.service`:
-`Restart=always` / `RestartSec=1`, `After=graphical-session.target`.
-It is **not** `PartOf=` that target — a TTY start without UWSM never
-reaches it, and `PartOf` would stop the shell immediately.
+The shell unit is `stow/systemd/.config/systemd/user/modern-shell.service`:
+`Restart=always` / `RestartSec=1`, `After=graphical-session.target`,
+`ConditionEnvironment=WAYLAND_DISPLAY`. It is **not** `PartOf=` that
+target — a TTY start without UWSM never reaches it, and `PartOf` would
+stop the shell immediately. TTY testing does **not** need this unit
+enabled.
+
+`modules/autostart.lua` **exec**s `qs -c modern` as a child of this
+compositor (logs: `~/.local/state/modern/quickshell.log`). Do not wrap
+it in a `while` loop: Hyprland then tracks `sh` instead of Quickshell,
+and the bar never appears. systemd calls (import-environment, stop a
+leftover unit, polkit) run separately with `timeout 2`.
+
+Enable the unit only from **inside** a running session if you want a
+UWSM/greetd watchdog — not from a text TTY, and not as a requirement
+to get a bar:
 
 ```bash
 systemctl --user enable modern-shell.service
 ```
 
-`modules/autostart.lua` starts Quickshell as a child of this compositor
-(logs: `~/.local/state/modern/quickshell.log`) so a second TTY cannot
-steal the bar via the user unit.
+A getty/`sudo -iu` prompt without `$XDG_RUNTIME_DIR` and
+`$DBUS_SESSION_BUS_ADDRESS` cannot talk to `systemd --user`. Skip enable
+and run `start-hyprland`; the wrapper starts the user session. If you
+must enable from that TTY and `/run/user/$(id -u)` exists:
+
+```bash
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+systemctl --user enable modern-shell.service
+```
+
+Do not enable the unit on the daily-driver account while isolation is in
+force.
 
 ## Shared session state
 
@@ -67,10 +92,26 @@ Preferred backends are in both:
 FileChooser is KDE (Dolphin/Qt-first, `docs/DECISIONS.md` #5);
 Screenshot and ScreenCast are Hyprland.
 
-## Troubleshooting a black session
+## Troubleshooting a black session / no bar
 
-1. Confirm you launched with `start-hyprland`, not `Hyprland`
-2. TTY login as the same user, `systemctl --user status modern-shell.service`
-3. `qs -c modern log -t 80` or `quickshell -c modern` in a terminal — QML errors
-   print there
-4. `scripts/doctor.sh` then `docs/TROUBLESHOOTING.md`
+If the graphical session is up (wallpaper, `SUPER+B`) but you have no
+terminal, try `SUPER+RETURN` (emergency `/usr/bin/kitty`). Do **not**
+wait only on `SUPER+T` if `modern-launch` is broken. From the
+daily-driver TTY:
+
+1. `loginctl list-sessions` — note the `devuser` / `tty3` id
+2. Optional: `loginctl terminate-session <id>`
+3. `Ctrl+Alt+F4`, text login as `devuser` (not Hyprland)
+
+Then:
+
+```bash
+pgrep -a qs; pgrep -a quickshell; pgrep -a Hyprland
+systemctl --user status modern-shell.service
+tail -n 80 ~/.local/state/modern/quickshell.log
+qs -c modern log -t 80
+ls -l ~/.config/kitty/colors.conf
+```
+
+Confirm you originally launched with `start-hyprland`, not `Hyprland`.
+`scripts/doctor.sh` then `docs/TROUBLESHOOTING.md`.

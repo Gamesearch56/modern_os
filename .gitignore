@@ -2,7 +2,6 @@
 stow/modern/.config/modern/tokens.json
 stow/gtk/.config/gtk-3.0/gtk.css
 stow/gtk/.config/gtk-4.0/gtk.css
-stow/kitty/.config/kitty/colors.conf
 stow/fastfetch/.config/fastfetch/config.jsonc
 stow/qt/.config/qt6ct/qss/modern.qss
 stow/qt/.config/qt6ct/colors/modern.conf

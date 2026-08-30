@@ -3,6 +3,8 @@
 -- read the exact same table — see docs/WIDGETS.md's cheatsheet section
 -- and docs/DECISIONS.md). What each action DOES is fixed here, in code,
 -- since that's an architectural decision, not a per-user preference.
+-- SUPER+T uses apps.defaults.terminal via modern-launch; SUPER+RETURN
+-- is a hard-coded /usr/bin/kitty emergency when modern-launch is broken.
 --
 -- hl.bind(combo, dispatcher_descriptor) — dispatcher descriptors come
 -- from hl.dsp.*, per wiki.hypr.land's 0.55+ Lua dispatcher reference.
@@ -58,6 +60,10 @@ end
 local function default_number_combo(n, shift)
     return xkb.default_number_combo(n, shift)
 end
+
+-- Bare path — a wrapped sh -lc here broke emergency terminal binds on main.
+-- colors.conf is globincluded from kitty.conf so a missing theme is not fatal.
+local emergency_kitty = hl.dsp.exec_cmd("/usr/bin/kitty")
 
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
 -- Named config `modern` is ~/.config/quickshell/modern. Bare `qs ipc`
@@ -147,6 +153,9 @@ for action, dispatcher in pairs(bindings) do
         end
     end
 end
+
+-- Emergency terminal only — does not replace keybinds.terminal / modern-launch.
+hl.bind("SUPER + RETURN", emergency_kitty)
 
 -- Power menu (SUPER+M) needs the shell. This always ends the compositor.
 if not combo("exitSession") then
