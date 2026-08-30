@@ -67,6 +67,7 @@ local bindings = {
     aiChat = hl.dsp.exec_cmd("qs -c modern ipc call ai toggle"),
     powerMenu = hl.dsp.exec_cmd("qs -c modern ipc call powermenu toggle"),
     controlCenter = hl.dsp.exec_cmd("qs -c modern ipc call notifications toggle"),
+    lockScreen = hl.dsp.exec_cmd("qs -c modern ipc call session lock"),
     cheatsheet = hl.dsp.exec_cmd("qs -c modern ipc call cheatsheet toggle"),
     settings = hl.dsp.exec_cmd("qs -c modern ipc call settings toggle"),
     wallpaperPicker = hl.dsp.exec_cmd("qs -c modern ipc call wallpaper toggle"),

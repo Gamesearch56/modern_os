@@ -33,7 +33,7 @@ Singleton {
         moveToWorkspace9: "workspaces", moveToWorkspace10: "workspaces",
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
         screenshotFull: "screenshots", colorPicker: "screenshots",
-        cheatsheet: "system", powerMenu: "system", controlCenter: "system", exitSession: "system",
+        cheatsheet: "system", powerMenu: "system", controlCenter: "system", lockScreen: "system", exitSession: "system",
         filePreview: "utilities"
     })
 

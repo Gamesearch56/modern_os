@@ -11,7 +11,8 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 |-------|--------|-----|
 | `SUPER + SPACE` | Launcher | `qs -c modern ipc call launcher toggle` |
 | `SUPER + M` | Power menu | `qs -c modern ipc call powermenu toggle` |
-| `SUPER + L` | Control panel | `qs -c modern ipc call notifications toggle` |
+| `SUPER + O` | Control panel | `qs -c modern ipc call notifications toggle` |
+| `SUPER + L` | Lock screen | `qs -c modern ipc call session lock` |
 | `SUPER + SHIFT + M` | Exit compositor | `hyprctl dispatch "hl.dsp.exit()"` |
 | `SUPER + K` | Cheatsheet | `qs -c modern ipc call cheatsheet toggle` |
 | `SUPER + I` | System Settings (Hyprland window) | `qs -c modern ipc call settings toggle` |
