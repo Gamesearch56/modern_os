@@ -54,35 +54,40 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 context: Qt.ApplicationShortcut
-                onActivated: Wallpaper.hide()
+                onActivated: {
+                    if (overlay.confirming)
+                        overlay.cancelRemove();
+                    else
+                        Wallpaper.hide();
+                }
             }
             Shortcut {
-                enabled: Wallpaper.images.length > 0
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
                 sequence: "Left"
                 onActivated: overlay.moveBy(-1)
             }
             Shortcut {
-                enabled: Wallpaper.images.length > 0
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
                 sequence: "Right"
                 onActivated: overlay.moveBy(1)
             }
             Shortcut {
-                enabled: Wallpaper.images.length > 0
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
                 sequence: "Up"
                 onActivated: overlay.moveBy(-overlay.columns)
             }
             Shortcut {
-                enabled: Wallpaper.images.length > 0
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
                 sequence: "Down"
                 onActivated: overlay.moveBy(overlay.columns)
             }
             Shortcut {
-                enabled: Wallpaper.images.length > 0
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
                 sequence: "Return"
                 onActivated: overlay.activate()
             }
             Shortcut {
-                enabled: Wallpaper.images.length > 0
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
                 sequence: "Enter"
                 onActivated: overlay.activate()
             }

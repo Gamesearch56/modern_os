@@ -10,7 +10,11 @@ Item {
     signal closed()
 
     property bool _entered: false
+    property string pendingRemove: ""
     readonly property bool _shown: Wallpaper.pickerOpen && root._entered
+    readonly property bool confirming: root.pendingRemove.length > 0
+
+    function cancelRemove() { root.pendingRemove = ""; }
 
     Component.onCompleted: {
         root._entered = true;
@@ -133,6 +137,7 @@ Item {
                         id: grid
                         anchors.fill: parent
                         visible: Wallpaper.images.length > 0
+                        onRemoveRequested: (path) => { root.pendingRemove = path; }
                     }
 
                     MEmptyState {
@@ -144,5 +149,20 @@ Item {
                 }
             }
         }
+    }
+
+    MDialog {
+        anchors.fill: parent
+        open: root.confirming
+        titleKey: "wallpaper.removeTitle"
+        bodyKey: "wallpaper.removeBody"
+        confirmKey: "wallpaper.remove"
+        cancelKey: "powerMenu.cancel"
+        destructive: true
+        onConfirmed: {
+            Wallpaper.remove(root.pendingRemove);
+            root.pendingRemove = "";
+        }
+        onCancelled: root.cancelRemove()
     }
 }

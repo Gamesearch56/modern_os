@@ -1,1 +1,1 @@
-{"id":"settings","key":"bar.settings","defaultEnabled":true,"services":["Settings"]}
+{"id":"settings","key":"bar.controlPanel","defaultEnabled":true,"services":["Notifications"]}

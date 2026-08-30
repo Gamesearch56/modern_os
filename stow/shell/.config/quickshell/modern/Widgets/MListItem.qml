@@ -25,6 +25,8 @@ Item {
     property string badgeIcon: ""
     property int badgeCount: 0
 
+    property bool compact: false
+
     default property alias extra: trailing.data
 
     signal clicked()
@@ -32,6 +34,9 @@ Item {
     signal activated()
 
     readonly property bool _nav: root.variant === "nav"
+    readonly property real _padH: root.compact ? Tokens.spacing.sm : Tokens.spacing.md
+    readonly property real _padV: root.compact ? Tokens.spacing.xs : Tokens.spacing.sm
+    readonly property int _glyph: root.compact ? Tokens.icon.sm : Tokens.icon.md
     readonly property color _fg: {
         if (root.destructive)
             return Colors.color.error;
@@ -40,10 +45,14 @@ Item {
         return root._nav ? Chrome.navSelected.fg : Chrome.tonal.fg;
     }
 
-    implicitHeight: root.imageSource.length > 0
-        ? root.imageSize + Tokens.spacing.md * 2
-        : Tokens.spacing.xxl + Tokens.spacing.md * 2
-    implicitWidth: Tokens.spacing.xxl * 10
+    implicitHeight: {
+        if (root.compact)
+            return Tokens.spacing.xxl;
+        if (root.imageSource.length > 0)
+            return root.imageSize + Tokens.spacing.md * 2;
+        return Tokens.spacing.xxl + Tokens.spacing.md * 2;
+    }
+    implicitWidth: root.compact ? Tokens.spacing.xxl * 7 : Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled && root.hoverHighlight
     Accessible.role: root.hoverHighlight ? Accessible.Button : Accessible.StaticText
@@ -93,6 +102,7 @@ Item {
     }
 
     MouseArea {
+        z: -1
         anchors.fill: parent
         enabled: root.enabled && root.hoverHighlight
         hoverEnabled: true
@@ -111,11 +121,11 @@ Item {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: Tokens.spacing.md
-        anchors.rightMargin: Tokens.spacing.md
-        anchors.topMargin: Tokens.spacing.sm
-        anchors.bottomMargin: Tokens.spacing.sm
-        spacing: Tokens.spacing.md
+        anchors.leftMargin: root._padH
+        anchors.rightMargin: root._padH
+        anchors.topMargin: root._padV
+        anchors.bottomMargin: root._padV
+        spacing: root.compact ? Tokens.spacing.sm : Tokens.spacing.md
 
         Rectangle {
             visible: root.imageSource.length > 0
@@ -138,7 +148,7 @@ Item {
         MIcon {
             visible: root.iconName.length > 0 && root.imageSource.length === 0
             name: root.iconName
-            size: Tokens.icon.md
+            size: root._glyph
             tint: root.tintIcon
             preferSymbolic: !root._nav
             color: root._fg
@@ -162,7 +172,7 @@ Item {
                         key: root.titleKey
                         params: root.titleParams
                         value: root.titleValue
-                        styleName: "bodyLarge"
+                        styleName: root.compact ? "bodyMedium" : "bodyLarge"
                         color: root._fg
                         width: {
                             const extra = titleBadge.visible ? titleBadge.width + titleRow.spacing : 0;
@@ -197,6 +207,7 @@ Item {
 
         Item {
             id: trailing
+            z: 2
             visible: childrenRect.width > 0
             Layout.preferredWidth: childrenRect.width
             Layout.preferredHeight: childrenRect.height
@@ -206,7 +217,7 @@ Item {
 
     MFocusRing {
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
-        active: !root._nav && (root.selected || (root.hoverHighlight && (root.activeFocus || hover.hovered)))
+        active: !root.compact && !root._nav && (root.selected || (root.hoverHighlight && (root.activeFocus || hover.hovered)))
         ringColor: Colors.color.primary
     }
 }

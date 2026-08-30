@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
@@ -83,7 +84,8 @@ Item {
                                     root.closeMenu();
                                     return;
                                 }
-                                const p = item.mapToItem(root, 0, 0);
+                                const host = Window.window ? Window.window.contentItem : root;
+                                const p = item.mapToItem(host, 0, 0);
                                 root.menuRowY = p.y;
                                 root.menuRowH = item.height;
                                 root.menuAddress = item.address;

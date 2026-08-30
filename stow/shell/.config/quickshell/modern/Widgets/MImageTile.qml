@@ -1,8 +1,8 @@
 // Image tile. Keyboard `current` and pointer hover share a primary
-// ring drawn above the photo. MultiEffect masks the bitmap to the same
-// radius as the hover ring — Rectangle.clip is axis-aligned.
+// ring drawn above the photo. ClippingRectangle clips the bitmap to
+// the same radius — Rectangle.clip is axis-aligned.
 import QtQuick
-import QtQuick.Effects
+import Quickshell.Widgets
 import "../Commons"
 
 Item {
@@ -11,26 +11,39 @@ Item {
     property url source: ""
     property bool selected: false
     property bool current: false
+    property bool removable: false
 
-    readonly property bool _ring: root.current || ma.containsMouse
+    readonly property bool _ring: !root.selected && (root.current || ma.containsMouse)
     readonly property real _radius: Tokens.radius.small
+    readonly property bool _removeHot: removeMa.containsMouse || removeMa.pressed
+
+    scale: (root.selected || root._ring) ? 1 : Motion.overlayScale(false)
+    opacity: (root.selected || root._ring) ? 1 : (1 - Tokens.interaction.hover)
+    transformOrigin: Item.Center
+
+    Behavior on scale {
+        enabled: Motion.overlaysZoom
+        NumberAnimation {
+            duration: Motion.mediumMs
+            easing.bezierCurve: Motion.easingEmphasizedDecelerate
+        }
+    }
+    Behavior on opacity {
+        enabled: Motion.overlaysFade
+        NumberAnimation {
+            duration: Motion.mediumMs
+            easing.bezierCurve: Motion.easingStandard
+        }
+    }
 
     signal clicked()
     signal hovered()
+    signal removeClicked()
 
-    Rectangle {
-        id: plate
+    ClippingRectangle {
         anchors.fill: parent
         radius: root._radius
         color: Colors.color.surfaceContainerHighest
-    }
-
-    Item {
-        id: contents
-        anchors.fill: parent
-        visible: false
-        layer.enabled: true
-        layer.smooth: true
 
         Image {
             anchors.fill: parent
@@ -40,37 +53,11 @@ Item {
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
         }
-
-        Rectangle {
-            anchors.fill: parent
-            color: Colors.color.primary
-            opacity: root.selected ? Tokens.interaction.focus : 0
-        }
-    }
-
-    Item {
-        id: roundMask
-        anchors.fill: parent
-        visible: false
-        layer.enabled: true
-        layer.smooth: true
-
-        Rectangle {
-            anchors.fill: parent
-            radius: root._radius
-            color: Qt.rgba(1, 1, 1, 1)
-        }
-    }
-
-    MultiEffect {
-        anchors.fill: parent
-        source: contents
-        maskEnabled: true
-        maskSource: roundMask
     }
 
     Rectangle {
         visible: root.selected
+        z: 2
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: Tokens.spacing.xs
@@ -98,10 +85,59 @@ Item {
     MouseArea {
         id: ma
         anchors.fill: parent
+        enabled: !root.selected
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: root.selected ? Qt.ArrowCursor : Qt.PointingHandCursor
         onClicked: root.clicked()
         onEntered: root.hovered()
+    }
+
+    Item {
+        visible: root.removable
+        z: 3
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: Tokens.spacing.xs
+        width: Tokens.spacing.xl
+        height: Tokens.spacing.xl
+        Accessible.role: Accessible.Button
+        Accessible.name: I18n.t("wallpaper.remove")
+        Accessible.onPressAction: root.removeClicked()
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Tokens.radius.full
+            color: root._removeHot ? Colors.color.error : Colors.color.errorContainer
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Motion.shortMs
+                    easing.bezierCurve: Motion.easingStandard
+                }
+            }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Tokens.radius.full
+            color: root._removeHot ? Colors.color.onError : Colors.color.onErrorContainer
+            opacity: Chrome.stateLayer(removeMa.containsMouse, removeMa.pressed)
+        }
+
+        MIcon {
+            anchors.centerIn: parent
+            name: "window-close"
+            size: Tokens.icon.sm
+            color: root._removeHot ? Colors.color.onError : Colors.color.onErrorContainer
+        }
+
+        MouseArea {
+            id: removeMa
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.removeClicked()
+        }
     }
 
     MFocusRing {

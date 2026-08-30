@@ -1,11 +1,15 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 
 Item {
     id: root
+
+    parent: Window.window ? Window.window.contentItem : parent
+    anchors.fill: parent
 
     property string menuAddress: ""
     property bool menuBackground: false
@@ -23,22 +27,22 @@ Item {
     Item {
         id: menuCard
         z: 21
-        width: parent.width - Tokens.spacing.md * 2
-        height: menuCol.implicitHeight + Tokens.spacing.sm * 2
-        x: Tokens.spacing.md
+        width: Tokens.spacing.xxl * 7
+        height: menuCol.implicitHeight + Tokens.spacing.xs * 2
+        x: Math.max(Tokens.spacing.sm, parent.width - width - Tokens.spacing.sm)
         y: {
             const h = menuCard.height;
             const below = root.menuRowY + root.menuRowH;
-            if (below + h <= root.height)
+            if (below + h + Tokens.spacing.xs <= root.height)
                 return below;
             return Math.max(0, root.menuRowY - h);
         }
 
         Rectangle {
             anchors.fill: parent
-            radius: Tokens.radius.medium
-            color: Colors.color.surface
-            border.width: Tokens.stroke.focus
+            radius: Tokens.radius.small
+            color: Colors.color.surfaceContainerHigh
+            border.width: Tokens.stroke.hairline
             border.color: Colors.color.outlineVariant
         }
 
@@ -52,6 +56,7 @@ Item {
 
             MListItem {
                 Layout.fillWidth: true
+                compact: true
                 iconName: "focus-windows-symbolic"
                 titleKey: "bar.taskbarShow"
                 onClicked: {
@@ -64,6 +69,7 @@ Item {
             }
             MListItem {
                 Layout.fillWidth: true
+                compact: true
                 visible: !root.menuBackground
                 iconName: "window-minimize-symbolic"
                 titleKey: "bar.taskbarHide"
@@ -77,6 +83,7 @@ Item {
             }
             MListItem {
                 Layout.fillWidth: true
+                compact: true
                 iconName: "view-restore-symbolic"
                 titleKey: "bar.taskbarFloat"
                 onClicked: {
@@ -87,6 +94,7 @@ Item {
             }
             MListItem {
                 Layout.fillWidth: true
+                compact: true
                 iconName: "view-fullscreen-symbolic"
                 titleKey: "bar.taskbarFullscreen"
                 onClicked: {
@@ -97,6 +105,7 @@ Item {
             }
             MListItem {
                 Layout.fillWidth: true
+                compact: true
                 iconName: "window-close-symbolic"
                 titleKey: "bar.close"
                 destructive: true

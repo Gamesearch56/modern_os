@@ -22,7 +22,7 @@ QtObject {
         connectivity: "network-wireless-symbolic",
         audio: "audio-volume-high-symbolic",
         battery: "battery-good-symbolic",
-        settings: "org.gnome.Settings-symbolic",
+        settings: "view-grid-symbolic",
         power: "system-shutdown-symbolic"
     })
 
@@ -33,6 +33,8 @@ QtObject {
     function key(id: string): string {
         if (id === "ai")
             return "ai.title";
+        if (id === "settings")
+            return "bar.controlPanel";
         return "bar." + id;
     }
 }

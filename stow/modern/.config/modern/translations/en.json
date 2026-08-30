@@ -15,8 +15,9 @@
     "bluetooth": "Bluetooth",
     "notifications": "Notifications",
     "settings": "Settings",
+    "controlPanel": "Control panel",
     "power": "Power",
-    "taskbar": "Windows",
+    "taskbar": "Applications",
     "taskbarEmpty": "No open windows",
     "taskbarEmptyHint": "Running programs appear here",
     "taskbarShow": "Show",
@@ -186,7 +187,11 @@
     "importTitle": "Add wallpaper",
     "importImages": "Images",
     "importAll": "All files",
-    "needChooser": "Need zenity or kdialog to pick a wallpaper"
+    "needChooser": "Need zenity or kdialog to pick a wallpaper",
+    "remove": "Delete",
+    "removeTitle": "Delete wallpaper?",
+    "removeBody": "This image will be deleted from your wallpaper folder.",
+    "removeFailed": "Could not delete wallpaper"
   },
   "folderPicker": {
     "title": "Choose folder",

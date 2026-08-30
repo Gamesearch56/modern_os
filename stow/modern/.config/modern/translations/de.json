@@ -15,8 +15,9 @@
     "bluetooth": "Bluetooth",
     "notifications": "Benachrichtigungen",
     "settings": "Einstellungen",
+    "controlPanel": "Kontrollzentrum",
     "power": "Ein/Aus",
-    "taskbar": "Fenster",
+    "taskbar": "Anwendungen",
     "taskbarEmpty": "Keine offenen Fenster",
     "taskbarEmptyHint": "Laufende Programme erscheinen hier",
     "taskbarShow": "Anzeigen",
@@ -186,7 +187,11 @@
     "importTitle": "Hintergrund hinzufügen",
     "importImages": "Bilder",
     "importAll": "Alle Dateien",
-    "needChooser": "Zum Auswählen wird zenity oder kdialog benötigt"
+    "needChooser": "Zum Auswählen wird zenity oder kdialog benötigt",
+    "remove": "Löschen",
+    "removeTitle": "Hintergrund löschen?",
+    "removeBody": "Dieses Bild wird aus deinem Hintergrundordner gelöscht.",
+    "removeFailed": "Hintergrund konnte nicht gelöscht werden"
   },
   "folderPicker": {
     "title": "Ordner wählen",

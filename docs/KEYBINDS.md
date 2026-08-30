@@ -14,7 +14,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + L` | Control panel | `qs -c modern ipc call notifications toggle` |
 | `SUPER + SHIFT + M` | Exit compositor | `hyprctl dispatch "hl.dsp.exit()"` |
 | `SUPER + K` | Cheatsheet | `qs -c modern ipc call cheatsheet toggle` |
-| `SUPER + I` | System Settings (Hyprland window) | `qs -c modern ipc call settings open` |
+| `SUPER + I` | System Settings (Hyprland window) | `qs -c modern ipc call settings toggle` |
 | `SUPER + W` | Wallpaper picker | `qs -c modern ipc call wallpaper toggle` |
 | `SUPER + TAB` | Overview | `qs -c modern ipc call overview toggle` |
 | `SUPER + T` | Terminal | Configured `apps.defaults.terminal` via `modern-launch` |

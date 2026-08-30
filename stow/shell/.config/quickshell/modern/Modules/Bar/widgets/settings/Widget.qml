@@ -9,8 +9,8 @@ Item {
 
     MIconButton {
         anchors.fill: parent
-        iconName: "org.gnome.Settings-symbolic"
-        key: "bar.settings"
+        iconName: "view-grid-symbolic"
+        key: "bar.controlPanel"
         checked: Notifications.panelOpen
         onClicked: Notifications.toggle()
     }

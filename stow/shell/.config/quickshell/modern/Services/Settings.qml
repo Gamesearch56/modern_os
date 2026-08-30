@@ -49,10 +49,18 @@ Singleton {
         root.open = false;
     }
 
+    function toggle() {
+        if (root.open)
+            root.close();
+        else
+            root.openAt("overview", "");
+    }
+
     IpcHandler {
         target: "settings"
         function open() { root.openAt("overview", ""); }
         function openAt(section: string) { root.openAt(section, ""); }
         function close() { root.close(); }
+        function toggle() { root.toggle(); }
     }
 }

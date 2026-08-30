@@ -97,6 +97,7 @@ Item {
     }
 
     MouseArea {
+        z: -1
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: root._activate()
@@ -161,6 +162,7 @@ Item {
         }
 
         MIconButton {
+            z: 3
             Layout.alignment: Qt.AlignTop
             close: true
             iconName: "window-close"

@@ -17,16 +17,20 @@
     --md-scrim: {{colors.scrim.default.hex}};
 }
 
-/* Vivaldi paints pageload and toolbar hover from these, as inline
-   vars on #browser. Remap so leftover Wallust/brand red cannot leak. */
+/* Vivaldi paints pageload, tab hover and the + button from these, often
+   as *resolved* inline alphas from an old accent. Override the alphas
+   too so leftover Wallust/brand red cannot leak. */
 #browser {
     --colorAccentBg: var(--md-primary) !important;
     --colorAccentFg: var(--md-on-primary) !important;
-    --colorAccentBgDark: color-mix(in srgb, var(--md-primary) 8%, transparent) !important;
-    --colorAccentBgDarker: color-mix(in srgb, var(--md-primary) 12%, transparent) !important;
+    --colorAccentBgDark: color-mix(in srgb, var(--md-primary) 12%, transparent) !important;
+    --colorAccentBgDarker: color-mix(in srgb, var(--md-primary) 18%, transparent) !important;
     --colorAccentBgFaded: color-mix(in srgb, var(--md-primary) 8%, transparent) !important;
     --colorAccentBgFadedMore: color-mix(in srgb, var(--md-primary) 12%, transparent) !important;
     --colorAccentBgFadedMost: var(--md-primary-container) !important;
+    --colorAccentBgAlpha: color-mix(in srgb, var(--md-primary) 50%, transparent) !important;
+    --colorAccentBgAlphaHeavy: color-mix(in srgb, var(--md-primary) 30%, transparent) !important;
+    --colorAccentBgAlphaBlur: color-mix(in srgb, var(--md-primary) 40%, transparent) !important;
     --colorHighlightBg: var(--md-primary-container) !important;
     --colorHighlightFg: var(--md-on-primary-container) !important;
 }
@@ -62,8 +66,10 @@
 }
 
 #browser .tab:not(.active):hover,
-#browser .tab-wrapper:hover .tab:not(.active) {
-    background-color: color-mix(in srgb, var(--md-primary) 8%, transparent) !important;
+#browser .tab-wrapper:hover .tab:not(.active),
+#browser .unified-ui .tab:not(.active):hover {
+    background-color: color-mix(in srgb, var(--md-primary) 12%, transparent) !important;
+    border-radius: var(--md-radius-full, 9999px) !important;
 }
 
 #browser .tab.active,
@@ -133,9 +139,18 @@
     background-color: var(--md-primary) !important;
 }
 
+#browser .button-toolbar.newtab > button:hover,
+#browser .button-toolbar.newtab > button:active,
+#browser #tabs-tabbar-container .toolbar-tabbar-after .button-toolbar > button:hover,
+#browser #tabs-tabbar-container .toolbar-tabbar-before .button-toolbar > button:hover,
+#browser #tabs-tabbar-container .toolbar-tabbar-after .button-toolbar > button:active,
+#browser #tabs-tabbar-container .toolbar-tabbar-before .button-toolbar > button:active,
 .toolbar-tabbar .button-toolbar.newtab > button:hover,
 .toolbar-tabbar .button-toolbar > button:hover {
-    background-color: color-mix(in srgb, var(--md-primary) 8%, transparent) !important;
+    background-color: color-mix(in srgb, var(--md-primary) 12%, transparent) !important;
+    color: var(--md-on-surface) !important;
+    fill: currentColor !important;
+    border-radius: var(--md-radius-full, 9999px) !important;
 }
 
 .toolbar-mainbar,

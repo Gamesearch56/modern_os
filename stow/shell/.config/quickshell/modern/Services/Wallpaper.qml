@@ -67,6 +67,18 @@ Singleton {
         }
     }
 
+    Process {
+        id: deleteProc
+        running: false
+        command: [root.home + "/modern_dotfile/scripts/wallpaper-delete.sh"]
+        onExited: (code) => {
+            if (code === 0)
+                root._refresh();
+            else
+                Logger.error("Wallpaper", I18n.t("wallpaper.removeFailed"));
+        }
+    }
+
     IpcHandler {
         target: "wallpaper"
         function picker() { root.pick(); }
@@ -112,6 +124,24 @@ Singleton {
         } catch (e) {
             Logger.error("Wallpaper", String(e));
         }
+    }
+
+    function canRemove(path: string): bool {
+        const p = String(path || "");
+        if (!p || p === root.currentPath)
+            return false;
+        const shipped = root.home + "/.config/modern/wallpapers/";
+        return p.indexOf(shipped) !== 0;
+    }
+
+    function remove(path: string) {
+        if (!root.canRemove(path))
+            return;
+        deleteProc.command = [root.home + "/modern_dotfile/scripts/wallpaper-delete.sh", path];
+        deleteProc.running = false;
+        Qt.callLater(() => {
+            deleteProc.running = true;
+        });
     }
 
     function setWallpaper(path: string) {

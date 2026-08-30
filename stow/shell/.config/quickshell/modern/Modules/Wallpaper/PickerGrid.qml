@@ -9,23 +9,52 @@ Item {
 
     property int currentIndex: 0
     property bool _pendingSync: true
+
+    signal removeRequested(string path)
     readonly property int columns: 3
     readonly property real contentHeight: layout.implicitHeight
 
+    function _selectable(i: int): bool {
+        const paths = Wallpaper.images;
+        if (i < 0 || i >= paths.length)
+            return false;
+        return paths[i] !== Wallpaper.currentPath;
+    }
+
+    function _scan(from: int, step: int): int {
+        const n = Wallpaper.images.length;
+        for (let i = from; i >= 0 && i < n; i += step)
+            if (root._selectable(i))
+                return i;
+        return -1;
+    }
+
     function moveBy(delta: int) {
         const n = Wallpaper.images.length;
-        if (n <= 0)
+        if (n <= 0 || delta === 0)
             return;
-        const next = root.currentIndex + delta;
-        if (next < 0 || next >= n)
+        if (!root._selectable(root.currentIndex)) {
+            const found = root._scan(delta > 0 ? 0 : n - 1, delta > 0 ? 1 : -1);
+            if (found >= 0) {
+                root.currentIndex = found;
+                root._ensureVisible();
+            }
             return;
-        root.currentIndex = next;
-        root._ensureVisible();
+        }
+        let next = root.currentIndex + delta;
+        while (next >= 0 && next < n) {
+            if (root._selectable(next)) {
+                root.currentIndex = next;
+                root._ensureVisible();
+                return;
+            }
+            next += delta;
+        }
     }
 
     function activate() {
         const path = Wallpaper.images[root.currentIndex];
-        if (path)
+        if (path && path !== Wallpaper.currentPath)
             Wallpaper.setWallpaper(path);
     }
 
@@ -34,7 +63,7 @@ Item {
         const pending = Wallpaper.pendingSelect || "";
         if (pending.length > 0) {
             for (let i = 0; i < paths.length; i++) {
-                if (paths[i] === pending) {
+                if (paths[i] === pending && root._selectable(i)) {
                     root.currentIndex = i;
                     root._pendingSync = false;
                     Wallpaper.clearPendingSelect();
@@ -42,32 +71,40 @@ Item {
                     return;
                 }
             }
-            return;
+            Wallpaper.clearPendingSelect();
         }
+        let start = 0;
         const cur = Wallpaper.currentPath;
         for (let i = 0; i < paths.length; i++) {
             if (paths[i] === cur) {
-                root.currentIndex = i;
-                root._pendingSync = false;
-                root._ensureVisible();
-                return;
+                start = i + 1;
+                break;
             }
         }
-        root.currentIndex = 0;
+        let idx = root._scan(start, 1);
+        if (idx < 0)
+            idx = root._scan(0, 1);
+        root.currentIndex = idx;
         if (paths.length > 0)
             root._pendingSync = false;
+        if (idx >= 0)
+            root._ensureVisible();
     }
 
     function _clamp() {
         const n = Wallpaper.images.length;
         if (n <= 0) {
-            root.currentIndex = 0;
+            root.currentIndex = -1;
             return;
         }
         if (root.currentIndex >= n)
             root.currentIndex = n - 1;
-        if (root.currentIndex < 0)
-            root.currentIndex = 0;
+        if (!root._selectable(root.currentIndex)) {
+            let i = root._scan(root.currentIndex + 1, 1);
+            if (i < 0)
+                i = root._scan(root.currentIndex - 1, -1);
+            root.currentIndex = i;
+        }
     }
 
     function _ensureVisible() {
@@ -103,8 +140,8 @@ Item {
             id: layout
             width: flick.width
             columns: root.columns
-            columnSpacing: Tokens.spacing.sm
-            rowSpacing: Tokens.spacing.sm
+            columnSpacing: Tokens.spacing.xxs
+            rowSpacing: Tokens.spacing.xxs
 
             Repeater {
                 id: tiles
@@ -120,12 +157,19 @@ Item {
                     Layout.columnSpan: tiles.count === 1 ? root.columns : 1
                     source: path.length > 0 ? ("file://" + path) : ""
                     selected: path === Wallpaper.currentPath
-                    current: root.currentIndex === index
+                    current: root.currentIndex === index && path !== Wallpaper.currentPath
+                    removable: Wallpaper.canRemove(path)
                     onClicked: {
+                        if (path === Wallpaper.currentPath)
+                            return;
                         root.currentIndex = index;
                         Wallpaper.setWallpaper(path);
                     }
-                    onHovered: root.currentIndex = index
+                    onHovered: {
+                        if (path !== Wallpaper.currentPath)
+                            root.currentIndex = index;
+                    }
+                    onRemoveClicked: root.removeRequested(path)
                 }
             }
         }

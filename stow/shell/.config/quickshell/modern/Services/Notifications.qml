@@ -18,6 +18,7 @@ Singleton {
     property bool panelOpen: false
     property var _lastLocal: ({ key: "", at: 0 })
     property int _minute: 0
+    property int _nextId: 1
 
     readonly property bool scheduledDnd: {
         void root._minute;
@@ -108,7 +109,8 @@ Singleton {
     function _wrap(n) {
         const protocol = n.expireTimeout;
         const resident = n.resident === true || protocol === 0;
-        return {
+        const item = {
+            uid: root._nextId++,
             raw: n,
             summary: root._str(n.summary),
             body: root._str(n.body),
@@ -122,10 +124,17 @@ Singleton {
             expireTimeout: resident ? 0 : root._timeoutMs(),
             shownAt: Date.now()
         };
+        try {
+            n.closed.connect(() => root._drop(item.uid));
+        } catch (e) {
+            console.error("Notifications: " + e);
+        }
+        return item;
     }
 
     function _local(summary, body, image, expireTimeout) {
         return {
+            uid: root._nextId++,
             raw: null,
             summary: summary,
             body: body || "",
@@ -239,22 +248,70 @@ Singleton {
         return "";
     }
 
-    function dismiss(item) {
-        root._stopTimer(item);
-        root.list = root.list.filter(n => n !== item);
+    function _live(item) {
+        if (!item)
+            return null;
+        const uid = Number(item.uid);
+        if (uid > 0) {
+            for (const n of root.list) {
+                if (Number(n.uid) === uid)
+                    return n;
+            }
+        }
+        for (const n of root.list) {
+            if (n === item || (item.raw && n.raw === item.raw))
+                return n;
+        }
+        return null;
+    }
+
+    function _drop(uid) {
+        const id = Number(uid);
+        if (!(id > 0))
+            return;
+        const next = [];
+        let hit = false;
+        for (const n of root.list) {
+            if (Number(n.uid) === id) {
+                root._stopTimer(n);
+                hit = true;
+                continue;
+            }
+            next.push(n);
+        }
+        if (!hit)
+            return;
+        root.list = next;
         root._syncToasts();
-        if (item?.raw?.dismiss)
-            item.raw.dismiss();
+    }
+
+    function dismiss(item) {
+        const live = root._live(item);
+        if (!live)
+            return;
+        const raw = live.raw;
+        root._drop(live.uid);
+        try {
+            if (raw)
+                raw.dismiss();
+        } catch (e) {
+            Logger.error("Notifications", String(e));
+        }
     }
 
     function dismissAll() {
-        for (const n of root.list) {
-            root._stopTimer(n);
-            if (n?.raw?.dismiss)
-                n.raw.dismiss();
-        }
+        const items = root.list.slice();
         root.list = [];
         root.toasts = [];
+        for (const n of items) {
+            root._stopTimer(n);
+            try {
+                if (n.raw)
+                    n.raw.dismiss();
+            } catch (e) {
+                Logger.error("Notifications", String(e));
+            }
+        }
     }
 
     function toggleDnd() { root.dnd = !root.dnd; }
