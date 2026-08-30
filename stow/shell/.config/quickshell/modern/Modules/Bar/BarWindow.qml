@@ -10,15 +10,73 @@ PanelWindow {
     readonly property bool vertical: Config.bar.position === "left" || Config.bar.position === "right"
     readonly property real _edge: Config.bar.style === "floating" ? (Config.bar.edgeGap ?? Tokens.spacing.sm) : 0
     readonly property real _end: Config.bar.endGap ?? Tokens.spacing.sm
+    readonly property bool _auto: !!(Config.bar.autoHide)
+    readonly property real _strip: Tokens.spacing.xs
+    readonly property bool _hold: Popups.openCount > 0
+    readonly property bool _shown: !root._auto || root._peek || root._hold
+    readonly property bool _expanded: !root._auto || root._shown || root._slidingOut
+    readonly property string _layoutKey: String(Config.bar.position || "top")
+    readonly property real _fullH: Config.bar.height + root._edge * 2
+    readonly property real _fullW: Config.bar.height + root._edge * 2
+    property bool _peek: false
+    property bool _slidingOut: false
+    property real _slide: 0
+
     anchors.top: Config.bar.position !== "bottom"
     anchors.bottom: Config.bar.position !== "top"
     anchors.left: Config.bar.position !== "right"
     anchors.right: Config.bar.position !== "left"
-    implicitHeight: root.vertical ? 0 : (Config.bar.height + root._edge * 2)
-    implicitWidth: root.vertical ? (Config.bar.height + root._edge * 2) : 0
-    exclusiveZone: Config.bar.autoHide ? 0 : (root.vertical ? implicitWidth : implicitHeight)
+    implicitHeight: root.vertical ? 0 : (root._expanded ? root._fullH : root._strip)
+    implicitWidth: root.vertical ? (root._expanded ? root._fullW : root._strip) : 0
+    exclusiveZone: root._auto ? 0 : (root.vertical ? implicitWidth : implicitHeight)
     color: "transparent"
     focusable: Popups.openCount > 0
+
+    Behavior on _slide {
+        NumberAnimation {
+            duration: Motion.extraLongMs
+            easing.bezierCurve: Motion.easingEmphasizedDecelerate
+        }
+    }
+
+    on_ShownChanged: {
+        if (root._shown) {
+            hideSettle.stop();
+            root._slidingOut = false;
+            root._slide = 0;
+        } else {
+            root._slidingOut = true;
+            root._slide = 1;
+            hideSettle.restart();
+        }
+    }
+    on_LayoutKeyChanged: {
+        layoutLoader.active = false;
+        Qt.callLater(() => {
+            layoutLoader.active = true;
+        });
+    }
+    on_AutoChanged: {
+        if (!root._auto) {
+            hideTimer.stop();
+            hideSettle.stop();
+            root._peek = false;
+            root._slidingOut = false;
+            root._slide = 0;
+        }
+    }
+    on_HoldChanged: {
+        if (root._hold) {
+            hideTimer.stop();
+            root._peek = true;
+        } else if (root._auto && !barHover.hovered)
+            hideTimer.restart();
+    }
+
+    Component.onCompleted: {
+        if (!root._shown)
+            root._slide = 1;
+    }
 
     Shortcut {
         sequence: "Escape"
@@ -27,16 +85,57 @@ PanelWindow {
         onActivated: Popups.dismiss()
     }
 
+    Timer {
+        id: hideTimer
+        interval: Math.max(Motion.mediumMs, 1)
+        onTriggered: {
+            if (!root._auto || root._hold || barHover.hovered)
+                return;
+            root._peek = false;
+        }
+    }
+    Timer {
+        id: hideSettle
+        interval: Math.max(Motion.extraLongMs, 1)
+        onTriggered: {
+            if (!root._shown)
+                root._slidingOut = false;
+        }
+    }
+
     Item {
         anchors.fill: parent
-        anchors.topMargin: root.vertical ? root._end : root._edge
-        anchors.bottomMargin: root.vertical ? root._end : root._edge
-        anchors.leftMargin: root.vertical ? root._edge : root._end
-        anchors.rightMargin: root.vertical ? root._edge : root._end
 
-        Loader {
-            anchors.fill: parent
-            sourceComponent: root.vertical ? vertComp : horizComp
+        HoverHandler {
+            id: barHover
+            onHoveredChanged: {
+                if (hovered) {
+                    hideTimer.stop();
+                    root._peek = true;
+                } else if (root._auto && !root._hold) {
+                    hideTimer.restart();
+                }
+            }
+        }
+
+        Item {
+            id: chrome
+            width: parent.width
+            height: parent.height
+            x: root.vertical ? root._slide * (Config.bar.position === "right" ? root._fullW : -root._fullW) : 0
+            y: root.vertical ? 0 : root._slide * (Config.bar.position === "bottom" ? root._fullH : -root._fullH)
+            clip: true
+
+            Loader {
+                id: layoutLoader
+                anchors.fill: parent
+                anchors.topMargin: root._shown || root._slidingOut ? (root.vertical ? root._end : root._edge) : 0
+                anchors.bottomMargin: root._shown || root._slidingOut ? (root.vertical ? root._end : root._edge) : 0
+                anchors.leftMargin: root._shown || root._slidingOut ? (root.vertical ? root._edge : root._end) : 0
+                anchors.rightMargin: root._shown || root._slidingOut ? (root.vertical ? root._edge : root._end) : 0
+                active: true
+                sourceComponent: root.vertical ? vertComp : horizComp
+            }
         }
     }
 

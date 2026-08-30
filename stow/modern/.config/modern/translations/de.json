@@ -34,6 +34,7 @@
     "ai": "Assistent",
     "close": "Schließen",
     "audio": "Lautstärke",
+    "clock": "Uhr",
     "workspaceAdd": "Nächster Arbeitsbereich"
   },
   "media": {
@@ -434,6 +435,7 @@
       "barLeft": "Linke Insel",
       "barCenter": "Mittlere Insel",
       "barRight": "Rechte Insel",
+      "widgetsPosition": "Widget-Position",
       "showSeconds": "Sekunden anzeigen",
       "showWeekday": "Wochentag anzeigen",
       "weatherLocation": "Wetterstandort",
@@ -580,7 +582,7 @@
       "storageGated": "Snapshots liegen unter den abgeschotteten install/system-Helfern.",
       "gamingGated": "Kernel-Anpassungen liegen unter install/system und werden nicht automatisch angewendet.",
       "timeMerged": "Datums- und Zeitformate liegen unter Sprache & Zeit.",
-      "weatherLocation": "Leer nutzt IP-Standort. Oder Stadt, oder Breitengrad,Längengrad.",
+      "weatherLocation": "Wenn leer, nutzt Wetter die IP-Ortung.",
       "ollamaModel": "Lokal mit ollama pull. Nutzt der Leisten-Assistent.",
       "ollamaSetup": "Ollama installieren, ollama serve starten, dann ollama pull llama3 (oder diesen Namen). Der Assistent-Chip in der Leiste öffnet den Chat.",
       "calendarIcs": "Proton Calendar → Einstellungen → Kalender → Freigabelink erstellen und hier einfügen.",
@@ -686,7 +688,9 @@
     },
     "bar": {
       "available": "Verfügbare Widgets",
-      "editWidget": "Widget"
+      "editWidget": "Widget",
+      "emptySlot": "Widget hier ablegen",
+      "customize": "Hat Optionen"
     },
     "audio": {
       "emptyStreams": "Gerade keine App-Streams"

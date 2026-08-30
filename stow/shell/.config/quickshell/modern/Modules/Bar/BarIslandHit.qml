@@ -12,7 +12,7 @@ Item {
     signal clicked(var mouse)
     signal middleClicked()
     signal rightClicked()
-    signal wheel(real steps)
+    signal wheel(real steps, bool fine)
     signal entered()
     signal exited()
 
@@ -67,6 +67,6 @@ Item {
             else
                 root.clicked(mouse);
         }
-        onWheel: (w) => root.wheel(w.angleDelta.y > 0 ? 1 : -1)
+        onWheel: (w) => root.wheel(w.angleDelta.y > 0 ? 1 : -1, !!(w.modifiers & Qt.ShiftModifier))
     }
 }

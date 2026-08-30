@@ -21,6 +21,8 @@ Item {
     property bool enabled: true
     property string variant: "row"
     property bool destructive: false
+    property bool hoverHighlight: true
+    property string badgeIcon: ""
 
     default property alias extra: trailing.data
 
@@ -42,7 +44,7 @@ Item {
         : Tokens.spacing.xxl + Tokens.spacing.md * 2
     implicitWidth: Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
-    activeFocusOnTab: root.enabled
+    activeFocusOnTab: root.enabled && root.hoverHighlight
     Accessible.role: Accessible.Button
     Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
     Accessible.onPressAction: root.clicked()
@@ -75,12 +77,12 @@ Item {
         anchors.fill: parent
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
         color: Colors.color.primary
-        opacity: root.selected ? 0 : Chrome.stateLayer(hover.hovered, false)
+        opacity: root.selected || !root.hoverHighlight ? 0 : Chrome.stateLayer(hover.hovered, false)
     }
 
     HoverHandler {
         id: hover
-        enabled: root.enabled
+        enabled: root.enabled && root.hoverHighlight
     }
 
     MouseArea {
@@ -88,9 +90,10 @@ Item {
         enabled: root.enabled
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: root.hoverHighlight ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: (mouse) => {
-            root.forceActiveFocus();
+            if (root.hoverHighlight)
+                root.forceActiveFocus();
             if (mouse.button === Qt.RightButton)
                 root.rightClicked();
             else
@@ -138,13 +141,35 @@ Item {
             Layout.fillWidth: true
             spacing: 0
 
-            MText {
-                key: root.titleKey
-                params: root.titleParams
-                value: root.titleValue
-                styleName: "bodyLarge"
-                color: root._fg
+            Item {
                 Layout.fillWidth: true
+                implicitHeight: titleRow.implicitHeight
+
+                Row {
+                    id: titleRow
+                    spacing: Tokens.spacing.xs
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    MText {
+                        key: root.titleKey
+                        params: root.titleParams
+                        value: root.titleValue
+                        styleName: "bodyLarge"
+                        color: root._fg
+                        width: {
+                            const extra = titleBadge.visible ? titleBadge.width + titleRow.spacing : 0;
+                            return Math.min(implicitWidth, Math.max(0, titleRow.parent.width - extra));
+                        }
+                    }
+                    MIcon {
+                        id: titleBadge
+                        visible: root.badgeIcon.length > 0
+                        name: root.badgeIcon
+                        size: Tokens.icon.xs
+                        color: Colors.color.onSurfaceVariant
+                    }
+                }
             }
 
             MText {
@@ -169,7 +194,7 @@ Item {
 
     MFocusRing {
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
-        active: root.selected || root.activeFocus || hover.hovered
+        active: root.selected || (root.hoverHighlight && (root.activeFocus || hover.hovered))
         ringColor: root.selected && root._nav ? Colors.color.onPrimary : Colors.color.primary
     }
 }

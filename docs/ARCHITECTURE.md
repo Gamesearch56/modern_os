@@ -47,7 +47,7 @@ Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media
 
 Widgets/   MButton MIconButton MSwitch MSlider MCard MChip MListItem
            MTextField MPopup MIcon MText MDialog MTooltip MOverlay
-           MSparkline MLinearProgress MReorderList
+           MSparkline MLinearProgress MSlotBoard
            — MD3 primitives. Stateless, token-driven, zero system access.
 
 Modules/   Bar/ Launcher/ Panels/ PowerMenu/ Notifications/ Wallpaper/

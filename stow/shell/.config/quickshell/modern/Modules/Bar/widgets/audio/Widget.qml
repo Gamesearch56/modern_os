@@ -28,8 +28,10 @@ Item {
         }
         onMiddleClicked: Audio.toggleMute()
         onRightClicked: Audio.toggleMute()
-        onWheel: (steps) => {
-            const step = Config.widgets.audio?.scrollStepPercent ?? 5;
+        onWheel: (steps, fine) => {
+            const step = fine
+                ? (Config.widgets.audio?.scrollStepFinePercent ?? 1)
+                : (Config.widgets.audio?.scrollStepPercent ?? 5);
             Audio.adjustVolume(steps > 0 ? step : -step);
         }
     }

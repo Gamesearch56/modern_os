@@ -33,7 +33,7 @@ Six groups, 19 pages. Catalog lives in
 | General | Privacy | `privacy` | Live `Notifications.dnd` (same as the control-panel tile) plus applied `general.dndSchedule` quiet hours; `general.notificationTimeoutMs`. `kdeconnect.enabled` starts/stops `kdeconnectd`. `accounts.calendarIcsUrl` feeds the clock popup. No Proton Drive UI. |
 | General | Energy | `power` | Live `Battery` hero. Power button (`ask` = power menu) and lid actions via `modern power`. `hypridle` listeners from `general.idleTimings`. Fullscreen/media idle inhibit via `systemd-inhibit`. |
 | Appearance | Design | `design` | Wallpaper gallery + four derived theme profiles (`Theme`, `Wallpaper`). `design.*`, `typography`, `motion`, `windows.*` (no title-bar toggle), `windowRules`. Animations and cursor theme are selects; cursor list comes from installed `cursors/` themes. Changing a knob writes `config.json` then applies live: shell chrome (transparency, rounding, type scale, motion), Hyprland (`hyprctl keyword` / reload for animations), cursor (`cursor-apply.sh` + GTK/Qt), and toolkit chrome (`theme-apply.sh --chrome-only` for GTK/Qt/KDE/Vivaldi radii and fonts). |
-| Appearance | Bar | `bar` | `bar.left\|center\|right`, `bar.autoHide`, `widgets.*` |
+| Appearance | Bar | `bar` | `bar.position`, `bar.style`, `bar.height`, `bar.edgeGap`, `bar.endGap`, `bar.autoHide`, `bar.left\|center\|right`, `widgets.*`. Islands drag across left/middle/right (`MSlotBoard`); enabling a widget appends to `bar.left`. Auto-hide slides the bar to an edge strip. |
 | Appearance | Launcher | `launcher` | `launcher.*` |
 | Apps | Applications | `applications` | `apps.defaults`, `general.autostart` |
 | Apps | Screenshot | `screenshots` | `screenshots.*` |
@@ -65,10 +65,12 @@ Update have no Restore control.
 ## Bar widget forms
 
 Click a widget on Settings → Bar. Overlay fields (when the widget has
-them): weather location/units, clock seconds/weekday, performance
-poll/GPU/temps, audio scroll steps. Drag reorders within
-`bar.left`, `bar.center`, or `bar.right`. Enable/disable from the
-catalog list.
+them): weather location/units, clock seconds/weekday, audio scroll
+steps (Shift+wheel uses the fine step). Customizable widgets (clock,
+weather, volume) use a hover outline instead of a gear. Drag rows
+across the three-column Left / Middle / Right table; enable/disable
+from Available widgets (on → left). Auto-hide stays pinned open while
+a bar popup is showing.
 
 ## Update, mirrors, backup
 

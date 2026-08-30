@@ -1,0 +1,191 @@
+// One island column in MSlotBoard. Equal-width card; pointer mapping
+// lives on the board so a row can be dragged into another column.
+import QtQuick
+import QtQuick.Layouts
+import "../Commons"
+
+Rectangle {
+    id: root
+
+    property var board: null
+    property string slotId: ""
+    property string titleKey: ""
+    property var items: []
+    property var labelKey: function (id) { return String(id); }
+    property var iconName: function (id) { return ""; }
+    property var configurable: function (id) { return false; }
+
+    readonly property alias listBox: listBox
+    readonly property real _rowH: Tokens.spacing.xxl + Tokens.spacing.sm
+
+    radius: Tokens.radius.medium
+    color: Colors.color.surfaceContainerHigh
+    border.width: Tokens.stroke.hairline
+    border.color: Colors.color.outlineVariant
+    clip: false
+    implicitHeight: Tokens.spacing.sm * 2 + col.implicitHeight
+
+    function indexAt(y: real): int {
+        const n = (root.items || []).length;
+        if (root._rowH <= 0)
+            return n;
+        let i = Math.round(y / root._rowH);
+        if (i < 0)
+            i = 0;
+        if (i > n)
+            i = n;
+        return i;
+    }
+
+    ColumnLayout {
+        id: col
+        x: Tokens.spacing.sm
+        y: Tokens.spacing.sm
+        width: parent.width - Tokens.spacing.sm * 2
+        spacing: Tokens.spacing.xs
+
+        MText {
+            key: root.titleKey
+            styleName: "labelMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+
+        Item {
+            id: listBox
+            Layout.fillWidth: true
+            implicitHeight: listCol.implicitHeight
+
+            ColumnLayout {
+                id: listCol
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: 0
+
+                Repeater {
+                    model: (root.items || []).length
+
+                    delegate: Item {
+                        id: row
+                        required property int index
+                        readonly property string itemId: String((root.items || [])[index] || "")
+                        readonly property bool canEdit: root.configurable(row.itemId)
+                        property bool _moved: false
+                        Layout.fillWidth: true
+                        implicitHeight: root._rowH
+                        z: drag.drag.active ? 20 : 0
+
+                        Rectangle {
+                            id: tile
+                            width: row.width
+                            height: row.implicitHeight
+                            radius: Tokens.radius.small
+                            color: drag.drag.active ? Colors.color.primaryContainer : "transparent"
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: Tokens.radius.small
+                                color: Colors.color.primary
+                                opacity: row.canEdit && drag.containsMouse && !drag.drag.active
+                                    ? Chrome.stateLayer(true, false) : 0
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: Tokens.spacing.xs
+                                anchors.rightMargin: Tokens.spacing.xs
+                                spacing: Tokens.spacing.xs
+
+                                MIcon {
+                                    visible: root.iconName(row.itemId).length > 0
+                                    name: root.iconName(row.itemId)
+                                    size: Tokens.icon.sm
+                                    color: Colors.color.onSurface
+                                }
+                                Item {
+                                    Layout.fillWidth: true
+                                    implicitHeight: nameRow.implicitHeight
+
+                                    Row {
+                                        id: nameRow
+                                        spacing: Tokens.spacing.xs
+                                        anchors.left: parent.left
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        MText {
+                                            key: root.labelKey(row.itemId)
+                                            styleName: "bodySmall"
+                                            width: {
+                                                const extra = editBadge.visible ? editBadge.width + nameRow.spacing : 0;
+                                                return Math.min(implicitWidth, Math.max(0, nameRow.parent.width - extra));
+                                            }
+                                        }
+                                        MIcon {
+                                            id: editBadge
+                                            visible: row.canEdit
+                                            name: "document-edit-symbolic"
+                                            size: Tokens.icon.xs
+                                            color: Colors.color.onSurfaceVariant
+                                            Accessible.name: I18n.t("settings.bar.customize")
+                                        }
+                                    }
+                                }
+                            }
+
+                            MFocusRing {
+                                radius: Tokens.radius.small
+                                active: row.canEdit && drag.containsMouse && !drag.drag.active
+                            }
+                        }
+
+                        MouseArea {
+                            id: drag
+                            anchors.fill: parent
+                            preventStealing: true
+                            hoverEnabled: true
+                            cursorShape: Qt.SizeAllCursor
+                            drag.target: tile
+                            drag.axis: Drag.XAndYAxis
+                            onPressed: {
+                                row._moved = false;
+                                if (root.board)
+                                    root.board.beginDrag(root.slotId, row.index, row.itemId);
+                            }
+                            onPositionChanged: {
+                                if (pressed && (Math.abs(tile.x) > Tokens.spacing.xs || Math.abs(tile.y) > Tokens.spacing.xs))
+                                    row._moved = true;
+                            }
+                            onReleased: (mouse) => {
+                                if (row._moved && root.board)
+                                    root.board.dropFrom(drag, mouse.x, mouse.y);
+                                tile.x = 0;
+                                tile.y = 0;
+                                if (root.board)
+                                    root.board.endDrag();
+                                if (!row._moved && row.canEdit && root.board)
+                                    root.board.itemClicked(row.itemId);
+                            }
+                            onCanceled: {
+                                tile.x = 0;
+                                tile.y = 0;
+                                if (root.board)
+                                    root.board.endDrag();
+                            }
+                        }
+                    }
+                }
+
+                MText {
+                    visible: (root.items || []).length === 0
+                    key: root.board ? root.board.emptyKey : ""
+                    styleName: "bodySmall"
+                    color: Colors.color.onSurfaceVariant
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: root._rowH
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+        }
+    }
+}

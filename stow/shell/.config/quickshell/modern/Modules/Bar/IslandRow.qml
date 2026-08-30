@@ -12,7 +12,10 @@ Item {
     property bool vertical: false
     property var barScreen: null
 
-    readonly property var groups: root._split(root.ids)
+    readonly property var groups: {
+        void root.ids;
+        return root._split(root.ids);
+    }
 
     implicitWidth: lay.implicitWidth
     implicitHeight: lay.implicitHeight

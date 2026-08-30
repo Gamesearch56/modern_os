@@ -108,7 +108,8 @@ Equal top/bottom margin (`Tokens.spacing.sm` when floating). Defaults in
   share one pill. Gear opens the control center, not the Settings app
 
 Tray, mic, performance, vpn, kdeconnect, and the notification
-bell stay available in Settings → Widgets. See `docs/WIDGETS.md`.
+bell stay on disk under `Modules/Bar/widgets/` if a leftover
+`config.json` still lists them; they are **not** in Settings → Bar.
 
 ## Cross-toolkit consistency
 

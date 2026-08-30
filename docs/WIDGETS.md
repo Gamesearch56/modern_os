@@ -33,9 +33,15 @@ directory plus an id in those arrays — no central switch.
 
 Default layout (bubbles) in `stow/modern/.config/modern/config.default.json`:
 
-- `bar.left`: `launcher`, `ai`, `workspaces`, `media`, `taskbar`
+- `bar.left`: `launcher`, `ai`, `workspaces`, `media`
 - `bar.center`: `clock` (calendar popup)
-- `bar.right`: `weather`, `connectivity`, `audio`, `battery`, `settings`, `power`
+- `bar.right`: `weather`, `connectivity`, `audio`, `taskbar`, `battery`, `settings`, `power`
+
+Settings → Bar can enable/disable and drag those ids across left/middle/right.
+These still exist as directories but are **not** in the Settings catalog
+(they render only if leftover `config.json` lists them): `tray`,
+`calendar`, `mail`, `network`, `bluetooth`, `microphone`, `performance`,
+`vpn`, `kdeconnect`, `notifications`.
 
 A **bubble** is a widget (or small cluster) with its own background
 pill. `widget.json` `"bubble": true` marks a standalone pill. Wi-Fi and

@@ -8,86 +8,82 @@ MOverlay {
     id: root
     property string widgetId: ""
     open: widgetId.length > 0
-    titleKey: {
-        if (root.widgetId === "calendar")
-            return "calendar.title";
-        if (root.widgetId === "ai")
-            return "ai.title";
-        return "bar." + root.widgetId;
-    }
-    cardHeight: Tokens.spacing.xxl * 12
+    titleKey: root.widgetId === "ai" ? "ai.title" : ("bar." + root.widgetId)
+    elevation: 0
+    cardColor: Colors.color.surface
+    chromeHover: false
+    chromeOpacity: 1
+    scrimOpacity: Tokens.overlay.lock
+    cardWidth: Tokens.spacing.xxl * 14
+    cardHeight: root.widgetId === "audio"
+        ? Tokens.spacing.xxl * 8
+        : (root.widgetId === "clock" ? Tokens.spacing.xxl * 6 : Tokens.spacing.xxl * 7)
     onClosed: {}
 
     ColumnLayout {
         spacing: Tokens.spacing.md
 
-        MField {
+        ColumnLayout {
             visible: root.widgetId === "weather"
-            labelKey: "settings.fields.weatherLocation"
-            hintKey: "settings.hints.weatherLocation"
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.sm
+
+            MSegmented {
+                Layout.fillWidth: true
+                value: Config.widgets?.weather?.units ?? "metric"
+                model: [
+                    { value: "metric", titleKey: "settings.weatherMetric" },
+                    { value: "imperial", titleKey: "settings.weatherImperial" }
+                ]
+                onSelected: (v) => ConfigWrite.set("widgets.weather.units", v)
+            }
+            MText {
+                key: "settings.fields.weatherLocation"
+                styleName: "titleSmall"
+                Layout.fillWidth: true
+                Layout.topMargin: Tokens.spacing.md
+            }
             MTextField {
+                Layout.fillWidth: true
                 text: Config.widgets?.weather?.manualLocation ?? ""
                 placeholderKey: "settings.weatherLocationPlaceholder"
                 onAccepted: ConfigWrite.set("widgets.weather.manualLocation", text)
+                onEditingFinished: ConfigWrite.set("widgets.weather.manualLocation", text)
+            }
+            MHint {
+                key: "settings.hints.weatherLocation"
+                Layout.fillWidth: true
             }
         }
-        MSegmented {
-            visible: root.widgetId === "weather"
-            Layout.fillWidth: true
-            value: Config.widgets?.weather?.units ?? "metric"
-            model: [
-                { value: "metric", titleKey: "settings.weatherMetric" },
-                { value: "imperial", titleKey: "settings.weatherImperial" }
-            ]
-            onSelected: (v) => ConfigWrite.set("widgets.weather.units", v)
-        }
 
-        MListItem {
+        RowLayout {
             visible: root.widgetId === "clock"
             Layout.fillWidth: true
-            titleKey: "settings.fields.showWeekday"
+            spacing: Tokens.spacing.md
+            MText {
+                key: "settings.fields.showWeekday"
+                styleName: "bodyMedium"
+                color: Colors.color.onSurfaceVariant
+                Layout.fillWidth: true
+            }
             MSwitch {
                 checked: !!(Config.widgets?.clock?.showWeekday)
                 onToggled: (v) => ConfigWrite.set("widgets.clock.showWeekday", v)
             }
         }
-        MListItem {
+        RowLayout {
             visible: root.widgetId === "clock"
             Layout.fillWidth: true
-            titleKey: "settings.fields.showSeconds"
+            spacing: Tokens.spacing.md
+            MText {
+                key: "settings.fields.showSeconds"
+                styleName: "bodyMedium"
+                color: Colors.color.onSurfaceVariant
+                Layout.fillWidth: true
+            }
             MSwitch {
                 checked: !!(Config.widgets?.clock?.showSeconds)
                 onToggled: (v) => ConfigWrite.set("widgets.clock.showSeconds", v)
-            }
-        }
-
-        MField {
-            visible: root.widgetId === "performance"
-            labelKey: "settings.fields.pollInterval"
-            MSlider {
-                from: 500
-                to: 5000
-                value: Config.widgets?.performance?.pollIntervalMs ?? 2000
-                showValue: true
-                onMoved: (v) => ConfigWrite.set("widgets.performance.pollIntervalMs", Math.round(v))
-            }
-        }
-        MListItem {
-            visible: root.widgetId === "performance"
-            Layout.fillWidth: true
-            titleKey: "settings.fields.showGpu"
-            MSwitch {
-                checked: !!(Config.widgets?.performance?.showGpu)
-                onToggled: (v) => ConfigWrite.set("widgets.performance.showGpu", v)
-            }
-        }
-        MListItem {
-            visible: root.widgetId === "performance"
-            Layout.fillWidth: true
-            titleKey: "settings.fields.showTemps"
-            MSwitch {
-                checked: !!(Config.widgets?.performance?.showTemps)
-                onToggled: (v) => ConfigWrite.set("widgets.performance.showTemps", v)
             }
         }
 

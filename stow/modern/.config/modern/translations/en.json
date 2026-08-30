@@ -34,6 +34,7 @@
     "ai": "Assistant",
     "close": "Close",
     "audio": "Volume",
+    "clock": "Clock",
     "workspaceAdd": "Next workspace"
   },
   "media": {
@@ -432,8 +433,9 @@
       "workspaceMode": "Workspaces",
       "titlebar": "Title bars",
       "barLeft": "Left island",
-      "barCenter": "Center island",
+      "barCenter": "Middle island",
       "barRight": "Right island",
+      "widgetsPosition": "Widgets Position",
       "showSeconds": "Show seconds",
       "showWeekday": "Show weekday",
       "weatherLocation": "Weather location",
@@ -580,7 +582,7 @@
       "storageGated": "Snapshots are applied by the gated install/system helpers.",
       "gamingGated": "Kernel tweaks live under install/system and are not applied automatically.",
       "timeMerged": "Date and time formats live under Language & Time.",
-      "weatherLocation": "Empty uses IP geolocation. Or a city, or latitude,longitude.",
+      "weatherLocation": "If empty weather uses IP geolocation.",
       "ollamaModel": "Pulled locally with ollama pull. Used by the bar assistant.",
       "ollamaSetup": "Install ollama, run ollama serve, then ollama pull llama3 (or this name). The Assistant chip on the bar opens the chat.",
       "calendarIcs": "Proton Calendar → Settings → Calendars → Create a share link and paste it here.",
@@ -686,7 +688,9 @@
     },
     "bar": {
       "available": "Available widgets",
-      "editWidget": "Widget"
+      "editWidget": "Widget",
+      "emptySlot": "Drop a widget here",
+      "customize": "Has options"
     },
     "audio": {
       "emptyStreams": "No app streams right now"

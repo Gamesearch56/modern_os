@@ -36,4 +36,5 @@ MQuickTile 1.0 MQuickTile.qml
 MRobotIcon 1.0 MRobotIcon.qml
 MSparkline 1.0 MSparkline.qml
 MLinearProgress 1.0 MLinearProgress.qml
-MReorderList 1.0 MReorderList.qml
+MSlotBoard 1.0 MSlotBoard.qml
+MSlotLane 1.0 MSlotLane.qml

@@ -25,12 +25,17 @@ Item {
         id: label
         anchors.centerIn: parent
         z: 1
-        value: DateTime.clockLabel(
-            DateTime.displayDate(clock.date),
-            Config.language.dateFormat || "DD.MM.YYYY",
-            Config.language.timeFormat || "HH:mm",
-            Config.widgets.clock?.showSeconds ?? false,
-            Config.widgets.clock?.showWeekday ?? false)
+        value: {
+            void Config.widgets.clock.showSeconds;
+            void Config.widgets.clock.showWeekday;
+            void clock.date;
+            return DateTime.clockLabel(
+                DateTime.displayDate(clock.date),
+                Config.language.dateFormat || "DD.MM.YYYY",
+                Config.language.timeFormat || "HH:mm",
+                Config.widgets.clock?.showSeconds ?? false,
+                Config.widgets.clock?.showWeekday ?? false);
+        }
         styleName: "labelLarge"
         color: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
     }

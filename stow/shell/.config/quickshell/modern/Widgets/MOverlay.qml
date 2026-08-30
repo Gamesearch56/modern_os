@@ -17,6 +17,10 @@ Item {
     property bool closeVisible: true
     property string actionKey: ""
     property string actionIcon: ""
+    property real chromeOpacity: Config.design.transparency ?? 0.85
+    property real scrimOpacity: Tokens.overlay.scrim
+    property color cardColor: Colors.color.surfaceContainer
+    property bool chromeHover: true
 
     signal closed()
     signal actionClicked()
@@ -34,7 +38,7 @@ Item {
         id: scrim
         anchors.fill: parent
         color: Colors.color.scrim
-        opacity: root._shown ? Tokens.overlay.scrim : 0
+        opacity: root._shown ? root.scrimOpacity : 0
 
         Behavior on opacity {
             enabled: Motion.overlaysFade
@@ -53,18 +57,20 @@ Item {
     MCard {
         id: card
         level: root.elevation
+        color: root.cardColor
         width: Math.min(root.cardWidth, root.width - Tokens.spacing.xxl)
         height: Math.min(root.cardHeight, root.height - Tokens.spacing.xxl * 2)
         anchors.centerIn: parent
         padding: Tokens.spacing.md
         scale: Motion.overlayScale(root._shown)
-        opacity: Motion.overlayOpacity(root._shown) * (Config.design.transparency ?? 0.85)
+        opacity: Motion.overlayOpacity(root._shown) * root.chromeOpacity
         transformOrigin: Item.Center
-        borderWidth: cardHover.hovered ? 2 : 1
-        borderColor: cardHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
+        borderWidth: root.chromeHover && cardHover.hovered ? Tokens.stroke.focus : Tokens.stroke.hairline
+        borderColor: root.chromeHover && cardHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
 
         HoverHandler {
             id: cardHover
+            enabled: root.chromeHover
             acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         }
 
