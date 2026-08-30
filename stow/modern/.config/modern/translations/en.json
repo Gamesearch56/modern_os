@@ -617,6 +617,8 @@
       "autoSwitchBluetooth": "Paired headphones connect and become the sound speaker when they are used.",
       "restoreGated": "Restoring a snapshot needs a gated snapper rollback. See docs/BACKUP.md.",
       "speedTest": "Downloads a short sample from the Arch geo mirror via curl. Not a third-party speed-test site.",
+      "wifi": "Turns the wireless radio on. Nearby networks appear below.",
+      "wifiHardware": "No Wi-Fi adapter, or the radio is hardware-blocked.",
       "autologin": "This saves the preference in config.json. Graphical boot autologin is gated (docs/ISOLATION.md) and is not applied from this switch."
     },
     "hub": {
@@ -720,7 +722,20 @@
     },
     "network": {
       "ethernetOn": "Connected",
-      "ethernetOff": "Not connected"
+      "ethernetOff": "Not connected",
+      "wifiConnected": "Connected",
+      "nearby": "Nearby networks",
+      "wifiEmpty": "No networks nearby",
+      "speedDownload": "Download",
+      "speedTransferred": "Transferred",
+      "speedTime": "Duration",
+      "speedDns": "DNS",
+      "speedConnect": "Connect",
+      "speedHttp": "HTTP",
+      "mb": "{n} MB",
+      "seconds": "{n} s",
+      "ms": "{n} ms",
+      "httpCode": "{n}"
     }
   },
   "onboarding": {

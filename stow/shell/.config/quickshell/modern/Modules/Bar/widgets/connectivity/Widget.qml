@@ -9,8 +9,8 @@ Item {
     implicitWidth: row.implicitWidth
     implicitHeight: Config.bar.height
 
-    readonly property string _wifiIcon: Network.connected ? (Network.wifi?.ssid ? "network-wireless-symbolic" : "network-wired-symbolic") : "network-offline-symbolic"
-    readonly property string _ssid: Network.wifi?.ssid || ""
+    readonly property string _wifiIcon: Network.connected ? (Network.ssid.length > 0 ? "network-wireless-symbolic" : "network-wired-symbolic") : "network-offline-symbolic"
+    readonly property string _ssid: Network.ssid
     readonly property string _btName: {
         const list = Bluetooth.devices?.values ?? [];
         for (let i = 0; i < list.length; i++) {

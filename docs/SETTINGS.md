@@ -42,7 +42,7 @@ Six groups, 19 pages. Catalog lives in
 | Keyboard & Region | Keyboard | `keyboard` | `input.kbLayout`, `repeatRate`, `repeatDelay`, `numlockOnBoot` (off by default) applied live (`hyprctl eval`). Cheat sheet button opens `Cheatsheet` (Super+K). |
 | Devices | Display | `displays` | `monitors.workspaceMode` (default **dynamic**; two-monitor `fixed` keeps 1–5 / 6–10). Per-profile `scale`, `mode` (resolution + refresh), `cm`, `hdr`, `vrr` on the selected display (`desc:` + serial). Brightness via `Brightness` when DDC/backlight matches that panel. |
 | Devices | Audio | `audio` | `audio.masterVolumeLimit`; `audio.autoSwitchBluetooth` (on/off, default on) trusts and connects paired Bluetooth audio, then sets the PipeWire default sink/source when a BlueZ endpoint appears. Per-app streams with icon and mute via `Audio`. |
-| Devices | Network | `network` | `network.*`; `Network` (Wi-Fi password overlay, curl speed test) |
+| Devices | Network | `network` | Wi-Fi radio, nearby networks, ethernet status, curl speed test (`Network`). Mirror country stays on Update / `modern mirrors`; DNS override is not applied. |
 | Devices | Bluetooth | `bluetooth` | `Bluetooth` |
 | System | Storage | `storage` | `Storage` |
 | System | Backup | `backup` | `backup.*`; `Snapshots` (snapper list/delete) |

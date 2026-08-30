@@ -31,8 +31,8 @@ ColumnLayout {
             width: ListView.view.width
             iconName: "network-wireless"
             titleValue: modelData.ssid || modelData.name || ""
-            subtitleValue: modelData.active ? I18n.t("network.ethernet") : ""
-            selected: !!modelData.active
+            subtitleValue: modelData.connected ? I18n.t("settings.network.wifiConnected") : ""
+            selected: !!modelData.connected
             onClicked: Network.connect(modelData, "")
         }
 
