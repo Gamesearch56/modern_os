@@ -114,8 +114,13 @@ Item {
                     visible: root._blocked || Ai.history.length === 0
                     anchors.fill: parent
                     iconName: "robot"
-                    titleKey: root._off ? "ai.disabled" : (!Ai.ready ? "ai.unavailable" : "ai.empty")
-                    hintKey: root._off ? "ai.enableHint" : (!Ai.ready ? "ai.setupHint" : "ai.hint")
+                    titleKey: root._blocked ? "ai.needSetup" : "ai.empty"
+                    hintKey: root._blocked ? "" : "ai.hint"
+                    actionKey: root._blocked ? "ai.setup" : ""
+                    onActionClicked: {
+                        root._close();
+                        Settings.openAt("ai", "");
+                    }
                 }
         }
 

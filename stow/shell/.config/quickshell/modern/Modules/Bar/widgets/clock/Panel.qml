@@ -39,10 +39,11 @@ Item {
             key: "calendar.open"
             fillWidth: true
             onClicked: {
-                const e = Apps.entryFor("calendar");
-                const id = (e && (e.id || e.name)) || Apps.desktopId("calendar");
-                if (!Hypr.raiseDesktop(String(id || "")) && !Apps.launch("calendar"))
-                    Settings.openAt("accounts", "calendar");
+                const id = String(Apps.desktopId("calendar") || "");
+                if (!id.length || (!Hypr.raiseDesktop(id) && !Apps.launch("calendar"))) {
+                    Notifications.toast(I18n.t("calendar.needApp"), "");
+                    Settings.openAt("applications", "calendar");
+                }
             }
         }
     }

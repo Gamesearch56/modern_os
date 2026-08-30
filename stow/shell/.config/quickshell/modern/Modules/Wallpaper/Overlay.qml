@@ -77,10 +77,9 @@ Item {
 
         Rectangle {
             id: card
-            width: Tokens.spacing.xxl * 22
-            implicitHeight: inner.implicitHeight + Tokens.spacing.lg * 2
-            height: Math.min(implicitHeight, root.height - Tokens.spacing.xl)
-            color: Colors.color.surface
+            width: Tokens.spacing.xxl * 24
+            height: Math.min(Tokens.spacing.xxl * 20, root.height - Tokens.spacing.xl)
+            color: Colors.color.surfaceContainer
             radius: Tokens.radius.medium
             border.color: Colors.color.outlineVariant
             border.width: Tokens.stroke.hairline
@@ -117,11 +116,9 @@ Item {
 
             ColumnLayout {
                 id: inner
-                width: parent.width - Tokens.spacing.lg * 2
-                anchors.top: parent.top
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.topMargin: Tokens.spacing.lg
-                spacing: Tokens.spacing.md
+                anchors.fill: parent
+                anchors.margins: Tokens.spacing.lg
+                spacing: Tokens.spacing.xl
 
                 Header {
                     Layout.fillWidth: true
@@ -130,9 +127,7 @@ Item {
 
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: Wallpaper.images.length === 0
-                        ? Tokens.spacing.xxl * 8
-                        : Math.min(grid.contentHeight, Tokens.spacing.xxl * 16)
+                    Layout.fillHeight: true
 
                     PickerGrid {
                         id: grid

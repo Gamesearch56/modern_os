@@ -1,5 +1,5 @@
-// MPRIS players. Spotify and anything else that speaks the spec. The
-// media widget never calls playerctl — only this singleton.
+// MPRIS players. The bar widget never calls playerctl — only this
+// singleton. Spotify keeps the bar slot whenever it is open.
 pragma Singleton
 
 import Quickshell
@@ -38,6 +38,18 @@ Singleton {
     readonly property real position: root.active?.position ?? 0
     readonly property real length: root.active?.length ?? 0
     readonly property bool playing: root.active?.isPlaying ?? false
+    readonly property bool anyPlaying: {
+        void root._playKey;
+        void root._gen;
+        const vals = Mpris.players.values;
+        if (!vals)
+            return false;
+        for (let i = 0; i < vals.length; i++) {
+            if (root._isPlaying(vals[i]))
+                return true;
+        }
+        return false;
+    }
     readonly property bool canPlay: root.active?.canPlay ?? false
     readonly property bool canPause: root.active?.canPause ?? false
     readonly property bool canGoNext: root.active?.canGoNext ?? false
@@ -135,28 +147,23 @@ Singleton {
         if (!vals || vals.length === 0)
             return null;
         let spotify = null;
-        let playingOther = null;
-        let playingAny = null;
+        let playing = null;
         let other = null;
         for (let i = 0; i < vals.length; i++) {
             const p = vals[i];
-            const isSpotify = root._isSpotify(p);
-            if (isSpotify)
+            if (root._isSpotify(p)) {
                 spotify = p;
-            else if (!other)
-                other = p;
-            if (root._isPlaying(p)) {
-                playingAny = p;
-                if (!isSpotify)
-                    playingOther = p;
+                continue;
             }
+            if (!other)
+                other = p;
+            if (!playing && root._isPlaying(p))
+                playing = p;
         }
-        if (playingOther)
-            return playingOther;
-        if (playingAny)
-            return playingAny;
         if (spotify)
             return spotify;
+        if (playing)
+            return playing;
         return other;
     }
 }

@@ -123,8 +123,8 @@
     "eventsTab": "Termine",
     "prevMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
-    "icsHint": "Die Kalender-Feed-URL muss eingerichtet werden, damit Termine hier erscheinen.",
-    "setupFeed": "Kalender-Feed-URL einrichten"
+    "setupFeed": "Kalender-Feed-URL einrichten",
+    "needApp": "Lege unter Einstellungen → Anwendungen eine Kalender-App fest."
   },
   "mail": {
     "open": "Mail öffnen"
@@ -136,10 +136,8 @@
     "assistant": "Assistent",
     "empty": "Noch keine Nachrichten",
     "hint": "Stell eine Frage. Antworten kommen vom lokalen Ollama-Modell.",
-    "setupHint": "Unter Einstellungen → KI die Ollama-Schritte durchgehen.",
-    "disabled": "Assistent ist aus",
-    "unavailable": "Ollama läuft nicht",
-    "enableHint": "Einschalten unter Einstellungen → KI.",
+    "needSetup": "Der Assistent muss eingerichtet werden",
+    "setup": "Assistent einrichten",
     "clear": "Chat leeren",
     "send": "Senden",
     "thinking": "Denkt nach…",
@@ -189,6 +187,10 @@
     "importAll": "Alle Dateien",
     "needChooser": "Zum Auswählen wird zenity oder kdialog benötigt"
   },
+  "folderPicker": {
+    "title": "Ordner wählen",
+    "needChooser": "Zum Auswählen eines Ordners wird zenity oder kdialog benötigt"
+  },
   "filePreview": {
     "title": "Schnellansicht",
     "hint": "Leertaste oder Esc schließt",
@@ -206,7 +208,6 @@
   "quickSettings": {
     "title": "Schnelleinstellungen",
     "brightness": "Helligkeit",
-    "brightnessUnavailable": "Kein Display mit Helligkeitsregelung gefunden",
     "brightnessFailed": "Helligkeit konnte nicht gesetzt werden",
     "caffeine": "Caffeine"
   },

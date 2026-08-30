@@ -16,6 +16,7 @@ MOverlay 1.0 MOverlay.qml
 MSectionHeader 1.0 MSectionHeader.qml
 MHint 1.0 MHint.qml
 MField 1.0 MField.qml
+MFolderField 1.0 MFolderField.qml
 MSelect 1.0 MSelect.qml
 MMultiSelect 1.0 MMultiSelect.qml
 MSegmented 1.0 MSegmented.qml

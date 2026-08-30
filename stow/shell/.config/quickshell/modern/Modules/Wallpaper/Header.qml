@@ -16,7 +16,7 @@ ColumnLayout {
 
     MText {
         key: "wallpaper.hint"
-        styleName: "bodySmall"
+        styleName: "bodyMedium"
         color: Colors.color.onSurfaceVariant
         wrapMode: Text.WordWrap
         Layout.fillWidth: true

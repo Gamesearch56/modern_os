@@ -53,6 +53,7 @@ ColumnLayout {
         }
     }
     MField {
+        id: calendarField
         labelKey: "settings.fields.calendar"
         MSelect {
             model: Apps.entriesFor("calendar")
@@ -99,4 +100,36 @@ ColumnLayout {
     Autostart {
         Layout.fillWidth: true
     }
+
+    function _flickable() {
+        let p = root.parent;
+        while (p) {
+            if (p.flickableDirection !== undefined)
+                return p;
+            p = p.parent;
+        }
+        return null;
+    }
+
+    function _scrollToCalendar() {
+        if (Settings.subsectionId !== "calendar")
+            return;
+        if (calendarField.height <= 0)
+            return;
+        const flick = root._flickable();
+        if (!flick)
+            return;
+        const pos = calendarField.mapToItem(flick.contentItem, 0, 0);
+        const maxY = Math.max(0, flick.contentHeight - flick.height);
+        flick.contentY = Math.min(maxY, Math.max(0, pos.y - Tokens.spacing.md));
+        Settings.subsectionId = "";
+    }
+
+    Connections {
+        target: Settings
+        function onSubsectionIdChanged() { Qt.callLater(root._scrollToCalendar); }
+    }
+
+    Component.onCompleted: Qt.callLater(root._scrollToCalendar)
+    onImplicitHeightChanged: Qt.callLater(root._scrollToCalendar)
 }

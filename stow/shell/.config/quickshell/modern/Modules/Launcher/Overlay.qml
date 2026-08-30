@@ -27,7 +27,7 @@ Item {
     readonly property real _searchY: Math.max(
         Tokens.spacing.xl,
         (root.height - search.implicitHeight) / 2 - (Tokens.spacing.xxl * 6 + Tokens.spacing.xs * 2)
-    )
+    ) + Tokens.spacing.xxl + Tokens.spacing.sm
     readonly property real _belowSearch: Math.max(
         0,
         root.height - root._searchY - search.implicitHeight - root._stackGap - Tokens.spacing.xl

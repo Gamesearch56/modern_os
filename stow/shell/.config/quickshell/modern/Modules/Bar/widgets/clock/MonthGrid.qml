@@ -109,10 +109,4 @@ ColumnLayout {
             }
         }
     }
-
-    MHint {
-        visible: Calendar.icsUrl.length === 0
-        key: "calendar.icsHint"
-        Layout.fillWidth: true
-    }
 }

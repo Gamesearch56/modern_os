@@ -123,8 +123,8 @@
     "eventsTab": "Events",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
-    "icsHint": "The Calendar Feed URL has to be set up to show events here.",
-    "setupFeed": "Set up Calendar Feed URL"
+    "setupFeed": "Set up Calendar Feed URL",
+    "needApp": "Set a calendar application in Settings → Applications."
   },
   "mail": {
     "open": "Open mail"
@@ -136,10 +136,8 @@
     "assistant": "Assistant",
     "empty": "No messages yet",
     "hint": "Ask a question. Replies come from the local Ollama model.",
-    "setupHint": "Open Settings → AI and follow the Ollama setup steps.",
-    "disabled": "Assistant is off",
-    "unavailable": "Ollama is not running",
-    "enableHint": "Turn it on in Settings → AI.",
+    "needSetup": "The assistant has to be set up",
+    "setup": "Set up assistant",
     "clear": "Clear chat",
     "send": "Send",
     "thinking": "Thinking…",
@@ -189,6 +187,10 @@
     "importAll": "All files",
     "needChooser": "Need zenity or kdialog to pick a wallpaper"
   },
+  "folderPicker": {
+    "title": "Choose folder",
+    "needChooser": "Need zenity or kdialog to pick a folder"
+  },
   "filePreview": {
     "title": "Quick Look",
     "hint": "Space or Esc to close",
@@ -206,7 +208,6 @@
   "quickSettings": {
     "title": "Quick settings",
     "brightness": "Brightness",
-    "brightnessUnavailable": "No backlight or DDC display found",
     "brightnessFailed": "Could not set brightness",
     "caffeine": "Caffeine"
   },

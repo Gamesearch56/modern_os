@@ -46,24 +46,6 @@ Item {
             color: Colors.color.primary
             opacity: root.selected ? Tokens.interaction.focus : 0
         }
-
-        Rectangle {
-            visible: root.selected
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Tokens.spacing.xs
-            width: Tokens.spacing.xl
-            height: Tokens.spacing.xl
-            radius: Tokens.radius.full
-            color: Colors.color.primary
-
-            MIcon {
-                anchors.centerIn: parent
-                name: "object-select-symbolic"
-                size: Tokens.icon.sm
-                color: Colors.color.onPrimary
-            }
-        }
     }
 
     Item {
@@ -85,6 +67,24 @@ Item {
         source: contents
         maskEnabled: true
         maskSource: roundMask
+    }
+
+    Rectangle {
+        visible: root.selected
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: Tokens.spacing.xs
+        width: Tokens.spacing.xl
+        height: Tokens.spacing.xl
+        radius: Tokens.radius.full
+        color: Colors.color.primary
+
+        MIcon {
+            anchors.centerIn: parent
+            name: "object-select-symbolic"
+            size: Tokens.icon.sm
+            color: Colors.color.onPrimary
+        }
     }
 
     Rectangle {

@@ -7,6 +7,16 @@ import "../../Widgets"
 import "../../Services"
 
 Scope {
+    Connections {
+        target: FilePick
+        function onDirectoryPicked(path) {
+            ConfigWrite.set("screenshots.directory", path);
+        }
+        function onPickFinished(section) {
+            Settings.openAt(section || "screenshots", "");
+        }
+    }
+
     LazyLoader {
         active: Settings.open
 

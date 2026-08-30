@@ -23,7 +23,6 @@ ColumnLayout {
 
     MField {
         labelKey: "quickSettings.brightness"
-        hintKey: Brightness.available ? "" : "quickSettings.brightnessUnavailable"
         MSlider {
             enabled: Brightness.available
             from: 1

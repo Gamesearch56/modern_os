@@ -81,9 +81,13 @@ ColumnLayout {
 
     MField {
         labelKey: "settings.fields.screenshotDir"
-        MTextField {
-            text: Config.screenshots.directory || ""
-            onEditingFinished: ConfigWrite.set("screenshots.directory", text)
+        MFolderField {
+            path: Config.screenshots.directory || ""
+            onBrowse: {
+                const dir = Config.screenshots.directory || "";
+                Settings.close();
+                FilePick.pickDirectory(dir, "screenshots");
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ import "../../Services"
 Scope {
     readonly property bool idleHold: IdleInhibit.caffeine
         || (!!Config.power.inhibitOnFullscreen && Hypr.focusedFullscreen)
-        || (!!Config.power.inhibitOnMedia && Media.playing)
+        || (!!Config.power.inhibitOnMedia && Media.anyPlaying)
     onIdleHoldChanged: IdleInhibit.setActive(idleHold)
     Component.onCompleted: {
         IdleInhibit.setActive(idleHold);
