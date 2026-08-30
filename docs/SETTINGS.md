@@ -45,7 +45,7 @@ Six groups, 19 pages. Catalog lives in
 | Devices | Network | `network` | Wi-Fi radio, nearby networks, ethernet status, curl speed test (`Network`). Mirror country stays on Update / `modern mirrors`; DNS override is not applied. |
 | Devices | Bluetooth | `bluetooth` | Adapter power, nearby/connected lists, connect/disconnect/forget via `Bluetooth` (BlueZ). |
 | System | Storage | `storage` | Internal and external drive cards via `Storage` (`lsblk`, sysfs link speed). Eject uses `udisksctl` unmount + power-off. |
-| System | Backup | `backup` | `backup.*`; `Snapshots` (snapper list/delete) |
+| System | Backup | `backup` | Live Snapper status (`Snapshots`). `backup.preUpdateSnapshot` drives `modern update`. Create/delete via `pkexec snapper`. Restore is gated. |
 | System | Update | `system` | `gaming.*`; `Update` (`modern update`, `modern mirrors`) |
 
 ## Restore defaults
@@ -75,7 +75,7 @@ a bar popup is showing.
 |--------|-----|--------|
 | System update | `modern update` | Overlay: current step + log. Snapshot-before-update if `backup.preUpdateSnapshot`. |
 | Mirrorlist | `modern mirrors` | `reflector` using `network.mirrorCountry`. Also a button on Update. |
-| Snapshots | `snapper -c root list` / `delete` | Settings lists and can request delete. **Restore** is gated (`docs/BACKUP.md`). Enabling `backup.snapperEnabled` does not write `/etc/snapper`. |
+| Snapshots | `snapper -c root list` / `create` / `delete` | Settings lists snapshots with timestamps, can create (pkexec), and can request delete. **Restore** is gated (`docs/BACKUP.md`). The Snapper/Restic enable toggles were removed: they did not write `/etc/snapper` or configure a restic repo. |
 
 ## How to add a page
 

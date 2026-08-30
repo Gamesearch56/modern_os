@@ -1,82 +1,144 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 import "."
 
-ColumnLayout {
+Item {
     id: root
-    spacing: Tokens.spacing.md
 
-    Component.onCompleted: Snapshots.refresh()
+    property var pending: null
 
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.snapper"
-        MSwitch {
-            checked: Config.backup.snapperEnabled
-            onToggled: (v) => ConfigWrite.set("backup.snapperEnabled", v)
-        }
-    }
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.preUpdateSnapshot"
-        MSwitch {
-            checked: Config.backup.preUpdateSnapshot
-            onToggled: (v) => ConfigWrite.set("backup.preUpdateSnapshot", v)
-        }
-    }
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.restic"
-        MSwitch {
-            checked: Config.backup.resticEnabled
-            onToggled: (v) => ConfigWrite.set("backup.resticEnabled", v)
-        }
-    }
+    implicitHeight: col.implicitHeight
 
-    MLinearProgress {
-        visible: Snapshots.running
-        Layout.fillWidth: true
-        indeterminate: true
-    }
-    MText {
-        visible: Snapshots.step.length > 0
-        value: Snapshots.step
-        styleName: "bodySmall"
-        Layout.fillWidth: true
-        wrapMode: Text.WordWrap
-    }
+    Component.onCompleted: Snapshots.watching = true
+    Component.onDestruction: Snapshots.watching = false
 
-    MSectionHeader { key: "settings.backup.snapshots" }
-    Repeater {
-        model: Snapshots.items.length
-        MListItem {
-            required property int index
-            readonly property var snap: Snapshots.items[index] || ({})
+    readonly property string _emptyKey: Snapshots.status === "unconfigured"
+        ? "settings.backup.unconfigured"
+        : "settings.backup.missing"
+
+    ColumnLayout {
+        id: col
+        width: parent.width
+        spacing: Tokens.spacing.lg
+
+        Status {
             Layout.fillWidth: true
-            titleValue: snap.description || snap.number || ""
-            subtitleValue: snap.date || ""
-            MButton {
-                kind: "tonal"
-                key: "settings.snapshotDelete"
-                onClicked: Snapshots.remove(snap.number)
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.xs
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.md
+                MText {
+                    key: "settings.fields.preUpdateSnapshot"
+                    styleName: "bodyMedium"
+                    color: Colors.color.onSurfaceVariant
+                    Layout.fillWidth: true
+                }
+                MSwitch {
+                    checked: Config.backup.preUpdateSnapshot
+                    onToggled: (v) => ConfigWrite.set("backup.preUpdateSnapshot", v)
+                }
+            }
+            MHint {
+                key: "settings.hints.preUpdateSnapshot"
+                Layout.fillWidth: true
             }
         }
-    }
-    MEmptyState {
-        visible: Snapshots.items.length === 0
-        Layout.fillWidth: true
-        Layout.preferredHeight: Tokens.spacing.xxl * 3
-        iconName: "drive-harddisk"
-        titleKey: "settings.snapshotEmpty"
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.md
+            MText {
+                key: "settings.backup.snapshots"
+                styleName: "titleSmall"
+                color: Colors.color.onSurfaceVariant
+                Layout.fillWidth: true
+            }
+            MIconButton {
+                iconName: "view-refresh"
+                key: "settings.refresh"
+                iconSize: Tokens.icon.sm
+                enabled: !Snapshots.running
+                onClicked: Snapshots.refresh()
+            }
+            MButton {
+                kind: "filled"
+                key: "settings.backup.create"
+                enabled: Snapshots.ready && !Snapshots.running
+                onClicked: Snapshots.create()
+            }
+        }
+
+        MLinearProgress {
+            visible: Snapshots.running
+            Layout.fillWidth: true
+            indeterminate: true
+        }
+        MText {
+            visible: Snapshots.step.length > 0
+            value: Snapshots.step
+            styleName: "bodySmall"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+        }
+        MText {
+            visible: Snapshots.error.length > 0 && !Snapshots.running
+            value: Snapshots.error
+            styleName: "bodySmall"
+            color: Colors.color.error
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            elide: Text.ElideNone
+        }
+
+        Repeater {
+            model: Snapshots.items.length
+            SnapshotCard {
+                required property int index
+                snap: Snapshots.items[index]
+                onRequestDelete: (s) => root.pending = s
+            }
+        }
+        MEmptyState {
+            visible: Snapshots.items.length === 0 && !Snapshots.running
+            Layout.fillWidth: true
+            Layout.preferredHeight: Tokens.spacing.xxl * 4
+            iconName: "document-save"
+            titleKey: Snapshots.ready ? "settings.snapshotEmpty" : root._emptyKey
+        }
+
+        MHint {
+            key: "settings.hints.restoreGated"
+            Layout.fillWidth: true
+        }
     }
 
-    MHint { key: "settings.hints.restoreGated"; Layout.fillWidth: true }
-    MButton {
-        kind: "tonal"
-        key: "settings.refresh"
-        onClicked: Snapshots.refresh()
+    MDialog {
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        open: root.pending !== null
+        titleKey: "settings.backup.deleteTitle"
+        bodyKey: "settings.backup.deleteBody"
+        bodyParams: ({
+            n: root.pending ? String(root.pending.number || "") : "",
+            date: root.pending ? String(root.pending.date || "") : ""
+        })
+        confirmKey: "settings.snapshotDelete"
+        cancelKey: "powerMenu.cancel"
+        destructive: true
+        onConfirmed: {
+            if (root.pending)
+                Snapshots.remove(root.pending.number);
+            root.pending = null;
+        }
+        onCancelled: root.pending = null
     }
 }

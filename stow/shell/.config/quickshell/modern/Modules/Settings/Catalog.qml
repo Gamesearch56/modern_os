@@ -91,7 +91,7 @@ QtObject {
         network: { icon: "network-wireless", order: 54, group: "devices", keywords: ["wifi", "ethernet", "speed"] },
         bluetooth: { icon: "bluetooth", order: 56, group: "devices", keywords: ["devices", "pair", "headphones"] },
         storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["disk", "mount", "eject", "usb", "nvme"] },
-        backup: { icon: "document-save", order: 72, group: "system", keywords: ["snapper", "snapshot", "restore"] },
+        backup: { icon: "document-save", order: 72, group: "system", keywords: ["snapper", "snapshot", "restore", "rollback"] },
         system: { icon: "system-software-update", order: 74, group: "system", keywords: ["update", "mirrors", "gaming"] }
     })
 }

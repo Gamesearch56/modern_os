@@ -615,7 +615,11 @@
       "repeatDelay": "Wait before a held key starts repeating.",
       "numlockOnBoot": "Turns Num Lock on when Hyprland starts.",
       "autoSwitchBluetooth": "Paired headphones connect and become the sound speaker when they are used.",
-      "restoreGated": "Restoring a snapshot needs a gated snapper rollback. See docs/BACKUP.md.",
+      "restoreGated": "Restoring a snapshot needs a gated snapper rollback.",
+      "preUpdateSnapshot": "Creates a Snapper snapshot of / before a system update so you can roll back.",
+      "snapperReady": "Point-in-time copies of the system disk (btrfs).",
+      "snapperMissing": "Snapper is not installed. Setup is gated and is not applied from Settings.",
+      "snapperUnconfigured": "Snapper is installed but has no root config.",
       "speedTest": "Downloads a short sample from the Arch geo mirror via curl. Not a third-party speed-test site.",
       "bluetooth": "Turns the adapter on. Nearby devices appear below.",
       "bluetoothBlocked": "No Bluetooth adapter, or the radio is hardware-blocked.",
@@ -702,7 +706,17 @@
       "mbps": "{n} Mb/s"
     },
     "backup": {
-      "snapshots": "Snapshots"
+      "snapshots": "Snapshots",
+      "engine": "Snapper",
+      "ready": "Ready",
+      "missing": "Not installed",
+      "unconfigured": "Not configured",
+      "create": "Create snapshot",
+      "creating": "Creating snapshot…",
+      "manual": "Manual",
+      "untitled": "Snapshot {n}",
+      "deleteTitle": "Delete snapshot?",
+      "deleteBody": "Delete snapshot {n} from {date}?"
     },
     "overview": {
       "stats": "Live stats",

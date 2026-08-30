@@ -138,6 +138,10 @@ Scope {
                             it.dialogDevice = null;
                             return;
                         }
+                        if (it.pending) {
+                            it.pending = null;
+                            return;
+                        }
                     }
                     Settings.close();
                 }

@@ -615,7 +615,11 @@
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn Hyprland startet.",
       "autoSwitchBluetooth": "Gekoppelte Kopfhörer verbinden sich und werden zum Lautsprecher, sobald sie verwendet werden.",
-      "restoreGated": "Ein Snapshot-Rollback ist abgeschottet. Siehe docs/BACKUP.md.",
+      "restoreGated": "Ein Snapshot-Rollback ist abgeschottet.",
+      "preUpdateSnapshot": "Legt vor einem Systemupdate einen Snapper-Snapshot von / an, damit du zurückrollen kannst.",
+      "snapperReady": "Zeitpunkte der Systemplatte (btrfs).",
+      "snapperMissing": "Snapper ist nicht installiert. Die Einrichtung ist abgeschottet und wird nicht aus den Einstellungen gesetzt.",
+      "snapperUnconfigured": "Snapper ist installiert, hat aber keine root-Config.",
       "speedTest": "Kurzer curl-Download vom Arch-Geo-Spiegel. Keine Speedtest-Website.",
       "bluetooth": "Schaltet den Adapter ein. Geräte erscheinen darunter.",
       "bluetoothBlocked": "Kein Bluetooth-Adapter, oder der Funk ist hardwareseitig gesperrt.",
@@ -702,7 +706,17 @@
       "mbps": "{n} Mbit/s"
     },
     "backup": {
-      "snapshots": "Snapshots"
+      "snapshots": "Snapshots",
+      "engine": "Snapper",
+      "ready": "Bereit",
+      "missing": "Nicht installiert",
+      "unconfigured": "Nicht eingerichtet",
+      "create": "Snapshot erstellen",
+      "creating": "Snapshot wird erstellt…",
+      "manual": "Manuell",
+      "untitled": "Snapshot {n}",
+      "deleteTitle": "Snapshot löschen?",
+      "deleteBody": "Snapshot {n} von {date} löschen?"
     },
     "overview": {
       "stats": "Live-Werte",

@@ -18,8 +18,13 @@ Btrfs subvolumes created by `scripts/bootstrap.sh` (print-only until
 | `@snapshots` | `/.snapshots`      | snapper's store |
 | `@swap`      | swap file host     | **never** |
 
-`config.json` → `backup.snapperEnabled` is the Settings flag. Enabling
-it does not create `/etc/snapper/configs/`; that remains a gated copy.
+`config.json` → `backup.preUpdateSnapshot` is the Settings flag that
+`modern update` honors. `backup.snapperEnabled` and `backup.resticEnabled`
+stay in config for compatibility; Settings no longer shows those
+toggles (they did not install snapper or configure a restic repo).
+Enabling snapper still does not create `/etc/snapper/configs/`; that
+remains a gated copy. Settings probes whether the `root` config exists
+and lists/creates/deletes snapshots when it does.
 
 ## Swapfile lives on `@swap`
 
