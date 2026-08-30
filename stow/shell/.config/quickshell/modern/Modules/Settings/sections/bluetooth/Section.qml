@@ -1,57 +1,118 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 import "."
 
-ColumnLayout {
+Item {
     id: root
-    spacing: Tokens.spacing.md
 
     property var dialogDevice: null
+    readonly property bool _online: !!(root.dialogDevice && root.dialogDevice.connected)
+    readonly property bool _paired: !!(root.dialogDevice && root.dialogDevice.paired)
 
-    Component.onCompleted: Bluetooth.setDiscovering(true)
+    implicitHeight: col.implicitHeight
+
+    Component.onCompleted: {
+        if (Bluetooth.powered)
+            Bluetooth.setDiscovering(true);
+    }
     Component.onDestruction: Bluetooth.setDiscovering(false)
 
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.bluetoothPower"
-        MSwitch {
-            checked: Bluetooth.powered
-            onToggled: (v) => Bluetooth.setPowered(v)
+    ColumnLayout {
+        id: col
+        width: parent.width
+        spacing: Tokens.spacing.lg
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.xs
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.md
+                MText {
+                    key: "settings.fields.bluetoothPower"
+                    styleName: "bodyMedium"
+                    color: Colors.color.onSurfaceVariant
+                    Layout.fillWidth: true
+                }
+                MSwitch {
+                    enabled: Bluetooth.adapterReady
+                    checked: Bluetooth.powered
+                    onToggled: (v) => Bluetooth.setPowered(v)
+                }
+            }
+            MHint {
+                key: Bluetooth.adapterReady ? "settings.hints.bluetooth" : "settings.hints.bluetoothBlocked"
+                Layout.fillWidth: true
+            }
+        }
+
+        ColumnLayout {
+            visible: Bluetooth.powered
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.lg
+
+            MSectionHeader {
+                key: "settings.bluetooth.connected"
+                topMargin: Tokens.spacing.xl
+            }
+            DeviceList {
+                Layout.fillWidth: true
+                devices: Bluetooth.connectedDevices
+                emptyKey: "settings.bluetooth.emptyConnected"
+                emptyIcon: "bluetooth-disabled"
+                onDeviceClicked: (d) => root.dialogDevice = d
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: Tokens.spacing.xl
+                spacing: Tokens.spacing.md
+                MText {
+                    key: "settings.bluetooth.available"
+                    styleName: "titleSmall"
+                    color: Colors.color.onSurfaceVariant
+                    Layout.fillWidth: true
+                }
+                MIconButton {
+                    iconName: "view-refresh"
+                    key: "settings.refresh"
+                    iconSize: Tokens.icon.sm
+                    onClicked: Bluetooth.refresh()
+                }
+            }
+            DeviceList {
+                Layout.fillWidth: true
+                devices: Bluetooth.availableDevices
+                emptyKey: "settings.bluetooth.emptyAvailable"
+                onDeviceClicked: (d) => root.dialogDevice = d
+            }
         }
     }
 
-    MSectionHeader { key: "settings.bluetooth.connected" }
-    Repeater {
-        model: Bluetooth.connectedDevices.length
-        MListItem {
-            required property int index
-            readonly property var dev: Bluetooth.connectedDevices[index]
-            Layout.fillWidth: true
-            titleValue: (dev && dev.name) ? dev.name : ""
-            subtitleValue: (dev && dev.address) ? dev.address : ""
-            onClicked: root.dialogDevice = dev
+    MDialog {
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        open: root.dialogDevice !== null
+        titleValue: Bluetooth.deviceLabel(root.dialogDevice)
+        bodyKey: root._online ? "settings.bluetooth.disconnectBody" : "settings.bluetooth.connectBody"
+        confirmKey: root._online ? "settings.bluetooth.disconnect" : "settings.bluetooth.connect"
+        cancelKey: "powerMenu.cancel"
+        destructiveKey: root._paired ? "settings.bluetooth.forget" : ""
+        onConfirmed: {
+            if (root._online)
+                Bluetooth.disconnectDevice(root.dialogDevice);
+            else
+                Bluetooth.connectDevice(root.dialogDevice);
+            root.dialogDevice = null;
         }
-    }
-    MEmptyState {
-        visible: Bluetooth.connectedDevices.length === 0
-        Layout.fillWidth: true
-        Layout.preferredHeight: Tokens.spacing.xxl * 3
-        iconName: "bluetooth-disabled"
-        titleKey: "settings.bluetooth.emptyConnected"
-    }
-
-    MSectionHeader { key: "settings.bluetooth.available" }
-    Repeater {
-        model: Bluetooth.availableDevices.length
-        MListItem {
-            required property int index
-            readonly property var dev: Bluetooth.availableDevices[index]
-            Layout.fillWidth: true
-            titleValue: (dev && dev.name) ? dev.name : ""
-            onClicked: root.dialogDevice = dev
+        onCancelled: root.dialogDevice = null
+        onDestructiveClicked: {
+            Bluetooth.forgetDevice(root.dialogDevice);
+            root.dialogDevice = null;
         }
     }
 }

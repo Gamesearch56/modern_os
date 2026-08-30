@@ -16,11 +16,13 @@ Item {
     property var bodyParams: ({})
     property string confirmKey: "powerMenu.confirmTitle"
     property string cancelKey: "powerMenu.cancel"
+    property string destructiveKey: ""
     property bool destructive: false
     default property alias extra: extraCol.data
 
     signal confirmed()
     signal cancelled()
+    signal destructiveClicked()
 
     visible: root.open || scrim.opacity > 0
     z: 100
@@ -54,12 +56,15 @@ Item {
 
     MCard {
         id: card
-        level: 5
+        level: 0
+        color: Colors.color.surface
+        borderWidth: Tokens.stroke.hairline
+        borderColor: Colors.color.outlineVariant
         width: Math.min(parent.width - Tokens.spacing.xxl, Tokens.spacing.xxl * 12)
         implicitHeight: dialogCol.implicitHeight + padding * 2
         anchors.centerIn: parent
         scale: Motion.overlayScale(root.open)
-        opacity: Motion.overlayOpacity(root.open) * (Config.design.transparency ?? 0.85)
+        opacity: Motion.overlayOpacity(root.open)
 
         Behavior on opacity {
             enabled: Motion.overlaysFade
@@ -81,13 +86,35 @@ Item {
             width: parent.width
             spacing: Tokens.spacing.md
 
-            MText {
-                key: root.titleKey
-                params: root.titleParams
-                value: root.titleValue
-                styleName: "headlineSmall"
-                wrapMode: Text.WordWrap
+            RowLayout {
                 Layout.fillWidth: true
+                spacing: Tokens.spacing.md
+
+                MText {
+                    key: root.titleKey
+                    params: root.titleParams
+                    value: root.titleValue
+                    styleName: "headlineSmall"
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                }
+
+                MText {
+                    visible: root.destructiveKey.length > 0
+                    key: root.destructiveKey
+                    styleName: "labelLarge"
+                    color: Colors.color.error
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    Accessible.role: Accessible.Button
+                    Accessible.name: root.destructiveKey.length > 0 ? I18n.t(root.destructiveKey) : ""
+                    Accessible.onPressAction: root.destructiveClicked()
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.destructiveClicked()
+                    }
+                }
             }
 
             MText {

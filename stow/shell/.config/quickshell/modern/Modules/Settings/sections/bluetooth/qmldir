@@ -1,2 +1,2 @@
-module bluetooth
-BluetoothSection 1.0 Section.qml
+Model 1.0 Model.qml
+DeviceList 1.0 DeviceList.qml

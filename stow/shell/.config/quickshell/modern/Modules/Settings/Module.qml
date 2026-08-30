@@ -179,20 +179,6 @@ Scope {
                     });
                 }
             }
-            Loader {
-                anchors.fill: card
-                z: 23
-                active: Settings.sectionId === "bluetooth" && sectionLoader.item
-                    && !!sectionLoader.item.dialogDevice
-                source: Qt.resolvedUrl("sections/bluetooth/DeviceOverlay.qml")
-                onLoaded: {
-                    item.device = Qt.binding(() => sectionLoader.item ? sectionLoader.item.dialogDevice : null);
-                    item.closed.connect(() => {
-                        if (sectionLoader.item)
-                            sectionLoader.item.dialogDevice = null;
-                    });
-                }
-            }
         }
     }
 }

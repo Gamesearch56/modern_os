@@ -89,7 +89,7 @@ QtObject {
         displays: { icon: "video-display", order: 50, group: "devices", keywords: ["monitors", "workspace", "hdr", "scale", "display", "brightness", "refresh", "resolution", "color"] },
         audio: { icon: "audio-volume-high", order: 52, group: "devices", keywords: ["volume", "speakers", "microphone", "headphones", "mute", "bluetooth"] },
         network: { icon: "network-wireless", order: 54, group: "devices", keywords: ["wifi", "ethernet", "speed"] },
-        bluetooth: { icon: "bluetooth", order: 56, group: "devices", keywords: ["devices", "pair"] },
+        bluetooth: { icon: "bluetooth", order: 56, group: "devices", keywords: ["devices", "pair", "headphones"] },
         storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["disk", "mount"] },
         backup: { icon: "document-save", order: 72, group: "system", keywords: ["snapper", "snapshot", "restore"] },
         system: { icon: "system-software-update", order: 74, group: "system", keywords: ["update", "mirrors", "gaming"] }

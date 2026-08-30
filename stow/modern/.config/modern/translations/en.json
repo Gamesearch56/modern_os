@@ -617,6 +617,8 @@
       "autoSwitchBluetooth": "Paired headphones connect and become the sound speaker when they are used.",
       "restoreGated": "Restoring a snapshot needs a gated snapper rollback. See docs/BACKUP.md.",
       "speedTest": "Downloads a short sample from the Arch geo mirror via curl. Not a third-party speed-test site.",
+      "bluetooth": "Turns the adapter on. Nearby devices appear below.",
+      "bluetoothBlocked": "No Bluetooth adapter, or the radio is hardware-blocked.",
       "wifi": "Turns the wireless radio on. Nearby networks appear below.",
       "wifiHardware": "No Wi-Fi adapter, or the radio is hardware-blocked.",
       "autologin": "This saves the preference in config.json. Graphical boot autologin is gated (docs/ISOLATION.md) and is not applied from this switch."
@@ -675,9 +677,13 @@
       "connected": "Connected",
       "available": "Available",
       "emptyConnected": "No connected devices",
+      "emptyAvailable": "No devices nearby",
       "forget": "Forget",
       "connect": "Connect",
-      "disconnect": "Disconnect"
+      "disconnect": "Disconnect",
+      "connectBody": "Connect to this device. If it is not paired yet, confirm on the device.",
+      "disconnectBody": "Disconnect this device. It stays paired until you forget it.",
+      "remembered": "Saved"
     },
     "storage": {
       "mounts": "Volumes",
