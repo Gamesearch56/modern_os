@@ -39,6 +39,12 @@ ColumnLayout {
         }
         MPercentTile {
             Layout.fillWidth: true
+            titleKey: "performance.gpu"
+            valueText: Math.round(SystemStats.gpuPercent) + "%"
+            percent: SystemStats.gpuPercent
+        }
+        MPercentTile {
+            Layout.fillWidth: true
             titleKey: "performance.ram"
             valueText: Math.round(SystemStats.ramPercent) + "%"
             percent: SystemStats.ramPercent
@@ -48,12 +54,6 @@ ColumnLayout {
             titleKey: "performance.disk"
             valueText: Math.round(SystemStats.diskPercent) + "%"
             percent: SystemStats.diskPercent
-        }
-        MPercentTile {
-            Layout.fillWidth: true
-            titleKey: "performance.gpu"
-            valueText: Math.round(SystemStats.gpuPercent) + "%"
-            percent: SystemStats.gpuPercent
         }
     }
 }
