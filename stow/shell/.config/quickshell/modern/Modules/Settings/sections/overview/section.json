@@ -1,6 +1,6 @@
 {
   "id": "overview",
-  "icon": "computer",
+  "icon": "view-pages-overview",
   "key": "settings.sections.overview",
   "order": 10,
   "keywords": ["about", "hardware", "software", "boot", "cpu", "ram"]

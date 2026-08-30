@@ -67,7 +67,7 @@ Scope {
                             Layout.fillHeight: true
                             spacing: Tokens.spacing.md
 
-                            PageHeader { catalog: catalog }
+                            PageHeader { id: pageHeader; catalog: catalog }
 
                             Flickable {
                                 id: pane
@@ -109,6 +109,10 @@ Scope {
                 sequence: "Escape"
                 onActivated: {
                     const it = sectionLoader.item;
+                    if (pageHeader.restoreOpen) {
+                        pageHeader.restoreOpen = false;
+                        return;
+                    }
                     if (Update.open) {
                         Update.close();
                         return;

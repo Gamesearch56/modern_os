@@ -28,6 +28,7 @@ $(t cli.usage)
   modern repair
   modern window close
   modern config set motion.scale 1.2
+  modern config restore design typography
 EOF
 }
 
@@ -174,8 +175,11 @@ case "$TARGET" in
             set)
                 exec "$SCRIPT_DIR/config-set.sh" "$@"
                 ;;
+            restore)
+                exec "$SCRIPT_DIR/config-restore.sh" "$@"
+                ;;
             *)
-                echo "Usage: modern config set PATH VALUE" >&2
+                echo "Usage: modern config set PATH VALUE | restore PATH..." >&2
                 exit 1
                 ;;
         esac
@@ -191,6 +195,36 @@ case "$TARGET" in
             exit 0
         fi
         exec "$SCRIPT_DIR/screenshot.sh" "$MODE"
+        ;;
+    power)
+        ACTION="${1:-button}"
+        act() {
+            case "$1" in
+                lock) exec loginctl lock-session ;;
+                suspend) exec systemctl suspend ;;
+                poweroff) exec systemctl poweroff ;;
+                ask | *) exec qs -c modern ipc call powermenu show ;;
+            esac
+        }
+        on_battery() {
+            grep -q Discharging /sys/class/power_supply/BAT*/status 2>/dev/null
+        }
+        case "$ACTION" in
+            button)
+                act "$(cfg power.buttonAction ask)"
+                ;;
+            lid)
+                if on_battery; then
+                    act "$(cfg power.lidActionBattery suspend)"
+                else
+                    act "$(cfg power.lidActionAc lock)"
+                fi
+                ;;
+            *)
+                echo "usage: modern power button|lid" >&2
+                exit 1
+                ;;
+        esac
         ;;
     filepreview)
         # shellcheck source=lib/filepreview.sh

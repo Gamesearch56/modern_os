@@ -98,7 +98,7 @@ Item {
         }
 
         MIcon {
-            name: menu.open ? "go-up" : "go-down"
+            name: menu.open && !menu.opensAbove ? "go-up" : "go-down"
             size: Tokens.icon.sm
             color: Colors.color.onSurfaceVariant
             tint: true
@@ -132,7 +132,6 @@ Item {
                 + Tokens.spacing.md * 2
                 + (root._searchable ? Tokens.spacing.xxl + Tokens.spacing.lg : 0),
             Tokens.spacing.xxl * 14)
-        y: root.height + Tokens.spacing.xs
         z: 80
         onOpenChanged: {
             root._raise(open);
@@ -189,6 +188,7 @@ Item {
                     readonly property var opt: root._filtered[index] || ({})
                     width: list.width
                     titleKey: opt.titleKey || ""
+                    titleParams: opt.params || ({})
                     titleValue: opt.titleValue || ""
                     selected: (root.values || []).indexOf(opt.value) !== -1
                     onClicked: {

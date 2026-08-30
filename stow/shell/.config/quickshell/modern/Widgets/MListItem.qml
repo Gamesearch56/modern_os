@@ -12,8 +12,10 @@ Item {
     property real imageSize: Tokens.icon.lg
     property bool tintIcon: true
     property string titleKey: ""
+    property var titleParams: ({})
     property string titleValue: ""
     property string subtitleKey: ""
+    property var subtitleParams: ({})
     property string subtitleValue: ""
     property bool selected: false
     property bool enabled: true
@@ -42,7 +44,7 @@ Item {
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
     Accessible.role: Accessible.Button
-    Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey) : root.titleValue
+    Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
     Accessible.onPressAction: root.clicked()
 
     Keys.onPressed: (event) => {
@@ -128,6 +130,7 @@ Item {
             name: root.iconName
             size: Tokens.icon.md
             tint: root.tintIcon
+            preferSymbolic: !root._nav
             color: root._fg
         }
 
@@ -137,6 +140,7 @@ Item {
 
             MText {
                 key: root.titleKey
+                params: root.titleParams
                 value: root.titleValue
                 styleName: "bodyLarge"
                 color: root._fg
@@ -146,6 +150,7 @@ Item {
             MText {
                 visible: root.subtitleKey.length > 0 || root.subtitleValue.length > 0
                 key: root.subtitleKey
+                params: root.subtitleParams
                 value: root.subtitleValue
                 styleName: "bodySmall"
                 color: Colors.color.onSurfaceVariant

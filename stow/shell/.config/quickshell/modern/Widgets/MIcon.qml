@@ -1,7 +1,7 @@
-// Freedesktop icon by name, sized from Tokens. `tint` colorizes
-// symbolic icons onto a role. Papirus action SVGs are dark while
-// status SVGs are already light — colorize from a full-bright source
-// so both land on the same onSurface (or caller) role.
+// Freedesktop icon by name, sized from Tokens. `tint` recolors onto a
+// role. Symbolic glyphs (bar, chrome) are often dark grey — lift them
+// with brightness 1 so they land on onSurface. Full-color Settings nav
+// icons keep luminance (brightness 0) so inner shapes stay visible.
 import QtQuick
 import QtQuick.Effects
 import Quickshell
@@ -16,6 +16,7 @@ Item {
     property int size: Tokens.icon.md
     property color color: Colors.color.onSurface
     property bool tint: true
+    property bool preferSymbolic: true
 
     readonly property bool _file: root.source.toString().length > 0
 
@@ -29,7 +30,12 @@ Item {
         if (root.name.length === 0)
             return "";
         const symbolic = Quickshell.iconPath(root.name, true);
-        const p = (symbolic && symbolic.length > 0) ? symbolic : Quickshell.iconPath(root.name);
+        const full = Quickshell.iconPath(root.name);
+        let p = "";
+        if (root.preferSymbolic)
+            p = (symbolic && symbolic.length > 0) ? symbolic : full;
+        else
+            p = (full && full.length > 0) ? full : symbolic;
         if (!p || p.length === 0)
             return "";
         if (p.indexOf("://") !== -1 || p.indexOf("image:") === 0)
@@ -82,7 +88,7 @@ Item {
         source: root._file ? fileImg : img
         colorization: 1
         colorizationColor: root.color
-        brightness: root._file ? 0 : 1
+        brightness: root.preferSymbolic ? 1 : 0
         saturation: 0
     }
 }

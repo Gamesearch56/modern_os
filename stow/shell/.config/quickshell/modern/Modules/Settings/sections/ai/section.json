@@ -1,6 +1,6 @@
 {
   "id": "ai",
-  "icon": "computer",
+  "icon": "robot",
   "key": "settings.sections.ai",
   "order": 34,
   "keywords": ["ollama", "assistant", "chat"]

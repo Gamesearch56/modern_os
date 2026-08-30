@@ -34,6 +34,10 @@ QtObject {
         return root._byId[id]?.keywords ?? [];
     }
 
+    function restorePaths(id) {
+        return root._byId[id]?.restore ?? [];
+    }
+
     function filtered(needle) {
         const n = (needle || "").trim().toLowerCase();
         const items = [];
@@ -70,24 +74,24 @@ QtObject {
     }
 
     readonly property var _byId: ({
-        overview: { icon: "computer", order: 10, group: "general", keywords: ["about", "hardware", "software", "boot", "stats"] },
-        users: { icon: "user-group-new", order: 12, group: "general", keywords: ["accounts", "passwd", "autologin"] },
-        privacy: { icon: "security-high", order: 14, group: "general", keywords: ["dnd", "kdeconnect", "calendar", "ics", "quiet", "notifications"] },
-        power: { icon: "battery", order: 16, group: "general", keywords: ["lid", "suspend", "energy", "idle"] },
-        design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "wallpaper", "windows", "gaps"] },
-        bar: { icon: "view-grid", order: 22, group: "appearance", keywords: ["widgets", "layout", "topbar"] },
-        launcher: { icon: "view-app-grid-symbolic", order: 24, group: "appearance", keywords: ["frecency", "search"] },
-        applications: { icon: "applications-other", order: 30, group: "apps", keywords: ["autostart", "browser", "calendar", "mail"] },
-        screenshots: { icon: "camera-photo", order: 32, group: "apps", keywords: ["capture", "grim"] },
-        ai: { icon: "computer", order: 34, group: "apps", keywords: ["ollama", "assistant"] },
-        language: { icon: "preferences-desktop-locale", order: 40, group: "input", keywords: ["locale", "date", "time", "timezone"] },
-        keyboard: { icon: "input-keyboard", order: 42, group: "input", keywords: ["keybinds", "layout", "cheatsheet"] },
+        overview: { icon: "view-pages-overview", order: 10, group: "general", keywords: ["about", "hardware", "software", "boot", "stats"] },
+        users: { icon: "user-identity", order: 12, group: "general", keywords: ["accounts", "passwd", "autologin"] },
+        privacy: { icon: "security-high", order: 14, group: "general", keywords: ["dnd", "kdeconnect", "calendar", "ics", "quiet", "notifications"], restore: ["general.dndSchedule", "general.notificationTimeoutMs", "kdeconnect", "accounts.calendarIcsUrl"] },
+        power: { icon: "battery", order: 16, group: "general", keywords: ["lid", "suspend", "energy", "idle", "battery"], restore: ["power", "general.idleTimings"] },
+        design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "wallpaper", "windows", "gaps"], restore: ["design", "typography", "motion", "windows", "windowRules"] },
+        bar: { icon: "cs-panel", order: 22, group: "appearance", keywords: ["widgets", "layout", "topbar"], restore: ["bar", "widgets"] },
+        launcher: { icon: "view-app-grid-symbolic", order: 24, group: "appearance", keywords: ["frecency", "search"], restore: ["launcher"] },
+        applications: { icon: "applications-other", order: 30, group: "apps", keywords: ["autostart", "browser", "calendar", "mail"], restore: ["apps.defaults", "general.autostart"] },
+        screenshots: { icon: "camera-photo", order: 32, group: "apps", keywords: ["capture", "grim"], restore: ["screenshots"] },
+        ai: { icon: "robot", order: 34, group: "apps", keywords: ["ollama", "assistant"] },
+        language: { icon: "preferences-desktop-locale", order: 40, group: "input", keywords: ["locale", "date", "time", "timezone"], restore: ["language", "widgets.clock.showWeekday", "widgets.clock.showSeconds"] },
+        keyboard: { icon: "input-keyboard", order: 42, group: "input", keywords: ["keybinds", "layout", "cheatsheet"], restore: ["input", "keybinds"] },
         displays: { icon: "video-display", order: 50, group: "devices", keywords: ["monitors", "workspace", "hdr", "scale", "display"] },
         audio: { icon: "audio-volume-high", order: 52, group: "devices", keywords: ["volume", "speakers", "microphone"] },
         network: { icon: "network-wireless", order: 54, group: "devices", keywords: ["wifi", "dns", "vpn", "speed"] },
         bluetooth: { icon: "bluetooth", order: 56, group: "devices", keywords: ["devices", "pair"] },
         storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["disk", "mount"] },
-        backup: { icon: "drive-harddisk", order: 72, group: "system", keywords: ["snapper", "snapshot", "restore"] },
+        backup: { icon: "document-save", order: 72, group: "system", keywords: ["snapper", "snapshot", "restore"] },
         system: { icon: "system-software-update", order: 74, group: "system", keywords: ["update", "mirrors", "gaming"] }
     })
 }

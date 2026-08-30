@@ -31,25 +31,36 @@ Six groups, 19 pages. Catalog lives in
 | General | Overview | `overview` | `Diagnostics`, `SystemStats`, `Battery` |
 | General | Users | `users` | `general.autologin` preference plus a gated-boot hint (not applied from Settings). `Passwd`, `User`, `Apps.runInTerminal` for confirmed terminal login. Groups are read-only; no usersd edit overlays. |
 | General | Privacy | `privacy` | Live `Notifications.dnd` (same as the control-panel tile) plus applied `general.dndSchedule` quiet hours; `general.notificationTimeoutMs`. `kdeconnect.enabled` starts/stops `kdeconnectd`. `accounts.calendarIcsUrl` feeds the clock popup. No Proton Drive UI. |
-| General | Energy | `power` | `power.*`, `general.idleTimings`; `Battery`, `SystemStats` |
+| General | Energy | `power` | Live `Battery` hero. Power button (`ask` = power menu) and lid actions via `modern power`. `hypridle` listeners from `general.idleTimings`. Fullscreen/media idle inhibit via `systemd-inhibit`. |
 | Appearance | Design | `design` | `design.*`, `typography`, `motion`, `windows.*`, `windowRules`; `Theme`, `Wallpaper` |
 | Appearance | Bar | `bar` | `bar.left\|center\|right`, `bar.autoHide`, `widgets.*` |
 | Appearance | Launcher | `launcher` | `launcher.*` |
 | Apps | Applications | `applications` | `apps.defaults`, `general.autostart` |
 | Apps | Screenshot | `screenshots` | `screenshots.*` |
 | Apps | AI | `ai` | `accounts.ai` |
-| Input | Language & Region | `language` | `language.*` (incl. `previewDate`); `Locale` (`timedatectl`) |
-| Input | Keyboard | `keyboard` | `input.*`, `keybinds`; `Cheatsheet` |
+| Keyboard & Region | Language & Time | `language` | `language.*` (incl. `previewDate`); `Locale` (`timedatectl`) |
+| Keyboard & Region | Keyboard | `keyboard` | `input.*`, `keybinds`; `Cheatsheet` |
 | Devices | Display | `displays` | `monitors.*`; `Hypr` |
 | Devices | Audio | `audio` | `audio.*`; `Audio` (PipeWire streams when present) |
 | Devices | Network | `network` | `network.*`; `Network` (Wi-Fi password overlay, curl speed test) |
 | Devices | Bluetooth | `bluetooth` | `Bluetooth` |
 | System | Storage | `storage` | `Storage` |
 | System | Backup | `backup` | `backup.*`; `Snapshots` (snapper list/delete) |
-| System | System | `system` | `gaming.*`; `Update` (`modern update`, `modern mirrors`) |
+| System | Update | `system` | `gaming.*`; `Update` (`modern update`, `modern mirrors`) |
 
 `language.previewDate` is UI-only (`DateTime.displayDate`) — it does not
 call `timedatectl`. Timezone display/set is `Services/Locale.qml`.
+
+## Restore defaults
+
+Privacy, Energy, Design, Bar, Launcher, Applications, Screenshot,
+Language & Time, and Keyboard show **Restore** on the page header.
+Confirm copies that page’s keys from `config.default.json` via
+`modern config restore` (one jq write). Privacy also clears session
+DND. Design re-runs `theme-apply.sh` so the palette matches the
+restored profile. Overview, Users, AI, devices, Storage, Backup, and
+Update have no Restore control.
+
 
 ## Bar widget forms
 
@@ -64,7 +75,7 @@ catalog list.
 | Action | CLI | Notes |
 |--------|-----|--------|
 | System update | `modern update` | Overlay: current step + log. Snapshot-before-update if `backup.preUpdateSnapshot`. |
-| Mirrorlist | `modern mirrors` | `reflector` using `network.mirrorCountry`. Also a button on System. |
+| Mirrorlist | `modern mirrors` | `reflector` using `network.mirrorCountry`. Also a button on Update. |
 | Snapshots | `snapper -c root list` / `delete` | Settings lists and can request delete. **Restore** is gated (`docs/BACKUP.md`). Enabling `backup.snapperEnabled` does not write `/etc/snapper`. |
 
 ## How to add a page

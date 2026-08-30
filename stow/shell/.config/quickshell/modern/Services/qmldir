@@ -31,6 +31,7 @@ singleton Drive 1.0 Drive.qml
 singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
 singleton IdleInhibit 1.0 IdleInhibit.qml
+singleton IdleDaemon 1.0 IdleDaemon.qml
 singleton Screenshot 1.0 Screenshot.qml
 singleton Popups 1.0 Popups.qml
 singleton Battery 1.0 Battery.qml

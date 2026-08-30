@@ -28,6 +28,20 @@ Singleton {
     }
     readonly property var focusedWorkspace: Hyprland.focusedWorkspace
     readonly property var focusedToplevel: Hyprland.focusedToplevel
+    readonly property bool focusedFullscreen: {
+        void root.focusedToplevel;
+        const t = root.focusedToplevel;
+        if (!t)
+            return false;
+        const fs = t.fullscreen;
+        if (fs === true || fs === 2)
+            return true;
+        const ipc = t.lastIpcObject;
+        if (!ipc)
+            return false;
+        const v = ipc.fullscreen;
+        return v === true || v === 2 || v === "2";
+    }
 
     readonly property bool _lua: Hyprland.usingLua === true
 

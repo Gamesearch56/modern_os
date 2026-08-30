@@ -5,6 +5,15 @@ import "../../Commons"
 import "../../Services"
 
 Scope {
+    readonly property bool idleHold: IdleInhibit.caffeine
+        || (!!Config.power.inhibitOnFullscreen && Hypr.focusedFullscreen)
+        || (!!Config.power.inhibitOnMedia && Media.playing)
+    onIdleHoldChanged: IdleInhibit.setActive(idleHold)
+    Component.onCompleted: {
+        IdleInhibit.setActive(idleHold);
+        void IdleDaemon.dimSec;
+    }
+
     Connections {
         target: Alarm
         function onFired() {

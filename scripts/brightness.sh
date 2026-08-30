@@ -94,8 +94,29 @@ case "${cmd}" in
             exit 1
         fi
         ;;
+    dim)
+        state="${XDG_STATE_HOME:-$HOME/.local/state}/modern/brightness-undim"
+        mkdir -p "$(dirname "$state")"
+        if pct="$(backlight_pct)"; then
+            printf '%s\n' "$pct" >"$state"
+            set_pct $((pct < 20 ? 1 : pct / 10))
+        elif pair="$(ddc_read)"; then
+            cur="${pair##* }"
+            printf '%s\n' "$cur" >"$state"
+            set_pct $((cur < 20 ? 1 : cur / 10))
+        else
+            exit 1
+        fi
+        ;;
+    undim)
+        state="${XDG_STATE_HOME:-$HOME/.local/state}/modern/brightness-undim"
+        if [ -f "$state" ]; then
+            set_pct "$(cat "$state")"
+            rm -f "$state"
+        fi
+        ;;
     *)
-        echo "usage: brightness.sh get|set PERCENT|up|down" >&2
+        echo "usage: brightness.sh get|set PERCENT|up|down|dim|undim" >&2
         exit 2
         ;;
 esac

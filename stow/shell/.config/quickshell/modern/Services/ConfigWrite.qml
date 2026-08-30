@@ -14,6 +14,19 @@ Singleton {
 
     property string lastError: ""
     property bool _reloadHypr: false
+    property bool _restoreReloadHypr: false
+
+    signal finished(bool ok)
+
+    function _hyprPath(path: string): bool {
+        const roots = ["input", "keybinds", "windows", "windowRules", "design", "monitors"];
+        for (let i = 0; i < roots.length; i++) {
+            const r = roots[i];
+            if (path === r || path.indexOf(r + ".") === 0)
+                return true;
+        }
+        return false;
+    }
 
     function set(path, value) {
         try {
@@ -41,6 +54,24 @@ Singleton {
         root.set("monitors", m);
     }
 
+    function restore(paths) {
+        const list = paths || [];
+        if (list.length === 0)
+            return;
+        root.lastError = "";
+        root._restoreReloadHypr = false;
+        const cmd = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "config", "restore"];
+        for (let i = 0; i < list.length; i++) {
+            const p = String(list[i]);
+            cmd.push(p);
+            if (root._hyprPath(p))
+                root._restoreReloadHypr = true;
+        }
+        restoreProc.command = cmd;
+        restoreProc.running = true;
+        Logger.debug("ConfigWrite", "restore " + list.join(" "));
+    }
+
     Process {
         id: proc
         stdout: StdioCollector {
@@ -64,6 +95,33 @@ Singleton {
                 Logger.error("ConfigWrite", "modern config set exited " + exitCode);
             if (exitCode === 0 && root._reloadHypr)
                 Quickshell.execDetached(["hyprctl", "reload"]);
+        }
+    }
+
+    Process {
+        id: restoreProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const t = this.text.trim();
+                if (t.length > 0)
+                    Logger.info("ConfigWrite", t);
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const t = this.text.trim();
+                if (t.length > 0) {
+                    root.lastError = t;
+                    Logger.error("ConfigWrite", t);
+                }
+            }
+        }
+        onExited: (exitCode) => {
+            if (exitCode !== 0 && root.lastError.length === 0)
+                Logger.error("ConfigWrite", "modern config restore exited " + exitCode);
+            if (exitCode === 0 && root._restoreReloadHypr)
+                Quickshell.execDetached(["hyprctl", "reload"]);
+            root.finished(exitCode === 0);
         }
     }
 }

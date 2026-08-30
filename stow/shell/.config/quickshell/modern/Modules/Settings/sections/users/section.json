@@ -1,6 +1,6 @@
 {
   "id": "users",
-  "icon": "user-group-new",
+  "icon": "user-identity",
   "key": "settings.sections.users",
   "order": 170,
   "keywords": ["accounts", "passwd", "groups", "autologin"]
