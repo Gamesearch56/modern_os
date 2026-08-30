@@ -4,9 +4,10 @@ kitty                   # terminal — SUPER+T
 dolphin                 # file manager — SUPER+E (replaces Nautilus, Qt-first: docs/DECISIONS.md #5)
 vivaldi                 # browser — SUPER+B, themed per docs/THEMING.md
 fastfetch                # terminal banner, themed via matugen (docs/DECISIONS.md, .bashrc migration)
-imv                      # lightweight image viewer
-mpv                      # video playback
+imv                      # image viewer — Settings + Dolphin default
+mpv                      # video player — Settings + Dolphin default; seekbar thumbs via ffmpeg
 vlc                      # video playback fallback / disc & format coverage mpv lacks
+ffmpeg                    # mpv_thumbnail_script stills (prefer_mpv=no)
 ffmpegthumbnailer         # Dolphin video thumbnails
 gst-plugins-base          # GStreamer codecs for mpv/browser media
 gst-plugins-good

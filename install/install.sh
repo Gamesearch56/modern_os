@@ -161,7 +161,7 @@ fi
 # ---------------------------------------------------------------------------
 log_phase "Phase 4/5: stow dotfiles -> $TARGET"
 
-stow_packages=(hypr shell theme kitty dolphin gtk qt bash git modern systemd xdg fontconfig fastfetch)
+stow_packages=(hypr shell theme kitty dolphin gtk qt bash git modern systemd xdg fontconfig fastfetch mpv imv)
 for pkg in "${stow_packages[@]}"; do
     stow_package "$pkg" "$TARGET"
 done
@@ -215,6 +215,12 @@ if command -v matugen >/dev/null 2>&1; then
 else
     log_warn "matugen not found — run scripts/theme-apply.sh once it is installed"
 fi
+
+# Dolphin / xdg-open follow Settings → Applications video/image defaults.
+run "$REPO_ROOT/scripts/mime-defaults.sh" \
+    --config "$TARGET/.config/modern/config.json" \
+    --mimeapps "$TARGET/.config/mimeapps.list" \
+    || log_warn "mime-defaults.sh failed — set video/image defaults in Settings → Applications"
 
 log_ok "Install complete for profile '$PROFILE'."
 log_info "Start the session with start-hyprland (not Hyprland) — see README.md; a second TTY keeps the daily-driver session."

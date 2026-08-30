@@ -89,6 +89,22 @@ ColumnLayout {
         }
     }
     MField {
+        labelKey: "settings.fields.videoPlayer"
+        MSelect {
+            model: Apps.entriesFor("videoPlayer")
+            value: Config.apps.defaults.videoPlayer
+            onSelected: (v) => ConfigWrite.set("apps.defaults.videoPlayer", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.imageViewer"
+        MSelect {
+            model: Apps.entriesFor("imageViewer")
+            value: Config.apps.defaults.imageViewer
+            onSelected: (v) => ConfigWrite.set("apps.defaults.imageViewer", v)
+        }
+    }
+    MField {
         labelKey: "settings.fields.terminal"
         MSelect {
             model: Apps.entriesFor("terminal")

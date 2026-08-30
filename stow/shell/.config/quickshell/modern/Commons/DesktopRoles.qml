@@ -38,6 +38,10 @@ Singleton {
             return ["instantmessaging", "chat", "ircclient", "videoconference", "telephony"];
         if (role === "fileManager")
             return ["filemanager"];
+        if (role === "videoPlayer")
+            return ["video", "audiovideo"];
+        if (role === "imageViewer")
+            return ["viewer", "graphics", "2dgraphics"];
         if (role === "terminal")
             return ["terminalemulator"];
         return [];
@@ -54,6 +58,10 @@ Singleton {
             return ["discord", "telegram", "signal", "whatsapp", "element", "slack", "zoom", "teams"];
         if (role === "fileManager")
             return ["dolphin", "nautilus", "thunar", "nemo", "pcmanfm", "krusader", "caja"];
+        if (role === "videoPlayer")
+            return ["mpv", "vlc", "celluloid", "haruna", "smplayer", "totem"];
+        if (role === "imageViewer")
+            return ["imv", "gwenview", "eog", "eom", "loupe", "nsxiv", "feh", "qimgv"];
         if (role === "terminal")
             return ["kitty", "alacritty", "foot", "wezterm", "konsole", "ghostty", "ptyxis"];
         return [];

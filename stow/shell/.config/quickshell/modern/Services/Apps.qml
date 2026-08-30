@@ -1,5 +1,6 @@
 // Default-app launcher. Roles come from config apps.defaults
-// (browser, calendar, mail, communication, fileManager, terminal).
+// (browser, calendar, mail, communication, fileManager, videoPlayer,
+// imageViewer, terminal).
 // DesktopEntries lookup lives here so Modules never spawn processes.
 pragma Singleton
 
@@ -21,25 +22,50 @@ Singleton {
         return root._list(role || "");
     }
 
+    function _stem(id: string): string {
+        return String(id || "").replace(/\.desktop$/, "").toLowerCase();
+    }
+
     function _list(role: string): var {
         const entries = DesktopEntries.applications.values;
         const keep = {};
         if (role.length > 0) {
             const cur = root.desktopId(role);
             if (cur)
-                keep[String(cur).replace(/\.desktop$/, "").toLowerCase()] = true;
+                keep[root._stem(cur)] = cur;
             const fb = root._fallbackIds(role) || [];
-            for (let i = 0; i < fb.length; i++)
-                keep[String(fb[i]).replace(/\.desktop$/, "").toLowerCase()] = true;
+            for (let i = 0; i < fb.length; i++) {
+                const stem = root._stem(fb[i]);
+                if (stem && keep[stem] === undefined)
+                    keep[stem] = fb[i];
+            }
         }
         const out = [];
+        const seen = {};
         for (let i = 0; i < entries.length; i++) {
             const e = entries[i];
-            if (e.noDisplay)
+            const stem = root._stem(e.id || e.name);
+            const pinned = !!(keep[stem]);
+            // imv.desktop (and similar MIME handlers) ship NoDisplay=true.
+            if (e.noDisplay && !pinned)
                 continue;
             if (role.length > 0 && !DesktopRoles.matches(role, e.categories, e.name, e.genericName, e.id, keep))
                 continue;
-            out.push({ value: e.id || e.name, titleValue: e.name || e.id });
+            const value = pinned ? (keep[stem] || e.id || e.name) : (e.id || e.name);
+            out.push({ value: value, titleValue: e.name || e.id });
+            seen[stem] = true;
+        }
+        const missing = Object.keys(keep);
+        for (let j = 0; j < missing.length; j++) {
+            const stem = missing[j];
+            if (seen[stem])
+                continue;
+            const id = keep[stem];
+            const e = root._entryById(id);
+            out.push({
+                value: id,
+                titleValue: (e && e.name) ? e.name : stem
+            });
         }
         out.sort((a, b) => a.titleValue.localeCompare(b.titleValue));
         return out;
@@ -125,6 +151,10 @@ Singleton {
             return ["proton-mail.desktop", "proton-mail", "org.proton.Mail.desktop", "thunderbird.desktop", "org.mozilla.Thunderbird.desktop"];
         if (role === "communication")
             return ["whatsapp-desktop.desktop", "whatsapp-for-linux.desktop", "com.rtg.whatsapp.desktop", "io.github.mimbrero.WhatsAppDesktop.desktop", "wasistlos.desktop", "zapzap.desktop", "whatsapp.desktop"];
+        if (role === "videoPlayer")
+            return ["mpv.desktop", "mpv"];
+        if (role === "imageViewer")
+            return ["imv.desktop", "imv"];
         return [];
     }
 
@@ -135,6 +165,10 @@ Singleton {
             return ["dolphin"];
         if (role === "terminal")
             return ["kitty"];
+        if (role === "videoPlayer")
+            return ["mpv"];
+        if (role === "imageViewer")
+            return ["imv"];
         if (role === "mail")
             return ["xdg-open", "https://mail.proton.me"];
         return null;

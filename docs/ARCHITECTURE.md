@@ -89,7 +89,7 @@ modern_dotfile/
 │   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules
 │   ├── greeter/.config/quickshell/greeter/  shares Session/ with the shell
 │   ├── theme/.config/matugen/               config.toml + templates/
-│   ├── kitty/ dolphin/ gtk/ qt/ bash/ git/
+│   ├── kitty/ dolphin/ gtk/ qt/ bash/ git/ mpv/ imv/
 │   └── modern/.config/modern/               config.default.json, themes/, translations/
 ├── scripts/    theme-apply.sh wallpaper.sh optiscaler.sh game-profile.sh
 │               lint-layers.sh snapshot-packages.sh check-isolation.sh

@@ -18,6 +18,8 @@ Singleton {
     property bool _patchChrome: false
     property bool _restoreChrome: false
     property bool _restoreCursor: false
+    property bool _applyMime: false
+    property bool _restoreMime: false
     property string _lastPath: ""
     property var _lastValue
 
@@ -54,12 +56,19 @@ Singleton {
             || path === "design.cursorSize";
     }
 
+    function _mimePath(path: string): bool {
+        return path === "apps.defaults"
+            || path.indexOf("apps.defaults.videoPlayer") === 0
+            || path.indexOf("apps.defaults.imageViewer") === 0;
+    }
+
     function set(path, value) {
         try {
             const encoded = JSON.stringify(value);
             root._lastPath = path;
             root._lastValue = value;
             root._patchChrome = root._chromePath(path);
+            root._applyMime = root._mimePath(path);
             root._reloadHypr = path === "monitors" || path.indexOf("monitors.") === 0
                 || path === "windows.titlebar" || path === "windowRules"
                 || path === "motion.scale" || path === "motion";
@@ -96,6 +105,7 @@ Singleton {
         root._restoreReloadHypr = false;
         root._restoreChrome = false;
         root._restoreCursor = false;
+        root._restoreMime = false;
         const cmd = [Paths.modern, "config", "restore"];
         for (let i = 0; i < list.length; i++) {
             const p = String(list[i]);
@@ -106,6 +116,8 @@ Singleton {
                 root._restoreChrome = true;
             if (root._cursorPath(p))
                 root._restoreCursor = true;
+            if (root._mimePath(p))
+                root._restoreMime = true;
         }
         restoreProc.command = cmd;
         restoreProc.running = true;
@@ -140,6 +152,8 @@ Singleton {
                 Quickshell.execDetached(["hyprctl", "reload"]);
             if (root._patchChrome)
                 chromeDebounce.restart();
+            if (root._applyMime)
+                Quickshell.execDetached([Paths.script("mime-defaults.sh")]);
         }
     }
 
@@ -170,6 +184,8 @@ Singleton {
                 chromeDebounce.restart();
             if (exitCode === 0 && root._restoreCursor)
                 Hypr.setCursor(Config.design.cursorTheme ?? "", Config.design.cursorSize ?? 24);
+            if (exitCode === 0 && root._restoreMime)
+                Quickshell.execDetached([Paths.script("mime-defaults.sh")]);
             root.finished(exitCode === 0);
         }
     }

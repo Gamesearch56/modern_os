@@ -161,6 +161,8 @@ Singleton {
                     property string mail: "proton-mail.desktop"
                     property string communication: ""
                     property string fileManager: "org.kde.dolphin.desktop"
+                    property string videoPlayer: "mpv.desktop"
+                    property string imageViewer: "imv.desktop"
                     property string terminal: "kitty.desktop"
                 }
             }

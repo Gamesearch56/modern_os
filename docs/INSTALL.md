@@ -46,7 +46,7 @@ Profiles: `m0` (bar/launcher/session), `dev` (+ Cursor/toolchain),
 
 `install.sh` only installs packages and stows listed packages into
 `--target` (default `$HOME`): hypr, shell, theme, kitty, dolphin, gtk,
-qt, bash, git, modern, systemd, xdg, fontconfig. It does **not** stow
+qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, mpv, imv. It does **not** stow
 `greeter`. It never copies `install/system/` (no greetd tree exists).
 Stow conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
 

@@ -41,6 +41,14 @@ ColumnLayout {
         value: Apps.displayName("fileManager")
     }
     FactRow {
+        labelKey: "settings.fields.videoPlayer"
+        value: Apps.displayName("videoPlayer")
+    }
+    FactRow {
+        labelKey: "settings.fields.imageViewer"
+        value: Apps.displayName("imageViewer")
+    }
+    FactRow {
         labelKey: "settings.fields.browser"
         value: Apps.displayName("browser")
     }

@@ -149,6 +149,8 @@ Singleton {
                 "--title=modern.quicklook",
                 "--no-terminal",
                 "--keep-open=yes",
+                "--mute=no",
+                "--loop-file=no",
                 "--autofit=80%x80%",
                 "--input-conf=" + root.mpvInput,
                 root.path

@@ -285,6 +285,8 @@
       "mail": "proton-mail.desktop",
       "communication": "",
       "fileManager": "org.kde.dolphin.desktop",
+      "videoPlayer": "mpv.desktop",
+      "imageViewer": "imv.desktop",
       "terminal": "kitty.desktop"
     }
   },

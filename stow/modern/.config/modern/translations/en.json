@@ -405,6 +405,8 @@
       "mail": "Mail",
       "communication": "Messenger",
       "fileManager": "File manager",
+      "videoPlayer": "Video player",
+      "imageViewer": "Image viewer",
       "terminal": "Terminal",
       "idleDim": "Dim after",
       "idleOff": "Screen off",

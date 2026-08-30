@@ -81,7 +81,7 @@ QtObject {
         design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "wallpaper", "windows", "gaps", "cursor", "4k", "provider"], restore: ["design", "typography", "motion", "windows", "windowRules"] },
         bar: { icon: "cs-panel", order: 22, group: "appearance", keywords: ["widgets", "layout", "topbar"], restore: ["bar", "widgets"] },
         launcher: { icon: "view-app-grid-symbolic", order: 24, group: "appearance", keywords: ["frecency", "icons", "results", "search"], restore: ["launcher"] },
-        applications: { icon: "applications-other", order: 30, group: "apps", keywords: ["autostart", "browser", "calendar", "mail", "messenger"], restore: ["apps.defaults", "general.autostart"] },
+        applications: { icon: "applications-other", order: 30, group: "apps", keywords: ["autostart", "browser", "calendar", "mail", "messenger", "video", "mpv", "image", "imv"], restore: ["apps.defaults", "general.autostart"] },
         screenshots: { icon: "video-x-generic", order: 32, group: "apps", keywords: ["capture", "grim", "png", "jpeg", "webp", "clipboard", "video", "mp4", "wf-recorder"], restore: ["screenshots"] },
         ai: { icon: "applications-science-symbolic", order: 34, group: "apps", keywords: ["ollama", "assistant", "model", "chat"] },
         language: { icon: "preferences-desktop-locale", order: 40, group: "input", keywords: ["locale", "date", "time", "format", "week"], restore: ["language"] },
