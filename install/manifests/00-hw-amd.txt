@@ -1,0 +1,2 @@
+# CPU microcode for AMD. Selected by install.sh --hw amd (or auto-detect).
+amd-ucode

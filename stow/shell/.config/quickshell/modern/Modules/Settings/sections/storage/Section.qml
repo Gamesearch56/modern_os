@@ -3,60 +3,50 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "."
 
 ColumnLayout {
-    spacing: Tokens.spacing.md
+    id: root
+    spacing: Tokens.spacing.lg
 
-    Model { id: model }
+    Component.onCompleted: Storage.watching = true
+    Component.onDestruction: Storage.watching = false
 
-    MText {
-        key: "settings.sections.storage"
-        styleName: "headlineSmall"
+    MSectionHeader {
+        key: "settings.storage.internal"
+        topMargin: 0
+    }
+    Repeater {
+        model: Storage.internal.length
+        DriveCard {
+            required property int index
+            drive: Storage.internal[index]
+        }
+    }
+    MEmptyState {
+        visible: Storage.internal.length === 0
         Layout.fillWidth: true
+        Layout.preferredHeight: Tokens.spacing.xxl * 4
+        iconName: "drive-harddisk"
+        titleKey: "settings.storage.emptyInternal"
     }
 
-    MText {
-        key: "settings.fields.snapper"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
+    MSectionHeader {
+        key: "settings.storage.external"
+        topMargin: Tokens.spacing.xl
     }
-
-    MText {
-        value: model.snapperEnabled ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
-        Layout.fillWidth: true
+    Repeater {
+        model: Storage.external.length
+        DriveCard {
+            required property int index
+            drive: Storage.external[index]
+        }
     }
-
-    MText {
-        key: "settings.fields.restic"
-        styleName: "titleSmall"
+    MEmptyState {
+        visible: Storage.external.length === 0
         Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.resticEnabled ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.preUpdateSnapshot"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.preUpdateSnapshot ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+        Layout.preferredHeight: Tokens.spacing.xxl * 4
+        iconName: "drive-removable-media"
+        titleKey: "settings.storage.emptyExternal"
     }
 }

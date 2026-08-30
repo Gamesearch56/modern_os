@@ -1,7 +1,0 @@
-{
-  "id": "accounts",
-  "icon": "system-users",
-  "key": "settings.sections.accounts",
-  "order": 30,
-  "keywords": ["proton", "calendar", "ai", "ollama", "kdeconnect"]
-}

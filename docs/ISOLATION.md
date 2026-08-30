@@ -6,7 +6,9 @@ until you explicitly decide the new system is ready and run the gated
 system-wide phase yourself.
 
 How to create `devuser`, start Hyprland on a second TTY, and return to
-this session: **`README.md`**. Install flags: `docs/INSTALL.md`.
+this session: **`README.md`**. Install flags: `docs/INSTALL.md`. Switching
+**this** account onto the new desktop, with rewind then a clean cut:
+**`docs/CUTOVER.md`**.
 
 ## Safe by construction
 
@@ -17,7 +19,7 @@ this session: **`README.md`**. Install flags: `docs/INSTALL.md`.
 - `install.sh` **refuses** a stow target of `/home/bastianweigand` (or any
   path under it). Override with `MODERN_PROTECT_HOME` if the protected
   path differs; override the refuse with `--allow-live-home` only for a
-  deliberate cutover (new PC that reuses this username).
+  deliberate cutover (`docs/CUTOVER.md` Phase 1 — rewind archive first).
 - `stow` therefore never runs against the daily-driver home during testing.
   Conflict backups are stored under `$TARGET/.local/state/modern/stow-backups`.
 - All runtime state this project creates lives under the **target** user's
@@ -52,7 +54,7 @@ comment for the exact command.
 
 | Change | Why it's gated | Rollback |
 |---|---|---|
-| `greetd` enablement | Replaces autologin machine-wide. A broken greeter locks out *both* users graphically. | `sudo systemctl disable greetd`, re-enable the previous getty autologin unit, reboot. Documented in the file header of `install/system/greetd/config.toml` (when that file lands). |
+| `greetd` (planned, **not staged**) | Would replace autologin machine-wide. There is no `install/system/greetd/` file yet. Do not `systemctl enable greetd`. | If someone enabled a foreign greetd unit: `sudo systemctl disable greetd`, restore getty autologin, reboot. |
 | Plymouth theme + `mkinitcpio` hooks | Rewrites the initramfs. A bad rebuild can leave the machine unable to boot. | `sudo mkinitcpio -P` after reverting `/etc/mkinitcpio.conf`; the previous initramfs stays as a fallback boot entry — never delete it. |
 | `sysctl.d`, `polkit` actions, `tmpfiles.d`, udev rules, gaming perf sysctls | System-wide kernel/session policy. | Remove the dropped-in file under `/etc/{sysctl.d,polkit-1,tmpfiles.d,udev/rules.d}/modern-*` and reload (`sysctl --system`, `systemctl restart polkit`, `systemd-tmpfiles --create`). |
 | `modern-usersd` + its polkit action | Privileged account/group mutation. | Remove `/usr/local/bin/modern-usersd` and the `.policy` file; nothing else depends on it. |

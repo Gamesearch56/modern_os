@@ -1,44 +1,71 @@
 import QtQuick
 import Quickshell
+import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
+import "../../../../Services"
+import "../../"
 
-Rectangle {
+Item {
     id: root
-    radius: Tokens.radius.full
-    color: Colors.color.surfaceContainerHighest
     implicitWidth: label.implicitWidth + Tokens.spacing.md * 2
-    implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
+    implicitHeight: Config.bar.height
 
     SystemClock {
         id: clock
         precision: (Config.widgets.clock?.showSeconds ?? false) ? SystemClock.Seconds : SystemClock.Minutes
     }
 
+    BarIslandHit {
+        checked: popup.open
+        onClicked: popup.open = !popup.open
+    }
+
     MText {
         id: label
         anchors.centerIn: parent
-        value: root._format(clock.date)
+        z: 1
+        value: {
+            void Config.widgets.clock.showSeconds;
+            void Config.widgets.clock.showWeekday;
+            void clock.date;
+            return DateTime.clockLabel(
+                DateTime.displayDate(clock.date),
+                Config.language.dateFormat || "DD.MM.YYYY",
+                Config.language.timeFormat || "HH:mm",
+                Config.widgets.clock?.showSeconds ?? false,
+                Config.widgets.clock?.showWeekday ?? false);
+        }
         styleName: "labelLarge"
+        color: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
     }
 
-    MouseArea {
-        anchors.fill: parent
-        // Calendar panel is Modules/Panels; click is reserved for that
-        // once the panel module is loaded. For M0 this is display-only.
-    }
+    BarPopup {
+        id: popup
+        open: false
+        anchorItem: root
+        implicitWidth: Tokens.spacing.xxl * 14
+        implicitHeight: (panelLoader.item ? panelLoader.item.implicitHeight : Tokens.spacing.xxl * 12) + Tokens.spacing.md * 2
+        hAlign: Qt.AlignHCenter
+        onOpenChanged: {
+            Calendar.watching = popup.open;
+            if (popup.open) {
+                Calendar.resetView();
+                Calendar.refresh();
+            }
+        }
 
-    function _pad(n: int): string {
-        return n < 10 ? "0" + n : "" + n;
-    }
-
-    function _format(d: var): string {
-        if (!d)
-            return "";
-        const dateStr = root._pad(d.getDate()) + "." + root._pad(d.getMonth() + 1) + "." + d.getFullYear();
-        let timeStr = root._pad(d.getHours()) + ":" + root._pad(d.getMinutes());
-        if (Config.widgets.clock?.showSeconds)
-            timeStr += ":" + root._pad(d.getSeconds());
-        return dateStr + " - " + timeStr;
+        Loader {
+            id: panelLoader
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            height: item ? item.implicitHeight : parent.height
+            source: Qt.resolvedUrl("Panel.qml")
+            onLoaded: {
+                if (item)
+                    item.width = Qt.binding(() => panelLoader.width);
+            }
+        }
     }
 }

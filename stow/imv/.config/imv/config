@@ -1,0 +1,11 @@
+[binds]
+# Mausrad
+WheelUp = zoom 0.1
+WheelDown = zoom -0.1
+
+# Pfeiltasten
+Up = zoom 0.1
+Down = zoom -0.1
+
+# Rotate the currently open image by 90 degrees
+<Shift+R> = exec mogrify -rotate 90 "$imv_current_file"

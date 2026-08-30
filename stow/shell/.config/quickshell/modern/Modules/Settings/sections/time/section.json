@@ -1,7 +1,0 @@
-{
-  "id": "time",
-  "icon": "preferences-system-time",
-  "key": "settings.sections.time",
-  "order": 80,
-  "keywords": ["clock", "date", "format", "timezone", "weekday"]
-}

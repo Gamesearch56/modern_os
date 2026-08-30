@@ -3,39 +3,66 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "."
 
 ColumnLayout {
-    spacing: Tokens.spacing.md
+    id: root
+    spacing: Tokens.spacing.lg
 
-    Model { id: model }
+    property string selectedDesc: ""
 
-    MText {
-        key: "settings.sections.displays"
-        styleName: "headlineSmall"
-        Layout.fillWidth: true
+    readonly property int _n: {
+        void Hypr.monitors;
+        void Hypr.monitorGen;
+        return (Hypr.monitors?.values ?? []).length;
     }
 
-    MText {
-        key: "settings.fields.monitors"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
+    function _ensureSelection() {
+        const list = Hypr.monitors?.values ?? [];
+        let found = false;
+        for (let i = 0; i < list.length; i++) {
+            if (String(list[i].description || "") === root.selectedDesc) {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            root.selectedDesc = list.length ? String(list[0].description || "") : "";
     }
 
-    MText {
-        value: model.monitorsText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    on_NChanged: root._ensureSelection()
+    Component.onCompleted: {
+        Hypr.refreshMonitorDump();
+        Brightness.refreshDisplays();
+        root._ensureSelection();
     }
 
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.workspaceMode"
+        hintKey: "settings.hints.workspaceMode"
+        MSegmented {
+            value: Config.monitors?.workspaceMode || "dynamic"
+            model: [
+                { value: "dynamic", titleKey: "settings.wsDynamic" },
+                { value: "fixed", titleKey: "settings.wsFixed" }
+            ]
+            onSelected: (v) => ConfigWrite.set("monitors.workspaceMode", v)
+        }
+    }
+
+    MField {
+        visible: root._n > 0
+        labelKey: "settings.fields.monitors"
+        Layout.topMargin: Tokens.spacing.xxl
+        ProfileList {
+            selectedDesc: root.selectedDesc
+            onPicked: (desc) => {
+                root.selectedDesc = desc;
+            }
+        }
+    }
+
+    ProfileForm {
+        selectedDesc: root.selectedDesc
     }
 }

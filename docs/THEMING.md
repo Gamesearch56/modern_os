@@ -17,18 +17,29 @@ scripts/theme-apply.sh  ── resolves the profile + wallpaper/seed,
 matugen -c ~/.config/matugen/config.toml ...
         │
         ├─▶ tokens.json                          (SINGLE SOURCE OF TRUTH)
-        ├─▶ Colors.qml                           (Quickshell shell)
+        │     └─▶ Colors.qml FileView            (Quickshell live)
         ├─▶ hypr/modules/colors.lua               (Hyprland borders)
         ├─▶ kitty/colors.conf
         ├─▶ gtk-3.0/gtk.css, gtk-4.0/gtk.css
-        ├─▶ qt6ct/colors/modern.conf
+        ├─▶ qt6ct/colors/modern.conf              (QPalette; Fusion / Dolphin)
         ├─▶ kdeglobals                            (Dolphin, other KDE apps)
+        ├─▶ qt6ct/qss/modern.qss                  (Fusion stylesheet)
+        ├─▶ hypr/application-style.conf           (hyprland-qt-support radii)
+        ├─▶ hypr/hyprtoolkit.conf                 (hyprpolkitagent chrome)
         └─▶ vivaldi/custom_css/00-modern.css
+            + 01-chrome.css (fonts/radii)
 ```
 
-Every output in that list is written by **one** `matugen` invocation from
-**one** seed color, so nothing can drift out of sync the way hand-rolled
-per-app Wallust templates could. `tokens.json` is also readable directly
+Do **not** mix `design.transparency` into Vivaldi `#browser` — glass is
+for the island bar. Enable CSS mods once at `vivaldi://experiments`.
+
+
+Every *color* output in that list is written by **one** `matugen`
+invocation from **one** seed color, so nothing can drift out of sync the
+way hand-rolled per-app Wallust templates could. Radii, fonts, and
+motion for toolkit chrome (`01-chrome.css`, QSS placeholders,
+`application-style.conf`, `hyprtoolkit.conf`) are patched afterwards from `config.json`.
+`tokens.json` is also readable directly
 by anything that isn't a matugen template consumer (e.g. a shell script
 via `jq`, or the future Settings > Diagnostics color preview).
 
@@ -49,7 +60,11 @@ via `jq`, or the future Settings > Diagnostics color preview).
   for the live system. Resolves which profile to use (from
   `config.json`'s `design.activeProfile`, or `--profile`), resolves the
   wallpaper/seed, runs matugen, then does what live-reload it can
-  (`hyprctl reload`, `kitty @ load-config`).
+  (`hyprctl reload`, `kitty @ load-config`). Quickshell watches
+`tokens.json` and restyles the bar/overlays immediately. GTK apps pick
+up `gtk.css` on restart. Vivaldi's CSS overlay is already on disk
+(reload the tab); the native theme object is merged only while Vivaldi
+is not running. Dolphin must be fully quit after `theme-apply.sh`.
 
 ## Profile resolution
 
@@ -95,16 +110,54 @@ requires `allow_remote_control` in `stow/kitty/.config/kitty/kitty.conf`).
 That file `globinclude`s `colors.conf` so a missing theme file does not
 abort kitty. A shipped MD3 dark stub lives at
 `stow/kitty/.config/kitty/colors.conf`; matugen overwrites the live copy.
-Do not commit generated output from a theme-apply run. GTK/Qt live-reload
-(re-reading `settings.ini`/`qt6ct.conf` in already-running apps) and the
-Vivaldi `Preferences` merge are out of scope here — see the
-`gtk-qt-theming` and `vivaldi-theme` plan entries in `docs/DECISIONS.md`.
-The files these templates write are always correct on disk either way, so
-a restarted app always picks up the current theme even before those
-tasks land.
+Do not commit generated output from a theme-apply run. GTK/Qt live-reload (re-reading `settings.ini`/`qt6ct.conf` in
+already-running apps) and the Vivaldi `Preferences` merge are out of
+scope of a running-app live-reload: CSS overlay + `01-chrome.css` are
+always rewritten; the native theme object is merged only while Vivaldi is
+**not** running (so we do not fight its Preferences writer). Dolphin does
+not reload QSS live — fully quit it after `theme-apply.sh` and reopen with
+Super+E (`scripts/modern-launch` so `qt6ct` is in the environment even
+when Hyprland was only reloaded). qt6ct must **not** load `modern.qss`:
+an application stylesheet makes Fusion ignore the custom **Active**
+palette. Colors come from `qt6ct/colors/modern.conf` (`#AARRGGBB`) plus
+kdeglobals. KF6 apps (Dolphin) ignore that QPalette: KColorSchemeManager
+treats qt6ct's `ColorScheme::Unknown` as light, so a focused window goes
+white. `kdeglobals` `[UiSettings] ColorScheme=modern` pins
+`~/.local/share/color-schemes/modern.colors`. Widget style is
+`qt6ct-style`. Dolphin is an opaque overlay card (`dolphin-opaque`).
+Fully quit Dolphin after `theme-apply.sh`. Wallpaper stays in the
+compositor gaps around the window. `hyprctl reload` picks up the rule.
+`theme-apply.sh` writes absolute paths into `qt6ct.conf` because qt6ct
+does not expand `~`.
+
+**hyprpolkitagent** is hyprtoolkit (not Qt Quick / QSS). Colors, Inter,
+and `Tokens.radius.medium`/`small` are written to
+`~/.config/hypr/hyprtoolkit.conf` from `tokens.json` + `config.json`.
+The compositor applies `design.transparency` and `dim_around` via the
+`polkit-auth-dialog` window rule so the prompt reads as glass over a
+scrim, like Super+W. The next dialog picks up toolkit colors without a
+restart; `theme-apply.sh` still restarts the user unit after a palette
+swap. The agent's error string is hardcoded `"red"` upstream and cannot
+follow `error`. The files these
+templates write are always correct on disk, so a restarted app always
+picks up the current theme.
+
+**Vivaldi CSS modifications** must be enabled once in the browser:
+open `vivaldi://experiments` and turn on “Allow CSS modifications”, then
+point Custom UI Modifications at `~/.config/vivaldi/custom_css`. That
+toggle cannot be flipped from `config.json`. When
+`design.bootScreen.wallpaperOnVivaldi` is true, `theme-apply.sh` copies
+the current wallpaper to `custom_css/wallpaper` and `01-chrome.css` sets
+`--md-wallpaper` (plus `--md-font-*`, `--md-radius-*`, `--md-space-*`,
+`--md-blur`, `--md-transparency` from `config.json`).
 
 `--no-reload` skips all of the above — used by CI/lint checks and the M0
 verification script, where no Hyprland/kitty session exists to reload.
+
+`--chrome-only` skips matugen and rewrites GTK/Qt/KDE/Vivaldi radii,
+fonts, cursor, and motion from the current `config.json`. Settings uses
+this after Design knobs that are not a palette swap (rounding, type
+scale, animations, transparency, cursor).
 
 ## Adding a new consumer
 

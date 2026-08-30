@@ -3,5 +3,5 @@
   "icon": "drive-harddisk",
   "key": "settings.sections.storage",
   "order": 180,
-  "keywords": ["backup", "snapper", "restic", "snapshot"]
+  "keywords": ["disk", "mount", "eject", "usb", "nvme"]
 }

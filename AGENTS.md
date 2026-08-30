@@ -10,7 +10,8 @@ A from-scratch Material Design 3 desktop environment for Hyprland: a
 Quickshell (QML) shell replaces Waybar/SwayNC/Rofi, `matugen` replaces
 Wallust for colors, and everything behavioural lives in one JSON config
 file instead of scattered shell scripts. Full plan: `docs/ARCHITECTURE.md`.
-Status and milestones: `README.md`.
+Status: `README.md`. Settings is a Hyprland window (`modern.settings`);
+it still writes `config.json` only.
 
 ## The layer contract
 
@@ -54,16 +55,19 @@ Add it to `Widgets/qmldir`.
 **A new bar widget.** Create a directory under
 `Modules/Bar/widgets/<id>/` with `Widget.qml` (the mini bar representation)
 and optionally `Panel.qml` (the popup). Add a `widget.json` descriptor
-(`id`, translation key, default enabled, required Services). Add the id to
+(`id`, translation key, default enabled, required Services). Set
+`"bubble": true` if the widget should be its own pill (launcher, media,
+volume) instead of grouping with neighbours. Wi-Fi/Bluetooth and
+battery/control/power are the grouped clusters. Add the id to
 `bar.left` / `bar.center` / `bar.right` in `config.default.json`. Nothing
 else changes — no central switch statement to edit.
 
 **A new Settings section.** Create `Modules/Settings/sections/<id>/` with
 `Section.qml`, `section.json` (id, icon, translation key, order, search
 keywords) and `Model.qml` that reads only `config.<id>` from
-`Commons/Config.qml`. Add the id to the section registry array in
-`Modules/Settings/Module.qml`. It is picked up by global search
-automatically via its `section.json` keywords.
+`Commons/Config.qml`. Add the id to **`Modules/Settings/Catalog.qml`**
+(`ids` and `_byId`; `groupOrder` if you add a nav group). Search uses
+the catalog — a folder alone is not enough. See `docs/SETTINGS.md`.
 
 **A new launcher provider.** Add a file under
 `Modules/Launcher/providers/<name>.qml` implementing `query(text) -> results[]`

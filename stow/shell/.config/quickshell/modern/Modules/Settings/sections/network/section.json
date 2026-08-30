@@ -3,5 +3,5 @@
   "icon": "network-wireless",
   "key": "settings.sections.network",
   "order": 120,
-  "keywords": ["wifi", "dns", "ethernet"]
+  "keywords": ["wifi", "ethernet", "speed"]
 }

@@ -1,0 +1,35 @@
+import QtQuick
+import QtQuick.Layouts
+import "../../../../Commons"
+import "../../../../Widgets"
+import "../../../../Services"
+
+MStatusCard {
+    id: root
+
+    iconName: "system-software-update"
+    titleKey: {
+        if (Update.checking && Update.pending.length === 0)
+            return "settings.update.checking";
+        if (Update.pending.length > 0)
+            return "settings.update.available";
+        return "settings.update.upToDate";
+    }
+    titleParams: ({ n: String(Update.pending.length) })
+
+    trailing: MButton {
+        kind: "tonal"
+        key: "settings.update.search"
+        iconName: "view-refresh"
+        iconAfter: true
+        busy: Update.checking
+        enabled: !Update.running && !Update.mirrorsRunning
+        onClicked: Update.refresh()
+    }
+
+    MLinearProgress {
+        visible: Update.checking
+        Layout.fillWidth: true
+        indeterminate: true
+    }
+}

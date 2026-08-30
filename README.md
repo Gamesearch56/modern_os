@@ -16,34 +16,41 @@ Two install paths exist:
   pass `--yes --disk`) then `install/install.sh` as the new user.
 
 Full plan: `docs/ARCHITECTURE.md`. Isolation rules: `docs/ISOLATION.md`.
+When `devuser` testing is done and this account should run the new
+desktop (with a rewind path, then a later clean cut): `docs/CUTOVER.md`.
+
+## What a clone installs
+
+`git clone` plus `install.sh` reproduces the **designed** desktop
+(`config.default.json`, package manifests, stow), not this machine’s
+live `config.json`. Displays, wallpaper, calendar, Ollama, Proton,
+Vivaldi profile, and SSH stay out of git. The shipped UI language is
+**English**; keyboard layout default is `de`. Clone the branch you
+intend to run (`main` may lag the working branch).
 
 ## Status
 
-The shell, installer, token pipeline and Settings modules are in the
-repo and internally consistent (`scripts/lint-layers.sh`). They have
-**not** been lived as a daily session yet. Package installs are additive
-(pacman has no per-user scope). Everything that would change boot, login,
-or `/etc` lives under `install/system/` and is **never** applied by
-`install.sh`.
+The desktop is a daily Hyprland + Quickshell session: Material You widget
+kit, Settings as a real window, island bar (including vertical), compact
+control panel (Super+L; not lock), overlay menus as floating windows,
+tokenized GTK/Qt/Dolphin/Vivaldi chrome. The lock screen is a **visual
+overlay** (any non-empty password), not a real session lock. Verify with:
 
-| Milestone | Scope | Code |
-|---|---|---|
-| M0 | Bar, launcher, power menu, cheatsheet, Vivaldi, Cursor on `devuser` | present |
-| M1 | Lock/login/shutdown, Plymouth (gated), notifications, GTK/Qt/Vivaldi | present |
-| M2 | Wallpaper picker, media/performance/weather/VPN/notes widgets | present |
-| M3 | Settings app | present |
-| M4 | Gaming: OptiScaler, profiles, perf sysctls (gated) | present |
-| M5 | Watchdog, portals, IPC CLI, KDE Connect, backups, bootstrap, onboarding | present |
-| M6 | Personal layer, plugins, extras | present |
+```bash
+scripts/lint-layers.sh
+scripts/doctor.sh
+scripts/check-isolation.sh
+```
 
-Hand-check remaining items: `docs/TROUBLESHOOTING.md` and the milestone
-notes in `docs/DECISIONS.md`.
+System-wide boot/login/`/etc` files stay under `install/system/` and are
+**never** applied by `install.sh` or Settings.
 
 ## Safety — testing will not replace your current session
 
 If you follow the **this machine** path below and **do not** apply
-`install/system/` (greetd, Plymouth/mkinitcpio, sysctl, polkit, ufw,
-snapper, ESP hook):
+`install/system/` (Plymouth/mkinitcpio, sysctl, polkit, ufw, tmpfiles,
+usersd, portals, snapper, ESP hook). There is **no** `install/system/greetd/`
+tree yet — `sudo systemctl enable greetd` is not a supported step:
 
 - `install.sh` **refuses** to stow into `/home/bastianweigand` (even
   `--dry-run`). Override only with `--allow-live-home` for a deliberate
@@ -69,7 +76,7 @@ remove anything the daily driver uses. The existing
 **Do not run** while testing:
 
 ```text
-sudo systemctl enable greetd
+sudo systemctl enable greetd   # unit/config are not shipped
 # anything that copies install/system/ into /etc
 # install.sh without --target if you are logged in as bastianweigand
 # install.sh --allow-live-home
@@ -155,6 +162,11 @@ TTY3.
 - **After a reboot:** autologin is still the daily-driver account,
   because greetd was never enabled. Log in as usual.
 
+Putting **this** account on the new desktop (not `devuser`) is a
+different, two-phase procedure: reversible stow first, delete the old
+`~/dotfiles` stack only after days of use — `docs/CUTOVER.md`. Do not
+use `--allow-live-home` until that document’s Phase 1.
+
 ### 5. Cursor on `devuser`
 
 Follow `docs/CURSOR-SETUP.md` inside the `devuser` session (`--profile
@@ -164,8 +176,9 @@ copy under `/home/bastianweigand`.
 ## New PC — install from scratch
 
 Gated `/etc` files are still **not** applied by default. You get a
-working user session first; greetd/Plymouth are a later, explicit step
-(`docs/BOOT.md`, `docs/ISOLATION.md`).
+working TTY session first. Plymouth and other staged files under
+`install/system/` are a later, explicit step. A greetd login greeter is
+**not shipped** (`docs/BOOT.md`, `docs/ISOLATION.md`).
 
 ### Already running Arch (one empty user)
 
@@ -208,15 +221,10 @@ QEMU recipe only: `./scripts/bootstrap.sh --vm`.
 
 ## Logging and errors
 
-| Layer | Where it goes | User-visible |
-|---|---|---|
-| Installer | terminal + `install/install.log` (gitignored) + `journalctl -t modern-install` | no toasts (would hit the wrong session) |
-| Shell | Quickshell `log.qslog` + `Logger` ring (Settings → System) | **errors** become notification toasts; DND does not hide errors |
-| Soft failures | `Logger.warn` (console + ring) | no toast unless `Logger.notifyOnWarn` is enabled |
-
-Failed `config.json` writes, Hyprland dispatch, brightness, Drive sync,
-and uncaught Service exceptions call `Logger.error` and surface in the
-notification panel.
+Installer: terminal + `install/install.log` (gitignored) +
+`journalctl -t modern-install`. Shell: Quickshell log + Settings →
+System ring. User-visible toasts are described in
+`docs/TROUBLESHOOTING.md`.
 
 ## Architecture at a glance
 
@@ -249,10 +257,13 @@ modern_dotfile/
 | Keys | Action |
 |---|---|
 | `SUPER` + `Space` | Application launcher |
-| `SUPER` + `M` | Power menu |
+| `SUPER` + `M` | Power menu (Lock is a preview overlay, not a real lock) |
+| `SUPER` + `L` | Control panel (not lock) |
+| `SUPER` + `SHIFT` + `M` | Exit compositor |
 | `SUPER` + `K` | Keybind cheatsheet |
 | `SUPER` + `I` | Settings |
 | `SUPER` + `W` | Wallpaper picker |
+| `SUPER` + `DELETE` | Applications (taskbar) |
 | `SUPER` + `Tab` | Overview |
 | `SUPER` + `T` | Terminal (kitty; always bound) |
 | `SUPER` + `Return` | Terminal (always bound) |
@@ -260,8 +271,10 @@ modern_dotfile/
 | `SUPER` + `E` | File manager (Dolphin) |
 | `SUPER` + `Q` | Close window |
 
-Full list: `SUPER`+`K`, or `stow/modern/.config/modern/config.default.json`
-→ `keybinds`.
+Full list: `SUPER`+`K`, `docs/KEYBINDS.md`, or
+`stow/modern/.config/modern/config.default.json` → `keybinds`.
+Design → wallpaper provider opens a **separate** `qml6` window
+(`qt6-webengine`), not an in-shell WebEngine view.
 
 ## Verify (from the daily-driver account)
 

@@ -3,39 +3,149 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "."
 
 ColumnLayout {
-    spacing: Tokens.spacing.md
+    id: root
+    spacing: Tokens.spacing.lg
 
-    Model { id: model }
+    function _stem(id) {
+        return String(id || "").replace(/\.desktop$/, "");
+    }
 
-    MText {
-        key: "settings.sections.applications"
-        styleName: "headlineSmall"
+    function setBackgroundApp(role, v) {
+        const prev = String(Config.apps.defaults[role] || "");
+        const id = String(v || "");
+        ConfigWrite.set("apps.defaults." + role, id);
+        const locked = {};
+        const roles = ["calendar", "mail", "communication"];
+        for (let r = 0; r < roles.length; r++) {
+            const cur = roles[r] === role ? id : String(Config.apps.defaults[roles[r]] || "");
+            if (cur.length > 0)
+                locked[root._stem(cur)] = cur;
+        }
+        const next = [];
+        const seen = {};
+        const list = Config.general.autostart || [];
+        for (let i = 0; i < list.length; i++) {
+            const item = String(list[i] || "");
+            const s = root._stem(item);
+            if (s.length === 0 || seen[s])
+                continue;
+            if (s === root._stem(prev) && !locked[s])
+                continue;
+            seen[s] = true;
+            next.push(item);
+        }
+        if (id.length > 0 && !seen[root._stem(id)])
+            next.push(id);
+        ConfigWrite.set("general.autostart", next);
+        if (id.length > 0 && !Hypr.raiseDesktop(id))
+            Apps.launchBackground(id);
+    }
+
+    MField {
+        labelKey: "settings.fields.browser"
+        MSelect {
+            model: Apps.entriesFor("browser")
+            value: Config.apps.defaults.browser
+            onSelected: (v) => ConfigWrite.set("apps.defaults.browser", v)
+        }
+    }
+    MField {
+        id: calendarField
+        labelKey: "settings.fields.calendar"
+        MSelect {
+            model: Apps.entriesFor("calendar")
+            value: Config.apps.defaults.calendar
+            allowEmpty: true
+            onSelected: (v) => root.setBackgroundApp("calendar", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.mail"
+        MSelect {
+            model: Apps.entriesFor("mail")
+            value: Config.apps.defaults.mail
+            allowEmpty: true
+            onSelected: (v) => root.setBackgroundApp("mail", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.communication"
+        MSelect {
+            model: Apps.entriesFor("communication")
+            value: Config.apps.defaults.communication
+            allowEmpty: true
+            onSelected: (v) => root.setBackgroundApp("communication", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.fileManager"
+        MSelect {
+            model: Apps.entriesFor("fileManager")
+            value: Config.apps.defaults.fileManager
+            onSelected: (v) => ConfigWrite.set("apps.defaults.fileManager", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.videoPlayer"
+        MSelect {
+            model: Apps.entriesFor("videoPlayer")
+            value: Config.apps.defaults.videoPlayer
+            onSelected: (v) => ConfigWrite.set("apps.defaults.videoPlayer", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.imageViewer"
+        MSelect {
+            model: Apps.entriesFor("imageViewer")
+            value: Config.apps.defaults.imageViewer
+            onSelected: (v) => ConfigWrite.set("apps.defaults.imageViewer", v)
+        }
+    }
+    MField {
+        labelKey: "settings.fields.terminal"
+        MSelect {
+            model: Apps.entriesFor("terminal")
+            value: Config.apps.defaults.terminal
+            onSelected: (v) => ConfigWrite.set("apps.defaults.terminal", v)
+        }
+    }
+
+    Autostart {
         Layout.fillWidth: true
     }
 
-    MText {
-        key: "settings.fields.autostart"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
+    function _flickable() {
+        let p = root.parent;
+        while (p) {
+            if (p.flickableDirection !== undefined)
+                return p;
+            p = p.parent;
+        }
+        return null;
     }
 
-    MText {
-        value: model.autostartText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    function _scrollToCalendar() {
+        if (Settings.subsectionId !== "calendar")
+            return;
+        if (calendarField.height <= 0)
+            return;
+        const flick = root._flickable();
+        if (!flick)
+            return;
+        const pos = calendarField.mapToItem(flick.contentItem, 0, 0);
+        const maxY = Math.max(0, flick.contentHeight - flick.height);
+        flick.contentY = Math.min(maxY, Math.max(0, pos.y - Tokens.spacing.md));
+        Settings.subsectionId = "";
     }
 
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    Connections {
+        target: Settings
+        function onSubsectionIdChanged() { Qt.callLater(root._scrollToCalendar); }
     }
+
+    Component.onCompleted: Qt.callLater(root._scrollToCalendar)
+    onImplicitHeightChanged: Qt.callLater(root._scrollToCalendar)
 }

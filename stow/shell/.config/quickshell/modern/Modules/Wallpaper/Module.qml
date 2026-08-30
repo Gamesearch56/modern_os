@@ -1,17 +1,43 @@
 import Quickshell
+import Quickshell.Hyprland
+import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
-import "../../Widgets"
 import "../../Services"
 
 Scope {
+    id: root
+
+    Connections {
+        target: Wallpaper
+        function onFetched(path) {
+            Notifications.toast(I18n.t("wallpaper.fetched"), I18n.t("wallpaper.fetchedHint"), path);
+        }
+        function onFetchFailed() {
+            Notifications.toast(I18n.t("wallpaper.fetchFailed"), "");
+        }
+        function onOpenedInBrowser() {
+            Notifications.toast(I18n.t("wallpaper.providerBrowser"), I18n.t("wallpaper.providerBrowserHint"));
+        }
+    }
+
+    function _focusedScreen(): var {
+        const n = Hypr.focusedMonitorName();
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === n)
+                return screens[i];
+        }
+        return screens.length ? screens[0] : null;
+    }
+
     LazyLoader {
         active: Wallpaper.pickerOpen
 
         PanelWindow {
             id: win
             visible: Wallpaper.pickerOpen
+            screen: root._focusedScreen()
             color: "transparent"
             anchors.top: true
             anchors.left: true
@@ -19,85 +45,71 @@ Scope {
             anchors.bottom: true
             exclusionMode: ExclusionMode.Ignore
             focusable: true
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
 
-            Rectangle {
+            Overlay {
+                id: overlay
                 anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.4
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Wallpaper.setPickerOpen(false)
-                }
+                onClosed: Wallpaper.hide()
             }
 
-            MCard {
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 22, win.width - Tokens.spacing.xxl)
-                height: Math.min(Tokens.spacing.xxl * 16, win.height - Tokens.spacing.xxl * 2)
-                anchors.centerIn: parent
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: Tokens.spacing.md
-
-                    MText {
-                        key: "wallpaper.title"
-                        styleName: "headlineSmall"
-                    }
-
-                    GridView {
-                        id: grid
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
-                        cellWidth: Tokens.spacing.xxl * 8
-                        cellHeight: Tokens.spacing.xxl * 6
-                        model: Wallpaper.images
-                        delegate: Item {
-                            required property var modelData
-                            width: grid.cellWidth
-                            height: grid.cellHeight
-
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: Tokens.spacing.xs
-                                radius: Tokens.radius.small
-                                color: Colors.color.surfaceContainerHighest
-                                border.width: modelData === Wallpaper.currentPath ? 2 : 0
-                                border.color: Colors.color.primary
-                                clip: true
-
-                                Image {
-                                    anchors.fill: parent
-                                    source: "file://" + modelData
-                                    sourceSize.width: 256
-                                    sourceSize.height: 256
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: Wallpaper.setWallpaper(modelData)
-                                }
-                            }
-                        }
-                    }
-
-                    MText {
-                        visible: Wallpaper.images.length === 0
-                        key: "wallpaper.empty"
-                        styleName: "bodyMedium"
-                        color: Colors.color.onSurfaceVariant
-                        Layout.alignment: Qt.AlignHCenter
-                    }
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: [win]
+                onCleared: {
+                    if (Wallpaper.pickerOpen)
+                        Wallpaper.hide();
                 }
             }
 
             Shortcut {
                 sequence: "Escape"
-                onActivated: Wallpaper.setPickerOpen(false)
+                context: Qt.ApplicationShortcut
+                onActivated: {
+                    if (overlay.confirming)
+                        overlay.cancelRemove();
+                    else
+                        Wallpaper.hide();
+                }
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
+                sequence: "Left"
+                onActivated: overlay.moveBy(-1)
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
+                sequence: "Right"
+                onActivated: overlay.moveBy(1)
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
+                sequence: "Up"
+                onActivated: overlay.moveBy(-overlay.columns)
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
+                sequence: "Down"
+                onActivated: overlay.moveBy(overlay.columns)
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
+                sequence: "Return"
+                onActivated: overlay.activate()
+            }
+            Shortcut {
+                enabled: Wallpaper.images.length > 0 && !overlay.confirming
+                sequence: "Enter"
+                onActivated: overlay.activate()
+            }
+
+            Component.onCompleted: {
+                Qt.callLater(() => {
+                    if (!Wallpaper.pickerOpen)
+                        return;
+                    keyGrab.active = true;
+                });
             }
         }
     }

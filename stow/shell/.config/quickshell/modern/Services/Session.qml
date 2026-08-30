@@ -17,6 +17,7 @@ Singleton {
     property bool locked: false
     property string mode: "lock"
     property string pendingAction: ""
+    property string lastError: ""
 
     IpcHandler {
         target: "session"
@@ -49,8 +50,11 @@ Singleton {
         // so M1 accepts a non-empty password and unlocks the overlay.
         // Replace this body with pam.start()/respond() once the gated
         // greetd phase lands (docs/ISOLATION.md).
-        if (!password || password.length === 0)
+        if (!password || password.length === 0) {
+            root.lastError = "empty";
             return;
+        }
+        root.lastError = "";
         root.unlock();
     }
 

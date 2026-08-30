@@ -8,15 +8,19 @@ what is shared with an unprivileged greeter. Plymouth and greetd are
 
 ```
 TTY: start-hyprland   →  Hyprland (stow/hypr)
-greetd (gated)        →  (same, via hyprland.desktop / UWSM)
-                      │
+                      │     (greetd is not shipped; future path only)
                       ├─ autostart.lua
                       │     exec qs -c modern  (compositor child)
-                      │     timeout systemctl --user … (polkit, optional stop)
+                      │     timeout 2 systemctl/dbus/polkit/stop
                       ├─ modern-shell.service  (optional UWSM watchdog)
                       │     ExecStart=quickshell -c modern
                       └─ portals (xdg-desktop-portal-hyprland + gtk/kde)
 ```
+
+Autostart in Hyprland already starts Quickshell as a child of this
+compositor. Enable `modern-shell.service` on the **target** user
+(`devuser` while testing; the live account only after CUTOVER Phase 1).
+Do not enable it on the daily-driver account while isolation is in force.
 
 From a TTY, always run **`start-hyprland`**, not the `Hyprland` binary.
 Hyprland ≥ 0.53’s wrapper sets up crash recovery and the user session;
@@ -60,18 +64,20 @@ force.
 
 ## Shared session state
 
-Runtime the greeter must read without touching `$HOME` lives under
-`/var/lib/modern/session/` (world-readable, created by a gated
-tmpfiles.d drop-in when that phase is applied). Per-user state stays in
-`$XDG_STATE_HOME/modern/` and `$XDG_DATA_HOME/modern/`.
+Runtime a future greeter must read without touching `$HOME` lives under
+`/var/lib/modern/session/` (gated tmpfiles.d, not applied yet).
+`wallpaper-sync.sh` currently writes to
+`$XDG_STATE_HOME/modern/session/` when that directory is missing.
+Per-user state stays in `$XDG_STATE_HOME/modern/` and
+`$XDG_DATA_HOME/modern/`.
 
 ## Lock vs login vs splash
 
 | Surface | Owner | Notes |
 |---------|--------|------|
-| Plymouth splash | gated theme + mkinitcpio hook | never rewrite initramfs from `install.sh` |
-| greetd greeter | `stow/greeter` Quickshell | shares Session module with the shell |
-| lock screen | `Modules/Session` + `WlSessionLock` | `Power.lock` → `loginctl lock-session` |
+| Plymouth splash | gated theme + mkinitcpio hook | `plymouth-sync.sh`; never rewrite initramfs from `install.sh` |
+| greetd greeter | `stow/greeter` stub | **Not installed.** No `install/system/greetd/`. Autologin/getty unchanged. |
+| lock screen | `Modules/Session` overlay | Power menu preview. Any non-empty password unlocks. Idle/lid run `loginctl lock-session` and do **not** show the overlay. Not `WlSessionLock`. |
 
 `config.json` → `design.bootScreen` chooses whether the current wallpaper
 is shown on splash/lock/login.
@@ -89,7 +95,9 @@ Screenshot and ScreenCast are Hyprland.
 ## Troubleshooting a black session / no bar
 
 If the graphical session is up (wallpaper, `SUPER+B`) but you have no
-terminal, do **not** wait on `SUPER+T`. From the daily-driver TTY:
+terminal, try `SUPER+RETURN` (emergency `/usr/bin/kitty`). Do **not**
+wait only on `SUPER+T` if `modern-launch` is broken. From the
+daily-driver TTY:
 
 1. `loginctl list-sessions` — note the `devuser` / `tty3` id
 2. Optional: `loginctl terminate-session <id>`

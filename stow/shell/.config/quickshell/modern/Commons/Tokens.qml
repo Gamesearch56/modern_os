@@ -41,13 +41,15 @@ Singleton {
     // on the background", level5 is the highest (e.g. a modal dialog).
     // Applied via MCard's background — no other component draws its own
     // shadow (docs/DESIGN.md).
+    readonly property real surfaceTint: Config.design.surfaceTint ?? 1.0
+
     readonly property var elevation: [
         { tintOpacity: 0.0, shadowOpacity: 0.0, shadowRadius: 0 },
-        { tintOpacity: 0.05, shadowOpacity: 0.08, shadowRadius: 3 },
-        { tintOpacity: 0.08, shadowOpacity: 0.1, shadowRadius: 6 },
-        { tintOpacity: 0.11, shadowOpacity: 0.12, shadowRadius: 10 },
-        { tintOpacity: 0.12, shadowOpacity: 0.14, shadowRadius: 14 },
-        { tintOpacity: 0.14, shadowOpacity: 0.16, shadowRadius: 20 }
+        { tintOpacity: 0.10, shadowOpacity: 0.08, shadowRadius: 3 },
+        { tintOpacity: 0.16, shadowOpacity: 0.1, shadowRadius: 6 },
+        { tintOpacity: 0.22, shadowOpacity: 0.12, shadowRadius: 10 },
+        { tintOpacity: 0.24, shadowOpacity: 0.14, shadowRadius: 14 },
+        { tintOpacity: 0.28, shadowOpacity: 0.16, shadowRadius: 20 }
     ]
 
     readonly property QtObject overlay: QtObject {
@@ -55,7 +57,54 @@ Singleton {
         readonly property real lock: 0.48
     }
 
+    readonly property QtObject icon: QtObject {
+        readonly property real xs: 16
+        readonly property real sm: 20
+        readonly property real md: 24
+        readonly property real lg: 40
+    }
+
+    readonly property QtObject interaction: QtObject {
+        readonly property real hover: 0.08
+        readonly property real press: 0.12
+        readonly property real focus: 0.12
+    }
+
+    // Hairline rest stroke vs MD3 2dp focus/hover indicator.
+    readonly property QtObject stroke: QtObject {
+        readonly property real hairline: 1
+        readonly property real focus: 2
+    }
+
+    readonly property QtObject window: QtObject {
+        readonly property real settingsWidth: root.spacing.xxl * 32 + root.spacing.lg
+        readonly property real settingsHeight: root.spacing.xxl * 22 + root.spacing.lg
+        readonly property real overviewWidth: root.spacing.xxl * 22
+        readonly property real overviewHeight: root.spacing.xxl * 16
+        readonly property real overlayWidth: root.spacing.xxl * 24
+        readonly property real overlayHeight: root.spacing.xxl * 20
+        readonly property real providerWidth: 1200
+        readonly property real providerHeight: 800
+    }
+
+    readonly property QtObject panel: QtObject {
+        readonly property real popupMin: root.spacing.xxl * 10
+        readonly property real cheatsheetNav: root.spacing.xxl * 8
+        readonly property real powerWidth: root.spacing.xxl * 12
+        readonly property real launcherWidth: root.spacing.xxl * 16
+    }
+
+    readonly property QtObject slider: QtObject {
+        readonly property real trackHeight: 8
+        readonly property real thumb: 20
+    }
+
     function elevationFor(level: int): var {
-        return elevation[Math.max(0, Math.min(level, elevation.length - 1))];
+        const raw = elevation[Math.max(0, Math.min(level, elevation.length - 1))];
+        return {
+            tintOpacity: Math.min(1, raw.tintOpacity * root.surfaceTint),
+            shadowOpacity: raw.shadowOpacity,
+            shadowRadius: raw.shadowRadius
+        };
     }
 }

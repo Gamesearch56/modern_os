@@ -1,5 +1,4 @@
-// Single-line text field. Placeholder is an I18n key. Used by launcher
-// search, Settings search, lock-screen password (echoMode Password).
+// Single-line filled field with a primary focus ring.
 import QtQuick
 import "../Commons"
 
@@ -7,12 +6,20 @@ Item {
     id: root
 
     property alias text: input.text
+    readonly property alias focused: input.activeFocus
+    property alias editor: input
     property string placeholderKey: ""
+    property string iconName: ""
     property int echoMode: TextInput.Normal
     property bool enabled: true
+    property bool escapeCloses: false
 
     signal accepted()
     signal textEdited()
+    signal editingFinished()
+    signal escaped()
+    signal upPressed()
+    signal downPressed()
 
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
@@ -20,35 +27,65 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Tokens.radius.small
+        radius: Tokens.radius.full
         color: Colors.color.surfaceContainerHighest
         border.color: input.activeFocus ? Colors.color.primary : Colors.color.outline
         border.width: input.activeFocus ? 2 : 1
 
         Behavior on border.color {
             ColorAnimation {
-                duration: Motion.short()
+                duration: Motion.shortMs
                 easing.bezierCurve: Motion.easingStandard
             }
         }
     }
 
+    MIcon {
+        visible: root.iconName.length > 0
+        anchors.left: parent.left
+        anchors.leftMargin: Tokens.spacing.md
+        anchors.verticalCenter: parent.verticalCenter
+        name: root.iconName
+        size: Tokens.icon.md
+        color: Colors.color.onSurfaceVariant
+        tint: true
+    }
+
     TextInput {
         id: input
         anchors.fill: parent
-        anchors.leftMargin: Tokens.spacing.md
+        anchors.leftMargin: root.iconName.length > 0 ? Tokens.spacing.xxl + Tokens.spacing.xs : Tokens.spacing.md
         anchors.rightMargin: Tokens.spacing.md
         verticalAlignment: TextInput.AlignVCenter
         color: Colors.color.onSurface
-        selectionColor: Colors.color.primaryContainer
-        selectedTextColor: Colors.color.onPrimaryContainer
+        selectionColor: Colors.color.primary
+        selectedTextColor: Colors.color.onPrimary
         font.family: Typography.family.ui
         font.pixelSize: Typography.style("bodyLarge").pixelSize
+        font.hintingPreference: Font.PreferNoHinting
+        renderType: TextInput.QtRendering
         echoMode: root.echoMode
         enabled: root.enabled
+        activeFocusOnPress: true
         clip: true
         onAccepted: root.accepted()
         onTextChanged: root.textEdited()
+        onEditingFinished: root.editingFinished()
+        Keys.priority: Keys.BeforeItem
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_Escape) {
+                root.escaped();
+                event.accepted = true;
+                return;
+            }
+            if (event.key === Qt.Key_Down) {
+                root.downPressed();
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Up) {
+                root.upPressed();
+                event.accepted = true;
+            }
+        }
     }
 
     MText {
@@ -57,6 +94,10 @@ Item {
         key: root.placeholderKey
         styleName: "bodyLarge"
         color: Colors.color.onSurfaceVariant
+    }
+
+    function focusInput() {
+        input.forceActiveFocus();
     }
 
     function forceActiveFocus() {

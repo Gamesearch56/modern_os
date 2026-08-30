@@ -24,23 +24,36 @@ esac
 
 alias vim=nvim
 alias ls='ls -alh --color=auto'
+alias ll='ls -alh --color=auto'
+alias la='ls -A --color=auto'
 alias grep='grep --color=auto'
 alias wallpaper='modern wallpaper picker'
 alias reload_ui='modern shell reload'
-alias system_language='echo use Settings'
+alias reload_quickshell='modern shell reload'
+alias ifind='find . -iname'
+alias system_update='modern update'
+alias system_cleanup='modern cleanup'
+alias system_find='modern pkg find'
+alias system_fix='modern repair'
+alias fsr_on='optiscaler.sh on'
+alias fsr_off='optiscaler.sh off'
+
+shopt -s histappend checkwinsize
+HISTSIZE=5000
+HISTFILESIZE=20000
+
+# shellcheck source=/dev/null
+[ -f /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
 
 load() { yay -S --needed -- "$@"; }
 unload() { yay -Rns -- "$@"; }
 
-system_cleanup() {
-    yay -Yc
-    paccache -r
-}
-
-system_find() {
-    pacman -F -- "$@"
-}
+if [ -d "$HOME/Android/Sdk" ]; then
+    export ANDROID_HOME="$HOME/Android/Sdk"
+    PATH="$ANDROID_HOME/platform-tools:$PATH"
+fi
 
 if command -v fastfetch >/dev/null 2>&1; then
     fastfetch
+    echo ""
 fi

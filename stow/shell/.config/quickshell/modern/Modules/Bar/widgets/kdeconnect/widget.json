@@ -1,1 +1,1 @@
-{"id":"kdeconnect","key":"bar.kdeconnect","defaultEnabled":true,"services":["KdeConnect"]}
+{"id":"kdeconnect","key":"bar.kdeconnect","defaultEnabled":true,"bubble":true,"services":["KdeConnect"]}

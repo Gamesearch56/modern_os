@@ -4,21 +4,38 @@ import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 
-RowLayout {
-    spacing: Tokens.spacing.xs
+Item {
+    id: root
+    implicitWidth: row.implicitWidth + Tokens.spacing.xs
+    implicitHeight: Tokens.spacing.xxl
 
-    MIcon {
-        name: Bluetooth.powered ? "bluetooth-active" : "bluetooth-disabled"
-        size: Tokens.spacing.lg
+    readonly property string _device: {
+        const list = Bluetooth.devices?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].connected)
+                return list[i].name || "";
+        }
+        return "";
     }
 
-    MText {
-        value: Bluetooth.powered ? I18n.t("bluetooth.connected", { count: Bluetooth.connectedCount }) : I18n.t("bluetooth.off")
-        styleName: "labelLarge"
-    }
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        spacing: Tokens.spacing.xs
 
-    MouseArea {
-        anchors.fill: parent
-        onClicked: Settings.openAt("network", "bluetooth")
+        MIconButton {
+            tabFocus: false
+            iconName: Bluetooth.powered ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
+            key: "bar.bluetooth"
+            onClicked: Settings.openAt("bluetooth", "")
+        }
+
+        MText {
+            visible: root._device.length > 0
+            value: root._device
+            styleName: "labelSmall"
+            elide: Text.ElideRight
+            Layout.maximumWidth: Tokens.spacing.xxl * 4
+        }
     }
 }

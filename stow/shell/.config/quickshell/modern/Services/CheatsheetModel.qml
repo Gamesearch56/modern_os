@@ -11,8 +11,10 @@ Singleton {
 
     readonly property var categoryOf: ({
         launcher: "applications", terminal: "applications", browser: "applications",
+        browserIncognito: "applications",
         fileManager: "applications", settings: "applications", wallpaperPicker: "applications",
-        overview: "applications",
+        taskbar: "applications",
+        overview: "applications", spotify: "applications", aiChat: "applications",
         closeWindow: "windowManagement", fullscreen: "windowManagement",
         toggleFloating: "windowManagement", pseudoTile: "windowManagement",
         toggleSplit: "windowManagement",
@@ -31,8 +33,8 @@ Singleton {
         moveToWorkspace9: "workspaces", moveToWorkspace10: "workspaces",
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
         screenshotFull: "screenshots", colorPicker: "screenshots",
-        gameMode: "media", clipboardHistory: "media", powerMenu: "media",
-        cheatsheet: "media"
+        cheatsheet: "system", powerMenu: "system", controlCenter: "system", lockScreen: "system", exitSession: "system",
+        filePreview: "utilities"
     })
 
     function rows(filter: string): var {
@@ -41,6 +43,8 @@ Singleton {
         const out = [];
         for (const action in binds) {
             if (action.charAt(0) === "_")
+                continue;
+            if (action === "gameMode")
                 continue;
             const combo = binds[action];
             if (typeof combo !== "string")
@@ -58,5 +62,46 @@ Singleton {
         }
         out.sort((a, b) => a.category.localeCompare(b.category) || a.action.localeCompare(b.action));
         return out;
+    }
+
+    function grouped(filter: string): var {
+        const all = root.rows(filter);
+        return {
+            left: root._pack(all, ["applications", "system", "utilities", "screenshots"]),
+            right: root._pack(all, ["windowManagement", "workspaces"])
+        };
+    }
+
+    function categoryIds(): var {
+        return ["applications", "system", "utilities", "screenshots", "windowManagement", "workspaces"];
+    }
+
+    function categories(filter: string): var {
+        return root._pack(root.rows(filter), root.categoryIds());
+    }
+
+    function itemsFor(category: string, filter: string): var {
+        const all = root.rows(filter);
+        const out = [];
+        for (let i = 0; i < all.length; i++) {
+            if (all[i].category === category)
+                out.push(all[i]);
+        }
+        return out;
+    }
+
+    function _pack(all: var, ids: var): var {
+        const cats = [];
+        for (let i = 0; i < ids.length; i++) {
+            const id = ids[i];
+            const items = [];
+            for (let j = 0; j < all.length; j++) {
+                if (all[j].category === id)
+                    items.push(all[j]);
+            }
+            if (items.length)
+                cats.push({ id: id, items: items });
+        }
+        return cats;
     }
 }

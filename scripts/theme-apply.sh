@@ -1,24 +1,32 @@
 #!/usr/bin/env bash
-# Regenerates every theme output file (tokens.json, Colors.qml, kitty
-# colors, Hyprland border colors, plus the GTK/Qt/KDE/Vivaldi templates —
-# see stow/theme/.config/matugen/config.toml) from the active theme
-# profile, then reloads the apps that can pick the change up live.
+# Regenerates every theme output file (tokens.json, kitty colors,
+# fastfetch, Hyprland border colors, plus the GTK/Qt/KDE/Vivaldi
+# templates — see stow/theme/.config/matugen/config.toml) from the active
+# theme profile, then reloads the apps that can pick the change up live.
+# Quickshell reads tokens.json directly (Commons/Colors.qml FileView).
 #
 # tokens.json is the single source of truth: everything else in this
 # list is generated from the same matugen run, so nothing can drift out
 # of sync the way the old Wallust templates could.
 #
 # Usage:
-#   theme-apply.sh [--profile NAME] [--wallpaper PATH] [--no-reload]
+#   theme-apply.sh [--profile NAME] [--wallpaper PATH] [--skip-wallpaper]
+#                  [--chrome-only] [--no-reload]
 #
-#   --profile NAME     One of stow/modern/.config/modern/themes/*.json,
-#                       by filename without ".json"
+#   --profile NAME     Filename without ".json" under
+#                       ~/.config/modern/themes or
+#                       $XDG_STATE_HOME/modern/themes
 #                       (default: config.json's design.activeProfile).
 #   --wallpaper PATH   Absolute path to an image. Required the first
 #                       time a "sourceMode": "wallpaper" profile is
 #                       applied; remembered afterwards in
 #                       $STATE_DIR/current-wallpaper. Also sets the
-#                       wallpaper itself via awww, with a transition.
+#                       wallpaper itself via awww, with a transition,
+#                       unless --skip-wallpaper (picker already showed it).
+#   --skip-wallpaper   Remember --wallpaper / regenerate colors only;
+#                       do not call awww (avoids a second delayed fade).
+#   --chrome-only      Patch GTK/Qt/KDE/Vivaldi radii, fonts, and motion
+#                       from config.json without re-running matugen.
 #   --no-reload        Regenerate files only, skip live-reload side
 #                       effects (used by CI/lint and the M0 verify
 #                       script, where no Hyprland session is running).
@@ -39,7 +47,7 @@ WALLPAPER_STATE="$STATE_DIR/current-wallpaper"
 LAST_APPLIED_STATE="$STATE_DIR/theme-last-applied.json"
 MATUGEN_CONFIG="$HOME/.config/matugen/config.toml"
 
-log()  { printf '\033[36m[theme-apply]\033[0m %s\n' "$*"; }
+log()  { printf '\033[36m[theme-apply]\033[0m %s\n' "$*" || true; }
 warn() { printf '\033[33m[theme-apply] WARN\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[31m[theme-apply] ERROR\033[0m %s\n' "$*" >&2; exit 1; }
 
@@ -55,21 +63,282 @@ merge_vivaldi_theme() {
         warn "Vivaldi is running — not touching Preferences; CSS overlay is already updated"
         return 0
     fi
-    local primary surface on_surface
+    local primary surface on_surface primary_container
     primary="$(jq -r '.color.primary' "$tokens")"
     surface="$(jq -r '.color.surface' "$tokens")"
     on_surface="$(jq -r '.color.onSurface' "$tokens")"
+    primary_container="$(jq -r '.color.primaryContainer' "$tokens")"
+    local radius
+    radius="$(merged_config | jq -r '.design.cornerRounding // 1')"
     jq \
         --arg bg "$surface" \
         --arg fg "$on_surface" \
         --arg accent "$primary" \
+        --arg highlight "$primary_container" \
+        --argjson radius "$radius" \
         '.vivaldi.themes.current = "modern"
          | .vivaldi.themes.user = ((.vivaldi.themes.user // []) | map(select(.id != "modern")))
            + [{id:"modern", name:"modern",
                colorBg:$bg, colorFg:$fg, colorAccentBg:$accent,
-               accentOnWindow:false, accentFromPage:false}]' \
+               colorHighlightBg:$highlight,
+               accentOnWindow:false, accentFromPage:false,
+               windowBg:$bg}]
+         | .vivaldi.customUiMods = true' \
         "$prefs" > "$prefs.tmp" && mv "$prefs.tmp" "$prefs"
     log "merged Vivaldi native theme (id=modern)"
+}
+
+# Apple-tab folders from matugen tokens. Own theme name so we Inherits=
+# Papirus-Dark instead of shadowing it (same-name inherit is a no-op).
+overlay_folder_icons() {
+    local inherit="$1"
+    local dest="${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders"
+    local src="$dest/scalable/places/folder.svg"
+    mkdir -p "$dest/scalable/places" "$dest/64x64/places"
+    [ -f "$src" ] || return 0
+    cat > "$dest/index.theme" <<EOF
+[Icon Theme]
+Name=modern-folders
+Comment=Papirus with ModernOS folders
+Inherits=${inherit},hicolor
+Directories=scalable/places,64x64/places
+
+[scalable/places]
+Size=64
+Context=Places
+Type=Scalable
+MinSize=16
+MaxSize=256
+
+[64x64/places]
+Size=64
+Context=Places
+Type=Fixed
+EOF
+    local name
+    for name in folder folder-open inode-directory user-home folder-download \
+        folder-pictures folder-documents folder-music folder-videos; do
+        if [ "$name" != folder ]; then
+            cp -f -- "$src" "$dest/scalable/places/${name}.svg"
+        fi
+        cp -f -- "$src" "$dest/64x64/places/${name}.svg"
+    done
+    gtk-update-icon-cache -f -t "$dest" >/dev/null 2>&1 || true
+}
+
+patch_toolkit_chrome() {
+    local cfg radius font mono blur trans
+    cfg="$(merged_config)"
+    radius="$(jq -r '.design.cornerRounding // 1' <<<"$cfg")"
+    font="$(jq -r '.typography.ui // "Inter"' <<<"$cfg")"
+    mono="$(jq -r '.typography.monospace // "JetBrainsMono Nerd Font"' <<<"$cfg")"
+    blur="$(jq -r '.design.blurStrength // 40' <<<"$cfg")"
+    trans="$(jq -r '.design.transparency // 0.85' <<<"$cfg")"
+    local scale pt mpt cursor_theme cursor_size icon
+    scale="$(jq -r '.typography.scale // 1' <<<"$cfg")"
+    pt="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 11*s }')"
+    mpt="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 10*s }')"
+    cursor_theme="$(jq -r '.design.cursorTheme // "Bibata-Modern-Classic"' <<<"$cfg")"
+    cursor_size="$(jq -r '.design.cursorSize // 24' <<<"$cfg")"
+    icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
+    overlay_folder_icons "$icon"
+    local kde_icon="$icon"
+    if [ -f "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places/folder.svg" ]; then
+        case "$icon" in
+            Papirus|Papirus-Dark|Papirus-Light) kde_icon=modern-folders ;;
+        esac
+    fi
+    local sm md lg
+    sm="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 8*r }')"
+    md="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 16*r }')"
+    lg="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 28*r }')"
+    local css_dir="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi/custom_css"
+    mkdir -p "$css_dir"
+    local wp_on
+    wp_on="$(jq -r '.design.bootScreen.wallpaperOnVivaldi // false' <<<"$cfg")"
+    local wp_url="none"
+    if [ "$wp_on" = "true" ] && [ -f "$WALLPAPER_STATE" ]; then
+        local src
+        src="$(cat "$WALLPAPER_STATE")"
+        if [ -f "$src" ]; then
+            cp -f "$src" "$css_dir/wallpaper"
+            wp_url="url('wallpaper')"
+        fi
+    else
+        rm -f "$css_dir/wallpaper"
+    fi
+    cat > "$css_dir/01-chrome.css" <<EOF
+:root {
+  --md-font-ui: ${font};
+  --md-font-mono: ${mono};
+  --md-radius-sm: ${sm}px;
+  --md-radius-md: ${md}px;
+  --md-radius-lg: ${lg}px;
+  --md-radius-full: 9999px;
+  --md-space-xs: 4px;
+  --md-space-sm: 8px;
+  --md-space-md: 12px;
+  --md-space-lg: 16px;
+  --md-space-xl: 24px;
+  --md-blur: ${blur}px;
+  --md-transparency: $(awk -v t="$trans" 'BEGIN { printf "%.0f", t*100 }')%;
+  --md-wallpaper: ${wp_url};
+}
+body, #browser { font-family: var(--md-font-ui), sans-serif !important; }
+EOF
+    local qss="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qss/modern.qss"
+    if [ -f "$qss" ]; then
+        local tmp
+        tmp="$(mktemp)"
+        sed \
+            -e "s|@FONT_UI@|${font}|g" \
+            -e "s|@RADIUS_SM@|${sm}|g" \
+            -e "s|@RADIUS_MD@|${md}|g" \
+            -e "s|@RADIUS_FULL@|9999|g" \
+            -e "s|@SPACE_XXS@|2|g" \
+            -e "s|@SPACE_XS@|4|g" \
+            -e "s|@SPACE_SM@|8|g" \
+            -e "s|@SPACE_MD@|12|g" \
+            -e "s|@SPACE_LG@|16|g" \
+            -e "s|@SPACE_XL@|24|g" \
+            "$qss" > "$tmp" && mv "$tmp" "$qss"
+    fi
+    local kde="${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals"
+    if [ -f "$kde" ]; then
+        awk -v font="$font" -v mono="$mono" -v pt="$pt" -v icon="$kde_icon" '
+            BEGIN { g=0; i=0 }
+            /^\[General\]/ { print; print "font=" font "," pt ",-1,5,50,0,0,0,0,0"; print "fixed=" mono "," pt ",-1,5,50,0,0,0,0,0"; g=1; next }
+            /^\[Icons\]/ { print; print "Theme=" icon; i=1; next }
+            /^widgetStyle=/ { print "widgetStyle=qt6ct-style"; next }
+            { print }
+            END {
+              if (!g) { print "[General]"; print "font=" font "," pt ",-1,5,50,0,0,0,0,0" }
+              if (!i) { print "[Icons]"; print "Theme=" icon }
+            }
+        ' "$kde" > "$kde.tmp" && mv "$kde.tmp" "$kde"
+    fi
+    local qtconf="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qt6ct.conf"
+    if [ -f "$qtconf" ]; then
+        local scheme_abs
+        scheme_abs="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/colors/modern.conf"
+        awk -v icon="$icon" -v scheme="$scheme_abs" -v font="$font" -v mono="$mono" -v pt="$pt" -v mpt="$mpt" '
+            /^icon_theme=/ { print "icon_theme=" icon; next }
+            /^style=/ { print "style=qt6ct-style"; next }
+            /^stylesheets=/ { print "stylesheets="; next }
+            /^color_scheme_path=/ { print "color_scheme_path=" scheme; next }
+            /^general=/ { print "general=@ByteArray(" font "," pt ",-1,5,50,0,0,0,0,0)"; next }
+            /^fixed=/ { print "fixed=@ByteArray(" mono "," mpt ",-1,5,50,0,0,0,0,0)"; next }
+            { print }
+        ' "$qtconf" > "$qtconf.tmp" && mv "$qtconf.tmp" "$qtconf"
+    fi
+
+    # Other hypr* Qt Quick apps still read chrome from
+    # ~/.config/hypr/application-style.conf — QSS never reaches that QML
+    # style. Enum steps are 0/4/8/16 px; Tokens.radius.medium is 16 * rounding.
+    local hypr_round=2
+    if [ "$md" -le 2 ]; then
+        hypr_round=0
+    elif [ "$md" -le 6 ]; then
+        hypr_round=1
+    elif [ "$md" -le 12 ]; then
+        hypr_round=2
+    else
+        hypr_round=3
+    fi
+    local motion_scale reduce_motion
+    motion_scale="$(jq -r '.motion.scale // 1' <<<"$cfg")"
+    if awk -v s="$motion_scale" 'BEGIN { exit (s+0 == 0) ? 0 : 1 }'; then
+        reduce_motion="true"
+    else
+        reduce_motion="false"
+    fi
+    local style_conf="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/application-style.conf"
+    mkdir -p "$(dirname "$style_conf")"
+    cat > "$style_conf" <<EOF
+# GENERATED by scripts/theme-apply.sh — do not hand-edit.
+# Maps config.json design.cornerRounding / motion.scale onto
+# hyprland-qt-support (other hypr* Qt Quick apps). See docs/THEMING.md.
+roundness = ${hypr_round}
+border_width = 1
+reduce_motion = ${reduce_motion}
+EOF
+
+    # hyprpolkitagent (C++/hyprtoolkit) reads hyprtoolkit.conf, not
+    # qt6ct or application-style.conf. Map overlay chrome: surface,
+    # primary, Inter, radius.medium/small. Next dialog picks this up
+    # without a restart; compositor opacity still needs hyprctl reload.
+    local tokens="$MODERN_DIR/tokens.json"
+    local toolkit_conf="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprtoolkit.conf"
+    if [ -f "$tokens" ]; then
+        local h1 h2 h3 body small
+        local c_surface c_base c_alt c_text c_bright c_accent c_secondary
+        h1="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 24*s }')"
+        h2="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 16*s }')"
+        h3="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 14*s }')"
+        body="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 14*s }')"
+        small="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 12*s }')"
+        c_surface="$(jq -r '.color.surface' "$tokens" | tr -d '#')"
+        c_base="$(jq -r '.color.surfaceContainerHighest' "$tokens" | tr -d '#')"
+        c_alt="$(jq -r '.color.surfaceContainer' "$tokens" | tr -d '#')"
+        c_text="$(jq -r '.color.onSurface' "$tokens" | tr -d '#')"
+        c_bright="$(jq -r '.color.onPrimary' "$tokens" | tr -d '#')"
+        c_accent="$(jq -r '.color.primary' "$tokens" | tr -d '#')"
+        c_secondary="$(jq -r '.color.secondary' "$tokens" | tr -d '#')"
+        cat > "$toolkit_conf" <<EOF
+# GENERATED by scripts/theme-apply.sh — do not hand-edit.
+# Overlay chrome for hyprtoolkit apps (hyprpolkitagent). See docs/THEMING.md.
+background = 0xFF${c_surface}
+base = 0xFF${c_base}
+alternate_base = 0xFF${c_alt}
+text = 0xFF${c_text}
+bright_text = 0xFF${c_bright}
+accent = 0xFF${c_accent}
+accent_secondary = 0xFF${c_secondary}
+h1_size = ${h1}
+h2_size = ${h2}
+h3_size = ${h3}
+font_size = ${body}
+small_font_size = ${small}
+icon_theme = ${icon}
+font_family = ${font}
+font_family_monospace = ${mono}
+rounding_large = ${md}
+rounding_small = ${sm}
+EOF
+    fi
+
+    local gtkcss
+    for gtkcss in \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/gtk.css" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0/gtk.css"; do
+        if [ -f "$gtkcss" ]; then
+            sed -i "s|@RADIUS_MD@|${md}|g" "$gtkcss" || true
+        fi
+    done
+
+    local gini
+    for gini in \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0/settings.ini"; do
+        if [ -f "$gini" ]; then
+            awk -v font="$font $pt" -v cursor="$cursor_theme" -v csize="$cursor_size" -v icon="$icon" '
+                /^gtk-font-name=/ { print "gtk-font-name=" font; next }
+                /^gtk-cursor-theme-name=/ { print "gtk-cursor-theme-name=" cursor; next }
+                /^gtk-cursor-theme-size=/ { print "gtk-cursor-theme-size=" csize; next }
+                /^gtk-icon-theme-name=/ { print "gtk-icon-theme-name=" icon; next }
+                { print }
+            ' "$gini" > "$gini.tmp" && mv "$gini.tmp" "$gini"
+        fi
+    done
+
+    if command -v gsettings >/dev/null 2>&1; then
+        gsettings set org.gnome.desktop.interface font-name "$font $pt" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface document-font-name "$font $pt" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface monospace-font-name "$mono $pt" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface cursor-size "$cursor_size" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface icon-theme "$icon" >/dev/null 2>&1 || true
+    fi
 }
 
 usage() { grep '^#' "$0" | cut -c3- | head -n26; }
@@ -77,6 +346,8 @@ usage() { grep '^#' "$0" | cut -c3- | head -n26; }
 PROFILE=""
 WALLPAPER=""
 RELOAD=1
+CHROME_ONLY=0
+SKIP_WALLPAPER=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -86,13 +357,14 @@ while [ $# -gt 0 ]; do
         --wallpaper)
             [ $# -ge 2 ] || die "--wallpaper needs a value"
             WALLPAPER="$2"; shift 2 ;;
+        --skip-wallpaper) SKIP_WALLPAPER=1; shift ;;
+        --chrome-only) CHROME_ONLY=1; shift ;;
         --no-reload) RELOAD=0; shift ;;
         -h|--help) usage; exit 0 ;;
         *) die "unknown argument: $1 (see --help)" ;;
     esac
 done
 
-command -v matugen >/dev/null 2>&1 || die "matugen not on PATH — see install/manifests/20-theming.aur.txt"
 command -v jq >/dev/null 2>&1 || die "jq not on PATH — see install/manifests/00-base.txt"
 
 mkdir -p "$STATE_DIR"
@@ -111,12 +383,23 @@ merged_config() {
     fi
 }
 
+if [ "$CHROME_ONLY" -eq 1 ]; then
+    patch_toolkit_chrome || warn "toolkit chrome patch skipped"
+    log "done (--chrome-only)"
+    exit 0
+fi
+
+command -v matugen >/dev/null 2>&1 || die "matugen not on PATH — see install/manifests/20-theming.aur.txt"
+
 if [ -z "$PROFILE" ]; then
     PROFILE="$(merged_config | jq -r '.design.activeProfile // "tonal-spot-auto"')"
 fi
 
 PROFILE_JSON="$THEMES_DIR/$PROFILE.json"
-[ -f "$PROFILE_JSON" ] || die "unknown theme profile '$PROFILE' (no $PROFILE_JSON — see stow/modern/.config/modern/themes/README.md)"
+if [ ! -f "$PROFILE_JSON" ]; then
+    PROFILE_JSON="$STATE_DIR/themes/$PROFILE.json"
+fi
+[ -f "$PROFILE_JSON" ] || die "unknown theme profile '$PROFILE' (no $THEMES_DIR/$PROFILE.json or $STATE_DIR/themes/$PROFILE.json — see stow/modern/.config/modern/themes/README.md)"
 
 VARIANT="$(jq -r '.variant' "$PROFILE_JSON")"
 PROFILE_MODE="$(jq -r '.mode' "$PROFILE_JSON")"
@@ -177,21 +460,21 @@ esac
 
 # --- Set the wallpaper first (if applicable), then let matugen render
 # every configured template from the same seed in one pass ---
-if [ "$SOURCE_MODE" = "wallpaper" ] && [ "$RELOAD" -eq 1 ]; then
-    if command -v awww >/dev/null 2>&1 && pgrep -x awww-daemon >/dev/null 2>&1; then
-        # Default transition — Settings > Design will expose per-call
-        # overrides once the wallpaper picker module (docs/DECISIONS.md
-        # "wallpaper-assets") lands; today every call gets the same feel.
-        awww img "$WALLPAPER" --transition-type wipe --transition-duration 0.8 --transition-fps 60 \
+if [ "$SOURCE_MODE" = "wallpaper" ] && [ "$RELOAD" -eq 1 ] && [ "$SKIP_WALLPAPER" -eq 0 ]; then
+    show_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-show.sh"
+    if [ -x "$show_script" ] || [ -f "$show_script" ]; then
+        bash "$show_script" "$WALLPAPER" \
             || warn "awww img failed — is awww-daemon running? (autostart.lua starts it on Hyprland launch)"
     else
-        warn "awww-daemon not running — skipping live wallpaper set, only regenerating colors"
+        warn "wallpaper-show.sh missing — skipping live wallpaper set"
     fi
 fi
 
 log "running matugen (${MATUGEN_ARGS[*]})"
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places"
 matugen "${MATUGEN_ARGS[@]}"
-log "regenerated tokens.json, Colors.qml, kitty/GTK/Qt/KDE/Vivaldi color files"
+log "regenerated tokens.json, kitty/fastfetch/GTK/Qt/KDE/Vivaldi color files"
+patch_toolkit_chrome || warn "toolkit chrome patch skipped"
 
 kitty_colors="${XDG_CONFIG_HOME:-$HOME/.config}/kitty/colors.conf"
 if [ ! -f "$kitty_colors" ]; then
@@ -252,6 +535,13 @@ fi
 # never fight its Preferences writer.
 if [ "$RELOAD" -eq 1 ]; then
     merge_vivaldi_theme || warn "vivaldi Preferences merge skipped"
+    # hyprtoolkit.conf is picked up by the next dialog without a restart;
+    # restart anyway so a running prompt cannot keep a stale palette.
+    if systemctl --user try-restart hyprpolkitagent.service >/dev/null 2>&1; then
+        log "restarted hyprpolkitagent (hyprtoolkit.conf)"
+    else
+        warn "hyprpolkitagent not restarted — start it from the session or: systemctl --user start hyprpolkitagent"
+    fi
 fi
 
 log "done (profile=$PROFILE)"

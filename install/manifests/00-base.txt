@@ -4,7 +4,6 @@ base-devel              # toolchain required to build AUR packages
 linux-zen               # low-latency kernel, matches the audited running system
 linux-zen-headers       # required for DKMS-style modules against linux-zen
 linux-firmware          # firmware blobs for GPU/network/etc.
-amd-ucode               # AMD CPU microcode updates
 btrfs-progs             # the root filesystem is btrfs (see docs/BACKUP.md)
 dosfstools              # mkfs.vfat for the EFI System Partition
 exfatprogs              # read/write the exfat external backup SSD
@@ -16,8 +15,6 @@ jq                      # JSON manipulation used throughout install/ and scripts
 bash-completion         # completion for pacman/systemctl/etc.
 man-db                  # man pages
 bc                      # arithmetic in shell scripts (theme-apply, doctor)
-gdu                     # fast disk usage — feeds Settings > Storage
-lshw                    # hardware inventory — feeds Settings > System
 pacman-contrib          # paccache, checkupdates — used by Settings > Update
 reflector               # mirrorlist refresh, see Settings > Update
 openssh                 # remote access / git over ssh

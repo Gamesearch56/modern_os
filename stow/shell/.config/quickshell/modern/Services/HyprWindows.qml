@@ -1,0 +1,200 @@
+// Window matching, focus, close, float. Host is the Hypr singleton
+// (dispatch + workspace focus). Keeps Hypr.qml under the line cap.
+import Quickshell.Hyprland
+import QtQuick
+
+QtObject {
+    id: root
+
+    property var host: null
+
+    function focusWindow(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        if (root.host._lua)
+            root.host.dispatch("hl.dsp.focus({ window = \"address:" + addr + "\" })");
+        else
+            root.host.dispatch("focuswindow address:" + addr);
+    }
+
+    function activateWindow(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        const t = root.toplevelByAddress(addr);
+        const wsId = t && t.workspace ? Number(t.workspace.id) : 0;
+        const ipc = t ? t.lastIpcObject : null;
+        const hidden = !!(ipc && (ipc.hidden === true || ipc.mapped === false));
+        if (wsId < 0 || hidden)
+            root.moveToCurrentWorkspace(addr);
+        else if (wsId > 0)
+            root.host.focusWorkspace(wsId);
+        root.focusWindow(addr);
+    }
+
+    function moveToCurrentWorkspace(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        const fw = root.host.focusedWorkspace;
+        const id = (fw && Number(fw.id) > 0) ? Number(fw.id) : 1;
+        if (root.host._lua)
+            root.host.dispatch("hl.dsp.window.move({ workspace = " + id + ", window = \"address:" + addr + "\" })");
+        else
+            root.host.dispatch("movetoworkspace " + id + ",address:" + addr);
+    }
+
+    function moveToBackground(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        if (root.host._lua)
+            root.host.dispatch("hl.dsp.window.move({ workspace = \"special:background\", silent = true, window = \"address:" + addr + "\" })");
+        else
+            root.host.dispatch("movetoworkspacesilent special:background,address:" + addr);
+    }
+
+    function raiseDesktop(desktopId: string): bool {
+        const id = String(desktopId || "");
+        if (!id.length)
+            return false;
+        if (root._raiseMatching(id, true))
+            return true;
+        return root._raiseMatching(id, false);
+    }
+
+    function _raiseMatching(desktopId: string, classOnly: bool): bool {
+        const list = Hyprland.toplevels?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            const t = list[i];
+            if (!t)
+                continue;
+            const ok = classOnly ? root._windowMatchesClass(t, desktopId) : root._windowMatchesDesktop(t, desktopId);
+            if (!ok)
+                continue;
+            root.activateWindow(String(t.address || ""));
+            return true;
+        }
+        return false;
+    }
+
+    function _normId(s: string): string {
+        return String(s || "").replace(/\.desktop$/i, "").toLowerCase().replace(/[\s._-]+/g, "");
+    }
+
+    function _classFields(toplevel: var): var {
+        const ipc = toplevel.lastIpcObject || ({});
+        return [ipc.class, ipc.initialClass, toplevel.class, toplevel.initialClass];
+    }
+
+    function _windowMatchesClass(toplevel: var, desktopId: string): bool {
+        const needle = root._normId(desktopId);
+        if (!needle.length)
+            return false;
+        const fields = root._classFields(toplevel);
+        for (let i = 0; i < fields.length; i++) {
+            const n = root._normId(String(fields[i] || ""));
+            if (!n.length)
+                continue;
+            if (n === needle)
+                return true;
+            if (needle.length >= 5 && n.indexOf(needle) !== -1)
+                return true;
+            if (n.length >= 5 && needle.indexOf(n) !== -1)
+                return true;
+        }
+        return false;
+    }
+
+    function _windowMatchesDesktop(toplevel: var, desktopId: string): bool {
+        if (root._windowMatchesClass(toplevel, desktopId))
+            return true;
+        const needle = root._normId(desktopId);
+        if (!needle.length)
+            return false;
+        const ipc = toplevel.lastIpcObject || ({});
+        const fields = [ipc.title, toplevel.title];
+        for (let i = 0; i < fields.length; i++) {
+            const n = root._normId(String(fields[i] || ""));
+            if (!n.length)
+                continue;
+            if (n === needle)
+                return true;
+            if (needle.length >= 5 && n.indexOf(needle) !== -1)
+                return true;
+            if (n.length >= 5 && needle.indexOf(n) !== -1)
+                return true;
+        }
+        return false;
+    }
+
+    function toplevelByAddress(address: string): var {
+        const addr = String(address || "");
+        const list = Hyprland.toplevels?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i] && String(list[i].address || "") === addr)
+                return list[i];
+        }
+        return null;
+    }
+
+    function closeWindow(address: string) {
+        const addr = String(address || "");
+        if (!addr.length) {
+            if (root.host._lua)
+                root.host.dispatch("hl.dsp.window.close()");
+            else
+                root.host.dispatch("killactive");
+            return;
+        }
+        if (root.host._lua)
+            root.host.dispatch("hl.dsp.window.close({ window = \"address:" + addr + "\" })");
+        else
+            root.host.dispatch("closewindow address:" + addr);
+    }
+
+    function windowOnScreen(toplevel: var, screen: var): bool {
+        const mon = root.host.monitorForScreen(screen);
+        if (!mon || !toplevel)
+            return true;
+        const ipc = toplevel.lastIpcObject;
+        const wsId = toplevel.workspace ? Number(toplevel.workspace.id) : 0;
+        const hidden = !!(ipc && (ipc.hidden === true || ipc.mapped === false));
+        const special = wsId < 0;
+        if (ipc && ipc.monitor !== undefined && ipc.monitor !== null && ipc.monitor !== "") {
+            const mid = Number(ipc.monitor);
+            if (!Number.isNaN(mid) && mid < 0)
+                return root._taskbarOnFocused(screen);
+            if (!Number.isNaN(mid) && mon.id !== undefined && Number(mon.id) === mid)
+                return true;
+            if (String(ipc.monitor) === String(mon.name))
+                return true;
+            return false;
+        }
+        if (hidden || special)
+            return root._taskbarOnFocused(screen);
+        return root.host._onMonitor(toplevel.workspace, mon);
+    }
+
+    function _taskbarOnFocused(screen: var): bool {
+        const name = screen && screen.name ? String(screen.name) : "";
+        if (!name.length)
+            return true;
+        return name === root.host.focusedMonitorName();
+    }
+
+    function toggleFloating(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        root.host.dispatch("togglefloating address:" + addr);
+    }
+
+    function toggleFullscreen(address: string) {
+        const addr = String(address || "");
+        if (!addr.length)
+            return;
+        root.host.dispatch("fullscreen 0,address:" + addr);
+    }
+}

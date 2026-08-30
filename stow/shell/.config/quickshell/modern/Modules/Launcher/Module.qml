@@ -1,17 +1,88 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
-import "../../Widgets"
 import "../../Services"
 
 Scope {
+    id: root
+
+    property string query: ""
+    property int currentIndex: 0
+
     IpcHandler {
         target: "launcher"
         function toggle() { Launcher.toggle(); }
         function show() { Launcher.show(); }
         function hide() { Launcher.hide(); }
+    }
+
+    readonly property var results: {
+        void Config.launcher.frecencyEnabled;
+        void Config.launcher.resultCount;
+        void Config.launcher.mostUsedGridSize;
+        return root.resultsFor(root.query);
+    }
+    readonly property var current: {
+        if (root.currentIndex < 0 || root.currentIndex >= root.results.length)
+            return null;
+        return root.results[root.currentIndex];
+    }
+
+    function resultsFor(text: string): var {
+        const needle = (text || "").trim().toLowerCase();
+        const actions = [];
+        if (needle.length > 0) {
+            if (root._matchAction(needle, "settings", I18n.t("settings.title")))
+                actions.push({ id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "preferences-system", kind: "settings" });
+            if (root._matchAction(needle, "power", I18n.t("powerMenu.title")))
+                actions.push({ id: "shell:power", name: I18n.t("powerMenu.title"), genericName: "", icon: "system-shutdown", kind: "power" });
+        }
+        const apps = Launcher.query(text);
+        const out = [];
+        for (let i = 0; i < actions.length; i++)
+            out.push(actions[i]);
+        for (let j = 0; j < apps.length; j++) {
+            const a = apps[j];
+            a.kind = "app";
+            out.push(a);
+        }
+        return out;
+    }
+
+    function _matchAction(needle: string, english: string, title: string): bool {
+        const n = needle.toLowerCase();
+        const en = english.toLowerCase();
+        const t = (title || "").toLowerCase();
+        return en.indexOf(n) !== -1 || t.indexOf(n) !== -1 || n.indexOf(en) !== -1;
+    }
+
+    function activate(item: var) {
+        if (!item)
+            return;
+        if (item.kind === "settings") {
+            Settings.openAt("overview", "");
+            Launcher.hide();
+            return;
+        }
+        if (item.kind === "power") {
+            PowerMenu.toggle();
+            Launcher.hide();
+            return;
+        }
+        Launcher.launch(item);
+    }
+
+    function _focusedScreen(): var {
+        const n = Hypr.focusedMonitorName();
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === n)
+                return screens[i];
+        }
+        return screens.length ? screens[0] : null;
     }
 
     LazyLoader {
@@ -20,6 +91,7 @@ Scope {
         PanelWindow {
             id: win
             visible: Launcher.open
+            screen: root._focusedScreen()
             color: "transparent"
             anchors.top: true
             anchors.left: true
@@ -27,92 +99,51 @@ Scope {
             anchors.bottom: true
             exclusionMode: ExclusionMode.Ignore
             focusable: true
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
 
-            Rectangle {
+            Overlay {
+                id: overlay
                 anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.4
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Launcher.hide()
+                query: root.query
+                results: root.results
+                currentIndex: root.currentIndex
+                onQueryEdited: (t) => {
+                    root.query = t;
+                    root.currentIndex = 0;
                 }
+                onPicked: (i) => root.currentIndex = i
+                onActivated: (i) => {
+                    root.currentIndex = i;
+                    root.activate(root.results[i]);
+                }
+                onClosed: Launcher.hide()
             }
 
-            MCard {
-                id: card
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 16, win.width - Tokens.spacing.xxl)
-                height: Tokens.spacing.xxl * 14
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: Tokens.spacing.xxl * 3
-                scale: Launcher.open ? 1 : 0.94
-
-                Behavior on scale {
-                    SpringAnimation {
-                        spring: Motion.springBouncy.spring
-                        damping: Motion.springBouncy.damping
-                    }
-                }
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: Tokens.spacing.md
-
-                    MTextField {
-                        id: query
-                        Layout.fillWidth: true
-                        placeholderKey: "launcher.placeholder"
-                        Component.onCompleted: forceActiveFocus()
-                        onAccepted: results.activateFirst()
-                    }
-
-                    MText {
-                        visible: query.text.length === 0
-                        key: "launcher.mostUsed"
-                        styleName: "labelLarge"
-                        color: Colors.color.onSurfaceVariant
-                    }
-
-                    ListView {
-                        id: results
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
-                        model: Launcher.query(query.text)
-                        currentIndex: 0
-                        delegate: MListItem {
-                            required property var modelData
-                            required property int index
-                            width: results.width
-                            iconName: modelData.icon || "application-x-executable"
-                            titleValue: modelData.name
-                            subtitleValue: modelData.genericName || ""
-                            selected: results.currentIndex === index
-                            onClicked: Launcher.launch(modelData)
-                        }
-
-                        function activateFirst() {
-                            if (count > 0)
-                                Launcher.launch(model[0]);
-                        }
-
-                        Keys.onDownPressed: currentIndex = Math.min(count - 1, currentIndex + 1)
-                        Keys.onUpPressed: currentIndex = Math.max(0, currentIndex - 1)
-                    }
-
-                    MText {
-                        visible: results.count === 0 && query.text.length > 0
-                        key: "launcher.noResults"
-                        styleName: "bodyMedium"
-                        color: Colors.color.onSurfaceVariant
-                    }
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: [win]
+                onCleared: {
+                    if (Launcher.open)
+                        Launcher.hide();
                 }
             }
 
             Shortcut {
                 sequence: "Escape"
+                context: Qt.ApplicationShortcut
                 onActivated: Launcher.hide()
+            }
+
+            Component.onCompleted: {
+                root.query = "";
+                root.currentIndex = 0;
+                Qt.callLater(() => {
+                    if (!Launcher.open)
+                        return;
+                    keyGrab.active = true;
+                    overlay.focusSearch();
+                });
             }
         }
     }

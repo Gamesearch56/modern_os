@@ -3,79 +3,95 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "../../"
 
 Item {
     id: root
-    implicitWidth: row.implicitWidth + Tokens.spacing.md
-    implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
+    implicitWidth: row.implicitWidth + Tokens.spacing.xs * 2
+    implicitHeight: Config.bar.height
 
-    readonly property string _icon: Audio.muted ? "audio-volume-muted" : (Audio.volume < 34 ? "audio-volume-low" : (Audio.volume < 67 ? "audio-volume-medium" : "audio-volume-high"))
+    readonly property string _icon: Audio.muted ? "audio-volume-muted-symbolic" : (Audio.volume < 34 ? "audio-volume-low-symbolic" : (Audio.volume < 67 ? "audio-volume-medium-symbolic" : "audio-volume-high-symbolic"))
+    readonly property color _fg: hit.checked ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+
+    BarIslandHit {
+        id: hit
+        checked: Settings.open && Settings.sectionId === "audio"
+        onEntered: {
+            hideSlider.stop();
+            sliderPopup.open = true;
+        }
+        onExited: hideSlider.restart()
+        onClicked: {
+            if (Settings.open && Settings.sectionId === "audio")
+                Settings.close();
+            else
+                Settings.openAt("audio", "");
+        }
+        onMiddleClicked: Audio.toggleMute()
+        onRightClicked: Audio.toggleMute()
+        onWheel: (steps, fine) => {
+            const step = fine
+                ? (Config.widgets.audio?.scrollStepFinePercent ?? 1)
+                : (Config.widgets.audio?.scrollStepPercent ?? 5);
+            Audio.adjustVolume(steps > 0 ? step : -step);
+        }
+    }
 
     RowLayout {
         id: row
         anchors.centerIn: parent
+        z: 1
         spacing: Tokens.spacing.xs
 
         MIcon {
             name: root._icon
-            size: Tokens.spacing.lg
+            size: Tokens.icon.md
+            color: root._fg
         }
 
         MText {
-            value: Audio.muted ? I18n.t("bar.muted") : (Audio.volume + "%")
+            value: String(Audio.volume) + "%"
             styleName: "labelLarge"
+            color: root._fg
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-        hoverEnabled: true
-        onClicked: (mouse) => {
-            if (mouse.button === Qt.MiddleButton)
-                Audio.toggleMute();
-            else if (mouse.button === Qt.RightButton)
-                Audio.cycleSink();
-            else
-                popup.open = !popup.open;
-        }
-        onWheel: (w) => {
-            const fine = w.modifiers & Qt.ShiftModifier;
-            const step = fine ? (Config.widgets.audio?.scrollStepFinePercent ?? 1) : (Config.widgets.audio?.scrollStepPercent ?? 5);
-            Audio.adjustVolume(w.angleDelta.y > 0 ? step : -step);
+    Timer {
+        id: hideSlider
+        interval: Motion.mediumMs
+        onTriggered: {
+            if (!sliderPopup.bodyHovered)
+                sliderPopup.open = false;
         }
     }
 
-    MPopup {
-        id: popup
+    BarPopup {
+        id: sliderPopup
         open: false
-        width: Tokens.spacing.xxl * 8
-        height: Tokens.spacing.xxl * 6
-        anchors.top: parent.bottom
-        anchors.topMargin: Tokens.spacing.sm
+        grab: false
+        hoverBridge: true
+        barIslandChrome: true
+        hAlign: Qt.AlignHCenter
+        anchorItem: root
+        implicitWidth: Tokens.spacing.xxl * 7
+        implicitHeight: Tokens.slider.thumb + Tokens.spacing.xs + Tokens.spacing.sm * 3
+        padding: Tokens.spacing.sm
+        onBodyHoveredChanged: {
+            if (sliderPopup.bodyHovered)
+                hideSlider.stop();
+            else
+                hideSlider.restart();
+        }
 
-        ColumnLayout {
-            anchors.fill: parent
-            spacing: Tokens.spacing.sm
-
-            MText { key: "bar.volume"; styleName: "titleSmall" }
-
-            MSlider {
-                Layout.fillWidth: true
-                from: 0
-                to: Config.audio.masterVolumeLimit ?? 100
-                value: Audio.volume
-                onMoved: (v) => Audio.setVolume(v)
-            }
-
-            MButton {
-                kind: "text"
-                key: "bar.soundSettings"
-                onClicked: {
-                    popup.open = false;
-                    Settings.openAt("audio", "");
-                }
-            }
+        MSlider {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            activeFocusOnTab: false
+            from: 0
+            to: Audio.volumeCap
+            value: Audio.volume
+            onMoved: (v) => Audio.setVolume(v)
         }
     }
 }

@@ -9,8 +9,9 @@ Item {
     implicitHeight: Tokens.spacing.xxl
 
     MIconButton {
+        tabFocus: false
         anchors.centerIn: parent
-        iconName: Notifications.unread > 0 ? "notifications" : "notifications-disabled"
+        iconName: Notifications.unread > 0 ? "notifications-symbolic" : "notifications-disabled-symbolic"
         key: "bar.notifications"
         onClicked: Notifications.toggle()
     }

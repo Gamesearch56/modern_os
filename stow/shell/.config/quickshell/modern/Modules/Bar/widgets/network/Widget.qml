@@ -1,24 +1,17 @@
 import QtQuick
-import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 
-RowLayout {
-    spacing: Tokens.spacing.xs
+Item {
+    implicitWidth: Tokens.spacing.xxl
+    implicitHeight: Tokens.spacing.xxl
 
-    MIcon {
-        name: Network.connected ? (Network.wifi?.ssid ? "network-wireless" : "network-wired") : "network-offline"
-        size: Tokens.spacing.lg
-    }
-
-    MText {
-        value: Network.connected ? (Network.primaryName === "ethernet" ? I18n.t("network.ethernet") : Network.primaryName) : I18n.t("network.disconnected")
-        styleName: "labelLarge"
-    }
-
-    MouseArea {
-        anchors.fill: parent
+    MIconButton {
+        tabFocus: false
+        anchors.centerIn: parent
+        iconName: Network.connected ? (Network.ssid.length > 0 ? "network-wireless-symbolic" : "network-wired-symbolic") : "network-offline-symbolic"
+        key: "bar.network"
         onClicked: Settings.openAt("network", "")
     }
 }

@@ -4,7 +4,10 @@
 #
 # Usage:
 #   install.sh --profile <m0|dev|gaming|full> [--dry-run] [--yes] [--target DIR]
-#              [--allow-live-home]
+#              [--allow-live-home] [--hw amd|intel|nvidia] [--extra proton]
+#
+# --hw selects CPU microcode and (for gaming/full) GPU Vulkan packages.
+# Default is auto-detect. --extra proton installs 90-accounts.aur.txt.
 #
 # Profiles (see install/manifests/README.md for exact layer membership):
 #   m0       base + desktop + theming + minimal apps  (default, matches the plan's M0)
@@ -25,6 +28,8 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_FILE="$REPO_ROOT/install/install.log"
 PROFILE="m0"
+HW="auto"
+EXTRA=""
 DRY_RUN=0
 ASSUME_YES=0
 ALLOW_LIVE_HOME=0
@@ -37,6 +42,8 @@ for arg in "$@"; do
         --dry-run) DRY_RUN=1 ;;
         --yes|-y) ASSUME_YES=1 ;;
         --allow-live-home) ALLOW_LIVE_HOME=1 ;;
+        --hw=*) HW="${arg#*=}" ;;
+        --extra=*) EXTRA="${arg#*=}" ;;
         --target=*) TARGET="${arg#*=}" ;;
         --help|-h)
             grep '^#' "$0" | sed 's/^#//'; exit 0 ;;
@@ -50,6 +57,12 @@ for i in "${!args[@]}"; do
     fi
     if [ "${args[$i]}" = "--target" ] && [ -n "${args[$((i+1))]:-}" ]; then
         TARGET="${args[$((i+1))]}"
+    fi
+    if [ "${args[$i]}" = "--hw" ] && [ -n "${args[$((i+1))]:-}" ]; then
+        HW="${args[$((i+1))]}"
+    fi
+    if [ "${args[$i]}" = "--extra" ] && [ -n "${args[$((i+1))]:-}" ]; then
+        EXTRA="${args[$((i+1))]}"
     fi
 done
 
@@ -69,11 +82,22 @@ source "$REPO_ROOT/install/lib/preflight.sh"
 : > "$LOG_FILE"
 trap 'rc=$?; log_error "install aborted at line $LINENO (exit $rc). See $LOG_FILE"; exit "$rc"' ERR
 
-log_info "modern_dotfile installer — profile '$PROFILE', target '$TARGET', dry-run=$DRY_RUN"
+log_info "modern_dotfile installer — profile '$PROFILE', hw='$HW', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN"
 
 case "$PROFILE" in
     m0|dev|gaming|full) ;;
     *) die "unknown profile '$PROFILE' — expected m0|dev|gaming|full" ;;
+esac
+
+case "$HW" in
+    auto) HW="$(detect_hw)"; log_info "detected hardware class: $HW" ;;
+    amd|intel|nvidia) ;;
+    *) die "unknown --hw '$HW' — expected auto|amd|intel|nvidia" ;;
+esac
+
+case "$EXTRA" in
+    ""|proton) ;;
+    *) die "unknown --extra '$EXTRA' — expected proton or omit" ;;
 esac
 
 # ---------------------------------------------------------------------------
@@ -109,6 +133,20 @@ for layer in "${layers[@]}"; do
     [ -f "$aur_file" ] && mapfile -t -O "${#aur_pkgs[@]}" aur_pkgs < <(parse_manifest "$aur_file")
 done
 
+hw_cpu="$MANIFEST_DIR/00-hw-${HW}.txt"
+if [ -f "$hw_cpu" ]; then
+    mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_cpu")
+fi
+if [ "$PROFILE" = "gaming" ] || [ "$PROFILE" = "full" ]; then
+    hw_gpu="$MANIFEST_DIR/50-hw-${HW}.txt"
+    if [ -f "$hw_gpu" ]; then
+        mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_gpu")
+    fi
+fi
+if [ "$EXTRA" = "proton" ]; then
+    mapfile -t -O "${#aur_pkgs[@]}" aur_pkgs < <(parse_manifest "$MANIFEST_DIR/90-accounts.aur.txt")
+fi
+
 install_native "${native_pkgs[@]}"
 install_aur "${aur_pkgs[@]}"
 
@@ -123,7 +161,7 @@ fi
 # ---------------------------------------------------------------------------
 log_phase "Phase 4/5: stow dotfiles -> $TARGET"
 
-stow_packages=(hypr shell theme kitty dolphin gtk qt bash git modern systemd xdg fastfetch)
+stow_packages=(hypr shell theme kitty dolphin gtk qt bash git modern systemd xdg fontconfig fastfetch mpv imv)
 for pkg in "${stow_packages[@]}"; do
     stow_package "$pkg" "$TARGET"
 done
@@ -177,6 +215,12 @@ if command -v matugen >/dev/null 2>&1; then
 else
     log_warn "matugen not found — run scripts/theme-apply.sh once it is installed"
 fi
+
+# Dolphin / xdg-open follow Settings → Applications video/image defaults.
+run "$REPO_ROOT/scripts/mime-defaults.sh" \
+    --config "$TARGET/.config/modern/config.json" \
+    --mimeapps "$TARGET/.config/mimeapps.list" \
+    || log_warn "mime-defaults.sh failed — set video/image defaults in Settings → Applications"
 
 kitty_colors="$TARGET/.config/kitty/colors.conf"
 kitty_stub="$REPO_ROOT/stow/kitty/.config/kitty/colors.conf"

@@ -6,37 +6,48 @@
 //
 // Every property below mirrors stow/modern/.config/modern/config.default.json
 // 1:1 — that file is the authoritative schema; this is its QML-typed
-// reflection. Sections with a fixed, simple shape are declared as typed
-// JsonObject sub-adapters (get individual change signals, e.g.
-// `onScaleChanged`); sections that are free-form, widget-specific, or not
-// yet consumed anywhere use a plain `var` blob instead of hand-typing
-// every nested key twice — see docs/DECISIONS.md. Promote a `var` section
-// to a typed JsonObject once a consumer needs granular reactivity on one
-// of its keys specifically.
+// reflection. Typed JsonObject sections get QML fallbacks; `var` blobs
+// (keybinds, widgets, windowRules, monitors, …) are replaced wholesale
+// by the live JSON object and are not deep-merged. Restore missing keys
+// from config.default.json after a shipped-key add. Promote a `var`
+// section to a typed JsonObject when a consumer needs granular
+// reactivity on one of its keys.
 pragma Singleton
 
 import Quickshell
 import Quickshell.Io
+import QtQuick
 
 Singleton {
     id: root
 
     readonly property string home: Quickshell.env("HOME")
+    property int _configMisses: 0
 
     FileView {
         id: file
         path: `${root.home}/.config/modern/config.json`
         watchChanges: true
         onFileChanged: reload()
-        printErrors: true
-        onLoadFailed: (error) => Logger.error("Config", "failed to load config.json: " + error)
+        printErrors: false
+        onLoaded: root._configMisses = 0
+        onLoadFailed: (error) => {
+            // FileNotFound (2): atomic replace can fire the watcher between
+            // unlink and rename. Retry; do not toast.
+            if (error === FileViewError.FileNotFound && root._configMisses < 8) {
+                root._configMisses++;
+                Qt.callLater(() => file.reload());
+                return;
+            }
+            Logger.error("Config", "failed to load config.json: " + error);
+        }
 
         JsonAdapter {
             id: adapter
 
             property JsonObject general: JsonObject {
-                property list<string> autostart: []
-                property int notificationTimeoutMs: 5000
+                property list<string> autostart: ["proton-mail.desktop"]
+                property int notificationTimeoutMs: 6000
                 property JsonObject dndSchedule: JsonObject {
                     property bool enabled: false
                     property string from: "23:00"
@@ -53,6 +64,7 @@ Singleton {
 
             property JsonObject motion: JsonObject {
                 property real scale: 1.0
+                property string overlay: "fadeZoom"
             }
 
             property JsonObject typography: JsonObject {
@@ -64,13 +76,15 @@ Singleton {
             }
 
             property JsonObject design: JsonObject {
-                property string activeProfile: "tonal-spot-auto"
+                property string activeProfile: "tonal-spot-dark"
                 property real cornerRounding: 1.0
                 property real transparency: 0.85
+                property real surfaceTint: 0.7
                 property int blurStrength: 40
                 property string iconTheme: "Papirus-Dark"
                 property string cursorTheme: "Bibata-Modern-Classic"
                 property int cursorSize: 24
+                property string wallpaperProvider: "https://4kwallpapers.com"
                 property JsonObject bootScreen: JsonObject {
                     property string mode: "static"
                     property bool wallpaperOnSplash: true
@@ -86,37 +100,80 @@ Singleton {
                 property string dateFormat: "DD.MM.YYYY"
                 property string timeFormat: "HH:mm"
                 property int firstDayOfWeek: 1
+                property string previewDate: ""
+                property string timezone: ""
             }
 
             property JsonObject bar: JsonObject {
                 property string position: "top"
                 property string style: "floating"
-                property int height: 40
+                property int height: 36
+                property int edgeGap: 8
+                property int endGap: 8
                 property bool autoHide: false
                 property JsonObject perMonitor: JsonObject {
                     property bool enabled: true
                 }
-                property list<string> left: ["launcher", "workspaces", "tray", "taskbar"]
-                property list<string> center: ["clock", "media"]
-                property list<string> right: ["audio", "weather", "network", "microphone", "performance", "vpn", "bluetooth", "kdeconnect", "notifications", "settings", "power"]
+                property list<string> left: ["launcher", "ai", "workspaces", "media"]
+                property list<string> center: ["clock"]
+                property list<string> right: ["weather", "connectivity", "audio", "taskbar", "battery", "settings", "power"]
             }
 
             // Per-widget settings blobs — shape varies per widget, each
             // widget reads its own key (e.g. Config.widgets.clock).
             property var widgets: ({
                 clock: { dateFormat: "DD.MM.YYYY", timeFormat: "HH:mm", showSeconds: false, showWeekday: false },
-                weather: { locationMode: "auto", manualLocation: "", units: "metric" },
+                weather: { locationMode: "auto", manualLocation: "", units: "metric", pollIntervalMs: 600000 },
                 performance: { pollIntervalMs: 2000, showGpu: true, showTemps: true },
-                audio: { scrollStepPercent: 5, scrollStepFinePercent: 1 },
-                quickSettingsOrder: ["wifi", "bluetooth", "audio", "brightness", "dnd", "calendar"]
+                audio: { scrollStepPercent: 5, scrollStepFinePercent: 1 }
             })
 
             // Per-monitor profiles (keyed by "description + serial") and
             // workspace-assignment rules — see docs/ARCHITECTURE.md
             // "Monitors". Free-form since the key set is per-machine.
-            property var monitors: ({ profiles: ({}), rules: [] })
+            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "dynamic" })
 
-            property var windowRules: []
+            property var windowRules: [
+                {
+                    name: "steam-game",
+                    match: { class: "steam_app_.*" },
+                    workspace: "special:game",
+                    fullscreen: true
+                },
+                {
+                    name: "jetbrains-dialogs",
+                    match: { class: "jetbrains-.*", title: "win0" },
+                    float: true
+                }
+            ]
+
+            property JsonObject windows: JsonObject {
+                property bool titlebar: true
+                property real opacity: 1.0
+                property int gapsIn: 5
+                property int gapsOut: 10
+            }
+
+            property JsonObject apps: JsonObject {
+                property JsonObject defaults: JsonObject {
+                    property string browser: "vivaldi-stable.desktop"
+                    property string calendar: "proton-mail.desktop"
+                    property string mail: "proton-mail.desktop"
+                    property string communication: ""
+                    property string fileManager: "org.kde.dolphin.desktop"
+                    property string videoPlayer: "mpv.desktop"
+                    property string imageViewer: "imv.desktop"
+                    property string terminal: "kitty.desktop"
+                }
+            }
+
+            property JsonObject input: JsonObject {
+                property string kbLayout: "de"
+                property string kbVariant: ""
+                property int repeatRate: 25
+                property int repeatDelay: 600
+                property bool numlockOnBoot: false
+            }
 
             property JsonObject launcher: JsonObject {
                 property var providers: ({
@@ -151,15 +208,18 @@ Singleton {
                 property bool copyToClipboard: true
                 property bool openEditorAfterCapture: false
                 property bool includeCursor: false
+                property string videoDirectory: "~/Videos/Recordings"
+                property string videoFilenameTemplate: "recording-%Y%m%d-%H%M%S"
+                property bool recordAudio: true
             }
 
             property JsonObject audio: JsonObject {
-                property string autoSwitchBluetooth: "ask"
+                property string autoSwitchBluetooth: "on"
                 property var perAppVolume: ({})
                 property int masterVolumeLimit: 100
             }
 
-            property var network: ({ wifiAutoconnectPriority: ({}), dnsOverride: [] })
+            property var network: ({ wifiAutoconnectPriority: ({}), dnsOverride: [], mirrorCountry: "Germany" })
 
             property JsonObject kdeconnect: JsonObject {
                 property bool enabled: true
@@ -170,13 +230,7 @@ Singleton {
             property var accounts: ({
                 protonDrive: { enabled: false },
                 calendarIcsUrl: "",
-                ai: { provider: "ollama", ollamaModel: "llama3" }
-            })
-
-            property var gaming: ({
-                profiles: ({}),
-                systemFixes: { vmMaxMapCount: true, fileDescriptorLimits: true, splitLockMitigate: false },
-                optiscaler: { trackedGames: ({}) }
+                ai: { provider: "none", ollamaModel: "llama3" }
             })
 
             property JsonObject backup: JsonObject {
@@ -191,14 +245,21 @@ Singleton {
             // same object to render the SUPER+K overlay.
             property var keybinds: ({
                 launcher: "SUPER + SPACE",
+                aiChat: "SUPER + A",
                 powerMenu: "SUPER + M",
+                controlCenter: "SUPER + O",
+                lockScreen: "SUPER + L",
+                exitSession: "SUPER + SHIFT + M",
                 cheatsheet: "SUPER + K",
                 settings: "SUPER + I",
                 wallpaperPicker: "SUPER + W",
+                taskbar: "SUPER + DELETE",
                 overview: "SUPER + TAB",
                 terminal: "SUPER + T",
                 browser: "SUPER + B",
+                browserIncognito: "SUPER + SHIFT + B",
                 fileManager: "SUPER + E",
+                spotify: "SUPER + R",
                 closeWindow: "SUPER + Q",
                 fullscreen: "SUPER + F",
                 toggleFloating: "SUPER + V",
@@ -222,11 +283,10 @@ Singleton {
                 moveToWorkspace7: "SUPER + SHIFT + 7", moveToWorkspace8: "SUPER + SHIFT + 8",
                 moveToWorkspace9: "SUPER + SHIFT + 9", moveToWorkspace10: "SUPER + SHIFT + 0",
                 screenshotRegion: "PRINT",
-                screenshotWindow: "ALT + PRINT",
+                screenshotWindow: "SHIFT + PRINT",
                 screenshotFull: "SUPER + PRINT",
-                gameMode: "SUPER + G",
                 colorPicker: "SUPER + SHIFT + C",
-                clipboardHistory: "SUPER + SHIFT + V"
+                filePreview: "SPACE"
             })
         }
     }
@@ -236,10 +296,13 @@ Singleton {
     readonly property alias typography: adapter.typography
     readonly property alias design: adapter.design
     readonly property alias language: adapter.language
+    readonly property alias input: adapter.input
     readonly property alias bar: adapter.bar
     readonly property alias widgets: adapter.widgets
     readonly property alias monitors: adapter.monitors
     readonly property alias windowRules: adapter.windowRules
+    readonly property alias windows: adapter.windows
+    readonly property alias apps: adapter.apps
     readonly property alias launcher: adapter.launcher
     readonly property alias power: adapter.power
     readonly property alias screenshots: adapter.screenshots
@@ -247,7 +310,6 @@ Singleton {
     readonly property alias network: adapter.network
     readonly property alias kdeconnect: adapter.kdeconnect
     readonly property alias accounts: adapter.accounts
-    readonly property alias gaming: adapter.gaming
     readonly property alias backup: adapter.backup
     readonly property alias keybinds: adapter.keybinds
 }

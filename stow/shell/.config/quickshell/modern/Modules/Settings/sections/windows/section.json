@@ -1,7 +1,0 @@
-{
-  "id": "windows",
-  "icon": "preferences-system-windows",
-  "key": "settings.sections.windows",
-  "order": 100,
-  "keywords": ["rules", "floating", "opacity", "workspace"]
-}

@@ -74,13 +74,15 @@ Singleton {
             const name = (e.name || "").toLowerCase();
             const generic = (e.genericName || "").toLowerCase();
             if (needle.length === 0 || name.indexOf(needle) !== -1 || generic.indexOf(needle) !== -1 || root._subseq(name, needle)) {
+                const rank = (Config.launcher.frecencyEnabled ?? true)
+                    ? root.score(e.id || e.name) : 0;
                 out.push({
                     id: e.id || e.name,
                     name: e.name,
                     genericName: e.genericName,
                     icon: e.icon,
                     exec: e,
-                    score: root.score(e.id || e.name)
+                    score: rank
                 });
             }
         }

@@ -1,6 +1,4 @@
-// Settings app. Lazy-loaded when Services/Settings.open; the only UI
-// that asks ConfigWrite to mutate config.json. Sidebar is the section
-// registry; search filters Catalog keywords (mirrors section.json).
+// Settings as a Hyprland toplevel. Super+Q closes it as killactive.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -9,96 +7,94 @@ import "../../Widgets"
 import "../../Services"
 
 Scope {
-    Catalog { id: catalog }
+    Connections {
+        target: Update
+        function onNotify(summary, body) {
+            Notifications.toast(summary, body || "");
+        }
+    }
 
-    readonly property var registry: catalog.ids
+    Connections {
+        target: FilePick
+        function onDirectoryPicked(path, key) {
+            if (key === "screenshots.videoDirectory")
+                ConfigWrite.set("screenshots.videoDirectory", path);
+            else
+                ConfigWrite.set("screenshots.directory", path);
+        }
+        function onPickFinished(section) {
+            Settings.openAt(section || "screenshots", "");
+        }
+    }
 
     LazyLoader {
         active: Settings.open
 
-        PanelWindow {
+        FloatingWindow {
             id: win
             visible: Settings.open
+            title: "modern.settings"
             color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            implicitWidth: Tokens.window.settingsWidth
+            implicitHeight: Tokens.window.settingsHeight
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.45
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Settings.close()
+            Catalog { id: catalog }
+
+            onVisibleChanged: {
+                if (!visible) {
+                    Settings.close();
+                    return;
                 }
+                Qt.callLater(() => nav.focusSearch());
             }
 
-            MCard {
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 28, win.width - Tokens.spacing.xxl)
-                height: Math.min(Tokens.spacing.xxl * 20, win.height - Tokens.spacing.xxl * 2)
-                anchors.centerIn: parent
+            MWindowShell {
+                id: card
+                anchors.fill: parent
+                titleKey: "settings.title"
+                titleColumnWidth: Tokens.spacing.xxl * 9
+                onClosed: Settings.close()
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: Tokens.spacing.md
+                RowLayout {
+                    spacing: Tokens.spacing.lg
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        MText {
-                            key: "settings.title"
-                            styleName: "headlineSmall"
-                            Layout.fillWidth: true
-                        }
-                        MIconButton {
-                            iconName: "window-close"
-                            onClicked: Settings.close()
+                    MPane {
+                        Layout.preferredWidth: Tokens.spacing.xxl * 9
+                        Layout.fillHeight: true
+
+                        Nav {
+                            id: nav
+                            anchors.fill: parent
+                            catalog: catalog
                         }
                     }
 
-                    MTextField {
-                        id: search
-                        Layout.fillWidth: true
-                        placeholderKey: "settings.search"
-                    }
-
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         spacing: Tokens.spacing.md
 
-                        ListView {
-                            id: nav
-                            Layout.preferredWidth: Tokens.spacing.xxl * 8
-                            Layout.fillHeight: true
-                            clip: true
-                            model: catalog.filtered(search.text)
-                            spacing: Tokens.spacing.xxs
-                            delegate: MListItem {
-                                required property var modelData
-                                width: nav.width
-                                iconName: catalog.icon(modelData)
-                                titleKey: "settings.sections." + modelData
-                                selected: Settings.sectionId === modelData
-                                onClicked: Settings.openAt(modelData, "")
-                            }
-                        }
+                        PageHeader { id: pageHeader; catalog: catalog }
 
                         Flickable {
                             id: pane
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             clip: true
+                            focus: false
                             contentWidth: width
-                            contentHeight: {
-                                const it = sectionLoader.item;
-                                if (!it)
-                                    return 0;
-                                return Math.max(it.implicitHeight, it.childrenRect.height);
+                            contentHeight: sectionLoader.item
+                                ? sectionLoader.item.implicitHeight
+                                : 0
+
+                            MouseArea {
+                                z: -1
+                                width: pane.width
+                                height: Math.max(pane.height, pane.contentHeight)
+                                onPressed: (mouse) => {
+                                    pane.forceActiveFocus();
+                                    mouse.accepted = false;
+                                }
                             }
 
                             Loader {
@@ -109,36 +105,93 @@ Scope {
                                     if (item)
                                         item.width = Qt.binding(() => sectionLoader.width);
                                 }
-                                onStatusChanged: {
-                                    if (status === Loader.Error)
-                                        Logger.error("Settings", "failed to load section '" + Settings.sectionId + "'");
-                                }
-                            }
-
-                            MText {
-                                visible: sectionLoader.status === Loader.Error
-                                width: pane.width
-                                key: "settings.loadError"
-                                styleName: "bodyMedium"
-                                color: Colors.color.error
-                                wrapMode: Text.WordWrap
-                                elide: Text.ElideNone
                             }
                         }
-                    }
-
-                    MText {
-                        visible: nav.count === 0
-                        key: "settings.noResults"
-                        styleName: "bodyMedium"
-                        color: Colors.color.onSurfaceVariant
                     }
                 }
             }
 
             Shortcut {
                 sequence: "Escape"
-                onActivated: Settings.close()
+                onActivated: {
+                    if (SelectMenus.current && SelectMenus.current.closeMenu) {
+                        SelectMenus.current.closeMenu();
+                        return;
+                    }
+                    const it = sectionLoader.item;
+                    if (pageHeader.restoreOpen) {
+                        pageHeader.restoreOpen = false;
+                        return;
+                    }
+                    if (Update.open) {
+                        Update.close();
+                        return;
+                    }
+                    if (it) {
+                        if (it.createOpen) {
+                            it.createOpen = false;
+                            return;
+                        }
+                        if (it.pendingLogin && String(it.pendingLogin).length > 0) {
+                            it.pendingLogin = "";
+                            return;
+                        }
+                        if (it.editorId !== undefined && String(it.editorId).length > 0) {
+                            it.editorId = "";
+                            return;
+                        }
+                        if (it.passwordOpen) {
+                            it.pendingNet = null;
+                            return;
+                        }
+                        if (it.dialogDevice) {
+                            it.dialogDevice = null;
+                            return;
+                        }
+                        if (it.pending) {
+                            it.pending = null;
+                            return;
+                        }
+                    }
+                    Settings.close();
+                }
+            }
+
+            Loader {
+                anchors.fill: card
+                z: 20
+                active: Settings.sectionId === "bar" && sectionLoader.item
+                    && !!sectionLoader.item.editorOpen
+                source: Qt.resolvedUrl("sections/bar/WidgetForm.qml")
+                onLoaded: {
+                    item.widgetId = Qt.binding(() => sectionLoader.item ? sectionLoader.item.editorId : "");
+                    item.closed.connect(() => {
+                        if (sectionLoader.item)
+                            sectionLoader.item.editorId = "";
+                    });
+                }
+            }
+
+            Loader {
+                anchors.fill: card
+                z: 21
+                active: Update.open
+                source: Qt.resolvedUrl("sections/system/UpdateOverlay.qml")
+            }
+
+            Loader {
+                anchors.fill: card
+                z: 22
+                active: Settings.sectionId === "network" && sectionLoader.item
+                    && !!sectionLoader.item.passwordOpen
+                source: Qt.resolvedUrl("sections/network/PasswordOverlay.qml")
+                onLoaded: {
+                    item.net = Qt.binding(() => sectionLoader.item ? sectionLoader.item.pendingNet : null);
+                    item.closed.connect(() => {
+                        if (sectionLoader.item)
+                            sectionLoader.item.pendingNet = null;
+                    });
+                }
             }
         }
     }

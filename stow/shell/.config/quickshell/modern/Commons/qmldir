@@ -1,8 +1,14 @@
 module Commons
 singleton Config 1.0 Config.qml
+singleton BarLayout 1.0 BarLayout.qml
 singleton Colors 1.0 Colors.qml
 singleton Motion 1.0 Motion.qml
 singleton Tokens 1.0 Tokens.qml
+singleton Chrome 1.0 Chrome.qml
 singleton Typography 1.0 Typography.qml
 singleton I18n 1.0 I18n.qml
 singleton Logger 1.0 Logger.qml
+singleton DateTime 1.0 DateTime.qml
+singleton SelectMenus 1.0 SelectMenus.qml
+singleton Paths 1.0 Paths.qml
+singleton DesktopRoles 1.0 DesktopRoles.qml

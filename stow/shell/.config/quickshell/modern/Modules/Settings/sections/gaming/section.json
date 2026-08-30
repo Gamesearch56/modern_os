@@ -1,7 +1,0 @@
-{
-  "id": "gaming",
-  "icon": "input-gaming",
-  "key": "settings.sections.gaming",
-  "order": 200,
-  "keywords": ["optiscaler", "game", "vm", "limits"]
-}

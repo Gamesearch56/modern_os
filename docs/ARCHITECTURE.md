@@ -23,10 +23,13 @@ graph TD
 
 Two flows, deliberately kept separate: **colors** derive from the
 wallpaper and the active theme profile; **behaviour** derives from
-`config.json`. The Settings app writes JSON only, never Lua or QML —
-`hyprland.lua` and the shell parse `config.json` at load/reload. This
-one rule is what makes a GUI monitor and keybind editor safe to build:
-there is no code generation step that can produce invalid Lua.
+`config.json`. The Settings app (**System Settings**) is a Hyprland
+`FloatingWindow` (title `modern.settings`) and writes JSON only, never
+Lua or QML — `hyprland.lua` and the shell parse `config.json` at
+load/reload. Page map, aliases, and how to add a section:
+`docs/SETTINGS.md`. This one rule is what makes a GUI monitor and
+keybind editor safe to build: there is no code generation step that can
+produce invalid Lua.
 
 ## QML layer pattern
 
@@ -35,7 +38,7 @@ Commons/   Tokens.qml Typography.qml Motion.qml Config.qml I18n.qml Logger.qml
            — depends on nothing.
 
 Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media
-           Wallpaper SystemStats Vpn Weather Calendar Notes Drive Ai Games
+           Wallpaper SystemStats Locale Snapshots Update Weather Calendar Notes Drive Ai
            Users KdeConnect Diagnostics
            — imports Commons only. Owns ALL process spawning, IPC, D-Bus and
            filesystem access. Each file is `pragma Singleton` with a
@@ -43,7 +46,8 @@ Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media
            `qmldir` (docs/DECISIONS.md #19).
 
 Widgets/   MButton MIconButton MSwitch MSlider MCard MChip MListItem
-           MTextField MPopup MIcon MText MDialog MTooltip
+           MTextField MPopup MIcon MText MDialog MTooltip MOverlay
+           MSparkline MLinearProgress MSlotBoard
            — MD3 primitives. Stateless, token-driven, zero system access.
 
 Modules/   Bar/ Launcher/ Panels/ PowerMenu/ Notifications/ Wallpaper/
@@ -71,6 +75,7 @@ modern_dotfile/
 │   ARCHITECTURE.md DESIGN.md MOTION.md DECISIONS.md INSTALL.md
 │   CURSOR-SETUP.md KEYBINDS.md THEMING.md BOOT.md I18N.md WIDGETS.md
 │   ISOLATION.md BACKUP.md SECURITY.md GAMING.md TROUBLESHOOTING.md
+│   CUTOVER.md SETTINGS.md
 ├── install/
 │   ├── install.sh              phased, idempotent, set -euo pipefail
 │   ├── lib/                    log.sh ui.sh pkg.sh stow.sh i18n.sh preflight.sh
@@ -84,7 +89,7 @@ modern_dotfile/
 │   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules
 │   ├── greeter/.config/quickshell/greeter/  shares Session/ with the shell
 │   ├── theme/.config/matugen/               config.toml + templates/
-│   ├── kitty/ dolphin/ gtk/ qt/ bash/ git/
+│   ├── kitty/ dolphin/ gtk/ qt/ bash/ git/ mpv/ imv/
 │   └── modern/.config/modern/               config.default.json, themes/, translations/
 ├── scripts/    theme-apply.sh wallpaper.sh optiscaler.sh game-profile.sh
 │               lint-layers.sh snapshot-packages.sh check-isolation.sh
@@ -124,8 +129,9 @@ No hardcoded output names anywhere. `Services/Hypr` enumerates monitors
 via the Hyprland IPC socket and keys everything on `description + serial`
 (via `hyprctl monitors -j`), because connector names (`DP-1`, `DP-2`)
 shuffle across reboots and cable changes. Unknown monitors fall back to
-`preferred`/`auto`. Workspace-to-monitor mapping is a rule in
-`config.json` (`monitors.rules`), not a fixed split.
+`preferred`/`auto`. `monitors.workspaceMode` `fixed` keeps 1–5 on the
+leftmost display and 6–10 on the next (by x); `dynamic` is per-monitor.
+Optional `monitors.rules` pin extra workspaces by description.
 
 ## i18n
 

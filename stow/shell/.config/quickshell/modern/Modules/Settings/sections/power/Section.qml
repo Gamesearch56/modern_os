@@ -3,63 +3,84 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "."
 
 ColumnLayout {
+    id: root
     spacing: Tokens.spacing.md
 
-    Model { id: model }
+    Component.onCompleted: Battery.watching = true
+    Component.onDestruction: Battery.watching = false
 
-    MText {
-        key: "settings.sections.power"
-        styleName: "headlineSmall"
+    readonly property var lidActions: [
+        { value: "ask", titleKey: "settings.powerAsk" },
+        { value: "suspend", titleKey: "powerMenu.suspend" },
+        { value: "lock", titleKey: "powerMenu.lock" },
+        { value: "poweroff", titleKey: "powerMenu.poweroff" }
+    ]
+
+    Status {
         Layout.fillWidth: true
     }
 
-    MText {
-        key: "settings.fields.buttonAction"
-        styleName: "titleSmall"
+    MSectionHeader {
+        key: "settings.energy.power"
+        topMargin: 0
+    }
+    RowLayout {
         Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.buttonAction"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSelect {
+            Layout.preferredWidth: Tokens.spacing.xxl * 8
+            model: root.lidActions
+            value: Config.power.buttonAction
+            onSelected: (v) => ConfigWrite.set("power.buttonAction", v)
+        }
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.lidAc"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSelect {
+            Layout.preferredWidth: Tokens.spacing.xxl * 8
+            model: root.lidActions
+            value: Config.power.lidActionAc
+            onSelected: (v) => ConfigWrite.set("power.lidActionAc", v)
+        }
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.lidBattery"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSelect {
+            Layout.preferredWidth: Tokens.spacing.xxl * 8
+            model: root.lidActions
+            value: Config.power.lidActionBattery
+            onSelected: (v) => ConfigWrite.set("power.lidActionBattery", v)
+        }
     }
 
-    MText {
-        value: model.buttonAction
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
+    MSectionHeader {
+        key: "settings.energy.idle"
+        topMargin: Tokens.spacing.xxl
     }
-
-    MText {
-        key: "settings.fields.lidAc"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.lidActionAc
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.lidBattery"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.lidActionBattery
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
+    Idle {
         Layout.fillWidth: true
     }
 }

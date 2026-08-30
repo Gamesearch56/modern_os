@@ -2,5 +2,6 @@
   "id": "audio",
   "key": "bar.volume",
   "defaultEnabled": true,
+  "bubble": true,
   "services": ["Audio"]
 }

@@ -4,13 +4,15 @@ import "../../../../Services"
 import "../../../../Commons"
 
 Item {
-    implicitWidth: Tokens.spacing.xxl
-    implicitHeight: Tokens.spacing.xxl
+    implicitWidth: Config.bar.height
+    implicitHeight: Config.bar.height
 
     MIconButton {
-        anchors.centerIn: parent
+        tabFocus: false
+        anchors.fill: parent
         iconName: "system-shutdown-symbolic"
         key: "bar.power"
+        checked: PowerMenu.open
         onClicked: PowerMenu.toggle()
     }
 }

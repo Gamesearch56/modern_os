@@ -1,1 +1,1 @@
-{"id":"notifications","key":"bar.notifications","defaultEnabled":true,"services":["Notifications"]}
+{"id":"notifications","key":"bar.notifications","defaultEnabled":true,"bubble":true,"services":["Notifications"]}

@@ -34,9 +34,10 @@ function extraLong(): int { return Math.round(durationExtraLong * scale); }
 
 - **Durations**: `short` 100ms (state toggles), `medium` 250ms (popups,
   panel open/close), `long` 400ms (page transitions), `extraLong` 600ms
-  (session surfaces, large overlays). Always read through the
-  `short()`/`medium()`/`long()`/`extraLong()` functions, never the raw
-  `duration*` properties, so `motion.scale` always applies.
+  (session surfaces, large overlays). Bind `Motion.shortMs` /
+  `mediumMs` / `longMs` / `extraLongMs` (and `overlaysFade` /
+  `overlaysZoom`) so `motion.scale` re-evaluates. The `short()` /
+  `medium()` functions remain as aliases.
 - **Easing**: `emphasized` for anything entering/leaving the screen,
   `emphasizedDecelerate` for enters, `emphasizedAccelerate` for exits,
   `standard` for small in-place state changes (hover, press).
@@ -67,6 +68,15 @@ function extraLong(): int { return Math.round(durationExtraLong * scale); }
    `1.5` = slow-mo for demos/screenshots). Implemented once, in
    `Motion.qml`'s duration getters — nothing downstream needs to know it
    exists.
+5. **`config.json`'s `motion.overlay`** (`fade` | `zoom` | `fadeZoom`,
+   default `fadeZoom`) is how every `MOverlay` / `MPopup` / `MDialog`
+   enters and exits. Scrim always fades. The card uses
+   `Motion.overlayOpacity(open)` / `Motion.overlayScale(open)` so Modules
+   never branch on the string. Fade = opacity 0↔1; zoom = scale ~0.92↔1
+   (open zooms in, close zooms out); fadeZoom = both. Durations/easings
+   only via `Motion.mediumMs` with `easingEmphasizedDecelerate` (enter) and
+   `easingEmphasizedAccelerate` (exit). When `motion.scale` is 0, motion is
+   instant. Settings → Design owns the chips.
 
 ## Hyprland side
 
@@ -83,16 +93,28 @@ in deciseconds (1ds = 100ms):
 ```lua
 -- modules/animations.lua (excerpt)
 local tokens = require("modules.motion_tokens") -- hand-kept in sync with Motion.qml
+local scale = config.value("motion.scale", 1.0)
+local function speed(ms) return (ms * scale) / 100.0 end
 
 for name, p in pairs(tokens.bezier) do
     hl.curve(name, { type = "bezier", points = { { p[1], p[2] }, { p[3], p[4] } } })
 end
 
-hl.animation({ leaf = "windows", enabled = true, speed = tokens.durationMediumMs / 100, bezier = "emphasized" })
-hl.animation({ leaf = "workspaces", enabled = true, speed = tokens.durationLongMs / 100, bezier = "emphasizedDecelerate", style = "slide" })
-hl.animation({ leaf = "fade", enabled = true, speed = tokens.durationShortMs / 100, bezier = "standard" })
-hl.animation({ leaf = "border", enabled = true, speed = tokens.durationShortMs / 100, bezier = "standard" })
+hl.animation({ leaf = "windowsIn", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedDecelerate", style = "popin 92%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedAccelerate", style = "popin 92%" })
+hl.animation({ leaf = "fade", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasized" })
+hl.animation({ leaf = "workspaces", enabled = true, speed = speed(tokens.durationLongMs), bezier = "emphasizedDecelerate", style = "slide" })
+hl.animation({ leaf = "border", enabled = true, speed = speed(tokens.durationShortMs), bezier = "standard" })
 ```
+
+`popin 92%` is the same closed floor as `Motion.overlayScale(false)`.
+`motion.scale <= 0` disables the `global` leaf instead of animating at
+zero speed.
+
+Overlay menus (control panel, bar popups) use `Motion.overlay*` and
+`motion.scale` from Settings → Design. Hyprland window open/close and
+awww wallpaper fades use the same tokens in `animations.lua` /
+`theme-apply.sh`. Session lock enter uses `Motion.extraLongMs`.
 
 `modules/motion_tokens.lua` is hand-kept in sync with the numeric
 constants in `Commons/Motion.qml`'s source — a comment pointer in both

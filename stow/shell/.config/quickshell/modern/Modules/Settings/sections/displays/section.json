@@ -3,5 +3,5 @@
   "icon": "video-display",
   "key": "settings.sections.displays",
   "order": 90,
-  "keywords": ["monitors", "scale", "resolution", "profile"]
+  "keywords": ["monitors", "scale", "resolution", "profile", "hdr", "refresh", "brightness", "color"]
 }

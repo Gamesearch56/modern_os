@@ -6,91 +6,111 @@ import "../../../../Services"
 
 Item {
     id: root
-    implicitWidth: row.implicitWidth + Tokens.spacing.md
-    implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
+    visible: Media.hasPlayer
+    implicitWidth: visible ? row.implicitWidth + Tokens.spacing.md * 2 : 0
+    implicitHeight: Config.bar.height
+    clip: true
+
+    readonly property real _art: Tokens.spacing.xl - Tokens.spacing.xxs
+    readonly property real _titleMax: Tokens.spacing.xxl * 4
+    readonly property string _label: {
+        const title = Media.trackTitle || "";
+        const artist = Media.trackArtist || "";
+        if (title.length > 0 && artist.length > 0)
+            return artist + " — " + title;
+        return title || artist;
+    }
+
+    function _raise() {
+        const desk = Media.desktopEntry;
+        const ident = Media.identity;
+        if ((desk.length > 0 && Hypr.raiseDesktop(desk)) || (ident.length > 0 && Hypr.raiseDesktop(ident)))
+            return;
+        Media.raise();
+    }
 
     RowLayout {
         id: row
         anchors.centerIn: parent
-        spacing: Tokens.spacing.xs
+        spacing: Tokens.spacing.sm
 
-        MIcon {
-            name: Media.playing ? "media-playback-pause" : "media-playback-start"
-            size: Tokens.spacing.lg
+        Rectangle {
+            visible: Media.trackArtUrl.length > 0
+            Layout.preferredWidth: root._art
+            Layout.preferredHeight: root._art
+            Layout.alignment: Qt.AlignVCenter
+            radius: Tokens.radius.small
+            color: Colors.color.surfaceContainerHighest
+            clip: true
+
+            Image {
+                anchors.fill: parent
+                source: Media.trackArtUrl
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                smooth: true
+                sourceSize.width: root._art * 2
+                sourceSize.height: root._art * 2
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root._raise()
+            }
         }
 
-        MText {
-            value: Media.hasPlayer ? (Media.trackArtist + " - " + Media.trackTitle) : I18n.t("media.notPlaying")
-            styleName: "labelLarge"
-            elide: Text.ElideRight
-            Layout.maximumWidth: Tokens.spacing.xxl * 8
+        Item {
+            id: titleBox
+            visible: root._label.length > 0
+            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredWidth: Math.min(title.implicitWidth, root._titleMax)
+            Layout.maximumWidth: root._titleMax
+            Layout.preferredHeight: root._art
+            implicitHeight: root._art
+
+            MText {
+                id: title
+                anchors.fill: parent
+                value: root._label
+                styleName: "titleSmall"
+                elide: Text.ElideRight
+                wrapMode: Text.NoWrap
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        MIconButton {
+            tabFocus: false
+            iconName: "media-skip-backward-symbolic"
+            size: root._art
+            iconSize: Tokens.icon.sm
+            Layout.alignment: Qt.AlignVCenter
+            enabled: Media.canGoPrevious
+            onClicked: Media.previous()
+        }
+        MIconButton {
+            tabFocus: false
+            iconName: Media.playing ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
+            size: root._art
+            iconSize: Tokens.icon.sm
+            Layout.alignment: Qt.AlignVCenter
+            onClicked: Media.togglePlaying()
+        }
+        MIconButton {
+            tabFocus: false
+            iconName: "media-skip-forward-symbolic"
+            size: root._art
+            iconSize: Tokens.icon.sm
+            Layout.alignment: Qt.AlignVCenter
+            enabled: Media.canGoNext
+            onClicked: Media.next()
         }
     }
 
     MouseArea {
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-        onClicked: (mouse) => {
-            if (mouse.button === Qt.MiddleButton) {
-                if (Media.hasPlayer)
-                    Media.togglePlaying();
-                else
-                    Media.launchSpotify();
-                return;
-            }
-            if (!Media.hasPlayer) {
-                Media.launchSpotify();
-                return;
-            }
-            panel.open = !panel.open;
-        }
-        onWheel: (w) => {
-            if (Media.canSeek)
-                Media.seek(w.angleDelta.y > 0 ? 5 : -5);
-        }
-    }
-
-    MPopup {
-        id: panel
-        open: false
-        width: Tokens.spacing.xxl * 10
-        height: Tokens.spacing.xxl * 8
-        anchors.top: parent.bottom
-        anchors.topMargin: Tokens.spacing.sm
-
-        ColumnLayout {
-            anchors.fill: parent
-            spacing: Tokens.spacing.sm
-
-            MText {
-                value: Media.trackTitle
-                styleName: "titleMedium"
-                Layout.fillWidth: true
-            }
-            MText {
-                value: Media.trackArtist
-                styleName: "bodySmall"
-                color: Colors.color.onSurfaceVariant
-                Layout.fillWidth: true
-            }
-
-            MSlider {
-                Layout.fillWidth: true
-                from: 0
-                to: Math.max(1, Media.length)
-                value: Media.position
-                onMoved: (v) => Media.setPosition(v)
-            }
-
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Tokens.spacing.sm
-
-                MIconButton { iconName: "media-skip-backward"; onClicked: Media.previous() }
-                MIconButton { iconName: Media.playing ? "media-playback-pause" : "media-playback-start"; onClicked: Media.togglePlaying() }
-                MIconButton { iconName: "media-playback-stop"; onClicked: Media.stop() }
-                MIconButton { iconName: "media-skip-forward"; onClicked: Media.next() }
-            }
-        }
+        z: -1
+        onClicked: root._raise()
     }
 }

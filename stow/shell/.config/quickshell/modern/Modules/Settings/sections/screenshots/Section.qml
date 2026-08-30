@@ -5,62 +5,126 @@ import "../../../../Widgets"
 import "../../../../Services"
 
 ColumnLayout {
-    spacing: Tokens.spacing.md
+    id: root
+    spacing: Tokens.spacing.lg
 
-    Model { id: model }
+    readonly property string format: Config.screenshots.format || "png"
+    readonly property bool lossy: root.format === "jpeg" || root.format === "webp"
 
-    MText {
-        key: "settings.sections.screenshots"
-        styleName: "headlineSmall"
-        Layout.fillWidth: true
+    MSectionHeader {
+        key: "settings.screenshots.stills"
+        topMargin: 0
     }
 
-    MText {
-        key: "settings.fields.screenshotDir"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.screenshotFormat"
+        MSegmented {
+            value: root.format
+            model: [
+                { value: "png", titleValue: "PNG" },
+                { value: "jpeg", titleValue: "JPEG" },
+                { value: "webp", titleValue: "WebP" }
+            ]
+            onSelected: (v) => ConfigWrite.set("screenshots.format", v)
+        }
     }
 
-    MText {
-        value: model.directory
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MField {
+        visible: root.lossy
+        labelKey: "settings.fields.screenshotQuality"
+        MSlider {
+            from: 1
+            to: 100
+            value: Config.screenshots.quality ?? 90
+            showValue: true
+            onMoved: (v) => ConfigWrite.set("screenshots.quality", Math.round(v))
+        }
     }
 
-    MText {
-        key: "settings.fields.screenshotFormat"
-        styleName: "titleSmall"
+    RowLayout {
         Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.copyClipboard"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: !!(Config.screenshots.copyToClipboard)
+            onToggled: (v) => ConfigWrite.set("screenshots.copyToClipboard", v)
+        }
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.openEditor"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: !!(Config.screenshots.openEditorAfterCapture)
+            onToggled: (v) => ConfigWrite.set("screenshots.openEditorAfterCapture", v)
+        }
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.includeCursor"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: !!(Config.screenshots.includeCursor)
+            onToggled: (v) => ConfigWrite.set("screenshots.includeCursor", v)
+        }
     }
 
-    MText {
-        value: model.format
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.screenshotDir"
+        MFolderField {
+            path: Config.screenshots.directory || ""
+            onBrowse: {
+                const dir = Config.screenshots.directory || "";
+                Settings.close();
+                FilePick.pickDirectory(dir, "screenshots", "screenshots.directory");
+            }
+        }
     }
 
-    MText {
-        key: "settings.fields.copyClipboard"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
+    MSectionHeader {
+        key: "settings.screenshots.video"
+        topMargin: Tokens.spacing.xxl
     }
 
-    MText {
-        value: model.copyToClipboard ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
+    RowLayout {
         Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.recordAudio"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: !!(Config.screenshots.recordAudio)
+            onToggled: (v) => ConfigWrite.set("screenshots.recordAudio", v)
+        }
     }
 
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.videoDir"
+        MFolderField {
+            path: Config.screenshots.videoDirectory || ""
+            onBrowse: {
+                const dir = Config.screenshots.videoDirectory || "";
+                Settings.close();
+                FilePick.pickDirectory(dir, "screenshots", "screenshots.videoDirectory");
+            }
+        }
     }
 }

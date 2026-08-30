@@ -4,13 +4,15 @@ import "../../../../Services"
 import "../../../../Commons"
 
 Item {
-    implicitWidth: Tokens.spacing.xxl
-    implicitHeight: Tokens.spacing.xxl
+    implicitWidth: Config.bar.height
+    implicitHeight: Config.bar.height
 
     MIconButton {
-        anchors.centerIn: parent
-        iconName: "preferences-system"
-        key: "bar.settings"
-        onClicked: Settings.openAt("general", "")
+        tabFocus: false
+        anchors.fill: parent
+        iconName: "view-grid-symbolic"
+        key: "bar.controlPanel"
+        checked: Notifications.panelOpen
+        onClicked: Notifications.toggle()
     }
 }

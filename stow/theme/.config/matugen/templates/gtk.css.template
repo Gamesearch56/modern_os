@@ -23,5 +23,28 @@
 @define-color borders {{colors.outline_variant.default.hex}};
 
 window, .background {
-    border-radius: 16px;
+    border-radius: @RADIUS_MD@px;
+}
+
+button {
+    background-color: @card_bg_color;
+    color: @window_fg_color;
+    border-radius: 9999px;
+    padding: 8px 16px;
+}
+
+button.suggested-action, .suggested-action {
+    background-color: @accent_bg_color;
+    color: @accent_fg_color;
+}
+
+button.destructive-action, .destructive-action {
+    background-color: @destructive_bg_color;
+    color: @destructive_fg_color;
+}
+
+.sidebar row:selected, list row:selected {
+    background-color: @accent_bg_color;
+    color: @accent_fg_color;
+    border-radius: 9999px;
 }

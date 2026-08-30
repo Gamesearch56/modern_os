@@ -1,12 +1,17 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
-import "../../Widgets"
 import "../../Services"
 
 Scope {
+    id: root
+
+    property string query: ""
+    property string categoryId: "applications"
+
     IpcHandler {
         target: "cheatsheet"
         function toggle() { Cheatsheet.toggle(); }
@@ -14,19 +19,57 @@ Scope {
         function hide() { Cheatsheet.hide(); }
     }
 
-    readonly property var categories: ({
-        applications: ["launcher", "terminal", "browser", "fileManager", "settings", "wallpaperPicker", "overview", "exitSession"],
-        windowManagement: ["closeWindow", "fullscreen", "toggleFloating", "pseudoTile", "toggleSplit", "moveFocusLeft", "moveFocusRight", "moveFocusUp", "moveFocusDown", "moveWindowLeft", "moveWindowRight", "moveWindowUp", "moveWindowDown"],
-        workspaces: ["workspace1", "workspace2", "workspace3", "workspace4", "workspace5", "workspace6", "workspace7", "workspace8", "workspace9", "workspace10", "moveToWorkspace1", "moveToWorkspace2", "moveToWorkspace3", "moveToWorkspace4", "moveToWorkspace5", "moveToWorkspace6", "moveToWorkspace7", "moveToWorkspace8", "moveToWorkspace9", "moveToWorkspace10"],
-        screenshots: ["screenshotRegion", "screenshotWindow", "screenshotFull", "colorPicker"],
-        media: ["gameMode", "clipboardHistory", "powerMenu", "cheatsheet"]
-    })
+    function _moveCategory(delta: int) {
+        const cats = CheatsheetModel.categories(root.query);
+        if (!cats || cats.length === 0)
+            return;
+        let i = 0;
+        for (; i < cats.length; i++) {
+            if (cats[i].id === root.categoryId)
+                break;
+        }
+        if (i >= cats.length)
+            i = 0;
+        const n = Math.max(0, Math.min(cats.length - 1, i + delta));
+        root.categoryId = cats[n].id;
+    }
+
+    function _syncCategory() {
+        const cats = CheatsheetModel.categories(root.query);
+        for (let i = 0; i < cats.length; i++) {
+            if (cats[i].id === root.categoryId)
+                return;
+        }
+        root.categoryId = cats.length > 0 ? cats[0].id : "applications";
+    }
+
+    function _focusedScreen(): var {
+        const n = Hypr.focusedMonitorName();
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === n)
+                return screens[i];
+        }
+        return screens.length ? screens[0] : null;
+    }
+
+    Connections {
+        target: Cheatsheet
+        function onOpenChanged() {
+            if (Cheatsheet.open)
+                return;
+            root.query = "";
+            root.categoryId = "applications";
+        }
+    }
 
     LazyLoader {
         active: Cheatsheet.open
 
         PanelWindow {
+            id: win
             visible: Cheatsheet.open
+            screen: root._focusedScreen()
             color: "transparent"
             anchors.top: true
             anchors.left: true
@@ -34,84 +77,53 @@ Scope {
             anchors.bottom: true
             exclusionMode: ExclusionMode.Ignore
             focusable: true
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
 
-            Rectangle {
+            Overlay {
+                id: overlay
                 anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.45
-                MouseArea { anchors.fill: parent; onClicked: Cheatsheet.hide() }
+                query: root.query
+                categoryId: root.categoryId
+                onQueryEdited: (t) => {
+                    root.query = t;
+                    root._syncCategory();
+                }
+                onPicked: (id) => root.categoryId = id
+                onClosed: Cheatsheet.hide()
             }
 
-            MCard {
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 22, parent.width - Tokens.spacing.xxl)
-                height: Math.min(Tokens.spacing.xxl * 18, parent.height - Tokens.spacing.xxl * 2)
-                anchors.centerIn: parent
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: Tokens.spacing.md
-
-                    MText { key: "cheatsheet.title"; styleName: "headlineSmall" }
-
-                    MTextField {
-                        id: search
-                        Layout.fillWidth: true
-                        placeholderKey: "cheatsheet.search"
-                    }
-
-                    ListView {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
-                        model: CheatsheetModel.rows(search.text)
-                        spacing: Tokens.spacing.xs
-                        section.property: "category"
-                        section.delegate: MText {
-                            required property string section
-                            key: "cheatsheet.category." + section
-                            styleName: "titleSmall"
-                            color: Colors.color.primary
-                        }
-
-                        delegate: RowLayout {
-                            required property var modelData
-                            width: ListView.view.width
-                            spacing: Tokens.spacing.md
-
-                            Row {
-                                spacing: Tokens.spacing.xs
-                                Repeater {
-                                    model: modelData.caps
-                                    Rectangle {
-                                        required property string modelData
-                                        radius: Tokens.radius.small
-                                        color: Colors.color.surfaceContainerHighest
-                                        implicitWidth: cap.implicitWidth + Tokens.spacing.sm * 2
-                                        implicitHeight: cap.implicitHeight + Tokens.spacing.xs
-
-                                        MText {
-                                            id: cap
-                                            anchors.centerIn: parent
-                                            value: modelData
-                                            styleName: "labelMedium"
-                                            familyRole: "monospace"
-                                        }
-                                    }
-                                }
-                            }
-
-                            MText {
-                                key: "cheatsheet.action." + modelData.action
-                                styleName: "bodyMedium"
-                                Layout.fillWidth: true
-                            }
-                        }
-                    }
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: [win]
+                onCleared: {
+                    if (Cheatsheet.open)
+                        Cheatsheet.hide();
                 }
             }
 
-            Shortcut { sequence: "Escape"; onActivated: Cheatsheet.hide() }
+            Shortcut {
+                sequence: "Escape"
+                context: Qt.ApplicationShortcut
+                onActivated: Cheatsheet.hide()
+            }
+            Shortcut {
+                sequence: "Up"
+                onActivated: root._moveCategory(-1)
+            }
+            Shortcut {
+                sequence: "Down"
+                onActivated: root._moveCategory(1)
+            }
+
+            Component.onCompleted: {
+                Qt.callLater(() => {
+                    if (!Cheatsheet.open)
+                        return;
+                    keyGrab.active = true;
+                    overlay.focusSearch();
+                });
+            }
         }
     }
 }

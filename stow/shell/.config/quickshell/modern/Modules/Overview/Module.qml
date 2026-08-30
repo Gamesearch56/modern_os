@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons"
@@ -10,80 +9,30 @@ Scope {
     LazyLoader {
         active: Overview.open
 
-        PanelWindow {
+        FloatingWindow {
+            id: win
             visible: Overview.open
+            title: "modern.overview"
             color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            implicitWidth: Tokens.window.overviewWidth
+            implicitHeight: Tokens.window.overviewHeight
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.45
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Overview.hide()
-                }
+            onVisibleChanged: {
+                if (visible)
+                    win.requestActivate();
+                else
+                    Overview.hide();
             }
 
-            MCard {
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 22, parent.width - Tokens.spacing.xxl)
-                height: Math.min(Tokens.spacing.xxl * 16, parent.height - Tokens.spacing.xxl * 2)
-                anchors.centerIn: parent
+            MWindowShell {
+                anchors.fill: parent
+                titleKey: "overview.title"
+                onClosed: Overview.hide()
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: Tokens.spacing.md
-
-                    MText { key: "overview.title"; styleName: "headlineSmall" }
-
-                    GridView {
+                MPane {
+                    WindowGrid {
                         id: grid
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
-                        cellWidth: Tokens.spacing.xxl * 7
-                        cellHeight: Tokens.spacing.xxl * 4
-                        model: Hypr.toplevels
-
-                        delegate: MCard {
-                            required property var modelData
-                            width: grid.cellWidth - Tokens.spacing.sm
-                            height: grid.cellHeight - Tokens.spacing.sm
-                            level: modelData.activated ? 3 : 1
-
-                            ColumnLayout {
-                                anchors.fill: parent
-                                spacing: Tokens.spacing.xs
-
-                                IconImage {
-                                    Layout.preferredWidth: Tokens.spacing.xl
-                                    Layout.preferredHeight: Tokens.spacing.xl
-                                    source: Quickshell.iconPath(modelData.lastIpcObject?.class ?? "application-x-executable")
-                                    asynchronous: true
-                                }
-
-                                MText {
-                                    value: modelData.title || ""
-                                    styleName: "labelLarge"
-                                    elide: Text.ElideRight
-                                    Layout.fillWidth: true
-                                }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    Hypr.focusWindow(modelData.address);
-                                    Overview.hide();
-                                }
-                            }
-                        }
+                        anchors.fill: parent
                     }
                 }
             }
@@ -91,6 +40,30 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 onActivated: Overview.hide()
+            }
+            Shortcut {
+                sequence: "Left"
+                onActivated: grid.moveBy(-1)
+            }
+            Shortcut {
+                sequence: "Right"
+                onActivated: grid.moveBy(1)
+            }
+            Shortcut {
+                sequence: "Up"
+                onActivated: grid.moveBy(-grid.columns)
+            }
+            Shortcut {
+                sequence: "Down"
+                onActivated: grid.moveBy(grid.columns)
+            }
+            Shortcut {
+                sequence: "Return"
+                onActivated: grid.activate()
+            }
+            Shortcut {
+                sequence: "Enter"
+                onActivated: grid.activate()
             }
         }
     }

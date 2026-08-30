@@ -25,10 +25,12 @@ if scale <= 0 then
     hl.animation({ leaf = "global", enabled = false })
 else
     hl.animation({ leaf = "windows", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasized" })
-    hl.animation({ leaf = "windowsIn", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedDecelerate", style = "popin 80%" })
-    hl.animation({ leaf = "windowsOut", enabled = true, speed = speed(tokens.durationShortMs), bezier = "emphasizedAccelerate", style = "popin 80%" })
+    -- popin 92% matches Motion.overlayScale(false); overlay enter/exit
+    -- both use medium, not a snappier windowsOut.
+    hl.animation({ leaf = "windowsIn", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedDecelerate", style = "popin 92%" })
+    hl.animation({ leaf = "windowsOut", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedAccelerate", style = "popin 92%" })
     hl.animation({ leaf = "border", enabled = true, speed = speed(tokens.durationShortMs), bezier = "standard" })
-    hl.animation({ leaf = "fade", enabled = true, speed = speed(tokens.durationShortMs), bezier = "standard" })
+    hl.animation({ leaf = "fade", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasized" })
     hl.animation({ leaf = "workspaces", enabled = true, speed = speed(tokens.durationLongMs), bezier = "emphasizedDecelerate", style = "slide" })
     hl.animation({ leaf = "specialWorkspace", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasized", style = "slidevert" })
 end

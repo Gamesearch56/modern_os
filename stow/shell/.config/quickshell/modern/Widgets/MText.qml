@@ -13,7 +13,10 @@ Text {
     property string styleName: "bodyMedium"
     property string familyRole: "ui"
 
-    readonly property var _style: Typography.style(root.styleName)
+    readonly property var _style: {
+        void Typography.scale;
+        return Typography.style(root.styleName);
+    }
 
     text: root.key !== "" ? I18n.t(root.key, root.params) : root.value
     color: Colors.color.onSurface
@@ -26,4 +29,7 @@ Text {
     wrapMode: Text.NoWrap
     elide: Text.ElideRight
     verticalAlignment: Text.AlignVCenter
+    renderType: Text.QtRendering
+    antialiasing: true
+    font.hintingPreference: Font.PreferNoHinting
 }

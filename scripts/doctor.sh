@@ -38,6 +38,15 @@ else
 fi
 
 section "optional runtime files (this account)"
+if command -v hyprctl >/dev/null 2>&1 && hyprctl plugin list 2>/dev/null | grep -qi hyprbars; then
+    ok "hyprbars plugin loaded"
+else
+    if [ ! -d "/var/cache/hyprpm/${USER}" ]; then
+        warn "hyprpm state store missing (/var/cache/hyprpm/${USER}) — run once in a terminal (pkexec): hyprpm add https://github.com/hyprwm/hyprland-plugins && hyprpm enable hyprbars && hyprpm reload"
+    else
+        warn "hyprbars not listed in hyprctl plugin list — titlebars need: hyprpm enable hyprbars && hyprpm reload"
+    fi
+fi
 TOKENS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/tokens.json"
 if [ -f "$TOKENS" ]; then
     ok "tokens.json present"
@@ -83,10 +92,29 @@ else
 fi
 
 section "user units"
-if systemctl --user is-enabled modern-shell.service >/dev/null 2>&1; then
+if pgrep -u "$USER" -x qs >/dev/null 2>&1 || pgrep -u "$USER" -f 'qs -c modern' >/dev/null 2>&1; then
+    ok "qs -c modern is running as a Hyprland child (modern-shell.service stays disabled on TTY sessions)"
+elif systemctl --user is-enabled modern-shell.service >/dev/null 2>&1; then
     ok "modern-shell.service enabled"
 else
-    warn "modern-shell.service not enabled (stow systemd + systemctl --user enable; autostart restarts it after WAYLAND_DISPLAY is imported)"
+    warn "neither qs nor modern-shell.service is running (start Hyprland via start-hyprland)"
+fi
+if systemctl --user is-active hyprpolkitagent.service >/dev/null 2>&1; then
+    ok "hyprpolkitagent.service is active"
+else
+    warn "hyprpolkitagent.service is not active — pkexec prompts will not render"
+fi
+TOOLKIT_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprtoolkit.conf"
+if [ -f "$TOOLKIT_CONF" ]; then
+    ok "hyprtoolkit.conf present (hyprpolkitagent chrome)"
+else
+    warn "hyprtoolkit.conf missing — run scripts/theme-apply.sh so hyprpolkitagent matches overlay chrome"
+fi
+STYLE_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/application-style.conf"
+if [ -f "$STYLE_CONF" ]; then
+    ok "application-style.conf present (hyprland-qt-support radii)"
+else
+    warn "application-style.conf missing — run scripts/theme-apply.sh so hypr Qt Quick apps get MD3 radii"
 fi
 
 section "PATH tools"

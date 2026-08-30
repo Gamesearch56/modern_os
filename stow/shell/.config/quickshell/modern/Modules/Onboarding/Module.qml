@@ -12,9 +12,7 @@ Scope {
 
     function _finish() {
         FirstRun.complete();
-        // ConfigWrite is the Settings writer; first-run seeds config.json
-        // from the shipped default, then opens Settings for the rest.
-        Settings.openAt("general", "");
+        Settings.openAt("overview", "");
     }
 
     function _next() {
@@ -37,30 +35,19 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             focusable: true
 
-            Rectangle {
-                anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.5
-            }
-
-            MCard {
-                level: 3
-                width: Math.min(Tokens.spacing.xxl * 16, parent.width - Tokens.spacing.xxl)
-                height: Tokens.spacing.xxl * 12
-                anchors.centerIn: parent
+            MOverlay {
+                open: FirstRun.isFirstRun
+                titleKey: "onboarding." + root.pages[root.page]
+                closeVisible: false
+                cardWidth: Tokens.spacing.xxl * 16
+                cardHeight: Tokens.spacing.xxl * 12
 
                 ColumnLayout {
-                    anchors.fill: parent
                     spacing: Tokens.spacing.lg
 
-                    MText {
-                        key: "onboarding." + root.pages[root.page]
-                        styleName: "headlineSmall"
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
+                    Item {
+                        Layout.fillHeight: true
                     }
-
-                    Item { Layout.fillHeight: true }
 
                     RowLayout {
                         Layout.alignment: Qt.AlignRight

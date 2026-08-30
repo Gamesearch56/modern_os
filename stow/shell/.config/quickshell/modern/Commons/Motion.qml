@@ -36,13 +36,52 @@ Singleton {
     readonly property int durationExtraLong: 600
 
     readonly property real scale: Config.motion.scale ?? 1.0 // 0 = off (accessibility/slow machine), 1.5 = slow-mo for demos
+    readonly property string overlay: Config.motion.overlay ?? "fadeZoom"
+
+    // Bindable scaled durations — `duration: Motion.short()` does not
+    // re-evaluate when scale changes; `Motion.shortMs` does.
+    readonly property int shortMs: Math.round(durationShort * root.scale)
+    readonly property int mediumMs: Math.round(durationMedium * root.scale)
+    readonly property int longMs: Math.round(durationLong * root.scale)
+    readonly property int extraLongMs: Math.round(durationExtraLong * root.scale)
+    readonly property bool overlaysFade: root.scale !== 0 && root.overlay !== "zoom"
+    readonly property bool overlaysZoom: root.scale !== 0 && root.overlay !== "fade"
 
     // Always read duration through these, never the raw duration*
     // properties directly, so `config.json`'s motion.scale always applies.
-    function short(): int { return Math.round(durationShort * root.scale); }
-    function medium(): int { return Math.round(durationMedium * root.scale); }
-    function long(): int { return Math.round(durationLong * root.scale); }
-    function extraLong(): int { return Math.round(durationExtraLong * root.scale); }
+    function short(): int { return root.shortMs; }
+    function medium(): int { return root.mediumMs; }
+    function long(): int { return root.longMs; }
+    function extraLong(): int { return root.extraLongMs; }
+
+    // Overlay enter/exit — Modules/Widgets call these instead of
+    // branching on motion.overlay. scale 0 is instant (opacity stays
+    // 1 while open; the loader unmounts on close).
+    function overlayOpacity(open: bool): real {
+        return open ? 1 : 0;
+    }
+
+    function overlayScale(open: bool): real {
+        if (root.scale === 0 || root.overlay === "fade")
+            return 1;
+        return open ? 1 : 0.92;
+    }
+
+    function overlayFades(): bool {
+        return root.overlaysFade;
+    }
+
+    function overlayZooms(): bool {
+        return root.overlaysZoom;
+    }
+
+    // Inverse of the closed overlay scale (~0.92 → ~1.087). Search
+    // fields use this as a focused bump so motion.overlay still owns
+    // the number; fade-only / scale-0 stays at 1.
+    function overlayFocusScale(): real {
+        const closed = root.overlayScale(false);
+        return closed > 0 ? 1 / closed : 1;
+    }
 
     // Named SpringAnimation presets — real QML SpringAnimation property
     // names are `spring` (stiffness) and `damping` (0-1, lower = faster

@@ -1,0 +1,7 @@
+{
+  "id": "firewall",
+  "icon": "preferences-security-firewall",
+  "key": "settings.sections.firewall",
+  "order": 73,
+  "keywords": ["ufw", "rules", "allow", "deny", "port"]
+}

@@ -1,8 +1,5 @@
-// Reactive view of ~/.config/modern/tokens.json — the color half of
-// the two-flow contract (docs/ARCHITECTURE.md). Matugen writes that
-// file; this singleton never generates colors itself. Fallback values
-// are the MD3 dark baseline so the shell still paints before the first
-// theme-apply.sh run, rather than rendering unstyled.
+// Live MD3 palette from tokens.json. Wallpaper / theme-apply rewrite
+// that file; FileView picks it up without restarting Quickshell.
 pragma Singleton
 
 import Quickshell
@@ -14,72 +11,74 @@ Singleton {
 
     readonly property string home: Quickshell.env("HOME")
 
-    // MD3 dark baseline (source #6750A4). Used until tokens.json loads.
-    readonly property var _fallback: ({
-        primary: "#D0BCFF",
-        onPrimary: "#381E72",
-        primaryContainer: "#4F378B",
-        onPrimaryContainer: "#EADDFF",
-        secondary: "#CCC2DC",
-        onSecondary: "#332D41",
-        secondaryContainer: "#4A4458",
-        onSecondaryContainer: "#E8DEF8",
-        tertiary: "#EFB8C8",
-        onTertiary: "#492532",
-        tertiaryContainer: "#633B48",
-        onTertiaryContainer: "#FFD8E4",
-        error: "#F2B8B5",
-        onError: "#601410",
-        errorContainer: "#8C1D18",
-        onErrorContainer: "#F9DEDC",
-        background: "#141218",
-        onBackground: "#E6E0E9",
-        surface: "#141218",
-        onSurface: "#E6E0E9",
-        surfaceVariant: "#49454F",
-        onSurfaceVariant: "#CAC4D0",
-        surfaceDim: "#141218",
-        surfaceBright: "#3B383E",
-        surfaceContainerLowest: "#0F0D13",
-        surfaceContainerLow: "#1D1B20",
-        surfaceContainer: "#211F26",
-        surfaceContainerHigh: "#2B2930",
-        surfaceContainerHighest: "#36343B",
-        outline: "#938F99",
-        outlineVariant: "#49454F",
-        inverseSurface: "#E6E0E9",
-        inverseOnSurface: "#322F35",
-        inversePrimary: "#6750A4",
+    property string mode: "dark"
+    property string sourceColor: "#8020e6"
+    property var color: ({
+        primary: "#74d7ca",
+        onPrimary: "#003732",
+        primaryContainer: "#005049",
+        onPrimaryContainer: "#91f4e6",
+        secondary: "#ecb8ce",
+        onSecondary: "#482536",
+        secondaryContainer: "#613b4d",
+        onSecondaryContainer: "#ffd8e7",
+        tertiary: "#e7b7e8",
+        onTertiary: "#46234a",
+        tertiaryContainer: "#5e3962",
+        onTertiaryContainer: "#ffd5ff",
+        error: "#ffb4ab",
+        onError: "#690005",
+        errorContainer: "#93000a",
+        onErrorContainer: "#ffdad6",
+        background: "#171118",
+        onBackground: "#ebdfe9",
+        surface: "#171118",
+        onSurface: "#ebdfe9",
+        surfaceVariant: "#4e4350",
+        onSurfaceVariant: "#d2c2d2",
+        surfaceDim: "#171118",
+        surfaceBright: "#3e373f",
+        surfaceContainerLowest: "#120c13",
+        surfaceContainerLow: "#201a21",
+        surfaceContainer: "#241d25",
+        surfaceContainerHigh: "#2f282f",
+        surfaceContainerHighest: "#3a323a",
+        outline: "#9b8c9b",
+        outlineVariant: "#4e4350",
+        inverseSurface: "#ebdfe9",
+        inverseOnSurface: "#352e36",
+        inversePrimary: "#006a61",
         shadow: "#000000",
         scrim: "#000000"
     })
 
-    property var color: root._fallback
-    property string mode: "dark"
-    property string sourceColor: "#6750A4"
-
     FileView {
         id: file
-        path: `${root.home}/.config/modern/tokens.json`
+        path: root.home + "/.config/modern/tokens.json"
         watchChanges: true
         printErrors: false
         onFileChanged: reload()
-        onLoaded: {
-            try {
-                const data = JSON.parse(text());
-                if (data.mode)
-                    root.mode = data.mode;
-                if (data.sourceColor)
-                    root.sourceColor = data.sourceColor;
-                if (data.color)
-                    root.color = data.color;
-            } catch (e) {
-                Logger.error("Colors", "tokens.json parse failed, keeping fallback: " + e);
-            }
+        onLoaded: root._apply(text())
+        onLoadFailed: (error) => {
+            if (error === FileViewError.FileNotFound)
+                Qt.callLater(() => file.reload());
         }
-        onLoadFailed: {
-            root.color = root._fallback;
-            Logger.warn("Colors", "tokens.json missing — using MD3 dark baseline");
+    }
+
+    function refresh() {
+        file.reload();
+    }
+
+    function _apply(raw: string) {
+        try {
+            const j = JSON.parse(raw);
+            if (j.mode)
+                root.mode = String(j.mode);
+            if (j.sourceColor)
+                root.sourceColor = String(j.sourceColor);
+            if (j.color && typeof j.color === "object")
+                root.color = j.color;
+        } catch (e) {
         }
     }
 }

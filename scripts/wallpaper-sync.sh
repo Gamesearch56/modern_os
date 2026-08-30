@@ -46,11 +46,11 @@ copy_as_jpeg() {
 copy_as_jpeg "$IMAGE" "$SHARED/wallpaper.jpg"
 
 if command -v magick >/dev/null 2>&1; then
-    magick "$IMAGE" -blur 0x24 "$SHARED/wallpaper-blur.jpg"
     magick "$IMAGE" -resize '1920x1080>' "$SHARED/wallpaper-boot.jpg"
+    magick "$SHARED/wallpaper-boot.jpg" -blur 0x16 "$SHARED/wallpaper-blur.jpg"
 elif command -v convert >/dev/null 2>&1; then
-    convert "$IMAGE" -blur 0x24 "$SHARED/wallpaper-blur.jpg"
     convert "$IMAGE" -resize '1920x1080>' "$SHARED/wallpaper-boot.jpg"
+    convert "$SHARED/wallpaper-boot.jpg" -blur 0x16 "$SHARED/wallpaper-blur.jpg"
 else
     warn "ImageMagick not on PATH — blur/boot variants are copies"
     cp "$SHARED/wallpaper.jpg" "$SHARED/wallpaper-blur.jpg"
@@ -60,6 +60,21 @@ fi
 TOKENS="$HOME/.config/modern/tokens.json"
 if [ -f "$TOKENS" ]; then
     cp "$TOKENS" "$SHARED/tokens.json"
+fi
+
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+EN="${XDG_CONFIG_HOME:-$HOME/.config}/modern/translations/en.json"
+DE="${XDG_CONFIG_HOME:-$HOME/.config}/modern/translations/de.json"
+if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    lang="$(jq -r '.language.ui // "en"' "$CFG")"
+    trans="$EN"
+    [ "$lang" = "de" ] && [ -f "$DE" ] && trans="$DE"
+    jq -n \
+        --argjson cfg "$(jq '{typography,design:{cornerRounding,transparency},language}' "$CFG")" \
+        --arg unlock "$(jq -r '.session.unlock // "Unlock"' "$trans")" \
+        --arg password "$(jq -r '.session.password // "Password"' "$trans")" \
+        '$cfg + {strings:{unlock:$unlock, password:$password}}' \
+        > "$SHARED/chrome.json" || warn "chrome.json skipped"
 fi
 
 log "synced to $SHARED"

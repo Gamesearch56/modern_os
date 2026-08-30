@@ -1,21 +1,34 @@
 #!/usr/bin/env bash
 # Drive the running Quickshell session from scripts and Hyprland
-# keybinds. Thin wrapper over `qs ipc` so muscle-memory `modern launcher
-# toggle` stays stable if the IPC target names ever move.
+# keybinds. Maintenance commands (update/cleanup/pkg/mirrors/repair)
+# live here too — i18n from translations/*.json, sudo stays explicit.
 set -euo pipefail
 
-usage() {
-    cat <<'EOF'
-Usage: modern <target> <function> [args...]
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=../install/lib/i18n.sh
+source "$REPO_ROOT/install/lib/i18n.sh"
 
-Examples:
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    I18N_LANG="$(jq -r '.language.ui // "en"' "$CFG")"
+    [ "$I18N_LANG" = "de" ] || I18N_LANG="en"
+fi
+
+usage() {
+    cat <<EOF
+$(t cli.usage)
+
   modern launcher toggle
-  modern powermenu toggle
-  modern cheatsheet toggle
-  modern settings open
-  modern volume up
-  modern shell reload
+  modern filepreview
+  modern update
+  modern cleanup
+  modern pkg find [q]
+  modern mirrors
+  modern repair
+  modern window close
   modern config set motion.scale 1.2
+  modern config restore design typography
 EOF
 }
 
@@ -31,18 +44,108 @@ ipc() {
     exec qs -c modern ipc call "$@"
 }
 
+cfg() {
+    local path="$1" default="$2"
+    if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+        jq -r --arg p "$path" --arg d "$default" 'getpath($p | split(".")) // $d' "$CFG"
+    else
+        printf '%s\n' "$default"
+    fi
+}
+
+priv() {
+    if [ -t 0 ]; then
+        sudo "$@"
+    else
+        pkexec "$@"
+    fi
+}
+
 case "$TARGET" in
+    update)
+        if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
+            if command -v snapper >/dev/null 2>&1 && snapper list-configs >/dev/null 2>&1 \
+                && snapper list-configs 2>/dev/null | grep -q root; then
+                t cli.snapshotting
+                priv /usr/bin/snapper -c root create --description "modern update" || {
+                    t cli.snapshotFailed >&2
+                    exit 1
+                }
+            else
+                t cli.snapperUnconfigured >&2 || true
+            fi
+        fi
+        if [ -t 0 ]; then
+            exec yay -Syu
+        fi
+        exec pkexec /usr/bin/pacman -Syu --noconfirm
+        ;;
+    cleanup)
+        yay -Yc
+        paccache -r
+        ;;
+    pkg)
+        SUB="${1:-find}"
+        shift || true
+        case "$SUB" in
+            find)
+                pacman -Q | grep -i -- "${1:-.}" || true
+                ;;
+            load)
+                exec yay -S --needed -- "$@"
+                ;;
+            unload)
+                exec yay -Rns -- "$@"
+                ;;
+            *)
+                echo "$(t cli.unknown) pkg $SUB" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    mirrors)
+        country="$(cfg network.mirrorCountry Germany)"
+        t cli.mirrors "$country"
+        priv /usr/bin/reflector --country "$country" --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+        ;;
+    repair)
+        t cli.repairReset
+        systemctl reset-failed || true
+        t cli.repairScrub
+        sudo btrfs scrub start -B / || true
+        t cli.repairDmesg
+        dmesg -T 2>/dev/null | grep -Ei 'corrupt|unmount|I/O error' | tail -n 20 || true
+        t cli.repairFsck
+        ;;
     volume)
         ACTION="${1:-up}"
         case "$ACTION" in
             up) ipc audio volumeUp ;;
             down) ipc audio volumeDown ;;
             mute) ipc audio mute ;;
-            *) echo "unknown volume action: $ACTION" >&2; exit 1 ;;
+            *) t cli.volumeUnknown "$ACTION" >&2; exit 1 ;;
+        esac
+        ;;
+    brightness)
+        ACTION="${1:-get}"
+        case "$ACTION" in
+            up | down)
+                if qs -c modern ipc call brightness "$ACTION" >/dev/null 2>&1; then
+                    exit 0
+                fi
+                exec "$SCRIPT_DIR/brightness.sh" "$ACTION"
+                ;;
+            get | set)
+                exec "$SCRIPT_DIR/brightness.sh" "$@"
+                ;;
+            *)
+                echo "usage: modern brightness up|down|get|set PERCENT" >&2
+                exit 1
+                ;;
         esac
         ;;
     lang)
-        echo "language switching is Settings > Language (or edit config.json language.ui)" >&2
+        t cli.languageViaSettings >&2
         exit 1
         ;;
     wallpaper)
@@ -50,6 +153,23 @@ case "$TARGET" in
         ;;
     shell)
         ipc shell "${1:-reload}"
+        ;;
+    window)
+        ACTION="${1:-close}"
+        case "$ACTION" in
+            close)
+                dismissed="$(qs -c modern ipc call shell dismiss 2>/dev/null || true)"
+                dismissed="$(printf '%s' "$dismissed" | tr -d '[:space:]\"')"
+                if [ "$dismissed" = "true" ]; then
+                    exit 0
+                fi
+                exec hyprctl dispatch "hl.dsp.window.close()"
+                ;;
+            *)
+                echo "unknown window action: $ACTION" >&2
+                exit 1
+                ;;
+        esac
         ;;
     settings)
         ipc settings "${1:-open}"
@@ -59,11 +179,13 @@ case "$TARGET" in
         shift || true
         case "$SUB" in
             set)
-                SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
                 exec "$SCRIPT_DIR/config-set.sh" "$@"
                 ;;
+            restore)
+                exec "$SCRIPT_DIR/config-restore.sh" "$@"
+                ;;
             *)
-                echo "Usage: modern config set PATH VALUE" >&2
+                echo "Usage: modern config set PATH VALUE | restore PATH..." >&2
                 exit 1
                 ;;
         esac
@@ -71,6 +193,88 @@ case "$TARGET" in
     game)
         shift || true
         exec modern-game "$@"
+        ;;
+    screenshot)
+        MODE="${1:-region}"
+        PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/modern/screencast.pid"
+        if [ -f "$PIDFILE" ]; then
+            pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+            if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                qs -c modern ipc call recording stop 2>/dev/null \
+                    || "$SCRIPT_DIR/screencast.sh" stop
+                exit 0
+            fi
+            rm -f "$PIDFILE"
+        fi
+        reply="$(qs -c modern ipc call screenshot "$MODE" 2>&1)" || true
+        if ! printf '%s' "$reply" | grep -qiE 'not ready|unknown|error'; then
+            exit 0
+        fi
+        exec "$SCRIPT_DIR/screenshot.sh" "$MODE"
+        ;;
+    recording)
+        ACTION="${1:-stop}"
+        rec_ipc() {
+            local reply
+            reply="$(qs -c modern ipc call recording "$1" 2>&1)" || true
+            if ! printf '%s' "$reply" | grep -qiE 'not ready|unknown|error'; then
+                return 0
+            fi
+            return 1
+        }
+        case "$ACTION" in
+            start | region | startRegion)
+                rec_ipc startRegion && exit 0
+                exec "$SCRIPT_DIR/screencast.sh" region
+                ;;
+            window)
+                rec_ipc window && exit 0
+                exec "$SCRIPT_DIR/screencast.sh" window
+                ;;
+            full)
+                rec_ipc full && exit 0
+                exec "$SCRIPT_DIR/screencast.sh" full
+                ;;
+            stop | *)
+                rec_ipc stop || "$SCRIPT_DIR/screencast.sh" stop
+                exit 0
+                ;;
+        esac
+        ;;
+    power)
+        ACTION="${1:-button}"
+        act() {
+            case "$1" in
+                lock) exec loginctl lock-session ;;
+                suspend) exec systemctl suspend ;;
+                poweroff) exec systemctl poweroff ;;
+                ask | *) exec qs -c modern ipc call powermenu show ;;
+            esac
+        }
+        on_battery() {
+            grep -q Discharging /sys/class/power_supply/BAT*/status 2>/dev/null
+        }
+        case "$ACTION" in
+            button)
+                act "$(cfg power.buttonAction ask)"
+                ;;
+            lid)
+                if on_battery; then
+                    act "$(cfg power.lidActionBattery suspend)"
+                else
+                    act "$(cfg power.lidActionAc lock)"
+                fi
+                ;;
+            *)
+                echo "usage: modern power button|lid" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    filepreview)
+        # shellcheck source=lib/filepreview.sh
+        source "$SCRIPT_DIR/lib/filepreview.sh"
+        filepreview_run
         ;;
     *)
         FUNC="${1:-toggle}"

@@ -8,14 +8,23 @@ Rectangle {
     id: root
 
     property int level: 1
+    property real padding: Tokens.spacing.md
+    property color borderColor: "transparent"
+    property int borderWidth: 0
+    property bool highlighted: false
     property alias content: inner.data
     default property alias extra: inner.data
 
-    readonly property var _elev: Tokens.elevationFor(root.level)
+    readonly property var _elev: {
+        void Tokens.surfaceTint;
+        return Tokens.elevationFor(root.level);
+    }
 
     radius: Tokens.radius.medium
     color: Colors.color.surfaceContainer
-    border.width: 0
+    border.color: root.borderColor
+    border.width: root.borderWidth
+    clip: true
 
     layer.enabled: root._elev.shadowOpacity > 0
     layer.effect: null
@@ -30,6 +39,11 @@ Rectangle {
     Item {
         id: inner
         anchors.fill: parent
-        anchors.margins: Tokens.spacing.md
+        anchors.margins: root.padding
+    }
+
+    MFocusRing {
+        radius: root.radius
+        active: root.highlighted
     }
 }

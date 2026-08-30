@@ -8,9 +8,9 @@ TRANSLATIONS_DIR="${TRANSLATIONS_DIR:-$REPO_ROOT/stow/modern/.config/modern/tran
 I18N_LANG="${I18N_LANG:-${LANG%%_*}}"
 [ "$I18N_LANG" = "de" ] || I18N_LANG="en"
 
-# t "install.welcome" -> looks up translations/<lang>.json's "install.welcome"
-# (dot-path into nested JSON), falling back to English, then to the key
-# itself if neither file has it.
+# t "cli.usage" -> looks up translations/<lang>.json's nested "cli.usage"
+# (dot-path), falling back to English, then to the key itself if neither
+# file has it. There is no install.* tree — installer copy is English.
 t() {
     local key="$1"; shift || true
     local jq_path=".$(echo "$key" | sed 's/\./\./g')"

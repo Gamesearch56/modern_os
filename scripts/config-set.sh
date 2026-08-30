@@ -58,12 +58,14 @@ if ! jq -n --argjson v "$VALUE_JSON" '$v' >/dev/null; then
     exit 2
 fi
 
-tmp="$(mktemp)"
+tmp="$(mktemp "$CONFIG_HOME/config.json.XXXXXX")"
 trap 'rm -f -- "$tmp"' EXIT
 
 jq --arg p "$PATH_EXPR" --argjson v "$VALUE_JSON" \
     'setpath($p | split("."); $v)' "$CFG" >"$tmp"
 
+# Same-directory rename so FileView never sees a missing path (mv from
+# /tmp is copy+unlink and toasts "failed to load config.json: 2").
 mv -f -- "$tmp" "$CFG"
 trap - EXIT
 echo "updated $PATH_EXPR"

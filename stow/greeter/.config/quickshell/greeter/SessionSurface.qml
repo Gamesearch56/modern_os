@@ -26,6 +26,30 @@ Item {
         scrim: "#000000"
     })
 
+    property var chrome: ({ strings: { unlock: "Unlock", password: "Password" }, typography: { ui: "Inter", scale: 1 } })
+
+    readonly property string _font: String(root.chrome?.typography?.ui || "Inter")
+    readonly property real _typeScale: {
+        const s = Number(root.chrome?.typography?.scale);
+        return (s > 0) ? s : 1;
+    }
+
+    FileView {
+        path: "/var/lib/modern/session/chrome.json"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                const data = JSON.parse(text());
+                if (data)
+                    root.chrome = data;
+            } catch (e) {
+                /* keep fallback */
+            }
+        }
+    }
+
     FileView {
         path: "/var/lib/modern/session/tokens.json"
         watchChanges: true
@@ -79,14 +103,16 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root._time()
             color: root.color.onSurface
-            font.pixelSize: 57
+            font.family: root._font
+            font.pixelSize: Math.round(57 * root._typeScale)
         }
 
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: root._date()
             color: root.color.onSurfaceVariant
-            font.pixelSize: 16
+            font.family: root._font
+            font.pixelSize: Math.round(16 * root._typeScale)
         }
 
         TextInput {
@@ -95,6 +121,8 @@ Item {
             Layout.preferredHeight: 36
             echoMode: TextInput.Password
             color: root.color.onSurface
+            font.family: root._font
+            font.pixelSize: Math.round(16 * root._typeScale)
             padding: 12
             onAccepted: root.authenticate(text)
 
@@ -113,6 +141,8 @@ Item {
                 verticalAlignment: Text.AlignVCenter
                 text: root._t("session.password")
                 color: root.color.onSurfaceVariant
+                font.family: root._font
+                font.pixelSize: Math.round(16 * root._typeScale)
             }
         }
 
@@ -128,7 +158,8 @@ Item {
                 anchors.centerIn: parent
                 text: root._t("session.unlock")
                 color: root.color.onPrimary
-                font.pixelSize: 14
+                font.family: root._font
+                font.pixelSize: Math.round(14 * root._typeScale)
             }
 
             MouseArea {
@@ -148,10 +179,11 @@ Item {
     }
 
     function _t(key: string): string {
+        const s = root.chrome?.strings || ({});
         if (key === "session.unlock")
-            return "Unlock";
+            return s.unlock || "Unlock";
         if (key === "session.password")
-            return "Password";
+            return s.password || "Password";
         return key;
     }
 

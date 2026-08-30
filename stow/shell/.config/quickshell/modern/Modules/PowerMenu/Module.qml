@@ -1,7 +1,8 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
@@ -17,12 +18,50 @@ Scope {
     }
 
     property string pending: ""
+    property int focusIndex: 0
+
+    readonly property var actions: [
+        { id: "lock", icon: "system-lock-screen-symbolic" },
+        { id: "logout", icon: "system-log-out-symbolic" },
+        { id: "restart", icon: "system-reboot-symbolic" },
+        { id: "poweroff", icon: "system-shutdown-symbolic" }
+    ]
+
+    function _run(id: string) {
+        if (id === "lock") {
+            Session.lock();
+            PowerMenu.hide();
+            return;
+        }
+        root._ask(id === "restart" ? "reboot" : id);
+    }
+
+    function _ask(action: string) {
+        root.pending = action;
+    }
+
+    function _move(delta: int) {
+        const n = root.actions.length;
+        root.focusIndex = Math.max(0, Math.min(n - 1, root.focusIndex + delta));
+    }
+
+    function _focusedScreen(): var {
+        const n = Hypr.focusedMonitorName();
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === n)
+                return screens[i];
+        }
+        return screens.length ? screens[0] : null;
+    }
 
     LazyLoader {
         active: PowerMenu.open
 
         PanelWindow {
+            id: win
             visible: PowerMenu.open
+            screen: root._focusedScreen()
             color: "transparent"
             anchors.top: true
             anchors.left: true
@@ -30,36 +69,23 @@ Scope {
             anchors.bottom: true
             exclusionMode: ExclusionMode.Ignore
             focusable: true
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
 
-            Rectangle {
+            Overlay {
+                id: overlay
                 anchors.fill: parent
-                color: Colors.color.scrim
-                opacity: 0.45
-                MouseArea { anchors.fill: parent; onClicked: PowerMenu.hide() }
-            }
-
-            MCard {
-                level: 4
-                width: Tokens.spacing.xxl * 14
-                height: Tokens.spacing.xxl * 8
-                anchors.centerIn: parent
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: Tokens.spacing.lg
-
-                    MText { key: "powerMenu.title"; styleName: "headlineSmall" }
-
-                    RowLayout {
-                        Layout.alignment: Qt.AlignHCenter
-                        spacing: Tokens.spacing.lg
-
-                        MButton { kind: "tonal"; key: "powerMenu.lock"; iconName: "system-lock-screen"; onClicked: { Session.lock(); PowerMenu.hide(); } }
-                        MButton { kind: "tonal"; key: "powerMenu.logout"; iconName: "system-log-out"; onClicked: root._ask("logout") }
-                        MButton { kind: "tonal"; key: "powerMenu.suspend"; iconName: "system-suspend"; onClicked: { Power.suspend(); PowerMenu.hide(); } }
-                        MButton { kind: "filled"; key: "powerMenu.restart"; iconName: "system-reboot"; onClicked: root._ask("reboot") }
-                        MButton { kind: "filled"; key: "powerMenu.poweroff"; iconName: "system-shutdown"; onClicked: root._ask("poweroff") }
-                    }
+                actions: root.actions
+                focusIndex: root.focusIndex
+                onChosen: (i) => {
+                    root.focusIndex = i;
+                    root._run(root.actions[i].id);
+                }
+                onClosed: {
+                    if (root.pending.length > 0)
+                        root.pending = "";
+                    else
+                        PowerMenu.hide();
                 }
             }
 
@@ -68,23 +94,77 @@ Scope {
                 open: root.pending.length > 0
                 titleKey: "powerMenu.confirmTitle"
                 bodyKey: "powerMenu.confirmBody"
-                bodyParams: ({ action: I18n.t("powerMenu." + (root.pending === "reboot" ? "restart" : root.pending)), seconds: 0 })
+                bodyParams: ({ action: I18n.t("powerMenu." + (root.pending === "reboot" ? "restart" : root.pending)) })
                 confirmKey: "powerMenu." + (root.pending === "reboot" ? "restart" : (root.pending || "poweroff"))
+                destructive: root.pending === "poweroff" || root.pending === "logout"
                 onConfirmed: {
-                    if (root.pending === "logout") Power.logout();
-                    else if (root.pending === "reboot") Power.reboot();
-                    else if (root.pending === "poweroff") Power.poweroff();
+                    if (root.pending === "logout")
+                        Power.logout();
+                    else if (root.pending === "reboot")
+                        Power.reboot();
+                    else if (root.pending === "poweroff")
+                        Power.poweroff();
                     root.pending = "";
                     PowerMenu.hide();
                 }
                 onCancelled: root.pending = ""
             }
 
-            Shortcut { sequence: "Escape"; onActivated: { root.pending = ""; PowerMenu.hide(); } }
-        }
-    }
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: [win]
+                onCleared: {
+                    if (PowerMenu.open)
+                        PowerMenu.hide();
+                }
+            }
 
-    function _ask(action: string) {
-        root.pending = action;
+            Shortcut {
+                sequence: "Escape"
+                context: Qt.ApplicationShortcut
+                onActivated: {
+                    if (root.pending.length > 0) {
+                        root.pending = "";
+                        return;
+                    }
+                    PowerMenu.hide();
+                }
+            }
+            Shortcut {
+                sequence: "Left"
+                enabled: root.pending.length === 0
+                onActivated: root._move(-1)
+            }
+            Shortcut {
+                sequence: "Right"
+                enabled: root.pending.length === 0
+                onActivated: root._move(1)
+            }
+            Shortcut {
+                sequence: "Up"
+                enabled: root.pending.length === 0
+                onActivated: root._move(-2)
+            }
+            Shortcut {
+                sequence: "Down"
+                enabled: root.pending.length === 0
+                onActivated: root._move(2)
+            }
+            Shortcut {
+                sequence: "Return"
+                enabled: root.pending.length === 0
+                onActivated: root._run(root.actions[root.focusIndex].id)
+            }
+
+            Component.onCompleted: {
+                root.focusIndex = 0;
+                root.pending = "";
+                Qt.callLater(() => {
+                    if (!PowerMenu.open)
+                        return;
+                    keyGrab.active = true;
+                });
+            }
+        }
     }
 }

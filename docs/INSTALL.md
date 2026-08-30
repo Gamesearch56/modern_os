@@ -44,13 +44,19 @@ Profiles: `m0` (bar/launcher/session), `dev` (+ Cursor/toolchain),
 `gaming` (+ Proton/MangoHud), `full`. Manifests:
 `install/manifests/README.md`.
 
-`install.sh` only installs packages and stows `stow/` into `--target`
-(default `$HOME`). It does not enable greetd, sysctls, ufw, snapper, or
-the ESP hook. Stow conflict backups go under
-`$TARGET/.local/state/modern/stow-backups`.
+`install.sh` only installs packages and stows listed packages into
+`--target` (default `$HOME`): hypr, shell, theme, kitty, dolphin, gtk,
+qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, mpv, imv. It does **not** stow
+`greeter`. It never copies `install/system/` (no greetd tree exists).
+Stow conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
+
+Clone + install is the **designed** desktop (`config.default.json`:
+English UI, `kbLayout` `de`), not this machine’s live `config.json`.
 
 `--allow-live-home` disables the daily-driver home guard. Use it only
-when this account *is* the one you want to own (new PC cutover).
+when this account *is* the one you want to own, following
+`docs/CUTOVER.md` Phase 1 (rewind tarball first). Not for `devuser`
+testing.
 
 Installer log: `install/install.log` (gitignored) and
 `journalctl -t modern-install`.
@@ -80,8 +86,13 @@ arch-chroot → chain `install.sh`). Disks are not wiped unless you pass
 ## After stow (on the **target** user)
 
 `install.sh` phase 5 applies `~/.config/modern/wallpapers/default.jpg`
-(tokens, GTK/Qt/kitty, lock/login copies via `wallpaper-sync.sh`). To
-use a different image later:
+(tokens, GTK/Qt/kitty). `wallpaper-sync.sh` writes lock assets to
+`~/.local/state/modern/session` until gated `/var/lib/modern/session`
+exists. First-hour UI is **English**. Power-menu lock is an overlay
+preview, not a real lock. Titlebars need a one-time `hyprpm` + pkexec
+in a graphical session (`docs/TROUBLESHOOTING.md`).
+
+To use a different image later:
 
 1. `scripts/theme-apply.sh --wallpaper PATH` (writes `tokens.json` and
    syncs lock/login assets)
@@ -89,8 +100,12 @@ use a different image later:
    starts `qs -c modern` as a child of Hyprland. Skip
    `systemctl --user enable` on a text TTY (`docs/BOOT.md`).
 3. `scripts/doctor.sh`
-4. Optional gated: sysctl, ufw KDE Connect, ESP hook, snapper — each
-   file's header comment has the copy command
+4. Optional gated files that **exist**: Plymouth README, sysctl, ufw
+   KDE Connect, tmpfiles, ESP hook, snapper, `create-devuser.sh` —
+   each file's header comment has the copy command. Do **not** enable
+   greetd; that config is not in the repo.
+
+Hand-edit reference is `config.default.json` (no `config.schema.json`).
 
 Firewall reminder if a later mobile/LAN API is involved: listen on
 `0.0.0.0` and `sudo ufw allow <port>/tcp` — not needed for this desktop

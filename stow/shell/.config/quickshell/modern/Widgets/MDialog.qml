@@ -10,27 +10,41 @@ Item {
 
     property bool open: false
     property string titleKey: ""
+    property var titleParams: ({})
+    property string titleValue: ""
     property string bodyKey: ""
     property var bodyParams: ({})
     property string confirmKey: "powerMenu.confirmTitle"
     property string cancelKey: "powerMenu.cancel"
+    property string destructiveKey: ""
     property bool destructive: false
+    property bool confirmEnabled: true
+    default property alias extra: extraCol.data
 
     signal confirmed()
     signal cancelled()
+    signal destructiveClicked()
 
     visible: root.open || scrim.opacity > 0
     z: 100
+    activeFocusOnTab: root.open
+    Accessible.role: Accessible.Dialog
+    Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
+
+    onOpenChanged: {
+        if (root.open)
+            root.forceActiveFocus();
+    }
 
     Rectangle {
         id: scrim
         anchors.fill: parent
         color: Colors.color.scrim
-        opacity: root.open ? 0.5 : 0
+        opacity: root.open ? Tokens.overlay.scrim : 0
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: Motion.easingEmphasized
             }
         }
@@ -43,33 +57,56 @@ Item {
 
     MCard {
         id: card
-        level: 5
+        level: 0
+        color: Colors.color.surface
+        borderWidth: Tokens.stroke.hairline
+        borderColor: Colors.color.outlineVariant
         width: Math.min(parent.width - Tokens.spacing.xxl, Tokens.spacing.xxl * 12)
+        implicitHeight: dialogCol.implicitHeight + padding * 2
         anchors.centerIn: parent
-        scale: root.open ? 1 : 0.92
-        opacity: root.open ? 1 : 0
+        scale: Motion.overlayScale(root.open)
+        opacity: Motion.overlayOpacity(root.open)
 
         Behavior on opacity {
+            enabled: Motion.overlaysFade
             NumberAnimation {
-                duration: Motion.medium()
-                easing.bezierCurve: Motion.easingEmphasizedDecelerate
+                duration: Motion.mediumMs
+                easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }
         Behavior on scale {
-            SpringAnimation {
-                spring: Motion.springGentle.spring
-                damping: Motion.springGentle.damping
+            enabled: Motion.overlaysZoom
+            NumberAnimation {
+                duration: Motion.mediumMs
+                easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }
 
         ColumnLayout {
-            anchors.fill: parent
+            id: dialogCol
+            width: parent.width
             spacing: Tokens.spacing.md
 
-            MText {
-                key: root.titleKey
-                styleName: "headlineSmall"
+            RowLayout {
                 Layout.fillWidth: true
+                spacing: Tokens.spacing.md
+
+                MText {
+                    key: root.titleKey
+                    params: root.titleParams
+                    value: root.titleValue
+                    styleName: "headlineSmall"
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                }
+
+                MButton {
+                    visible: root.destructiveKey.length > 0
+                    kind: "text"
+                    key: root.destructiveKey
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    onClicked: root.destructiveClicked()
+                }
             }
 
             MText {
@@ -78,6 +115,12 @@ Item {
                 styleName: "bodyMedium"
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
+            }
+
+            ColumnLayout {
+                id: extraCol
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.sm
             }
 
             RowLayout {
@@ -91,8 +134,9 @@ Item {
                 }
 
                 MButton {
-                    kind: "filled"
+                    kind: root.destructive ? "destructive" : "filled"
                     key: root.confirmKey
+                    enabled: root.confirmEnabled
                     onClicked: root.confirmed()
                 }
             }
@@ -100,4 +144,12 @@ Item {
     }
 
     Keys.onEscapePressed: root.cancelled()
+    Keys.onReturnPressed: {
+        if (root.open && root.confirmEnabled)
+            root.confirmed();
+    }
+    Keys.onEnterPressed: {
+        if (root.open && root.confirmEnabled)
+            root.confirmed();
+    }
 }

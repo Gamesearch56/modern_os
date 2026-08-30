@@ -95,6 +95,100 @@ if missing_en:
 PY
 fi
 
+# --- file size (Config.qml is a JsonAdapter; do not size-fail it) ---
+MAX_LINES=290
+while IFS= read -r qml; do
+    base="$(basename "$qml")"
+    # JsonAdapter blob; IPC facade composes HyprMonitors/HyprWindows;
+    # NotificationServer + toast list stay in one singleton.
+    case "$base" in
+        Config.qml|Hypr.qml|Notifications.qml|Colors.qml) continue ;;
+    esac
+    n="$(wc -l < "$qml")"
+    if [ "$n" -gt "$MAX_LINES" ]; then
+        err "file too long ($n > $MAX_LINES): $(realpath --relative-to="$ROOT" "$qml")"
+    fi
+done < <(find "$SHELL_ROOT" -name '*.qml' ! -path '*/Colors.qml')
+
+# --- module-internal imports (a Module may only use another Module's Module.qml) ---
+while IFS= read -r hit; do
+    err "module imported another module's internals: $hit"
+done < <(grep -RIn --include='*.qml' -E 'import ["'\'']\.\./(Bar|Settings|Launcher|Notifications|Wallpaper|PowerMenu|Cheatsheet|Overview|Session|Plugins|Onboarding|FilePreview|Screenshot)/' "$SHELL_ROOT/Modules" \
+    | grep -v 'Module.qml' || true)
+
+# --- hardcoded repo scripts path (must go through Commons/Paths.qml) ---
+while IFS= read -r hit; do
+    err "hardcoded modern_dotfile/scripts (use Paths): $hit"
+done < <(grep -RIn --include='*.qml' 'modern_dotfile/scripts' "$SHELL_ROOT" \
+    | grep -v '/Commons/Paths.qml' || true)
+
+# --- Config.qml defaults vs config.default.json (var blobs are not deep-merged) ---
+DEFAULT_JSON="$ROOT/stow/modern/.config/modern/config.default.json"
+CONFIG_QML="$SHELL_ROOT/Commons/Config.qml"
+if [ -f "$DEFAULT_JSON" ] && [ -f "$CONFIG_QML" ]; then
+    python3 - "$DEFAULT_JSON" "$CONFIG_QML" <<'PY' || FAIL=1
+import json, re, sys
+default = json.load(open(sys.argv[1]))
+qml = open(sys.argv[2]).read()
+fail = False
+
+def miss(msg):
+    global fail
+    print("lint-layers:", msg, file=sys.stderr)
+    fail = True
+
+uis = re.findall(r'property string ui:\s*"([^"]+)"', qml)
+lang_ui = uis[-1] if uis else None
+if lang_ui and default.get("language", {}).get("ui") != lang_ui:
+    miss(f"language.ui Config.qml={lang_ui!r} default.json={default.get('language', {}).get('ui')!r}")
+
+binds = default.get("keybinds") or {}
+for k in binds:
+    if k.startswith("_"):
+        continue
+    if not re.search(r'\b' + re.escape(k) + r'\s*:', qml):
+        miss(f"keybinds.{k} in default.json missing from Config.qml")
+
+if fail:
+    sys.exit(1)
+PY
+fi
+
+# --- referenced i18n keys exist in en.json ---
+if command -v python3 >/dev/null 2>&1 && [ -f "$EN" ]; then
+    python3 - "$EN" "$SHELL_ROOT" <<'PY' || FAIL=1
+import json, re, sys
+from pathlib import Path
+en = json.load(open(sys.argv[1]))
+
+def keys(obj, prefix=""):
+    out = set()
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            path = f"{prefix}.{k}" if prefix else k
+            if isinstance(v, dict):
+                out |= keys(v, path)
+            else:
+                out.add(path)
+    return out
+known = keys(en)
+root = Path(sys.argv[2])
+pat = re.compile(r'''(?:I18n\.t\(|(?:titleKey|hintKey|labelKey|placeholderKey|emptyKey|key|bodyKey|confirmKey|cancelKey|destructiveKey|actionKey|subtitleKey)\s*:\s*)["']([a-zA-Z][a-zA-Z0-9.]+)["']''')
+missing = set()
+for qml in root.rglob("*.qml"):
+    text = qml.read_text(errors="replace")
+    for m in pat.finditer(text):
+        k = m.group(1)
+        if k not in known and "." in k and not k.endswith("."):
+            missing.add(k)
+if missing:
+    print("lint-layers: I18n keys used in QML missing from en.json:", file=sys.stderr)
+    for k in sorted(missing):
+        print("  ", k, file=sys.stderr)
+    sys.exit(1)
+PY
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     printf 'lint-layers: FAILED\n' >&2
     exit 1

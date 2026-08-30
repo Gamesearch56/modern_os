@@ -5,62 +5,80 @@ import "../../../../Widgets"
 import "../../../../Services"
 
 ColumnLayout {
-    spacing: Tokens.spacing.md
+    id: root
+    spacing: Tokens.spacing.lg
 
-    Model { id: model }
-
-    MText {
-        key: "settings.sections.launcher"
-        styleName: "headlineSmall"
+    ColumnLayout {
         Layout.fillWidth: true
+        spacing: Tokens.spacing.xs
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.md
+            MText {
+                key: "settings.fields.frecency"
+                styleName: "bodyMedium"
+                color: Colors.color.onSurfaceVariant
+                Layout.fillWidth: true
+            }
+            MSwitch {
+                checked: !!(Config.launcher.frecencyEnabled)
+                onToggled: (v) => ConfigWrite.set("launcher.frecencyEnabled", v)
+            }
+        }
+        MHint {
+            key: "settings.hints.frecency"
+            Layout.fillWidth: true
+        }
     }
 
-    MText {
-        key: "settings.fields.launcherResults"
-        styleName: "titleSmall"
+    RowLayout {
         Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.showIcons"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: !!(Config.launcher.showIcons)
+            onToggled: (v) => ConfigWrite.set("launcher.showIcons", v)
+        }
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.showDescriptions"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: !!(Config.launcher.showDescriptions)
+            onToggled: (v) => ConfigWrite.set("launcher.showDescriptions", v)
+        }
     }
 
-    MText {
-        value: String(model.resultCount)
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.launcherResults"
+        MSlider {
+            from: 4
+            to: 20
+            value: Config.launcher.resultCount ?? 9
+            showValue: true
+            onMoved: (v) => ConfigWrite.set("launcher.resultCount", Math.round(v))
+        }
     }
-
-    MText {
-        key: "settings.fields.frecency"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.frecencyEnabled ? I18n.t("settings.on") : I18n.t("settings.off")
-        styleName: "bodyMedium"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.fields.providers"
-        styleName: "titleSmall"
-        Layout.fillWidth: true
-    }
-
-    MText {
-        value: model.providersText
-        styleName: "bodyMedium"
-        familyRole: "monospace"
-        wrapMode: Text.Wrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
-    }
-
-    MText {
-        key: "settings.cliNote"
-        styleName: "bodySmall"
-        color: Colors.color.onSurfaceVariant
-        wrapMode: Text.WordWrap
-        elide: Text.ElideNone
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.mostUsed"
+        MSlider {
+            from: 4
+            to: 16
+            value: Config.launcher.mostUsedGridSize ?? 8
+            showValue: true
+            onMoved: (v) => ConfigWrite.set("launcher.mostUsedGridSize", Math.round(v))
+        }
     }
 }

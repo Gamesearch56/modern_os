@@ -3,28 +3,113 @@
 -- float/size/position/workspace/opacity/...), replacing hand-edited Lua
 -- (docs/ARCHITECTURE.md's "two data flows" — Settings never writes Lua).
 --
--- Each entry: { name?, match = { class=, title=, xwayland= }, ...effects }
--- effects map 1:1 onto hl.window_rule()'s keys — see
--- wiki.hypr.land/Configuring/Basics/Window-Rules for the full effect
--- list (float, tile, fullscreen, move, size, center, pseudo, monitor,
--- workspace, no_initial_focus, pin, group, content, no_close_for, ...).
+-- Effect names must match 0.56's WINDOW_RULE_EFFECT_DESCS exactly:
+-- dim_around (not dimaround), size as {w, h}, opacity as a string.
+-- Plugin effects (hyprbars:no_bar, …) are unknown until hyprbars is
+-- loaded — same gate as modules/titlebar.lua.
 
 local config = require("modules.config")
+local overlays = require("modules.windows")
 
-local rules = config.value("windowRules", {})
+local function hyprbars_loaded()
+    return hl.plugin and hl.plugin.hyprbars ~= nil
+end
 
-for _, rule in ipairs(rules) do
-    if rule.match then
-        hl.window_rule(rule)
+local function vec2(v)
+    if type(v) ~= "string" then
+        return v
     end
+    local a, b = v:match("^(%S+)%s+(%S+)$")
+    if not a then
+        return v
+    end
+    return { tonumber(a) or a, tonumber(b) or b }
+end
+
+local function normalize(rule)
+    local out = {}
+    for k, v in pairs(rule) do
+        local key = k
+        if key == "dimaround" then
+            key = "dim_around"
+        end
+        local plugin_effect = type(key) == "string" and key:sub(1, 9) == "hyprbars:"
+        if not plugin_effect or hyprbars_loaded() then
+            if key == "size" or key == "move" or key == "max_size" or key == "min_size" then
+                out[key] = vec2(v)
+            elseif key == "opacity" and type(v) == "number" then
+                out[key] = tostring(v) .. " override"
+            else
+                out[key] = v
+            end
+        end
+    end
+    return out
+end
+
+local function apply(rule)
+    if not rule or not rule.match then
+        return
+    end
+    hl.window_rule(normalize(rule))
+end
+
+for _, rule in ipairs(config.value("windowRules", {})) do
+    apply(rule)
 end
 
 -- One default, kept even with an empty user rule list: JetBrains IDEs
 -- have well-documented Wayland/XWayland focus-stealing issues (see
 -- docs/DECISIONS.md's audit and the ArchWiki Hyprland troubleshooting
 -- section) — this is cheap insurance, not a personal preference.
-hl.window_rule({
+apply({
     name = "xwayland-no-initial-focus",
     match = { xwayland = true },
     no_initial_focus = true,
 })
+
+-- hyprpolkitagent has no .desktop file; Wayland app_id is the binary
+-- name or the QApplication name. Glass like the wallpaper overlay:
+-- float+center, dim_around as scrim, design.transparency, no hyprbars.
+apply({
+    name = "polkit-auth-dialog",
+    match = { class = "hyprpolkitagent|hyprland-polkit-agent" },
+    float = true,
+    center = true,
+    dim_around = true,
+    border_size = 1,
+    opacity = config.value("design.transparency", 0.85),
+    ["hyprbars:no_bar"] = true,
+})
+
+-- Dolphin is a tiled app window, not a HUD. Punching wallpaper through
+-- the icon view (design.transparency) washed out labels and toolbar
+-- icons. Opaque surface; wallpaper stays in the compositor gaps.
+apply({
+    name = "dolphin-opaque",
+    match = { class = "org.kde.dolphin|dolphin" },
+    opaque = true,
+})
+
+-- Spacebar Quick Look video (mpv). Image/text previews are a QML overlay.
+apply({
+    name = "modern-quicklook",
+    match = { class = "modern.quicklook" },
+    float = true,
+    center = true,
+    dim_around = true,
+    ["hyprbars:no_bar"] = true,
+})
+
+for _, w in ipairs(overlays) do
+    apply({
+        name = w.name,
+        match = { title = w.title },
+        float = true,
+        center = true,
+        size = w.size,
+        dim_around = true,
+        ["hyprbars:no_bar"] = true,
+        opaque = w.opaque == true,
+    })
+end
