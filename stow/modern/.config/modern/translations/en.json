@@ -606,7 +606,27 @@
       "snapshots": "Snapshots"
     },
     "overview": {
-      "stats": "Live stats"
+      "stats": "Live stats",
+      "os": "OS",
+      "kernel": "Kernel",
+      "session": "Session",
+      "wayland": "Wayland",
+      "wm": "Window manager",
+      "shell": "Shell",
+      "launcher": "Launcher",
+      "launcherName": "modern",
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "Memory",
+      "board": "Motherboard",
+      "disk": "Storage",
+      "diskUsed": "{used} / {total}",
+      "bootFinished": "Startup finished",
+      "seconds": "{n} s",
+      "firmware": "Firmware",
+      "loader": "Loader",
+      "initrd": "Initrd",
+      "userspace": "Userspace"
     },
     "bar": {
       "available": "Available widgets",

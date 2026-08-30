@@ -13,6 +13,7 @@ ColumnLayout {
     property string hintValue: ""
     property string styleName: "titleSmall"
     property bool caps: false
+    property real topMargin: Tokens.spacing.md
 
     spacing: Tokens.spacing.xs
     Layout.fillWidth: true
@@ -24,7 +25,7 @@ ColumnLayout {
         color: Colors.color.onSurfaceVariant
         font.capitalization: root.caps ? Font.AllUppercase : Font.MixedCase
         Layout.fillWidth: true
-        Layout.topMargin: Tokens.spacing.md
+        Layout.topMargin: root.topMargin
     }
 
     MHint {

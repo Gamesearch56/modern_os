@@ -11,19 +11,20 @@ ColumnLayout {
     Component.onCompleted: {
         Diagnostics.watching = true;
         SystemStats.watching = true;
-        Battery.watching = true;
     }
     Component.onDestruction: {
         Diagnostics.watching = false;
         SystemStats.watching = false;
-        Battery.watching = false;
     }
 
     DiagnosticsView {
         Layout.fillWidth: true
     }
 
-    MSectionHeader { key: "settings.overview.stats" }
+    MSectionHeader {
+        key: "settings.overview.stats"
+        topMargin: Tokens.spacing.xxl
+    }
     GridLayout {
         Layout.fillWidth: true
         columns: 2
@@ -49,16 +50,10 @@ ColumnLayout {
             percent: SystemStats.diskPercent
         }
         MPercentTile {
-            visible: SystemStats.gpuPercent > 0
             Layout.fillWidth: true
             titleKey: "performance.gpu"
             valueText: Math.round(SystemStats.gpuPercent) + "%"
             percent: SystemStats.gpuPercent
         }
-    }
-    MSparkline {
-        Layout.fillWidth: true
-        Layout.preferredHeight: Tokens.spacing.xxl + Tokens.spacing.md
-        values: SystemStats.cpuSamples
     }
 }

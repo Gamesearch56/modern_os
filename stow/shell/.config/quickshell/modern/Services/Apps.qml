@@ -37,6 +37,11 @@ Singleton {
         return root._entryFromIds(root._fallbackIds(role));
     }
 
+    function displayName(role: string): string {
+        const e = root.entryFor(role);
+        return (e && e.name) ? String(e.name) : "";
+    }
+
     function launch(role: string): bool {
         try {
             const e = root.entryFor(role);
