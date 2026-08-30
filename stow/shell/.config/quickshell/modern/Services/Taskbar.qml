@@ -4,6 +4,7 @@
 pragma Singleton
 
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import "../Commons"
 
@@ -12,6 +13,13 @@ Singleton {
 
     property bool open: false
     property string hostScreenName: ""
+
+    IpcHandler {
+        target: "taskbar"
+        function toggle() { root.toggle(null); }
+        function show() { root.show(null); }
+        function hide() { root.hide(); }
+    }
 
     function toggle(screen: var) {
         const name = root._nameOf(screen) || root._focusedName();

@@ -81,6 +81,7 @@ local bindings = {
     cheatsheet = hl.dsp.exec_cmd("qs -c modern ipc call cheatsheet toggle"),
     settings = hl.dsp.exec_cmd("qs -c modern ipc call settings toggle"),
     wallpaperPicker = hl.dsp.exec_cmd("qs -c modern ipc call wallpaper toggle"),
+    taskbar = hl.dsp.exec_cmd("qs -c modern ipc call taskbar toggle"),
     overview = hl.dsp.exec_cmd("qs -c modern ipc call overview toggle"),
     exitSession = hl.dsp.exit(),
     terminal = app_cmd("terminal", "kitty.desktop"),
@@ -149,10 +150,17 @@ for action, dispatcher in pairs(bindings) do
             end
         end
         -- Same as the number row: letter names can fail to register
-        -- (hyprctl binds showed no SUPER+A). Evdev KEY_A is code 38
-        -- on both us and de.
+        -- (hyprctl binds showed no SUPER+A). Hyprland `code:` is XKB
+        -- (evdev + 8); KEY_A is 38 on us and de.
         if action == "aiChat" and key == "SUPER + A" then
             hl.bind("SUPER + code:38", dispatcher)
+            skip = true
+        end
+        -- Entf/Delete: XKB 119 (evdev KEY_DELETE 111 + 8). Binding
+        -- 111 would be Up and leave Entf unbound — terminals then
+        -- print the CSI Delete tail "~".
+        if action == "taskbar" and key == "SUPER + DELETE" then
+            hl.bind("SUPER + code:119", dispatcher)
             skip = true
         end
         if not skip then

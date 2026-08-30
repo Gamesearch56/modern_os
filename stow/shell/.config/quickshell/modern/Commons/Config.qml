@@ -85,6 +85,7 @@ Singleton {
                 property string iconTheme: "Papirus-Dark"
                 property string cursorTheme: "Bibata-Modern-Classic"
                 property int cursorSize: 24
+                property string wallpaperProvider: "https://4kwallpapers.com"
                 property JsonObject bootScreen: JsonObject {
                     property string mode: "static"
                     property bool wallpaperOnSplash: true
@@ -245,6 +246,7 @@ Singleton {
                 cheatsheet: "SUPER + K",
                 settings: "SUPER + I",
                 wallpaperPicker: "SUPER + W",
+                taskbar: "SUPER + DELETE",
                 overview: "SUPER + TAB",
                 terminal: "SUPER + T",
                 browser: "SUPER + B",

@@ -16,6 +16,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + K` | Cheatsheet | `qs -c modern ipc call cheatsheet toggle` |
 | `SUPER + I` | System Settings (Hyprland window) | `qs -c modern ipc call settings toggle` |
 | `SUPER + W` | Wallpaper picker | `qs -c modern ipc call wallpaper toggle` |
+| `SUPER + DELETE` | Applications (taskbar) | `qs -c modern ipc call taskbar toggle` |
 | `SUPER + TAB` | Overview | `qs -c modern ipc call overview toggle` |
 | `SUPER + T` | Terminal | Configured `apps.defaults.terminal` via `modern-launch` |
 | `SUPER + B` | Browser | Configured `apps.defaults.browser` via `modern-launch` |

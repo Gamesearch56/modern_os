@@ -103,6 +103,11 @@ Item {
                     onClicked: Wallpaper.importWallpaper()
                 }
                 MIconButton {
+                    iconName: "edit-find-symbolic"
+                    key: "wallpaper.get"
+                    onClicked: Wallpaper.openProvider()
+                }
+                MIconButton {
                     iconName: "folder-symbolic"
                     key: "wallpaper.openFolder"
                     onClicked: {
@@ -126,7 +131,7 @@ Item {
 
                 Header {
                     Layout.fillWidth: true
-                    Layout.rightMargin: Tokens.spacing.xxl * 3 + Tokens.spacing.sm
+                    Layout.rightMargin: Tokens.spacing.xxl * 4 + Tokens.spacing.sm
                 }
 
                 Item {

@@ -13,6 +13,7 @@ Singleton {
         launcher: "applications", terminal: "applications", browser: "applications",
         browserIncognito: "applications",
         fileManager: "applications", settings: "applications", wallpaperPicker: "applications",
+        taskbar: "applications",
         overview: "applications", spotify: "applications", aiChat: "applications",
         closeWindow: "windowManagement", fullscreen: "windowManagement",
         toggleFloating: "windowManagement", pseudoTile: "windowManagement",

@@ -39,6 +39,21 @@ ColumnLayout {
         }
     }
 
+    MField {
+        labelKey: "settings.fields.wallpaperProvider"
+        hintKey: "settings.hints.wallpaperProvider"
+        MTextField {
+            id: providerField
+            text: Config.design.wallpaperProvider || ""
+            placeholderKey: "settings.fields.wallpaperProvider"
+            onAccepted: root._saveProvider()
+            onFocusedChanged: {
+                if (!providerField.focused)
+                    root._saveProvider();
+            }
+        }
+    }
+
     MSectionHeader {
         key: "settings.fields.activeProfile"
         hintKey: "settings.hints.activeProfile"
@@ -116,6 +131,13 @@ ColumnLayout {
             if (item)
                 item.width = Qt.binding(() => width);
         }
+    }
+
+    function _saveProvider() {
+        const u = String(providerField.text || "").trim();
+        const cur = String(Config.design.wallpaperProvider || "").trim();
+        if (u !== cur)
+            ConfigWrite.set("design.wallpaperProvider", u);
     }
 
     function _flickable() {

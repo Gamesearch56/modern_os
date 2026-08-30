@@ -109,7 +109,7 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: Tokens.spacing.md
-        spacing: Tokens.spacing.md
+        spacing: Tokens.spacing.xl
 
         Rectangle {
             visible: root._thumb.length > 0
@@ -132,7 +132,9 @@ Item {
 
         MIcon {
             visible: root._thumb.length === 0
-            Layout.alignment: Qt.AlignTop
+            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredWidth: Tokens.icon.md
+            Layout.preferredHeight: Tokens.icon.md
             name: root._iconSource.toString().length > 0 ? "" : root._iconName
             source: root._iconSource
             size: Tokens.icon.md

@@ -110,6 +110,16 @@ apply({
     ["hyprbars:no_bar"] = true,
 })
 
+apply({
+    name = "modern-wallpaper-provider",
+    match = { title = "modern.wallpaper-provider" },
+    float = true,
+    center = true,
+    size = { 1200, 800 },
+    dim_around = true,
+    ["hyprbars:no_bar"] = true,
+})
+
 local overlay_windows = {
     { name = "modern-overview", title = "modern.overview", size = { 920, 640 } },
 }

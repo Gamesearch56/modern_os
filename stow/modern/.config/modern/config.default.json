@@ -36,6 +36,7 @@
     "iconTheme": "Papirus-Dark",
     "cursorTheme": "Bibata-Modern-Classic",
     "cursorSize": 24,
+    "wallpaperProvider": "https://4kwallpapers.com",
     "bootScreen": {
       "mode": "static",
       "wallpaperOnSplash": true,
@@ -252,6 +253,7 @@
     "cheatsheet": "SUPER + K",
     "settings": "SUPER + I",
     "wallpaperPicker": "SUPER + W",
+    "taskbar": "SUPER + DELETE",
     "overview": "SUPER + TAB",
     "terminal": "SUPER + T",
     "browser": "SUPER + B",

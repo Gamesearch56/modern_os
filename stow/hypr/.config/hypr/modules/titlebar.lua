@@ -74,6 +74,7 @@ hl.window_rule({
 local chrome = {
     "modern.settings",
     "modern.overview",
+    "modern.wallpaper-provider",
 }
 for _, title in ipairs(chrome) do
     hl.window_rule({

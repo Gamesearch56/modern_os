@@ -1,7 +1,3 @@
-// Owns the current wallpaper path, the picker open-state, and the
-// directory listing. Modules/Wallpaper never touches disk or spawns
-// theme-apply — derived copies for the greeter/Plymouth live in
-// sharedDir so those processes never read $HOME (docs/DECISIONS.md #14).
 pragma Singleton
 
 import Quickshell
@@ -14,9 +10,11 @@ Singleton {
 
     property string currentPath: ""
     property bool pickerOpen: false
+    property bool providerOpen: false
+    property bool _reopenPicker: false
+    property bool fetching: false
     property var images: []
     property string pendingSelect: ""
-    property string sharedDir: "/var/lib/modern/session"
 
     readonly property string home: Quickshell.env("HOME")
     readonly property string libraryDir: root.home + "/Pictures/Wallpapers"
@@ -24,6 +22,11 @@ Singleton {
         const env = Quickshell.env("XDG_STATE_HOME");
         return (env && env.length > 0) ? env : (root.home + "/.local/state");
     }
+    readonly property string scripts: root.home + "/modern_dotfile/scripts"
+
+    signal fetched(string path)
+    signal fetchFailed()
+    signal openedInBrowser()
 
     FileView {
         id: stateFile
@@ -37,23 +40,18 @@ Singleton {
 
     Process {
         id: listProc
-        running: false
-        command: [root.home + "/modern_dotfile/scripts/wallpaper-list.sh"]
+        command: [root.scripts + "/wallpaper-list.sh"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const lines = this.text.trim().split("\n").filter(l => l.length > 0);
-                root.images = lines;
+                root.images = this.text.trim().split("\n").filter(l => l.length > 0);
             }
         }
     }
 
     Process {
         id: importProc
-        running: false
-        command: [root.home + "/modern_dotfile/scripts/wallpaper-import.sh"]
-        stdout: StdioCollector {
-            id: importOut
-        }
+        command: [root.scripts + "/wallpaper-import.sh"]
+        stdout: StdioCollector { id: importOut }
         onExited: (code) => {
             if (code === 2)
                 Logger.error("Wallpaper", I18n.t("wallpaper.alreadyInLibrary"));
@@ -69,8 +67,7 @@ Singleton {
 
     Process {
         id: deleteProc
-        running: false
-        command: [root.home + "/modern_dotfile/scripts/wallpaper-delete.sh"]
+        command: [root.scripts + "/wallpaper-delete.sh"]
         onExited: (code) => {
             if (code === 0)
                 root._refresh();
@@ -79,87 +76,173 @@ Singleton {
         }
     }
 
+    Process {
+        id: fetchProc
+        stdout: StdioCollector { id: fetchOut }
+        stderr: StdioCollector { id: fetchErr }
+        onExited: (code) => {
+            root.fetching = false;
+            const path = fetchOut.text.trim().split("\n").filter(l => l.length > 0).pop() || "";
+            if (code === 0 && path.length > 0) {
+                root._refresh();
+                root.fetched(path);
+            } else {
+                const err = fetchErr.text.trim();
+                if (err.length)
+                    Logger.warn("Wallpaper", err);
+                root.fetchFailed();
+            }
+        }
+    }
+
+    Process {
+        id: providerProc
+        stdout: SplitParser {
+            onRead: (line) => {
+                const t = String(line || "").trim();
+                if (t.indexOf("INGEST ") === 0)
+                    root.ingest(t.slice(7).trim());
+            }
+        }
+        onExited: (code) => {
+            const reopen = root._reopenPicker && code !== 127;
+            root._reopenPicker = false;
+            root.providerOpen = false;
+            if (code === 127) {
+                root.openInBrowser();
+                return;
+            }
+            if (reopen) {
+                Qt.callLater(() => {
+                    root.pickerOpen = true;
+                    root._refresh();
+                });
+            }
+        }
+    }
+
     IpcHandler {
         target: "wallpaper"
         function picker() { root.pick(); }
         function pick() { root.pick(); }
         function toggle() { root.togglePicker(); }
+        function provider() { root.openProvider(); }
+        function ingest(path) { root.ingest(path); }
     }
 
-    function pick() {
-        root.pickerOpen = true;
-        root._refresh();
-    }
+    function pick() { root.setPickerOpen(true); }
 
-    function togglePicker() {
-        root.setPickerOpen(!root.pickerOpen);
-    }
+    function togglePicker() { root.setPickerOpen(!root.pickerOpen); }
 
     function setPickerOpen(open: bool) {
+        if (open)
+            root.closeProvider();
         root.pickerOpen = open;
         if (open)
             root._refresh();
     }
 
-    function hide() { root.setPickerOpen(false); }
+    function hide() {
+        root.pickerOpen = false;
+        root.closeProvider();
+    }
+
+    function providerUrl(): string {
+        let u = String(Config.design.wallpaperProvider || "").trim() || "https://4kwallpapers.com";
+        if (u.indexOf("http://") !== 0 && u.indexOf("https://") !== 0)
+            u = "https://" + u;
+        return u;
+    }
+
+    function isImageUrl(url: string): bool {
+        const u = String(url || "").split("?")[0].split("#")[0].toLowerCase();
+        return u.endsWith(".jpg") || u.endsWith(".jpeg") || u.endsWith(".png") || u.endsWith(".webp");
+    }
+
+    function openProvider() {
+        root.pickerOpen = false;
+        if (providerProc.running) {
+            Quickshell.execDetached(["hyprctl", "dispatch", "focuswindow", "title:modern.wallpaper-provider"]);
+            return;
+        }
+        providerProc.command = [root.scripts + "/wallpaper-provider.sh", root.providerUrl(), root.libraryDir];
+        root._reopenPicker = true;
+        root.providerOpen = true;
+        providerProc.running = true;
+    }
+
+    function closeProvider() {
+        root._reopenPicker = false;
+        providerProc.running = false;
+        root.providerOpen = false;
+    }
+
+    function ingest(path: string) {
+        const p = String(path || "").trim();
+        if (!p.length)
+            return;
+        root.pendingSelect = p;
+        root._refresh();
+        root.fetched(p);
+    }
+    function openInBrowser() {
+        Quickshell.execDetached(["xdg-open", root.providerUrl()]);
+        root.openedInBrowser();
+    }
+
+    function fetch(url: string) {
+        const u = String(url || "").trim();
+        if (!u.length || root.fetching)
+            return;
+        fetchProc.running = false;
+        fetchProc.command = [root.scripts + "/wallpaper-fetch.sh", u, root.libraryDir];
+        root.fetching = true;
+        fetchProc.running = true;
+    }
 
     function clearPendingSelect() { root.pendingSelect = ""; }
-
     function refresh() { root._refresh(); }
 
     function _refresh() {
         listProc.running = false;
-        Qt.callLater(() => {
-            listProc.running = true;
-        });
+        Qt.callLater(() => { listProc.running = true; });
     }
 
     function importWallpaper() {
-        try {
-            root.pickerOpen = false;
-            Qt.callLater(() => {
-                importProc.running = false;
-                importProc.running = true;
-            });
-        } catch (e) {
-            Logger.error("Wallpaper", String(e));
-        }
+        root.pickerOpen = false;
+        Qt.callLater(() => {
+            importProc.running = false;
+            importProc.running = true;
+        });
     }
 
     function canRemove(path: string): bool {
         const p = String(path || "");
         if (!p || p === root.currentPath)
             return false;
-        const shipped = root.home + "/.config/modern/wallpapers/";
-        return p.indexOf(shipped) !== 0;
+        return p.indexOf(root.home + "/.config/modern/wallpapers/") !== 0;
     }
 
     function remove(path: string) {
         if (!root.canRemove(path))
             return;
-        deleteProc.command = [root.home + "/modern_dotfile/scripts/wallpaper-delete.sh", path];
+        deleteProc.command = [root.scripts + "/wallpaper-delete.sh", path];
         deleteProc.running = false;
-        Qt.callLater(() => {
-            deleteProc.running = true;
-        });
+        Qt.callLater(() => { deleteProc.running = true; });
     }
 
     function setWallpaper(path: string) {
-        try {
-            if (!path || path.length === 0) {
-                Logger.warn("Wallpaper", "setWallpaper called with an empty path");
-                return;
-            }
-            root.currentPath = path;
-            root.hide();
-            const shown = path;
-            Qt.callLater(() => {
-                Quickshell.execDetached([root.home + "/modern_dotfile/scripts/wallpaper-show.sh", shown]);
-                Theme.applyShown(shown);
-            });
-            Logger.info("Wallpaper", "applied " + path);
-        } catch (e) {
-            Logger.error("Wallpaper", String(e));
+        if (!path || path.length === 0) {
+            Logger.warn("Wallpaper", "setWallpaper called with an empty path");
+            return;
         }
+        root.currentPath = path;
+        root.hide();
+        const shown = path;
+        Qt.callLater(() => {
+            Quickshell.execDetached([root.scripts + "/wallpaper-show.sh", shown]);
+            Theme.applyShown(shown);
+        });
+        Logger.info("Wallpaper", "applied " + path);
     }
 }

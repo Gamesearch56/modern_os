@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Hyprland
-import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import "../../Commons"
@@ -8,6 +7,19 @@ import "../../Services"
 
 Scope {
     id: root
+
+    Connections {
+        target: Wallpaper
+        function onFetched(path) {
+            Notifications.toast(I18n.t("wallpaper.fetched"), I18n.t("wallpaper.fetchedHint"), path);
+        }
+        function onFetchFailed() {
+            Notifications.toast(I18n.t("wallpaper.fetchFailed"), "");
+        }
+        function onOpenedInBrowser() {
+            Notifications.toast(I18n.t("wallpaper.providerBrowser"), I18n.t("wallpaper.providerBrowserHint"));
+        }
+    }
 
     function _focusedScreen(): var {
         const n = Hypr.focusedMonitorName();
