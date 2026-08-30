@@ -41,7 +41,7 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: Motion.easingEmphasized
             }
         }
@@ -59,19 +59,19 @@ Item {
         implicitHeight: dialogCol.implicitHeight + padding * 2
         anchors.centerIn: parent
         scale: Motion.overlayScale(root.open)
-        opacity: Motion.overlayOpacity(root.open)
+        opacity: Motion.overlayOpacity(root.open) * (Config.design.transparency ?? 0.85)
 
         Behavior on opacity {
-            enabled: Motion.overlayFades()
+            enabled: Motion.overlaysFade
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }
         Behavior on scale {
-            enabled: Motion.overlayZooms()
+            enabled: Motion.overlaysZoom
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }

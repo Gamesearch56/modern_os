@@ -17,19 +17,31 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Io
+import QtQuick
 
 Singleton {
     id: root
 
     readonly property string home: Quickshell.env("HOME")
+    property int _configMisses: 0
 
     FileView {
         id: file
         path: `${root.home}/.config/modern/config.json`
         watchChanges: true
         onFileChanged: reload()
-        printErrors: true
-        onLoadFailed: (error) => Logger.error("Config", "failed to load config.json: " + error)
+        printErrors: false
+        onLoaded: root._configMisses = 0
+        onLoadFailed: (error) => {
+            // FileNotFound (2): atomic replace can fire the watcher between
+            // unlink and rename. Retry; do not toast.
+            if (error === FileViewError.FileNotFound && root._configMisses < 8) {
+                root._configMisses++;
+                Qt.callLater(() => file.reload());
+                return;
+            }
+            Logger.error("Config", "failed to load config.json: " + error);
+        }
 
         JsonAdapter {
             id: adapter

@@ -34,9 +34,10 @@ function extraLong(): int { return Math.round(durationExtraLong * scale); }
 
 - **Durations**: `short` 100ms (state toggles), `medium` 250ms (popups,
   panel open/close), `long` 400ms (page transitions), `extraLong` 600ms
-  (session surfaces, large overlays). Always read through the
-  `short()`/`medium()`/`long()`/`extraLong()` functions, never the raw
-  `duration*` properties, so `motion.scale` always applies.
+  (session surfaces, large overlays). Bind `Motion.shortMs` /
+  `mediumMs` / `longMs` / `extraLongMs` (and `overlaysFade` /
+  `overlaysZoom`) so `motion.scale` re-evaluates. The `short()` /
+  `medium()` functions remain as aliases.
 - **Easing**: `emphasized` for anything entering/leaving the screen,
   `emphasizedDecelerate` for enters, `emphasizedAccelerate` for exits,
   `standard` for small in-place state changes (hover, press).
@@ -73,7 +74,7 @@ function extraLong(): int { return Math.round(durationExtraLong * scale); }
    `Motion.overlayOpacity(open)` / `Motion.overlayScale(open)` so Modules
    never branch on the string. Fade = opacity 0↔1; zoom = scale ~0.92↔1
    (open zooms in, close zooms out); fadeZoom = both. Durations/easings
-   only via `Motion.medium()` with `easingEmphasizedDecelerate` (enter) and
+   only via `Motion.mediumMs` with `easingEmphasizedDecelerate` (enter) and
    `easingEmphasizedAccelerate` (exit). When `motion.scale` is 0, motion is
    instant. Settings → Design owns the chips.
 
@@ -113,7 +114,7 @@ zero speed.
 Overlay menus (control panel, bar popups) use `Motion.overlay*` and
 `motion.scale` from Settings → Design. Hyprland window open/close and
 awww wallpaper fades use the same tokens in `animations.lua` /
-`theme-apply.sh`. Session lock enter uses `Motion.extraLong()`.
+`theme-apply.sh`. Session lock enter uses `Motion.extraLongMs`.
 
 `modules/motion_tokens.lua` is hand-kept in sync with the numeric
 constants in `Commons/Motion.qml`'s source — a comment pointer in both

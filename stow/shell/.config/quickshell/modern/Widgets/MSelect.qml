@@ -92,7 +92,7 @@ Item {
 
         Behavior on border.color {
             ColorAnimation {
-                duration: Motion.short()
+                duration: Motion.shortMs
                 easing.bezierCurve: Motion.easingStandard
             }
         }

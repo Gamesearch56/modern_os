@@ -36,9 +36,9 @@ Item {
         transformOrigin: Item.Top
 
         Behavior on scale {
-            enabled: Motion.overlayZooms()
+            enabled: Motion.overlaysZoom
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: Screenshot.hudOpen ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }

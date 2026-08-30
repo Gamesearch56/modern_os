@@ -51,7 +51,7 @@ Item {
             model: root._count
             currentIndex: root.currentIndex
             highlightFollowsCurrentItem: true
-            highlightMoveDuration: Motion.short()
+            highlightMoveDuration: Motion.shortMs
 
             delegate: MListItem {
                 required property int index
@@ -80,12 +80,12 @@ Item {
                     property: "opacity"
                     from: 0
                     to: 1
-                    duration: Motion.medium()
+                    duration: Motion.mediumMs
                     easing.bezierCurve: Motion.easingEmphasizedDecelerate
                 }
                 NumberAnimation {
                     property: "y"
-                    duration: Motion.medium()
+                    duration: Motion.mediumMs
                     easing.bezierCurve: Motion.easingEmphasizedDecelerate
                 }
             }
@@ -93,19 +93,19 @@ Item {
                 NumberAnimation {
                     property: "opacity"
                     to: 0
-                    duration: Motion.short()
+                    duration: Motion.shortMs
                     easing.bezierCurve: Motion.easingEmphasizedAccelerate
                 }
                 NumberAnimation {
                     property: "y"
-                    duration: Motion.short()
+                    duration: Motion.shortMs
                     easing.bezierCurve: Motion.easingEmphasizedAccelerate
                 }
             }
             displaced: Transition {
                 NumberAnimation {
                     property: "y"
-                    duration: Motion.short()
+                    duration: Motion.shortMs
                     easing.bezierCurve: Motion.easingStandard
                 }
             }

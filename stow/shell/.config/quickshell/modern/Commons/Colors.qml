@@ -4,6 +4,7 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Io
+import QtQuick
 
 Singleton {
     id: root
@@ -52,11 +53,20 @@ Singleton {
     })
 
     FileView {
+        id: file
         path: root.home + "/.config/modern/tokens.json"
         watchChanges: true
         printErrors: false
         onFileChanged: reload()
         onLoaded: root._apply(text())
+        onLoadFailed: (error) => {
+            if (error === FileViewError.FileNotFound)
+                Qt.callLater(() => file.reload());
+        }
+    }
+
+    function refresh() {
+        file.reload();
     }
 
     function _apply(raw: string) {

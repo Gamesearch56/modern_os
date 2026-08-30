@@ -10,16 +10,19 @@
 # of sync the way the old Wallust templates could.
 #
 # Usage:
-#   theme-apply.sh [--profile NAME] [--wallpaper PATH] [--no-reload]
+#   theme-apply.sh [--profile NAME] [--wallpaper PATH] [--chrome-only] [--no-reload]
 #
-#   --profile NAME     One of stow/modern/.config/modern/themes/*.json,
-#                       by filename without ".json"
+#   --profile NAME     Filename without ".json" under
+#                       ~/.config/modern/themes or
+#                       $XDG_STATE_HOME/modern/themes
 #                       (default: config.json's design.activeProfile).
 #   --wallpaper PATH   Absolute path to an image. Required the first
 #                       time a "sourceMode": "wallpaper" profile is
 #                       applied; remembered afterwards in
 #                       $STATE_DIR/current-wallpaper. Also sets the
 #                       wallpaper itself via awww, with a transition.
+#   --chrome-only      Patch GTK/Qt/KDE/Vivaldi radii, fonts, and motion
+#                       from config.json without re-running matugen.
 #   --no-reload        Regenerate files only, skip live-reload side
 #                       effects (used by CI/lint and the M0 verify
 #                       script, where no Hyprland session is running).
@@ -89,6 +92,13 @@ patch_toolkit_chrome() {
     mono="$(jq -r '.typography.monospace // "JetBrainsMono Nerd Font"' <<<"$cfg")"
     blur="$(jq -r '.design.blurStrength // 40' <<<"$cfg")"
     trans="$(jq -r '.design.transparency // 0.85' <<<"$cfg")"
+    local scale pt mpt cursor_theme cursor_size icon
+    scale="$(jq -r '.typography.scale // 1' <<<"$cfg")"
+    pt="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 11*s }')"
+    mpt="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 10*s }')"
+    cursor_theme="$(jq -r '.design.cursorTheme // "Bibata-Modern-Classic"' <<<"$cfg")"
+    cursor_size="$(jq -r '.design.cursorSize // 24' <<<"$cfg")"
+    icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
     local sm md lg
     sm="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 8*r }')"
     md="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 16*r }')"
@@ -146,12 +156,6 @@ EOF
     fi
     local kde="${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals"
     if [ -f "$kde" ]; then
-        local scale
-        scale="$(jq -r '.typography.scale // 1' <<<"$cfg")"
-        local pt
-        pt="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 11*s }')"
-        local icon
-        icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
         awk -v font="$font" -v mono="$mono" -v pt="$pt" -v icon="$icon" '
             BEGIN { g=0; i=0 }
             /^\[General\]/ { print; print "font=" font "," pt ",-1,5,50,0,0,0,0,0"; print "fixed=" mono "," pt ",-1,5,50,0,0,0,0,0"; g=1; next }
@@ -166,14 +170,15 @@ EOF
     fi
     local qtconf="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qt6ct.conf"
     if [ -f "$qtconf" ]; then
-        local icon scheme_abs
-        icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
+        local scheme_abs
         scheme_abs="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/colors/modern.conf"
-        awk -v icon="$icon" -v scheme="$scheme_abs" '
+        awk -v icon="$icon" -v scheme="$scheme_abs" -v font="$font" -v mono="$mono" -v pt="$pt" -v mpt="$mpt" '
             /^icon_theme=/ { print "icon_theme=" icon; next }
             /^style=/ { print "style=qt6ct-style"; next }
             /^stylesheets=/ { print "stylesheets="; next }
             /^color_scheme_path=/ { print "color_scheme_path=" scheme; next }
+            /^general=/ { print "general=@ByteArray(" font "," pt ",-1,5,50,0,0,0,0,0)"; next }
+            /^fixed=/ { print "fixed=@ByteArray(" mono "," mpt ",-1,5,50,0,0,0,0,0)"; next }
             { print }
         ' "$qtconf" > "$qtconf.tmp" && mv "$qtconf.tmp" "$qtconf"
     fi
@@ -216,15 +221,13 @@ EOF
     local tokens="$MODERN_DIR/tokens.json"
     local toolkit_conf="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprtoolkit.conf"
     if [ -f "$tokens" ]; then
-        local tscale h1 h2 h3 body small icon
+        local h1 h2 h3 body small
         local c_surface c_base c_alt c_text c_bright c_accent c_secondary
-        tscale="$(jq -r '.typography.scale // 1' <<<"$cfg")"
-        h1="$(awk -v s="$tscale" 'BEGIN { printf "%.0f", 24*s }')"
-        h2="$(awk -v s="$tscale" 'BEGIN { printf "%.0f", 16*s }')"
-        h3="$(awk -v s="$tscale" 'BEGIN { printf "%.0f", 14*s }')"
-        body="$(awk -v s="$tscale" 'BEGIN { printf "%.0f", 14*s }')"
-        small="$(awk -v s="$tscale" 'BEGIN { printf "%.0f", 12*s }')"
-        icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
+        h1="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 24*s }')"
+        h2="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 16*s }')"
+        h3="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 14*s }')"
+        body="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 14*s }')"
+        small="$(awk -v s="$scale" 'BEGIN { printf "%.0f", 12*s }')"
         c_surface="$(jq -r '.color.surface' "$tokens" | tr -d '#')"
         c_base="$(jq -r '.color.surfaceContainerHighest' "$tokens" | tr -d '#')"
         c_alt="$(jq -r '.color.surfaceContainer' "$tokens" | tr -d '#')"
@@ -264,6 +267,30 @@ EOF
         fi
     done
 
+    local gini
+    for gini in \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0/settings.ini"; do
+        if [ -f "$gini" ]; then
+            awk -v font="$font $pt" -v cursor="$cursor_theme" -v csize="$cursor_size" -v icon="$icon" '
+                /^gtk-font-name=/ { print "gtk-font-name=" font; next }
+                /^gtk-cursor-theme-name=/ { print "gtk-cursor-theme-name=" cursor; next }
+                /^gtk-cursor-theme-size=/ { print "gtk-cursor-theme-size=" csize; next }
+                /^gtk-icon-theme-name=/ { print "gtk-icon-theme-name=" icon; next }
+                { print }
+            ' "$gini" > "$gini.tmp" && mv "$gini.tmp" "$gini"
+        fi
+    done
+
+    if command -v gsettings >/dev/null 2>&1; then
+        gsettings set org.gnome.desktop.interface font-name "$font $pt" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface document-font-name "$font $pt" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface monospace-font-name "$mono $pt" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface cursor-size "$cursor_size" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface icon-theme "$icon" >/dev/null 2>&1 || true
+    fi
+
     if command -v papirus-folders >/dev/null 2>&1; then
         papirus-folders -C paleorange --theme Papirus-Dark >/dev/null 2>&1 \
             || papirus-folders -C orange --theme Papirus-Dark >/dev/null 2>&1 \
@@ -276,6 +303,7 @@ usage() { grep '^#' "$0" | cut -c3- | head -n26; }
 PROFILE=""
 WALLPAPER=""
 RELOAD=1
+CHROME_ONLY=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -285,13 +313,13 @@ while [ $# -gt 0 ]; do
         --wallpaper)
             [ $# -ge 2 ] || die "--wallpaper needs a value"
             WALLPAPER="$2"; shift 2 ;;
+        --chrome-only) CHROME_ONLY=1; shift ;;
         --no-reload) RELOAD=0; shift ;;
         -h|--help) usage; exit 0 ;;
         *) die "unknown argument: $1 (see --help)" ;;
     esac
 done
 
-command -v matugen >/dev/null 2>&1 || die "matugen not on PATH — see install/manifests/20-theming.aur.txt"
 command -v jq >/dev/null 2>&1 || die "jq not on PATH — see install/manifests/00-base.txt"
 
 mkdir -p "$STATE_DIR"
@@ -310,12 +338,23 @@ merged_config() {
     fi
 }
 
+if [ "$CHROME_ONLY" -eq 1 ]; then
+    patch_toolkit_chrome || warn "toolkit chrome patch skipped"
+    log "done (--chrome-only)"
+    exit 0
+fi
+
+command -v matugen >/dev/null 2>&1 || die "matugen not on PATH — see install/manifests/20-theming.aur.txt"
+
 if [ -z "$PROFILE" ]; then
     PROFILE="$(merged_config | jq -r '.design.activeProfile // "tonal-spot-auto"')"
 fi
 
 PROFILE_JSON="$THEMES_DIR/$PROFILE.json"
-[ -f "$PROFILE_JSON" ] || die "unknown theme profile '$PROFILE' (no $PROFILE_JSON — see stow/modern/.config/modern/themes/README.md)"
+if [ ! -f "$PROFILE_JSON" ]; then
+    PROFILE_JSON="$STATE_DIR/themes/$PROFILE.json"
+fi
+[ -f "$PROFILE_JSON" ] || die "unknown theme profile '$PROFILE' (no $THEMES_DIR/$PROFILE.json or $STATE_DIR/themes/$PROFILE.json — see stow/modern/.config/modern/themes/README.md)"
 
 VARIANT="$(jq -r '.variant' "$PROFILE_JSON")"
 PROFILE_MODE="$(jq -r '.mode' "$PROFILE_JSON")"

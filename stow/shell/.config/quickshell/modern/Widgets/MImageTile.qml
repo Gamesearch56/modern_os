@@ -1,6 +1,8 @@
 // Image tile. Keyboard `current` and pointer hover share a primary
-// ring drawn above the photo (a plate border sits under the Image).
+// ring drawn above the photo. MultiEffect masks the bitmap to the same
+// radius as the hover ring — Rectangle.clip is axis-aligned.
 import QtQuick
+import QtQuick.Effects
 import "../Commons"
 
 Item {
@@ -11,16 +13,24 @@ Item {
     property bool current: false
 
     readonly property bool _ring: root.current || ma.containsMouse
+    readonly property real _radius: Tokens.radius.small
 
     signal clicked()
     signal hovered()
 
     Rectangle {
+        id: plate
         anchors.fill: parent
-        radius: Tokens.radius.small
+        radius: root._radius
         color: Colors.color.surfaceContainerHighest
-        clip: true
+    }
+
+    Item {
+        id: contents
+        anchors.fill: parent
+        visible: false
         layer.enabled: true
+        layer.smooth: true
 
         Image {
             anchors.fill: parent
@@ -56,9 +66,30 @@ Item {
         }
     }
 
+    Item {
+        id: roundMask
+        anchors.fill: parent
+        visible: false
+        layer.enabled: true
+        layer.smooth: true
+
+        Rectangle {
+            anchors.fill: parent
+            radius: root._radius
+            color: Qt.rgba(1, 1, 1, 1)
+        }
+    }
+
+    MultiEffect {
+        anchors.fill: parent
+        source: contents
+        maskEnabled: true
+        maskSource: roundMask
+    }
+
     Rectangle {
         anchors.fill: parent
-        radius: Tokens.radius.small
+        radius: root._radius
         color: "transparent"
         border.width: root._ring ? 0 : Tokens.stroke.hairline
         border.color: Colors.color.outlineVariant
@@ -74,7 +105,7 @@ Item {
     }
 
     MFocusRing {
-        radius: Tokens.radius.small
+        radius: root._radius
         active: root._ring
     }
 }

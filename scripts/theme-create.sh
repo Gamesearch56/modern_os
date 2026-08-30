@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Write a theme profile JSON under ~/.config/modern/themes/<slug>.json.
-# SLUG must be [a-z0-9-]+. BODY is the JSON document.
+# Write a theme profile JSON. SLUG must be [a-z0-9-]+. BODY is the JSON
+# document. Optional DIR defaults to ~/.config/modern/themes; derived
+# profiles from Settings use $XDG_STATE_HOME/modern/themes.
 set -euo pipefail
 
 slug="${1:-}"
@@ -18,7 +19,7 @@ if ! printf '%s' "$body" | jq -e . >/dev/null; then
     exit 2
 fi
 
-dir="${XDG_CONFIG_HOME:-$HOME/.config}/modern/themes"
+dir="${3:-${XDG_CONFIG_HOME:-$HOME/.config}/modern/themes}"
 mkdir -p "$dir"
 out="$dir/${slug}.json"
 printf '%s\n' "$body" >"$out"

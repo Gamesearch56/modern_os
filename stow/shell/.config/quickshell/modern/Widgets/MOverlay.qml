@@ -37,9 +37,9 @@ Item {
         opacity: root._shown ? Tokens.overlay.scrim : 0
 
         Behavior on opacity {
-            enabled: Motion.overlayFades()
+            enabled: Motion.overlaysFade
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: Motion.easingEmphasized
             }
         }
@@ -58,7 +58,7 @@ Item {
         anchors.centerIn: parent
         padding: Tokens.spacing.md
         scale: Motion.overlayScale(root._shown)
-        opacity: Motion.overlayOpacity(root._shown)
+        opacity: Motion.overlayOpacity(root._shown) * (Config.design.transparency ?? 0.85)
         transformOrigin: Item.Center
         borderWidth: cardHover.hovered ? 2 : 1
         borderColor: cardHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
@@ -69,22 +69,22 @@ Item {
         }
 
         Behavior on opacity {
-            enabled: Motion.overlayFades()
+            enabled: Motion.overlaysFade
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: root._shown ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }
         Behavior on scale {
-            enabled: Motion.overlayZooms()
+            enabled: Motion.overlaysZoom
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: root._shown ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }
         Behavior on borderColor {
             ColorAnimation {
-                duration: Motion.short()
+                duration: Motion.shortMs
                 easing.bezierCurve: Motion.easingStandard
             }
         }

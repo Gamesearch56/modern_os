@@ -12,18 +12,27 @@ ColumnLayout {
     property string draftRules: JSON.stringify(Config.windowRules || [], null, 2)
     property string rulesError: ""
 
-    MSectionHeader { key: "settings.fields.titlebar" }
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.titlebar"
-        MSwitch {
-            checked: Config.windows?.titlebar ?? true
-            onToggled: (v) => ConfigWrite.set("windows.titlebar", v)
+    MField {
+        labelKey: "settings.fields.transparency"
+        MSlider {
+            from: 0.4
+            to: 1
+            value: Config.design.transparency
+            onMoved: (v) => ConfigWrite.set("design.transparency", Math.round(v * 100) / 100)
         }
     }
-    MHint {
-        key: Hypr.hyprbarsLoaded ? "settings.hints.hyprbarsOn" : "settings.hints.hyprbarsOff"
-        Layout.fillWidth: true
+    MField {
+        labelKey: "settings.fields.cornerRounding"
+        MSlider {
+            from: 0.5
+            to: 1.5
+            value: Config.design.cornerRounding
+            onMoved: (v) => {
+                const n = Math.round(v * 100) / 100;
+                ConfigWrite.set("design.cornerRounding", n);
+                Hypr.keyword("decoration:rounding", String(Math.floor(16 * n)));
+            }
+        }
     }
 
     MSectionHeader { key: "settings.fields.gaps" }
@@ -34,7 +43,11 @@ ColumnLayout {
             to: 24
             value: Config.windows?.gapsIn ?? 5
             showValue: true
-            onMoved: (v) => ConfigWrite.set("windows.gapsIn", Math.round(v))
+            onMoved: (v) => {
+                const n = Math.round(v);
+                ConfigWrite.set("windows.gapsIn", n);
+                Hypr.keyword("general:gaps_in", String(n));
+            }
         }
     }
     MField {
@@ -44,7 +57,11 @@ ColumnLayout {
             to: 40
             value: Config.windows?.gapsOut ?? 10
             showValue: true
-            onMoved: (v) => ConfigWrite.set("windows.gapsOut", Math.round(v))
+            onMoved: (v) => {
+                const n = Math.round(v);
+                ConfigWrite.set("windows.gapsOut", n);
+                Hypr.keyword("general:gaps_out", String(n));
+            }
         }
     }
     MField {
@@ -53,7 +70,12 @@ ColumnLayout {
             from: 0.5
             to: 1
             value: Config.windows?.opacity ?? 1
-            onMoved: (v) => ConfigWrite.set("windows.opacity", Math.round(v * 100) / 100)
+            onMoved: (v) => {
+                const n = Math.round(v * 100) / 100;
+                ConfigWrite.set("windows.opacity", n);
+                Hypr.keyword("decoration:active_opacity", String(n));
+                Hypr.keyword("decoration:inactive_opacity", String(Math.min(1, n * 0.98)));
+            }
         }
     }
 

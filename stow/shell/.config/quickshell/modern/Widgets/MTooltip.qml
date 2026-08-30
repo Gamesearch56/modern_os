@@ -18,7 +18,7 @@ Item {
 
     Behavior on opacity {
         NumberAnimation {
-            duration: Motion.short()
+            duration: Motion.shortMs
             easing.bezierCurve: Motion.easingStandard
         }
     }

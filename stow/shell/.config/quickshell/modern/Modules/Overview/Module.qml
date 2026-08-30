@@ -13,7 +13,7 @@ Scope {
             id: win
             visible: Overview.open
             title: "modern.overview"
-            color: Colors.color.surface
+            color: "transparent"
             implicitWidth: Tokens.spacing.xxl * 22
             implicitHeight: Tokens.spacing.xxl * 16
 
@@ -28,6 +28,7 @@ Scope {
                 anchors.fill: parent
                 color: Colors.color.surface
                 radius: Tokens.radius.medium
+                opacity: Config.design.transparency ?? 0.85
             }
 
             ColumnLayout {

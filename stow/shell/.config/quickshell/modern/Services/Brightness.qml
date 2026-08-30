@@ -64,7 +64,7 @@ Singleton {
     }
 
     Timer {
-        interval: Motion.extraLong() * 8
+        interval: Motion.extraLongMs * 8
         running: root.watching && root.available
         repeat: true
         onTriggered: root.refresh()
@@ -72,7 +72,7 @@ Singleton {
 
     Timer {
         id: writeDebounce
-        interval: Motion.short() * 2
+        interval: Motion.shortMs * 2
         onTriggered: root._flush()
     }
 

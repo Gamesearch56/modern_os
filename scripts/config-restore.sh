@@ -51,7 +51,7 @@ done
 
 PATHS_JSON="$(printf '%s\n' "$@" | jq -R . | jq -s .)"
 
-tmp="$(mktemp)"
+tmp="$(mktemp "$CONFIG_HOME/config.json.XXXXXX")"
 trap 'rm -f -- "$tmp"' EXIT
 
 jq --slurpfile def "$DEFAULT" --argjson paths "$PATHS_JSON" '

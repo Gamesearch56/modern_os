@@ -49,7 +49,7 @@ Item {
 
         Behavior on scale {
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: Motion.easingEmphasizedDecelerate
             }
         }

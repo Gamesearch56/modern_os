@@ -25,12 +25,12 @@ Item {
         placeholderKey: "launcher.placeholder"
         escapeCloses: true
         transformOrigin: Item.Center
-        scale: field.focused && Motion.overlayZooms() ? Motion.overlayFocusScale() : 1
+        scale: field.focused && Motion.overlaysZoom ? Motion.overlayFocusScale() : 1
 
         Behavior on scale {
-            enabled: Motion.overlayZooms()
+            enabled: Motion.overlaysZoom
             NumberAnimation {
-                duration: Motion.short()
+                duration: Motion.shortMs
                 easing.bezierCurve: Motion.easingStandard
             }
         }

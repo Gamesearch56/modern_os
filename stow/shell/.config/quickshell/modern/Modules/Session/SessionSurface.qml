@@ -54,9 +54,9 @@ Item {
         opacity: root._shown ? Tokens.overlay.lock : 0
 
         Behavior on opacity {
-            enabled: Motion.overlayFades()
+            enabled: Motion.overlaysFade
             NumberAnimation {
-                duration: Motion.extraLong()
+                duration: Motion.extraLongMs
                 easing.bezierCurve: Motion.easingEmphasized
             }
         }
@@ -70,18 +70,18 @@ Item {
         transformOrigin: Item.Center
 
         Behavior on opacity {
-            enabled: Motion.overlayFades()
+            enabled: Motion.overlaysFade
             NumberAnimation {
-                duration: Motion.extraLong()
+                duration: Motion.extraLongMs
                 easing.bezierCurve: root._shown
                     ? Motion.easingEmphasizedDecelerate
                     : Motion.easingEmphasizedAccelerate
             }
         }
         Behavior on scale {
-            enabled: Motion.overlayZooms()
+            enabled: Motion.overlaysZoom
             NumberAnimation {
-                duration: Motion.extraLong()
+                duration: Motion.extraLongMs
                 easing.bezierCurve: root._shown
                     ? Motion.easingEmphasizedDecelerate
                     : Motion.easingEmphasizedAccelerate

@@ -40,9 +40,9 @@ Item {
         opacity: root._shown ? Tokens.overlay.scrim : 0
 
         Behavior on opacity {
-            enabled: Motion.overlayFades()
+            enabled: Motion.overlaysFade
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: Motion.easingEmphasized
             }
         }
@@ -64,16 +64,16 @@ Item {
         transformOrigin: Item.Top
 
         Behavior on opacity {
-            enabled: Motion.overlayFades()
+            enabled: Motion.overlaysFade
             NumberAnimation {
-                duration: Motion.medium()
+                duration: Motion.mediumMs
                 easing.bezierCurve: root._shown
                     ? Motion.easingEmphasizedDecelerate
                     : Motion.easingEmphasizedAccelerate
             }
         }
         Behavior on scale {
-            enabled: Motion.overlayZooms()
+            enabled: Motion.overlaysZoom
             SpringAnimation {
                 spring: Motion.springBouncy.spring
                 damping: Motion.springBouncy.damping

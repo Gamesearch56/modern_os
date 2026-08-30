@@ -55,7 +55,7 @@ Item {
 
     Timer {
         id: hideSlider
-        interval: Motion.medium()
+        interval: Motion.mediumMs
         onTriggered: {
             if (!sliderPopup.bodyHovered)
                 sliderPopup.open = false;

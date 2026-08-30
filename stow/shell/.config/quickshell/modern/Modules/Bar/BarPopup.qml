@@ -151,9 +151,9 @@ PopupWindow {
             }
 
             Behavior on scale {
-                enabled: Motion.overlayZooms()
+                enabled: Motion.overlaysZoom
                 NumberAnimation {
-                    duration: Motion.medium()
+                    duration: Motion.mediumMs
                     easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
                 }
             }

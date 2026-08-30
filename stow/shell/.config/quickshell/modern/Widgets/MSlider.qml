@@ -81,15 +81,18 @@ Item {
                 anchors.fill: parent
                 enabled: root.enabled
                 hoverEnabled: root.enabled
+                preventStealing: true
                 cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onPressed: (mouse) => {
-                    root.forceActiveFocus();
+                    root._lockFlick(true);
                     root._setFromX(mouse.x);
                 }
                 onPositionChanged: (mouse) => {
                     if (pressed)
                         root._setFromX(mouse.x);
                 }
+                onReleased: root._lockFlick(false)
+                onCanceled: root._lockFlick(false)
                 onWheel: (w) => {
                     w.accepted = false;
                 }
@@ -105,8 +108,15 @@ Item {
         }
     }
 
-    MFocusRing {
-        radius: Tokens.radius.full
+    function _lockFlick(lock: bool) {
+        let p = root.parent;
+        while (p) {
+            if (p.flickableDirection !== undefined) {
+                p.interactive = !lock;
+                return;
+            }
+            p = p.parent;
+        }
     }
 
     function _setFromX(px: real) {

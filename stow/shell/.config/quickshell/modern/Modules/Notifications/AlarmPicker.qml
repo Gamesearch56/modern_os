@@ -49,7 +49,7 @@ PopupWindow {
         anchors.fill: parent
         level: 1
         color: Colors.color.surface
-        opacity: 1
+        opacity: Config.design.transparency ?? 0.85
         borderWidth: Tokens.stroke.hairline
         borderColor: Colors.color.outlineVariant
         padding: Tokens.spacing.sm

@@ -40,7 +40,7 @@ Item {
             property: "opacity"
             from: 0.35
             to: 1
-            duration: Motion.medium()
+            duration: Motion.mediumMs
             easing.bezierCurve: Motion.easingStandard
         }
         NumberAnimation {
@@ -48,7 +48,7 @@ Item {
             property: "opacity"
             from: 1
             to: 0.35
-            duration: Motion.medium()
+            duration: Motion.mediumMs
             easing.bezierCurve: Motion.easingStandard
         }
     }

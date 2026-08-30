@@ -93,6 +93,8 @@ Singleton {
 
     function clearPendingSelect() { root.pendingSelect = ""; }
 
+    function refresh() { root._refresh(); }
+
     function _refresh() {
         listProc.running = false;
         Qt.callLater(() => {

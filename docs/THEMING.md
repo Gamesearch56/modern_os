@@ -151,6 +151,11 @@ the current wallpaper to `custom_css/wallpaper` and `01-chrome.css` sets
 `--no-reload` skips all of the above — used by CI/lint checks and the M0
 verification script, where no Hyprland/kitty session exists to reload.
 
+`--chrome-only` skips matugen and rewrites GTK/Qt/KDE/Vivaldi radii,
+fonts, cursor, and motion from the current `config.json`. Settings uses
+this after Design knobs that are not a palette swap (rounding, type
+scale, animations, transparency, cursor).
+
 ## Adding a new consumer
 
 1. Write `stow/theme/.config/matugen/templates/<name>.template` using

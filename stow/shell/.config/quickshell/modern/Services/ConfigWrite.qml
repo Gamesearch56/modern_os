@@ -15,6 +15,11 @@ Singleton {
     property string lastError: ""
     property bool _reloadHypr: false
     property bool _restoreReloadHypr: false
+    property bool _patchChrome: false
+    property bool _restoreChrome: false
+    property bool _restoreCursor: false
+    property string _lastPath: ""
+    property var _lastValue
 
     signal finished(bool ok)
 
@@ -28,12 +33,41 @@ Singleton {
         return false;
     }
 
+    function _chromePath(path: string): bool {
+        if (path === "typography" || path.indexOf("typography.") === 0)
+            return true;
+        if (path === "motion" || path.indexOf("motion.") === 0)
+            return true;
+        const keys = [
+            "design.cornerRounding", "design.transparency",
+            "design.cursorTheme", "design.cursorSize", "design.iconTheme"
+        ];
+        for (let i = 0; i < keys.length; i++) {
+            if (path === keys[i])
+                return true;
+        }
+        return false;
+    }
+
+    function _cursorPath(path: string): bool {
+        return path === "design" || path === "design.cursorTheme"
+            || path === "design.cursorSize";
+    }
+
     function set(path, value) {
         try {
             const encoded = JSON.stringify(value);
-            root._reloadHypr = path === "monitors" || path.indexOf("monitors.") === 0;
+            root._lastPath = path;
+            root._lastValue = value;
+            root._patchChrome = root._chromePath(path);
+            root._reloadHypr = path === "monitors" || path.indexOf("monitors.") === 0
+                || path === "windows.titlebar" || path === "windowRules"
+                || path === "motion.scale" || path === "motion";
             proc.command = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "config", "set", path, encoded];
-            proc.running = true;
+            proc.running = false;
+            Qt.callLater(() => {
+                proc.running = true;
+            });
             Logger.debug("ConfigWrite", path + " = " + encoded);
         } catch (e) {
             root.lastError = String(e);
@@ -60,12 +94,18 @@ Singleton {
             return;
         root.lastError = "";
         root._restoreReloadHypr = false;
+        root._restoreChrome = false;
+        root._restoreCursor = false;
         const cmd = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "config", "restore"];
         for (let i = 0; i < list.length; i++) {
             const p = String(list[i]);
             cmd.push(p);
             if (root._hyprPath(p))
                 root._restoreReloadHypr = true;
+            if (root._chromePath(p) || p === "design")
+                root._restoreChrome = true;
+            if (root._cursorPath(p))
+                root._restoreCursor = true;
         }
         restoreProc.command = cmd;
         restoreProc.running = true;
@@ -93,8 +133,13 @@ Singleton {
         onExited: (exitCode) => {
             if (exitCode !== 0 && root.lastError.length === 0)
                 Logger.error("ConfigWrite", "modern config set exited " + exitCode);
-            if (exitCode === 0 && root._reloadHypr)
+            if (exitCode !== 0)
+                return;
+            Hypr.syncAppearance(root._lastPath, root._lastValue);
+            if (root._reloadHypr)
                 Quickshell.execDetached(["hyprctl", "reload"]);
+            if (root._patchChrome)
+                chromeDebounce.restart();
         }
     }
 
@@ -121,7 +166,21 @@ Singleton {
                 Logger.error("ConfigWrite", "modern config restore exited " + exitCode);
             if (exitCode === 0 && root._restoreReloadHypr)
                 Quickshell.execDetached(["hyprctl", "reload"]);
+            if (exitCode === 0 && root._restoreChrome)
+                chromeDebounce.restart();
+            if (exitCode === 0 && root._restoreCursor)
+                Hypr.setCursor(Config.design.cursorTheme ?? "", Config.design.cursorSize ?? 24);
             root.finished(exitCode === 0);
         }
+    }
+
+    Timer {
+        id: chromeDebounce
+        interval: Math.max(Motion.mediumMs, 1)
+        repeat: false
+        onTriggered: Quickshell.execDetached([
+            Quickshell.env("HOME") + "/modern_dotfile/scripts/theme-apply.sh",
+            "--chrome-only"
+        ])
     }
 }

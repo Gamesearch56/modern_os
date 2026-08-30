@@ -19,7 +19,7 @@ Item {
     readonly property var _host: Window.window ? Window.window.contentItem : null
 
     visible: root.open || opacity > 0.01
-    opacity: Motion.overlayOpacity(root.open)
+    opacity: Motion.overlayOpacity(root.open) * (Config.design.transparency ?? 0.85)
     scale: Motion.overlayScale(root.open)
     transformOrigin: root.opensAbove ? Item.Bottom : Item.Top
     y: {
@@ -75,16 +75,16 @@ Item {
     }
 
     Behavior on opacity {
-        enabled: Motion.overlayFades()
+        enabled: Motion.overlaysFade
         NumberAnimation {
-            duration: Motion.medium()
+            duration: Motion.mediumMs
             easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
         }
     }
     Behavior on scale {
-        enabled: Motion.overlayZooms()
+        enabled: Motion.overlaysZoom
         NumberAnimation {
-            duration: Motion.medium()
+            duration: Motion.mediumMs
             easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
         }
     }
@@ -121,7 +121,7 @@ Item {
 
         Behavior on borderColor {
             ColorAnimation {
-                duration: Motion.short()
+                duration: Motion.shortMs
                 easing.bezierCurve: Motion.easingStandard
             }
         }

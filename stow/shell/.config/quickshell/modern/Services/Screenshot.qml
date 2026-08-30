@@ -61,7 +61,7 @@ Singleton {
 
     Timer {
         id: finishGrace
-        interval: Motion.short()
+        interval: Motion.shortMs
         onTriggered: {
             if (!root._done && root._exited) {
                 root._outDone = true;
@@ -72,7 +72,7 @@ Singleton {
 
     Timer {
         id: hudGone
-        interval: Motion.short()
+        interval: Motion.shortMs
         onTriggered: root._runRegion()
     }
 

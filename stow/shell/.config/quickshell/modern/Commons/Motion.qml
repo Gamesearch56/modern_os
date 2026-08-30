@@ -38,12 +38,21 @@ Singleton {
     readonly property real scale: Config.motion.scale ?? 1.0 // 0 = off (accessibility/slow machine), 1.5 = slow-mo for demos
     readonly property string overlay: Config.motion.overlay ?? "fadeZoom"
 
+    // Bindable scaled durations — `duration: Motion.short()` does not
+    // re-evaluate when scale changes; `Motion.shortMs` does.
+    readonly property int shortMs: Math.round(durationShort * root.scale)
+    readonly property int mediumMs: Math.round(durationMedium * root.scale)
+    readonly property int longMs: Math.round(durationLong * root.scale)
+    readonly property int extraLongMs: Math.round(durationExtraLong * root.scale)
+    readonly property bool overlaysFade: root.scale !== 0 && root.overlay !== "zoom"
+    readonly property bool overlaysZoom: root.scale !== 0 && root.overlay !== "fade"
+
     // Always read duration through these, never the raw duration*
     // properties directly, so `config.json`'s motion.scale always applies.
-    function short(): int { return Math.round(durationShort * root.scale); }
-    function medium(): int { return Math.round(durationMedium * root.scale); }
-    function long(): int { return Math.round(durationLong * root.scale); }
-    function extraLong(): int { return Math.round(durationExtraLong * root.scale); }
+    function short(): int { return root.shortMs; }
+    function medium(): int { return root.mediumMs; }
+    function long(): int { return root.longMs; }
+    function extraLong(): int { return root.extraLongMs; }
 
     // Overlay enter/exit — Modules/Widgets call these instead of
     // branching on motion.overlay. scale 0 is instant (opacity stays
@@ -59,11 +68,11 @@ Singleton {
     }
 
     function overlayFades(): bool {
-        return root.scale !== 0 && root.overlay !== "zoom";
+        return root.overlaysFade;
     }
 
     function overlayZooms(): bool {
-        return root.scale !== 0 && root.overlay !== "fade";
+        return root.overlaysZoom;
     }
 
     // Inverse of the closed overlay scale (~0.92 → ~1.087). Search

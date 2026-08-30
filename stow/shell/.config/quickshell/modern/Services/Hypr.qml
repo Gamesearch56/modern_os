@@ -309,6 +309,70 @@ Singleton {
             root.dispatch("reload");
     }
 
+    function keyword(key: string, value: string) {
+        const k = String(key || "");
+        if (!k.length)
+            return;
+        Quickshell.execDetached(["hyprctl", "keyword", k, String(value)]);
+    }
+
+    function setCursor(theme: string, size: int) {
+        const t = String(theme || "").trim();
+        if (!t.length)
+            return;
+        const n = size > 0 ? size : 24;
+        Quickshell.execDetached([
+            Quickshell.env("HOME") + "/modern_dotfile/scripts/cursor-apply.sh",
+            t, String(n)
+        ]);
+    }
+
+    function syncAppearance(path: string, value: var) {
+        const p = String(path || "");
+        const win = (p === "windows" && value && typeof value === "object")
+            ? value : (Config.windows || {});
+        const design = (p === "design" && value && typeof value === "object")
+            ? value : (Config.design || {});
+        if (p === "windows.gapsIn")
+            root.keyword("general:gaps_in", String(value ?? win.gapsIn ?? 5));
+        else if (p === "windows.gapsOut")
+            root.keyword("general:gaps_out", String(value ?? win.gapsOut ?? 10));
+        else if (p === "windows.opacity") {
+            const a = value ?? win.opacity ?? 1;
+            root.keyword("decoration:active_opacity", String(a));
+            root.keyword("decoration:inactive_opacity", String(Math.min(1, a * 0.98)));
+        } else if (p === "windows") {
+            root.keyword("general:gaps_in", String(win.gapsIn ?? 5));
+            root.keyword("general:gaps_out", String(win.gapsOut ?? 10));
+            const a = win.opacity ?? 1;
+            root.keyword("decoration:active_opacity", String(a));
+            root.keyword("decoration:inactive_opacity", String(Math.min(1, a * 0.98)));
+        } else if (p === "design.cornerRounding") {
+            const r = value ?? design.cornerRounding ?? 1;
+            root.keyword("decoration:rounding", String(Math.floor(16 * r)));
+        } else if (p === "design.cursorTheme" || p === "design.cursorSize") {
+            const theme = p === "design.cursorTheme"
+                ? String(value || design.cursorTheme || "")
+                : String(design.cursorTheme || "");
+            const size = p === "design.cursorSize"
+                ? (value || 24) : (design.cursorSize ?? 24);
+            root.setCursor(theme, size);
+        } else if (p === "design") {
+            const r = design.cornerRounding ?? 1;
+            root.keyword("decoration:rounding", String(Math.floor(16 * r)));
+            root.setCursor(String(design.cursorTheme || ""), design.cursorSize ?? 24);
+        }
+    }
+
+    property var cursorThemes: []
+
+    function refreshCursorThemes() {
+        cursorProc.running = false;
+        Qt.callLater(() => {
+            cursorProc.running = true;
+        });
+    }
+
     function focusedMonitorName(): string {
         void root.focusedWorkspace;
         void root.monitors;
@@ -480,6 +544,17 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.hyprbarsLoaded = this.text.toLowerCase().indexOf("hyprbars") !== -1;
+            }
+        }
+    }
+
+    Process {
+        id: cursorProc
+        running: false
+        command: [Quickshell.env("HOME") + "/modern_dotfile/scripts/cursor-themes.sh"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.cursorThemes = this.text.trim().split("\n").filter(s => s.length > 0);
             }
         }
     }

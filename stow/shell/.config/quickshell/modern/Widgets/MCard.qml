@@ -15,7 +15,10 @@ Rectangle {
     property alias content: inner.data
     default property alias extra: inner.data
 
-    readonly property var _elev: Tokens.elevationFor(root.level)
+    readonly property var _elev: {
+        void Tokens.surfaceTint;
+        return Tokens.elevationFor(root.level);
+    }
 
     radius: Tokens.radius.medium
     color: Colors.color.surfaceContainer

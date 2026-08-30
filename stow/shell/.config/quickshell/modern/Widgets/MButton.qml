@@ -58,7 +58,7 @@ Item {
 
         Behavior on color {
             ColorAnimation {
-                duration: Motion.short()
+                duration: Motion.shortMs
                 easing.bezierCurve: Motion.easingStandard
             }
         }

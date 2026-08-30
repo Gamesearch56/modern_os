@@ -16,6 +16,7 @@ Item {
 
     signal accepted()
     signal textEdited()
+    signal editingFinished()
     signal escaped()
     signal upPressed()
     signal downPressed()
@@ -33,7 +34,7 @@ Item {
 
         Behavior on border.color {
             ColorAnimation {
-                duration: Motion.short()
+                duration: Motion.shortMs
                 easing.bezierCurve: Motion.easingStandard
             }
         }
@@ -69,6 +70,7 @@ Item {
         clip: true
         onAccepted: root.accepted()
         onTextChanged: root.textEdited()
+        onEditingFinished: root.editingFinished()
         Keys.priority: Keys.BeforeItem
         Keys.onEscapePressed: (event) => {
             root.escaped();

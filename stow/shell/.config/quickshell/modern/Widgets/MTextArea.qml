@@ -23,33 +23,79 @@ Item {
 
         Behavior on border.color {
             ColorAnimation {
-                duration: Motion.short()
+                duration: Motion.shortMs
                 easing.bezierCurve: Motion.easingStandard
             }
         }
     }
 
-    TextEdit {
-        id: input
+    Flickable {
+        id: flick
         anchors.fill: parent
         anchors.margins: Tokens.spacing.sm
-        wrapMode: TextEdit.Wrap
-        color: Colors.color.onSurface
-        selectionColor: Colors.color.primary
-        selectedTextColor: Colors.color.onPrimary
-        font.family: Typography.family.ui
-        font.pixelSize: Typography.style("bodyMedium").pixelSize
-        font.hintingPreference: Font.PreferNoHinting
-        renderType: TextEdit.QtRendering
         clip: true
-        onTextChanged: root.textEdited()
+        boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.VerticalFlick
+        contentWidth: width
+        contentHeight: Math.max(height, input.implicitHeight)
+        interactive: contentHeight > height
+
+        onMovementStarted: root._lockParent(true)
+        onMovementEnded: root._lockParent(false)
+
+        HoverHandler {
+            onHoveredChanged: {
+                if (hovered && flick.contentHeight > flick.height)
+                    root._lockParent(true);
+                else if (!hovered && !flick.moving)
+                    root._lockParent(false);
+            }
+        }
+
+        function ensureVisible(r) {
+            if (contentY >= r.y)
+                contentY = r.y;
+            else if (contentY + height <= r.y + r.height)
+                contentY = r.y + r.height - height;
+        }
+
+        TextEdit {
+            id: input
+            width: flick.width
+            wrapMode: TextEdit.Wrap
+            color: Colors.color.onSurface
+            selectionColor: Colors.color.primary
+            selectedTextColor: Colors.color.onPrimary
+            font.family: Typography.family.ui
+            font.pixelSize: Typography.style("bodyMedium").pixelSize
+            font.hintingPreference: Font.PreferNoHinting
+            renderType: TextEdit.QtRendering
+            selectByMouse: true
+            onTextChanged: root.textEdited()
+            onCursorRectangleChanged: flick.ensureVisible(cursorRectangle)
+            Keys.onPressed: (event) => {
+                if (event.key === Qt.Key_Up || event.key === Qt.Key_Down)
+                    event.accepted = false;
+            }
+        }
     }
 
     MText {
         visible: input.text.length === 0 && !input.activeFocus
-        anchors.fill: input
+        anchors.fill: flick
         key: root.placeholderKey
         styleName: "bodyMedium"
         color: Colors.color.onSurfaceVariant
+    }
+
+    function _lockParent(lock: bool) {
+        let p = root.parent;
+        while (p) {
+            if (p.flickableDirection !== undefined) {
+                p.interactive = !lock;
+                return;
+            }
+            p = p.parent;
+        }
     }
 }
