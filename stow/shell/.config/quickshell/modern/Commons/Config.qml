@@ -47,7 +47,7 @@ Singleton {
             id: adapter
 
             property JsonObject general: JsonObject {
-                property list<string> autostart: []
+                property list<string> autostart: ["proton-mail.desktop"]
                 property int notificationTimeoutMs: 6000
                 property JsonObject dndSchedule: JsonObject {
                     property bool enabled: false
@@ -145,8 +145,8 @@ Singleton {
             property JsonObject apps: JsonObject {
                 property JsonObject defaults: JsonObject {
                     property string browser: "vivaldi-stable.desktop"
-                    property string calendar: "org.kde.korganizer.desktop"
-                    property string mail: ""
+                    property string calendar: "proton-mail.desktop"
+                    property string mail: "proton-mail.desktop"
                     property string communication: ""
                     property string fileManager: "org.kde.dolphin.desktop"
                     property string terminal: "kitty.desktop"

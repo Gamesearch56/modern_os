@@ -74,7 +74,7 @@ hl.on("hyprland.start", function()
                 if is_background(name) then
                     hl.exec_cmd(modern_launch .. " --background " .. name)
                 else
-                    hl.exec_cmd("gtk-launch " .. name)
+                    hl.exec_cmd(modern_launch .. " " .. name)
                 end
             end
         end

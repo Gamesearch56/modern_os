@@ -13,11 +13,30 @@ Singleton {
     readonly property var defaults: Config.apps?.defaults ?? ({})
 
     function allEntries(): var {
+        return root._list("");
+    }
+
+    function entriesFor(role: string): var {
+        return root._list(role || "");
+    }
+
+    function _list(role: string): var {
         const entries = DesktopEntries.applications.values;
+        const keep = {};
+        if (role.length > 0) {
+            const cur = root.desktopId(role);
+            if (cur)
+                keep[String(cur).replace(/\.desktop$/, "").toLowerCase()] = true;
+            const fb = root._fallbackIds(role) || [];
+            for (let i = 0; i < fb.length; i++)
+                keep[String(fb[i]).replace(/\.desktop$/, "").toLowerCase()] = true;
+        }
         const out = [];
         for (let i = 0; i < entries.length; i++) {
             const e = entries[i];
             if (e.noDisplay)
+                continue;
+            if (role.length > 0 && !DesktopRoles.matches(role, e.categories, e.name, e.genericName, e.id, keep))
                 continue;
             out.push({ value: e.id || e.name, titleValue: e.name || e.id });
         }
@@ -40,6 +59,18 @@ Singleton {
     function displayName(role: string): string {
         const e = root.entryFor(role);
         return (e && e.name) ? String(e.name) : "";
+    }
+
+    function labelForId(id: string): string {
+        const e = root._entryById(id);
+        if (e?.name)
+            return String(e.name);
+        return String(id || "").replace(/\.desktop$/, "");
+    }
+
+    function iconForId(id: string): string {
+        const e = root._entryById(id);
+        return e?.icon ? String(e.icon) : "application-x-executable";
     }
 
     function launch(role: string): bool {
@@ -88,7 +119,7 @@ Singleton {
 
     function _fallbackIds(role: string): var {
         if (role === "calendar")
-            return ["proton-calendar.desktop", "proton-calendar", "gnome-calendar.desktop", "org.gnome.Calendar.desktop", "kalendar.desktop", "org.kde.kalendar.desktop", "org.kde.korganizer.desktop"];
+            return ["proton-mail.desktop", "proton-calendar.desktop", "proton-calendar", "gnome-calendar.desktop", "org.gnome.Calendar.desktop", "kalendar.desktop", "org.kde.kalendar.desktop", "org.kde.korganizer.desktop"];
         if (role === "mail")
             return ["proton-mail.desktop", "proton-mail", "org.proton.Mail.desktop", "thunderbird.desktop", "org.mozilla.Thunderbird.desktop"];
         if (role === "communication")
@@ -130,8 +161,10 @@ Singleton {
                 cmd = ["alacritty", "-e"].concat(args);
             else if (id.indexOf("wezterm") !== -1)
                 cmd = ["wezterm", "start", "--"].concat(args);
-            else
+            else if (id.indexOf("kitty") !== -1 || id.length === 0)
                 cmd = ["kitty", "-e"].concat(args);
+            else
+                cmd = [id.split(".").pop() || id, "-e"].concat(args);
             Quickshell.execDetached(cmd);
             return true;
         } catch (err) {

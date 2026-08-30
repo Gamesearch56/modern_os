@@ -3,6 +3,7 @@
 # does not keep after display-server init (hl.env only applies at start).
 # --background parks the next window on special:background so mail/chat
 # keep running (and notifying) without occupying a workspace.
+# Extra args after the desktop id are appended to Exec= (incognito, etc.).
 set -euo pipefail
 export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
 export QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}"
@@ -12,4 +13,45 @@ if [[ "${1:-}" == "--background" ]]; then
     inner=$(printf '%q ' "$0" "$@")
     exec hyprctl dispatch exec "[workspace special:background silent] ${inner% }"
 fi
-exec gtk-launch "$@"
+
+desktop="${1:-}"
+if [[ -z "$desktop" ]]; then
+    echo "modern-launch: missing desktop id" >&2
+    exit 1
+fi
+shift
+desktop="${desktop%.desktop}"
+
+if [[ $# -eq 0 ]]; then
+    exec gtk-launch "$desktop"
+fi
+
+desktop_file() {
+    local id="$1.desktop"
+    local dirs="${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+    local IFS=:
+    local d
+    for d in $dirs; do
+        if [[ -f "$d/applications/$id" ]]; then
+            printf '%s\n' "$d/applications/$id"
+            return 0
+        fi
+    done
+    return 1
+}
+
+path="$(desktop_file "$desktop" || true)"
+if [[ -z "$path" ]]; then
+    exec gtk-launch "$desktop" "$@"
+fi
+
+exec_line="$(awk -F= '/^Exec=/{ print substr($0, 6); exit }' "$path")"
+if [[ -z "$exec_line" ]]; then
+    exec gtk-launch "$desktop" "$@"
+fi
+exec_line="${exec_line//%%/__PCT__}"
+exec_line="$(printf '%s\n' "$exec_line" | sed -E 's/ %[fFuUdDnNickvm]//g')"
+exec_line="${exec_line//__PCT__/%}"
+# Exec= comes from a trusted .desktop; extra args are quoted.
+# shellcheck disable=SC2086
+eval "exec ${exec_line} $(printf '%q ' "$@")"

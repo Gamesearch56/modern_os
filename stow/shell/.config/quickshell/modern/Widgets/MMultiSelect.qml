@@ -126,6 +126,7 @@ Item {
         id: menu
         open: false
         elevation: 0
+        chromeOpacity: 1
         width: root.width
         implicitHeight: Math.min(
             list.contentHeight
@@ -153,7 +154,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: Tokens.radius.medium
-            color: Colors.color.surfaceContainerHighest
+            color: Colors.color.surface
         }
 
         ColumnLayout {

@@ -2,6 +2,8 @@
 // motion.overlay (fade / zoom / fadeZoom) so bar menus match overlays.
 // Opens below the parent field unless a clipped ancestor (Settings
 // Flickable, window) would eat the menu — then it flips above.
+// Select menus reparent onto the window so later form rows cannot
+// paint through a clipped, translucent list.
 import QtQuick
 import QtQuick.Window
 import "../Commons"
@@ -14,33 +16,64 @@ Item {
     property real gap: Tokens.spacing.xs
     property bool autoPlace: true
     property bool opensAbove: false
+    property real chromeOpacity: Config.design.transparency ?? 0.85
+    property bool reparentToHost: true
     default property alias content: card.content
 
+    property Item _anchor: null
+
     readonly property var _host: Window.window ? Window.window.contentItem : null
+    readonly property Item _field: root._anchor || root.parent
 
     visible: root.open || opacity > 0.01
-    opacity: Motion.overlayOpacity(root.open) * (Config.design.transparency ?? 0.85)
+    opacity: Motion.overlayOpacity(root.open) * root.chromeOpacity
     scale: Motion.overlayScale(root.open)
     transformOrigin: root.opensAbove ? Item.Bottom : Item.Top
+    z: root.open && root.parent === root._host ? 80 : 0
+    x: {
+        if (root.parent !== root._host || !root._field || !root._host)
+            return 0;
+        return root._field.mapToItem(root._host, 0, 0).x;
+    }
     y: {
         if (!root.autoPlace)
             return 0;
-        const field = root.parent;
+        const field = root._field;
         const h = field ? field.height : 0;
-        return root.opensAbove ? -(root.height + root.gap) : h + root.gap;
+        const ly = root.opensAbove ? -(root.height + root.gap) : h + root.gap;
+        if (root.parent !== root._host || !field || !root._host)
+            return ly;
+        return field.mapToItem(root._host, 0, ly).y;
     }
 
+    Component.onCompleted: root._syncParent()
     onOpenChanged: {
+        root._syncParent();
         if (root.open)
             Qt.callLater(root._updatePlace);
+    }
+    onVisibleChanged: {
+        if (!root.open)
+            root._syncParent();
     }
     onImplicitHeightChanged: {
         if (root.open)
             root._updatePlace();
     }
 
+    function _syncParent() {
+        if (!root._anchor && root.parent && root.parent !== root._host)
+            root._anchor = root.parent;
+        if (!root.reparentToHost || !root._anchor)
+            return;
+        const stay = root.open || root.visible;
+        const next = (stay && root._host) ? root._host : root._anchor;
+        if (next && root.parent !== next)
+            root.parent = next;
+    }
+
     function _clipHost(): var {
-        let p = root.parent;
+        let p = root._field;
         while (p) {
             if (p.clip)
                 return p;
@@ -50,7 +83,7 @@ Item {
     }
 
     function _shouldOpenAbove(): bool {
-        const field = root.parent;
+        const field = root._field;
         const host = root._clipHost();
         if (!field || !host)
             return false;
@@ -97,7 +130,7 @@ Item {
         visible: enabled
         z: 40
         onPressed: (mouse) => {
-            if (root._inside(root, mouse.x, mouse.y) || root._inside(root.parent, mouse.x, mouse.y)) {
+            if (root._inside(root, mouse.x, mouse.y) || root._inside(root._field, mouse.x, mouse.y)) {
                 mouse.accepted = false;
                 return;
             }
@@ -110,7 +143,7 @@ Item {
         id: card
         anchors.fill: parent
         level: 0
-        color: Colors.color.surfaceContainerHighest
+        color: Colors.color.surface
         borderWidth: popupHover.hovered ? 2 : 1
         borderColor: popupHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
         z: 1

@@ -403,11 +403,10 @@
       "restic": "Restic",
       "preUpdateSnapshot": "Snapshot vor Updates",
       "gaming": "Spieleprofile",
-      "defaultApps": "Standard-Apps",
       "browser": "Browser",
       "calendar": "Kalender",
       "mail": "Mail",
-      "communication": "Kommunikation",
+      "communication": "Messenger",
       "fileManager": "Dateimanager",
       "terminal": "Terminal",
       "idleDim": "Abdunkeln nach",
@@ -572,7 +571,6 @@
       "rulesInvalid": "Dieses JSON ist ungültig."
     },
     "hints": {
-      "defaultApps": "Browser ist SUPER+B, Kalender öffnet sich von der Uhr, Mail von der Leiste, Dateien SUPER+E, Terminal SUPER+T. Kalender, Mail und Chat starten im Hintergrund, damit Benachrichtigungen ankommen.",
       "animations": "Wie lange Menüs, die Leiste und Fenster brauchen. Aus ist sofort.",
       "overlayMotion": "Ein-/Ausblenden, Zoom beim Öffnen/Schließen, oder beides.",
       "surfaceTint": "Wie stark der Wallpaper-Akzent Leisten und Panels einfärbt.",

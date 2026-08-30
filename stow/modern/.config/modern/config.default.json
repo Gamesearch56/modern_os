@@ -2,7 +2,7 @@
   "$schema": "config.schema.json",
   "_comment": "Shipped defaults. Tracked in git. Copied to config.json on first install; config.json is the live, gitignored, per-machine file that the Settings app edits. Never edit this file to change YOUR machine's behaviour — edit config.json.",
   "general": {
-    "autostart": [],
+    "autostart": ["proton-mail.desktop"],
     "notificationTimeoutMs": 6000,
     "dndSchedule": {
       "enabled": false,
@@ -299,8 +299,8 @@
   "apps": {
     "defaults": {
       "browser": "vivaldi-stable.desktop",
-      "calendar": "org.kde.korganizer.desktop",
-      "mail": "",
+      "calendar": "proton-mail.desktop",
+      "mail": "proton-mail.desktop",
       "communication": "",
       "fileManager": "org.kde.dolphin.desktop",
       "terminal": "kitty.desktop"

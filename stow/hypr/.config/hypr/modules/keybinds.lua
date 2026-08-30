@@ -28,8 +28,13 @@ end
 
 local function browser_incognito()
     local id = config.value("apps.defaults.browser", "vivaldi-stable.desktop") or "vivaldi-stable.desktop"
-    local bin = tostring(id):gsub("%.desktop$", "")
-    return hl.dsp.exec_cmd(bin .. " --incognito")
+    id = tostring(id):gsub("%.desktop$", "")
+    local flag = "--incognito"
+    local lower = string.lower(id)
+    if lower:find("firefox", 1, true) or lower:find("librewolf", 1, true) then
+        flag = "--private-window"
+    end
+    return hl.dsp.exec_cmd(modern_launch .. " " .. id .. " " .. flag)
 end
 
 local workspaces = require("modules.workspaces")

@@ -403,11 +403,10 @@
       "restic": "Restic",
       "preUpdateSnapshot": "Snapshot before updates",
       "gaming": "Gaming profiles",
-      "defaultApps": "Default apps",
       "browser": "Browser",
       "calendar": "Calendar",
       "mail": "Mail",
-      "communication": "Communication",
+      "communication": "Messenger",
       "fileManager": "File manager",
       "terminal": "Terminal",
       "idleDim": "Dim after",
@@ -572,7 +571,6 @@
       "rulesInvalid": "That JSON is not valid."
     },
     "hints": {
-      "defaultApps": "Browser is SUPER+B, calendar opens from the clock, mail from the bar, files SUPER+E, terminal SUPER+T. Calendar, mail, and chat start in the background so they can still notify.",
       "animations": "How long menus, the bar, and windows take to move. Off is instant.",
       "overlayMotion": "Fade in/out, zoom in on open / zoom out on close, or both.",
       "surfaceTint": "How strongly the wallpaper accent tints bars and panels.",

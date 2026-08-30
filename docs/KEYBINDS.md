@@ -17,10 +17,10 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + I` | System Settings (Hyprland window) | `qs -c modern ipc call settings open` |
 | `SUPER + W` | Wallpaper picker | `qs -c modern ipc call wallpaper toggle` |
 | `SUPER + TAB` | Overview | `qs -c modern ipc call overview toggle` |
-| `SUPER + T` | Terminal | kitty |
-| `SUPER + B` | Browser | Vivaldi |
-| `SUPER + SHIFT + B` | Browser incognito | `vivaldi-stable --incognito` (from `apps.defaults.browser`) |
-| `SUPER + E` | File manager | Dolphin |
+| `SUPER + T` | Terminal | Configured `apps.defaults.terminal` via `modern-launch` |
+| `SUPER + B` | Browser | Configured `apps.defaults.browser` via `modern-launch` |
+| `SUPER + SHIFT + B` | Browser private window | Same desktop id, with `--incognito` or `--private-window` |
+| `SUPER + E` | File manager | Configured `apps.defaults.fileManager` via `modern-launch` |
 | `SPACE` | Quick Look (Dolphin selection; else types Space) | `modern filepreview` |
 | `SUPER + R` | Spotify | `spotify-launcher` |
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
