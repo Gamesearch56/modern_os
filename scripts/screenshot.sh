@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Capture a screenshot into config.json's screenshots.directory (default
-# ~/Pictures/Screenshots), optionally copy to the clipboard, optionally
-# open swappy. Used by Hyprland binds via `modern screenshot <mode>`.
+# ~/Pictures/Screenshots) using screenshots.format / quality / clipboard /
+# editor / cursor. Used by Hyprland binds via `modern screenshot <mode>`.
 set -euo pipefail
 
 usage() {
@@ -43,6 +43,23 @@ TEMPLATE="$(jq -r '.screenshots.filenameTemplate // "screenshot-%Y%m%d-%H%M%S"' 
 COPY="$(jq -r '.screenshots.copyToClipboard // true' <<<"$CFG")"
 EDIT="$(jq -r '.screenshots.openEditorAfterCapture // false' <<<"$CFG")"
 CURSOR="$(jq -r '.screenshots.includeCursor // false' <<<"$CFG")"
+FORMAT="$(jq -r '.screenshots.format // "png"' <<<"$CFG" | tr '[:upper:]' '[:lower:]')"
+QUALITY="$(jq -r '.screenshots.quality // 90' <<<"$CFG")"
+
+case "$FORMAT" in
+    jpg|jpeg) FORMAT="jpeg" ;;
+    webp) FORMAT="webp" ;;
+    *) FORMAT="png" ;;
+esac
+if ! [[ "$QUALITY" =~ ^[0-9]+$ ]]; then
+    QUALITY=90
+fi
+if [ "$QUALITY" -gt 100 ]; then
+    QUALITY=100
+fi
+if [ "$QUALITY" -lt 1 ]; then
+    QUALITY=1
+fi
 
 case "$DIR" in
     "~/"*) DIR="$HOME/${DIR#~/}" ;;
@@ -52,7 +69,8 @@ if [ -z "$DIR" ]; then
 fi
 mkdir -p "$DIR"
 
-# filenameTemplate uses strftime tokens (%Y etc.), not bash date(1) plus.
+# Capture PNG first so swappy can edit; convert after if the user
+# picked JPEG/WebP. grim on this stack cannot write WebP.
 FILE="$DIR/$(date +"$TEMPLATE").png"
 
 GRIM=(grim)
@@ -139,12 +157,36 @@ case "$MODE" in
         ;;
 esac
 
-if [ "$COPY" = "true" ] && command -v wl-copy >/dev/null 2>&1; then
-    wl-copy --type image/png < "$FILE"
-fi
-
 if [ "$EDIT" = "true" ] && command -v swappy >/dev/null 2>&1; then
-    swappy -f "$FILE"
+    swappy -f "$FILE" || true
 fi
 
-printf '%s\n' "$FILE"
+SAVED="$FILE"
+MIME="image/png"
+case "$FORMAT" in
+    jpeg)
+        SAVED="${FILE%.png}.jpeg"
+        MIME="image/jpeg"
+        ;;
+    webp)
+        SAVED="${FILE%.png}.webp"
+        MIME="image/webp"
+        ;;
+esac
+if [ "$SAVED" != "$FILE" ]; then
+    if command -v magick >/dev/null 2>&1; then
+        magick "$FILE" -quality "$QUALITY" "$SAVED"
+    elif command -v convert >/dev/null 2>&1; then
+        convert "$FILE" -quality "$QUALITY" "$SAVED"
+    else
+        echo "screenshot: ImageMagick required for $FORMAT" >&2
+        exit 1
+    fi
+    rm -f "$FILE"
+fi
+
+if [ "$COPY" = "true" ] && command -v wl-copy >/dev/null 2>&1; then
+    wl-copy --type "$MIME" < "$SAVED"
+fi
+
+printf '%s\n' "$SAVED"

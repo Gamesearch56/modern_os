@@ -3,5 +3,5 @@
   "icon": "camera-photo",
   "key": "settings.sections.screenshots",
   "order": 160,
-  "keywords": ["capture", "png", "clipboard", "grim"]
+  "keywords": ["capture", "png", "jpeg", "webp", "clipboard", "grim", "format", "directory"]
 }
