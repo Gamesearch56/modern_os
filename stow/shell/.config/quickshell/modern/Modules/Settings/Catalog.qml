@@ -84,7 +84,7 @@ QtObject {
         applications: { icon: "applications-other", order: 30, group: "apps", keywords: ["autostart", "browser", "calendar", "mail", "messenger"], restore: ["apps.defaults", "general.autostart"] },
         screenshots: { icon: "camera-photo", order: 32, group: "apps", keywords: ["capture", "grim", "png", "jpeg", "webp", "clipboard"], restore: ["screenshots"] },
         ai: { icon: "robot", order: 34, group: "apps", keywords: ["ollama", "assistant", "model", "chat"] },
-        language: { icon: "preferences-desktop-locale", order: 40, group: "input", keywords: ["locale", "date", "time", "timezone"], restore: ["language", "widgets.clock.showWeekday", "widgets.clock.showSeconds"] },
+        language: { icon: "preferences-desktop-locale", order: 40, group: "input", keywords: ["locale", "date", "time", "format", "week"], restore: ["language"] },
         keyboard: { icon: "input-keyboard", order: 42, group: "input", keywords: ["keybinds", "layout", "cheatsheet"], restore: ["input", "keybinds"] },
         displays: { icon: "video-display", order: 50, group: "devices", keywords: ["monitors", "workspace", "hdr", "scale", "display"] },
         audio: { icon: "audio-volume-high", order: 52, group: "devices", keywords: ["volume", "speakers", "microphone"] },

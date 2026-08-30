@@ -1,101 +1,83 @@
+import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
-import "."
 
 ColumnLayout {
-    spacing: Tokens.spacing.md
+    id: root
+    spacing: Tokens.spacing.lg
 
-    MSectionHeader { key: "settings.fields.languageUi" }
-    RowLayout {
-        spacing: Tokens.spacing.sm
-        MChip {
-            key: "settings.langEn"
-            checked: Config.language.ui === "en"
-            onClicked: ConfigWrite.set("language.ui", "en")
-        }
-        MChip {
-            key: "settings.langDe"
-            checked: Config.language.ui === "de"
-            onClicked: ConfigWrite.set("language.ui", "de")
-        }
+    SystemClock {
+        id: clock
+        precision: SystemClock.Minutes
     }
 
-    MSectionHeader { key: "settings.fields.dateFormat" }
-    MSelect {
+    MText {
         Layout.fillWidth: true
-        value: Config.language.dateFormat
-        model: [
-            { value: "DD.MM.YYYY", titleValue: "DD.MM.YYYY" },
-            { value: "YYYY-MM-DD", titleValue: "YYYY-MM-DD" },
-            { value: "MM/DD/YYYY", titleValue: "MM/DD/YYYY" }
-        ]
-        onSelected: (v) => ConfigWrite.set("language.dateFormat", v)
-    }
-
-    MSectionHeader { key: "settings.fields.timeFormat" }
-    MSelect {
-        Layout.fillWidth: true
-        value: Config.language.timeFormat
-        model: [
-            { value: "HH:mm", titleValue: "HH:mm" },
-            { value: "hh:mm a", titleValue: "hh:mm a" }
-        ]
-        onSelected: (v) => ConfigWrite.set("language.timeFormat", v)
-    }
-
-    MSectionHeader { key: "settings.fields.firstDayOfWeek" }
-    RowLayout {
-        spacing: Tokens.spacing.sm
-        MChip {
-            key: "settings.weekMon"
-            checked: Config.language.firstDayOfWeek === 1
-            onClicked: ConfigWrite.set("language.firstDayOfWeek", 1)
-        }
-        MChip {
-            key: "settings.weekSun"
-            checked: Config.language.firstDayOfWeek === 0
-            onClicked: ConfigWrite.set("language.firstDayOfWeek", 0)
-        }
-    }
-
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.showWeekday"
-        MSwitch {
-            checked: !!(Config.widgets?.clock?.showWeekday)
-            onToggled: (v) => ConfigWrite.set("widgets.clock.showWeekday", v)
-        }
-    }
-    MListItem {
-        Layout.fillWidth: true
-        titleKey: "settings.fields.showSeconds"
-        MSwitch {
-            checked: !!(Config.widgets?.clock?.showSeconds)
-            onToggled: (v) => ConfigWrite.set("widgets.clock.showSeconds", v)
+        styleName: "titleLarge"
+        wrapMode: Text.WordWrap
+        elide: Text.ElideNone
+        value: {
+            void clock.date;
+            void Config.language.dateFormat;
+            void Config.language.timeFormat;
+            return DateTime.clockLabel(
+                DateTime.displayDate(clock.date),
+                Config.language.dateFormat || "DD.MM.YYYY",
+                Config.language.timeFormat || "HH:mm",
+                false,
+                false);
         }
     }
 
     MField {
-        labelKey: "settings.fields.timezone"
-        hintKey: "settings.hints.timezone"
-        MTextField {
-            text: Locale.timezone || Config.language.timezone || ""
-            onAccepted: {
-                ConfigWrite.set("language.timezone", text);
-                Locale.setTimezone(text);
-            }
+        labelKey: "settings.fields.languageUi"
+        MSegmented {
+            value: Config.language.ui || "de"
+            model: [
+                { value: "en", titleKey: "settings.langEn" },
+                { value: "de", titleKey: "settings.langDe" }
+            ]
+            onSelected: (v) => ConfigWrite.set("language.ui", v)
         }
     }
+
     MField {
-        labelKey: "settings.fields.previewDate"
-        hintKey: "settings.hints.previewDate"
-        MTextField {
-            text: Config.language.previewDate ?? ""
-            placeholderKey: "settings.previewDatePlaceholder"
-            onAccepted: ConfigWrite.set("language.previewDate", text)
+        labelKey: "settings.fields.firstDayOfWeek"
+        MSegmented {
+            value: Config.language.firstDayOfWeek
+            model: [
+                { value: 1, titleKey: "settings.weekMon" },
+                { value: 0, titleKey: "settings.weekSun" }
+            ]
+            onSelected: (v) => ConfigWrite.set("language.firstDayOfWeek", Number(v))
+        }
+    }
+
+    MField {
+        labelKey: "settings.fields.dateFormat"
+        MSelect {
+            value: Config.language.dateFormat || "DD.MM.YYYY"
+            model: [
+                { value: "DD.MM.YYYY", titleValue: "DD.MM.YYYY" },
+                { value: "YYYY-MM-DD", titleValue: "YYYY-MM-DD" },
+                { value: "MM/DD/YYYY", titleValue: "MM/DD/YYYY" }
+            ]
+            onSelected: (v) => ConfigWrite.set("language.dateFormat", v)
+        }
+    }
+
+    MField {
+        labelKey: "settings.fields.timeFormat"
+        MSelect {
+            value: Config.language.timeFormat || "HH:mm"
+            model: [
+                { value: "HH:mm", titleValue: "HH:mm" },
+                { value: "hh:mm a", titleValue: "hh:mm a" }
+            ]
+            onSelected: (v) => ConfigWrite.set("language.timeFormat", v)
         }
     }
 }

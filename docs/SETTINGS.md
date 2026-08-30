@@ -38,7 +38,7 @@ Six groups, 19 pages. Catalog lives in
 | Apps | Applications | `applications` | `apps.defaults` (browser Vivaldi, calendar/mail Proton Mail, messenger empty with WhatsApp fallback, file manager Dolphin, terminal kitty), `general.autostart`. Calendar/mail/messenger ids are locked on the autostart list. Shortcuts go through `scripts/modern-launch` and those defaults, not hardcoded binaries. |
 | Apps | Screenshot | `screenshots` | `screenshots.format` (PNG/JPEG/WebP), `quality` for JPEG/WebP, `directory`, `copyToClipboard`, `openEditorAfterCapture`, `includeCursor`. Capture is `scripts/screenshot.sh` (grim, then ImageMagick for WebP). |
 | Apps | AI | `ai` | `accounts.ai` (Ollama or Off). Model list comes from a running Ollama daemon. If Ollama is missing or stopped, Settings defaults the assistant to Off and shows the install steps. |
-| Keyboard & Region | Language & Time | `language` | `language.*` (incl. `previewDate`); `Locale` (`timedatectl`) |
+| Keyboard & Region | Language & Time | `language` | `language.ui`, `firstDayOfWeek`, `dateFormat`, `timeFormat`. Clock weekday/seconds live under Settings → Bar. |
 | Keyboard & Region | Keyboard | `keyboard` | `input.*`, `keybinds`; `Cheatsheet` |
 | Devices | Display | `displays` | `monitors.*`; `Hypr` |
 | Devices | Audio | `audio` | `audio.*`; `Audio` (PipeWire streams when present) |
@@ -47,9 +47,6 @@ Six groups, 19 pages. Catalog lives in
 | System | Storage | `storage` | `Storage` |
 | System | Backup | `backup` | `backup.*`; `Snapshots` (snapper list/delete) |
 | System | Update | `system` | `gaming.*`; `Update` (`modern update`, `modern mirrors`) |
-
-`language.previewDate` is UI-only (`DateTime.displayDate`) — it does not
-call `timedatectl`. Timezone display/set is `Services/Locale.qml`.
 
 ## Restore defaults
 

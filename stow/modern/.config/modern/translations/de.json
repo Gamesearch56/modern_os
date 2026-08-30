@@ -467,8 +467,6 @@
       "cursor": "Cursor",
       "cursorTheme": "Cursor-Thema",
       "cursorSize": "Cursor-Größe",
-      "previewDate": "Vorschaudatum",
-      "timezone": "Zeitzone",
       "repeatRate": "Wiederholrate",
       "repeatDelay": "Wiederholverzögerung",
       "numlockOnBoot": "Num-Lock beim Start",
@@ -564,7 +562,6 @@
     "snapshotEmpty": "Noch keine Snapshots",
     "energyNow": "Verbrauch",
     "energyBattery": "{n} %",
-    "previewDatePlaceholder": "JJJJ-MM-TT",
     "providerPrefixPlaceholder": ">",
     "nav": {
       "general": "Allgemein",
@@ -609,8 +606,6 @@
       "hyprbarsOff": "hyprbars ist nicht geladen. scripts/doctor.sh und hyprpm prüfen.",
       "windowRulesJson": "JSON-Array der Hyprland-Fensterregeln. Speichern prüft vor dem Schreiben.",
       "cheatsheetBind": "Öffnet die Übersicht (Super+K).",
-      "previewDate": "Nur die Oberfläche. Kalender und Uhr nutzen dieses Datum; die Systemzeit bleibt.",
-      "timezone": "IANA-Name wie Europe/Berlin. Wird mit timedatectl gesetzt (kann nachfragen).",
       "restoreGated": "Ein Snapshot-Rollback ist abgeschottet. Siehe docs/BACKUP.md.",
       "speedTest": "Kurzer curl-Download vom Arch-Geo-Spiegel. Keine Speedtest-Website.",
       "autologin": "Die Einstellung wird in config.json gespeichert. Die Anmeldung am Boot (getty/greetd) ist abgeschottet (docs/ISOLATION.md) und wird von diesem Schalter nicht gesetzt."

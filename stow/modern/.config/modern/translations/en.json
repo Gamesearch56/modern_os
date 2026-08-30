@@ -467,8 +467,6 @@
       "cursor": "Cursor",
       "cursorTheme": "Cursor theme",
       "cursorSize": "Cursor size",
-      "previewDate": "Preview date",
-      "timezone": "Timezone",
       "repeatRate": "Repeat rate",
       "repeatDelay": "Repeat delay",
       "numlockOnBoot": "Num lock on boot",
@@ -564,7 +562,6 @@
     "snapshotEmpty": "No snapshots yet",
     "energyNow": "Consumption",
     "energyBattery": "{n}%",
-    "previewDatePlaceholder": "YYYY-MM-DD",
     "providerPrefixPlaceholder": ">",
     "nav": {
       "general": "General",
@@ -609,8 +606,6 @@
       "hyprbarsOff": "hyprbars is not loaded. Run scripts/doctor.sh and hyprpm.",
       "windowRulesJson": "JSON array of Hyprland window rules. Save validates before writing.",
       "cheatsheetBind": "Opens the cheat sheet (Super+K).",
-      "previewDate": "UI-only. Calendar and clock previews use this date; the system clock is unchanged.",
-      "timezone": "IANA name such as Europe/Berlin. Applied with timedatectl (may prompt).",
       "restoreGated": "Restoring a snapshot needs a gated snapper rollback. See docs/BACKUP.md.",
       "speedTest": "Downloads a short sample from the Arch geo mirror via curl. Not a third-party speed-test site.",
       "autologin": "This saves the preference in config.json. Graphical boot autologin is gated (docs/ISOLATION.md) and is not applied from this switch."
