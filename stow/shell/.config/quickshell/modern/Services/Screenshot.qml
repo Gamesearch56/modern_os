@@ -20,7 +20,7 @@ Singleton {
     property int _code: 0
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string script: root.home + "/modern_dotfile/scripts/screenshot.sh"
+    readonly property string script: Paths.script("screenshot.sh")
 
     signal captured(string path)
 
@@ -99,7 +99,7 @@ Singleton {
             return;
         }
         if (root._code !== 0)
-            Logger.error("Screenshot", I18n.t("screenshot.failed"));
+            Logger.warn("Screenshot", I18n.t("screenshot.failed"));
     }
 
     function pick(which: string) {

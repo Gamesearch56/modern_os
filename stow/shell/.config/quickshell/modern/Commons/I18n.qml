@@ -21,7 +21,7 @@ Singleton {
     id: root
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string activeLang: Config.language.ui ?? "de"
+    readonly property string activeLang: Config.language.ui ?? "en"
     readonly property string fallbackLang: Config.language.fallback ?? "en"
 
     property var _active: ({})

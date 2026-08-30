@@ -5,6 +5,7 @@
 -- directly at file scope; always inside this callback.
 
 local config = require("modules.config")
+local paths = require("modules.paths")
 
 hl.on("hyprland.start", function()
     -- Import compositor env, then start the shell as a child of this
@@ -33,11 +34,6 @@ hl.on("hyprland.start", function()
     -- on the second parse once the .so is in.
     hl.exec_cmd("sh -lc 'if [ -d /var/cache/hyprpm/\"$USER\" ]; then hyprpm reload -n; fi'")
 
-    -- Clipboard history backend (see Modules/Cheatsheet + the
-    -- "clipboardHistory" bind in modules/keybinds.lua).
-    hl.exec_cmd("wl-paste --type text --watch cliphist store")
-    hl.exec_cmd("wl-paste --type image --watch cliphist store")
-
     -- Wallpaper daemon, then restore the last (or shipped default) image.
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("sh -lc 'state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; default=\"$HOME/.config/modern/wallpapers/default.jpg\"; if [ -f \"$state\" ]; then img=$(cat \"$state\"); elif [ -f \"$default\" ]; then img=\"$default\"; else exit 0; fi; [ -f \"$img\" ] && awww img \"$img\"'")
@@ -49,7 +45,7 @@ hl.on("hyprland.start", function()
     end
 
     local autostart = config.value("general.autostart", {})
-    local modern_launch = (os.getenv("HOME") or "") .. "/modern_dotfile/scripts/modern-launch"
+    local modern_launch = paths.modern_launch
 
     local function stem(id)
         return tostring(id or ""):gsub("%.desktop$", "")

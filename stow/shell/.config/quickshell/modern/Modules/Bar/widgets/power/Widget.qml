@@ -8,6 +8,7 @@ Item {
     implicitHeight: Config.bar.height
 
     MIconButton {
+        tabFocus: false
         anchors.fill: parent
         iconName: "system-shutdown-symbolic"
         key: "bar.power"

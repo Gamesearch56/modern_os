@@ -1,5 +1,5 @@
-# Accounts & Connections settings section (docs/ARCHITECTURE.md) surfaces
-# these as "connect" affordances. Not part of any default profile — add
-# via `--extra proton` if you want them pulled in automatically.
+# Accounts & Connections settings section surfaces these as "connect"
+# affordances. Not in any default profile — pass `--extra proton` to
+# install.sh to pull them in.
 proton-pass-bin
 proton-mail-bin

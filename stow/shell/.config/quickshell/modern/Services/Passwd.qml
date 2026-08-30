@@ -12,6 +12,7 @@ Singleton {
     id: root
 
     readonly property string loginName: Quickshell.env("USER") || ""
+    property bool watching: false
     property string lastError: ""
     property bool helperPresent: false
     property var users: []
@@ -21,6 +22,8 @@ Singleton {
     property var _queue: []
 
     function refresh() {
+        if (!root.watching)
+            return;
         snapProc.running = true;
         myGroupsProc.running = true;
         helperProc.running = true;
@@ -161,7 +164,7 @@ Singleton {
     Process {
         id: helperProc
         command: ["sh", "-c", "test -x /usr/local/bin/modern-usersd && echo 1 || echo 0"]
-        running: true
+        running: false
         stdout: StdioCollector {
             onStreamFinished: root.helperPresent = this.text.trim() === "1"
         }
@@ -170,7 +173,7 @@ Singleton {
     Process {
         id: snapProc
         command: ["sh", "-c", "getent passwd | awk -F: 'BEGIN{OFS=\"\\t\"} $3>=1000 && $3<60000 {print $1,$3,$4,$5,$6,$7}'; echo ---; getent group | awk -F: 'BEGIN{OFS=\"\\t\"} {print $1,$3,$4}'"]
-        running: true
+        running: false
         stdout: StdioCollector {
             onStreamFinished: root._parseSnap(this.text)
         }
@@ -179,7 +182,7 @@ Singleton {
     Process {
         id: myGroupsProc
         command: ["id", "-nG"]
-        running: true
+        running: false
         stdout: StdioCollector {
             onStreamFinished: root.groups = this.text.trim().split(/\s+/).filter(s => s.length > 0)
         }
@@ -213,5 +216,10 @@ Singleton {
             if (!mutateProc.running)
                 root._drain();
         }
+    }
+
+    onWatchingChanged: {
+        if (root.watching)
+            root.refresh();
     }
 }

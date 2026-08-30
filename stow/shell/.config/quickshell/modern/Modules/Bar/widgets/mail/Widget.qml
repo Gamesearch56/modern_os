@@ -8,6 +8,7 @@ RowLayout {
     spacing: Tokens.spacing.xs
 
     MIconButton {
+        tabFocus: false
         iconName: "mail-unread"
         key: "bar.mail"
         onClicked: {

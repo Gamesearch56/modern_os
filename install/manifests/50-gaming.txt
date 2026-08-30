@@ -6,9 +6,6 @@ lib32-gamemode           # 32-bit gamemode hook for older titles
 gamescope                 # micro-compositor for per-game resolution/upscaling/HDR
 goverlay                  # MangoHud/vkBasalt config GUI
 lib32-mesa                # 32-bit Mesa for Proton/older titles
-lib32-vulkan-radeon        # 32-bit RADV driver
-vulkan-radeon              # RADV Vulkan driver for the RX 9070 XT (RDNA4)
-rocm-hip-sdk               # ROCm/HIP stack, kept from the audited system (compute workloads)
 protontricks               # winetricks helpers scoped to individual Proton prefixes
 proton-vpn-gtk-app         # Proton VPN GUI client (Services/Vpn talks to its NM connection)
 mangohud                   # in-game performance overlay, used by game profiles (docs/GAMING.md)

@@ -73,8 +73,10 @@ RowLayout {
             if (!root._awaiting)
                 return;
             root._awaiting = false;
-            if (!ok)
+            if (!ok) {
+                Notifications.toast(I18n.t("settings.restoreFailed", ({ name: root._name })), "");
                 return;
+            }
             if (Settings.sectionId === "privacy")
                 Notifications.dnd = false;
             Notifications.toast(I18n.t("settings.restoreDone", ({ name: root._name })), "");

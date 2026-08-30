@@ -19,6 +19,9 @@ Singleton {
     property string raw: ""
     property int viewYear: new Date().getFullYear()
     property int viewMonth: new Date().getMonth()
+    property bool _userCommit: false
+
+    signal loadFailed()
 
     readonly property string home: Quickshell.env("HOME")
     property string pendingUrl: ""
@@ -82,6 +85,7 @@ Singleton {
     function commitUrl(url: string) {
         const u = String(url || "").trim();
         const prev = root.icsUrl;
+        root._userCommit = true;
         root.pendingUrl = u;
         if (u === prev)
             root.refresh();
@@ -130,6 +134,12 @@ Singleton {
     }
 
     function _ingest(text: string) {
+        const empty = !text || String(text).length === 0;
+        if (root._userCommit) {
+            root._userCommit = false;
+            if (empty && root.icsUrl.length > 0)
+                root.loadFailed();
+        }
         root.raw = text || "";
         root.events = Ics.parse(root.raw);
         root._recompute();

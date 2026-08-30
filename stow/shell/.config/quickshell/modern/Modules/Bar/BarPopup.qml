@@ -101,16 +101,16 @@ PopupWindow {
         }
     }
 
-    Shortcut {
-        sequence: "Escape"
-        enabled: root.open && !root.hoverBridge
-        context: Qt.ApplicationShortcut
-        onActivated: root.open = false
-    }
-
-    Item {
+    FocusScope {
         id: inner
         anchors.fill: parent
+        focus: root.open && !root.hoverBridge
+        Keys.onPressed: (event) => {
+            if (event.key !== Qt.Key_Escape || !root.open || root.hoverBridge)
+                return;
+            root.open = false;
+            event.accepted = true;
+        }
 
         Item {
             id: bridge

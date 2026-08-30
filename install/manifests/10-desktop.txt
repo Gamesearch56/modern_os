@@ -7,30 +7,23 @@ xdg-desktop-portal-hyprland     # screen share / screenshot portal backend
 xdg-desktop-portal-gtk          # fallback portal backend (file chooser when KDE one is absent)
 quickshell                      # the shell itself — bar, panels, launcher, lock, greeter
 qt6-wayland                     # native Wayland for Qt6 apps (Quickshell, Dolphin)
-qt6-webengine                   # in-shell wallpaper provider (Modules/Wallpaper/Provider)
+qt6-webengine                   # wallpaper provider: separate qml6 + WebEngine process (scripts/wallpaper-provider.sh)
 qt6ct                           # Qt6 theme configuration, written by theme-apply.sh
-qt5-quickcontrols2               # Qt5 QML app compatibility (a few legacy apps still need it)
-qt5-graphicaleffects             # Qt5 QML shader effects, same reason
 networkmanager                  # network management daemon
-network-manager-applet          # tray applet fallback / nmcli GUI helper
-nm-connection-editor             # manual connection editing, used by Settings > Network
 bluez-utils                      # bluetoothctl and friends
-blueman                          # Bluetooth GUI fallback outside our own panel
 kdeconnect                       # Android integration — see Services/KdeConnect
 pipewire                         # audio/video server
 pipewire-alsa                    # ALSA compatibility shim
 pipewire-jack                    # JACK compatibility shim (audio production tools)
 pipewire-pulse                   # PulseAudio compatibility shim (most apps still expect this)
 wireplumber                      # PipeWire session manager, spoken to by Services/Audio
-pavucontrol                      # audio GUI fallback outside our own popup
-wl-clipboard                     # wl-copy/wl-paste, backs the clipboard service
-cliphist                         # clipboard history — see "also worth having" in docs/WIDGETS.md
+wl-clipboard                     # wl-copy/wl-paste for screenshots, file preview, copy
 grim                             # screenshot capture backend
 slurp                            # region selection for screenshots
 swappy                           # screenshot annotation (GTK, follows token gtk.css)
 wf-recorder                      # screen recording backend (Services/Recording)
 ddcutil                         # DDC/CI brightness for external displays — see Services/Brightness
 brightnessctl                    # XF86 brightness keys in modules/keybinds.lua
-kdialog                          # Qt file picker (wallpaper Add); zenity is the GTK fallback
+kdialog                          # Qt file picker (wallpaper Add; pick-directory.sh)
 hyprpicker                       # color picker widget backend
-wtype                            # synthetic key events, used by a couple of launcher providers
+inotify-tools                    # wallpaper-provider.sh watches the download folder

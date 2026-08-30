@@ -1,5 +1,7 @@
 module Services
 singleton Hypr 1.0 Hypr.qml
+HyprMonitors 1.0 HyprMonitors.qml
+HyprWindows 1.0 HyprWindows.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml
 singleton Network 1.0 Network.qml
@@ -21,15 +23,14 @@ singleton FirstRun 1.0 FirstRun.qml
 singleton Overview 1.0 Overview.qml
 singleton Plugins 1.0 Plugins.qml
 singleton Mail 1.0 Mail.qml
-singleton Notes 1.0 Notes.qml
 singleton Weather 1.0 Weather.qml
 singleton Calendar 1.0 Calendar.qml
 singleton Ai 1.0 Ai.qml
+AiStatus 1.0 AiStatus.qml
 singleton Wallpaper 1.0 Wallpaper.qml
 singleton FilePreview 1.0 FilePreview.qml
 singleton FilePick 1.0 FilePick.qml
 singleton Session 1.0 Session.qml
-singleton Drive 1.0 Drive.qml
 singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
 singleton IdleInhibit 1.0 IdleInhibit.qml
@@ -44,7 +45,6 @@ singleton Theme 1.0 Theme.qml
 singleton Passwd 1.0 Passwd.qml
 singleton Storage 1.0 Storage.qml
 singleton Update 1.0 Update.qml
-singleton Locale 1.0 Locale.qml
 singleton Snapshots 1.0 Snapshots.qml
 singleton Firewall 1.0 Firewall.qml
 FirewallParse 1.0 FirewallParse.qml

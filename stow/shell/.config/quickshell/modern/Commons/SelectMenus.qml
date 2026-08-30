@@ -1,4 +1,4 @@
-// One open MSelect / MMultiSelect at a time. Widgets stay stateless
+// One open MSelect at a time. Widgets stay stateless
 // besides calling claim/release; the previous menu closes itself.
 pragma Singleton
 

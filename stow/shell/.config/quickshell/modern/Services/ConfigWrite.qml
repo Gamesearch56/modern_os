@@ -63,7 +63,7 @@ Singleton {
             root._reloadHypr = path === "monitors" || path.indexOf("monitors.") === 0
                 || path === "windows.titlebar" || path === "windowRules"
                 || path === "motion.scale" || path === "motion";
-            proc.command = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "config", "set", path, encoded];
+            proc.command = [Paths.modern, "config", "set", path, encoded];
             proc.running = false;
             Qt.callLater(() => {
                 proc.running = true;
@@ -96,7 +96,7 @@ Singleton {
         root._restoreReloadHypr = false;
         root._restoreChrome = false;
         root._restoreCursor = false;
-        const cmd = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "config", "restore"];
+        const cmd = [Paths.modern, "config", "restore"];
         for (let i = 0; i < list.length; i++) {
             const p = String(list[i]);
             cmd.push(p);
@@ -179,7 +179,7 @@ Singleton {
         interval: Math.max(Motion.mediumMs, 1)
         repeat: false
         onTriggered: Quickshell.execDetached([
-            Quickshell.env("HOME") + "/modern_dotfile/scripts/theme-apply.sh",
+            Paths.script("theme-apply.sh"),
             "--chrome-only"
         ])
     }

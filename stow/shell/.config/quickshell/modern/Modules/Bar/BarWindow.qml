@@ -78,13 +78,6 @@ PanelWindow {
             root._slide = 1;
     }
 
-    Shortcut {
-        sequence: "Escape"
-        enabled: Popups.active !== null
-        context: Qt.WindowShortcut
-        onActivated: Popups.dismiss()
-    }
-
     Timer {
         id: hideTimer
         interval: Math.max(Motion.mediumMs, 1)

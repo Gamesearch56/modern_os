@@ -97,7 +97,6 @@ Item {
     }
 
     MouseArea {
-        z: -1
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: root._activate()
@@ -110,6 +109,7 @@ Item {
         anchors.top: parent.top
         anchors.margins: Tokens.spacing.md
         spacing: Tokens.spacing.xl
+        z: 1
 
         Rectangle {
             visible: root._thumb.length > 0
@@ -163,15 +163,34 @@ Item {
             }
         }
 
-        MIconButton {
-            z: 3
-            Layout.alignment: Qt.AlignTop
-            close: true
-            iconName: "window-close"
-            key: "bar.close"
-            size: Tokens.spacing.xl
-            iconSize: Tokens.icon.sm
-            onClicked: Notifications.dismiss(root.notification)
+        Item {
+            Layout.preferredWidth: Tokens.spacing.xl
+            Layout.preferredHeight: Tokens.spacing.xl
+        }
+    }
+
+    MouseArea {
+        z: 20
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: Tokens.spacing.md
+        width: Tokens.spacing.xl
+        height: Tokens.spacing.xl
+        cursorShape: Qt.PointingHandCursor
+        preventStealing: true
+        Accessible.role: Accessible.Button
+        Accessible.name: I18n.t("bar.close")
+        onClicked: (mouse) => {
+            mouse.accepted = true;
+            Notifications.dismiss(root.notification);
+        }
+
+        MIcon {
+            anchors.centerIn: parent
+            name: "window-close"
+            size: Tokens.icon.sm
+            color: Colors.color.error
+            tint: true
         }
     }
 

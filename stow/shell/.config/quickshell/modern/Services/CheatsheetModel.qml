@@ -34,7 +34,7 @@ Singleton {
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
         screenshotFull: "screenshots", colorPicker: "screenshots",
         cheatsheet: "system", powerMenu: "system", controlCenter: "system", exitSession: "system",
-        gameMode: "system", clipboardHistory: "utilities", filePreview: "utilities"
+        filePreview: "utilities"
     })
 
     function rows(filter: string): var {
@@ -43,6 +43,8 @@ Singleton {
         const out = [];
         for (const action in binds) {
             if (action.charAt(0) === "_")
+                continue;
+            if (action === "gameMode")
                 continue;
             const combo = binds[action];
             if (typeof combo !== "string")

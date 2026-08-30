@@ -4,13 +4,15 @@ import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 
-MCard {
+MStatusCard {
     id: root
 
-    Layout.fillWidth: true
-    level: 0
-    implicitHeight: body.implicitHeight + Tokens.spacing.md * 2
-    Layout.preferredHeight: implicitHeight
+    iconName: Battery.hasBattery ? Battery.iconName : "ac-adapter"
+    iconColor: Colors.color.primary
+    titleValue: Battery.hasBattery
+        ? I18n.t("settings.energyBattery", ({ n: Battery.percent }))
+        : I18n.t("settings.energy.onAc")
+    subtitleValue: Battery.hasBattery ? root._subtitle : ""
 
     readonly property string _subtitle: {
         if (!Battery.hasBattery)
@@ -22,82 +24,45 @@ MCard {
         return I18n.t("settings.energy.pluggedIn");
     }
 
-    ColumnLayout {
-        id: body
-        width: parent.width
-        spacing: Tokens.spacing.md
+    detail: Flow {
+        visible: Battery.hasBattery && (Battery.timeLabel.length > 0 || Battery.rateWatts > 0)
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.xs
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Tokens.spacing.lg
-
-            MIcon {
-                name: Battery.hasBattery ? Battery.iconName : "ac-adapter"
-                size: Tokens.spacing.xxl * 2
-                color: Colors.color.primary
-                tint: true
-            }
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.xs
-
-                MText {
-                    value: Battery.hasBattery
-                        ? I18n.t("settings.energyBattery", ({ n: Battery.percent }))
-                        : I18n.t("settings.energy.onAc")
-                    styleName: "titleLarge"
-                    Layout.fillWidth: true
-                }
-                MText {
-                    visible: Battery.hasBattery
-                    value: root._subtitle
-                    styleName: "bodyMedium"
-                    color: Colors.color.onSurfaceVariant
-                    Layout.fillWidth: true
-                }
-                Flow {
-                    visible: Battery.hasBattery && (Battery.timeLabel.length > 0 || Battery.rateWatts > 0)
-                    Layout.fillWidth: true
-                    Layout.topMargin: Tokens.spacing.sm
-                    spacing: Tokens.spacing.xs
-
-                    Rectangle {
-                        visible: Battery.timeLabel.length > 0
-                        implicitHeight: Tokens.spacing.xl
-                        implicitWidth: timeLab.implicitWidth + Tokens.spacing.md * 2
-                        radius: Tokens.radius.full
-                        color: Colors.color.surfaceContainerHighest
-                        MText {
-                            id: timeLab
-                            anchors.centerIn: parent
-                            value: Battery.timeLabel
-                            styleName: "labelLarge"
-                        }
-                    }
-                    Rectangle {
-                        visible: Battery.rateWatts > 0
-                        implicitHeight: Tokens.spacing.xl
-                        implicitWidth: wattLab.implicitWidth + Tokens.spacing.md * 2
-                        radius: Tokens.radius.full
-                        color: Colors.color.surfaceContainerHighest
-                        MText {
-                            id: wattLab
-                            anchors.centerIn: parent
-                            value: I18n.t("settings.energy.watts", ({ n: Math.round(Battery.rateWatts * 10) / 10 }))
-                            styleName: "labelLarge"
-                        }
-                    }
-                }
+        Rectangle {
+            visible: Battery.timeLabel.length > 0
+            implicitHeight: Tokens.spacing.xl
+            implicitWidth: timeLab.implicitWidth + Tokens.spacing.md * 2
+            radius: Tokens.radius.full
+            color: Colors.color.surfaceContainerHighest
+            MText {
+                id: timeLab
+                anchors.centerIn: parent
+                value: Battery.timeLabel
+                styleName: "labelLarge"
             }
         }
-
-        Loader {
-            active: Battery.hasBattery
-            visible: active
-            Layout.fillWidth: true
-            Layout.preferredHeight: active ? Tokens.spacing.xxl + Tokens.spacing.md : 0
-            sourceComponent: spark
+        Rectangle {
+            visible: Battery.rateWatts > 0
+            implicitHeight: Tokens.spacing.xl
+            implicitWidth: wattLab.implicitWidth + Tokens.spacing.md * 2
+            radius: Tokens.radius.full
+            color: Colors.color.surfaceContainerHighest
+            MText {
+                id: wattLab
+                anchors.centerIn: parent
+                value: I18n.t("settings.energy.watts", ({ n: Math.round(Battery.rateWatts * 10) / 10 }))
+                styleName: "labelLarge"
+            }
         }
+    }
+
+    Loader {
+        active: Battery.hasBattery
+        visible: active
+        Layout.fillWidth: true
+        Layout.preferredHeight: active ? Tokens.spacing.xxl + Tokens.spacing.md : 0
+        sourceComponent: spark
     }
 
     Component {

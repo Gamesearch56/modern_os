@@ -13,6 +13,10 @@ Item {
     signal upPressed()
     signal downPressed()
 
+    function focusInput() {
+        field.forceActiveFocus();
+    }
+
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.md + Tokens.spacing.xs * 2
 

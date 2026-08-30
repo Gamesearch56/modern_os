@@ -36,4 +36,11 @@ ColumnLayout {
             ConfigWrite.set("accounts.calendarIcsUrl", u);
         Calendar.commitUrl(u);
     }
+
+    Connections {
+        target: Calendar
+        function onLoadFailed() {
+            Notifications.toast(I18n.t("settings.privacy.icsFailed"), "");
+        }
+    }
 }

@@ -25,12 +25,12 @@ Singleton {
             return "bar";
         if (id === "windows")
             return "design";
-        if (id === "gaming")
-            return "system";
         if (id === "display")
             return "displays";
         if (id === "screenshot")
             return "screenshots";
+        if (id === "gaming")
+            return "overview";
         return id;
     }
 
@@ -40,8 +40,6 @@ Singleton {
         root.subsectionId = subsection || "";
         if (id === "design" && (section === "windows" || subsection === "windows"))
             root.subsectionId = "windows";
-        if (id === "system" && (section === "gaming" || subsection === "gaming"))
-            root.subsectionId = "gaming";
         root.open = true;
     }
 

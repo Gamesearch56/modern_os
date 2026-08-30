@@ -38,11 +38,11 @@ Singleton {
 
     function apply() {
         if (root.enabled) {
-            Quickshell.execDetached(["sh", "-lc", "pgrep -u \"$USER\" -x kdeconnectd >/dev/null || kdeconnectd &"]);
+            Quickshell.execDetached(["kdeconnectd"]);
             Qt.callLater(() => root.refresh());
             return;
         }
-        Quickshell.execDetached(["sh", "-lc", "pkill -u \"$USER\" -x kdeconnectd || true"]);
+        Quickshell.execDetached(["pkill", "-u", Quickshell.env("USER") || "", "-x", "kdeconnectd"]);
         root.devices = [];
     }
 

@@ -6,7 +6,6 @@ ttf-liberation          # metric-compatible fallback for documents expecting Ari
 noto-fonts              # broad Unicode coverage fallback
 noto-fonts-cjk          # CJK fallback (kept from the audited system)
 noto-fonts-emoji        # emoji rendering everywhere, including the launcher's `:` emoji mode
-woff2-font-awesome      # icon font used by a couple of legacy-styled web views
 qt6-svg                 # SVG decode for Papirus/Adwaita icons in Quickshell IconImage
 papirus-icon-theme      # gtk-icon-theme-name / qt6ct / config.json design.iconTheme
 breeze                  # Dolphin widget style (modern-launch QT_STYLE_OVERRIDE); ColorScheme=modern, no QSS

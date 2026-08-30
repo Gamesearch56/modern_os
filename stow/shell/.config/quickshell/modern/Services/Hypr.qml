@@ -45,6 +45,24 @@ Singleton {
 
     readonly property bool _lua: Hyprland.usingLua === true
 
+    HyprMonitors {
+        id: dump
+        host: root
+    }
+
+    property alias monitorDump: dump.monitorDump
+    property alias monitorGen: dump.monitorGen
+
+    function refreshMonitorDump() { dump.refreshMonitorDump(); }
+    function parseMode(spec: string): var { return dump.parseMode(spec); }
+    function hzFor(mon: var): int { return dump.hzFor(mon); }
+    function resolutionsFor(mon: var): var { return dump.resolutionsFor(mon); }
+    function ratesFor(mon: var, w: int, h: int): var { return dump.ratesFor(mon, w, h); }
+    function bestMode(mon: var, w: int, h: int, preferHz: real): string {
+        return dump.bestMode(mon, w, h, preferHz);
+    }
+    function monitorByDesc(desc: string): var { return dump.monitorByDesc(desc); }
+
     function dispatch(cmd: string) {
         try {
             Hyprland.dispatch(cmd);
@@ -147,195 +165,21 @@ Singleton {
         }
     }
 
-    function focusWindow(address: string) {
-        const addr = String(address || "");
-        if (!addr.length)
-            return;
-        if (root._lua)
-            root.dispatch("hl.dsp.focus({ window = \"address:" + addr + "\" })");
-        else
-            root.dispatch("focuswindow address:" + addr);
+    HyprWindows {
+        id: wins
+        host: root
     }
 
-    function activateWindow(address: string) {
-        const addr = String(address || "");
-        if (!addr.length)
-            return;
-        const t = root.toplevelByAddress(addr);
-        const wsId = t && t.workspace ? Number(t.workspace.id) : 0;
-        const ipc = t ? t.lastIpcObject : null;
-        const hidden = !!(ipc && (ipc.hidden === true || ipc.mapped === false));
-        if (wsId < 0 || hidden)
-            root.moveToCurrentWorkspace(addr);
-        else if (wsId > 0)
-            root.focusWorkspace(wsId);
-        root.focusWindow(addr);
-    }
-
-    function moveToCurrentWorkspace(address: string) {
-        const addr = String(address || "");
-        if (!addr.length)
-            return;
-        const fw = root.focusedWorkspace;
-        const id = (fw && Number(fw.id) > 0) ? Number(fw.id) : 1;
-        if (root._lua)
-            root.dispatch("hl.dsp.window.move({ workspace = " + id + ", window = \"address:" + addr + "\" })");
-        else
-            root.dispatch("movetoworkspace " + id + ",address:" + addr);
-    }
-
-    function moveToBackground(address: string) {
-        const addr = String(address || "");
-        if (!addr.length)
-            return;
-        if (root._lua)
-            root.dispatch("hl.dsp.window.move({ workspace = \"special:background\", silent = true, window = \"address:" + addr + "\" })");
-        else
-            root.dispatch("movetoworkspacesilent special:background,address:" + addr);
-    }
-
-    function raiseDesktop(desktopId: string): bool {
-        const id = String(desktopId || "");
-        if (!id.length)
-            return false;
-        if (root._raiseMatching(id, true))
-            return true;
-        return root._raiseMatching(id, false);
-    }
-
-    function _raiseMatching(desktopId: string, classOnly: bool): bool {
-        const list = Hyprland.toplevels?.values ?? [];
-        for (let i = 0; i < list.length; i++) {
-            const t = list[i];
-            if (!t)
-                continue;
-            const ok = classOnly ? root._windowMatchesClass(t, desktopId) : root._windowMatchesDesktop(t, desktopId);
-            if (!ok)
-                continue;
-            root.activateWindow(String(t.address || ""));
-            return true;
-        }
-        return false;
-    }
-
-    function _normId(s: string): string {
-        return String(s || "").replace(/\.desktop$/i, "").toLowerCase().replace(/[\s._-]+/g, "");
-    }
-
-    function _classFields(toplevel: var): var {
-        const ipc = toplevel.lastIpcObject || ({});
-        return [ipc.class, ipc.initialClass, toplevel.class, toplevel.initialClass];
-    }
-
-    function _windowMatchesClass(toplevel: var, desktopId: string): bool {
-        const needle = root._normId(desktopId);
-        if (!needle.length)
-            return false;
-        const fields = root._classFields(toplevel);
-        for (let i = 0; i < fields.length; i++) {
-            const n = root._normId(String(fields[i] || ""));
-            if (!n.length)
-                continue;
-            if (n === needle)
-                return true;
-            if (needle.length >= 5 && n.indexOf(needle) !== -1)
-                return true;
-            if (n.length >= 5 && needle.indexOf(n) !== -1)
-                return true;
-        }
-        return false;
-    }
-
-    function _windowMatchesDesktop(toplevel: var, desktopId: string): bool {
-        if (root._windowMatchesClass(toplevel, desktopId))
-            return true;
-        const needle = root._normId(desktopId);
-        if (!needle.length)
-            return false;
-        const ipc = toplevel.lastIpcObject || ({});
-        const fields = [ipc.title, toplevel.title];
-        for (let i = 0; i < fields.length; i++) {
-            const n = root._normId(String(fields[i] || ""));
-            if (!n.length)
-                continue;
-            if (n === needle)
-                return true;
-            if (needle.length >= 5 && n.indexOf(needle) !== -1)
-                return true;
-            if (n.length >= 5 && needle.indexOf(n) !== -1)
-                return true;
-        }
-        return false;
-    }
-
-    function toplevelByAddress(address: string): var {
-        const addr = String(address || "");
-        const list = Hyprland.toplevels?.values ?? [];
-        for (let i = 0; i < list.length; i++) {
-            if (list[i] && String(list[i].address || "") === addr)
-                return list[i];
-        }
-        return null;
-    }
-
-    function closeWindow(address: string) {
-        const addr = String(address || "");
-        if (!addr.length) {
-            if (root._lua)
-                root.dispatch("hl.dsp.window.close()");
-            else
-                root.dispatch("killactive");
-            return;
-        }
-        if (root._lua)
-            root.dispatch("hl.dsp.window.close({ window = \"address:" + addr + "\" })");
-        else
-            root.dispatch("closewindow address:" + addr);
-    }
-
-    function windowOnScreen(toplevel: var, screen: var): bool {
-        const mon = root.monitorForScreen(screen);
-        if (!mon || !toplevel)
-            return true;
-        const ipc = toplevel.lastIpcObject;
-        const wsId = toplevel.workspace ? Number(toplevel.workspace.id) : 0;
-        const hidden = !!(ipc && (ipc.hidden === true || ipc.mapped === false));
-        const special = wsId < 0;
-        if (ipc && ipc.monitor !== undefined && ipc.monitor !== null && ipc.monitor !== "") {
-            const mid = Number(ipc.monitor);
-            if (!Number.isNaN(mid) && mid < 0)
-                return root._taskbarOnFocused(screen);
-            if (!Number.isNaN(mid) && mon.id !== undefined && Number(mon.id) === mid)
-                return true;
-            if (String(ipc.monitor) === String(mon.name))
-                return true;
-            return false;
-        }
-        if (hidden || special)
-            return root._taskbarOnFocused(screen);
-        return root._onMonitor(toplevel.workspace, mon);
-    }
-
-    function _taskbarOnFocused(screen: var): bool {
-        const name = screen && screen.name ? String(screen.name) : "";
-        if (!name.length)
-            return true;
-        return name === root.focusedMonitorName();
-    }
-
-    function toggleFloating(address: string) {
-        const addr = String(address || "");
-        if (!addr.length)
-            return;
-        root.dispatch("togglefloating address:" + addr);
-    }
-
-    function toggleFullscreen(address: string) {
-        const addr = String(address || "");
-        if (!addr.length)
-            return;
-        root.dispatch("fullscreen 0,address:" + addr);
-    }
+    function focusWindow(address: string) { wins.focusWindow(address); }
+    function activateWindow(address: string) { wins.activateWindow(address); }
+    function moveToCurrentWorkspace(address: string) { wins.moveToCurrentWorkspace(address); }
+    function moveToBackground(address: string) { wins.moveToBackground(address); }
+    function raiseDesktop(desktopId: string): bool { return wins.raiseDesktop(desktopId); }
+    function toplevelByAddress(address: string): var { return wins.toplevelByAddress(address); }
+    function closeWindow(address: string) { wins.closeWindow(address); }
+    function windowOnScreen(toplevel: var, screen: var): bool { return wins.windowOnScreen(toplevel, screen); }
+    function toggleFloating(address: string) { wins.toggleFloating(address); }
+    function toggleFullscreen(address: string) { wins.toggleFullscreen(address); }
 
     function reload() {
         if (root._lua)
@@ -371,7 +215,7 @@ Singleton {
             return;
         const n = size > 0 ? size : 24;
         Quickshell.execDetached([
-            Quickshell.env("HOME") + "/modern_dotfile/scripts/cursor-apply.sh",
+            Paths.script("cursor-apply.sh"),
             t, String(n)
         ]);
     }
@@ -616,130 +460,6 @@ Singleton {
         return shown;
     }
 
-    property var monitorDump: []
-    property int monitorGen: 0
-
-    function refreshMonitorDump() {
-        dumpProc.running = false;
-        Qt.callLater(() => {
-            dumpProc.running = true;
-        });
-    }
-
-    function _ipc(mon: var): var {
-        if (!mon)
-            return ({});
-        const desc = String(mon.description || "");
-        const dump = root.monitorDump || [];
-        for (let i = 0; i < dump.length; i++) {
-            if (String(dump[i].description || "") === desc)
-                return dump[i];
-        }
-        const ipc = mon.lastIpcObject;
-        if (ipc && typeof ipc === "object")
-            return ipc;
-        return ({});
-    }
-
-    function parseMode(spec: string): var {
-        const s = String(spec || "");
-        const m = s.match(/^(\d+)x(\d+)@([\d.]+)/);
-        if (!m)
-            return null;
-        return {
-            w: Number(m[1]),
-            h: Number(m[2]),
-            hz: Number(m[3]),
-            mode: m[1] + "x" + m[2] + "@" + m[3]
-        };
-    }
-
-    function hzFor(mon: var): int {
-        const ipc = root._ipc(mon);
-        let hz = Number(ipc.refreshRate ?? 0);
-        if (!(hz > 1))
-            hz = Number(mon?.refreshRate ?? 0);
-        if (hz > 1)
-            return Math.round(hz);
-        const modes = root._modesRaw(mon);
-        if (modes.length) {
-            const p = root.parseMode(modes[0]);
-            return p ? Math.round(p.hz) : 0;
-        }
-        return 0;
-    }
-
-    function _modesRaw(mon: var): var {
-        const ipc = root._ipc(mon);
-        if (ipc.availableModes && ipc.availableModes.length)
-            return ipc.availableModes;
-        if (mon && mon.availableModes && mon.availableModes.length)
-            return mon.availableModes;
-        return [];
-    }
-
-    function resolutionsFor(mon: var): var {
-        const seen = ({});
-        const out = [];
-        const modes = root._modesRaw(mon);
-        for (let i = 0; i < modes.length; i++) {
-            const p = root.parseMode(modes[i]);
-            if (!p)
-                continue;
-            const key = p.w + "x" + p.h;
-            if (seen[key])
-                continue;
-            seen[key] = true;
-            out.push({ value: key, titleValue: p.w + " × " + p.h, w: p.w, h: p.h });
-        }
-        return out;
-    }
-
-    function ratesFor(mon: var, w: int, h: int): var {
-        const seen = ({});
-        const out = [];
-        const modes = root._modesRaw(mon);
-        for (let i = 0; i < modes.length; i++) {
-            const p = root.parseMode(modes[i]);
-            if (!p || p.w !== w || p.h !== h)
-                continue;
-            const key = String(p.hz);
-            if (seen[key])
-                continue;
-            seen[key] = true;
-            out.push({
-                value: key,
-                titleValue: Math.round(p.hz) + " Hz",
-                hz: p.hz,
-                mode: p.mode
-            });
-        }
-        out.sort((a, b) => b.hz - a.hz);
-        return out;
-    }
-
-    function bestMode(mon: var, w: int, h: int, preferHz: real): string {
-        const rates = root.ratesFor(mon, w, h);
-        if (!rates.length)
-            return "";
-        const want = Number(preferHz);
-        for (let i = 0; i < rates.length; i++) {
-            if (Math.abs(rates[i].hz - want) < 0.6)
-                return rates[i].mode;
-        }
-        return rates[0].mode;
-    }
-
-    function monitorByDesc(desc: string): var {
-        const want = String(desc || "");
-        const list = root.monitors?.values ?? [];
-        for (let i = 0; i < list.length; i++) {
-            if (String(list[i].description || "") === want)
-                return list[i];
-        }
-        return null;
-    }
-
     readonly property int monitorCount: {
         void root.monitors;
         return (root.monitors?.values ?? []).length;
@@ -750,23 +470,6 @@ Singleton {
     Component.onCompleted: {
         root.refreshToplevels();
         root.refreshMonitorDump();
-    }
-
-    Process {
-        id: dumpProc
-        running: false
-        command: ["hyprctl", "-j", "monitors"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const j = JSON.parse(this.text);
-                    root.monitorDump = Array.isArray(j) ? j : [];
-                } catch (e) {
-                    root.monitorDump = [];
-                }
-                root.monitorGen++;
-            }
-        }
     }
 
     Process {
@@ -783,7 +486,7 @@ Singleton {
     Process {
         id: cursorProc
         running: false
-        command: [Quickshell.env("HOME") + "/modern_dotfile/scripts/cursor-themes.sh"]
+        command: [Paths.script("cursor-themes.sh")]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.cursorThemes = this.text.trim().split("\n").filter(s => s.length > 0);

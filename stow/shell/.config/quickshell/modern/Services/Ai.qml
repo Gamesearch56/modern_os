@@ -37,6 +37,11 @@ Singleton {
         function hide() { root.hide(); }
     }
 
+    AiStatus {
+        id: status
+        ai: root
+    }
+
     Process {
         id: proc
         running: false
@@ -61,14 +66,6 @@ Singleton {
         }
     }
 
-    Process {
-        id: statusProc
-        stdout: StdioCollector {
-            id: statusOut
-            onStreamFinished: root._parseStatus(this.text)
-        }
-    }
-
     Timer {
         interval: 4000
         running: root.watching && !root.busy
@@ -79,14 +76,7 @@ Singleton {
     Component.onCompleted: root.refreshStatus()
 
     function refreshStatus() {
-        if (statusProc.running || root.busy)
-            return;
-        statusProc.command = ["sh", "-c", "command -v ollama >/dev/null 2>&1 && printf 'INSTALLED\\n'; curl -sf --max-time 1 http://127.0.0.1:11434/api/tags || true"];
-        statusProc.running = false;
-        Qt.callLater(() => {
-            if (!root.busy)
-                statusProc.running = true;
-        });
+        status.refresh();
     }
 
     function modelChoices(): var {
@@ -108,7 +98,6 @@ Singleton {
 
     function _parseStatus(text: string) {
         const raw = String(text || "");
-        root.installed = raw.indexOf("INSTALLED") !== -1;
         const brace = raw.indexOf("{");
         let names = [];
         let on = false;
@@ -258,7 +247,6 @@ Singleton {
         if (reply.length === 0) {
             const msg = root._errorText();
             root.lastError = msg;
-            Logger.error("Ai", msg);
             root.history = root.history.concat([{ role: "assistant", text: msg }]);
             return;
         }

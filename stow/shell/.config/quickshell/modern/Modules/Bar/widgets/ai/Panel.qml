@@ -35,13 +35,6 @@ Item {
         field.forceActiveFocus();
     }
 
-    Shortcut {
-        sequence: "Escape"
-        enabled: Ai.panelOpen
-        context: Qt.ApplicationShortcut
-        onActivated: root._close()
-    }
-
     function _close() {
         Ai.hide();
         Popups.dismiss();

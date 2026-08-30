@@ -6,13 +6,12 @@
 //
 // Every property below mirrors stow/modern/.config/modern/config.default.json
 // 1:1 — that file is the authoritative schema; this is its QML-typed
-// reflection. Sections with a fixed, simple shape are declared as typed
-// JsonObject sub-adapters (get individual change signals, e.g.
-// `onScaleChanged`); sections that are free-form, widget-specific, or not
-// yet consumed anywhere use a plain `var` blob instead of hand-typing
-// every nested key twice — see docs/DECISIONS.md. Promote a `var` section
-// to a typed JsonObject once a consumer needs granular reactivity on one
-// of its keys specifically.
+// reflection. Typed JsonObject sections get QML fallbacks; `var` blobs
+// (keybinds, widgets, windowRules, monitors, …) are replaced wholesale
+// by the live JSON object and are not deep-merged. Restore missing keys
+// from config.default.json after a shipped-key add. Promote a `var`
+// section to a typed JsonObject when a consumer needs granular
+// reactivity on one of its keys.
 pragma Singleton
 
 import Quickshell
@@ -96,7 +95,7 @@ Singleton {
             }
 
             property JsonObject language: JsonObject {
-                property string ui: "de" // JSON key "ui", not "interface" — reserved QML identifier, see docs/DECISIONS.md
+                property string ui: "en" // JSON key "ui", not "interface" — reserved QML identifier, see docs/DECISIONS.md
                 property string fallback: "en"
                 property string dateFormat: "DD.MM.YYYY"
                 property string timeFormat: "HH:mm"
@@ -124,7 +123,7 @@ Singleton {
             // widget reads its own key (e.g. Config.widgets.clock).
             property var widgets: ({
                 clock: { dateFormat: "DD.MM.YYYY", timeFormat: "HH:mm", showSeconds: false, showWeekday: false },
-                weather: { locationMode: "auto", manualLocation: "", units: "metric" },
+                weather: { locationMode: "auto", manualLocation: "", units: "metric", pollIntervalMs: 600000 },
                 performance: { pollIntervalMs: 2000, showGpu: true, showTemps: true },
                 audio: { scrollStepPercent: 5, scrollStepFinePercent: 1 }
             })
@@ -134,7 +133,19 @@ Singleton {
             // "Monitors". Free-form since the key set is per-machine.
             property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "dynamic" })
 
-            property var windowRules: []
+            property var windowRules: [
+                {
+                    name: "steam-game",
+                    match: { class: "steam_app_.*" },
+                    workspace: "special:game",
+                    fullscreen: true
+                },
+                {
+                    name: "jetbrains-dialogs",
+                    match: { class: "jetbrains-.*", title: "win0" },
+                    float: true
+                }
+            ]
 
             property JsonObject windows: JsonObject {
                 property bool titlebar: true
@@ -220,14 +231,6 @@ Singleton {
                 ai: { provider: "none", ollamaModel: "llama3" }
             })
 
-            property var gaming: ({
-                profiles: ({}),
-                protonWayland: false,
-                hdrSession: false,
-                systemFixes: { vmMaxMapCount: true, fileDescriptorLimits: true, splitLockMitigate: false },
-                optiscaler: { trackedGames: ({}) }
-            })
-
             property JsonObject backup: JsonObject {
                 property bool snapperEnabled: false
                 property bool resticEnabled: false
@@ -243,6 +246,7 @@ Singleton {
                 aiChat: "SUPER + A",
                 powerMenu: "SUPER + M",
                 controlCenter: "SUPER + L",
+                exitSession: "SUPER + SHIFT + M",
                 cheatsheet: "SUPER + K",
                 settings: "SUPER + I",
                 wallpaperPicker: "SUPER + W",
@@ -278,9 +282,7 @@ Singleton {
                 screenshotRegion: "PRINT",
                 screenshotWindow: "SHIFT + PRINT",
                 screenshotFull: "SUPER + PRINT",
-                gameMode: "SUPER + G",
                 colorPicker: "SUPER + SHIFT + C",
-                clipboardHistory: "SUPER + SHIFT + V",
                 filePreview: "SPACE"
             })
         }
@@ -305,7 +307,6 @@ Singleton {
     readonly property alias network: adapter.network
     readonly property alias kdeconnect: adapter.kdeconnect
     readonly property alias accounts: adapter.accounts
-    readonly property alias gaming: adapter.gaming
     readonly property alias backup: adapter.backup
     readonly property alias keybinds: adapter.keybinds
 }

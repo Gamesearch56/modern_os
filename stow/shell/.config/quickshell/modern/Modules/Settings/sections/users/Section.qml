@@ -13,62 +13,36 @@ Item {
 
     implicitHeight: col.implicitHeight
 
+    Component.onCompleted: Passwd.watching = true
+    Component.onDestruction: Passwd.watching = false
+
     ColumnLayout {
         id: col
         width: parent.width
         spacing: Tokens.spacing.md
 
-        MCard {
-            id: hero
-            Layout.fillWidth: true
-            level: 0
-            implicitHeight: heroRow.implicitHeight + Tokens.spacing.md * 2
+        MStatusCard {
+            avatarSource: User.faceUrl
+            titleValue: User.displayName
+            subtitleValue: User.loginName
 
-            RowLayout {
-                id: heroRow
-                anchors.left: parent.left
-                anchors.right: parent.right
-                spacing: Tokens.spacing.lg
-
-                MAvatar {
-                    size: Tokens.spacing.xxl * 3
-                    source: User.faceUrl
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: Tokens.spacing.xs
-
-                    MText {
-                        value: User.displayName
-                        styleName: "titleLarge"
-                        Layout.fillWidth: true
-                    }
-                    MText {
-                        value: User.loginName
-                        styleName: "bodyMedium"
-                        color: Colors.color.onSurfaceVariant
-                        Layout.fillWidth: true
-                    }
-                    Flow {
-                        Layout.fillWidth: true
-                        Layout.topMargin: Tokens.spacing.sm
-                        spacing: Tokens.spacing.xs
-                        Repeater {
-                            model: Passwd.groups.length
-                            Rectangle {
-                                required property int index
-                                readonly property string name: Passwd.groups[index] || ""
-                                implicitHeight: Tokens.spacing.xl
-                                implicitWidth: lab.implicitWidth + Tokens.spacing.md * 2
-                                radius: Tokens.radius.full
-                                color: Colors.color.surfaceContainerHighest
-                                MText {
-                                    id: lab
-                                    anchors.centerIn: parent
-                                    value: name
-                                    styleName: "labelLarge"
-                                }
-                            }
+            detail: Flow {
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.xs
+                Repeater {
+                    model: Passwd.groups.length
+                    Rectangle {
+                        required property int index
+                        readonly property string name: Passwd.groups[index] || ""
+                        implicitHeight: Tokens.spacing.xl
+                        implicitWidth: lab.implicitWidth + Tokens.spacing.md * 2
+                        radius: Tokens.radius.full
+                        color: Colors.color.surfaceContainerHighest
+                        MText {
+                            id: lab
+                            anchors.centerIn: parent
+                            value: name
+                            styleName: "labelLarge"
                         }
                     }
                 }

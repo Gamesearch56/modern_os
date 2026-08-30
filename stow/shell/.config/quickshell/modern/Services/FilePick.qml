@@ -11,7 +11,7 @@ Singleton {
     id: root
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string script: root.home + "/modern_dotfile/scripts/pick-directory.sh"
+    readonly property string script: Paths.script("pick-directory.sh")
 
     signal directoryPicked(string path, string key)
     signal pickFinished(string section)

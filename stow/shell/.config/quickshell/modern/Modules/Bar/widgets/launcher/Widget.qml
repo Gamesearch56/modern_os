@@ -8,6 +8,7 @@ Item {
     implicitHeight: Config.bar.height
 
     MIconButton {
+        tabFocus: false
         anchors.fill: parent
         iconName: "view-app-grid-symbolic"
         key: "bar.launcher"

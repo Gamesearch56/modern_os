@@ -17,6 +17,10 @@ Item {
         return c.filtered(root.query);
     }
 
+    function focusSearch() {
+        search.forceActiveFocus();
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: Tokens.spacing.md

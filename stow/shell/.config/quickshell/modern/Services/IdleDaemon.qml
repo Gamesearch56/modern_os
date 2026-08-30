@@ -10,7 +10,7 @@ Singleton {
     id: root
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string bright: root.home + "/modern_dotfile/scripts/brightness.sh"
+    readonly property string bright: Paths.script("brightness.sh")
 
     readonly property int dimSec: Config.general.idleTimings.dimSec ?? 120
     readonly property int offSec: Config.general.idleTimings.screenOffSec ?? 300

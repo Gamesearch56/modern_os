@@ -8,17 +8,15 @@
 -- from hl.dsp.*, per wiki.hypr.land's 0.55+ Lua dispatcher reference.
 
 local config = require("modules.config")
+local paths = require("modules.paths")
+local xkb = require("modules.xkb")
 
 local function combo(action)
     return config.value("keybinds." .. action, nil)
 end
 
--- Hyprland's own PATH often lacks ~/.bashrc. Scripts live in the checkout.
-local modern = (os.getenv("HOME") or "") .. "/modern_dotfile/scripts/modern"
-
--- gtk-launch inherits Hyprland's environ; hl.env() does not stick on
--- reload, so prefix the Qt theme or Dolphin/Vivaldi open unthemed.
-local modern_launch = (os.getenv("HOME") or "") .. "/modern_dotfile/scripts/modern-launch"
+local modern = paths.modern
+local modern_launch = paths.modern_launch
 
 local function app_cmd(role, fallback)
     local id = config.value("apps.defaults." .. role, fallback) or fallback
@@ -53,21 +51,12 @@ local function move_ws(n)
     end
 end
 
--- Number-row keycodes 10–19 are the same on de/us. Shift+1 is "!" on
--- German, so "SUPER + SHIFT + 1" never matches the physical key.
 local function number_row_code(n)
-    if n == 10 then
-        return "code:19"
-    end
-    return "code:" .. tostring(9 + n)
+    return xkb.number_row_code(n)
 end
 
 local function default_number_combo(n, shift)
-    local digit = (n == 10) and "0" or tostring(n)
-    if shift then
-        return "SUPER + SHIFT + " .. digit
-    end
-    return "SUPER + " .. digit
+    return xkb.default_number_combo(n, shift)
 end
 
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
@@ -130,9 +119,7 @@ local bindings = {
     screenshotRegion = hl.dsp.exec_cmd(modern .. " screenshot region"),
     screenshotWindow = hl.dsp.exec_cmd(modern .. " screenshot window"),
     screenshotFull = hl.dsp.exec_cmd(modern .. " screenshot full"),
-    gameMode = hl.dsp.exec_cmd(modern .. " game mode toggle"),
     colorPicker = hl.dsp.exec_cmd("hyprpicker -a"),
-    clipboardHistory = hl.dsp.exec_cmd(modern .. " clipboard show"),
     filePreview = hl.dsp.exec_cmd(modern .. " filepreview"),
 }
 
@@ -149,18 +136,9 @@ for action, dispatcher in pairs(bindings) do
                 skip = true
             end
         end
-        -- Same as the number row: letter names can fail to register
-        -- (hyprctl binds showed no SUPER+A). Hyprland `code:` is XKB
-        -- (evdev + 8); KEY_A is 38 on us and de.
-        if action == "aiChat" and key == "SUPER + A" then
-            hl.bind("SUPER + code:38", dispatcher)
-            skip = true
-        end
-        -- Entf/Delete: XKB 119 (evdev KEY_DELETE 111 + 8). Binding
-        -- 111 would be Up and leave Entf unbound — terminals then
-        -- print the CSI Delete tail "~".
-        if action == "taskbar" and key == "SUPER + DELETE" then
-            hl.bind("SUPER + code:119", dispatcher)
+        local named = xkb.named[action]
+        if named and key == named.combo then
+            hl.bind(named.bind, dispatcher)
             skip = true
         end
         if not skip then

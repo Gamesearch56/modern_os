@@ -11,6 +11,8 @@ Item {
     property bool open: true
     property string titleKey: ""
     property string titleValue: ""
+    property string subtitleKey: ""
+    property alias headerExtra: extraRow.data
     property int elevation: 3
     property real cardWidth: Tokens.spacing.xxl * 16
     property real cardHeight: Tokens.spacing.xxl * 14
@@ -103,11 +105,30 @@ Item {
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.sm
 
-                MText {
-                    key: root.titleKey
-                    value: root.titleValue
-                    styleName: "headlineSmall"
+                ColumnLayout {
                     Layout.fillWidth: true
+                    spacing: Tokens.spacing.xs
+
+                    MText {
+                        key: root.titleKey
+                        value: root.titleValue
+                        styleName: "headlineSmall"
+                        Layout.fillWidth: true
+                    }
+                    MText {
+                        visible: root.subtitleKey.length > 0
+                        key: root.subtitleKey
+                        styleName: "bodyMedium"
+                        color: Colors.color.onSurfaceVariant
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                    }
+                }
+
+                RowLayout {
+                    id: extraRow
+                    spacing: Tokens.spacing.xs
+                    visible: children.length > 0
                 }
 
                 MButton {

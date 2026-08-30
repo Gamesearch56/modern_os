@@ -72,11 +72,12 @@ Item {
         onTextChanged: root.textEdited()
         onEditingFinished: root.editingFinished()
         Keys.priority: Keys.BeforeItem
-        Keys.onEscapePressed: (event) => {
-            root.escaped();
-            event.accepted = root.escapeCloses;
-        }
         Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_Escape) {
+                root.escaped();
+                event.accepted = true;
+                return;
+            }
             if (event.key === Qt.Key_Down) {
                 root.downPressed();
                 event.accepted = true;

@@ -1,8 +1,8 @@
 // First-run detector. FileView on config.json — missing file means the
 // onboarding wizard should run. complete() copies the shipped default
-// so the wizard does not loop. This is the one Service write of
-// config.json; there is no ConfigWrite singleton yet, so Onboarding
-// also opens Settings afterwards.
+// so the wizard does not loop. ConfigWrite exists for Settings writes;
+// this path still copies default.json so a missing live file is seeded
+// without going through the CLI. Onboarding also opens Settings afterwards.
 pragma Singleton
 
 import Quickshell

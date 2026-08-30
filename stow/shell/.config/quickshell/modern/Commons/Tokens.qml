@@ -76,6 +76,24 @@ Singleton {
         readonly property real focus: 2
     }
 
+    readonly property QtObject window: QtObject {
+        readonly property real settingsWidth: root.spacing.xxl * 32 + root.spacing.lg
+        readonly property real settingsHeight: root.spacing.xxl * 22 + root.spacing.lg
+        readonly property real overviewWidth: root.spacing.xxl * 22
+        readonly property real overviewHeight: root.spacing.xxl * 16
+        readonly property real overlayWidth: root.spacing.xxl * 24
+        readonly property real overlayHeight: root.spacing.xxl * 20
+        readonly property real providerWidth: 1200
+        readonly property real providerHeight: 800
+    }
+
+    readonly property QtObject panel: QtObject {
+        readonly property real popupMin: root.spacing.xxl * 10
+        readonly property real cheatsheetNav: root.spacing.xxl * 8
+        readonly property real powerWidth: root.spacing.xxl * 12
+        readonly property real launcherWidth: root.spacing.xxl * 16
+    }
+
     readonly property QtObject slider: QtObject {
         readonly property real trackHeight: 8
         readonly property real thumb: 20

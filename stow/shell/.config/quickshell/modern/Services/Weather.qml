@@ -37,7 +37,7 @@ Singleton {
     readonly property string windText: root.formatWind(root.windSpeed)
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string script: root.home + "/modern_dotfile/scripts/weather-fetch.sh"
+    readonly property string script: Paths.script("weather-fetch.sh")
     readonly property string manualLocation: Config.widgets?.weather?.manualLocation || ""
     readonly property string locationMode: Config.widgets?.weather?.locationMode || "auto"
 

@@ -16,16 +16,6 @@ hl.env("HYPRCURSOR_SIZE", tostring(config.value("design.cursorSize", 24)))
 
 -- Hyprland exec and qs inherit this, not ~/.bashrc. Keep repo scripts
 -- (modern, theme-apply.sh, screenshot.sh) resolvable without a login shell.
-local home = os.getenv("HOME") or ""
+local paths = require("modules.paths")
 local path = os.getenv("PATH") or "/usr/bin"
-hl.env("PATH", home .. "/modern_dotfile/scripts:" .. home .. "/.local/bin:" .. path)
-
--- Gaming / HDR session flags stay off unless Settings writes them.
--- Never export these from bashrc (docs/GAMING.md).
-if config.value("gaming.protonWayland", false) then
-    hl.env("PROTON_ENABLE_WAYLAND", "1")
-end
-if config.value("gaming.hdrSession", false) then
-    hl.env("ENABLE_HDR_WSI", "1")
-    hl.env("DXVK_HDR", "1")
-end
+hl.env("PATH", paths.scripts .. ":" .. paths.home .. "/.local/bin:" .. path)

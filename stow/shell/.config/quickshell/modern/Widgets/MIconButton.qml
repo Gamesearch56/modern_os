@@ -15,6 +15,7 @@ Item {
     property bool close: false
     property bool tint: true
     property bool busy: false
+    property bool tabFocus: true
 
     signal clicked()
     signal middleClicked()
@@ -24,7 +25,7 @@ Item {
     implicitWidth: root.size
     implicitHeight: root.size
     opacity: root.enabled ? 1 : 0.38
-    activeFocusOnTab: false
+    activeFocusOnTab: root.tabFocus && root.enabled && !root.busy
     Accessible.role: Accessible.Button
     Accessible.name: root.key.length > 0 ? I18n.t(root.key) : root.iconName
     Accessible.onPressAction: {
@@ -39,6 +40,12 @@ Item {
             root.clicked();
             event.accepted = true;
         }
+    }
+    Keys.onEscapePressed: (event) => {
+        if (!root.close || root.busy || !root.enabled)
+            return;
+        root.clicked();
+        event.accepted = true;
     }
 
     property bool _hover: false
@@ -89,13 +96,12 @@ Item {
     MouseArea {
         id: ma
         anchors.fill: parent
+        z: 1
         enabled: root.enabled && !root.busy
         hoverEnabled: true
+        preventStealing: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
-        HoverHandler {
-            cursorShape: Qt.PointingHandCursor
-        }
         onEntered: {
             if (!root._suppressHover)
                 root._hover = true;

@@ -16,8 +16,10 @@ session for days and rewind still works.
 | **1 — reversible switch** | This account starts `start-hyprland` + Quickshell | Frozen in place (packages, `~/dotfiles`, session files) | Restore the rewind tarball + unstow; old compositor still installed |
 | **2 — clean cut** | One desktop, one package set, docs match reality | Removed (configs, unused packages/AUR, caches, leftover units) | Snapper/restic + the restore kit in `docs/BACKUP.md` — not “boot the old Hyprland again” |
 
-Gated `/etc` work (greetd, Plymouth/mkinitcpio, sysctl, polkit, ufw,
-snapper configs) stays **off** in Phase 1. Those are machine-wide and
+Gated `/etc` work (Plymouth/mkinitcpio, sysctl, polkit, ufw, snapper)
+stays **off** in Phase 1. There is **no** `install/system/greetd/` in
+this repo — do not invent a copy command or enable greetd. See
+`docs/ISOLATION.md`.
 harder to undo than a home-directory stow. See `docs/ISOLATION.md`.
 
 ## What “old” vs “new” means
@@ -51,6 +53,7 @@ lockout.
 - `scripts/check-isolation.sh` is clean from this account (no unexpected
   symlinks from `/home/bastianweigand/.config` into this repo).
 - You are **not** enabling greetd or copying `install/system/` yet.
+  Greetd config **does not exist** in the repo.
 - Clone/checkout used for the cutover is one this user can read, e.g.
   `~/CursorProjects/modern_dotfile` or `~/modern_dotfile`.
 
@@ -154,8 +157,13 @@ On a TTY:
 start-hyprland
 ```
 
-Do not run the `Hyprland` binary (`docs/BOOT.md`). Confirm: bar, Settings,
-wallpaper, Vivaldi, portals (`docs/TROUBLESHOOTING.md`).
+Do not run the `Hyprland` binary (`docs/BOOT.md`). Confirm: bar, Settings
+(Super+I), Super+L control panel, Super+Entf taskbar, Design wallpaper
+provider window, `start-hyprland` not `Hyprland`. Do **not** treat
+power-menu lock as walk-away security. Shipped UI is English (this
+account may already be German via live `config.json`).
+`scripts/check-isolation.sh` still clean of gated `/etc`. `stow/greeter`
+is unused until a later gated phase.
 
 Leave autologin / greetd as they were. A reboot must still get you a
 login you understand. If autologin drops you into the old wrapper, either
@@ -334,10 +342,9 @@ duplicate notification daemons. Keep `modern-shell.service`,
   (`docs/DECISIONS.md` #11). After removal, `scripts/check-isolation.sh --init`
   if you still use that check, or drop the check (next section).
 - Do not disable `hyprpolkitagent` / pipewire / bluetooth.
-- Gated files under `install/system/` — apply now only if you still want
-  them (greetd, Plymouth, sysctl). Each file’s header is the copy
-  command. Applying greetd is a **login-path** change; test on a spare
-  TTY first (`docs/BOOT.md`, `docs/ISOLATION.md` rollback table).
+- Gated files under `install/system/` — apply only files that **exist**
+  (Plymouth, sysctl, ufw, tmpfiles, portals). Each file’s header is the
+  copy command. Do **not** enable greetd; that tree has not landed.
 
 **`devuser`:** keep until you no longer want a throwaway session, then
 `sudo userdel -r devuser`. That deletes `/home/devuser` only.

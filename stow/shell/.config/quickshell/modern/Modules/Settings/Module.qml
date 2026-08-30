@@ -8,6 +8,13 @@ import "../../Services"
 
 Scope {
     Connections {
+        target: Update
+        function onNotify(summary, body) {
+            Notifications.toast(summary, body || "");
+        }
+    }
+
+    Connections {
         target: FilePick
         function onDirectoryPicked(path, key) {
             if (key === "screenshots.videoDirectory")
@@ -28,89 +35,75 @@ Scope {
             visible: Settings.open
             title: "modern.settings"
             color: "transparent"
-            implicitWidth: Tokens.spacing.xxl * 32 + Tokens.spacing.lg
-            implicitHeight: Tokens.spacing.xxl * 22 + Tokens.spacing.lg
+            implicitWidth: Tokens.window.settingsWidth
+            implicitHeight: Tokens.window.settingsHeight
 
             Catalog { id: catalog }
 
             onVisibleChanged: {
-                if (!visible)
+                if (!visible) {
                     Settings.close();
+                    return;
+                }
+                Qt.callLater(() => nav.focusSearch());
             }
 
-            Rectangle {
+            MWindowShell {
                 id: card
                 anchors.fill: parent
-                color: Colors.color.surface
-                radius: Tokens.radius.medium
-                border.color: Colors.color.outlineVariant
-                border.width: Tokens.stroke.hairline
-                clip: true
-                opacity: Config.design.transparency ?? 0.85
+                titleKey: "settings.title"
+                titleColumnWidth: Tokens.spacing.xxl * 9
+                onClosed: Settings.close()
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: Tokens.spacing.md
-                    spacing: Tokens.spacing.md
+                RowLayout {
+                    spacing: Tokens.spacing.lg
 
-                    MWindowChrome {
-                        Layout.fillWidth: true
-                        titleKey: "settings.title"
-                        titleColumnWidth: Tokens.spacing.xxl * 9
-                        onClosed: Settings.close()
+                    MPane {
+                        Layout.preferredWidth: Tokens.spacing.xxl * 9
+                        Layout.fillHeight: true
+
+                        Nav {
+                            id: nav
+                            anchors.fill: parent
+                            catalog: catalog
+                        }
                     }
 
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        spacing: Tokens.spacing.lg
+                        spacing: Tokens.spacing.md
 
-                        MPane {
-                            Layout.preferredWidth: Tokens.spacing.xxl * 9
-                            Layout.fillHeight: true
+                        PageHeader { id: pageHeader; catalog: catalog }
 
-                            Nav {
-                                anchors.fill: parent
-                                catalog: catalog
-                            }
-                        }
-
-                        ColumnLayout {
+                        Flickable {
+                            id: pane
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            spacing: Tokens.spacing.md
+                            clip: true
+                            focus: false
+                            contentWidth: width
+                            contentHeight: sectionLoader.item
+                                ? sectionLoader.item.implicitHeight
+                                : 0
 
-                            PageHeader { id: pageHeader; catalog: catalog }
-
-                            Flickable {
-                                id: pane
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                clip: true
-                                focus: true
-                                contentWidth: width
-                                contentHeight: sectionLoader.item
-                                    ? sectionLoader.item.implicitHeight
-                                    : 0
-
-                                MouseArea {
-                                    z: -1
-                                    width: pane.width
-                                    height: Math.max(pane.height, pane.contentHeight)
-                                    onPressed: (mouse) => {
-                                        pane.forceActiveFocus();
-                                        mouse.accepted = false;
-                                    }
+                            MouseArea {
+                                z: -1
+                                width: pane.width
+                                height: Math.max(pane.height, pane.contentHeight)
+                                onPressed: (mouse) => {
+                                    pane.forceActiveFocus();
+                                    mouse.accepted = false;
                                 }
+                            }
 
-                                Loader {
-                                    id: sectionLoader
-                                    width: pane.width
-                                    source: Qt.resolvedUrl("sections/" + Settings.sectionId + "/Section.qml")
-                                    onLoaded: {
-                                        if (item)
-                                            item.width = Qt.binding(() => sectionLoader.width);
-                                    }
+                            Loader {
+                                id: sectionLoader
+                                width: pane.width
+                                source: Qt.resolvedUrl("sections/" + Settings.sectionId + "/Section.qml")
+                                onLoaded: {
+                                    if (item)
+                                        item.width = Qt.binding(() => sectionLoader.width);
                                 }
                             }
                         }
@@ -121,6 +114,10 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 onActivated: {
+                    if (SelectMenus.current && SelectMenus.current.closeMenu) {
+                        SelectMenus.current.closeMenu();
+                        return;
+                    }
                     const it = sectionLoader.item;
                     if (pageHeader.restoreOpen) {
                         pageHeader.restoreOpen = false;

@@ -144,6 +144,7 @@ Item {
         }
 
         MIconButton {
+            tabFocus: false
             visible: root.canAdd
             anchors.verticalCenter: parent.verticalCenter
             iconName: "list-add-symbolic"

@@ -22,6 +22,13 @@ Item {
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
+    activeFocusOnTab: root.enabled
+    Accessible.role: Accessible.ComboBox
+    Accessible.name: root._label.length > 0 ? root._label : (root.placeholderKey.length > 0 ? I18n.t(root.placeholderKey) : "")
+    Accessible.onPressAction: {
+        if (root.enabled)
+            menu.open = !menu.open;
+    }
 
     function _raise(on) {
         const z = on ? 40 : 0;
@@ -128,7 +135,41 @@ Item {
     }
 
     Keys.onPressed: (event) => {
-        if (!menu.open || !root._searchable || search.focused)
+        if (!root.enabled)
+            return;
+        if (!menu.open) {
+            if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter
+                    || event.key === Qt.Key_Down) {
+                menu.open = true;
+                event.accepted = true;
+            }
+            return;
+        }
+        if (event.key === Qt.Key_Escape) {
+            menu.open = false;
+            event.accepted = true;
+            return;
+        }
+        if (event.key === Qt.Key_Down) {
+            list.incrementCurrentIndex();
+            event.accepted = true;
+            return;
+        }
+        if (event.key === Qt.Key_Up) {
+            list.decrementCurrentIndex();
+            event.accepted = true;
+            return;
+        }
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            const opt = root._filtered[list.currentIndex];
+            if (opt) {
+                root.selected(opt.value);
+                menu.open = false;
+            }
+            event.accepted = true;
+            return;
+        }
+        if (!root._searchable || search.focused)
             return;
         if (!event.text || event.text.length === 0)
             return;
@@ -199,6 +240,8 @@ Item {
                 Layout.fillHeight: true
                 clip: true
                 model: root._filtered.length
+                keyNavigationEnabled: true
+                highlightFollowsCurrentItem: true
                 delegate: MListItem {
                     required property int index
                     readonly property var opt: root._filtered[index] || ({})

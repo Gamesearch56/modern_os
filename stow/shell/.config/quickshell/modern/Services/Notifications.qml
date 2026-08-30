@@ -172,10 +172,7 @@ Singleton {
     function _armHide(item) {
         if (!item.expireTimeout || item.expireTimeout <= 0)
             return;
-        const timer = Qt.createQmlObject("import QtQuick; Timer { running: true; repeat: false }", root);
-        timer.interval = item.expireTimeout;
-        timer.triggered.connect(() => { item._timer = null; timer.destroy(); root.hideToast(item); });
-        item._timer = timer;
+        item._timer = hideTimer.createObject(root, { item: item, interval: item.expireTimeout });
     }
 
     function _stopTimer(item) {
@@ -184,6 +181,20 @@ Singleton {
         item._timer.stop();
         item._timer.destroy();
         item._timer = null;
+    }
+
+    Component {
+        id: hideTimer
+        Timer {
+            property var item
+            running: true
+            repeat: false
+            onTriggered: {
+                item._timer = null;
+                root.hideToast(item);
+                destroy();
+            }
+        }
     }
 
     function hideToast(item) {
@@ -202,8 +213,8 @@ Singleton {
         if (root.effectiveDnd && level !== "error")
             return;
         const summaryKey = level === "error" ? "notifications.shellError" : "notifications.shellWarning";
-        const expire = level === "error" ? 0 : root._timeoutMs();
-        root._push(root._local(I18n.t(summaryKey) + " · " + tag, message, "", expire));
+        const expire = root._timeoutMs();
+        root._push(root._local(I18n.t(summaryKey), message, "", expire));
     }
 
     function toast(summary: string, body: string, imagePath) {

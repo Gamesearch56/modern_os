@@ -18,11 +18,7 @@ Singleton {
 
     readonly property string home: Quickshell.env("HOME")
     readonly property string libraryDir: root.home + "/Pictures/Wallpapers"
-    readonly property string stateHome: {
-        const env = Quickshell.env("XDG_STATE_HOME");
-        return (env && env.length > 0) ? env : (root.home + "/.local/state");
-    }
-    readonly property string scripts: root.home + "/modern_dotfile/scripts"
+    readonly property string stateHome: Paths.stateHome
 
     signal fetched(string path)
     signal fetchFailed()
@@ -40,7 +36,7 @@ Singleton {
 
     Process {
         id: listProc
-        command: [root.scripts + "/wallpaper-list.sh"]
+        command: [Paths.script("wallpaper-list.sh")]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.images = this.text.trim().split("\n").filter(l => l.length > 0);
@@ -50,7 +46,7 @@ Singleton {
 
     Process {
         id: importProc
-        command: [root.scripts + "/wallpaper-import.sh"]
+        command: [Paths.script("wallpaper-import.sh")]
         stdout: StdioCollector { id: importOut }
         onExited: (code) => {
             if (code === 2)
@@ -67,7 +63,7 @@ Singleton {
 
     Process {
         id: deleteProc
-        command: [root.scripts + "/wallpaper-delete.sh"]
+        command: [Paths.script("wallpaper-delete.sh")]
         onExited: (code) => {
             if (code === 0)
                 root._refresh();
@@ -148,8 +144,8 @@ Singleton {
     }
 
     function providerUrl(): string {
-        let u = String(Config.design.wallpaperProvider || "").trim() || "https://4kwallpapers.com";
-        if (u.indexOf("http://") !== 0 && u.indexOf("https://") !== 0)
+        let u = String(Config.design.wallpaperProvider || "").trim();
+        if (u.indexOf("http://") !== 0 && u.indexOf("https://") !== 0 && u.length > 0)
             u = "https://" + u;
         return u;
     }
@@ -165,7 +161,7 @@ Singleton {
             Quickshell.execDetached(["hyprctl", "dispatch", "focuswindow", "title:modern.wallpaper-provider"]);
             return;
         }
-        providerProc.command = [root.scripts + "/wallpaper-provider.sh", root.providerUrl(), root.libraryDir];
+        providerProc.command = [Paths.script("wallpaper-provider.sh"), root.providerUrl(), root.libraryDir];
         root._reopenPicker = true;
         root.providerOpen = true;
         providerProc.running = true;
@@ -195,7 +191,7 @@ Singleton {
         if (!u.length || root.fetching)
             return;
         fetchProc.running = false;
-        fetchProc.command = [root.scripts + "/wallpaper-fetch.sh", u, root.libraryDir];
+        fetchProc.command = [Paths.script("wallpaper-fetch.sh"), u, root.libraryDir];
         root.fetching = true;
         fetchProc.running = true;
     }
@@ -226,7 +222,7 @@ Singleton {
     function remove(path: string) {
         if (!root.canRemove(path))
             return;
-        deleteProc.command = [root.scripts + "/wallpaper-delete.sh", path];
+        deleteProc.command = [Paths.script("wallpaper-delete.sh"), path];
         deleteProc.running = false;
         Qt.callLater(() => { deleteProc.running = true; });
     }
@@ -240,7 +236,7 @@ Singleton {
         root.hide();
         const shown = path;
         Qt.callLater(() => {
-            Quickshell.execDetached([root.scripts + "/wallpaper-show.sh", shown]);
+            Quickshell.execDetached([Paths.script("wallpaper-show.sh"), shown]);
             Theme.applyShown(shown);
         });
         Logger.info("Wallpaper", "applied " + path);

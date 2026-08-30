@@ -52,7 +52,6 @@ Singleton {
         // greetd phase lands (docs/ISOLATION.md).
         if (!password || password.length === 0) {
             root.lastError = "empty";
-            Logger.error("Session", "authentication failed");
             return;
         }
         root.lastError = "";

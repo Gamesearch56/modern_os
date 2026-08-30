@@ -14,7 +14,7 @@ Singleton {
     property bool _stopping: false
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string script: root.home + "/modern_dotfile/scripts/screencast.sh"
+    readonly property string script: Paths.script("screencast.sh")
 
     signal saved(string path)
     signal failed()
@@ -56,7 +56,6 @@ Singleton {
             }
             if (stopping)
                 return;
-            Logger.error("Recording", I18n.t("recording.failed"));
             root.failed();
         }
     }

@@ -2,7 +2,8 @@
 -- (Settings → Energy). The bind is stable; modern power reads the
 -- current value so a Settings change does not need a compositor reload.
 
-local modern = (os.getenv("HOME") or "") .. "/modern_dotfile/scripts/modern"
+local paths = require("modules.paths")
+local modern = paths.modern
 local locked = { locked = true }
 
 hl.bind("XF86PowerOff", hl.dsp.exec_cmd(modern .. " power button"), locked)

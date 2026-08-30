@@ -16,12 +16,13 @@ Singleton {
     property var plugins: []
     property var outputs: ({})
     property bool open: false
+    property bool watching: false
     property int _cursor: 0
 
     Process {
         id: scan
-        command: ["sh", "-c", "dir=\"$HOME/.config/modern/plugins\"; [ -d \"$dir\" ] || exit 0; for f in \"$dir\"/*/plugin.json; do [ -f \"$f\" ] || continue; if command -v jq >/dev/null; then jq -c --arg d \"$(dirname \"$f\")\" '. + {dir:$d}' \"$f\"; else printf '%s\\n' \"{\\\"dir\\\":\\\"$(dirname \"$f\")\\\"}\"; fi; done"]
-        running: true
+        command: [Paths.script("plugin-scan.sh")]
+        running: false
         stdout: StdioCollector {
             onStreamFinished: root._parseScan(this.text)
         }
@@ -39,7 +40,7 @@ Singleton {
 
     Timer {
         interval: 1000
-        running: root.plugins.length > 0
+        running: root.watching && root.plugins.length > 0
         repeat: true
         onTriggered: root._tick()
     }
@@ -47,6 +48,9 @@ Singleton {
     function toggle() { root.open = !root.open; }
     function show() { root.open = true; }
     function hide() { root.open = false; }
+
+    onOpenChanged: root.watching = root.open
+    Component.onCompleted: root.refresh()
 
     IpcHandler {
         target: "plugins"
@@ -84,9 +88,27 @@ Singleton {
         if (!p.command || (p._due && now < p._due))
             return;
         p._due = now + interval;
-        runner.command = ["sh", "-c", String(p.command)];
+        const argv = root._argv(p);
+        if (argv.length === 0)
+            return;
+        runner.command = argv;
         root.runningId = p.id || p.dir || "plugin";
         runner.running = true;
+    }
+
+    function _argv(p: var): var {
+        const cmd = p.command;
+        if (Array.isArray(cmd) && cmd.length > 0)
+            return cmd.map(String);
+        const name = String(cmd || "").trim();
+        const dir = String(p.dir || "");
+        if (!name.length || !dir.length)
+            return [];
+        if (name.indexOf("..") !== -1 || /[;&|`$<>]/.test(name))
+            return [];
+        if (name.indexOf("/") === 0)
+            return name.indexOf(dir + "/") === 0 ? [name] : [];
+        return [dir + "/" + name];
     }
 
     function _onRun(text: string) {

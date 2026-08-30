@@ -24,6 +24,7 @@ Item {
         spacing: Tokens.spacing.xs
 
         MIconButton {
+            tabFocus: false
             iconName: Bluetooth.powered ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
             key: "bar.bluetooth"
             onClicked: Settings.openAt("bluetooth", "")

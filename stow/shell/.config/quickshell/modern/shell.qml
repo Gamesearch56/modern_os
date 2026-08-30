@@ -35,6 +35,13 @@ ShellRoot {
     ScreenshotMod.Module {}
     FilePreviewMod.Module {}
 
+    Shortcut {
+        sequence: "Escape"
+        enabled: Popups.active !== null
+        context: Qt.ApplicationShortcut
+        onActivated: Popups.dismiss()
+    }
+
     Connections {
         target: Popups
         function onExclusive(keeper) {

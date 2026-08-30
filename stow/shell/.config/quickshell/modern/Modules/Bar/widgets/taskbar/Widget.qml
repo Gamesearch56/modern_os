@@ -17,6 +17,7 @@ Item {
     }
 
     MIconButton {
+        tabFocus: false
         anchors.fill: parent
         iconName: "focus-windows-symbolic"
         key: "bar.taskbar"

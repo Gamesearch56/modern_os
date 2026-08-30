@@ -12,7 +12,7 @@ Scope {
 
     function _finish() {
         FirstRun.complete();
-        Settings.openAt("general", "");
+        Settings.openAt("overview", "");
     }
 
     function _next() {

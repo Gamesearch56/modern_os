@@ -14,8 +14,8 @@ Scope {
             visible: Overview.open
             title: "modern.overview"
             color: "transparent"
-            implicitWidth: Tokens.spacing.xxl * 22
-            implicitHeight: Tokens.spacing.xxl * 16
+            implicitWidth: Tokens.window.overviewWidth
+            implicitHeight: Tokens.window.overviewHeight
 
             onVisibleChanged: {
                 if (visible)
@@ -24,28 +24,12 @@ Scope {
                     Overview.hide();
             }
 
-            Rectangle {
+            MWindowShell {
                 anchors.fill: parent
-                color: Colors.color.surface
-                radius: Tokens.radius.medium
-                opacity: Config.design.transparency ?? 0.85
-            }
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Tokens.spacing.md
-                spacing: Tokens.spacing.md
-
-                MWindowChrome {
-                    Layout.fillWidth: true
-                    titleKey: "overview.title"
-                    onClosed: Overview.hide()
-                }
+                titleKey: "overview.title"
+                onClosed: Overview.hide()
 
                 MPane {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-
                     WindowGrid {
                         id: grid
                         anchors.fill: parent

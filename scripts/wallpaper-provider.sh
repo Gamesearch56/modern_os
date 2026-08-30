@@ -23,11 +23,18 @@ mkdir -p "$DEST"
 
 notify_new() {
     local f="$1"
-    case "${f,,}" in
-        *.jpg | *.jpeg | *.png | *.webp)
-            stdbuf -oL printf 'INGEST %s\n' "$f" || printf 'INGEST %s\n' "$f"
+    [ -f "$f" ] || return 0
+    local mime=""
+    if command -v file >/dev/null 2>&1; then
+        mime="$(file -b --mime-type "$f" || true)"
+    fi
+    case "$mime" in
+        image/jpeg | image/jpg | image/png | image/webp) ;;
+        *)
+            return 0
             ;;
     esac
+    stdbuf -oL printf 'INGEST %s\n' "$f" || printf 'INGEST %s\n' "$f"
 }
 
 declare -A seen=()
@@ -49,15 +56,25 @@ cleanup() {
 trap cleanup EXIT TERM INT
 
 (
-    while true; do
-        sleep 1
-        while IFS= read -r -d '' f; do
+    if command -v inotifywait >/dev/null 2>&1; then
+        while IFS= read -r f; do
+            [ -f "$f" ] || continue
             if [ -z "${seen[$f]+x}" ]; then
                 seen["$f"]=1
                 notify_new "$f"
             fi
-        done < <(find "$DEST" -maxdepth 1 -type f -print0 2>/dev/null || true)
-    done
+        done < <(inotifywait -m -e close_write,moved_to,create --format '%w%f' -- "$DEST" 2>/dev/null)
+    else
+        while true; do
+            sleep 1
+            while IFS= read -r -d '' f; do
+                if [ -z "${seen[$f]+x}" ]; then
+                    seen["$f"]=1
+                    notify_new "$f"
+                fi
+            done < <(find "$DEST" -maxdepth 1 -type f -print0 2>/dev/null || true)
+        done
+    fi
 ) &
 watch_pid=$!
 

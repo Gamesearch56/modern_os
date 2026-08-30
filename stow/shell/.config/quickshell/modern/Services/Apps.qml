@@ -144,8 +144,7 @@ Singleton {
         const name = String(desktopId || "").replace(/\.desktop$/, "");
         if (!name.length)
             return false;
-        const home = Quickshell.env("HOME");
-        Quickshell.execDetached([home + "/modern_dotfile/scripts/modern-launch", "--background", name]);
+        Quickshell.execDetached([Paths.modernLaunch, "--background", name]);
         return true;
     }
 

@@ -26,6 +26,7 @@ Item {
         spacing: 0
 
         MIconButton {
+            tabFocus: false
             iconName: root._wifiIcon
             key: "bar.network"
             size: Config.bar.height
@@ -47,6 +48,7 @@ Item {
         }
 
         MIconButton {
+            tabFocus: false
             iconName: Bluetooth.powered ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
             key: "bar.bluetooth"
             size: Config.bar.height

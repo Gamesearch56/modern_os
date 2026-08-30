@@ -8,6 +8,7 @@ Item {
     implicitHeight: Tokens.spacing.xxl
 
     MIconButton {
+        tabFocus: false
         anchors.centerIn: parent
         iconName: Network.connected ? (Network.ssid.length > 0 ? "network-wireless-symbolic" : "network-wired-symbolic") : "network-offline-symbolic"
         key: "bar.network"

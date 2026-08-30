@@ -122,7 +122,9 @@ Item {
                             Notifications.dismiss(modelData);
                         }
                         MIconButton {
+                            z: 3
                             close: true
+                            tabFocus: false
                             iconName: "window-close"
                             key: "bar.close"
                             size: Tokens.spacing.xl

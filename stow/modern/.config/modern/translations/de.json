@@ -11,7 +11,6 @@
     "network": "Netzwerk",
     "microphone": "Mikrofon",
     "performance": "Leistung",
-    "vpn": "VPN",
     "bluetooth": "Bluetooth",
     "notifications": "Benachrichtigungen",
     "settings": "Einstellungen",
@@ -28,7 +27,6 @@
     "taskbarBackground": "Hintergrund",
     "soundSettings": "Klangeinstellungen",
     "kdeconnect": "KDE Connect",
-    "notes": "Notizen",
     "mail": "Mail",
     "connectivity": "Netzwerk und Bluetooth",
     "battery": "Akku",
@@ -99,21 +97,12 @@
     "precipIn": "{amount} in",
     "pressureHpa": "{hpa} hPa"
   },
-  "vpn": {
-    "disconnected": "VPN aus",
-    "connected": "VPN an"
-  },
   "performance": {
     "cpu": "CPU",
     "ram": "RAM",
     "gpu": "GPU",
     "disk": "Disk",
     "fan": "Lüfter"
-  },
-  "notes": {
-    "title": "Notizen",
-    "empty": "Noch keine Notizen",
-    "new": "Neue Notiz"
   },
   "calendar": {
     "title": "Kalender",
@@ -179,7 +168,7 @@
     "title": "Hintergründe",
     "empty": "Keine Hintergründe gefunden",
     "add": "Hinzufügen",
-    "browse": "Wallpapers durchsuchen",
+    "browse": "Hintergründe durchsuchen",
     "openFolder": "Ordner öffnen",
     "hint": "Wähle ein Hintergrundbild mit den Pfeiltasten und übernimm es mit Enter, oder füge ein neues Bild hinzu.",
     "alreadyInLibrary": "Diese Datei liegt schon im Hintergrundordner",
@@ -193,14 +182,14 @@
     "removeBody": "Dieses Bild wird aus deinem Hintergrundordner gelöscht.",
     "removeFailed": "Hintergrund konnte nicht gelöscht werden",
     "get": "Hintergründe holen",
-    "providerTitle": "Wallpaper-Anbieter",
-    "providerHint": "Speichere ein Bild von der Seite, um es in den Wallpaper-Ordner zu legen.",
+    "providerTitle": "Hintergrund-Anbieter",
+    "providerHint": "Speichere ein Bild von der Seite, um es in den Hintergrundordner zu legen.",
     "providerBack": "Zurück",
     "fetched": "Hintergrund gespeichert",
     "fetchedHint": "Lege es in der Galerie als aktiv fest.",
     "fetchFailed": "Bild konnte nicht gespeichert werden",
     "providerBrowser": "Im Browser geöffnet",
-    "providerBrowserHint": "Speichere Bilder in den Wallpaper-Ordner und wähle sie in der Galerie."
+    "providerBrowserHint": "Speichere Bilder in den Hintergrundordner und wähle sie in der Galerie."
   },
   "folderPicker": {
     "title": "Ordner wählen",
@@ -240,17 +229,8 @@
   "users": {
     "title": "Benutzer"
   },
-  "gaming": {
-    "optiscaler": "OptiScaler",
-    "apply": "Anwenden",
-    "remove": "Entfernen"
-  },
   "backup": {
     "snapshotNow": "Jetzt Snapshot"
-  },
-  "extras": {
-    "ocr": "Text erkennen",
-    "annotate": "Screenshot annotieren"
   },
   "powerMenu": {
     "title": "Ein/Aus",
@@ -318,9 +298,7 @@
       "screenshotRegion": "Bereich aufnehmen",
       "screenshotWindow": "Fenster aufnehmen",
       "screenshotFull": "Ganzen Bildschirm aufnehmen",
-      "gameMode": "Spielmodus",
       "colorPicker": "Farbwähler",
-      "clipboardHistory": "Zwischenablage",
       "controlCenter": "Kontrollzentrum",
       "browserIncognito": "Browser (Inkognito)",
       "filePreview": "Schnellansicht"
@@ -368,6 +346,7 @@
     "restoreTitle": "{name}-Einstellungen zurücksetzen?",
     "restoreBody": "Damit werden alle Optionen dieser Seite auf die Standardwerte gesetzt.",
     "restoreDone": "{name}-Einstellungen wurden zurückgesetzt",
+    "restoreFailed": "{name}-Einstellungen konnten nicht zurückgesetzt werden",
     "typePreview": "Schriftvorschau",
     "typePreviewBody": "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.",
     "barTop": "Oben",
@@ -421,7 +400,6 @@
       "snapper": "Snapper",
       "restic": "Restic",
       "preUpdateSnapshot": "Snapshot vor Updates",
-      "gaming": "Spieleprofile",
       "browser": "Browser",
       "calendar": "Kalender",
       "mail": "Mail",
@@ -443,12 +421,12 @@
       "aiModel": "KI-Modell",
       "ollamaModel": "Ollama-Modell",
       "chrome": "Chrome",
-      "wallpaperColor": "Wallpaper-Farbe",
-      "wallpaperProvider": "Wallpaper-Anbieter",
+      "wallpaperColor": "Hintergrundfarbe",
+      "wallpaperProvider": "Hintergrund-Anbieter",
       "animations": "Animationen",
       "boot": "Startbildschirme",
-      "wallpaperOnLock": "Wallpaper auf dem Sperrbildschirm",
-      "wallpaperOnVivaldi": "Wallpaper in Vivaldi",
+      "wallpaperOnLock": "Hintergrund auf dem Sperrbildschirm",
+      "wallpaperOnVivaldi": "Hintergrund in Vivaldi",
       "wifi": "WLAN",
       "bluetoothPower": "Bluetooth",
       "workspaceMode": "Workspace-Anordnung",
@@ -464,7 +442,6 @@
       "includeCursor": "Cursor einschließen",
       "videoDir": "Aufnahmeordner",
       "recordAudio": "Audio aufnehmen",
-      "vmMaxMapCount": "vm.max_map_count erhöhen",
       "typeScale": "Schriftgröße",
       "barPosition": "Leistenposition",
       "barStyle": "Leistenstil",
@@ -484,8 +461,6 @@
       "bitrate": "Bitrate",
       "mirrorCountry": "Spiegel-Land",
       "showIcons": "Symbole anzeigen",
-      "protonWayland": "Proton Wayland",
-      "hdrSession": "Sitzungs-HDR",
       "autoHide": "Leiste automatisch ausblenden",
       "cursor": "Cursor",
       "cursorTheme": "Cursor-Thema",
@@ -534,7 +509,6 @@
       "backup": "Sicherung",
       "firewall": "Firewall",
       "system": "Aktualisierung",
-      "gaming": "Aktualisierung",
       "bluetooth": "Bluetooth",
       "ai": "KI"
     },
@@ -617,13 +591,12 @@
     "hints": {
       "animations": "Wie lange Menüs, die Leiste und Fenster brauchen. Aus ist sofort.",
       "overlayMotion": "Ein-/Ausblenden, Zoom beim Öffnen/Schließen, oder beides.",
-      "surfaceTint": "Wie stark der Wallpaper-Akzent Leisten und Panels einfärbt.",
+      "surfaceTint": "Wie stark der Hintergrund-Akzent Leisten und Panels einfärbt.",
       "wallpaperProvider": "Hauptseite für Hintergründe.",
       "activeProfile": "Farbstil zum Hintergrundbild. Dunkel, hell und hoher Kontrast ändern die Palette, nicht das Bild.",
       "workspaceMode": "Dynamisch legt Workspaces auf den Monitor, den du gerade nutzt. Zwei Monitore halten 1–5 links und 6–10 rechts.",
       "hdr": "Wide-Gamut-HDR-Panels (QD-OLED) brauchen das. Hyprland mappt sRGB-Sättigung nur im HDR-Modus; 10-Bit-PQ.",
       "storageGated": "Snapshots liegen unter den abgeschotteten install/system-Helfern.",
-      "gamingGated": "Kernel-Anpassungen liegen unter install/system und werden nicht automatisch angewendet.",
       "timeMerged": "Datums- und Zeitformate liegen unter Sprache & Zeit.",
       "weatherLocation": "Wenn leer, nutzt Wetter die IP-Ortung.",
       "frecency": "Sortiert Apps danach, wie oft und wie kürzlich sie gestartet wurden.",
@@ -688,7 +661,8 @@
       "bannerDuration": "Banner-Dauer (Sekunden)",
       "calendarTitle": "Termine an der Uhr",
       "calendarBody": "Füge einen geheimen iCal-Feed ein. In Proton Calendar: Einstellungen → Kalender → geheimer iCal-Link. Das Uhr-Popup in der Leiste zeigt die Termine und markiert Tage im Monatsraster.",
-      "icsPlaceholder": "https://calendar.example/secret.ics"
+      "icsPlaceholder": "https://calendar.example/secret.ics",
+      "icsFailed": "Kalender-Feed konnte nicht geladen werden"
     },
     "energy": {
       "power": "Ein/Aus",

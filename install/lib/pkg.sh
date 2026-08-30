@@ -55,3 +55,19 @@ install_flatpak() {
     log_info "Installing ${#ids[@]} flatpak(s): ${ids[*]}"
     run flatpak install -y --noninteractive flathub "${ids[@]}"
 }
+
+# CPU vendor + GPU class for hardware manifest layers. Override with --hw.
+detect_hw() {
+    local cpu gpu
+    cpu="$(awk -F: '/^vendor_id/{gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo 2>/dev/null || true)"
+    gpu="$(lspci 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /VGA compatible controller|3D controller/{print; exit}')"
+    if printf '%s' "$gpu" | grep -qi nvidia; then
+        printf 'nvidia\n'
+        return
+    fi
+    if printf '%s' "$cpu" | grep -qi intel; then
+        printf 'intel\n'
+        return
+    fi
+    printf 'amd\n'
+}

@@ -13,6 +13,10 @@ MOverlay {
     titleValue: root.net ? (root.net.ssid || root.net.name || "") : ""
     cardHeight: Tokens.spacing.xxl * 8
     onClosed: root.password = ""
+    onOpenChanged: {
+        if (root.open)
+            Qt.callLater(() => pwdField.forceActiveFocus());
+    }
 
     ColumnLayout {
         spacing: Tokens.spacing.md
@@ -20,6 +24,7 @@ MOverlay {
         MField {
             labelKey: "settings.fields.wifiPassword"
             MTextField {
+                id: pwdField
                 echoMode: TextInput.Password
                 onTextEdited: root.password = text
                 onAccepted: {

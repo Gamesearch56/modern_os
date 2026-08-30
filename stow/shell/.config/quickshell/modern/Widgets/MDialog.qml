@@ -100,21 +100,12 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                MText {
+                MButton {
                     visible: root.destructiveKey.length > 0
+                    kind: "text"
                     key: root.destructiveKey
-                    styleName: "labelLarge"
-                    color: Colors.color.error
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                    Accessible.role: Accessible.Button
-                    Accessible.name: root.destructiveKey.length > 0 ? I18n.t(root.destructiveKey) : ""
-                    Accessible.onPressAction: root.destructiveClicked()
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.destructiveClicked()
-                    }
+                    onClicked: root.destructiveClicked()
                 }
             }
 
@@ -153,4 +144,12 @@ Item {
     }
 
     Keys.onEscapePressed: root.cancelled()
+    Keys.onReturnPressed: {
+        if (root.open && root.confirmEnabled)
+            root.confirmed();
+    }
+    Keys.onEnterPressed: {
+        if (root.open && root.confirmEnabled)
+            root.confirmed();
+    }
 }

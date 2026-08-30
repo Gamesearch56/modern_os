@@ -9,6 +9,7 @@ RowLayout {
     readonly property bool on: Config.kdeconnect.enabled
 
     Component.onCompleted: KdeConnect.watching = root.on
+    Component.onDestruction: KdeConnect.watching = false
     onOnChanged: KdeConnect.watching = root.on
 
     MIcon {

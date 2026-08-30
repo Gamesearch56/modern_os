@@ -23,7 +23,7 @@ Singleton {
 
     readonly property bool showOverlay: root.open && (root.kind === "image" || root.kind === "text")
     readonly property string home: Quickshell.env("HOME")
-    readonly property string mpvInput: root.home + "/modern_dotfile/scripts/lib/quicklook-mpv-input.conf"
+    readonly property string mpvInput: Paths.script("lib/quicklook-mpv-input.conf")
 
     signal previewFailed(string key, string name)
 

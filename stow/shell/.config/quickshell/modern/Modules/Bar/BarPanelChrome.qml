@@ -33,6 +33,7 @@ ColumnLayout {
 
         MIconButton {
             close: true
+            tabFocus: false
             iconName: "window-close"
             key: "bar.close"
             onClicked: Popups.dismiss()

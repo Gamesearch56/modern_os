@@ -16,7 +16,6 @@ Deep links: `Settings.openAt(section, subsection)` in
 | `accounts` | `privacy` |
 | `widgets` | `bar` |
 | `windows` | `design` (subsection `windows`) |
-| `gaming` | `system` (subsection `gaming`) |
 | `display` | `displays` |
 | `screenshot` | `screenshots` |
 

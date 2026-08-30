@@ -7,6 +7,7 @@
 
 local config = require("modules.config")
 local colors = require("modules.colors")
+local overlays = require("modules.windows")
 
 if not config.value("windows.titlebar", true) then
     return
@@ -71,11 +72,10 @@ hl.window_rule({
 
 -- Settings and picker windows draw their own close; a hyprbars button
 -- on top of that is a second X. Applied here so the plugin is loaded.
-local chrome = {
-    "modern.settings",
-    "modern.overview",
-    "modern.wallpaper-provider",
-}
+local chrome = {}
+for _, w in ipairs(overlays) do
+    chrome[#chrome + 1] = w.title
+end
 for _, title in ipairs(chrome) do
     hl.window_rule({
         name = "hyprbars-nobar-" .. title,

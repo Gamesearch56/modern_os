@@ -9,6 +9,7 @@ ApplicationWindow {
     visible: true
     width: 1200
     height: 800
+    // Size matches Tokens.window.providerWidth/Height and modules/windows.lua.
 
     function _url(): string {
         const a = Qt.application.arguments;
@@ -17,7 +18,7 @@ ApplicationWindow {
             if (s.indexOf("http://") === 0 || s.indexOf("https://") === 0)
                 return s;
         }
-        return "https://4kwallpapers.com";
+        return "";
     }
 
     function _dest(): string {

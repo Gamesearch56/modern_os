@@ -81,6 +81,7 @@ Item {
         }
 
         MIconButton {
+            tabFocus: false
             iconName: "media-skip-backward-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
@@ -89,6 +90,7 @@ Item {
             onClicked: Media.previous()
         }
         MIconButton {
+            tabFocus: false
             iconName: Media.playing ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
@@ -96,6 +98,7 @@ Item {
             onClicked: Media.togglePlaying()
         }
         MIconButton {
+            tabFocus: false
             iconName: "media-skip-forward-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm

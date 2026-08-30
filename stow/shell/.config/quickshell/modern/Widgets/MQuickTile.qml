@@ -22,9 +22,21 @@ Item {
         : Tokens.spacing.xxl * 2 + Tokens.spacing.xs
     implicitWidth: Tokens.spacing.xxl * 6
     opacity: root.enabled ? 1 : 0.38
+    activeFocusOnTab: root.enabled
     Accessible.role: Accessible.Button
     Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey) : root.iconName
-    Accessible.onPressAction: root.clicked()
+    Accessible.onPressAction: {
+        if (root.enabled)
+            root.clicked();
+    }
+    Keys.onPressed: (event) => {
+        if (!root.enabled)
+            return;
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            root.clicked();
+            event.accepted = true;
+        }
+    }
 
     readonly property color _fg: root.checked ? Chrome.tonal.fg : Colors.color.onSurface
     readonly property int _textAlign: root.centerAlign ? Text.AlignHCenter : Text.AlignLeft

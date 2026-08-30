@@ -33,7 +33,6 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + mouse 272 / 273` | Drag / resize window | |
 | `SUPER + scroll` | Next/prev workspace on this monitor | `workspace m±1` |
 | `SUPER + SHIFT + C` | Color picker | |
-| `SUPER + SHIFT + V` | Clipboard history | |
 
 Workspace `SUPER + 1`…`0` and `SUPER + SHIFT + 1`…`0` (move), plus
 focus/move arrows, match the cheatsheet categories.

@@ -19,8 +19,7 @@ Singleton {
     property string _pendingDesc: ""
     property bool _fromUser: false
 
-    readonly property string home: Quickshell.env("HOME")
-    readonly property string script: root.home + "/modern_dotfile/scripts/brightness.sh"
+    readonly property string script: Paths.script("brightness.sh")
 
     IpcHandler {
         target: "brightness"

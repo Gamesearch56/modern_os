@@ -9,6 +9,7 @@
 -- loaded — same gate as modules/titlebar.lua.
 
 local config = require("modules.config")
+local overlays = require("modules.windows")
 
 local function hyprbars_loaded()
     return hl.plugin and hl.plugin.hyprbars ~= nil
@@ -100,31 +101,7 @@ apply({
     ["hyprbars:no_bar"] = true,
 })
 
-apply({
-    name = "modern-settings",
-    match = { title = "modern.settings" },
-    float = true,
-    center = true,
-    size = { 1040, 720 },
-    dim_around = true,
-    ["hyprbars:no_bar"] = true,
-})
-
-apply({
-    name = "modern-wallpaper-provider",
-    match = { title = "modern.wallpaper-provider" },
-    float = true,
-    center = true,
-    size = { 1200, 800 },
-    dim_around = true,
-    ["hyprbars:no_bar"] = true,
-})
-
-local overlay_windows = {
-    { name = "modern-overview", title = "modern.overview", size = { 920, 640 } },
-}
-
-for _, w in ipairs(overlay_windows) do
+for _, w in ipairs(overlays) do
     apply({
         name = w.name,
         match = { title = w.title },
@@ -133,6 +110,6 @@ for _, w in ipairs(overlay_windows) do
         size = w.size,
         dim_around = true,
         ["hyprbars:no_bar"] = true,
-        opaque = true,
+        opaque = w.opaque == true,
     })
 end

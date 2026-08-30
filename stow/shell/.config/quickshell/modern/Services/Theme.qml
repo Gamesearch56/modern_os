@@ -132,7 +132,7 @@ Singleton {
         root.lastError = "";
         root._pendingSlug = slug;
         writeProc.command = [
-            Quickshell.env("HOME") + "/modern_dotfile/scripts/theme-create.sh",
+            Paths.script("theme-create.sh"),
             slug, body, root.stateDir
         ];
         writeProc.running = true;
@@ -154,7 +154,7 @@ Singleton {
         });
         root.lastError = "";
         root._pendingSlug = slug;
-        writeProc.command = [Quickshell.env("HOME") + "/modern_dotfile/scripts/theme-create.sh", slug, body];
+        writeProc.command = [Paths.script("theme-create.sh"), slug, body];
         writeProc.running = true;
         ConfigWrite.set("design.activeProfile", slug);
     }
@@ -181,7 +181,7 @@ Singleton {
     }
 
     function _startApply(spec: var) {
-        const cmd = [Quickshell.env("HOME") + "/modern_dotfile/scripts/theme-apply.sh"];
+        const cmd = [Paths.script("theme-apply.sh")];
         if (spec.profile.length > 0) {
             cmd.push("--profile");
             cmd.push(spec.profile);

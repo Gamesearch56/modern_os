@@ -22,6 +22,8 @@ Singleton {
     property real progress: -1
     property string error: ""
     property string _notified: ""
+    signal finished(bool ok)
+    signal notify(string summary, string body)
 
     readonly property bool indeterminate: root.running && root.progress < 0
 
@@ -71,7 +73,7 @@ Singleton {
 
     Timer {
         interval: 3600000
-        running: true
+        running: root.watching
         repeat: true
         triggeredOnStart: true
         onTriggered: {
@@ -108,7 +110,7 @@ Singleton {
         root.progress = -1;
         root.running = true;
         root.error = "";
-        proc.command = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "update"];
+        proc.command = [Paths.modern, "update"];
         proc.running = true;
     }
 
@@ -117,7 +119,7 @@ Singleton {
             return;
         root.error = "";
         root.mirrorsRunning = true;
-        mirrorsProc.command = [Quickshell.env("HOME") + "/modern_dotfile/scripts/modern", "mirrors"];
+        mirrorsProc.command = [Paths.modern, "mirrors"];
         mirrorsProc.running = true;
     }
 
@@ -143,17 +145,11 @@ Singleton {
     function _done(ok: bool) {
         root.running = false;
         root.progress = ok ? 1 : -1;
-        root._notify(ok ? I18n.t("settings.update.success") : I18n.t("settings.update.failed"), root.step);
+        root.notify(ok ? I18n.t("settings.update.success") : I18n.t("settings.update.failed"), root.step);
         if (ok) {
             closeTimer.restart();
             root.refresh();
         }
-        if (!ok)
-            Logger.error("Update", root.step || "modern update failed");
-    }
-
-    function _notify(summary: string, body: string) {
-        Quickshell.execDetached(["notify-send", "-a", "modern", "-i", "system-software-update", summary, body || ""]);
     }
 
     function _icon(name: string): string {
@@ -208,7 +204,7 @@ Singleton {
         const key = all.map(p => p.name).join(" ");
         if (all.length > 0 && key !== root._notified) {
             root._notified = key;
-            root._notify(I18n.t("settings.update.available", ({ n: String(all.length) })), "");
+            root.notify(I18n.t("settings.update.available", ({ n: String(all.length) })), "");
         }
         if (all.length === 0)
             root._notified = "";

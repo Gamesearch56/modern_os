@@ -30,6 +30,18 @@ Item {
         root.menuBackground = false;
     }
 
+    function focusFirst() {
+        for (let i = 0; i < col.children.length; i++) {
+            const c = col.children[i];
+            if (c && c.forceActiveFocus && c.titleValue !== undefined) {
+                c.forceActiveFocus();
+                return;
+            }
+        }
+    }
+
+    Component.onCompleted: Qt.callLater(root.focusFirst)
+
     BarPanelChrome {
         anchors.fill: parent
         titleKey: "bar.taskbar"
