@@ -16,6 +16,12 @@ Singleton {
     property bool panelOpen: false
     property string hostScreenName: ""
     property string lastError: ""
+    property bool installed: false
+    property bool running: false
+    property bool probed: false
+    property bool watching: false
+    property var models: []
+    readonly property bool ready: root.installed && root.running
     property bool _awaiting: false
     property bool _exited: false
     property bool _outDone: false
@@ -55,6 +61,76 @@ Singleton {
         }
     }
 
+    Process {
+        id: statusProc
+        stdout: StdioCollector {
+            id: statusOut
+            onStreamFinished: root._parseStatus(this.text)
+        }
+    }
+
+    Timer {
+        interval: 4000
+        running: root.watching && !root.busy
+        repeat: true
+        onTriggered: root.refreshStatus()
+    }
+
+    Component.onCompleted: root.refreshStatus()
+
+    function refreshStatus() {
+        if (statusProc.running || root.busy)
+            return;
+        statusProc.command = ["sh", "-c", "command -v ollama >/dev/null 2>&1 && printf 'INSTALLED\\n'; curl -sf --max-time 1 http://127.0.0.1:11434/api/tags || true"];
+        statusProc.running = false;
+        Qt.callLater(() => {
+            if (!root.busy)
+                statusProc.running = true;
+        });
+    }
+
+    function modelChoices(): var {
+        const out = [];
+        const seen = {};
+        const list = root.models || [];
+        for (let i = 0; i < list.length; i++) {
+            const stem = String(list[i] || "").replace(/:latest$/, "");
+            if (!stem.length || seen[stem])
+                continue;
+            seen[stem] = true;
+            out.push({ value: stem, titleValue: stem });
+        }
+        const cur = String(Config.accounts?.ai?.ollamaModel || "").replace(/:latest$/, "");
+        if (cur.length > 0 && !seen[cur])
+            out.unshift({ value: cur, titleValue: cur });
+        return out;
+    }
+
+    function _parseStatus(text: string) {
+        const raw = String(text || "");
+        root.installed = raw.indexOf("INSTALLED") !== -1;
+        const brace = raw.indexOf("{");
+        let names = [];
+        let on = false;
+        if (brace !== -1) {
+            try {
+                const data = JSON.parse(raw.substring(brace));
+                const list = data.models || [];
+                on = true;
+                for (let i = 0; i < list.length; i++) {
+                    const n = String(list[i].name || list[i].model || "");
+                    if (n.length)
+                        names.push(n);
+                }
+            } catch (e) {
+                Logger.warn("Ai", String(e));
+            }
+        }
+        root.running = on;
+        root.models = names;
+        root.probed = true;
+    }
+
     function toggle(screen: var) {
         const name = root._nameOf(screen);
         if (root.panelOpen && root.hostScreenName === name) {
@@ -63,6 +139,7 @@ Singleton {
         }
         root.hostScreenName = name;
         root.panelOpen = true;
+        root.refreshStatus();
     }
 
     function toggleFocused() {
@@ -72,6 +149,7 @@ Singleton {
     function showFocused() {
         root.hostScreenName = root._focusedScreenName();
         root.panelOpen = true;
+        root.refreshStatus();
     }
 
     function hide() {
@@ -123,7 +201,7 @@ Singleton {
         const q = (text || "").trim();
         if (!q || root.busy)
             return;
-        if ((Config.accounts?.ai?.provider ?? "ollama") === "none")
+        if ((Config.accounts?.ai?.provider ?? "none") === "none" || !root.ready)
             return;
         try {
             root.history = root.history.concat([{ role: "user", text: q }]);

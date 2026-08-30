@@ -217,7 +217,7 @@
     },
     "calendarIcsUrl": "",
     "ai": {
-      "provider": "ollama",
+      "provider": "none",
       "ollamaModel": "llama3"
     }
   },

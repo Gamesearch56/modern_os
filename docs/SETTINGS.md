@@ -37,7 +37,7 @@ Six groups, 19 pages. Catalog lives in
 | Appearance | Launcher | `launcher` | `launcher.frecencyEnabled`, `launcher.showIcons`, `launcher.showDescriptions`, `launcher.resultCount`, `launcher.mostUsedGridSize`. Prefixes in `launcher.providers` stay in config for a future provider layer; Settings does not edit them. |
 | Apps | Applications | `applications` | `apps.defaults` (browser Vivaldi, calendar/mail Proton Mail, messenger empty with WhatsApp fallback, file manager Dolphin, terminal kitty), `general.autostart`. Calendar/mail/messenger ids are locked on the autostart list. Shortcuts go through `scripts/modern-launch` and those defaults, not hardcoded binaries. |
 | Apps | Screenshot | `screenshots` | `screenshots.format` (PNG/JPEG/WebP), `quality` for JPEG/WebP, `directory`, `copyToClipboard`, `openEditorAfterCapture`, `includeCursor`. Capture is `scripts/screenshot.sh` (grim, then ImageMagick for WebP). |
-| Apps | AI | `ai` | `accounts.ai` |
+| Apps | AI | `ai` | `accounts.ai` (Ollama or Off). Model list comes from a running Ollama daemon. If Ollama is missing or stopped, Settings defaults the assistant to Off and shows the install steps. |
 | Keyboard & Region | Language & Time | `language` | `language.*` (incl. `previewDate`); `Locale` (`timedatectl`) |
 | Keyboard & Region | Keyboard | `keyboard` | `input.*`, `keybinds`; `Cheatsheet` |
 | Devices | Display | `displays` | `monitors.*`; `Hypr` |

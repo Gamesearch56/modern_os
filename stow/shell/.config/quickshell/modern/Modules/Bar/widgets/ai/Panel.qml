@@ -8,10 +8,11 @@ import "../../"
 Item {
     id: root
 
-    readonly property bool _off: (Config.accounts?.ai?.provider ?? "ollama") === "none"
+    readonly property bool _off: (Config.accounts?.ai?.provider ?? "none") === "none"
+    readonly property bool _blocked: root._off || !Ai.ready
 
     function send() {
-        if (root._off || Ai.busy)
+        if (root._blocked || Ai.busy)
             return;
         const t = field.text.trim();
         if (!t.length)
@@ -29,7 +30,7 @@ Item {
     }
 
     function focusInput() {
-        if (root._off)
+        if (root._blocked)
             return;
         field.forceActiveFocus();
     }
@@ -68,7 +69,7 @@ Item {
                 contentWidth: width
                 contentHeight: col.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
-                visible: !root._off && Ai.history.length > 0
+                visible: !root._blocked && Ai.history.length > 0
 
                 ColumnLayout {
                     id: col
@@ -110,11 +111,11 @@ Item {
             }
 
                 MEmptyState {
-                    visible: root._off || Ai.history.length === 0
+                    visible: root._blocked || Ai.history.length === 0
                     anchors.fill: parent
                     iconName: "robot"
-                    titleKey: root._off ? "ai.disabled" : "ai.empty"
-                    hintKey: root._off ? "ai.enableHint" : "ai.setupHint"
+                    titleKey: root._off ? "ai.disabled" : (!Ai.ready ? "ai.unavailable" : "ai.empty")
+                    hintKey: root._off ? "ai.enableHint" : (!Ai.ready ? "ai.setupHint" : "ai.hint")
                 }
         }
 
@@ -125,7 +126,7 @@ Item {
             MTextField {
                 id: field
                 Layout.fillWidth: true
-                enabled: !root._off && !Ai.busy
+                enabled: !root._blocked && !Ai.busy
                 placeholderKey: "ai.placeholder"
                 escapeCloses: true
                 onAccepted: root.send()
@@ -134,7 +135,7 @@ Item {
             MButton {
                 kind: "filled"
                 key: "ai.send"
-                enabled: !root._off && !Ai.busy && field.text.trim().length > 0
+                enabled: !root._blocked && !Ai.busy && field.text.trim().length > 0
                 onClicked: root.send()
             }
         }

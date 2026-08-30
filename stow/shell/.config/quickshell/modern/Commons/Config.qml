@@ -213,7 +213,7 @@ Singleton {
             property var accounts: ({
                 protonDrive: { enabled: false },
                 calendarIcsUrl: "",
-                ai: { provider: "ollama", ollamaModel: "llama3" }
+                ai: { provider: "none", ollamaModel: "llama3" }
             })
 
             property var gaming: ({
