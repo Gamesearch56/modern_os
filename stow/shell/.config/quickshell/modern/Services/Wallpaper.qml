@@ -121,9 +121,12 @@ Singleton {
                 return;
             }
             root.currentPath = path;
-            Theme.apply(path, "");
-            Quickshell.execDetached([root.home + "/modern_dotfile/scripts/wallpaper-sync.sh", path]);
-            root.pickerOpen = false;
+            root.hide();
+            const shown = path;
+            Qt.callLater(() => {
+                Quickshell.execDetached([root.home + "/modern_dotfile/scripts/wallpaper-show.sh", shown]);
+                Theme.applyShown(shown);
+            });
             Logger.info("Wallpaper", "applied " + path);
         } catch (e) {
             Logger.error("Wallpaper", String(e));

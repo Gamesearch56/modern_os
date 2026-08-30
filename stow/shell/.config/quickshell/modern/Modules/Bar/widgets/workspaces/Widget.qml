@@ -20,35 +20,46 @@ Item {
         return Hypr.workspaceIdsFor(root.barScreen);
     }
 
-    // Next id in this monitor's assigned range (1-5 left, 6-10 next),
-    // not the next globally empty workspace.
-    readonly property int nextId: {
+    readonly property int activeId: {
         void Hypr.workspaces;
         void Hypr.monitors;
         void Hypr.focusedWorkspace;
         const range = Hypr.reservedRange(root.barScreen);
         if (!range)
             return 0;
-        let active = 0;
         for (let id = range.from; id <= range.to; id++) {
-            if (Hypr.isActiveOnScreen(root.barScreen, id)) {
-                active = id;
-                break;
-            }
-        }
-        if (active > 0) {
-            const next = active + 1;
-            if (next >= range.from && next <= range.to)
-                return next;
-            return 0;
-        }
-        for (let id = range.from; id <= range.to; id++) {
-            const ws = Hypr.workspaceById(id);
-            const n = Number(ws?.windows ?? ws?.lastIpcObject?.windows ?? 0);
-            if (n === 0)
+            if (Hypr.isActiveOnScreen(root.barScreen, id))
                 return id;
         }
         return 0;
+    }
+
+    // First unused id after the active one in this monitor's range
+    // (1-5 left, 6-10 next). Skip workspaces already on the strip.
+    readonly property int nextId: {
+        void Hypr.workspaces;
+        void Hypr.monitors;
+        void Hypr.focusedWorkspace;
+        void Hypr.toplevels;
+        const range = Hypr.reservedRange(root.barScreen);
+        if (!range || root.activeId <= 0)
+            return 0;
+        const taken = ({});
+        const shown = root.ids || [];
+        for (let i = 0; i < shown.length; i++)
+            taken[Number(shown[i])] = true;
+        for (let id = root.activeId + 1; id <= range.to; id++) {
+            if (!taken[id])
+                return id;
+        }
+        return 0;
+    }
+
+    readonly property bool canAdd: {
+        void Hypr.toplevelList;
+        void Hypr.workspaces;
+        void Hypr.focusedWorkspace;
+        return root.nextId > 0 && root.activeId > 0 && Hypr._workspaceHasWindows(root.activeId);
     }
 
     Row {
@@ -127,13 +138,13 @@ Item {
         }
 
         Item {
-            visible: root.nextId > 0
+            visible: root.canAdd
             width: Tokens.spacing.xs
             height: 1
         }
 
         MIconButton {
-            visible: root.nextId > 0
+            visible: root.canAdd
             anchors.verticalCenter: parent.verticalCenter
             iconName: "list-add-symbolic"
             key: "bar.workspaceAdd"
@@ -144,7 +155,7 @@ Item {
         }
 
         Item {
-            visible: root.nextId > 0
+            visible: root.canAdd
             width: Tokens.spacing.xs
             height: 1
         }

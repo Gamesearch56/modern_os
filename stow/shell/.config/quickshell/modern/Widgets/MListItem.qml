@@ -23,6 +23,7 @@ Item {
     property bool destructive: false
     property bool hoverHighlight: true
     property string badgeIcon: ""
+    property int badgeCount: 0
 
     default property alias extra: trailing.data
 
@@ -45,11 +46,17 @@ Item {
     implicitWidth: Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled && root.hoverHighlight
-    Accessible.role: Accessible.Button
+    Accessible.role: root.hoverHighlight ? Accessible.Button : Accessible.StaticText
     Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
-    Accessible.onPressAction: root.clicked()
+    Accessible.description: root.badgeCount > 0 ? String(root.badgeCount) : ""
+    Accessible.onPressAction: {
+        if (root.hoverHighlight)
+            root.clicked();
+    }
 
     Keys.onPressed: (event) => {
+        if (!root.hoverHighlight)
+            return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
             root.clicked();
             event.accepted = true;
@@ -87,7 +94,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        enabled: root.enabled
+        enabled: root.enabled && root.hoverHighlight
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: root.hoverHighlight ? Qt.PointingHandCursor : Qt.ArrowCursor
@@ -183,9 +190,14 @@ Item {
             }
         }
 
+        MBadge {
+            count: root.badgeCount
+            Layout.alignment: Qt.AlignVCenter
+        }
+
         Item {
             id: trailing
-            visible: children.length > 0
+            visible: childrenRect.width > 0
             Layout.preferredWidth: childrenRect.width
             Layout.preferredHeight: childrenRect.height
             Layout.alignment: Qt.AlignVCenter

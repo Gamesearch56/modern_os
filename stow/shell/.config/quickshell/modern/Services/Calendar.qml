@@ -15,6 +15,7 @@ Singleton {
     property var todayEvents: []
     property var eventDays: ({})
     property bool watching: false
+    property bool busy: false
     property string raw: ""
     property int viewYear: new Date().getFullYear()
     property int viewMonth: new Date().getMonth()
@@ -87,6 +88,7 @@ Singleton {
     }
 
     function refresh() {
+        root.busy = true;
         if (root._http) {
             fetchProc.running = false;
             fetchProc.command = ["curl", "-fsSL", "--max-time", "20", root.icsUrl];
@@ -131,6 +133,7 @@ Singleton {
         root.raw = text || "";
         root.events = Ics.parse(root.raw);
         root._recompute();
+        root.busy = false;
     }
 
     function _recompute() {

@@ -12,12 +12,21 @@ Item {
     clip: true
 
     readonly property real _art: Tokens.spacing.xl - Tokens.spacing.xxs
+    readonly property real _titleMax: Tokens.spacing.xxl * 4
     readonly property string _label: {
         const title = Media.trackTitle || "";
         const artist = Media.trackArtist || "";
         if (title.length > 0 && artist.length > 0)
-            return title + " — " + artist;
-        return title;
+            return artist + " — " + title;
+        return title || artist;
+    }
+
+    function _raise() {
+        const desk = Media.desktopEntry;
+        const ident = Media.identity;
+        if ((desk.length > 0 && Hypr.raiseDesktop(desk)) || (ident.length > 0 && Hypr.raiseDesktop(ident)))
+            return;
+        Media.raise();
     }
 
     RowLayout {
@@ -47,20 +56,28 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: Media.raise()
+                onClicked: root._raise()
             }
         }
 
-        MText {
-            value: root._label
-            styleName: "titleSmall"
-            elide: Text.ElideRight
-            wrapMode: Text.NoWrap
-            clip: true
+        Item {
+            id: titleBox
+            visible: root._label.length > 0
             Layout.alignment: Qt.AlignVCenter
-            Layout.maximumWidth: Tokens.spacing.xxl * 10
+            Layout.preferredWidth: Math.min(title.implicitWidth, root._titleMax)
+            Layout.maximumWidth: root._titleMax
             Layout.preferredHeight: root._art
-            Layout.maximumHeight: root._art
+            implicitHeight: root._art
+
+            MText {
+                id: title
+                anchors.fill: parent
+                value: root._label
+                styleName: "titleSmall"
+                elide: Text.ElideRight
+                wrapMode: Text.NoWrap
+                verticalAlignment: Text.AlignVCenter
+            }
         }
 
         MIconButton {
@@ -91,6 +108,6 @@ Item {
     MouseArea {
         anchors.fill: parent
         z: -1
-        onClicked: Media.raise()
+        onClicked: root._raise()
     }
 }

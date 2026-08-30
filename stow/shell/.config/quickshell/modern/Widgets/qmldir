@@ -8,6 +8,7 @@ MSlider 1.0 MSlider.qml
 MCard 1.0 MCard.qml
 MChip 1.0 MChip.qml
 MListItem 1.0 MListItem.qml
+MBadge 1.0 MBadge.qml
 MTextField 1.0 MTextField.qml
 MPopup 1.0 MPopup.qml
 MDialog 1.0 MDialog.qml
@@ -35,7 +36,6 @@ MFocusRing 1.0 MFocusRing.qml
 MPercentTile 1.0 MPercentTile.qml
 MPerfGrid 1.0 MPerfGrid.qml
 MQuickTile 1.0 MQuickTile.qml
-MRobotIcon 1.0 MRobotIcon.qml
 MSparkline 1.0 MSparkline.qml
 MLinearProgress 1.0 MLinearProgress.qml
 MSlotBoard 1.0 MSlotBoard.qml

@@ -75,6 +75,7 @@ Item {
                             variant: "nav"
                             iconName: root.catalog.icon(row.rowData.id)
                             titleKey: row._group ? "" : ("settings.sections." + row.rowData.id)
+                            badgeCount: row.rowData.id === "system" ? Update.pending.length : 0
                             selected: Settings.sectionId === row.rowData.id
                             onClicked: Settings.openAt(row.rowData.id, "")
                         }

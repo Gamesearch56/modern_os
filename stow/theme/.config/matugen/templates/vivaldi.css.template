@@ -17,6 +17,20 @@
     --md-scrim: {{colors.scrim.default.hex}};
 }
 
+/* Vivaldi paints pageload and toolbar hover from these, as inline
+   vars on #browser. Remap so leftover Wallust/brand red cannot leak. */
+#browser {
+    --colorAccentBg: var(--md-primary) !important;
+    --colorAccentFg: var(--md-on-primary) !important;
+    --colorAccentBgDark: color-mix(in srgb, var(--md-primary) 8%, transparent) !important;
+    --colorAccentBgDarker: color-mix(in srgb, var(--md-primary) 12%, transparent) !important;
+    --colorAccentBgFaded: color-mix(in srgb, var(--md-primary) 8%, transparent) !important;
+    --colorAccentBgFadedMore: color-mix(in srgb, var(--md-primary) 12%, transparent) !important;
+    --colorAccentBgFadedMost: var(--md-primary-container) !important;
+    --colorHighlightBg: var(--md-primary-container) !important;
+    --colorHighlightFg: var(--md-on-primary-container) !important;
+}
+
 ::-webkit-scrollbar-thumb {
     background-color: var(--md-outline) !important;
     border-radius: var(--md-radius-full, 9999px) !important;
@@ -101,6 +115,27 @@
 .UrlBar-AddressField:focus-within,
 .UrlBar-SearchField:focus-within {
     outline: 2px solid var(--md-primary) !important;
+}
+
+.UrlBar-AddressField .pageload .pageload-indicator {
+    background-color: var(--md-primary) !important;
+    border-radius: var(--md-radius-full, 9999px) !important;
+    overflow: hidden !important;
+}
+
+.UrlBar-AddressField .pageload .pageload-indicator::-webkit-progress-bar {
+    background: transparent !important;
+    border-radius: var(--md-radius-full, 9999px) !important;
+}
+
+.UrlBar-AddressField .pageload .pageload-indicator::-webkit-progress-value {
+    border-radius: var(--md-radius-full, 9999px) !important;
+    background-color: var(--md-primary) !important;
+}
+
+.toolbar-tabbar .button-toolbar.newtab > button:hover,
+.toolbar-tabbar .button-toolbar > button:hover {
+    background-color: color-mix(in srgb, var(--md-primary) 8%, transparent) !important;
 }
 
 .toolbar-mainbar,

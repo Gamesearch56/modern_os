@@ -20,7 +20,7 @@ Item {
     z: 0
 
     readonly property bool hovered: ma.containsMouse
-    readonly property real _layer: Chrome.stateLayer(ma.containsMouse, ma.pressed)
+    readonly property real _layer: Chrome.stateLayer(ma.containsMouse && !root.checked, ma.pressed && !root.checked)
 
     Rectangle {
         anchors.fill: parent

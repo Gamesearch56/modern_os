@@ -23,11 +23,12 @@ ColumnLayout {
                     width: ListView.view.width
                     titleValue: ev.summary || ""
                     subtitleValue: ev.when || ev.ymd || ""
+                    hoverHighlight: false
                 }
             }
 
         MEmptyState {
-            visible: Calendar.todayEvents.length === 0
+            visible: Calendar.todayEvents.length === 0 && !Calendar.busy
             anchors.fill: parent
             iconName: "x-office-calendar-symbolic"
             titleKey: "calendar.empty"

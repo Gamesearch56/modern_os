@@ -30,7 +30,7 @@ PanelWindow {
     implicitWidth: root.vertical ? (root._expanded ? root._fullW : root._strip) : 0
     exclusiveZone: root._auto ? 0 : (root.vertical ? implicitWidth : implicitHeight)
     color: "transparent"
-    focusable: Popups.openCount > 0
+    focusable: Popups.active !== null
 
     Behavior on _slide {
         NumberAnimation {
@@ -80,7 +80,7 @@ PanelWindow {
 
     Shortcut {
         sequence: "Escape"
-        enabled: Popups.openCount > 0
+        enabled: Popups.active !== null
         context: Qt.WindowShortcut
         onActivated: Popups.dismiss()
     }

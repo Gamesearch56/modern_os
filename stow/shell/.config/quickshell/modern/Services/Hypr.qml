@@ -198,10 +198,19 @@ Singleton {
         const id = String(desktopId || "");
         if (!id.length)
             return false;
+        if (root._raiseMatching(id, true))
+            return true;
+        return root._raiseMatching(id, false);
+    }
+
+    function _raiseMatching(desktopId: string, classOnly: bool): bool {
         const list = Hyprland.toplevels?.values ?? [];
         for (let i = 0; i < list.length; i++) {
             const t = list[i];
-            if (!t || !root._windowMatchesDesktop(t, id))
+            if (!t)
+                continue;
+            const ok = classOnly ? root._windowMatchesClass(t, desktopId) : root._windowMatchesDesktop(t, desktopId);
+            if (!ok)
                 continue;
             root.activateWindow(String(t.address || ""));
             return true;
@@ -213,12 +222,38 @@ Singleton {
         return String(s || "").replace(/\.desktop$/i, "").toLowerCase().replace(/[\s._-]+/g, "");
     }
 
+    function _classFields(toplevel: var): var {
+        const ipc = toplevel.lastIpcObject || ({});
+        return [ipc.class, ipc.initialClass, toplevel.class, toplevel.initialClass];
+    }
+
+    function _windowMatchesClass(toplevel: var, desktopId: string): bool {
+        const needle = root._normId(desktopId);
+        if (!needle.length)
+            return false;
+        const fields = root._classFields(toplevel);
+        for (let i = 0; i < fields.length; i++) {
+            const n = root._normId(String(fields[i] || ""));
+            if (!n.length)
+                continue;
+            if (n === needle)
+                return true;
+            if (needle.length >= 5 && n.indexOf(needle) !== -1)
+                return true;
+            if (n.length >= 5 && needle.indexOf(n) !== -1)
+                return true;
+        }
+        return false;
+    }
+
     function _windowMatchesDesktop(toplevel: var, desktopId: string): bool {
+        if (root._windowMatchesClass(toplevel, desktopId))
+            return true;
         const needle = root._normId(desktopId);
         if (!needle.length)
             return false;
         const ipc = toplevel.lastIpcObject || ({});
-        const fields = [ipc.class, ipc.initialClass, toplevel.class, toplevel.initialClass, ipc.title, toplevel.title];
+        const fields = [ipc.title, toplevel.title];
         for (let i = 0; i < fields.length; i++) {
             const n = root._normId(String(fields[i] || ""));
             if (!n.length)
@@ -522,13 +557,23 @@ Singleton {
     }
 
     function _workspaceHasWindows(id: int): bool {
+        const n = Number(id);
+        if (n <= 0)
+            return false;
         const list = Hyprland.toplevels?.values ?? [];
         for (let i = 0; i < list.length; i++) {
-            if (list[i]?.workspace && Number(list[i].workspace.id) === id)
-                return true;
+            const t = list[i];
+            if (!t || !t.workspace || Number(t.workspace.id) !== n)
+                continue;
+            const ipc = t.lastIpcObject || ({});
+            if (ipc.hidden === true || ipc.mapped === false)
+                continue;
+            const cls = String(ipc.class || t.class || "").toLowerCase();
+            if (cls.indexOf("quickshell") !== -1)
+                continue;
+            return true;
         }
-        const ws = root.workspaceById(id);
-        return Number(ws?.windows ?? ws?.lastIpcObject?.windows ?? 0) > 0;
+        return false;
     }
 
     function workspaceIdsFor(screen: var): var {
@@ -546,6 +591,8 @@ Singleton {
             shown.push(n);
         }
         const mon = root.monitorForScreen(screen);
+        const mode = Config.monitors?.workspaceMode || "dynamic";
+        const range = root.reservedRange(screen);
         const raw = Hyprland.workspaces?.values ?? [];
         for (let i = 0; i < raw.length; i++) {
             const ws = raw[i];
@@ -554,13 +601,15 @@ Singleton {
             if (mon && !root._onMonitor(ws, mon))
                 continue;
             const id = Number(ws.id);
+            if (mode === "fixed" && range && (id < range.from || id > range.to))
+                continue;
             if (root.isActiveOnScreen(screen, id) || root._workspaceHasWindows(id))
                 add(id);
         }
         if (mon) {
             const aw = mon.activeWorkspace ?? mon.lastIpcObject?.activeWorkspace;
             const awId = Number(aw && aw.id !== undefined ? aw.id : aw);
-            if (awId > 0)
+            if (awId > 0 && !(mode === "fixed" && range && (awId < range.from || awId > range.to)))
                 add(awId);
         }
         shown.sort((a, b) => a - b);

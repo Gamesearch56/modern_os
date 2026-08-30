@@ -14,6 +14,7 @@ Item {
     property int iconSize: Tokens.icon.md
     property bool close: false
     property bool tint: true
+    property bool busy: false
 
     signal clicked()
     signal middleClicked()
@@ -26,9 +27,14 @@ Item {
     activeFocusOnTab: false
     Accessible.role: Accessible.Button
     Accessible.name: root.key.length > 0 ? I18n.t(root.key) : root.iconName
-    Accessible.onPressAction: root.clicked()
+    Accessible.onPressAction: {
+        if (root.enabled && !root.busy)
+            root.clicked();
+    }
 
     Keys.onPressed: (event) => {
+        if (root.busy || !root.enabled)
+            return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
             root.clicked();
             event.accepted = true;
@@ -46,7 +52,7 @@ Item {
         return Colors.color.onSurface;
     }
 
-    readonly property real _layer: Chrome.stateLayer(root._hover && !root.checked, ma.pressed && !root.checked)
+    readonly property real _layer: Chrome.stateLayer(root._hover && !root.checked && !root.busy, ma.pressed && !root.checked && !root.busy)
 
     Rectangle {
         anchors.fill: parent
@@ -64,18 +70,26 @@ Item {
     }
 
     MIcon {
+        id: glyph
         anchors.centerIn: parent
         name: root.iconName
         source: root.iconSource
         size: root.iconSize
         color: root._iconColor
         tint: root.tint
+        RotationAnimation on rotation {
+            running: root.busy
+            from: 0
+            to: 360
+            duration: Motion.extraLongMs
+            loops: Animation.Infinite
+        }
     }
 
     MouseArea {
         id: ma
         anchors.fill: parent
-        enabled: root.enabled
+        enabled: root.enabled && !root.busy
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
@@ -113,6 +127,11 @@ Item {
             root._suppressHover = false;
         }
         onWheel: (w) => root.wheel(w.angleDelta.y > 0 ? 1 : -1)
+    }
+
+    onBusyChanged: {
+        if (!root.busy)
+            glyph.rotation = 0;
     }
 
     onCheckedChanged: {

@@ -124,7 +124,8 @@
     "prevMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
     "setupFeed": "Kalender-Feed-URL einrichten",
-    "needApp": "Lege unter Einstellungen → Anwendungen eine Kalender-App fest."
+    "needApp": "Lege unter Einstellungen → Anwendungen eine Kalender-App fest.",
+    "refresh": "Aktualisieren"
   },
   "mail": {
     "open": "Mail öffnen"

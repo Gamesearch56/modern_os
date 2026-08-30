@@ -11,10 +11,11 @@ Item {
     implicitHeight: Config.bar.height
 
     readonly property string _icon: Audio.muted ? "audio-volume-muted-symbolic" : (Audio.volume < 34 ? "audio-volume-low-symbolic" : (Audio.volume < 67 ? "audio-volume-medium-symbolic" : "audio-volume-high-symbolic"))
-    readonly property color _fg: sliderPopup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+    readonly property color _fg: hit.checked ? Colors.color.onPrimaryContainer : Colors.color.onSurface
 
     BarIslandHit {
-        checked: sliderPopup.open || (Settings.open && Settings.sectionId === "audio")
+        id: hit
+        checked: Settings.open && Settings.sectionId === "audio"
         onEntered: {
             hideSlider.stop();
             sliderPopup.open = true;
@@ -73,7 +74,8 @@ Item {
         hAlign: Qt.AlignHCenter
         anchorItem: root
         implicitWidth: Tokens.spacing.xxl * 7
-        implicitHeight: Tokens.slider.thumb + Tokens.spacing.md * 3
+        implicitHeight: Tokens.slider.thumb + Tokens.spacing.xs + Tokens.spacing.sm * 3
+        padding: Tokens.spacing.sm
         onBodyHoveredChanged: {
             if (sliderPopup.bodyHovered)
                 hideSlider.stop();
@@ -82,8 +84,10 @@ Item {
         }
 
         MSlider {
-            anchors.centerIn: parent
-            width: parent.width - Tokens.spacing.md
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            activeFocusOnTab: false
             from: 0
             to: Audio.volumeCap
             value: Audio.volume

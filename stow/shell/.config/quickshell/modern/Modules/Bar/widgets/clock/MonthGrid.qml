@@ -34,77 +34,88 @@ ColumnLayout {
         return out;
     }
 
-    RowLayout {
+    MPane {
         Layout.fillWidth: true
-        MIconButton {
-            iconName: "go-previous-symbolic"
-            key: "calendar.prevMonth"
-            onClicked: Calendar.shiftMonth(-1)
-        }
-        MText {
-            value: DateTime.monthTitle(Calendar.viewYear, Calendar.viewMonth)
-            styleName: "titleMedium"
-            horizontalAlignment: Text.AlignHCenter
-            Layout.fillWidth: true
-        }
-        MIconButton {
-            iconName: "go-next-symbolic"
-            key: "calendar.nextMonth"
-            onClicked: Calendar.shiftMonth(1)
-        }
-    }
+        implicitHeight: inner.implicitHeight + padding * 2
 
-    GridLayout {
-        Layout.fillWidth: true
-        columns: root.cols
-        columnSpacing: Tokens.spacing.xxs
-        rowSpacing: Tokens.spacing.xxs
+        ColumnLayout {
+            id: inner
+            width: parent.width
+            spacing: Tokens.spacing.sm
 
-        Repeater {
-            model: root.cols
-            MText {
-                required property int index
-                value: DateTime.weekdayIndex((root.weekStart + index) % 7)
-                styleName: "labelSmall"
-                color: Colors.color.onSurfaceVariant
-                horizontalAlignment: Text.AlignHCenter
+            RowLayout {
                 Layout.fillWidth: true
-            }
-        }
-
-        Repeater {
-            model: root.cells.length
-            Item {
-                required property int index
-                readonly property var cell: root.cells[index] || ({ day: 0, ymd: "", today: false, marked: false })
-                Layout.fillWidth: true
-                Layout.preferredHeight: Tokens.spacing.xl + Tokens.spacing.xs
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Tokens.radius.full
-                    color: cell.today ? Colors.color.primaryContainer : "transparent"
-                    visible: cell.day > 0
+                MIconButton {
+                    iconName: "go-previous-symbolic"
+                    key: "calendar.prevMonth"
+                    onClicked: Calendar.shiftMonth(-1)
                 }
-
                 MText {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: Tokens.spacing.xxs
-                    value: cell.day > 0 ? String(cell.day) : ""
-                    styleName: "labelLarge"
-                    color: cell.today ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+                    value: DateTime.monthTitle(Calendar.viewYear, Calendar.viewMonth)
+                    styleName: "titleMedium"
+                    horizontalAlignment: Text.AlignHCenter
+                    Layout.fillWidth: true
+                }
+                MIconButton {
+                    iconName: "go-next-symbolic"
+                    key: "calendar.nextMonth"
+                    onClicked: Calendar.shiftMonth(1)
+                }
+            }
+
+            GridLayout {
+                Layout.fillWidth: true
+                columns: root.cols
+                columnSpacing: Tokens.spacing.xxs
+                rowSpacing: Tokens.spacing.xxs
+
+                Repeater {
+                    model: root.cols
+                    MText {
+                        required property int index
+                        value: DateTime.weekdayIndex((root.weekStart + index) % 7)
+                        styleName: "labelSmall"
+                        color: Colors.color.onSurfaceVariant
+                        horizontalAlignment: Text.AlignHCenter
+                        Layout.fillWidth: true
+                    }
                 }
 
-                Rectangle {
-                    visible: cell.marked
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: Tokens.spacing.xxs
-                    width: Tokens.spacing.xs
-                    height: Tokens.spacing.xs
-                    radius: Tokens.radius.full
-                    color: cell.today ? Colors.color.onPrimaryContainer : Colors.color.primary
+                Repeater {
+                    model: root.cells.length
+                    Item {
+                        required property int index
+                        readonly property var cell: root.cells[index] || ({ day: 0, ymd: "", today: false, marked: false })
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: Tokens.spacing.xl + Tokens.spacing.xs
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Tokens.radius.full
+                            color: cell.today ? Colors.color.primaryContainer : "transparent"
+                            visible: cell.day > 0
+                        }
+
+                        MText {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: Tokens.spacing.xxs
+                            value: cell.day > 0 ? String(cell.day) : ""
+                            styleName: "labelLarge"
+                            color: cell.today ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+                        }
+
+                        Rectangle {
+                            visible: cell.marked
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: Tokens.spacing.xxs
+                            width: Tokens.spacing.xs
+                            height: Tokens.spacing.xs
+                            radius: Tokens.radius.full
+                            color: cell.today ? Colors.color.onPrimaryContainer : Colors.color.primary
+                        }
+                    }
                 }
             }
         }

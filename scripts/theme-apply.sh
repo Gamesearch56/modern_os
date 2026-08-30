@@ -10,7 +10,8 @@
 # of sync the way the old Wallust templates could.
 #
 # Usage:
-#   theme-apply.sh [--profile NAME] [--wallpaper PATH] [--chrome-only] [--no-reload]
+#   theme-apply.sh [--profile NAME] [--wallpaper PATH] [--skip-wallpaper]
+#                  [--chrome-only] [--no-reload]
 #
 #   --profile NAME     Filename without ".json" under
 #                       ~/.config/modern/themes or
@@ -20,7 +21,10 @@
 #                       time a "sourceMode": "wallpaper" profile is
 #                       applied; remembered afterwards in
 #                       $STATE_DIR/current-wallpaper. Also sets the
-#                       wallpaper itself via awww, with a transition.
+#                       wallpaper itself via awww, with a transition,
+#                       unless --skip-wallpaper (picker already showed it).
+#   --skip-wallpaper   Remember --wallpaper / regenerate colors only;
+#                       do not call awww (avoids a second delayed fade).
 #   --chrome-only      Patch GTK/Qt/KDE/Vivaldi radii, fonts, and motion
 #                       from config.json without re-running matugen.
 #   --no-reload        Regenerate files only, skip live-reload side
@@ -43,7 +47,7 @@ WALLPAPER_STATE="$STATE_DIR/current-wallpaper"
 LAST_APPLIED_STATE="$STATE_DIR/theme-last-applied.json"
 MATUGEN_CONFIG="$HOME/.config/matugen/config.toml"
 
-log()  { printf '\033[36m[theme-apply]\033[0m %s\n' "$*"; }
+log()  { printf '\033[36m[theme-apply]\033[0m %s\n' "$*" || true; }
 warn() { printf '\033[33m[theme-apply] WARN\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[31m[theme-apply] ERROR\033[0m %s\n' "$*" >&2; exit 1; }
 
@@ -304,6 +308,7 @@ PROFILE=""
 WALLPAPER=""
 RELOAD=1
 CHROME_ONLY=0
+SKIP_WALLPAPER=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -313,6 +318,7 @@ while [ $# -gt 0 ]; do
         --wallpaper)
             [ $# -ge 2 ] || die "--wallpaper needs a value"
             WALLPAPER="$2"; shift 2 ;;
+        --skip-wallpaper) SKIP_WALLPAPER=1; shift ;;
         --chrome-only) CHROME_ONLY=1; shift ;;
         --no-reload) RELOAD=0; shift ;;
         -h|--help) usage; exit 0 ;;
@@ -415,21 +421,13 @@ esac
 
 # --- Set the wallpaper first (if applicable), then let matugen render
 # every configured template from the same seed in one pass ---
-if [ "$SOURCE_MODE" = "wallpaper" ] && [ "$RELOAD" -eq 1 ]; then
-    if command -v awww >/dev/null 2>&1 && pgrep -x awww-daemon >/dev/null 2>&1; then
-        # extraLong (600ms) from Motion.qml / motion_tokens.lua — session-scale
-        # surfaces. Fade matches overlay scrim language; motion.scale 0 is instant.
-        motion_scale="$(merged_config | jq -r '.motion.scale // 1')"
-        if awk -v s="$motion_scale" 'BEGIN { exit !(s + 0 > 0) }'; then
-            dur="$(awk -v s="$motion_scale" 'BEGIN { printf "%.3f", 0.6 * s }')"
-            awww img "$WALLPAPER" --transition-type fade --transition-duration "$dur" --transition-fps 60 \
-                || warn "awww img failed — is awww-daemon running? (autostart.lua starts it on Hyprland launch)"
-        else
-            awww img "$WALLPAPER" \
-                || warn "awww img failed — is awww-daemon running? (autostart.lua starts it on Hyprland launch)"
-        fi
+if [ "$SOURCE_MODE" = "wallpaper" ] && [ "$RELOAD" -eq 1 ] && [ "$SKIP_WALLPAPER" -eq 0 ]; then
+    show_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-show.sh"
+    if [ -x "$show_script" ] || [ -f "$show_script" ]; then
+        bash "$show_script" "$WALLPAPER" \
+            || warn "awww img failed — is awww-daemon running? (autostart.lua starts it on Hyprland launch)"
     else
-        warn "awww-daemon not running — skipping live wallpaper set, only regenerating colors"
+        warn "wallpaper-show.sh missing — skipping live wallpaper set"
     fi
 fi
 

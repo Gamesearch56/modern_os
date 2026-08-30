@@ -103,6 +103,7 @@ Item {
         actions: MIconButton {
             iconName: "view-refresh-symbolic"
             key: "weather.refresh"
+            busy: Weather.busy
             onClicked: Weather.refresh(true)
         }
 
@@ -269,7 +270,7 @@ Item {
                 }
 
                 MEmptyState {
-                    visible: !Weather.available
+                    visible: !Weather.available && !Weather.busy
                     Layout.fillWidth: true
                     Layout.preferredHeight: Tokens.spacing.xxl * 4
                     iconName: "weather-none"

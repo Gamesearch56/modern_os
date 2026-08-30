@@ -13,7 +13,7 @@ QtObject {
     // Settings-list icons. Clock and workspaces stay text-only on the bar.
     readonly property var icons: ({
         launcher: "view-app-grid-symbolic",
-        ai: "robot",
+        ai: "applications-science-symbolic",
         workspaces: "virtual-desktops",
         media: "media-playback-start-symbolic",
         taskbar: "focus-windows-symbolic",

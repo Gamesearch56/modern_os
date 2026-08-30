@@ -46,11 +46,11 @@ copy_as_jpeg() {
 copy_as_jpeg "$IMAGE" "$SHARED/wallpaper.jpg"
 
 if command -v magick >/dev/null 2>&1; then
-    magick "$IMAGE" -blur 0x24 "$SHARED/wallpaper-blur.jpg"
     magick "$IMAGE" -resize '1920x1080>' "$SHARED/wallpaper-boot.jpg"
+    magick "$SHARED/wallpaper-boot.jpg" -blur 0x16 "$SHARED/wallpaper-blur.jpg"
 elif command -v convert >/dev/null 2>&1; then
-    convert "$IMAGE" -blur 0x24 "$SHARED/wallpaper-blur.jpg"
     convert "$IMAGE" -resize '1920x1080>' "$SHARED/wallpaper-boot.jpg"
+    convert "$SHARED/wallpaper-boot.jpg" -blur 0x16 "$SHARED/wallpaper-blur.jpg"
 else
     warn "ImageMagick not on PATH — blur/boot variants are copies"
     cp "$SHARED/wallpaper.jpg" "$SHARED/wallpaper-blur.jpg"

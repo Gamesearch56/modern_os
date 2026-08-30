@@ -113,7 +113,7 @@ Item {
                 MEmptyState {
                     visible: root._blocked || Ai.history.length === 0
                     anchors.fill: parent
-                    iconName: "robot"
+                    iconName: "applications-science-symbolic"
                     titleKey: root._blocked ? "ai.needSetup" : "ai.empty"
                     hintKey: root._blocked ? "" : "ai.hint"
                     actionKey: root._blocked ? "ai.setup" : ""

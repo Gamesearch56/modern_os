@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
@@ -8,7 +7,7 @@ import "../../"
 Item {
     id: root
     property var barScreen: null
-    implicitWidth: row.implicitWidth + Tokens.spacing.md * 2
+    implicitWidth: icon.implicitWidth + Tokens.spacing.md * 2
     implicitHeight: Config.bar.height
 
     readonly property bool _mine: {
@@ -23,22 +22,13 @@ Item {
         onClicked: Ai.toggle(root.barScreen)
     }
 
-    RowLayout {
-        id: row
+    MIcon {
+        id: icon
         anchors.centerIn: parent
         z: 1
-        spacing: Tokens.spacing.xs
-
-        MIcon {
-            name: "robot"
-            size: Tokens.icon.md
-            color: root._fg
-        }
-        MText {
-            key: "ai.title"
-            styleName: "labelLarge"
-            color: root._fg
-        }
+        name: "applications-science-symbolic"
+        size: Tokens.icon.md
+        color: root._fg
     }
 
     BarPopup {

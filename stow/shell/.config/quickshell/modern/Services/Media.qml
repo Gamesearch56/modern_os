@@ -31,6 +31,7 @@ Singleton {
     }
     readonly property bool hasPlayer: root.active !== null
     readonly property string identity: root.active?.identity ?? ""
+    readonly property string desktopEntry: String(root.active?.desktopEntry || "").replace(/\.desktop$/i, "")
     readonly property string trackTitle: root.active?.trackTitle ?? ""
     readonly property string trackArtist: root.active?.trackArtist ?? ""
     readonly property string trackAlbum: root.active?.trackAlbum ?? ""

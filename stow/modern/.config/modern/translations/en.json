@@ -124,7 +124,8 @@
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "setupFeed": "Set up Calendar Feed URL",
-    "needApp": "Set a calendar application in Settings → Applications."
+    "needApp": "Set a calendar application in Settings → Applications.",
+    "refresh": "Refresh"
   },
   "mail": {
     "open": "Open mail"

@@ -20,6 +20,7 @@ PopupWindow {
     property bool hoverBridge: false
     property bool bodyHovered: false
     property bool barIslandChrome: false
+    property real padding: Tokens.spacing.md
     default property alias content: card.content
 
     signal grabReady()
@@ -137,6 +138,7 @@ PopupWindow {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             level: root.elevation
+            padding: root.padding
             color: Colors.color.surface
             radius: root.barIslandChrome ? Tokens.radius.full : Tokens.radius.medium
             opacity: Config.design.transparency ?? 0.85

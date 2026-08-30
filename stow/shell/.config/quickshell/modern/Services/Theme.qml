@@ -16,6 +16,7 @@ Singleton {
     property string lastError: ""
     property string _pendingSlug: ""
     property string pendingSlug: ""
+    property var _queuedApply: null
 
     signal created(string path)
 
@@ -159,37 +160,63 @@ Singleton {
     }
 
     function apply(wallpaperPath: string, profile: string) {
+        root._runApply(wallpaperPath, profile, false);
+    }
+
+    function applyShown(wallpaperPath: string) {
+        root._runApply(wallpaperPath, "", true);
+    }
+
+    function _runApply(wallpaperPath: string, profile: string, skipWallpaper: bool) {
+        const spec = {
+            path: wallpaperPath || "",
+            profile: profile || "",
+            skip: !!skipWallpaper
+        };
+        if (applyProc.running) {
+            root._queuedApply = spec;
+            return;
+        }
+        root._startApply(spec);
+    }
+
+    function _startApply(spec: var) {
         const cmd = [Quickshell.env("HOME") + "/modern_dotfile/scripts/theme-apply.sh"];
-        if (profile && profile.length > 0) {
+        if (spec.profile.length > 0) {
             cmd.push("--profile");
-            cmd.push(profile);
+            cmd.push(spec.profile);
         }
-        if (wallpaperPath && wallpaperPath.length > 0) {
+        if (spec.path.length > 0) {
             cmd.push("--wallpaper");
-            cmd.push(wallpaperPath);
+            cmd.push(spec.path);
         }
+        if (spec.skip)
+            cmd.push("--skip-wallpaper");
         root.lastError = "";
-        applyProc.running = false;
         applyProc.command = cmd;
-        Qt.callLater(() => {
-            applyProc.running = true;
-        });
+        applyProc.running = true;
     }
 
     Process {
         id: applyProc
         running: false
+        stdout: StdioCollector {}
         stderr: StdioCollector {
-            onStreamFinished: {
-                const t = this.text.trim();
-                if (t.length > 0)
-                    root.lastError = t;
-            }
+            id: applyErr
         }
         onExited: (code) => {
             Colors.refresh();
-            if (code !== 0)
-                Logger.error("Theme", root.lastError.length > 0 ? root.lastError : I18n.t("theme.applyFailed"));
+            const next = root._queuedApply;
+            root._queuedApply = null;
+            if (next) {
+                Qt.callLater(() => root._startApply(next));
+                return;
+            }
+            if (code === 0)
+                return;
+            const err = applyErr.text.trim();
+            root.lastError = err;
+            Logger.error("Theme", err.length > 0 ? err : I18n.t("theme.applyFailed"));
         }
     }
 }

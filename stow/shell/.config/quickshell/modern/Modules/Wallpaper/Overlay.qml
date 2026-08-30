@@ -10,7 +10,7 @@ Item {
     signal closed()
 
     property bool _entered: false
-    readonly property bool _shown: root._entered
+    readonly property bool _shown: Wallpaper.pickerOpen && root._entered
 
     Component.onCompleted: {
         root._entered = true;

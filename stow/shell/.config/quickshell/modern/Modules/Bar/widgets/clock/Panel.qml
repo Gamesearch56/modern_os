@@ -18,6 +18,13 @@ Item {
         width: root.width
         titleKey: "calendar.title"
 
+        actions: MIconButton {
+            iconName: "view-refresh-symbolic"
+            key: "calendar.refresh"
+            busy: Calendar.busy
+            onClicked: Calendar.refresh()
+        }
+
         MSegmented {
             Layout.fillWidth: true
             value: root.range

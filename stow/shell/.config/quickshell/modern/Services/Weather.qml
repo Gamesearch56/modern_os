@@ -30,6 +30,7 @@ Singleton {
     property int weatherCode: -1
     property bool isDay: true
     property bool _fromUser: false
+    property bool busy: false
 
     readonly property bool imperial: (Config.widgets?.weather?.units || "metric") === "imperial"
 
@@ -76,6 +77,7 @@ Singleton {
 
     function refresh(fromUser: bool) {
         root._fromUser = !!fromUser;
+        root.busy = true;
         proc.running = false;
         proc.command = [root.script];
         proc.running = true;
@@ -192,6 +194,7 @@ Singleton {
                 if (root._fromUser)
                     Logger.error("Weather", I18n.t("weather.unavailable"));
                 root._fromUser = false;
+                root.busy = false;
                 return;
             }
             const days = root._days(j);
@@ -216,6 +219,7 @@ Singleton {
             root.iconName = root._iconFor(root.weatherCode, root.isDay);
             root.conditionKey = root._conditionKey(root.weatherCode);
             root._fromUser = false;
+            root.busy = false;
         } catch (e) {
             root._clear();
             if (root._fromUser)
@@ -223,6 +227,7 @@ Singleton {
             else
                 Logger.warn("Weather", "parse failed: " + e);
             root._fromUser = false;
+            root.busy = false;
         }
     }
 }

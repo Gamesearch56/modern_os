@@ -21,7 +21,10 @@ Singleton {
     }
 
     function opened(popup: var) {
-        if (popup)
+        // Hover-only popups (volume slider) must not claim exclusivity —
+        // that makes the bar layer-shell focusable and steals the
+        // Hyprland client under the pointer.
+        if (popup && !popup.hoverBridge)
             root.claim(popup);
         root.openCount += 1;
     }
@@ -33,7 +36,7 @@ Singleton {
     }
 
     function dismiss(): bool {
-        if (root.openCount <= 0)
+        if (!root.active)
             return false;
         root.active = null;
         root.closeRequested();

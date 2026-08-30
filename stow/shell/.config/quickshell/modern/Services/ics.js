@@ -140,10 +140,23 @@ function parse(raw) {
     return events;
 }
 
+function startMs(ev) {
+    if (!ev || !ev.start || isNaN(ev.start.getTime()))
+        return 0;
+    return ev.start.getTime();
+}
+
 function instancesInRange(events, rangeStart, rangeEnd) {
     let out = [];
     for (let i = 0; i < events.length; i++)
         out = out.concat(expand(events[i], rangeStart, rangeEnd));
-    out.sort((a, b) => a.start.getTime() - b.start.getTime());
+    out.sort((a, b) => {
+        if (!!a.allDay !== !!b.allDay)
+            return a.allDay ? -1 : 1;
+        const dt = startMs(a) - startMs(b);
+        if (dt !== 0)
+            return dt;
+        return String(a.summary || "").localeCompare(String(b.summary || ""));
+    });
     return out;
 }
