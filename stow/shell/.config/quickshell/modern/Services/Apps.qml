@@ -6,6 +6,7 @@ pragma Singleton
 import Quickshell
 import QtQuick
 import "../Commons"
+import "fileManager.js" as FileManager
 
 Singleton {
     id: root
@@ -178,34 +179,20 @@ Singleton {
             if (!dir || dir.length === 0)
                 return false;
             Quickshell.execDetached(["mkdir", "-p", dir]);
-            const id = String(root.desktopId("fileManager") || "").replace(/\.desktop$/, "");
-            const lower = id.toLowerCase();
-            if (lower.indexOf("dolphin") !== -1) {
-                Quickshell.execDetached(["dolphin", "--new-window", dir]);
-                return true;
-            }
-            if (lower.indexOf("nautilus") !== -1) {
-                Quickshell.execDetached(["nautilus", dir]);
-                return true;
-            }
-            if (lower.indexOf("thunar") !== -1) {
-                Quickshell.execDetached(["thunar", dir]);
-                return true;
-            }
-            if (lower.indexOf("nemo") !== -1) {
-                Quickshell.execDetached(["nemo", dir]);
-                return true;
-            }
-            if (id.length > 0) {
-                Quickshell.execDetached(["gtk-launch", id, dir]);
-                return true;
-            }
-            const fb = root._fallback("fileManager");
-            if (fb) {
-                Quickshell.execDetached(fb.concat([dir]));
-                return true;
-            }
-            Quickshell.execDetached(["xdg-open", dir]);
+            Quickshell.execDetached(FileManager.argv(root.desktopId("fileManager"), dir, false));
+            return true;
+        } catch (err) {
+            Logger.error("Apps", String(err));
+            return false;
+        }
+    }
+
+    function openInFileManager(path: string): bool {
+        try {
+            const p = FileManager.localPath(path);
+            if (!p.length)
+                return false;
+            Quickshell.execDetached(FileManager.argv(root.desktopId("fileManager"), p, true));
             return true;
         } catch (err) {
             Logger.error("Apps", String(err));

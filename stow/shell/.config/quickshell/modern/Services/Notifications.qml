@@ -68,6 +68,7 @@ Singleton {
         bodySupported: true
         imageSupported: true
         actionsSupported: true
+        extraHints: ["x-kde-urls"]
         onNotification: (notification) => {
             try {
                 if (root.effectiveDnd) {
@@ -114,6 +115,7 @@ Singleton {
             appName: root._str(n.appName),
             appIcon: root._str(n.appIcon),
             image: root._str(n.image),
+            hints: n.hints || ({}),
             local: false,
             toastVisible: true,
             read: false,
@@ -130,6 +132,7 @@ Singleton {
             appName: "modern",
             appIcon: "",
             image: image || "",
+            hints: ({}),
             local: true,
             toastVisible: true,
             read: false,
@@ -198,6 +201,42 @@ Singleton {
         if (root.effectiveDnd)
             return;
         root._push(root._local(summary, body || "", imagePath || "", root._timeoutMs()));
+    }
+
+    function _isLocalPath(s: string): bool {
+        const t = String(s || "");
+        return t.indexOf("/") === 0 || t.indexOf("file://") === 0;
+    }
+
+    function _hintUrls(v): var {
+        if (v && typeof v === "object" && v.length !== undefined) {
+            const out = [];
+            for (let i = 0; i < v.length; i++)
+                out.push(String(v[i]));
+            return out;
+        }
+        return root._str(v).split(/[\s,]+/);
+    }
+
+    function attachmentPath(item): string {
+        if (!item)
+            return "";
+        const img = root._str(item.image);
+        if (root._isLocalPath(img))
+            return img;
+        const h = item.hints || ({});
+        const ip = root._str(h["image-path"] || h["image_path"]);
+        if (root._isLocalPath(ip))
+            return ip;
+        const urls = root._hintUrls(h["x-kde-urls"]);
+        for (let i = 0; i < urls.length; i++) {
+            if (root._isLocalPath(urls[i]))
+                return urls[i];
+        }
+        const m = root._str(item.body).match(/file:\/\/[^\s<>"']+/);
+        if (m && root._isLocalPath(m[0]))
+            return m[0];
+        return "";
     }
 
     function dismiss(item) {

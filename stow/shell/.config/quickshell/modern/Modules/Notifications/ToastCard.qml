@@ -52,6 +52,16 @@ Item {
     width: Tokens.spacing.xxl * 12
     implicitWidth: width
     implicitHeight: inner.implicitHeight + Tokens.spacing.md * 2
+    Accessible.role: Accessible.Button
+    Accessible.name: root.summary
+    Accessible.onPressAction: root._activate()
+
+    function _activate() {
+        const path = Notifications.attachmentPath(root.notification);
+        if (path.length)
+            Apps.openInFileManager(path);
+        Notifications.dismiss(root.notification);
+    }
 
     Component.onCompleted: {
         if (root._timeout <= 0)
@@ -84,6 +94,12 @@ Item {
         color: "transparent"
         border.color: Colors.color.outlineVariant
         border.width: Tokens.stroke.hairline
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root._activate()
     }
 
     RowLayout {

@@ -117,6 +117,12 @@ Item {
                         imageSize: Tokens.icon.lg
                         titleValue: modelData.summary || modelData.appName || ""
                         subtitleValue: modelData.body || ""
+                        onClicked: {
+                            const path = Notifications.attachmentPath(modelData);
+                            if (path.length)
+                                Apps.openInFileManager(path);
+                            Notifications.dismiss(modelData);
+                        }
                         MIconButton {
                             close: true
                             iconName: "window-close"
