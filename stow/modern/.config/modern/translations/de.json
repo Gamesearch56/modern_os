@@ -49,8 +49,8 @@
     "repeat": "Wiederholen"
   },
   "audio": {
-    "output": "Ausgabe",
-    "input": "Eingabe",
+    "output": "Lautsprecher",
+    "input": "Mikrofon",
     "applications": "Anwendungen",
     "noOutputs": "Keine Ausgabegeräte",
     "noInputs": "Keine Eingabegeräte"
@@ -387,7 +387,7 @@
       "monitors": "Monitorprofile",
       "windowRules": "Fensterregeln",
       "masterVolumeLimit": "Lautstärkegrenze",
-      "autoSwitchBluetooth": "Bluetooth automatisch wechseln",
+      "autoSwitchBluetooth": "Bluetooth-Kopfhörer verbinden",
       "dns": "Netzwerk / DNS",
       "barLayout": "Leistenlayout (links / mitte / rechts)",
       "launcherResults": "Anzahl Ergebnisse",
@@ -482,7 +482,7 @@
       "speedTest": "Geschwindigkeitstest",
       "ethernet": "Ethernet",
       "wifiPassword": "WLAN-Passwort",
-      "perAppVolume": "App-Lautstärke",
+      "perAppVolume": "Anwendungen",
       "pollInterval": "Abfrageintervall (ms)",
       "showGpu": "GPU anzeigen",
       "showTemps": "Temperaturen anzeigen",
@@ -614,6 +614,7 @@
       "repeatRate": "Wie schnell eine gehaltene Taste wiederholt.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn Hyprland startet.",
+      "autoSwitchBluetooth": "Gekoppelte Kopfhörer verbinden sich und werden zum Lautsprecher, sobald sie verwendet werden.",
       "restoreGated": "Ein Snapshot-Rollback ist abgeschottet. Siehe docs/BACKUP.md.",
       "speedTest": "Kurzer curl-Download vom Arch-Geo-Spiegel. Keine Speedtest-Website.",
       "autologin": "Die Einstellung wird in config.json gespeichert. Die Anmeldung am Boot (getty/greetd) ist abgeschottet (docs/ISOLATION.md) und wird von diesem Schalter nicht gesetzt."
@@ -714,7 +715,8 @@
       "customize": "Hat Optionen"
     },
     "audio": {
-      "emptyStreams": "Gerade keine App-Streams"
+      "emptyStreams": "Gerade keine App-Streams",
+      "mute": "Stumm"
     },
     "network": {
       "ethernetOn": "Verbunden",

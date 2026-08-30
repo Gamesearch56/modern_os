@@ -85,7 +85,7 @@ Item {
             anchors.centerIn: parent
             width: parent.width - Tokens.spacing.md
             from: 0
-            to: Config.audio.masterVolumeLimit ?? 100
+            to: Audio.volumeCap
             value: Audio.volume
             onMoved: (v) => Audio.setVolume(v)
         }

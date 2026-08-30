@@ -197,7 +197,7 @@
     "includeCursor": false
   },
   "audio": {
-    "autoSwitchBluetooth": "ask",
+    "autoSwitchBluetooth": "on",
     "perAppVolume": {},
     "masterVolumeLimit": 100
   },

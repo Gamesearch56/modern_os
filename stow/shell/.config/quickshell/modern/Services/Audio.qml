@@ -14,6 +14,12 @@ Singleton {
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property PwNode source: Pipewire.defaultAudioSource
     readonly property var nodes: Pipewire.nodes
+    readonly property bool autoBluetooth: (Config.audio.autoSwitchBluetooth || "on") !== "off"
+    readonly property int volumeCap: Config.audio.masterVolumeLimit ?? 100
+
+    AudioBluetooth {
+        audio: root
+    }
 
     // Hardware endpoints only — application streams are not switchable
     // outputs. Tracked so nickname/description bind (docs/DECISIONS.md
@@ -22,7 +28,7 @@ Singleton {
         const t = root.trackedNodes;
         const out = [];
         for (let i = 0; i < t.length; i++) {
-            if (t[i].isSink)
+            if (t[i].isSink && t[i].audio)
                 out.push(t[i]);
         }
         return out;
@@ -31,7 +37,7 @@ Singleton {
         const t = root.trackedNodes;
         const out = [];
         for (let i = 0; i < t.length; i++) {
-            if (!t[i].isSink)
+            if (!t[i].isSink && t[i].audio)
                 out.push(t[i]);
         }
         return out;
@@ -72,6 +78,11 @@ Singleton {
     }
     readonly property bool sourceMuted: root.source?.audio?.muted ?? false
 
+    onVolumeCapChanged: {
+        if (root.volume > root.volumeCap)
+            root.setVolume(root.volumeCap);
+    }
+
     PwObjectTracker {
         objects: root.trackedNodes
     }
@@ -86,10 +97,33 @@ Singleton {
         return n.nickname || n.description || n.name || "";
     }
 
+    function streamAppId(n: var): string {
+        if (!n)
+            return "";
+        const _ = n.ready;
+        const p = n.properties || {};
+        return String(p["application.name"] || p["application.id"] || n.nickname || "").trim();
+    }
+
+    function streamLabel(n: var): string {
+        const app = root.streamAppId(n);
+        if (app.length)
+            return app;
+        return root.nodeLabel(n);
+    }
+
+    function streamIcon(n: var): string {
+        if (!n)
+            return "";
+        const _ = n.ready;
+        const p = n.properties || {};
+        return String(p["application.icon-name"] || p["application.icon_name"] || p["media.icon-name"] || "").trim();
+    }
+
     function setVolume(percent: real) {
         if (!root.sink?.audio)
             return;
-        const cap = Config.audio.masterVolumeLimit ?? 100;
+        const cap = root.volumeCap;
         const v = Math.max(0, Math.min(cap, percent)) / 100;
         root.sink.audio.volume = v;
     }
@@ -137,6 +171,14 @@ Singleton {
         if (!node?.audio)
             return;
         node.audio.volume = Math.max(0, Math.min(100, percent)) / 100;
+        if (percent > 0)
+            node.audio.muted = false;
+    }
+
+    function toggleStreamMute(node: var) {
+        if (!node?.audio)
+            return;
+        node.audio.muted = !node.audio.muted;
     }
 
     IpcHandler {

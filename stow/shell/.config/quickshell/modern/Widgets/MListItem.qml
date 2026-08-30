@@ -194,7 +194,7 @@ Item {
 
     MFocusRing {
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
-        active: root.selected || (root.hoverHighlight && (root.activeFocus || hover.hovered))
-        ringColor: root.selected && root._nav ? Colors.color.onPrimary : Colors.color.primary
+        active: !root._nav && (root.selected || (root.hoverHighlight && (root.activeFocus || hover.hovered)))
+        ringColor: Colors.color.primary
     }
 }

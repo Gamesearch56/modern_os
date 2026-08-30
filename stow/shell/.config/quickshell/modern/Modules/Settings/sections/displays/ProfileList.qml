@@ -28,7 +28,7 @@ RowLayout {
             readonly property bool active: desc.length > 0 && desc === root.selectedDesc
             Layout.fillWidth: true
             Layout.preferredWidth: 1
-            implicitHeight: Tokens.spacing.xxl * 3
+            implicitHeight: Tokens.icon.lg + Tokens.spacing.xxl * 3
             level: active ? 3 : 1
             highlighted: active
 
@@ -45,6 +45,13 @@ RowLayout {
                     horizontalAlignment: Text.AlignHCenter
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
+                }
+                MIcon {
+                    name: "video-display"
+                    size: Tokens.icon.lg
+                    color: active ? Colors.color.primary : Colors.color.onSurfaceVariant
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.fillHeight: true
                 }
                 MText {
                     styleName: "bodySmall"

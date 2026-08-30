@@ -32,15 +32,6 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.full
-        color: "transparent"
-        border.width: Tokens.stroke.focus
-        border.color: Colors.color.primary
-        visible: root.checked
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        radius: Tokens.radius.full
         color: Colors.color.primary
         visible: root._layer > 0
         opacity: root._layer

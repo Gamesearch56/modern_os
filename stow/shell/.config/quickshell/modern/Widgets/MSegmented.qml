@@ -85,8 +85,4 @@ Item {
             }
         }
     }
-
-    MFocusRing {
-        radius: Tokens.radius.full
-    }
 }
