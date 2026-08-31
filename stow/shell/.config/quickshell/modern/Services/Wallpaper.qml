@@ -56,8 +56,11 @@ Singleton {
             else if (code === 0) {
                 const lines = importOut.text.trim().split("\n").filter(l => l.length > 0);
                 root.pendingSelect = lines.length > 0 ? lines[lines.length - 1] : "";
-                root.setPickerOpen(true);
             }
+            const reopen = root._reopenPicker;
+            root._reopenPicker = false;
+            if (reopen)
+                Qt.callLater(() => root.setPickerOpen(true));
         }
     }
 
@@ -206,6 +209,7 @@ Singleton {
 
     function importWallpaper() {
         root.pickerOpen = false;
+        root._reopenPicker = true;
         Qt.callLater(() => {
             importProc.running = false;
             importProc.running = true;
@@ -240,5 +244,16 @@ Singleton {
             Theme.applyShown(shown);
         });
         Logger.info("Wallpaper", "applied " + path);
+    }
+
+    function replay(kind: string) {
+        const img = String(root.currentPath || "");
+        if (!img.length)
+            return;
+        const t = String(kind || "");
+        if (t.length > 0)
+            Quickshell.execDetached([Paths.script("wallpaper-show.sh"), img, t]);
+        else
+            Quickshell.execDetached([Paths.script("wallpaper-show.sh"), img]);
     }
 }

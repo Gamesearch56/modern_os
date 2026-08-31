@@ -13,6 +13,7 @@ RowLayout {
     }
 
     MText {
+        visible: !BarLayout.vertical
         value: Audio.sourceMuted ? "—" : (Audio.sourceVolume + "%")
         styleName: "labelLarge"
     }

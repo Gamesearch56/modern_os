@@ -14,6 +14,7 @@ RowLayout {
     property string actionKey: ""
     property string actionIcon: ""
     property real titleColumnWidth: 0
+    property bool busy: false
 
     readonly property bool _hasSubtitle: root.subtitleKey.length > 0 || root.subtitleValue.length > 0
 
@@ -54,6 +55,37 @@ RowLayout {
         iconName: root.actionIcon.length > 0 ? root.actionIcon : "list-add"
         key: root.actionKey
         onClicked: root.actionClicked()
+    }
+
+    Item {
+        visible: root.busy
+        implicitWidth: Tokens.icon.md
+        implicitHeight: Tokens.icon.md
+        Layout.alignment: Qt.AlignVCenter
+        Accessible.role: Accessible.Status
+        Accessible.name: I18n.t("settings.saving")
+
+        MIcon {
+            id: saveGlyph
+            anchors.centerIn: parent
+            name: "view-refresh"
+            size: Tokens.icon.md
+            color: Colors.color.primary
+            tint: true
+
+            RotationAnimation on rotation {
+                running: root.busy
+                from: 0
+                to: 360
+                duration: Motion.extraLongMs
+                loops: Animation.Infinite
+            }
+        }
+
+        onVisibleChanged: {
+            if (!visible)
+                saveGlyph.rotation = 0;
+        }
     }
 
     MIconButton {

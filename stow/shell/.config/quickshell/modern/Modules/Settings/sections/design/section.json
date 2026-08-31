@@ -3,5 +3,5 @@
   "icon": "preferences-desktop-theme",
   "key": "settings.sections.design",
   "order": 50,
-  "keywords": ["theme", "profile", "transparency", "rounding", "cursor", "wallpaper", "4k", "provider"]
+  "keywords": ["theme", "profile", "variant", "transparency", "rounding", "cursor", "wallpaper", "4k", "provider", "transition", "light", "dark"]
 }

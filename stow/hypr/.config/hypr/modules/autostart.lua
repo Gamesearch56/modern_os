@@ -16,7 +16,6 @@ hl.on("hyprland.start", function()
         .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
         .. "export QT_QPA_PLATFORM=wayland QT_QPA_PLATFORMTHEME=qt6ct "
         .. "QS_ICON_THEME=\"${QS_ICON_THEME:-Papirus-Dark}\"; "
-        .. "gsettings set org.gnome.desktop.interface color-scheme prefer-dark 2>/dev/null || true; "
         .. "exec qs -c modern >>\"$log\" 2>&1'")
 
     hl.exec_cmd("sh -lc '"

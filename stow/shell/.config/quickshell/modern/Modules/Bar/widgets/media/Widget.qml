@@ -7,11 +7,13 @@ import "../../../../Services"
 Item {
     id: root
     visible: Media.hasPlayer
-    implicitWidth: visible ? row.implicitWidth + Tokens.spacing.md * 2 : 0
+    implicitWidth: visible ? (BarLayout.vertical ? Config.bar.height : row.implicitWidth + Tokens.spacing.md * 2) : 0
     implicitHeight: Config.bar.height
     clip: true
 
-    readonly property real _art: Tokens.spacing.xl - Tokens.spacing.xxs
+    readonly property real _art: BarLayout.vertical
+        ? Config.bar.height - Tokens.spacing.sm
+        : Tokens.spacing.xl - Tokens.spacing.xxs
     readonly property real _titleMax: Tokens.spacing.xxl * 4
     readonly property string _label: {
         const title = Media.trackTitle || "";
@@ -35,22 +37,31 @@ Item {
         spacing: Tokens.spacing.sm
 
         Rectangle {
-            visible: Media.trackArtUrl.length > 0
+            visible: BarLayout.vertical || Media.trackArtUrl.length > 0
             Layout.preferredWidth: root._art
             Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
-            radius: Tokens.radius.small
+            radius: BarLayout.vertical ? Tokens.radius.full : Tokens.radius.small
             color: Colors.color.surfaceContainerHighest
             clip: true
 
             Image {
                 anchors.fill: parent
+                visible: Media.trackArtUrl.length > 0
                 source: Media.trackArtUrl
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 smooth: true
                 sourceSize.width: root._art * 2
                 sourceSize.height: root._art * 2
+            }
+
+            MIcon {
+                anchors.centerIn: parent
+                visible: Media.trackArtUrl.length === 0
+                name: "audio-x-generic-symbolic"
+                size: Tokens.icon.md
+                color: Colors.color.onSurface
             }
 
             MouseArea {
@@ -62,7 +73,7 @@ Item {
 
         Item {
             id: titleBox
-            visible: root._label.length > 0
+            visible: !BarLayout.vertical && root._label.length > 0
             Layout.alignment: Qt.AlignVCenter
             Layout.preferredWidth: Math.min(title.implicitWidth, root._titleMax)
             Layout.maximumWidth: root._titleMax
@@ -82,6 +93,7 @@ Item {
 
         MIconButton {
             tabFocus: false
+            visible: !BarLayout.vertical
             iconName: "media-skip-backward-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
@@ -91,6 +103,7 @@ Item {
         }
         MIconButton {
             tabFocus: false
+            visible: !BarLayout.vertical
             iconName: Media.playing ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
@@ -99,6 +112,7 @@ Item {
         }
         MIconButton {
             tabFocus: false
+            visible: !BarLayout.vertical
             iconName: "media-skip-forward-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm

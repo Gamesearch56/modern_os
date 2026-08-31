@@ -7,7 +7,7 @@ import "../../"
 
 Item {
     id: root
-    implicitWidth: row.implicitWidth + Tokens.spacing.md * 2
+    implicitWidth: BarLayout.vertical ? Config.bar.height : (row.implicitWidth + Tokens.spacing.md * 2)
     implicitHeight: Config.bar.height
     Component.onCompleted: Weather.watching = true
     Component.onDestruction: Weather.watching = false
@@ -32,6 +32,7 @@ Item {
         }
 
         MText {
+            visible: !BarLayout.vertical
             key: Weather.available ? "" : "weather.unavailable"
             value: Weather.display
             styleName: "labelLarge"

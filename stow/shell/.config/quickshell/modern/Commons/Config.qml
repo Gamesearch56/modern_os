@@ -77,6 +77,7 @@ Singleton {
 
             property JsonObject design: JsonObject {
                 property string activeProfile: "tonal-spot-dark"
+                property string sourceSeed: ""
                 property real cornerRounding: 1.0
                 property real transparency: 0.85
                 property real surfaceTint: 0.7
@@ -85,6 +86,7 @@ Singleton {
                 property string cursorTheme: "Bibata-Modern-Classic"
                 property int cursorSize: 24
                 property string wallpaperProvider: "https://4kwallpapers.com"
+                property string wallpaperTransition: "fade"
                 property JsonObject bootScreen: JsonObject {
                     property string mode: "static"
                     property bool wallpaperOnSplash: true

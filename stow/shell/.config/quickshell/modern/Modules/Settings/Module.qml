@@ -53,6 +53,7 @@ Scope {
                 anchors.fill: parent
                 titleKey: "settings.title"
                 titleColumnWidth: Tokens.spacing.xxl * 9
+                busy: ConfigWrite.pending || Theme.busy
                 onClosed: Settings.close()
 
                 RowLayout {
@@ -86,6 +87,8 @@ Scope {
                             contentHeight: sectionLoader.item
                                 ? sectionLoader.item.implicitHeight
                                 : 0
+                            readonly property string pageId: Settings.sectionId
+                            onPageIdChanged: contentY = 0
 
                             MouseArea {
                                 z: -1
@@ -102,6 +105,7 @@ Scope {
                                 width: pane.width
                                 source: Qt.resolvedUrl("sections/" + Settings.sectionId + "/Section.qml")
                                 onLoaded: {
+                                    pane.contentY = 0;
                                     if (item)
                                         item.width = Qt.binding(() => sectionLoader.width);
                                 }

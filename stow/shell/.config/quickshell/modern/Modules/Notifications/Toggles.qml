@@ -71,9 +71,9 @@ ColumnLayout {
         MQuickTile {
             Layout.fillWidth: true
             Layout.columnSpan: 2
+            centerAlign: true
             iconName: "camera-photo-symbolic"
             titleKey: "screenshot.capture"
-            centerAlign: true
             onClicked: {
                 Notifications.hide();
                 if (Recording.active)

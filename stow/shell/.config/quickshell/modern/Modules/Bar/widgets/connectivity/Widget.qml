@@ -6,8 +6,8 @@ import "../../../../Services"
 
 Item {
     id: root
-    implicitWidth: row.implicitWidth
-    implicitHeight: Config.bar.height
+    implicitWidth: BarLayout.vertical ? Config.bar.height : row.implicitWidth
+    implicitHeight: BarLayout.vertical ? row.implicitHeight : Config.bar.height
 
     readonly property string _wifiIcon: Network.connected ? (Network.ssid.length > 0 ? "network-wireless-symbolic" : "network-wired-symbolic") : "network-offline-symbolic"
     readonly property string _ssid: Network.ssid
@@ -20,10 +20,12 @@ Item {
         return "";
     }
 
-    RowLayout {
+    GridLayout {
         id: row
         anchors.fill: parent
-        spacing: 0
+        columns: BarLayout.vertical ? 1 : 8
+        rowSpacing: 0
+        columnSpacing: 0
 
         MIconButton {
             tabFocus: false
@@ -40,7 +42,7 @@ Item {
         }
 
         MText {
-            visible: root._ssid.length > 0
+            visible: !BarLayout.vertical && root._ssid.length > 0
             value: root._ssid
             styleName: "labelSmall"
             elide: Text.ElideRight
@@ -62,7 +64,7 @@ Item {
         }
 
         MText {
-            visible: root._btName.length > 0
+            visible: !BarLayout.vertical && root._btName.length > 0
             value: root._btName
             styleName: "labelSmall"
             elide: Text.ElideRight

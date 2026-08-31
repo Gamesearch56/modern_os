@@ -7,7 +7,7 @@ import "../../"
 
 Item {
     id: root
-    implicitWidth: row.implicitWidth + Tokens.spacing.xs * 2
+    implicitWidth: BarLayout.vertical ? Config.bar.height : (row.implicitWidth + Tokens.spacing.xs * 2)
     implicitHeight: Config.bar.height
 
     readonly property string _icon: Audio.muted ? "audio-volume-muted-symbolic" : (Audio.volume < 34 ? "audio-volume-low-symbolic" : (Audio.volume < 67 ? "audio-volume-medium-symbolic" : "audio-volume-high-symbolic"))
@@ -50,6 +50,7 @@ Item {
         }
 
         MText {
+            visible: !BarLayout.vertical
             value: String(Audio.volume) + "%"
             styleName: "labelLarge"
             color: root._fg

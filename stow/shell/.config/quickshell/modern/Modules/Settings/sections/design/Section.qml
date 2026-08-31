@@ -15,6 +15,17 @@ ColumnLayout {
         { value: "1.5", titleKey: "settings.motionSlow" }
     ]
 
+    readonly property var wallpaperMotion: [
+        { value: "fade", titleKey: "settings.wallpaperFade" },
+        { value: "grow", titleKey: "settings.wallpaperGrow" },
+        { value: "wipe", titleKey: "settings.wallpaperWipe" },
+        { value: "wave", titleKey: "settings.wallpaperWave" },
+        { value: "outer", titleKey: "settings.wallpaperOuter" },
+        { value: "any", titleKey: "settings.wallpaperAny" },
+        { value: "simple", titleKey: "settings.wallpaperSimple" },
+        { value: "random", titleKey: "settings.wallpaperRandom" }
+    ]
+
     MSectionHeader {
         key: "settings.fields.currentWallpaper"
         topMargin: 0
@@ -35,7 +46,24 @@ ColumnLayout {
             from: 0.5
             to: 2
             value: Config.design.surfaceTint ?? 1
-            onMoved: (v) => ConfigWrite.set("design.surfaceTint", Math.round(v * 10) / 10)
+            onCommitted: (v) => {
+                const t = Math.round(v * 10) / 10;
+                ConfigWrite.set("design.surfaceTint", t);
+                Theme.applyTint(t);
+            }
+        }
+    }
+
+    MField {
+        labelKey: "settings.fields.wallpaperTransition"
+        hintKey: "settings.hints.wallpaperTransition"
+        MSelect {
+            model: root.wallpaperMotion
+            value: Config.design.wallpaperTransition || "fade"
+            onSelected: (v) => {
+                ConfigWrite.set("design.wallpaperTransition", v);
+                Wallpaper.replay(v);
+            }
         }
     }
 
@@ -55,8 +83,7 @@ ColumnLayout {
     }
 
     MSectionHeader {
-        key: "settings.fields.activeProfile"
-        hintKey: "settings.hints.activeProfile"
+        key: "settings.fields.systemColors"
         topMargin: Tokens.spacing.xxl
     }
     Loader {
@@ -79,7 +106,7 @@ ColumnLayout {
         to: 1.4
         value: Config.typography.scale
         showValue: true
-        onMoved: (v) => ConfigWrite.set("typography.scale", Math.round(v * 100) / 100)
+        onCommitted: (v) => ConfigWrite.set("typography.scale", Math.round(v * 100) / 100)
     }
 
     MSectionHeader {

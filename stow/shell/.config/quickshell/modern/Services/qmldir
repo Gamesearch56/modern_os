@@ -42,6 +42,7 @@ singleton Battery 1.0 Battery.qml
 singleton Alarm 1.0 Alarm.qml
 singleton Taskbar 1.0 Taskbar.qml
 singleton Theme 1.0 Theme.qml
+singleton ThemePalettes 1.0 ThemePalettes.qml
 singleton Passwd 1.0 Passwd.qml
 singleton Storage 1.0 Storage.qml
 singleton Update 1.0 Update.qml

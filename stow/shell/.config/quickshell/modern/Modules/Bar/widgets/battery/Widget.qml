@@ -7,8 +7,8 @@ import "../../../../Services"
 Item {
     id: root
     visible: Battery.onBattery
-    implicitWidth: visible ? row.implicitWidth : 0
-    implicitHeight: Tokens.spacing.xl + Tokens.spacing.xs
+    implicitWidth: visible ? (BarLayout.vertical ? Config.bar.height : row.implicitWidth) : 0
+    implicitHeight: visible ? (Tokens.spacing.xl + Tokens.spacing.xs) : 0
 
     Component.onCompleted: Battery.watching = true
     Component.onDestruction: Battery.watching = false
@@ -21,11 +21,14 @@ Item {
         MIcon {
             name: Battery.iconName
             size: Tokens.icon.md
+            color: Colors.color.onSurface
         }
 
         MText {
+            visible: !BarLayout.vertical
             value: String(Battery.percent) + "%"
             styleName: "labelLarge"
+            color: Colors.color.onSurface
         }
     }
 

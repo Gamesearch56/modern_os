@@ -12,31 +12,43 @@ Item {
     property bool enabled: true
     property bool showValue: false
     property string suffix: ""
+    property bool _dragging: false
+    property bool _hold: false
+    property real _live: 0
 
     signal moved(real value)
+    signal committed(real value)
 
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.slider.thumb + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
     Accessible.role: Accessible.Slider
-    Accessible.description: String(Math.round(root.value))
-    Accessible.onIncreaseAction: root.moved(Math.min(root.to, root.value + root._span / 20))
-    Accessible.onDecreaseAction: root.moved(Math.max(root.from, root.value - root._span / 20))
+    Accessible.description: String(Math.round(root._shown))
+    Accessible.onIncreaseAction: root._emit(Math.min(root.to, root._shown + root._span / 20), true)
+    Accessible.onDecreaseAction: root._emit(Math.max(root.from, root._shown - root._span / 20), true)
 
     Keys.onPressed: (event) => {
         const step = root._span / 20;
         if (event.key === Qt.Key_Left || event.key === Qt.Key_Down) {
-            root.moved(Math.max(root.from, root.value - step));
+            root._emit(Math.max(root.from, root._shown - step), true);
             event.accepted = true;
         } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Up) {
-            root.moved(Math.min(root.to, root.value + step));
+            root._emit(Math.min(root.to, root._shown + step), true);
             event.accepted = true;
         }
     }
 
     readonly property real _span: Math.max(0.0001, root.to - root.from)
-    readonly property real _ratio: Math.max(0, Math.min(1, (root.value - root.from) / root._span))
+    readonly property real _shown: (root._dragging || root._hold) ? root._live : root.value
+    readonly property real _ratio: Math.max(0, Math.min(1, (root._shown - root.from) / root._span))
+
+    onValueChanged: {
+        if (root._dragging)
+            return;
+        if (Math.abs(root.value - root._live) <= root._span / 1000)
+            root._hold = false;
+    }
 
     RowLayout {
         anchors.fill: parent
@@ -84,6 +96,7 @@ Item {
                 preventStealing: true
                 cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onPressed: (mouse) => {
+                    root._dragging = true;
                     root._lockFlick(true);
                     root._setFromX(mouse.x);
                 }
@@ -91,8 +104,16 @@ Item {
                     if (pressed)
                         root._setFromX(mouse.x);
                 }
-                onReleased: root._lockFlick(false)
-                onCanceled: root._lockFlick(false)
+                onReleased: {
+                    root._dragging = false;
+                    root._lockFlick(false);
+                    root._commitIfChanged();
+                }
+                onCanceled: {
+                    root._dragging = false;
+                    root._lockFlick(false);
+                    root._commitIfChanged();
+                }
                 onWheel: (w) => {
                     w.accepted = false;
                 }
@@ -101,7 +122,7 @@ Item {
 
         MText {
             visible: root.showValue
-            value: Math.round(root.value) + root.suffix
+            value: Math.round(root._shown) + root.suffix
             styleName: "labelMedium"
             color: Colors.color.onSurfaceVariant
             Layout.preferredWidth: Tokens.spacing.xxl + Tokens.spacing.sm
@@ -119,8 +140,22 @@ Item {
         }
     }
 
+    function _emit(v: real, commit: bool) {
+        root._live = v;
+        root._hold = true;
+        root.moved(v);
+        if (commit)
+            root.committed(v);
+    }
+
+    function _commitIfChanged() {
+        if (Math.abs(root._live - root.value) <= root._span / 1000)
+            return;
+        root.committed(root._live);
+    }
+
     function _setFromX(px: real) {
         const r = Math.max(0, Math.min(1, px / Math.max(1, width - (root.showValue ? Tokens.spacing.xxl : 0))));
-        root.moved(root.from + r * root._span);
+        root._emit(root.from + r * root._span, false);
     }
 }

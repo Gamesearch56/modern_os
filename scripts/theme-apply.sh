@@ -11,7 +11,7 @@
 #
 # Usage:
 #   theme-apply.sh [--profile NAME] [--wallpaper PATH] [--skip-wallpaper]
-#                  [--chrome-only] [--no-reload]
+#                  [--seed HEX] [--extract] [--chrome-only] [--no-reload]
 #
 #   --profile NAME     Filename without ".json" under
 #                       ~/.config/modern/themes or
@@ -25,6 +25,12 @@
 #                       unless --skip-wallpaper (picker already showed it).
 #   --skip-wallpaper   Remember --wallpaper / regenerate colors only;
 #                       do not call awww (avoids a second delayed fade).
+#   --seed HEX         Use this source color (from theme-previews.sh)
+#                       instead of extracting from the wallpaper.
+#   --extract          Ignore a stored source seed and extract again
+#                       from the wallpaper (--prefer saturation).
+#   --surface-tint N   Wallpaper chroma in surfaces (config design.surfaceTint).
+#                       Combined with the profile contrast as matugen --contrast.
 #   --chrome-only      Patch GTK/Qt/KDE/Vivaldi radii, fonts, and motion
 #                       from config.json without re-running matugen.
 #   --no-reload        Regenerate files only, skip live-reload side
@@ -50,6 +56,77 @@ MATUGEN_CONFIG="$HOME/.config/matugen/config.toml"
 log()  { printf '\033[36m[theme-apply]\033[0m %s\n' "$*" || true; }
 warn() { printf '\033[33m[theme-apply] WARN\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[31m[theme-apply] ERROR\033[0m %s\n' "$*" >&2; exit 1; }
+
+# Variant-mode slugs Settings creates on the fly (tonal-spot-light, …)
+# when no JSON was shipped. Longest variant names first.
+KNOWN_VARIANTS="fruit-salad tonal-spot monochrome expressive fidelity rainbow vibrant content neutral"
+
+synthesize_profile() {
+    local slug="$1" v rest mode contrast source
+    contrast="standard"
+    source="wallpaper"
+    rest=""
+    VARIANT=""
+    for v in $KNOWN_VARIANTS; do
+        case "$slug" in
+            "$v"-*)
+                rest="${slug#"$v"-}"
+                VARIANT="$v"
+                break
+                ;;
+        esac
+    done
+    [ -n "$VARIANT" ] && [ -n "$rest" ] || return 1
+    mode="${rest%%-*}"
+    case "$mode" in
+        light|dark|auto) ;;
+        *) return 1 ;;
+    esac
+    rest="${rest#"$mode"}"
+    rest="${rest#-}"
+    while [ -n "$rest" ]; do
+        case "$rest" in
+            medium*) contrast="medium"; rest="${rest#medium}" ;;
+            high*) contrast="high"; rest="${rest#high}" ;;
+            fixed*) source="fixed"; rest="${rest#fixed}" ;;
+            *) return 1 ;;
+        esac
+        rest="${rest#-}"
+    done
+    mkdir -p "$STATE_DIR/themes"
+    PROFILE_JSON="$STATE_DIR/themes/${slug}.json"
+    jq -n --arg v "$VARIANT" --arg m "$mode" --arg c "$contrast" --arg s "$source" \
+        '{variant:$v,mode:$m,contrast:$c,sourceMode:$s,fixedSeed:null}' > "$PROFILE_JSON"
+    log "synthesized profile $PROFILE_JSON"
+}
+
+# libadwaita / xdg-desktop-portal / GTK read this; keep it in sync with
+# the matugen light|dark scheme so other apps follow Settings → Design.
+apply_color_scheme() {
+    local dark="$1" scheme gtk_dark
+    if [ "$dark" = 1 ]; then
+        scheme="prefer-dark"
+        gtk_dark=1
+    else
+        scheme="prefer-light"
+        gtk_dark=0
+    fi
+    if command -v gsettings >/dev/null 2>&1; then
+        gsettings set org.gnome.desktop.interface color-scheme "$scheme" >/dev/null 2>&1 || true
+    fi
+    local gini
+    for gini in \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0/settings.ini"; do
+        if [ -f "$gini" ]; then
+            if grep -q '^gtk-application-prefer-dark-theme=' "$gini"; then
+                sed -i "s/^gtk-application-prefer-dark-theme=.*/gtk-application-prefer-dark-theme=${gtk_dark}/" "$gini"
+            else
+                printf '\ngtk-application-prefer-dark-theme=%s\n' "$gtk_dark" >> "$gini"
+            fi
+        fi
+    done
+}
 
 # Merge an MD3 theme object into Vivaldi's Preferences. Skipped when
 # Vivaldi is running — it rewrites that file on quit and would clobber
@@ -123,7 +200,8 @@ EOF
         fi
         cp -f -- "$src" "$dest/64x64/places/${name}.svg"
     done
-    gtk-update-icon-cache -f -t "$dest" >/dev/null 2>&1 || true
+    gtk-update-icon-cache -f -t "$dest" >/dev/null 2>&1 &
+    disown $! 2>/dev/null || true
 }
 
 patch_toolkit_chrome() {
@@ -141,6 +219,14 @@ patch_toolkit_chrome() {
     cursor_theme="$(jq -r '.design.cursorTheme // "Bibata-Modern-Classic"' <<<"$cfg")"
     cursor_size="$(jq -r '.design.cursorSize // 24' <<<"$cfg")"
     icon="$(jq -r '.design.iconTheme // "Papirus-Dark"' <<<"$cfg")"
+    local prefer_dark
+    prefer_dark="$(scheme_is_dark)"
+    if [ "$prefer_dark" = 0 ]; then
+        case "$icon" in Papirus-Dark) icon="Papirus-Light" ;; esac
+    else
+        case "$icon" in Papirus-Light) icon="Papirus-Dark" ;; esac
+    fi
+    apply_color_scheme "$prefer_dark"
     overlay_folder_icons "$icon"
     local kde_icon="$icon"
     if [ -f "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places/folder.svg" ]; then
@@ -321,11 +407,12 @@ EOF
         "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini" \
         "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0/settings.ini"; do
         if [ -f "$gini" ]; then
-            awk -v font="$font $pt" -v cursor="$cursor_theme" -v csize="$cursor_size" -v icon="$icon" '
+            awk -v font="$font $pt" -v cursor="$cursor_theme" -v csize="$cursor_size" -v icon="$icon" -v dark="$prefer_dark" '
                 /^gtk-font-name=/ { print "gtk-font-name=" font; next }
                 /^gtk-cursor-theme-name=/ { print "gtk-cursor-theme-name=" cursor; next }
                 /^gtk-cursor-theme-size=/ { print "gtk-cursor-theme-size=" csize; next }
                 /^gtk-icon-theme-name=/ { print "gtk-icon-theme-name=" icon; next }
+                /^gtk-application-prefer-dark-theme=/ { print "gtk-application-prefer-dark-theme=" dark; next }
                 { print }
             ' "$gini" > "$gini.tmp" && mv "$gini.tmp" "$gini"
         fi
@@ -341,10 +428,26 @@ EOF
     fi
 }
 
-usage() { grep '^#' "$0" | cut -c3- | head -n26; }
+scheme_is_dark() {
+    local m
+    m="$(jq -r '.mode // empty' "$MODERN_DIR/tokens.json" 2>/dev/null || true)"
+    case "$m" in
+        light) echo 0; return ;;
+        dark) echo 1; return ;;
+    esac
+    case "${MATUGEN_MODE:-}" in
+        light) echo 0 ;;
+        *) echo 1 ;;
+    esac
+}
+
+usage() { grep '^#' "$0" | cut -c3- | head -n32; }
 
 PROFILE=""
 WALLPAPER=""
+SEED=""
+SURFACE_TINT=""
+EXTRACT=0
 RELOAD=1
 CHROME_ONLY=0
 SKIP_WALLPAPER=0
@@ -357,6 +460,13 @@ while [ $# -gt 0 ]; do
         --wallpaper)
             [ $# -ge 2 ] || die "--wallpaper needs a value"
             WALLPAPER="$2"; shift 2 ;;
+        --seed)
+            [ $# -ge 2 ] || die "--seed needs a value"
+            SEED="$2"; shift 2 ;;
+        --surface-tint)
+            [ $# -ge 2 ] || die "--surface-tint needs a value"
+            SURFACE_TINT="$2"; shift 2 ;;
+        --extract) EXTRACT=1; shift ;;
         --skip-wallpaper) SKIP_WALLPAPER=1; shift ;;
         --chrome-only) CHROME_ONLY=1; shift ;;
         --no-reload) RELOAD=0; shift ;;
@@ -399,7 +509,9 @@ PROFILE_JSON="$THEMES_DIR/$PROFILE.json"
 if [ ! -f "$PROFILE_JSON" ]; then
     PROFILE_JSON="$STATE_DIR/themes/$PROFILE.json"
 fi
-[ -f "$PROFILE_JSON" ] || die "unknown theme profile '$PROFILE' (no $THEMES_DIR/$PROFILE.json or $STATE_DIR/themes/$PROFILE.json — see stow/modern/.config/modern/themes/README.md)"
+if [ ! -f "$PROFILE_JSON" ]; then
+    synthesize_profile "$PROFILE" || die "unknown theme profile '$PROFILE' (no $THEMES_DIR/$PROFILE.json or $STATE_DIR/themes/$PROFILE.json — see stow/modern/.config/modern/themes/README.md)"
+fi
 
 VARIANT="$(jq -r '.variant' "$PROFILE_JSON")"
 PROFILE_MODE="$(jq -r '.mode' "$PROFILE_JSON")"
@@ -418,13 +530,25 @@ esac
 MATUGEN_ARGS=(-c "$MATUGEN_CONFIG" -t "scheme-$VARIANT" -m "$MATUGEN_MODE")
 
 case "$CONTRAST" in
-    standard) ;; # matugen's default (0) — no flag needed
-    medium) MATUGEN_ARGS+=(--contrast 0.5) ;;
-    high) MATUGEN_ARGS+=(--contrast 1) ;;
+    standard) CONTRAST_NUM=0 ;;
+    medium) CONTRAST_NUM=0.5 ;;
+    high) CONTRAST_NUM=1 ;;
     *) die "profile '$PROFILE' has invalid contrast '$CONTRAST' (expected standard|medium|high)" ;;
 esac
+if [ -z "$SURFACE_TINT" ]; then
+    SURFACE_TINT="$(merged_config | jq -r '.design.surfaceTint // 0.7')"
+fi
+MATUGEN_CONTRAST="$(awk -v pc="$CONTRAST_NUM" -v st="$SURFACE_TINT" 'BEGIN {
+    c = pc + (st + 0) - 1
+    if (c < -1) c = -1
+    if (c > 1) c = 1
+    printf "%.3f", c
+}')"
+if ! awk -v c="$MATUGEN_CONTRAST" 'BEGIN { exit (c + 0 == 0) ? 0 : 1 }'; then
+    MATUGEN_ARGS+=(--contrast "$MATUGEN_CONTRAST")
+fi
 
-log "profile=$PROFILE variant=$VARIANT mode=$PROFILE_MODE(matugen:$MATUGEN_MODE) contrast=$CONTRAST sourceMode=$SOURCE_MODE"
+log "profile=$PROFILE variant=$VARIANT mode=$PROFILE_MODE(matugen:$MATUGEN_MODE) contrast=$CONTRAST tint=$SURFACE_TINT (matugen --contrast $MATUGEN_CONTRAST) sourceMode=$SOURCE_MODE"
 
 case "$SOURCE_MODE" in
     fixed)
@@ -445,13 +569,23 @@ case "$SOURCE_MODE" in
         else
             die "profile '$PROFILE' needs a wallpaper and none is set yet — pass --wallpaper /path/to/image.jpg once (Settings > Design and the wallpaper picker do this for you once built, see docs/DECISIONS.md's wallpaper-assets entry)"
         fi
-        # --source-color-index 0 picks the single most dominant color
-        # deterministically. Without it matugen prompts interactively
-        # whenever a wallpaper yields multiple plausible source colors —
-        # fine at a terminal, fatal when theme-apply.sh runs from a
-        # keybind or the future Settings > Design wallpaper picker with
-        # no TTY attached.
-        MATUGEN_ARGS+=(image "$WALLPAPER" --source-color-index 0)
+        # A Settings palette card passes --seed (one of the unique
+        # colors matugen extracted). --extract or an empty seed falls
+        # back to the most saturated candidate so a new wallpaper still
+        # changes the chrome before the user picks a card.
+        if [ "$EXTRACT" -eq 1 ]; then
+            SEED=""
+        elif [ -z "$SEED" ]; then
+            SEED="$(merged_config | jq -r '.design.sourceSeed // empty')"
+        fi
+        if [ -z "$SEED" ] && [ -f "$MODERN_DIR/tokens.json" ]; then
+            SEED="$(jq -r '.sourceColor // empty' "$MODERN_DIR/tokens.json")"
+        fi
+        if [ -n "$SEED" ]; then
+            MATUGEN_ARGS+=(color hex "$SEED")
+        else
+            MATUGEN_ARGS+=(image "$WALLPAPER" --prefer saturation)
+        fi
         ;;
     *)
         die "profile '$PROFILE' has invalid sourceMode '$SOURCE_MODE' (expected wallpaper|fixed)"
@@ -474,7 +608,6 @@ log "running matugen (${MATUGEN_ARGS[*]})"
 mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places"
 matugen "${MATUGEN_ARGS[@]}"
 log "regenerated tokens.json, kitty/fastfetch/GTK/Qt/KDE/Vivaldi color files"
-patch_toolkit_chrome || warn "toolkit chrome patch skipped"
 
 kitty_colors="${XDG_CONFIG_HOME:-$HOME/.config}/kitty/colors.conf"
 if [ ! -f "$kitty_colors" ]; then
@@ -491,16 +624,18 @@ selection_foreground #E8DEF8
 EOF
 fi
 
-if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ]; then
+if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ] && [ "$SKIP_WALLPAPER" -eq 0 ]; then
     sync_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-sync.sh"
     if [ -f "$sync_script" ]; then
         bash "$sync_script" "$WALLPAPER" || warn "wallpaper-sync.sh failed — lock/login may miss the new image"
     fi
+elif [ -f "$MODERN_DIR/tokens.json" ]; then
+    shared="${XDG_STATE_HOME:-$HOME/.local/state}/modern/session"
+    [ -d /var/lib/modern/session ] && shared="/var/lib/modern/session"
+    mkdir -p "$shared"
+    cp -f "$MODERN_DIR/tokens.json" "$shared/tokens.json" || true
 fi
 
-# --- Record state for the future System > Diagnostics view (docs/
-# DECISIONS.md "diagnostics") — cheap to write now, useless to add later
-# without history ---
 jq -n \
     --arg profile "$PROFILE" \
     --arg variant "$VARIANT" \
@@ -511,37 +646,29 @@ jq -n \
     '{profile: $profile, variant: $variant, mode: $mode, contrast: $contrast, sourceMode: $sourceMode, appliedAt: $appliedAt}' \
     > "$LAST_APPLIED_STATE"
 
+finish_live() {
+    patch_toolkit_chrome || warn "toolkit chrome patch skipped"
+    if command -v kitty >/dev/null 2>&1; then
+        kitty @ load-config >/dev/null 2>&1 || true
+    fi
+    merge_vivaldi_theme || true
+    if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
+        hyprctl reload >/dev/null 2>&1 || true
+    fi
+    systemctl --user try-restart hyprpolkitagent.service >/dev/null 2>&1 || true
+}
+
 if [ "$RELOAD" -eq 0 ]; then
+    patch_toolkit_chrome || warn "toolkit chrome patch skipped"
     log "done (--no-reload: skipped live-reload side effects)"
     exit 0
 fi
 
-# --- Live-reload what can be reloaded without restarting it ---
-if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
-    hyprctl reload >/dev/null 2>&1 && log "reloaded Hyprland (picks up modules/colors.lua)" \
-        || warn "hyprctl reload failed"
-else
-    log "Hyprland not running — modules/colors.lua will apply on next start"
-fi
-
-if command -v kitty >/dev/null 2>&1; then
-    kitty @ load-config >/dev/null 2>&1 && log "reloaded kitty colors" \
-        || warn "kitty @ load-config failed (remote control off, or no kitty window open) — new windows still pick up the new colors"
-fi
-
-# GTK/Qt live-reload (settings.ini re-read, running-app repaint) and the
-# Vivaldi Preferences merge: CSS overlay is already on disk from matugen.
-# Native theme object is merged only while Vivaldi is not running, so we
-# never fight its Preferences writer.
-if [ "$RELOAD" -eq 1 ]; then
-    merge_vivaldi_theme || warn "vivaldi Preferences merge skipped"
-    # hyprtoolkit.conf is picked up by the next dialog without a restart;
-    # restart anyway so a running prompt cannot keep a stale palette.
-    if systemctl --user try-restart hyprpolkitagent.service >/dev/null 2>&1; then
-        log "restarted hyprpolkitagent (hyprtoolkit.conf)"
-    else
-        warn "hyprpolkitagent not restarted — start it from the session or: systemctl --user start hyprpolkitagent"
-    fi
-fi
+# tokens.json already restyled the shell. GTK/Qt/gsettings/icon cache
+# and hyprctl reload must not hold the Settings spinner.
+(
+    finish_live
+) </dev/null >/dev/null 2>&1 &
+disown $! 2>/dev/null || true
 
 log "done (profile=$PROFILE)"

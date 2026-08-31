@@ -82,11 +82,17 @@ remembers the last one used at `$XDG_STATE_HOME/modern/current-wallpaper`
 to the shipped `~/.config/modern/wallpapers/default.jpg`. Switching
 *profiles* without picking a new image reuses the remembered path.
 
-`matugen image <path>` is called with `--source-color-index 0` (most
-dominant color, deterministic) rather than letting matugen prompt
-interactively — it would otherwise ask "which of these N colors did you
-mean?" on stdin, which hangs forever when invoked from a keybind, a
-`hyprctl` dispatcher, or a future GUI button with no attached terminal.
+`matugen image <path>` is called with `--prefer saturation` so a
+wallpaper's most chromatic candidate becomes the seed (dark skies and
+walls are often the *dominant* color and made every image look the same).
+`--prefer` still picks non-interactively — without it matugen prompts
+"which of these N colors?" on stdin, which hangs forever from a keybind
+or Settings with no attached terminal.
+
+Settings → Design lists those candidate palettes as cards (`scripts/theme-previews.sh`
+dry-runs each seed). Choosing a card reapplies with `--seed HEX`. A new
+wallpaper passes `--extract` so the chrome follows the image until a
+card is picked again.
 
 ## `mode` and `contrast` mapping
 

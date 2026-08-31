@@ -88,8 +88,8 @@ Item {
                     model: island.modelData
                     WidgetLoader {
                         barScreen: root.barScreen
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        Layout.fillWidth: visible
+                        Layout.fillHeight: visible
                     }
                 }
             }

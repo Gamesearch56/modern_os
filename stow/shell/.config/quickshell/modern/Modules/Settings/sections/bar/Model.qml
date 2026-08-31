@@ -10,7 +10,7 @@ QtObject {
         right: Config.bar.right
     })
 
-    // Settings-list icons. Clock and workspaces stay text-only on the bar.
+    // Settings-list icons for the bar widget picker.
     readonly property var icons: ({
         launcher: "view-app-grid-symbolic",
         ai: "applications-science-symbolic",

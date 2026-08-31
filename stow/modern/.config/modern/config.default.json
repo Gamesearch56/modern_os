@@ -29,6 +29,7 @@
   },
   "design": {
     "activeProfile": "tonal-spot-dark",
+    "sourceSeed": "",
     "cornerRounding": 1.0,
     "transparency": 0.85,
     "blurStrength": 40,
@@ -36,6 +37,7 @@
     "cursorTheme": "Bibata-Modern-Classic",
     "cursorSize": 24,
     "wallpaperProvider": "https://4kwallpapers.com",
+    "wallpaperTransition": "fade",
     "bootScreen": {
       "mode": "static",
       "wallpaperOnSplash": true,
