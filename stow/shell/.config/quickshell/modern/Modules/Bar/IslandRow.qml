@@ -85,6 +85,8 @@ Item {
                     void Hypr.toplevels;
                     void Hypr.focusedWorkspace;
                     void Media.hasPlayer;
+                    void Media.playing;
+                    void Media.trackTitle;
                     void Audio.playback;
                     void Battery.onBattery;
                     return root._empty(modelData);

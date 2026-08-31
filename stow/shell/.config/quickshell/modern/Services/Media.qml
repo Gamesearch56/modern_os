@@ -32,13 +32,13 @@ Singleton {
     readonly property bool hasPlayer: root.active !== null
     readonly property string identity: root.active?.identity ?? ""
     readonly property string desktopEntry: String(root.active?.desktopEntry || "").replace(/\.desktop$/i, "")
-    readonly property string trackTitle: root.active?.trackTitle ?? ""
+    readonly property string trackTitle: root._titleOf(root.active)
     readonly property string trackArtist: root.active?.trackArtist ?? ""
     readonly property string trackAlbum: root.active?.trackAlbum ?? ""
     readonly property string trackArtUrl: root.active?.trackArtUrl ?? ""
     readonly property real position: root.active?.position ?? 0
     readonly property real length: root.active?.length ?? 0
-    readonly property bool playing: root.active?.isPlaying ?? false
+    readonly property bool playing: root._isPlaying(root.active)
     readonly property bool anyPlaying: {
         void root._playKey;
         void root._gen;
@@ -61,6 +61,8 @@ Singleton {
 
     Instantiator {
         model: Mpris.players
+        onObjectAdded: () => root._bump()
+        onObjectRemoved: () => root._bump()
         delegate: Connections {
             required property var modelData
             target: modelData
@@ -68,6 +70,7 @@ Singleton {
             function onPlaybackStateChanged() { root._bump(); }
             function onIdentityChanged() { root._bump(); }
             function onTrackTitleChanged() { root._bump(); }
+            Component.onCompleted: root._bump()
         }
     }
 
@@ -132,19 +135,45 @@ Singleton {
             || desk.indexOf("spotify") !== -1;
     }
 
+    function _playerList(): var {
+        const m = Mpris.players;
+        if (!m)
+            return [];
+        const vals = m.values;
+        if (vals && vals.length !== undefined)
+            return vals;
+        return [];
+    }
+
+    function _titleOf(player: var): string {
+        if (!player)
+            return "";
+        const t = String(player.trackTitle || "").trim();
+        if (t.length)
+            return t;
+        const a = String(player.trackArtist || "").trim();
+        if (a.length)
+            return a;
+        const meta = player.metadata || {};
+        return String(meta["xesam:title"] || meta["xesam:artist"] || "").trim();
+    }
+
     function _isPlaying(player: var): bool {
         if (!player)
             return false;
-        if (!player.isPlaying)
-            return false;
         const state = player.playbackState;
-        if (state === 2 || String(state).toLowerCase() === "paused")
+        const label = String(state).toLowerCase();
+        if (state === 2 || label === "paused")
             return false;
-        return true;
+        if (state === 1 || label === "playing" || player.isPlaying)
+            return true;
+        return false;
     }
 
     function _pickActive(): var {
-        const vals = Mpris.players.values;
+        void root._playKey;
+        void root._gen;
+        const vals = root._playerList();
         if (!vals || vals.length === 0)
             return null;
         let spotify = null;
@@ -158,7 +187,7 @@ Singleton {
             }
             if (!playing && root._isPlaying(p))
                 playing = p;
-            if (!titled && String(p?.trackTitle || p?.trackArtist || "").trim().length)
+            if (!titled && root._titleOf(p).length)
                 titled = p;
         }
         if (spotify)
