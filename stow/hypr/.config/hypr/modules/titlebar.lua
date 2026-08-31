@@ -3,10 +3,10 @@
 -- { hyprbars = … }}) is an unknown key and fills the error overlay if
 -- we apply it at parse time before hyprpm has loaded the .so.
 -- Traffic-light hues are OS window-control affordances, not MD3 roles
--- (docs/DECISIONS.md). Surface colors come from modules/colors.lua.
+-- (docs/DECISIONS.md). Surface colors come from modules/theme_colors.lua.
 
 local config = require("modules.config")
-local colors = require("modules.colors")
+local colors = require("modules.theme_colors")
 local overlays = require("modules.windows")
 
 if not config.value("windows.titlebar", true) then

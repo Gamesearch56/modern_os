@@ -3,8 +3,9 @@
 -- Every module below reads its behaviour from config.json via
 -- modules/config.lua (see docs/ARCHITECTURE.md's "two data flows"). This
 -- file itself should never grow — it only requires modules, in load
--- order. Colors come from modules/colors.lua, which
--- scripts/theme-apply.sh regenerates on every theme change; never hand-edit it.
+-- order. Colors come from modules/theme_colors.lua, which loads
+-- generated modules/colors.lua or tokens.json so a missing gitignored
+-- file cannot drop the compositor into emergency mode.
 --
 -- require() (not dofile()) so each module gets its own Lua scope and
 -- ConfigWatcher dependency tracking — see docs/DECISIONS.md and
@@ -13,7 +14,7 @@
 require("modules.permissions")
 require("modules.env")
 require("modules.general")
-require("modules.colors")
+require("modules.theme_colors")
 require("modules.animations")
 require("modules.input")
 require("modules.monitors")
