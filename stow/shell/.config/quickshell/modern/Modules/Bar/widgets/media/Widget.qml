@@ -9,7 +9,6 @@ Item {
     visible: Media.hasPlayer || !!Audio.playback
     implicitWidth: visible ? (BarLayout.vertical ? Config.bar.height : row.implicitWidth + Tokens.spacing.md * 2) : 0
     implicitHeight: Config.bar.height
-    clip: true
 
     readonly property bool _mpris: Media.hasPlayer
     readonly property real _art: BarLayout.vertical
@@ -21,12 +20,17 @@ Item {
             const title = Media.trackTitle || "";
             const artist = Media.trackArtist || "";
             if (title.length > 0 && artist.length > 0)
-                return artist + " — " + title;
-            return title || artist;
+                return title + " — " + artist;
+            if (title.length || artist.length)
+                return title || artist;
+            if ((Media.identity || "").length)
+                return Media.identity;
         }
-        return Audio.streamTitle(Audio.playback);
+        if (Audio.playback)
+            return Audio.streamTitle(Audio.playback);
+        return I18n.t("bar.media");
     }
-    readonly property string _artUrl: root._mpris ? Media.trackArtUrl : ""
+    readonly property string _artUrl: root._mpris ? (Media.trackArtUrl || "") : ""
     readonly property string _streamIcon: root._mpris ? "" : Audio.streamIcon(Audio.playback)
 
     function _raise() {
@@ -52,11 +56,12 @@ Item {
 
     RowLayout {
         id: row
-        anchors.centerIn: parent
+        anchors.left: parent.left
+        anchors.leftMargin: Tokens.spacing.md
+        anchors.verticalCenter: parent.verticalCenter
         spacing: Tokens.spacing.sm
 
         Rectangle {
-            visible: BarLayout.vertical || root._artUrl.length > 0 || !root._mpris
             Layout.preferredWidth: root._art
             Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
@@ -79,7 +84,7 @@ Item {
                 anchors.centerIn: parent
                 visible: root._artUrl.length === 0
                 name: root._streamIcon.length ? root._streamIcon : "audio-x-generic-symbolic"
-                size: Tokens.icon.md
+                size: Tokens.icon.sm
                 color: Colors.color.onSurface
             }
 
@@ -90,24 +95,15 @@ Item {
             }
         }
 
-        Item {
-            id: titleBox
+        MText {
             visible: !BarLayout.vertical && root._label.length > 0
             Layout.alignment: Qt.AlignVCenter
-            Layout.preferredWidth: Math.min(title.implicitWidth, root._titleMax)
             Layout.maximumWidth: root._titleMax
-            Layout.preferredHeight: root._art
-            implicitHeight: root._art
-
-            MText {
-                id: title
-                anchors.fill: parent
-                value: root._label
-                styleName: "titleSmall"
-                elide: Text.ElideRight
-                wrapMode: Text.NoWrap
-                verticalAlignment: Text.AlignVCenter
-            }
+            value: root._label
+            styleName: "titleSmall"
+            elide: Text.ElideRight
+            wrapMode: Text.NoWrap
+            verticalAlignment: Text.AlignVCenter
         }
 
         MIconButton {
@@ -116,6 +112,8 @@ Item {
             iconName: "media-skip-backward-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
+            Layout.preferredWidth: root._art
+            Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
             enabled: Media.canGoPrevious
             onClicked: Media.previous()
@@ -126,6 +124,8 @@ Item {
             iconName: (root._mpris ? Media.playing : !!Audio.playback) ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
+            Layout.preferredWidth: root._art
+            Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
             onClicked: root._toggle()
         }
@@ -135,6 +135,8 @@ Item {
             iconName: "media-skip-forward-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
+            Layout.preferredWidth: root._art
+            Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
             enabled: Media.canGoNext
             onClicked: Media.next()

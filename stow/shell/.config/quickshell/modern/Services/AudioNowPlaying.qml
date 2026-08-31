@@ -11,10 +11,13 @@ QtObject {
         const vals = root.streams || [];
         for (let i = 0; i < vals.length; i++) {
             const n = vals[i];
-            if (!n || !n.audio || n.audio.muted)
+            if (!n)
                 continue;
             void n.ready;
+            void n.audio;
             void n.properties;
+            if (!n.audio || n.audio.muted)
+                continue;
             if (n.ready === false)
                 continue;
             const p = n.properties || {};
