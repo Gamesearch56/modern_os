@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Proton Drive
+Name[de]=Proton Drive
+Comment=Proton Drive web app
+Comment[de]=Proton Drive als Web-App
+Exec=vivaldi-stable --app=https://drive.proton.me
+TryExec=vivaldi-stable
+Icon=proton-pass
+Terminal=false
+StartupNotify=true
+Categories=Network;FileTransfer;
+StartupWMClass=proton-drive

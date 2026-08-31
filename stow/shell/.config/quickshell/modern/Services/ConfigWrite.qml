@@ -66,7 +66,8 @@ Singleton {
         return path === "apps.defaults"
             || path.indexOf("apps.defaults.videoPlayer") === 0
             || path.indexOf("apps.defaults.imageViewer") === 0
-            || path.indexOf("apps.defaults.fileManager") === 0;
+            || path.indexOf("apps.defaults.fileManager") === 0
+            || path.indexOf("apps.defaults.mail") === 0;
     }
 
     function set(path, value) {

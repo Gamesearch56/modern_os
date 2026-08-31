@@ -46,7 +46,7 @@ Singleton {
             id: adapter
 
             property JsonObject general: JsonObject {
-                property list<string> autostart: ["proton-mail.desktop"]
+                property list<string> autostart: ["proton-mail.desktop", "proton-calendar.desktop", "whatsapp.desktop"]
                 property int notificationTimeoutMs: 6000
                 property JsonObject dndSchedule: JsonObject {
                     property bool enabled: false
@@ -160,9 +160,9 @@ Singleton {
             property JsonObject apps: JsonObject {
                 property JsonObject defaults: JsonObject {
                     property string browser: "vivaldi-stable.desktop"
-                    property string calendar: "proton-mail.desktop"
+                    property string calendar: "proton-calendar.desktop"
                     property string mail: "proton-mail.desktop"
-                    property string communication: ""
+                    property string communication: "whatsapp.desktop"
                     property string fileManager: "org.gnome.Nautilus.desktop"
                     property string videoPlayer: "mpv.desktop"
                     property string imageViewer: "imv.desktop"

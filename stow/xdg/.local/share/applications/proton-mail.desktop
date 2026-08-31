@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Proton Mail
+Name[de]=Proton Mail
+Comment=Proton Mail web app
+Comment[de]=Proton Mail als Web-App
+Exec=vivaldi-stable --app=https://mail.proton.me
+TryExec=vivaldi-stable
+Icon=proton-pass
+Terminal=false
+StartupNotify=true
+Categories=Network;Email;
+MimeType=x-scheme-handler/mailto;
+StartupWMClass=proton-mail

@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Write XDG default apps for video/image/folders into mimeapps.list so
+# Write XDG default apps for video/image/folders/mailto into mimeapps.list so
 # Nautilus/Dolphin and xdg-open follow Settings → Applications. Settings
 # itself never touches this file; ConfigWrite runs this after
 # apps.defaults changes. Folders are set explicitly: kitty-open.desktop
 # also claims inode/directory, which is why Steam "Browse files" opened
-# a terminal.
+# a terminal. Mail pins x-scheme-handler/mailto to apps.defaults.mail.
 #
 # Usage:
 #   mime-defaults.sh
-#   mime-defaults.sh --video mpv.desktop --image imv.desktop --files org.gnome.Nautilus.desktop
+#   mime-defaults.sh --video mpv.desktop --image imv.desktop --files org.gnome.Nautilus.desktop --mail proton-mail.desktop
 #
 # Desktop ids default to config.json apps.defaults.videoPlayer /
-# imageViewer / fileManager. Video/image MIME types come from each
+# imageViewer / fileManager / mail. Video/image MIME types come from each
 # app's .desktop MimeType= line.
 set -euo pipefail
 
@@ -20,10 +20,11 @@ MIMEAPPS="${XDG_CONFIG_HOME:-$HOME/.config}/mimeapps.list"
 VIDEO_ID=""
 IMAGE_ID=""
 FILES_ID=""
+MAIL_ID=""
 
 usage() {
     cat <<'EOF'
-Usage: mime-defaults.sh [--video DESKTOP] [--image DESKTOP] [--files DESKTOP] [--config PATH] [--mimeapps PATH]
+Usage: mime-defaults.sh [--video DESKTOP] [--image DESKTOP] [--files DESKTOP] [--mail DESKTOP] [--config PATH] [--mimeapps PATH]
 EOF
 }
 
@@ -32,6 +33,7 @@ while [ $# -gt 0 ]; do
         --video) VIDEO_ID="${2:-}"; shift 2 ;;
         --image) IMAGE_ID="${2:-}"; shift 2 ;;
         --files) FILES_ID="${2:-}"; shift 2 ;;
+        --mail) MAIL_ID="${2:-}"; shift 2 ;;
         --config) CONFIG="${2:-}"; shift 2 ;;
         --mimeapps) MIMEAPPS="${2:-}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
@@ -78,12 +80,14 @@ mime_types() {
 [ -n "$VIDEO_ID" ] || VIDEO_ID="$(from_config videoPlayer)"
 [ -n "$IMAGE_ID" ] || IMAGE_ID="$(from_config imageViewer)"
 [ -n "$FILES_ID" ] || FILES_ID="$(from_config fileManager)"
+[ -n "$MAIL_ID" ] || MAIL_ID="$(from_config mail)"
 [ -n "$VIDEO_ID" ] || VIDEO_ID="mpv.desktop"
 [ -n "$IMAGE_ID" ] || IMAGE_ID="imv.desktop"
 [ -n "$FILES_ID" ] || FILES_ID="org.gnome.Nautilus.desktop"
 VIDEO_ID="$(desktop_id "$VIDEO_ID")"
 IMAGE_ID="$(desktop_id "$IMAGE_ID")"
 FILES_ID="$(desktop_id "$FILES_ID")"
+MAIL_ID="$(desktop_id "$MAIL_ID")"
 
 pairs=""
 add_role() {
@@ -118,9 +122,21 @@ add_folder_role() {
     pairs="${pairs}inode/mount-point=${id}"$'\n'
 }
 
+# mailto: is pinned even if the mail .desktop omits MimeType=.
+add_mail_role() {
+    local id="$1"
+    [ -n "$id" ] || return 0
+    if ! desktop_file "$id" >/dev/null; then
+        echo "mime-defaults: no desktop file for $id" >&2
+        return 0
+    fi
+    pairs="${pairs}x-scheme-handler/mailto=${id}"$'\n'
+}
+
 add_role "$VIDEO_ID"
 add_role "$IMAGE_ID"
 add_folder_role "$FILES_ID"
+add_mail_role "$MAIL_ID"
 
 if [ -z "$pairs" ]; then
     echo "mime-defaults: nothing to apply" >&2
