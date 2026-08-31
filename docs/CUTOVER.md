@@ -341,7 +341,8 @@ duplicate notification daemons. Keep `modern-shell.service`,
   `~/dotfiles`). This repo does not ship a replacement hook
   (`docs/DECISIONS.md` #11). After removal, `scripts/check-isolation.sh --init`
   if you still use that check, or drop the check (next section).
-- Do not disable `hyprpolkitagent` / pipewire / bluetooth.
+- Do not disable `phylax` / pipewire / bluetooth. Stop leftover
+  `hyprpolkitagent` so two agents cannot hang `pkexec`.
 - Gated files under `install/system/` — apply only files that **exist**
   (Plymouth, sysctl, ufw, tmpfiles, portals). Each file’s header is the
   copy command. Do **not** enable greetd; that tree has not landed.

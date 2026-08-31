@@ -47,7 +47,7 @@ Six groups, 21 pages. Catalog lives in
 | Devices | Bluetooth | `bluetooth` | Adapter power, nearby/connected lists, connect/disconnect/forget via `Bluetooth` (BlueZ). |
 | System | Storage | `storage` | Internal and external drive cards via `Storage` (`lsblk`, sysfs link speed). Eject uses `udisksctl` unmount + power-off. |
 | System | Backup | `backup` | Live Snapper status (`Snapshots`). `backup.preUpdateSnapshot` drives `modern update`. Create/delete via `pkexec snapper`. Restore is gated. |
-| System | Firewall | `firewall` | Live UFW (`Firewall`). Enable/disable and allow/deny rules via `pkexec /usr/bin/ufw`. Rules persist in `/etc/ufw`. Enable forces deny incoming, allow outgoing, deny routed. No `config.json` keys, no Restore, no `ufw reset`. |
+| System | Firewall | `firewall` | Live UFW (`Firewall`). Listing, enable/disable, and allow/deny rules via `pkexec /usr/bin/ufw` (same polkit action as the store). Rules persist in `/etc/ufw`. Enable forces deny incoming, allow outgoing, deny routed. No `config.json` keys, no Restore, no `ufw reset`. |
 | System | Update | `system` | Pending packages via `checkupdates` (`Update`). `modern update` / `modern mirrors` (pkexec from Settings). |
 
 ## App Store
@@ -67,7 +67,7 @@ System upgrades stay on Settings → System.
   and refuses a protected set (glibc, pacman, systemd, hyprland,
   quickshell, …). Remove is `-R` of that name only (`-s`/`-n` stay off).
   The shell never SIGKILLs an in-flight transaction. `pkg-mutate.sh`
-  starts `hyprpolkitagent` if it is down so the password window can
+  starts `phylax.service` if it is down so the password window can
   appear; Cancel is allowed only while still waiting for that prompt.
 - Updates button appears only when `Update.pending` is non-empty
   (label without a count; `MBadge` pill is the count) and opens

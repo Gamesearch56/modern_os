@@ -71,14 +71,15 @@ apply({
     no_initial_focus = true,
 })
 
--- hyprpolkitagent has no .desktop file; Wayland app_id is the binary
--- name or the QApplication name. Glass like the wallpaper overlay:
+-- Phylax (GTK4 polkit agent) app_id. Glass like the wallpaper overlay:
 -- float+center, dim_around as scrim, design.transparency, no hyprbars.
+-- pin keeps the prompt above modern.store / modern.settings.
 apply({
     name = "polkit-auth-dialog",
-    match = { class = "hyprpolkitagent|hyprland-polkit-agent|org.hyprland.hyprpolkitagent" },
+    match = { class = "io.github.jakebgrant.phylax" },
     float = true,
     center = true,
+    pin = true,
     dim_around = true,
     stay_focused = true,
     border_size = 1,

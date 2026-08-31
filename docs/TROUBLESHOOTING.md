@@ -233,36 +233,59 @@ CSD under the SSD.
 
 ## App Store hangs on “Waiting for confirmation” with no password window
 
-`pkexec` talks to `hyprpolkitagent`. If that user unit is `failed`
-(`start-limit-hit` from a restart storm), no dialog maps and the store
+`pkexec` talks to Phylax (`phylax.service`). Phylax needs `XDG_SESSION_ID`
+in the user manager (autostart imports it; the unit falls back to
+`loginctl show-user Display`). If the unit is down or a leftover
+`hyprpolkitagent` is still registered, no dialog maps and the store
 overlay waits forever. Clear it:
 
 ```bash
-systemctl --user reset-failed hyprpolkitagent.service
-systemctl --user start hyprpolkitagent.service
+systemctl --user stop hyprpolkitagent.service
+systemctl --user reset-failed phylax.service
+systemctl --user start phylax.service
 pkexec true
 ```
 
-`scripts/doctor.sh` warns when the unit is not active. Install/remove
+`scripts/doctor.sh` warns when Phylax is not active. Install/remove
 from the store starts the agent first; Cancel is safe only while still
 waiting for the prompt (not after pacman has started writing).
 
 ## Polkit prompt is light / unthemed / tiled
 
-hyprpolkitagent is hyprtoolkit, not Fusion+QSS. Colors live in
-`~/.config/hypr/hyprtoolkit.conf` (written by `theme-apply.sh`). After
-`theme-apply.sh`, Hyprland reloads (glass opacity). If the agent is
-down, it is started (not bounced). By hand:
+Phylax is GTK4. Colors, type, and radii live in
+`~/.config/phylax/style.css` (written by `theme-apply.sh`). CSS
+hot-reloads when the next dialog maps. Hyprland floats
+`class:io.github.jakebgrant.phylax` with `dim_around`. By hand:
 
 ```bash
 scripts/theme-apply.sh
 pkexec true
+# preview chrome without a real auth:
+PHYLAX_DEMO=1 phylax
 ```
 
-Radii and type come from that toolkit conf (`rounding_large` =
-`Tokens.radius.medium`). The wrong-password label is hardcoded red in
-upstream. A missing `hyprtoolkit.conf` falls back to hyprtoolkit defaults
-(near-black + cyan), which will not match the overlay chrome.
+A missing `style.css` falls back to unstyled GTK defaults. Wrong-password
+text uses the `error` token. If the window tiles, the `polkit-auth-dialog`
+rule did not match — check `hyprctl clients` for the app_id. Confirm
+looking unfilled next to an outlined Cancel is Adwaita `background-image`
+winning; re-run `scripts/theme-apply.sh --chrome-only`. The dialog always
+authenticates as the logged-in user — if Confirm still names a different
+admin, `~/.local/bin/phylax` is missing (`scripts/build-phylax.sh`).
+
+## Firewall page does not ask for a password
+
+Settings → Firewall lists rules with `pkexec /usr/bin/ufw status numbered`,
+the same `org.freedesktop.policykit.exec` action as the App Store. Phylax
+does register for it. Opening the page with hyprpolkit prompted every
+time because that action is `auth_admin` (no keep-cookie). A missing
+prompt now is not a different, quieter policy.
+
+Phylax only handles **one** auth cookie at a time: a second `pkexec`
+(Firewall while the store prompt is still up) is ignored and the list
+hangs with no window. The Firewall singleton can still show the last
+successful list, so the page looks populated. Enable / disable / add /
+delete still call `pkexec` and should prompt when no dialog is already
+open. Check with `pkexec /usr/bin/ufw status numbered` in a terminal.
 
 ## Dolphin is light / has a File menu / ignores the wallpaper palette
 

@@ -130,9 +130,9 @@ bell stay on disk under `Modules/Bar/widgets/` if a leftover
   the process (Hyprland `hl.env` does not stick after reload). Restart
   Dolphin after `theme-apply.sh`. The window is opaque (wallpaper in the
   gaps, not through the view). No `QT_QPA_PLATFORM=xcb`.
-- **hyprpolkitagent** — hyprtoolkit palette in `hyprtoolkit.conf`
-  (surface / primary / Inter / radius.medium), plus a Hyprland window
-  rule for glass opacity and `dim_around`. Not QSS. See `docs/THEMING.md`.
+- **Phylax** — GTK4 polkit dialog, CSS from `~/.config/phylax/style.css`
+  (matugen tokens + chrome radii/type), plus a Hyprland window rule for
+  glass opacity, `pin`, and `dim_around`. See `docs/THEMING.md`.
 - **Vivaldi** — native theme object plus CSS overlay and a copied wallpaper
   at `~/.config/vivaldi/custom_css/wallpaper` when
   `design.bootScreen.wallpaperOnVivaldi` is on. CSS mods need

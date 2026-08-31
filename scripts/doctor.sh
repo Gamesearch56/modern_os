@@ -99,16 +99,29 @@ elif systemctl --user is-enabled modern-shell.service >/dev/null 2>&1; then
 else
     warn "neither qs nor modern-shell.service is running (start Hyprland via start-hyprland)"
 fi
-if systemctl --user is-active hyprpolkitagent.service >/dev/null 2>&1; then
-    ok "hyprpolkitagent.service is active"
+if command -v phylax >/dev/null 2>&1; then
+    ok "phylax on PATH"
 else
-    warn "hyprpolkitagent.service is not active — pkexec prompts will not render (systemctl --user reset-failed hyprpolkitagent.service && systemctl --user start hyprpolkitagent.service)"
+    warn "phylax missing — yay -S phylax-git (install/manifests/10-desktop.aur.txt)"
 fi
-TOOLKIT_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprtoolkit.conf"
-if [ -f "$TOOLKIT_CONF" ]; then
-    ok "hyprtoolkit.conf present (hyprpolkitagent chrome)"
+if systemctl --user is-active phylax.service >/dev/null 2>&1; then
+    ok "phylax.service is active"
 else
-    warn "hyprtoolkit.conf missing — run scripts/theme-apply.sh so hyprpolkitagent matches overlay chrome"
+    warn "phylax.service is not active — pkexec prompts will not render (systemctl --user reset-failed phylax.service && systemctl --user start phylax.service)"
+fi
+if [ -x "${HOME}/.local/bin/phylax" ]; then
+    ok "patched phylax in ~/.local/bin (session-user Confirm)"
+else
+    warn "patched Phylax missing (~/.local/bin/phylax) — AUR phylax Confirm uses the first wheel user; run scripts/build-phylax.sh"
+fi
+if systemctl --user is-active hyprpolkitagent.service >/dev/null 2>&1; then
+    warn "hyprpolkitagent.service is still active — stop it so only Phylax registers as the polkit agent"
+fi
+PHYLAX_CSS="${XDG_CONFIG_HOME:-$HOME/.config}/phylax/style.css"
+if [ -f "$PHYLAX_CSS" ]; then
+    ok "phylax/style.css present (polkit dialog chrome)"
+else
+    warn "phylax/style.css missing — run scripts/theme-apply.sh so the password prompt matches overlay chrome"
 fi
 STYLE_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/application-style.conf"
 if [ -f "$STYLE_CONF" ]; then

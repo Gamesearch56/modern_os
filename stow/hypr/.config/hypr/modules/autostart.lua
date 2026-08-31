@@ -19,11 +19,13 @@ hl.on("hyprland.start", function()
         .. "exec qs -c modern >>\"$log\" 2>&1'")
 
     hl.exec_cmd("sh -lc '"
-        .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true; "
+        .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XDG_SESSION_ID XDG_SESSION_TYPE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true; "
         .. "timeout 2 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true; "
         .. "timeout 2 systemctl --user stop modern-shell.service || true; "
-        .. "timeout 2 systemctl --user reset-failed hyprpolkitagent.service || true; "
-        .. "timeout 2 systemctl --user start hyprpolkitagent || true'")
+        .. "timeout 2 systemctl --user stop hyprpolkitagent.service || true; "
+        .. "timeout 2 systemctl --user daemon-reload || true; "
+        .. "timeout 2 systemctl --user reset-failed phylax.service || true; "
+        .. "timeout 2 systemctl --user start phylax || true'")
 
     hl.exec_cmd("hypridle")
     -- hyprpm stores plugins in /var/cache/hyprpm/$USER and needs pkexec

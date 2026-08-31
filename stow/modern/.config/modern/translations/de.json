@@ -965,7 +965,7 @@
     "working": "Pakete werden geändert…",
     "installing": "{name} wird installiert",
     "removing": "{name} wird entfernt",
-    "installLog": "Ein Passwortfenster sollte erscheinen. Falls nicht, abbrechen und erneut versuchen.",
+    "installLog": "Warte auf Bestätigung…",
     "cancel": "Abbrechen",
     "failed": "Paket konnte nicht geändert werden",
     "cancelled": "Authentifizierung abgebrochen",
