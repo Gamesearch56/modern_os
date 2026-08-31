@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Spacebar Quick Look: Dolphin selection via the copy_location QAction
 # (KF6 does not export the selection over D-Bus), then Quickshell IPC.
-# Not Dolphin → inject Space so the global bind still types in other apps.
+# Not Dolphin → return; SPACE is a non-consuming bind so the focused
+# field (AI chat, kitty, …) already received the key.
 # Source from scripts/modern, never execute directly.
 
 filepreview_trim() {
@@ -98,19 +99,6 @@ filepreview_selection() {
     return 1
 }
 
-filepreview_passthrough() {
-    local flag="${XDG_RUNTIME_DIR:-/tmp}/modern-filepreview-pass"
-    if [ -f "$flag" ]; then
-        rm -f "$flag"
-        return 0
-    fi
-    touch "$flag"
-    if ! hyprctl dispatch 'hl.dsp.send_shortcut({ mods = "", key = "space", window = "activewindow" })' >/dev/null 2>&1; then
-        hyprctl dispatch sendshortcut ", space, activewindow" >/dev/null 2>&1 || true
-    fi
-    rm -f "$flag"
-}
-
 filepreview_run() {
     if filepreview_is_open; then
         qs -c modern ipc call filepreview hide >/dev/null 2>&1 || true
@@ -130,6 +118,4 @@ filepreview_run() {
         qs -c modern ipc call notifications toast "$(t filePreview.noSelection)" "" >/dev/null 2>&1 || true
         return 0
     fi
-
-    filepreview_passthrough
 }

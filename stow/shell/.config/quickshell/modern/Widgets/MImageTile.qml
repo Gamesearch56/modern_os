@@ -1,6 +1,7 @@
-// Image tile. Keyboard `current` and pointer hover share a primary
-// ring drawn above the photo. ClippingRectangle clips the bitmap to
-// the same radius — Rectangle.clip is axis-aligned.
+// Image tile. `current` is the keyboard/pointer selection (one at a
+// time). `hoverRing` is for grids that are pointer-only (Settings
+// gallery) — the wallpaper picker keeps it off so a parked cursor
+// cannot draw a second ring next to the arrow-key selection.
 import QtQuick
 import Quickshell.Widgets
 import "../Commons"
@@ -11,9 +12,10 @@ Item {
     property url source: ""
     property bool selected: false
     property bool current: false
+    property bool hoverRing: true
     property bool removable: false
 
-    readonly property bool _ring: !root.selected && (root.current || ma.containsMouse)
+    readonly property bool _ring: root.current || (root.hoverRing && !root.selected && ma.containsMouse)
     readonly property real _radius: Tokens.radius.small
     readonly property bool _removeHot: removeMa.containsMouse || removeMa.pressed
 
@@ -38,6 +40,7 @@ Item {
 
     signal clicked()
     signal hovered()
+    signal pointerMoved()
     signal removeClicked()
 
     ClippingRectangle {
@@ -85,11 +88,14 @@ Item {
     MouseArea {
         id: ma
         anchors.fill: parent
-        enabled: !root.selected
         hoverEnabled: true
         cursorShape: root.selected ? Qt.ArrowCursor : Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onClicked: {
+            if (!root.selected)
+                root.clicked();
+        }
         onEntered: root.hovered()
+        onPositionChanged: root.pointerMoved()
     }
 
     Item {

@@ -67,11 +67,8 @@ ColumnLayout {
             to: 48
             value: Config.design.cursorSize ?? 24
             showValue: true
-            onMoved: (v) => {
-                const n = Math.round(v);
-                ConfigWrite.set("design.cursorSize", n);
-                Hypr.setCursor(Config.design.cursorTheme ?? "", n);
-            }
+            onMoved: (v) => Hypr.setCursor(Config.design.cursorTheme ?? "", Math.round(v))
+            onCommitted: (v) => ConfigWrite.set("design.cursorSize", Math.round(v))
         }
     }
 }

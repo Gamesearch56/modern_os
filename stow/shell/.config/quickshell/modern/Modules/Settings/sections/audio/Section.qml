@@ -43,7 +43,7 @@ ColumnLayout {
             to: 150
             value: sectionModel.masterVolumeLimit
             showValue: true
-            onMoved: (v) => {
+            onCommitted: (v) => {
                 const n = Math.round(v);
                 ConfigWrite.set("audio.masterVolumeLimit", n);
                 if (Audio.volume > n)

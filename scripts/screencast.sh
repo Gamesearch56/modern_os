@@ -34,6 +34,10 @@ fi
 
 command -v wf-recorder >/dev/null 2>&1 || { echo "screencast: wf-recorder not on PATH" >&2; exit 1; }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/paths.sh
+source "$SCRIPT_DIR/lib/paths.sh"
+
 MODERN_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/modern"
 DEFAULT_JSON="$MODERN_DIR/config.default.json"
 LIVE_JSON="$MODERN_DIR/config.json"
@@ -48,16 +52,6 @@ merged() {
     else
         echo '{}'
     fi
-}
-
-expand_home() {
-    local p="$1"
-    local prefix="~/"
-    case "$p" in
-        "~") printf '%s\n' "$HOME" ;;
-        "~/"*) printf '%s/%s\n' "$HOME" "${p#"$prefix"}" ;;
-        *) printf '%s\n' "$p" ;;
-    esac
 }
 
 CFG="$(merged)"

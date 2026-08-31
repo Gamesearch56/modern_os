@@ -137,17 +137,18 @@ Singleton {
 
             property var windowRules: [
                 {
-                    name: "steam-game",
-                    match: { class: "steam_app_.*" },
-                    workspace: "special:game",
-                    fullscreen: true
-                },
-                {
                     name: "jetbrains-dialogs",
                     match: { class: "jetbrains-.*", title: "win0" },
                     float: true
                 }
             ]
+
+            property JsonObject gaming: JsonObject {
+                property bool autoFullscreen: true
+                property bool autoOptimize: true
+                property string matchClass: "steam_app_.*|gamescope|.*\\.exe"
+                property string matchTitle: ".*\\.exe"
+            }
 
             property JsonObject windows: JsonObject {
                 property bool titlebar: true
@@ -170,7 +171,7 @@ Singleton {
             }
 
             property JsonObject input: JsonObject {
-                property string kbLayout: "de"
+                property string kbLayout: "us"
                 property string kbVariant: ""
                 property int repeatRate: 25
                 property int repeatDelay: 600
@@ -303,6 +304,7 @@ Singleton {
     readonly property alias widgets: adapter.widgets
     readonly property alias monitors: adapter.monitors
     readonly property alias windowRules: adapter.windowRules
+    readonly property alias gaming: adapter.gaming
     readonly property alias windows: adapter.windows
     readonly property alias apps: adapter.apps
     readonly property alias launcher: adapter.launcher

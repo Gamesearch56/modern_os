@@ -57,7 +57,10 @@ Singleton {
         path: root.home + "/.config/modern/tokens.json"
         watchChanges: true
         printErrors: false
-        onFileChanged: reload()
+        onFileChanged: {
+            reload();
+            Qt.callLater(() => file.reload());
+        }
         onLoaded: root._apply(text())
         onLoadFailed: (error) => {
             if (error === FileViewError.FileNotFound)
@@ -76,8 +79,13 @@ Singleton {
                 root.mode = String(j.mode);
             if (j.sourceColor)
                 root.sourceColor = String(j.sourceColor);
-            if (j.color && typeof j.color === "object")
-                root.color = j.color;
+            if (j.color && typeof j.color === "object") {
+                const next = {};
+                const src = j.color;
+                for (const k in src)
+                    next[k] = src[k];
+                root.color = next;
+            }
         } catch (e) {
         }
     }

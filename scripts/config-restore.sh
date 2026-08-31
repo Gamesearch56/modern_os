@@ -41,6 +41,9 @@ if [ ! -f "$CFG" ]; then
     cp -- "$DEFAULT" "$CFG"
 fi
 
+exec 9>"$CONFIG_HOME/config.json.lock"
+flock -x 9
+
 path_ok='^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*$'
 for p in "$@"; do
     if [[ ! "$p" =~ $path_ok ]]; then

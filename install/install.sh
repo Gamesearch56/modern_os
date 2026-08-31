@@ -216,11 +216,11 @@ else
     log_warn "matugen not found — run scripts/theme-apply.sh once it is installed"
 fi
 
-# Dolphin / xdg-open follow Settings → Applications video/image defaults.
+# Dolphin / xdg-open follow Settings → Applications video/image/folder defaults.
 run "$REPO_ROOT/scripts/mime-defaults.sh" \
     --config "$TARGET/.config/modern/config.json" \
     --mimeapps "$TARGET/.config/mimeapps.list" \
-    || log_warn "mime-defaults.sh failed — set video/image defaults in Settings → Applications"
+    || log_warn "mime-defaults.sh failed — set video/image/folder defaults in Settings → Applications"
 
 kitty_colors="$TARGET/.config/kitty/colors.conf"
 kitty_stub="$REPO_ROOT/stow/kitty/.config/kitty/colors.conf"

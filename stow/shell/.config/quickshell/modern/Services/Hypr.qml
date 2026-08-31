@@ -224,7 +224,7 @@ Singleton {
         const p = String(path || "");
         const input = Config.input || {};
         if (p === "input.kbLayout")
-            root.keyword("input:kb_layout", String(value || input.kbLayout || "de"));
+            root.keyword("input:kb_layout", String(value || input.kbLayout || "us"));
         else if (p === "input.repeatRate")
             root.keyword("input:repeat_rate", String(Math.round(Number(value ?? input.repeatRate ?? 25))));
         else if (p === "input.repeatDelay")

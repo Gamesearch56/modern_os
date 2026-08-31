@@ -15,10 +15,10 @@ Item {
         void Ai.hostScreenName;
         return Ai.openOn(root.barScreen);
     }
-    readonly property color _fg: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+    readonly property color _fg: root._mine ? Colors.color.onPrimaryContainer : Colors.color.onSurface
 
     BarIslandHit {
-        checked: popup.open
+        checked: root._mine
         onClicked: Ai.toggle(root.barScreen)
     }
 
@@ -36,43 +36,32 @@ Item {
         open: false
         anchorItem: root
         elevation: 0
-        implicitWidth: Tokens.spacing.xxl * 16
-        implicitHeight: Tokens.spacing.xxl * 14
+        implicitWidth: Tokens.window.chatWidth
+        implicitHeight: Tokens.window.chatHeight
+        hAlign: Qt.AlignLeft
         onOpenChanged: {
             if (!popup.open && root._mine)
                 Ai.hide();
         }
-        onGrabReady: root._focusInput()
+        onGrabReady: {
+            if (panelLoader.item && panelLoader.item.focusInput)
+                panelLoader.item.focusInput();
+        }
+
+        Connections {
+            target: Ai
+            function onPanelOpenChanged() {
+                root._sync();
+            }
+            function onHostScreenNameChanged() {
+                root._sync();
+            }
+        }
 
         Loader {
             id: panelLoader
             anchors.fill: parent
             source: Qt.resolvedUrl("Panel.qml")
-            onLoaded: {
-                if (popup.open)
-                    root._focusInput();
-            }
-        }
-    }
-
-    function _focusInput() {
-        if (!popup.open)
-            return;
-        Qt.callLater(() => {
-            if (!popup.open)
-                return;
-            if (panelLoader.item && panelLoader.item.focusInput)
-                panelLoader.item.focusInput();
-        });
-    }
-
-    Connections {
-        target: Ai
-        function onPanelOpenChanged() {
-            root._sync();
-        }
-        function onHostScreenNameChanged() {
-            root._sync();
         }
     }
 

@@ -9,47 +9,32 @@ Item {
 
     property int currentIndex: 0
     property bool _pendingSync: true
+    property bool _pointerArmed: false
+    property bool _swallowMove: true
 
     signal removeRequested(string path)
     readonly property int columns: 3
     readonly property real contentHeight: layout.implicitHeight
 
-    function _selectable(i: int): bool {
-        const paths = Wallpaper.images;
-        if (i < 0 || i >= paths.length)
-            return false;
-        return paths[i] !== Wallpaper.currentPath;
-    }
-
-    function _scan(from: int, step: int): int {
-        const n = Wallpaper.images.length;
-        for (let i = from; i >= 0 && i < n; i += step)
-            if (root._selectable(i))
-                return i;
-        return -1;
+    function _inRange(i: int): bool {
+        return i >= 0 && i < Wallpaper.images.length;
     }
 
     function moveBy(delta: int) {
         const n = Wallpaper.images.length;
         if (n <= 0 || delta === 0)
             return;
-        if (!root._selectable(root.currentIndex)) {
-            const found = root._scan(delta > 0 ? 0 : n - 1, delta > 0 ? 1 : -1);
-            if (found >= 0) {
-                root.currentIndex = found;
-                root._ensureVisible();
-            }
+        root._pointerArmed = false;
+        if (!root._inRange(root.currentIndex)) {
+            root.currentIndex = delta > 0 ? 0 : n - 1;
+            root._ensureVisible();
             return;
         }
-        let next = root.currentIndex + delta;
-        while (next >= 0 && next < n) {
-            if (root._selectable(next)) {
-                root.currentIndex = next;
-                root._ensureVisible();
-                return;
-            }
-            next += delta;
-        }
+        const next = root.currentIndex + delta;
+        if (!root._inRange(next))
+            return;
+        root.currentIndex = next;
+        root._ensureVisible();
     }
 
     function activate() {
@@ -58,37 +43,14 @@ Item {
             Wallpaper.setWallpaper(path);
     }
 
-    function syncFromCurrent() {
-        const paths = Wallpaper.images;
-        const pending = Wallpaper.pendingSelect || "";
-        if (pending.length > 0) {
-            for (let i = 0; i < paths.length; i++) {
-                if (paths[i] === pending && root._selectable(i)) {
-                    root.currentIndex = i;
-                    root._pendingSync = false;
-                    Wallpaper.clearPendingSelect();
-                    root._ensureVisible();
-                    return;
-                }
-            }
-            Wallpaper.clearPendingSelect();
-        }
-        let start = 0;
-        const cur = Wallpaper.currentPath;
-        for (let i = 0; i < paths.length; i++) {
-            if (paths[i] === cur) {
-                start = i + 1;
-                break;
-            }
-        }
-        let idx = root._scan(start, 1);
-        if (idx < 0)
-            idx = root._scan(0, 1);
-        root.currentIndex = idx;
-        if (paths.length > 0)
-            root._pendingSync = false;
-        if (idx >= 0)
-            root._ensureVisible();
+    function resetSelection() {
+        root._pointerArmed = false;
+        root._swallowMove = true;
+        const n = Wallpaper.images.length;
+        root.currentIndex = n > 0 ? 0 : -1;
+        root._pendingSync = false;
+        Wallpaper.clearPendingSelect();
+        flick.contentY = 0;
     }
 
     function _clamp() {
@@ -97,14 +59,10 @@ Item {
             root.currentIndex = -1;
             return;
         }
-        if (root.currentIndex >= n)
+        if (root.currentIndex < 0)
+            root.currentIndex = 0;
+        else if (root.currentIndex >= n)
             root.currentIndex = n - 1;
-        if (!root._selectable(root.currentIndex)) {
-            let i = root._scan(root.currentIndex + 1, 1);
-            if (i < 0)
-                i = root._scan(root.currentIndex - 1, -1);
-            root.currentIndex = i;
-        }
     }
 
     function _ensureVisible() {
@@ -119,12 +77,29 @@ Item {
             flick.contentY = Math.max(0, bottom - flick.height);
     }
 
+    function _hoverAt(index: int, moved: bool) {
+        if (!root._inRange(index))
+            return;
+        if (moved) {
+            if (root._swallowMove) {
+                root._swallowMove = false;
+                return;
+            }
+            root._pointerArmed = true;
+        }
+        if (!root._pointerArmed)
+            return;
+        root.currentIndex = index;
+    }
+
     Connections {
         target: Wallpaper
         function onImagesChanged() {
+            if (root._pendingSync) {
+                root.resetSelection();
+                return;
+            }
             root._clamp();
-            if (root._pendingSync || (Wallpaper.pendingSelect || "").length > 0)
-                root.syncFromCurrent();
         }
     }
 
@@ -157,7 +132,8 @@ Item {
                     Layout.columnSpan: tiles.count === 1 ? root.columns : 1
                     source: path.length > 0 ? ("file://" + path) : ""
                     selected: path === Wallpaper.currentPath
-                    current: root.currentIndex === index && path !== Wallpaper.currentPath
+                    current: root.currentIndex === index
+                    hoverRing: false
                     removable: Wallpaper.canRemove(path)
                     onClicked: {
                         if (path === Wallpaper.currentPath)
@@ -165,10 +141,8 @@ Item {
                         root.currentIndex = index;
                         Wallpaper.setWallpaper(path);
                     }
-                    onHovered: {
-                        if (path !== Wallpaper.currentPath)
-                            root.currentIndex = index;
-                    }
+                    onHovered: root._hoverAt(index, false)
+                    onPointerMoved: root._hoverAt(index, true)
                     onRemoveClicked: root.removeRequested(path)
                 }
             }

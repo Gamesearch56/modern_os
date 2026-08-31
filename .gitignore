@@ -9,6 +9,8 @@ stow/hypr/.config/hypr/application-style.conf
 stow/hypr/.config/hypr/hyprtoolkit.conf
 stow/hypr/.config/hypr/modules/colors.lua
 **/.cache/
+**/__pycache__/
+*.pyc
 
 # Live config, not the shipped default
 stow/modern/.config/modern/config.json
@@ -37,6 +39,7 @@ install/*.log
 
 # Launcher/session state
 **/launcher-usage.json
+**/ai-history.json
 **/boot-history.json
 **/notes/
 **/calendar.json

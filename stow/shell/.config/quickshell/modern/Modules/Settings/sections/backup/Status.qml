@@ -8,6 +8,8 @@ MStatusCard {
     id: root
 
     iconName: "document-save"
+    preferSymbolic: false
+    iconColor: Colors.color.primary
     titleKey: "settings.backup.engine"
     subtitleKey: {
         if (Snapshots.status === "ready")

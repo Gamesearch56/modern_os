@@ -34,7 +34,7 @@ Singleton {
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
         screenshotFull: "screenshots", colorPicker: "screenshots",
         cheatsheet: "system", powerMenu: "system", controlCenter: "system", lockScreen: "system", exitSession: "system",
-        filePreview: "utilities"
+        filePreview: "utilities", clipboardHistory: "utilities"
     })
 
     function rows(filter: string): var {
@@ -49,7 +49,9 @@ Singleton {
             const combo = binds[action];
             if (typeof combo !== "string")
                 continue;
-            const cat = root.categoryOf[action] || "applications";
+            const cat = root.categoryOf[action];
+            if (!cat)
+                continue;
             const label = I18n.t("cheatsheet.action." + action);
             if (needle.length > 0 && label.toLowerCase().indexOf(needle) === -1 && combo.toLowerCase().indexOf(needle) === -1)
                 continue;

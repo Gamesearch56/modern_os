@@ -274,7 +274,11 @@ modern_dotfile/
 Full list: `SUPER`+`K`, `docs/KEYBINDS.md`, or
 `stow/modern/.config/modern/config.default.json` → `keybinds`.
 Design → wallpaper provider opens a **separate** `qml6` window
-(`qt6-webengine`), not an in-shell WebEngine view.
+(`qt6-webengine`), not an in-shell WebEngine view. That window reads
+`tokens.json` for MD3 chrome and filters ads/cookie CMPs with an
+AdGuard-derived hostname denylist (local CONNECT proxy) plus an injected
+cosmetic/auto-decline script — Qt WebEngine cannot load the AdGuard
+extension.
 
 ## Verify (from the daily-driver account)
 

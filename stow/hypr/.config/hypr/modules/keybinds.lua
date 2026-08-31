@@ -130,26 +130,44 @@ local bindings = {
     filePreview = hl.dsp.exec_cmd(modern .. " filepreview"),
 }
 
+-- SPACE is a typing key. Non-consuming so xdg popups (AI chat) and
+-- other fields still receive it; filepreview.sh only acts in Dolphin.
+local function bind_opts(action)
+    if action == "filePreview" then
+        return { non_consuming = true }
+    end
+    return nil
+end
+
+local function bind_combo(combo, dispatcher, action)
+    local opts = bind_opts(action)
+    if opts then
+        hl.bind(combo, dispatcher, opts)
+    else
+        hl.bind(combo, dispatcher)
+    end
+end
+
 for action, dispatcher in pairs(bindings) do
     local key = combo(action)
     if key then
         local skip = false
         for n = 1, 10 do
             if action == ("workspace" .. n) and key == default_number_combo(n, false) then
-                hl.bind("SUPER + " .. number_row_code(n), dispatcher)
+                bind_combo("SUPER + " .. number_row_code(n), dispatcher, action)
                 skip = true
             elseif action == ("moveToWorkspace" .. n) and key == default_number_combo(n, true) then
-                hl.bind("SUPER + SHIFT + " .. number_row_code(n), dispatcher)
+                bind_combo("SUPER + SHIFT + " .. number_row_code(n), dispatcher, action)
                 skip = true
             end
         end
         local named = xkb.named[action]
         if named and key == named.combo then
-            hl.bind(named.bind, dispatcher)
+            bind_combo(named.bind, dispatcher, action)
             skip = true
         end
         if not skip then
-            hl.bind(key, dispatcher)
+            bind_combo(key, dispatcher, action)
         end
     end
 end

@@ -111,9 +111,11 @@ from kitty after the bar is up.
 - Broken-image / purple-black checkerboard icons: Papirus-Dark must be
   the active Qt/Quickshell theme, not only installed. Hyprland
   `modules/env.lua` sets `QS_ICON_THEME` and `QT_QPA_PLATFORMTHEME=qt6ct`.
-  Confirm `//@ pragma IconTheme Papirus-Dark` in `shell.qml`. Restart
-  `qs` after restow (`modern shell reload` or kill the `qs -c modern`
-  process). Packages: `papirus-icon-theme`, `qt6-svg`, `bibata-cursor-theme`.
+  Confirm `//@ pragma IconTheme Papirus-Dark` in `shell.qml`. After restow,
+  `reload_ui` / `modern ui reload` reloads Hyprland, hyprbars, hypridle,
+  Quickshell, and kitty colors. Quickshell only: `modern shell reload`.
+  Or kill the `qs -c modern` process. Packages: `papirus-icon-theme`,
+  `qt6-svg`, `bibata-cursor-theme`.
 
 ## `unknown config key 'misc.vfr'` / `'dwindle.pseudotile'`
 

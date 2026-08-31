@@ -26,6 +26,7 @@ $(t cli.usage)
   modern pkg find [q]
   modern mirrors
   modern repair
+  modern ui reload
   modern window close
   modern config set motion.scale 1.2
   modern config restore design typography
@@ -150,6 +151,18 @@ case "$TARGET" in
         ;;
     wallpaper)
         ipc wallpaper "${1:-pick}"
+        ;;
+    ui)
+        ACTION="${1:-reload}"
+        case "$ACTION" in
+            reload)
+                exec "$SCRIPT_DIR/reload-ui.sh"
+                ;;
+            *)
+                echo "usage: modern ui reload" >&2
+                exit 1
+                ;;
+        esac
         ;;
     shell)
         ipc shell "${1:-reload}"

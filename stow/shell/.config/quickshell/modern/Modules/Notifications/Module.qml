@@ -31,7 +31,7 @@ Scope {
             visible: !Notifications.panelOpen && Notifications.toasts.length > 0
             color: "transparent"
             implicitWidth: Tokens.spacing.xxl * 12
-            implicitHeight: Tokens.spacing.xxl * 16
+            implicitHeight: toastStack.implicitHeight
             anchors.top: Config.bar.position !== "bottom"
             anchors.bottom: Config.bar.position === "bottom"
             anchors.right: Config.bar.position !== "left"
@@ -39,6 +39,9 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             aboveWindows: true
             WlrLayershell.layer: WlrLayer.Overlay
+            mask: Region {
+                item: toastStack
+            }
             margins.top: toastWin._edgeMargin(Config.bar.position === "top")
             margins.bottom: toastWin._edgeMargin(Config.bar.position === "bottom")
             margins.right: toastWin._edgeMargin(Config.bar.position === "right")

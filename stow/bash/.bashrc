@@ -28,15 +28,18 @@ alias ll='ls -alh --color=auto'
 alias la='ls -A --color=auto'
 alias grep='grep --color=auto'
 alias wallpaper='modern wallpaper picker'
-alias reload_ui='modern shell reload'
+alias reload_ui='modern ui reload'
 alias reload_quickshell='modern shell reload'
-alias ifind='find . -iname'
+alias find='find . -iname'
 alias system_update='modern update'
 alias system_cleanup='modern cleanup'
 alias system_find='modern pkg find'
 alias system_fix='modern repair'
 alias fsr_on='optiscaler.sh on'
 alias fsr_off='optiscaler.sh off'
+
+# SSH
+alias connect_macbook='kitty +kitten ssh bastianweigand@192.168.178.103'
 
 shopt -s histappend checkwinsize
 HISTSIZE=5000

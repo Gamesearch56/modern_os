@@ -67,6 +67,7 @@ ShellRoot {
             Wallpaper.hide();
             Cheatsheet.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -81,6 +82,7 @@ ShellRoot {
             Wallpaper.hide();
             Cheatsheet.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -95,6 +97,7 @@ ShellRoot {
             Wallpaper.hide();
             Cheatsheet.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -109,6 +112,7 @@ ShellRoot {
             PowerMenu.hide();
             Cheatsheet.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -123,6 +127,7 @@ ShellRoot {
             PowerMenu.hide();
             Wallpaper.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -137,6 +142,22 @@ ShellRoot {
             PowerMenu.hide();
             Wallpaper.hide();
             Cheatsheet.hide();
+            Ai.hide();
+        }
+    }
+
+    Connections {
+        target: Ai
+        function onPanelOpenChanged() {
+            if (!Ai.panelOpen)
+                return;
+            Launcher.hide();
+            Notifications.hide();
+            PowerMenu.hide();
+            Wallpaper.hide();
+            Cheatsheet.hide();
+            FilePreview.hide();
+            Taskbar.hide();
         }
     }
 
@@ -183,6 +204,10 @@ ShellRoot {
             }
             if (FilePreview.open) {
                 FilePreview.hide();
+                closed = true;
+            }
+            if (Ai.panelOpen) {
+                Ai.hide();
                 closed = true;
             }
             if (Alarm.dialogOpen) {

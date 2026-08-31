@@ -7,6 +7,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=../install/lib/i18n.sh
 source "$REPO_ROOT/install/lib/i18n.sh"
+# shellcheck source=lib/paths.sh
+source "$SCRIPT_DIR/lib/paths.sh"
 
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
 if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
@@ -14,11 +16,7 @@ if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
     [ "$I18N_LANG" = "de" ] || I18N_LANG="en"
 fi
 
-START="${1:-}"
-case "$START" in
-    "~/"*) START="$HOME/${START#~/}" ;;
-    "~") START="$HOME" ;;
-esac
+START="$(expand_home "${1:-}")"
 if [ -n "$START" ] && [ ! -d "$START" ]; then
     START="$(dirname "$START")"
 fi

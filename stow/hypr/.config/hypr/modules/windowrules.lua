@@ -55,7 +55,10 @@ local function apply(rule)
 end
 
 for _, rule in ipairs(config.value("windowRules", {})) do
-    apply(rule)
+    -- Replaced by modules/games.lua; leftover special:game hid titles.
+    if rule.name ~= "steam-game" then
+        apply(rule)
+    end
 end
 
 -- One default, kept even with an empty user rule list: JetBrains IDEs

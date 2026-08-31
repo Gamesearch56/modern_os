@@ -97,7 +97,7 @@ ColumnLayout {
             to: 15
             value: (Config.general.notificationTimeoutMs ?? 6000) / 1000
             showValue: true
-            onMoved: (v) => ConfigWrite.set("general.notificationTimeoutMs", Math.round(v) * 1000)
+            onCommitted: (v) => ConfigWrite.set("general.notificationTimeoutMs", Math.round(v) * 1000)
         }
     }
 

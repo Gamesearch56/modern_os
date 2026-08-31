@@ -1,0 +1,83 @@
+// Conversation turns in XDG state. Streaming placeholders are dropped
+// so a reload never restores a half-written assistant row.
+import Quickshell
+import Quickshell.Io
+import QtQuick
+import "../Commons"
+
+Item {
+    id: root
+
+    property bool ready: false
+
+    readonly property int keep: 40
+    readonly property string path: Paths.stateHome + "/modern/ai-history.json"
+
+    signal restored(var rows)
+
+    property var _pending: null
+
+    FileView {
+        id: file
+        path: root.path
+        watchChanges: false
+        printErrors: false
+        onLoaded: root._ingest(text())
+        onLoadFailed: {
+            root.ready = true;
+            root.restored([]);
+            if (root._pending)
+                root.flush();
+        }
+    }
+
+    function save(history) {
+        root._pending = history;
+        if (root.ready)
+            root.flush();
+    }
+
+    function flush() {
+        const rows = root._serial(root._pending);
+        root._pending = null;
+        if (!root.ready)
+            return;
+        try {
+            file.setText(JSON.stringify(rows));
+        } catch (e) {
+            Logger.warn("Ai", "history persist failed: " + e);
+        }
+    }
+
+    function _ingest(raw) {
+        let rows = [];
+        try {
+            const data = JSON.parse(String(raw || "[]"));
+            if (Array.isArray(data))
+                rows = root._serial(data);
+        } catch (e) {
+            Logger.warn("Ai", "history parse failed: " + e);
+        }
+        root.ready = true;
+        root.restored(rows);
+        if (root._pending)
+            root.flush();
+    }
+
+    function _serial(history) {
+        const out = [];
+        const list = history || [];
+        for (let i = 0; i < list.length; i++) {
+            const r = list[i];
+            if (!r || r.streaming)
+                continue;
+            const role = r.role === "user" ? "user" : "assistant";
+            const text = String(r.text || "");
+            const thinking = String(r.thinking || "");
+            if (!text.length && !thinking.length)
+                continue;
+            out.push({ role: role, text: text, thinking: thinking });
+        }
+        return out.slice(Math.max(0, out.length - root.keep));
+    }
+}

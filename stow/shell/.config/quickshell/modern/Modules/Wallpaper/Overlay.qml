@@ -19,7 +19,7 @@ Item {
     Component.onCompleted: {
         root._entered = true;
         grid._pendingSync = true;
-        grid.syncFromCurrent();
+        grid.resetSelection();
     }
 
     function moveBy(delta: int) { grid.moveBy(delta); }

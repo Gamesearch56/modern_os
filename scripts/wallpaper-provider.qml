@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
 import QtWebEngine
 
 ApplicationWindow {
@@ -9,7 +8,26 @@ ApplicationWindow {
     visible: true
     width: 1200
     height: 800
+    color: String(win.theme.color.surface || "")
     // Size matches Tokens.window.providerWidth/Height and modules/windows.lua.
+
+    property var theme: ({
+        color: ({
+            primary: "#74d7ca",
+            onSurface: "#ebdfe9",
+            onSurfaceVariant: "#d2c2d2",
+            surface: "#171118",
+            surfaceContainer: "#241d25",
+            outlineVariant: "#4e4350",
+            error: "#ffb4ab"
+        }),
+        spacing: ({ xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 }),
+        radius: ({ full: 9999 }),
+        icon: ({ md: 24 }),
+        stroke: ({ hairline: 1 }),
+        interaction: ({ hover: 0.08, press: 0.12 })
+    })
+    property var i18n: ({ back: "Back", close: "Close" })
 
     function _url(): string {
         const a = Qt.application.arguments;
@@ -29,6 +47,23 @@ ApplicationWindow {
                 return s;
         }
         return "";
+    }
+
+    function _applyArgs() {
+        const a = Qt.application.arguments;
+        for (let i = 0; i < a.length; i++) {
+            const s = String(a[i]);
+            if (s.charAt(0) !== "{")
+                continue;
+            try {
+                const j = JSON.parse(s);
+                if (j && j.color)
+                    win.theme = j;
+                if (j && j.back !== undefined)
+                    win.i18n = j;
+            } catch (e) {
+            }
+        }
     }
 
     function _isImage(url): bool {
@@ -61,23 +96,55 @@ ApplicationWindow {
         download.accept();
     }
 
-    header: ToolBar {
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: "←"
-                enabled: web.canGoBack
-                onClicked: web.goBack()
-            }
-            Label {
-                Layout.fillWidth: true
-                elide: Label.ElideRight
-                text: web.url
-            }
-            ToolButton {
-                text: "✕"
-                onClicked: Qt.quit()
-            }
+    function _installScripts() {
+        providerProfile.userScripts.collection = [{
+            name: "modern-filter",
+            sourceUrl: Qt.resolvedUrl("wallpaper-provider-inject.js"),
+            injectionPoint: WebEngineScript.DocumentReady,
+            runOnSubframes: true,
+            worldId: WebEngineScript.MainWorld
+        }];
+    }
+
+    header: Loader {
+        id: chrome
+        width: win.width
+        source: Qt.resolvedUrl("wallpaper-provider-bar.qml")
+
+        Binding {
+            target: chrome.item
+            property: "theme"
+            value: win.theme
+            when: chrome.status === Loader.Ready
+        }
+        Binding {
+            target: chrome.item
+            property: "urlText"
+            value: String(web.url)
+            when: chrome.status === Loader.Ready
+        }
+        Binding {
+            target: chrome.item
+            property: "canGoBack"
+            value: web.canGoBack
+            when: chrome.status === Loader.Ready
+        }
+        Binding {
+            target: chrome.item
+            property: "backLabel"
+            value: String(win.i18n.back || "")
+            when: chrome.status === Loader.Ready
+        }
+        Binding {
+            target: chrome.item
+            property: "closeLabel"
+            value: String(win.i18n.close || "")
+            when: chrome.status === Loader.Ready
+        }
+        Connections {
+            target: chrome.item
+            function onBackClicked() { web.goBack(); }
+            function onCloseClicked() { Qt.quit(); }
         }
     }
 
@@ -90,7 +157,6 @@ ApplicationWindow {
     WebEngineView {
         id: web
         anchors.fill: parent
-        url: win._url()
         profile: providerProfile
         onNavigationRequested: (request) => {
             if (request.isMainFrame && win._leavePage(request.url))
@@ -111,5 +177,11 @@ ApplicationWindow {
     Shortcut {
         sequence: "Escape"
         onActivated: Qt.quit()
+    }
+
+    Component.onCompleted: {
+        win._applyArgs();
+        win._installScripts();
+        web.url = win._url();
     }
 }

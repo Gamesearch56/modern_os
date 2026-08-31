@@ -18,7 +18,7 @@ ColumnLayout {
             from: 0.4
             to: 1
             value: Config.design.transparency
-            onMoved: (v) => ConfigWrite.set("design.transparency", Math.round(v * 100) / 100)
+            onCommitted: (v) => ConfigWrite.set("design.transparency", Math.round(v * 100) / 100)
         }
     }
     MField {
@@ -29,9 +29,9 @@ ColumnLayout {
             value: Config.design.cornerRounding
             onMoved: (v) => {
                 const n = Math.round(v * 100) / 100;
-                ConfigWrite.set("design.cornerRounding", n);
                 Hypr.keyword("decoration:rounding", String(Math.floor(16 * n)));
             }
+            onCommitted: (v) => ConfigWrite.set("design.cornerRounding", Math.round(v * 100) / 100)
         }
     }
 
@@ -43,11 +43,8 @@ ColumnLayout {
             to: 24
             value: Config.windows?.gapsIn ?? 5
             showValue: true
-            onMoved: (v) => {
-                const n = Math.round(v);
-                ConfigWrite.set("windows.gapsIn", n);
-                Hypr.keyword("general:gaps_in", String(n));
-            }
+            onMoved: (v) => Hypr.keyword("general:gaps_in", String(Math.round(v)))
+            onCommitted: (v) => ConfigWrite.set("windows.gapsIn", Math.round(v))
         }
     }
     MField {
@@ -57,11 +54,8 @@ ColumnLayout {
             to: 40
             value: Config.windows?.gapsOut ?? 10
             showValue: true
-            onMoved: (v) => {
-                const n = Math.round(v);
-                ConfigWrite.set("windows.gapsOut", n);
-                Hypr.keyword("general:gaps_out", String(n));
-            }
+            onMoved: (v) => Hypr.keyword("general:gaps_out", String(Math.round(v)))
+            onCommitted: (v) => ConfigWrite.set("windows.gapsOut", Math.round(v))
         }
     }
     MField {
@@ -72,10 +66,10 @@ ColumnLayout {
             value: Config.windows?.opacity ?? 1
             onMoved: (v) => {
                 const n = Math.round(v * 100) / 100;
-                ConfigWrite.set("windows.opacity", n);
                 Hypr.keyword("decoration:active_opacity", String(n));
                 Hypr.keyword("decoration:inactive_opacity", String(Math.min(1, n * 0.98)));
             }
+            onCommitted: (v) => ConfigWrite.set("windows.opacity", Math.round(v * 100) / 100)
         }
     }
 

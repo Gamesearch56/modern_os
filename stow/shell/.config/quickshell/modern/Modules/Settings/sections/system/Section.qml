@@ -72,6 +72,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: Tokens.spacing.xxl * 4
         iconName: "system-software-update"
+        preferSymbolic: false
         titleKey: "settings.update.empty"
     }
 }

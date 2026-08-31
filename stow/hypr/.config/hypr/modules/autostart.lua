@@ -44,6 +44,10 @@ hl.on("hyprland.start", function()
         hl.exec_cmd("sh -lc 'pgrep -u \"$USER\" -x kdeconnectd >/dev/null || kdeconnectd &'")
     end
 
+    -- GameMode raises the CPU governor only while a game is registered,
+    -- then restores it — other apps stay on the default policy.
+    hl.exec_cmd("sh -lc 'command -v gamemoded >/dev/null 2>&1 || exit 0; pgrep -u \"$USER\" -x gamemoded >/dev/null || gamemoded -d'")
+
     local autostart = config.value("general.autostart", {})
     local modern_launch = paths.modern_launch
 

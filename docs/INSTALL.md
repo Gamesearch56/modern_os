@@ -51,7 +51,7 @@ qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, mpv, imv. It does **
 Stow conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
 
 Clone + install is the **designed** desktop (`config.default.json`:
-English UI, `kbLayout` `de`), not this machine’s live `config.json`.
+English UI, `kbLayout` `us`), not this machine’s live `config.json`.
 
 `--allow-live-home` disables the daily-driver home guard. Use it only
 when this account *is* the one you want to own, following

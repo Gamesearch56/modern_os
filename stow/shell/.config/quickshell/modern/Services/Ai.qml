@@ -1,6 +1,6 @@
-// Local assistant via `ollama run` when that binary exists. chat(text)
-// appends the user turn, then the model reply, onto history. Missing
-// ollama fails soft (history still records the user line).
+// Local assistant via Ollama's HTTP chat API. History is the
+// conversation (AiStore writes it to XDG state). AiChat owns curl so a
+// hung `ollama run` cannot steal stdin. Missing daemon fails soft.
 pragma Singleton
 
 import Quickshell
@@ -22,13 +22,6 @@ Singleton {
     property bool watching: false
     property var models: []
     readonly property bool ready: root.installed && root.running
-    property bool _awaiting: false
-    property bool _exited: false
-    property bool _outDone: false
-    property bool _done: false
-    property int _code: 0
-    property string _stdout: ""
-    property string _stderr: ""
 
     IpcHandler {
         target: "ai"
@@ -42,27 +35,18 @@ Singleton {
         ai: root
     }
 
-    Process {
-        id: proc
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root._stdout = this.text;
-                root._outDone = true;
-                root._tryFinish();
-            }
-        }
-        stderr: StdioCollector {
-            onStreamFinished: {
-                root._stderr = this.text;
-                if (this.text.trim().length > 0)
-                    Logger.warn("Ai", this.text.trim());
-            }
-        }
-        onExited: (code) => {
-            root._code = code;
-            root._exited = true;
-            Qt.callLater(root._tryFinish);
+    AiChat {
+        id: stream
+        onChunk: (content, thinking) => root._patchTail(content, thinking, true)
+        onFinished: (ok, err) => root._end(ok, err)
+    }
+
+    AiStore {
+        id: store
+        onRestored: (rows) => {
+            if (root.busy || root.history.length > 0 || rows.length === 0)
+                return;
+            root.history = rows;
         }
     }
 
@@ -128,6 +112,7 @@ Singleton {
         }
         root.hostScreenName = name;
         root.panelOpen = true;
+        root.watching = true;
         root.refreshStatus();
     }
 
@@ -138,12 +123,14 @@ Singleton {
     function showFocused() {
         root.hostScreenName = root._focusedScreenName();
         root.panelOpen = true;
+        root.watching = true;
         root.refreshStatus();
     }
 
     function hide() {
         root.panelOpen = false;
         root.hostScreenName = "";
+        root.watching = false;
     }
 
     function openOn(screen: var): bool {
@@ -186,71 +173,115 @@ Singleton {
         return "";
     }
 
+    function _resolveModel(): string {
+        const want = String(Config.accounts?.ai?.ollamaModel || "").replace(/:latest$/, "");
+        const list = root.models || [];
+        let family = "";
+        for (let i = 0; i < list.length; i++) {
+            const n = String(list[i] || "");
+            const stem = n.replace(/:latest$/, "");
+            if (stem === want || n === want || (want.length > 0 && n.indexOf(want + ":") === 0))
+                return n;
+            if (!family.length && want.length >= 3
+                    && (stem.indexOf(want + ".") === 0 || stem.indexOf(want + "-") === 0))
+                family = n;
+        }
+        return family;
+    }
+
     function chat(text: string) {
         const q = (text || "").trim();
         if (!q || root.busy)
             return;
         if ((Config.accounts?.ai?.provider ?? "none") === "none" || !root.ready)
             return;
+        const model = root._resolveModel();
+        if (!model.length) {
+            root.history = root.history.concat([
+                { role: "user", text: q },
+                { role: "assistant", text: I18n.t("ai.errorModel"), thinking: "", streaming: false }
+            ]);
+            root.lastError = I18n.t("ai.errorModel");
+            store.save(root.history);
+            return;
+        }
         try {
-            root.history = root.history.concat([{ role: "user", text: q }]);
-            const model = Config.accounts?.ai?.ollamaModel ?? "llama3";
+            const prior = root._apiMessages();
+            prior.push({ role: "user", content: q });
+            root.history = root.history.concat([
+                { role: "user", text: q },
+                { role: "assistant", text: "", thinking: "", streaming: true }
+            ]);
             root.busy = true;
-            root._awaiting = true;
             root.lastError = "";
-            root._stdout = "";
-            root._stderr = "";
-            root._done = false;
-            root._exited = false;
-            root._outDone = false;
-            root._code = 0;
-            proc.command = ["ollama", "run", model, q];
-            proc.running = true;
+            store.save(root.history);
+            const body = JSON.stringify({
+                model: model,
+                messages: prior,
+                stream: true,
+                think: true
+            });
+            stream.start(body);
         } catch (e) {
             root.busy = false;
-            root._awaiting = false;
             Logger.error("Ai", String(e));
         }
     }
 
     function clear() {
+        stream.stop();
+        root.busy = false;
         root.history = [];
         root.lastError = "";
+        store.save([]);
+    }
+
+    function _apiMessages(): var {
+        const out = [];
+        const list = root.history || [];
+        const start = Math.max(0, list.length - 20);
+        for (let i = start; i < list.length; i++) {
+            const r = list[i];
+            if (!r || r.streaming)
+                continue;
+            const role = r.role === "user" ? "user" : "assistant";
+            const t = String(r.text || "").trim();
+            if (!t.length)
+                continue;
+            out.push({ role: role, content: t });
+        }
+        return out;
+    }
+
+    function _patchTail(content: string, thinking: string, streaming: bool) {
+        const list = root.history.slice();
+        if (list.length === 0)
+            return;
+        const last = Object.assign({}, list[list.length - 1]);
+        last.text = content;
+        last.thinking = thinking;
+        last.streaming = streaming;
+        list[list.length - 1] = last;
+        root.history = list;
+    }
+
+    function _end(ok: bool, err: string) {
+        const text = stream.content;
+        const thinking = stream.thinking;
+        root.busy = false;
+        if (!ok || !String(text || "").trim().length) {
+            const msg = String(err || "").trim() || I18n.t("ai.errorEmpty");
+            root.lastError = msg;
+            root._patchTail(msg, thinking, false);
+            store.save(root.history);
+            return;
+        }
+        root.lastError = "";
+        root._patchTail(root._collapse(text), thinking, false);
+        store.save(root.history);
     }
 
     function _collapse(text: string): string {
         return String(text || "").replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim();
-    }
-
-    function _errorText(): string {
-        const err = (root._stderr || "").trim();
-        const low = err.toLowerCase();
-        if (root._code === 127 || low.indexOf("ollama:") !== -1 && low.indexOf("not found") !== -1)
-            return I18n.t("ai.errorMissing");
-        if (low.indexOf("not found") !== -1)
-            return I18n.t("ai.errorModel");
-        if (err.length > 0) {
-            const line = err.split("\n")[0];
-            const snippet = line.length > 160 ? line.substring(0, 160) : line;
-            return I18n.t("ai.errorStderr", { detail: snippet });
-        }
-        return I18n.t("ai.errorEmpty");
-    }
-
-    function _tryFinish() {
-        if (!root._awaiting || root._done || !root._exited || !root._outDone)
-            return;
-        root._done = true;
-        root._awaiting = false;
-        root.busy = false;
-        const reply = root._collapse(root._stdout);
-        if (reply.length === 0) {
-            const msg = root._errorText();
-            root.lastError = msg;
-            root.history = root.history.concat([{ role: "assistant", text: msg }]);
-            return;
-        }
-        root.lastError = "";
-        root.history = root.history.concat([{ role: "assistant", text: reply }]);
     }
 }

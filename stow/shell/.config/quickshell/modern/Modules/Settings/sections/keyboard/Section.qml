@@ -16,8 +16,8 @@ ColumnLayout {
         MSegmented {
             value: sectionModel.kbLayout
             model: [
-                { value: "de", titleKey: "settings.kbDe" },
-                { value: "us", titleKey: "settings.kbUs" }
+                { value: "us", titleKey: "settings.kbUs" },
+                { value: "de", titleKey: "settings.kbDe" }
             ]
             onSelected: (v) => {
                 ConfigWrite.set("input.kbLayout", v);
@@ -34,11 +34,8 @@ ColumnLayout {
             to: 80
             value: Config.input.repeatRate ?? 25
             showValue: true
-            onMoved: (v) => {
-                const n = Math.round(v);
-                ConfigWrite.set("input.repeatRate", n);
-                Hypr.syncInput("input.repeatRate", n);
-            }
+            onMoved: (v) => Hypr.syncInput("input.repeatRate", Math.round(v))
+            onCommitted: (v) => ConfigWrite.set("input.repeatRate", Math.round(v))
         }
     }
 
@@ -50,11 +47,8 @@ ColumnLayout {
             to: 1000
             value: Config.input.repeatDelay ?? 600
             showValue: true
-            onMoved: (v) => {
-                const n = Math.round(v);
-                ConfigWrite.set("input.repeatDelay", n);
-                Hypr.syncInput("input.repeatDelay", n);
-            }
+            onMoved: (v) => Hypr.syncInput("input.repeatDelay", Math.round(v))
+            onCommitted: (v) => ConfigWrite.set("input.repeatDelay", Math.round(v))
         }
     }
 

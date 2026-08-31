@@ -8,6 +8,8 @@ MStatusCard {
     id: root
 
     iconName: "system-software-update"
+    preferSymbolic: false
+    iconColor: Colors.color.primary
     titleKey: {
         if (Update.checking && Update.pending.length === 0)
             return "settings.update.checking";

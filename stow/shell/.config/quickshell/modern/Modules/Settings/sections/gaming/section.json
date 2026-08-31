@@ -1,0 +1,7 @@
+{
+  "id": "gaming",
+  "icon": "input-gaming",
+  "key": "settings.sections.gaming",
+  "order": 33,
+  "keywords": ["game", "steam", "proton", "fullscreen", "gamescope", "wine", "tearing", "gamemode"]
+}

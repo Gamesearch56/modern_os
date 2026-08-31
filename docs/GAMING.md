@@ -114,3 +114,25 @@ Launch-option string (no AMD env — see above):
 scripts/game-profile.sh --gamemode --gamescope --mangohud
 # → gamemoderun gamescope -- mangohud %command%
 ```
+
+## Automatic fullscreen and per-window optimize
+
+Hyprland matches Steam (`steam_app_*`), `gamescope`, and Wine `*.exe`
+class or title (see `gaming.matchClass` / `gaming.matchTitle` in
+`config.json`). Launchers stay windowed. Those game windows get:
+
+- **Fullscreen** on the monitor they opened on (not a special workspace)
+- **Tearing** (`immediate`) — only that window, and only while it is
+  exclusive fullscreen. Other clients stay vsync.
+- **No blur / no shadow / opaque / content: game** on the game surface
+
+`general.allow_tearing` is the master switch; it does not tear browsers
+or terminals. Blur and animations stay on for everything else.
+
+If `gamemoded` is installed it is started at login. Steam/Lutris titles
+that call GameMode raise the CPU governor for the game's lifetime, then
+restore the previous policy.
+
+Settings → Gaming can turn fullscreen or optimize off. An old
+`windowRules` entry named `steam-game` is ignored (it used to send games
+to `special:game` and hide them). That name is no longer in the defaults.

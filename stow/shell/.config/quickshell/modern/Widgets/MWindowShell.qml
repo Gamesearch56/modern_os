@@ -15,6 +15,7 @@ Item {
     property string actionIcon: ""
     property real titleColumnWidth: 0
     property real chromeOpacity: Config.design.transparency ?? 0.85
+    property bool busy: false
 
     signal closed()
     signal actionClicked()
@@ -45,6 +46,7 @@ Item {
             actionKey: root.actionKey
             actionIcon: root.actionIcon
             titleColumnWidth: root.titleColumnWidth
+            busy: root.busy
             onClosed: root.closed()
             onActionClicked: root.actionClicked()
         }

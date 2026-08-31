@@ -37,6 +37,7 @@ ColumnLayout {
     MPane {
         Layout.fillWidth: true
         implicitHeight: inner.implicitHeight + padding * 2
+        color: "transparent"
 
         ColumnLayout {
             id: inner

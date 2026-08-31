@@ -25,6 +25,11 @@ Item {
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
 
+    HoverHandler {
+        enabled: root.enabled
+        cursorShape: Qt.IBeamCursor
+    }
+
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.full
@@ -67,6 +72,7 @@ Item {
         echoMode: root.echoMode
         enabled: root.enabled
         activeFocusOnPress: true
+        selectByMouse: true
         clip: true
         onAccepted: root.accepted()
         onTextChanged: root.textEdited()

@@ -25,7 +25,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + B` | Browser | Configured `apps.defaults.browser` via `modern-launch` |
 | `SUPER + SHIFT + B` | Browser private window | Same desktop id, with `--incognito` or `--private-window` |
 | `SUPER + E` | File manager | Configured `apps.defaults.fileManager` via `modern-launch` |
-| `SPACE` | Quick Look (Dolphin selection; else types Space) | `modern filepreview` |
+| `SPACE` | Quick Look in Dolphin (non-consuming, so Space still types elsewhere) | `modern filepreview` |
 | `SUPER + R` | Spotify | `spotify-launcher` |
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |

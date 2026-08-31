@@ -2,12 +2,14 @@
 Visible=false
 
 [General]
+EditableUrl=true
 FilterBar=false
 GlobalViewProps=true
 LockPanels=true
+RememberOpenedTabs=false
+ShowFullPath=true
 ShowFullPathInTitlebar=true
 ShowSelectionToggle=false
-ShowStatusBar=0
 Version=202
 
 [IconsMode]
@@ -28,7 +30,7 @@ MenuBar=Disabled
 IconSize=40
 
 [PreviewSettings]
-Plugins=appimagethumbnail,audiothumbnail,comicbookthumbnail,cursorthumbnail,directorythumbnail,djvuthumbnail,ebookthumbnail,exrthumbnail,imagethumbnail,jpegthumbnail,kraorathumbnail,opendocumentthumbnail,svgthumbnail,windowsexethumbnail,windowsimagethumbnail,gsf-office,evince,glycin-heif,glycin-image-rs,glycin-jxl,glycin-svg,ffmpegthumbnailer-audio,ffmpegthumbnailer
+Plugins=ffmpegthumbnailer,appimagethumbnail,audiothumbnail,windowsexethumbnail,glycin-heif,imagethumbnail,evince,comicbookthumbnail,cursorthumbnail,djvuthumbnail,ebookthumbnail,exrthumbnail,glycin-image-rs,jpegthumbnail,glycin-jxl,kraorathumbnail,windowsimagethumbnail,opendocumentthumbnail,directorythumbnail,ffmpegthumbnailer-audio,glycin-svg,svgthumbnail,gsf-office
 
 [TerminalPanel]
 Visible=false

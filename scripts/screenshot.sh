@@ -21,6 +21,10 @@ fi
 
 command -v grim >/dev/null 2>&1 || { echo "screenshot: grim not on PATH" >&2; exit 1; }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/paths.sh
+source "$SCRIPT_DIR/lib/paths.sh"
+
 MODERN_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/modern"
 DEFAULT_JSON="$MODERN_DIR/config.default.json"
 LIVE_JSON="$MODERN_DIR/config.json"
@@ -38,9 +42,9 @@ merged() {
 }
 
 CFG="$(merged)"
-DIR="$(jq -r '.screenshots.directory // "~/Pictures/Screenshots"' <<<"$CFG")"
+DIR="$(expand_home "$(jq -r '.screenshots.directory // "~/Pictures/Screenshots"' <<<"$CFG")")"
 TEMPLATE="$(jq -r '.screenshots.filenameTemplate // "screenshot-%Y%m%d-%H%M%S"' <<<"$CFG")"
-COPY="$(jq -r '.screenshots.copyToClipboard // true' <<<"$CFG")"
+COPY="$(jq -r 'if .screenshots.copyToClipboard == false then "false" else "true" end' <<<"$CFG")"
 EDIT="$(jq -r '.screenshots.openEditorAfterCapture // false' <<<"$CFG")"
 CURSOR="$(jq -r '.screenshots.includeCursor // false' <<<"$CFG")"
 FORMAT="$(jq -r '.screenshots.format // "png"' <<<"$CFG" | tr '[:upper:]' '[:lower:]')"
@@ -61,9 +65,6 @@ if [ "$QUALITY" -lt 1 ]; then
     QUALITY=1
 fi
 
-case "$DIR" in
-    "~/"*) DIR="$HOME/${DIR#~/}" ;;
-esac
 if [ -z "$DIR" ]; then
     DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
 fi
@@ -161,16 +162,31 @@ if [ "$EDIT" = "true" ] && command -v swappy >/dev/null 2>&1; then
     swappy -f "$FILE" || true
 fi
 
+# PNG is what paste targets accept. Copy before a JPEG/WebP convert
+# deletes the png. setsid/nohup: Quickshell's Process sends SIGHUP to
+# this group on exit, which would otherwise reap wl-copy's daemon and
+# empty the clipboard.
+copy_clip() {
+    local f="$1"
+    [ -f "$f" ] || return 0
+    command -v wl-copy >/dev/null 2>&1 || return 0
+    if command -v setsid >/dev/null 2>&1; then
+        setsid wl-copy --type image/png < "$f" || true
+    else
+        nohup wl-copy --type image/png < "$f" >/dev/null 2>&1 || true
+    fi
+}
+if [ "$COPY" != "false" ]; then
+    copy_clip "$FILE"
+fi
+
 SAVED="$FILE"
-MIME="image/png"
 case "$FORMAT" in
     jpeg)
         SAVED="${FILE%.png}.jpeg"
-        MIME="image/jpeg"
         ;;
     webp)
         SAVED="${FILE%.png}.webp"
-        MIME="image/webp"
         ;;
 esac
 if [ "$SAVED" != "$FILE" ]; then
@@ -183,10 +199,6 @@ if [ "$SAVED" != "$FILE" ]; then
         exit 1
     fi
     rm -f "$FILE"
-fi
-
-if [ "$COPY" = "true" ] && command -v wl-copy >/dev/null 2>&1; then
-    wl-copy --type "$MIME" < "$SAVED"
 fi
 
 printf '%s\n' "$SAVED"

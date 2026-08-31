@@ -63,7 +63,7 @@ Scope {
         if (!item)
             return;
         if (item.kind === "settings") {
-            Settings.openAt("overview", "");
+            Settings.show();
             Launcher.hide();
             return;
         }

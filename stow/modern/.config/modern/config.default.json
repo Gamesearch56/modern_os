@@ -109,7 +109,7 @@
     }
   },
   "input": {
-    "kbLayout": "de",
+    "kbLayout": "us",
     "kbVariant": "",
     "repeatRate": 25,
     "repeatDelay": 600,
@@ -121,14 +121,6 @@
     "workspaceMode": "dynamic"
   },
   "windowRules": [
-    {
-      "name": "steam-game",
-      "match": {
-        "class": "steam_app_.*"
-      },
-      "workspace": "special:game",
-      "fullscreen": true
-    },
     {
       "name": "jetbrains-dialogs",
       "match": {
@@ -193,6 +185,12 @@
     "videoDirectory": "~/Videos/Recordings",
     "videoFilenameTemplate": "recording-%Y%m%d-%H%M%S",
     "recordAudio": true
+  },
+  "gaming": {
+    "autoFullscreen": true,
+    "autoOptimize": true,
+    "matchClass": "steam_app_.*|gamescope|.*\\.exe",
+    "matchTitle": ".*\\.exe"
   },
   "audio": {
     "autoSwitchBluetooth": "on",
