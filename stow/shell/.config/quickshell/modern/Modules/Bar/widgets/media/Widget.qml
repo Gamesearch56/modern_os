@@ -6,10 +6,19 @@ import "../../../../Services"
 
 Item {
     id: root
-    // Island empty hides this pill. Do not set visible:false here —
-    // the first frame has no player, implicitWidth stays 0, and the
-    // island then shows a hollow circle after MPRIS appears.
-    implicitWidth: BarLayout.vertical ? Config.bar.height : row.implicitWidth + Tokens.spacing.md * 2
+    // Keep this pill in the layout from the first frame. Hiding it until
+    // a player exists leaves a hollow circle after MPRIS appears.
+    implicitWidth: {
+        void Media.trackTitle;
+        void Media.trackArtist;
+        void Media.hasPlayer;
+        void Media.playing;
+        void Audio.playback;
+        void Typography.scale;
+        if (BarLayout.vertical)
+            return Config.bar.height;
+        return row.implicitWidth + Tokens.spacing.md * 2;
+    }
     implicitHeight: Config.bar.height
 
     readonly property bool _mpris: Media.hasPlayer

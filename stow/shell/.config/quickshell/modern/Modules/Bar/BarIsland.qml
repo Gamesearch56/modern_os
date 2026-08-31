@@ -2,7 +2,6 @@
 // as the control panel). Hover/active live on the inner hit target —
 // never on this pill — so padding cannot light up without a click.
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
 
 Item {
@@ -13,7 +12,7 @@ Item {
     property bool singleHit: true
 
     visible: !root.empty
-    implicitHeight: root.vertical ? Math.max(Config.bar.height, inner.implicitHeight) : Config.bar.height
+    implicitHeight: Config.bar.height
     implicitWidth: root.vertical ? Config.bar.height : Math.max(Config.bar.height, inner.implicitWidth)
 
     default property alias extra: inner.data
@@ -27,13 +26,12 @@ Item {
         border.color: Colors.color.outlineVariant
     }
 
-    GridLayout {
+    Grid {
         id: inner
-        anchors.fill: parent
-        columns: root.vertical ? 1 : 16
-        rows: root.vertical ? 16 : 1
-        flow: root.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
-        rowSpacing: 0
-        columnSpacing: 0
+        anchors.left: parent.left
+        anchors.top: parent.top
+        columns: root.vertical ? 1 : 32
+        flow: root.vertical ? Grid.TopToBottom : Grid.LeftToRight
+        spacing: 0
     }
 }

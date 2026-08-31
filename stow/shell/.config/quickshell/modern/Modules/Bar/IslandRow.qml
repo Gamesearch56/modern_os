@@ -59,7 +59,7 @@ Item {
         if (group.length !== 1)
             return false;
         if (group[0] === "media")
-            return !Media.hasPlayer && !Audio.playback;
+            return false;
         if (group[0] === "battery")
             return !Battery.onBattery;
         return false;
@@ -98,8 +98,6 @@ Item {
                     model: island.modelData
                     WidgetLoader {
                         barScreen: root.barScreen
-                        Layout.fillWidth: visible
-                        Layout.fillHeight: visible
                     }
                 }
             }
