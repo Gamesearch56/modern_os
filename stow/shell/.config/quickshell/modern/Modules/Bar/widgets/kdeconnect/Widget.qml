@@ -5,6 +5,7 @@ import "../../../../Widgets"
 import "../../../../Services"
 
 RowLayout {
+    id: root
     spacing: Tokens.spacing.xs
     readonly property bool on: Config.kdeconnect.enabled
 
@@ -18,6 +19,7 @@ RowLayout {
     }
 
     MText {
+        visible: !BarLayout.vertical
         value: !root.on || KdeConnect.connectedCount === 0
             ? I18n.t("kdeconnect.off")
             : I18n.t("kdeconnect.connected", ({ count: KdeConnect.connectedCount }))

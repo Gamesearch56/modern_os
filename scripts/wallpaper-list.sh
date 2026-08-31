@@ -37,19 +37,25 @@ if [ "${#dirs[@]}" -eq 0 ]; then
     exit 0
 fi
 
-# Preserve directory order (library, then shipped). sort -u would put
-# ~/.config/modern/wallpapers first and make the 1024px copies the
-# tiles you actually click.
-declare -A seen=()
-for d in "${dirs[@]}"; do
-    while IFS= read -r -d '' f; do
-        real="$(realpath "$f")"
+# Newest-added first. Import/fetch write without preserving source
+# mtime, so modification time is "when it landed in the library".
+{
+    for d in "${dirs[@]}"; do
+        find -L "$d" -maxdepth 1 -type f \
+            \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
+            -printf '%T@\t%p\0'
+    done
+} | {
+    declare -A seen=()
+    while IFS= read -r -d '' rec; do
+        ts="${rec%%$'\t'*}"
+        f="${rec#*$'\t'}"
+        real="$(realpath "$f" 2>/dev/null || true)"
+        [ -n "$real" ] || continue
         if [ -n "${seen[$real]+x}" ]; then
             continue
         fi
         seen[$real]=1
-        printf '%s\n' "$real"
-    done < <(find -L "$d" -maxdepth 1 -type f \
-        \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
-        -print0 | sort -z)
-done
+        printf '%s\t%s\n' "$ts" "$real"
+    done
+} | sort -nr -k1,1 | cut -f2-

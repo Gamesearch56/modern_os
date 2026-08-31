@@ -1,0 +1,182 @@
+{
+  "popular": [
+    "firefox",
+    "chromium",
+    "thunderbird",
+    "vlc",
+    "mpv",
+    "gimp",
+    "inkscape",
+    "krita",
+    "libreoffice-fresh",
+    "steam",
+    "lutris",
+    "obs-studio",
+    "blender",
+    "kdenlive",
+    "code",
+    "docker",
+    "telegram-desktop",
+    "discord",
+    "qbittorrent",
+    "keepassxc",
+    "audacity",
+    "darktable",
+    "godot",
+    "gparted"
+  ],
+  "icons": {
+    "libreoffice-fresh": "libreoffice-writer",
+    "obs-studio": "com.obsproject.Studio",
+    "telegram-desktop": "telegram",
+    "code": "visual-studio-code",
+    "nextcloud-client": "nextcloud",
+    "signal-desktop": "signal-desktop",
+    "element-desktop": "im.riot.Riot",
+    "transmission-gtk": "transmission",
+    "gnome-calculator": "org.gnome.Calculator",
+    "file-roller": "org.gnome.FileRoller",
+    "qalculate-gtk": "qalculate",
+    "simple-scan": "org.gnome.SimpleScan",
+    "pdfarranger": "com.github.jeromerobert.pdfarranger"
+  },
+  "categories": [
+    {
+      "id": "discover",
+      "icon": "view-grid-symbolic"
+    },
+    {
+      "id": "internet",
+      "icon": "web-browser",
+      "packages": [
+        "firefox",
+        "chromium",
+        "thunderbird",
+        "transmission-gtk",
+        "qbittorrent",
+        "filezilla",
+        "nextcloud-client",
+        "telegram-desktop",
+        "discord",
+        "signal-desktop",
+        "element-desktop",
+        "hexchat"
+      ]
+    },
+    {
+      "id": "office",
+      "icon": "x-office-document",
+      "packages": [
+        "libreoffice-fresh",
+        "evince",
+        "atril",
+        "simple-scan",
+        "pdfarranger",
+        "calibre",
+        "zathura",
+        "gnumeric"
+      ]
+    },
+    {
+      "id": "graphics",
+      "icon": "applications-graphics",
+      "packages": [
+        "gimp",
+        "inkscape",
+        "krita",
+        "darktable",
+        "blender",
+        "rawtherapee",
+        "shotwell",
+        "gthumb",
+        "imagemagick"
+      ]
+    },
+    {
+      "id": "multimedia",
+      "icon": "applications-multimedia",
+      "packages": [
+        "vlc",
+        "mpv",
+        "obs-studio",
+        "kdenlive",
+        "audacity",
+        "shotcut",
+        "strawberry",
+        "lollypop",
+        "handbrake",
+        "easyeffects"
+      ]
+    },
+    {
+      "id": "games",
+      "icon": "applications-games",
+      "packages": [
+        "steam",
+        "lutris",
+        "wine",
+        "gamemode",
+        "gamescope",
+        "mangohud",
+        "retroarch",
+        "godot",
+        "prismlauncher"
+      ]
+    },
+    {
+      "id": "development",
+      "icon": "applications-development",
+      "packages": [
+        "git",
+        "neovim",
+        "code",
+        "docker",
+        "podman",
+        "github-cli",
+        "lazygit",
+        "cmake",
+        "gdb",
+        "rustup",
+        "go",
+        "jq"
+      ]
+    },
+    {
+      "id": "system",
+      "icon": "applications-system",
+      "packages": [
+        "gparted",
+        "btop",
+        "htop",
+        "gnome-disk-utility",
+        "baobab",
+        "nvtop",
+        "smartmontools",
+        "rsync",
+        "timeshift",
+        "iotop"
+      ]
+    },
+    {
+      "id": "utilities",
+      "icon": "applications-utilities",
+      "packages": [
+        "keepassxc",
+        "seahorse",
+        "gnome-calculator",
+        "file-roller",
+        "qalculate-gtk",
+        "fzf",
+        "ripgrep",
+        "fd",
+        "bat",
+        "eza",
+        "tmux"
+      ]
+    },
+    {
+      "id": "installed",
+      "icon": "folder-download-symbolic"
+    }
+  ]
+}

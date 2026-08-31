@@ -95,7 +95,7 @@ MOverlay {
                 to: 20
                 value: Config.widgets?.audio?.scrollStepPercent ?? 5
                 showValue: true
-                onMoved: (v) => ConfigWrite.set("widgets.audio.scrollStepPercent", Math.round(v))
+                onCommitted: (v) => ConfigWrite.set("widgets.audio.scrollStepPercent", Math.round(v))
             }
         }
         MField {
@@ -106,7 +106,7 @@ MOverlay {
                 to: 5
                 value: Config.widgets?.audio?.scrollStepFinePercent ?? 1
                 showValue: true
-                onMoved: (v) => ConfigWrite.set("widgets.audio.scrollStepFinePercent", Math.round(v))
+                onCommitted: (v) => ConfigWrite.set("widgets.audio.scrollStepFinePercent", Math.round(v))
             }
         }
     }

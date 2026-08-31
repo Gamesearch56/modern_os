@@ -14,6 +14,7 @@ Item {
     property string hintKey: ""
     property string actionKey: ""
     property bool tintIcon: true
+    property bool preferSymbolic: true
 
     signal actionClicked()
 
@@ -29,6 +30,7 @@ Item {
             size: root.iconSize
             color: Colors.color.primary
             tint: root.tintIcon
+            preferSymbolic: root.preferSymbolic
         }
 
         MText {

@@ -1,7 +1,9 @@
-// Image tile. Keyboard `current` and pointer hover share a primary
-// ring drawn above the photo. ClippingRectangle clips the bitmap to
-// the same radius — Rectangle.clip is axis-aligned.
+// Image tile. `current` is the keyboard/pointer selection (one at a
+// time). `hoverRing` is for grids that are pointer-only (Settings
+// gallery) — the wallpaper picker keeps it off so a parked cursor
+// cannot draw a second ring next to the arrow-key selection.
 import QtQuick
+import QtQuick.Window
 import Quickshell.Widgets
 import "../Commons"
 
@@ -11,11 +13,18 @@ Item {
     property url source: ""
     property bool selected: false
     property bool current: false
+    property bool hoverRing: true
     property bool removable: false
 
-    readonly property bool _ring: !root.selected && (root.current || ma.containsMouse)
+    readonly property bool _ring: root.current || (root.hoverRing && !root.selected && ma.containsMouse)
     readonly property real _radius: Tokens.radius.small
     readonly property bool _removeHot: removeMa.containsMouse || removeMa.pressed
+    readonly property int _px: {
+        const dpr = root.Screen.devicePixelRatio || 1;
+        const w = Math.max(0, Math.round(root.width * dpr));
+        const h = Math.max(0, Math.round(root.height * dpr));
+        return Math.max(w, h);
+    }
 
     scale: (root.selected || root._ring) ? 1 : Motion.overlayScale(false)
     opacity: (root.selected || root._ring) ? 1 : (1 - Tokens.interaction.hover)
@@ -38,6 +47,7 @@ Item {
 
     signal clicked()
     signal hovered()
+    signal pointerMoved()
     signal removeClicked()
 
     ClippingRectangle {
@@ -47,11 +57,14 @@ Item {
 
         Image {
             anchors.fill: parent
-            source: root.source
-            sourceSize.width: 256
-            sourceSize.height: 256
+            visible: root._px > 0
+            source: (root._px > 0 && root.source.toString().length) ? root.source : ""
+            sourceSize.width: root._px
+            sourceSize.height: root._px
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
+            cache: true
+            smooth: true
         }
     }
 
@@ -85,11 +98,14 @@ Item {
     MouseArea {
         id: ma
         anchors.fill: parent
-        enabled: !root.selected
         hoverEnabled: true
         cursorShape: root.selected ? Qt.ArrowCursor : Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onClicked: {
+            if (!root.selected)
+                root.clicked();
+        }
         onEntered: root.hovered()
+        onPositionChanged: root.pointerMoved()
     }
 
     Item {

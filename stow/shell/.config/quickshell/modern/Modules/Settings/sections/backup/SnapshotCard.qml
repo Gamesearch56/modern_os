@@ -36,7 +36,7 @@ MCard {
                 size: Tokens.spacing.xxl * 2
                 color: Colors.color.onSurface
                 tint: true
-                preferSymbolic: true
+                preferSymbolic: false
                 Layout.alignment: Qt.AlignTop
             }
             ColumnLayout {

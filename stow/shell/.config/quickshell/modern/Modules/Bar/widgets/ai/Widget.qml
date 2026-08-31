@@ -13,12 +13,14 @@ Item {
     readonly property bool _mine: {
         void Ai.panelOpen;
         void Ai.hostScreenName;
+        void Ai.coverFullscreen;
         return Ai.openOn(root.barScreen);
     }
-    readonly property color _fg: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+    readonly property bool _barPopup: root._mine && !Ai.coverFullscreen
+    readonly property color _fg: root._mine ? Colors.color.onPrimaryContainer : Colors.color.onSurface
 
     BarIslandHit {
-        checked: popup.open
+        checked: root._mine
         onClicked: Ai.toggle(root.barScreen)
     }
 
@@ -36,48 +38,42 @@ Item {
         open: false
         anchorItem: root
         elevation: 0
-        implicitWidth: Tokens.spacing.xxl * 16
-        implicitHeight: Tokens.spacing.xxl * 14
+        implicitWidth: Tokens.window.chatWidth
+        implicitHeight: Tokens.window.chatHeight
+        hAlign: Qt.AlignLeft
         onOpenChanged: {
-            if (!popup.open && root._mine)
+            if (!popup.open && root._barPopup)
                 Ai.hide();
         }
-        onGrabReady: root._focusInput()
+        onGrabReady: {
+            if (panelLoader.item && panelLoader.item.focusInput)
+                panelLoader.item.focusInput();
+            if (panelLoader.item && panelLoader.item._scrollEnd)
+                panelLoader.item._scrollEnd();
+        }
+
+        Connections {
+            target: Ai
+            function onPanelOpenChanged() {
+                root._sync();
+            }
+            function onHostScreenNameChanged() {
+                root._sync();
+            }
+            function onCoverFullscreenChanged() {
+                root._sync();
+            }
+        }
 
         Loader {
             id: panelLoader
             anchors.fill: parent
             source: Qt.resolvedUrl("Panel.qml")
-            onLoaded: {
-                if (popup.open)
-                    root._focusInput();
-            }
-        }
-    }
-
-    function _focusInput() {
-        if (!popup.open)
-            return;
-        Qt.callLater(() => {
-            if (!popup.open)
-                return;
-            if (panelLoader.item && panelLoader.item.focusInput)
-                panelLoader.item.focusInput();
-        });
-    }
-
-    Connections {
-        target: Ai
-        function onPanelOpenChanged() {
-            root._sync();
-        }
-        function onHostScreenNameChanged() {
-            root._sync();
         }
     }
 
     function _sync() {
-        const mine = Ai.openOn(root.barScreen);
+        const mine = root._barPopup;
         if (popup.open !== mine)
             popup.open = mine;
     }

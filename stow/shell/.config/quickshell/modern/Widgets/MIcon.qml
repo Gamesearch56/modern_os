@@ -39,6 +39,13 @@ Item {
         return p.charAt(0) === "/" ? ("file://" + p) : p;
     }
 
+    // Brightness 1 flattens full-color Papirus badges (inner arrows
+    // become the same as the disc). Only lift true symbolic glyphs.
+    readonly property bool _symbolicFile: {
+        const s = root._source.toLowerCase();
+        return s.indexOf("-symbolic") !== -1 || s.indexOf("/symbolic") !== -1;
+    }
+
     implicitWidth: root.size
     implicitHeight: root.size
 
@@ -77,7 +84,7 @@ Item {
         source: root._file ? fileImg : img
         colorization: 1
         colorizationColor: root.color
-        brightness: root.preferSymbolic ? 1 : 0
+        brightness: root._symbolicFile ? 1 : 0
         saturation: 0
     }
 }

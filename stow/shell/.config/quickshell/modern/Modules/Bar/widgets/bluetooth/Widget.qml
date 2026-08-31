@@ -31,7 +31,7 @@ Item {
         }
 
         MText {
-            visible: root._device.length > 0
+            visible: !BarLayout.vertical && root._device.length > 0
             value: root._device
             styleName: "labelSmall"
             elide: Text.ElideRight

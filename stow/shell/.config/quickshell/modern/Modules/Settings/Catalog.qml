@@ -8,7 +8,7 @@ QtObject {
     readonly property var ids: [
         "overview", "users", "privacy", "power",
         "design", "bar", "launcher",
-        "applications", "screenshots", "ai",
+        "applications", "screenshots", "gaming", "ai",
         "language", "keyboard",
         "displays", "audio", "network", "bluetooth",
         "storage", "backup", "firewall", "system"
@@ -76,13 +76,14 @@ QtObject {
     readonly property var _byId: ({
         overview: { icon: "view-pages-overview", order: 10, group: "general", keywords: ["about", "hardware", "software", "boot", "stats"] },
         users: { icon: "user-identity", order: 12, group: "general", keywords: ["accounts", "passwd", "autologin"] },
-        privacy: { icon: "security-high", order: 14, group: "general", keywords: ["dnd", "kdeconnect", "calendar", "ics", "quiet", "notifications"], restore: ["general.dndSchedule", "general.notificationTimeoutMs", "kdeconnect", "accounts.calendarIcsUrl"] },
+        privacy: { icon: "security-high", order: 14, group: "general", keywords: ["dnd", "kdeconnect", "calendar", "ics", "quiet", "notifications"], restore: ["general.dndSchedule", "general.notificationTimeoutMs", "kdeconnect"] },
         power: { icon: "battery", order: 16, group: "general", keywords: ["lid", "suspend", "energy", "idle", "battery"], restore: ["power", "general.idleTimings"] },
-        design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "wallpaper", "windows", "gaps", "cursor", "4k", "provider"], restore: ["design", "typography", "motion", "windows", "windowRules"] },
+        design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "wallpaper", "windows", "gaps", "cursor", "4k", "provider", "palette"], restore: ["design", "typography", "motion", "windows", "windowRules"] },
         bar: { icon: "cs-panel", order: 22, group: "appearance", keywords: ["widgets", "layout", "topbar"], restore: ["bar", "widgets"] },
         launcher: { icon: "view-app-grid-symbolic", order: 24, group: "appearance", keywords: ["frecency", "icons", "results", "search"], restore: ["launcher"] },
         applications: { icon: "applications-other", order: 30, group: "apps", keywords: ["autostart", "browser", "calendar", "mail", "messenger", "video", "mpv", "image", "imv"], restore: ["apps.defaults", "general.autostart"] },
         screenshots: { icon: "video-x-generic", order: 32, group: "apps", keywords: ["capture", "grim", "png", "jpeg", "webp", "clipboard", "video", "mp4", "wf-recorder"], restore: ["screenshots"] },
+        gaming: { icon: "input-gaming", order: 33, group: "apps", keywords: ["game", "steam", "proton", "fullscreen", "gamescope", "wine", "tearing", "gamemode"], restore: ["gaming"] },
         ai: { icon: "applications-science-symbolic", order: 34, group: "apps", keywords: ["ollama", "assistant", "model", "chat"] },
         language: { icon: "preferences-desktop-locale", order: 40, group: "input", keywords: ["locale", "date", "time", "format", "week"], restore: ["language"] },
         keyboard: { icon: "input-keyboard", order: 42, group: "input", keywords: ["keybinds", "layout", "cheatsheet", "repeat", "numlock"], restore: ["input", "keybinds"] },

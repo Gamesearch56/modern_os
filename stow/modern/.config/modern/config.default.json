@@ -1,7 +1,7 @@
 {
   "_comment": "Shipped defaults. Tracked in git. Copied to config.json on first install; config.json is the live, gitignored, per-machine file that the Settings app edits. Never edit this file to change YOUR machine's behaviour — edit config.json. QML JsonAdapter does not deep-merge var blobs (keybinds, widgets, windowRules) — restore those keys from this file after a shipped-key add.",
   "general": {
-    "autostart": ["proton-mail.desktop"],
+    "autostart": ["proton-mail.desktop", "proton-calendar.desktop", "whatsapp.desktop"],
     "notificationTimeoutMs": 6000,
     "dndSchedule": {
       "enabled": false,
@@ -29,6 +29,7 @@
   },
   "design": {
     "activeProfile": "tonal-spot-dark",
+    "sourceSeed": "",
     "cornerRounding": 1.0,
     "transparency": 0.85,
     "blurStrength": 40,
@@ -36,6 +37,7 @@
     "cursorTheme": "Bibata-Modern-Classic",
     "cursorSize": 24,
     "wallpaperProvider": "https://4kwallpapers.com",
+    "wallpaperTransition": "fade",
     "bootScreen": {
       "mode": "static",
       "wallpaperOnSplash": true,
@@ -107,7 +109,7 @@
     }
   },
   "input": {
-    "kbLayout": "de",
+    "kbLayout": "us",
     "kbVariant": "",
     "repeatRate": 25,
     "repeatDelay": 600,
@@ -119,14 +121,6 @@
     "workspaceMode": "dynamic"
   },
   "windowRules": [
-    {
-      "name": "steam-game",
-      "match": {
-        "class": "steam_app_.*"
-      },
-      "workspace": "special:game",
-      "fullscreen": true
-    },
     {
       "name": "jetbrains-dialogs",
       "match": {
@@ -192,6 +186,12 @@
     "videoFilenameTemplate": "recording-%Y%m%d-%H%M%S",
     "recordAudio": true
   },
+  "gaming": {
+    "autoFullscreen": true,
+    "autoOptimize": true,
+    "matchClass": "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl",
+    "matchTitle": ".*\\.exe|Project Zomboid"
+  },
   "audio": {
     "autoSwitchBluetooth": "on",
     "perAppVolume": {},
@@ -227,7 +227,7 @@
     "launcher": "SUPER + SPACE",
     "aiChat": "SUPER + A",
     "powerMenu": "SUPER + M",
-    "controlCenter": "SUPER + O",
+    "controlCenter": "SUPER + N",
     "lockScreen": "SUPER + L",
     "exitSession": "SUPER + SHIFT + M",
     "cheatsheet": "SUPER + K",
@@ -282,10 +282,10 @@
   "apps": {
     "defaults": {
       "browser": "vivaldi-stable.desktop",
-      "calendar": "proton-mail.desktop",
+      "calendar": "proton-calendar.desktop",
       "mail": "proton-mail.desktop",
-      "communication": "",
-      "fileManager": "org.kde.dolphin.desktop",
+      "communication": "whatsapp.desktop",
+      "fileManager": "org.gnome.Nautilus.desktop",
       "videoPlayer": "mpv.desktop",
       "imageViewer": "imv.desktop",
       "terminal": "kitty.desktop"

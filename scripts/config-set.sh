@@ -45,6 +45,9 @@ DEFAULT="$CONFIG_HOME/config.default.json"
 
 mkdir -p "$CONFIG_HOME"
 
+exec 9>"$CONFIG_HOME/config.json.lock"
+flock -x 9
+
 if [ ! -f "$CFG" ]; then
     if [ ! -f "$DEFAULT" ]; then
         echo "config-set: missing $CFG and $DEFAULT" >&2

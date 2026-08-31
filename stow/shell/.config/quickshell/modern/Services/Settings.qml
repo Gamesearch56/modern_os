@@ -29,8 +29,8 @@ Singleton {
             return "displays";
         if (id === "screenshot")
             return "screenshots";
-        if (id === "gaming")
-            return "overview";
+        if (id === "games")
+            return "gaming";
         return id;
     }
 
@@ -44,19 +44,24 @@ Singleton {
     }
 
     function close() {
+        ConfigWrite.flush();
         root.open = false;
+    }
+
+    function show() {
+        root.open = true;
     }
 
     function toggle() {
         if (root.open)
             root.close();
         else
-            root.openAt("overview", "");
+            root.show();
     }
 
     IpcHandler {
         target: "settings"
-        function open() { root.openAt("overview", ""); }
+        function open() { root.show(); }
         function openAt(section: string) { root.openAt(section, ""); }
         function close() { root.close(); }
         function toggle() { root.toggle(); }

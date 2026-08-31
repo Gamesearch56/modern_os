@@ -1,0 +1,116 @@
+# Compact hostname denylist for the wallpaper-provider WebEngine proxy.
+# Subset of AdGuard DNS filter / AdGuard Base plus CMP (cookie-consent) CDNs.
+# https://adguard.com/kb/general/ad-filtering/adguard-filters/
+# AdGuard filters are GPLv3: https://github.com/AdguardTeam/AdguardFilters
+#
+# Hostname match is suffix-based (listed domain blocks its subdomains).
+# Default-allow: wallpaper CDNs are not listed.
+
+# --- ads / syndication ---
+doubleclick.net
+googleadservices.com
+googlesyndication.com
+googletagservices.com
+googletagmanager.com
+google-analytics.com
+adservice.google.com
+2mdn.net
+adsensecustomsearchads.com
+adtrafficquality.google
+
+# --- social / pixel trackers ---
+facebook.net
+graph.facebook.com
+an.facebook.com
+ads-twitter.com
+ads.linkedin.com
+static.ads-twitter.com
+analytics.twitter.com
+
+# --- ad exchanges / native ---
+adnxs.com
+adsrvr.org
+adform.net
+adsafeprotected.com
+advertising.com
+amazon-adsystem.com
+casalemedia.com
+contextweb.com
+criteo.com
+criteo.net
+outbrain.com
+taboola.com
+taboola.net
+pubmatic.com
+rubiconproject.com
+openx.net
+openx.com
+smartadserver.com
+indexww.com
+bidswitch.net
+rlcdn.com
+bluekai.com
+krxd.net
+exelator.com
+agkn.com
+mathtag.com
+media.net
+mgid.com
+revcontent.com
+yieldmo.com
+moatads.com
+moatpixel.com
+scorecardresearch.com
+quantserve.com
+quantcount.com
+imrworldwide.com
+adsymptotic.com
+
+# --- analytics often bundled with ads ---
+hotjar.com
+fullstory.com
+mouseflow.com
+clarity.ms
+segment.io
+segment.com
+mixpanel.com
+amplitude.com
+nr-data.net
+chartbeat.com
+chartbeat.net
+parsely.com
+
+# --- cookie consent / CMP ---
+onetrust.com
+cookielaw.org
+cookiebot.com
+cookiebot.eu
+quantcast.com
+consensu.org
+sourcepoint.com
+sp-prod.net
+privacy-mgmt.com
+didomi.io
+privacy-center.org
+usercentrics.eu
+usercentrics.com
+trustarc.com
+truste.com
+osano.com
+iubenda.com
+cookieyes.com
+complianz.io
+termly.io
+consentmanager.net
+borlabs.io
+cookieinformation.com
+cookie-script.com
+cookiehub.net
+uniconsent.com
+fundingchoicesmessages.google.com
+cdn-cookieyes.com
+wpcc.io
+kiprotect.com
+transcend.io
+airgap.io
+optanon.blob.core.windows.net

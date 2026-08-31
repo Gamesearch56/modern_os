@@ -120,6 +120,7 @@ Item {
 
         MPane {
             Layout.fillWidth: true
+            color: "transparent"
             implicitHeight: {
                 const inner = col.implicitHeight;
                 if (root.hourly)

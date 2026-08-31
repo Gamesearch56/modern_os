@@ -68,7 +68,7 @@ ColumnLayout {
             to: 20
             value: Config.launcher.resultCount ?? 9
             showValue: true
-            onMoved: (v) => ConfigWrite.set("launcher.resultCount", Math.round(v))
+            onCommitted: (v) => ConfigWrite.set("launcher.resultCount", Math.round(v))
         }
     }
     MField {
@@ -78,7 +78,7 @@ ColumnLayout {
             to: 16
             value: Config.launcher.mostUsedGridSize ?? 8
             showValue: true
-            onMoved: (v) => ConfigWrite.set("launcher.mostUsedGridSize", Math.round(v))
+            onCommitted: (v) => ConfigWrite.set("launcher.mostUsedGridSize", Math.round(v))
         }
     }
 }

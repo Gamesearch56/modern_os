@@ -36,5 +36,8 @@ MPerfGrid 1.0 MPerfGrid.qml
 MQuickTile 1.0 MQuickTile.qml
 MSparkline 1.0 MSparkline.qml
 MLinearProgress 1.0 MLinearProgress.qml
+MTypingDots 1.0 MTypingDots.qml
+MChatBubble 1.0 MChatBubble.qml
 MSlotBoard 1.0 MSlotBoard.qml
 MSlotLane 1.0 MSlotLane.qml
+MSwatchStrip 1.0 MSwatchStrip.qml

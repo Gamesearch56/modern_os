@@ -37,6 +37,9 @@ Scope {
         if (needle.length > 0) {
             if (root._matchAction(needle, "settings", I18n.t("settings.title")))
                 actions.push({ id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "preferences-system", kind: "settings" });
+            if (root._matchAction(needle, "store", I18n.t("store.title"))
+                || root._matchAction(needle, "app store", I18n.t("bar.store")))
+                actions.push({ id: "shell:store", name: I18n.t("store.title"), genericName: "", icon: "plasmadiscover", kind: "store" });
             if (root._matchAction(needle, "power", I18n.t("powerMenu.title")))
                 actions.push({ id: "shell:power", name: I18n.t("powerMenu.title"), genericName: "", icon: "system-shutdown", kind: "power" });
         }
@@ -63,7 +66,12 @@ Scope {
         if (!item)
             return;
         if (item.kind === "settings") {
-            Settings.openAt("overview", "");
+            Settings.show();
+            Launcher.hide();
+            return;
+        }
+        if (item.kind === "store") {
+            Store.show();
             Launcher.hide();
             return;
         }

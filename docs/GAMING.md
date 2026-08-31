@@ -114,3 +114,40 @@ Launch-option string (no AMD env — see above):
 scripts/game-profile.sh --gamemode --gamescope --mangohud
 # → gamemoderun gamescope -- mangohud %command%
 ```
+
+## Automatic fullscreen and per-window optimize
+
+Hyprland matches Steam (`steam_app_*`), `gamescope`, Wine `*.exe`, and
+native titles such as Project Zomboid (`ProjectZomboid*`, window title
+`Project Zomboid`) — see `gaming.matchClass` / `gaming.matchTitle` in
+`config.json`. Launchers stay windowed. Those game windows get:
+
+- **Exclusive fullscreen once**, when Hyprland can identify the game.
+  Static `fullscreen` window rules stay off so `SUPER+F` can leave
+  exclusive mode. Java/LWJGL titles (Project Zomboid) often map tiled
+  first and rename after boot — `games.lua` dispatches
+  `fullscreen_state 2 2` on `window.open` / `window.class` /
+  `window.title`, then leaves that window alone. Listeners re-read
+  `gaming.autoFullscreen` so the Settings toggle still stops new
+  windows from being forced. The bar hides while the focused window is
+  exclusive fullscreen; HUD binds and `SUPER+F` set `dont_inhibit` and
+  `allow_input_capture` so the game cannot swallow them.
+- **Tearing** (`immediate`) — only that window, and only while it is
+  exclusive fullscreen. Other clients stay vsync.
+- **No blur / no shadow / opaque / content: game** on the game surface
+  (and no hyprbars titlebar)
+
+`general.allow_tearing` is the master switch; it does not tear browsers
+or terminals. Blur and animations stay on for everything else.
+
+If `gamemoded` is installed it is started at login. Steam/Lutris titles
+that call GameMode raise the CPU governor for the game's lifetime, then
+restore the previous policy.
+
+Settings → Gaming can turn fullscreen or optimize off. An old
+`windowRules` entry named `steam-game` is ignored (it used to send games
+to `special:game` and hide them). That name is no longer in the defaults.
+
+Fullscreen games cover the bar, so AI (`SUPER + A`) and the taskbar
+(`SUPER + DELETE`) open as Overlay layer-shell windows — the same path
+as the launcher and control panel — instead of bar-anchored popups.

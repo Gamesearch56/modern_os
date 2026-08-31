@@ -49,6 +49,7 @@ Item {
         MPane {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            color: "transparent"
 
             Flickable {
                 id: flick

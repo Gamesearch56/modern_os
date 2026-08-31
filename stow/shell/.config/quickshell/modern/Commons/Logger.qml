@@ -69,7 +69,8 @@ Singleton {
 
     // Always logged — errors are never filtered by level.
     function error(tag: string, message: string) {
-        console.error(`[${tag}] ${message}`);
-        root._record("error", tag, message);
+        const msg = String(message || "").replace(/\u001b\[[0-9;]*m/g, "").trim();
+        console.error(`[${tag}] ${msg}`);
+        root._record("error", tag, msg);
     }
 }

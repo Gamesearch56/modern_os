@@ -19,18 +19,34 @@ Item {
 
     signal clicked()
 
+    readonly property bool _hovered: ma.containsMouse && root.enabled && !root.busy
+    readonly property bool _pressed: ma.pressed
+
     readonly property var _colors: {
+        const hot = root._hovered || root._pressed;
         switch (root.kind) {
         case "tonal":
             return { bg: Chrome.tonal.bg, fg: Chrome.tonal.fg, border: "transparent" };
         case "outlined":
-            return { bg: "transparent", fg: Colors.color.primary, border: Colors.color.outline };
+            return {
+                bg: hot ? Colors.color.primaryContainer : "transparent",
+                fg: hot ? Colors.color.onPrimaryContainer : Colors.color.primary,
+                border: Colors.color.outline
+            };
         case "text":
-            return { bg: "transparent", fg: Colors.color.primary, border: "transparent" };
+            return {
+                bg: hot ? Colors.color.primaryContainer : "transparent",
+                fg: hot ? Colors.color.onPrimaryContainer : Colors.color.primary,
+                border: "transparent"
+            };
         case "destructive":
-            return { bg: Colors.color.error, fg: Colors.color.onError, border: "transparent" };
+            return hot
+                ? { bg: Colors.color.errorContainer, fg: Colors.color.onErrorContainer, border: "transparent" }
+                : { bg: Colors.color.error, fg: Colors.color.onError, border: "transparent" };
         default:
-            return { bg: Chrome.filled.bg, fg: Chrome.filled.fg, border: "transparent" };
+            return hot
+                ? { bg: Colors.color.primaryContainer, fg: Colors.color.onPrimaryContainer, border: "transparent" }
+                : { bg: Chrome.filled.bg, fg: Chrome.filled.fg, border: "transparent" };
         }
     }
 
@@ -72,13 +88,14 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.full
-        color: Colors.color.onSurface
-        opacity: Chrome.stateLayer(hover.hovered, ma.pressed)
-    }
-
-    HoverHandler {
-        id: hover
-        enabled: root.enabled && !root.busy
+        color: {
+            if (root.kind === "destructive")
+                return Colors.color.onError;
+            if (root.kind === "filled")
+                return Colors.color.onPrimary;
+            return Colors.color.primary;
+        }
+        opacity: Chrome.stateLayer(root._hovered, root._pressed)
     }
 
     RowLayout {
@@ -115,7 +132,7 @@ Item {
         anchors.fill: parent
         enabled: root.enabled && !root.busy
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: (root.enabled && !root.busy) ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: {
             root.forceActiveFocus();
             root.clicked();

@@ -12,6 +12,7 @@ Item {
     property string iconName: ""
     property int echoMode: TextInput.Normal
     property bool enabled: true
+    property int maximumLength: 32767
     property bool escapeCloses: false
 
     signal accepted()
@@ -24,6 +25,11 @@ Item {
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
+
+    HoverHandler {
+        enabled: root.enabled
+        cursorShape: Qt.IBeamCursor
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -66,7 +72,9 @@ Item {
         renderType: TextInput.QtRendering
         echoMode: root.echoMode
         enabled: root.enabled
+        maximumLength: root.maximumLength
         activeFocusOnPress: true
+        selectByMouse: true
         clip: true
         onAccepted: root.accepted()
         onTextChanged: root.textEdited()

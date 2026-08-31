@@ -16,7 +16,13 @@ Singleton {
     property string lastError: ""
     property string _pendingSlug: ""
     property string pendingSlug: ""
+    property var pendingSpec: null
+    property string pendingSeed: ""
+    property bool extractNext: false
     property var _queuedApply: null
+    property real _tintOverride: -1
+
+    readonly property bool busy: applyProc.running || writeProc.running || root._queuedApply !== null
 
     signal created(string path)
 
@@ -81,6 +87,10 @@ Singleton {
         listProc.running = true;
     }
 
+    function _plain(s) {
+        return String(s || "").replace(/\u001b\[[0-9;]*m/g, "").trim();
+    }
+
     function _norm(p) {
         return {
             variant: String(p.variant || "tonal-spot"),
@@ -123,20 +133,25 @@ Singleton {
         if (!exists)
             slug = root.slugFor(spec);
         root.pendingSlug = slug;
-        if (exists) {
-            ConfigWrite.set("design.activeProfile", slug);
-            root.apply("", slug);
+        root.pendingSpec = root._norm(spec);
+        if (!exists) {
+            const body = JSON.stringify(root._norm(spec));
+            root.lastError = "";
+            root._pendingSlug = "";
+            writeProc.command = [
+                Paths.script("theme-create.sh"),
+                slug, body, root.stateDir
+            ];
+            writeProc.running = true;
+        }
+        ConfigWrite.set("design.activeProfile", slug);
+        const locked = root.pendingSeed || String(Config.design.sourceSeed || "");
+        if (root.extractNext && !locked) {
+            root._runApply("", slug, true, "", true);
             return;
         }
-        const body = JSON.stringify(root._norm(spec));
-        root.lastError = "";
-        root._pendingSlug = slug;
-        writeProc.command = [
-            Paths.script("theme-create.sh"),
-            slug, body, root.stateDir
-        ];
-        writeProc.running = true;
-        ConfigWrite.set("design.activeProfile", slug);
+        const seed = locked || String(Colors.sourceColor || "");
+        root._runApply("", slug, true, seed, false);
     }
 
     function create(name: string) {
@@ -160,18 +175,48 @@ Singleton {
     }
 
     function apply(wallpaperPath: string, profile: string) {
-        root._runApply(wallpaperPath, profile, false);
+        const p = profile || root.pendingSlug || String(Config.design.activeProfile || "");
+        if (root.extractNext) {
+            root._runApply(wallpaperPath, p, false, "", true);
+            return;
+        }
+        const seed = root.pendingSeed || String(Config.design.sourceSeed || "");
+        root._runApply(wallpaperPath, p, false, seed, false);
     }
 
     function applyShown(wallpaperPath: string) {
-        root._runApply(wallpaperPath, "", true);
+        const p = root.pendingSlug || String(Config.design.activeProfile || "");
+        root.pendingSeed = "";
+        root.extractNext = true;
+        ConfigWrite.set("design.sourceSeed", "");
+        root._runApply(wallpaperPath, p, true, "", true);
     }
 
-    function _runApply(wallpaperPath: string, profile: string, skipWallpaper: bool) {
+    function applySeed(seed: string) {
+        const hex = String(seed || "");
+        if (!hex.length)
+            return;
+        root.pendingSeed = hex;
+        root.extractNext = false;
+        ConfigWrite.set("design.sourceSeed", hex);
+        const p = root.pendingSlug || String(Config.design.activeProfile || "");
+        root._runApply("", p, true, hex, false);
+    }
+
+    function applyTint(tint: real) {
+        const p = root.pendingSlug || String(Config.design.activeProfile || "");
+        const seed = root.pendingSeed || String(Config.design.sourceSeed || "");
+        root._tintOverride = tint;
+        root._runApply("", p, true, seed, false);
+    }
+
+    function _runApply(wallpaperPath: string, profile: string, skipWallpaper: bool, seed: string, extract: bool) {
         const spec = {
             path: wallpaperPath || "",
             profile: profile || "",
-            skip: !!skipWallpaper
+            skip: !!skipWallpaper,
+            seed: seed || "",
+            extract: !!extract
         };
         if (applyProc.running) {
             root._queuedApply = spec;
@@ -192,6 +237,16 @@ Singleton {
         }
         if (spec.skip)
             cmd.push("--skip-wallpaper");
+        if (spec.extract)
+            cmd.push("--extract");
+        else if (spec.seed && String(spec.seed).length > 0) {
+            cmd.push("--seed");
+            cmd.push(String(spec.seed));
+        }
+        const tint = root._tintOverride >= 0 ? root._tintOverride : Number(Config.design.surfaceTint ?? 0.7);
+        root._tintOverride = -1;
+        cmd.push("--surface-tint");
+        cmd.push(String(tint));
         root.lastError = "";
         applyProc.command = cmd;
         applyProc.running = true;
@@ -206,15 +261,22 @@ Singleton {
         }
         onExited: (code) => {
             Colors.refresh();
+            if (code === 0)
+                root.extractNext = false;
             const next = root._queuedApply;
             root._queuedApply = null;
+            if (code !== 0) {
+                root.pendingSlug = "";
+                root.pendingSpec = null;
+                root.pendingSeed = "";
+            }
             if (next) {
                 Qt.callLater(() => root._startApply(next));
                 return;
             }
             if (code === 0)
                 return;
-            const err = applyErr.text.trim();
+            const err = root._plain(applyErr.text);
             root.lastError = err;
             Logger.error("Theme", err.length > 0 ? err : I18n.t("theme.applyFailed"));
         }

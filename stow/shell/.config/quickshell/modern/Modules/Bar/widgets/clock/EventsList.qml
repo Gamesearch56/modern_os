@@ -10,6 +10,7 @@ ColumnLayout {
     MPane {
         Layout.fillWidth: true
         implicitHeight: Tokens.spacing.xxl * 8
+        color: "transparent"
 
             ListView {
                 anchors.fill: parent

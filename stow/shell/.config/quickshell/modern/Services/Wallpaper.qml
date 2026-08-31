@@ -15,6 +15,7 @@ Singleton {
     property bool fetching: false
     property var images: []
     property string pendingSelect: ""
+    readonly property int thumbsRev: thumbs.rev
 
     readonly property string home: Quickshell.env("HOME")
     readonly property string libraryDir: root.home + "/Pictures/Wallpapers"
@@ -40,6 +41,7 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.images = this.text.trim().split("\n").filter(l => l.length > 0);
+                thumbs.rebuild(root.images);
             }
         }
     }
@@ -56,8 +58,11 @@ Singleton {
             else if (code === 0) {
                 const lines = importOut.text.trim().split("\n").filter(l => l.length > 0);
                 root.pendingSelect = lines.length > 0 ? lines[lines.length - 1] : "";
-                root.setPickerOpen(true);
             }
+            const reopen = root._reopenPicker;
+            root._reopenPicker = false;
+            if (reopen)
+                Qt.callLater(() => root.setPickerOpen(true));
         }
     }
 
@@ -116,6 +121,12 @@ Singleton {
             }
         }
     }
+
+    WallpaperThumbs {
+        id: thumbs
+    }
+
+    Component.onCompleted: root._refresh()
 
     IpcHandler {
         target: "wallpaper"
@@ -199,6 +210,10 @@ Singleton {
     function clearPendingSelect() { root.pendingSelect = ""; }
     function refresh() { root._refresh(); }
 
+    function tileSource(path: string): string {
+        return thumbs.url(path);
+    }
+
     function _refresh() {
         listProc.running = false;
         Qt.callLater(() => { listProc.running = true; });
@@ -206,6 +221,7 @@ Singleton {
 
     function importWallpaper() {
         root.pickerOpen = false;
+        root._reopenPicker = true;
         Qt.callLater(() => {
             importProc.running = false;
             importProc.running = true;
@@ -240,5 +256,16 @@ Singleton {
             Theme.applyShown(shown);
         });
         Logger.info("Wallpaper", "applied " + path);
+    }
+
+    function replay(kind: string) {
+        const img = String(root.currentPath || "");
+        if (!img.length)
+            return;
+        const t = String(kind || "");
+        if (t.length > 0)
+            Quickshell.execDetached([Paths.script("wallpaper-show.sh"), img, t]);
+        else
+            Quickshell.execDetached([Paths.script("wallpaper-show.sh"), img]);
     }
 }

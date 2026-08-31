@@ -16,14 +16,16 @@ hl.on("hyprland.start", function()
         .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
         .. "export QT_QPA_PLATFORM=wayland QT_QPA_PLATFORMTHEME=qt6ct "
         .. "QS_ICON_THEME=\"${QS_ICON_THEME:-Papirus-Dark}\"; "
-        .. "gsettings set org.gnome.desktop.interface color-scheme prefer-dark 2>/dev/null || true; "
         .. "exec qs -c modern >>\"$log\" 2>&1'")
 
     hl.exec_cmd("sh -lc '"
-        .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true; "
+        .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XDG_SESSION_ID XDG_SESSION_TYPE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true; "
         .. "timeout 2 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true; "
         .. "timeout 2 systemctl --user stop modern-shell.service || true; "
-        .. "timeout 2 systemctl --user start hyprpolkitagent || true'")
+        .. "timeout 2 systemctl --user stop hyprpolkitagent.service || true; "
+        .. "timeout 2 systemctl --user daemon-reload || true; "
+        .. "timeout 2 systemctl --user reset-failed phylax.service || true; "
+        .. "timeout 2 systemctl --user start phylax || true'")
 
     hl.exec_cmd("hypridle")
     -- hyprpm stores plugins in /var/cache/hyprpm/$USER and needs pkexec
@@ -44,6 +46,10 @@ hl.on("hyprland.start", function()
         -- is not shipped. Start the daemon if it is not already running.
         hl.exec_cmd("sh -lc 'pgrep -u \"$USER\" -x kdeconnectd >/dev/null || kdeconnectd &'")
     end
+
+    -- GameMode raises the CPU governor only while a game is registered,
+    -- then restores it — other apps stay on the default policy.
+    hl.exec_cmd("sh -lc 'command -v gamemoded >/dev/null 2>&1 || exit 0; pgrep -u \"$USER\" -x gamemoded >/dev/null || gamemoded -d'")
 
     local autostart = config.value("general.autostart", {})
     local modern_launch = paths.modern_launch

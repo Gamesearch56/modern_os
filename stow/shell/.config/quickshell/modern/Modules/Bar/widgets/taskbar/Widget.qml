@@ -13,8 +13,10 @@ Item {
     readonly property bool _mine: {
         void Taskbar.open;
         void Taskbar.hostScreenName;
+        void Taskbar.coverFullscreen;
         return Taskbar.openOn(root.barScreen);
     }
+    readonly property bool _barPopup: root._mine && !Taskbar.coverFullscreen
 
     MIconButton {
         tabFocus: false
@@ -34,7 +36,7 @@ Item {
         implicitHeight: Tokens.spacing.xxl * 14
         hAlign: Qt.AlignRight
         onOpenChanged: {
-            if (!popup.open && root._mine)
+            if (!popup.open && root._barPopup)
                 Taskbar.hide();
         }
 
@@ -44,6 +46,9 @@ Item {
                 root._sync();
             }
             function onHostScreenNameChanged() {
+                root._sync();
+            }
+            function onCoverFullscreenChanged() {
                 root._sync();
             }
         }
@@ -59,7 +64,7 @@ Item {
     }
 
     function _sync() {
-        const mine = Taskbar.openOn(root.barScreen);
+        const mine = root._barPopup;
         if (popup.open !== mine)
             popup.open = mine;
     }

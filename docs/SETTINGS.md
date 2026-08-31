@@ -18,10 +18,11 @@ Deep links: `Settings.openAt(section, subsection)` in
 | `windows` | `design` (subsection `windows`) |
 | `display` | `displays` |
 | `screenshot` | `screenshots` |
+| `games` | `gaming` |
 
 ## Nav map
 
-Six groups, 20 pages. Catalog lives in
+Six groups, 21 pages. Catalog lives in
 `Modules/Settings/Catalog.qml` (`groupOrder` + `_byId`). Search uses
 `section.json` keywords **and** that catalog.
 
@@ -34,8 +35,9 @@ Six groups, 20 pages. Catalog lives in
 | Appearance | Design | `design` | Wallpaper gallery + four derived theme profiles (`Theme`, `Wallpaper`). `design.*`, `typography`, `motion`, `windows.*` (no title-bar toggle), `windowRules`. Animations and cursor theme are selects; cursor list comes from installed `cursors/` themes. Changing a knob writes `config.json` then applies live: shell chrome (transparency, rounding, type scale, motion), Hyprland (`hyprctl keyword` / reload for animations), cursor (`cursor-apply.sh` + GTK/Qt), and toolkit chrome (`theme-apply.sh --chrome-only` for GTK/Qt/KDE/Vivaldi radii and fonts). |
 | Appearance | Bar | `bar` | `bar.position`, `bar.style`, `bar.height`, `bar.edgeGap`, `bar.endGap`, `bar.autoHide`, `bar.left\|center\|right`, `widgets.*`. Islands drag across left/middle/right (`MSlotBoard`); enabling a widget appends to `bar.left`. Auto-hide slides the bar to an edge strip. |
 | Appearance | Launcher | `launcher` | `launcher.frecencyEnabled`, `launcher.showIcons`, `launcher.showDescriptions`, `launcher.resultCount`, `launcher.mostUsedGridSize`. Prefixes in `launcher.providers` stay in config for a future provider layer; Settings does not edit them. |
-| Apps | Applications | `applications` | `apps.defaults` (browser Vivaldi, calendar/mail Proton Mail, messenger empty with WhatsApp fallback, file manager Dolphin, video player mpv, image viewer imv, terminal kitty), `general.autostart`. Calendar/mail/messenger ids are locked on the autostart list. Shortcuts go through `scripts/modern-launch` and those defaults, not hardcoded binaries. Changing video player or image viewer also updates `~/.config/mimeapps.list` via `scripts/mime-defaults.sh` so Dolphin/`xdg-open` follow the same apps. |
+| Apps | Applications | `applications` | `apps.defaults` (browser Vivaldi; calendar/mail/messenger are Vivaldi `--app=` windows: Proton Calendar, Proton Mail, WhatsApp). Proton Drive is a launcher-only desktop entry, not a default role and not autostarted. File manager Nautilus with Dolphin selectable, video player mpv, image viewer imv, terminal kitty. `general.autostart` starts mail, calendar, and WhatsApp on `special:background` so they keep notifying; those ids are locked on the autostart list. First WhatsApp Web pairing needs a visible window to scan the QR — open it from the launcher once. Shortcuts go through `scripts/modern-launch` and those defaults, not hardcoded binaries. Changing video player, image viewer, file manager, or mail also updates `~/.config/mimeapps.list` via `scripts/mime-defaults.sh` (`mailto:` follows the mail app; Nautilus/Dolphin/`xdg-open` follow the rest). |
 | Apps | Recording | `screenshots` | Stills: `screenshots.format` (PNG/JPEG/WebP), `quality`, `directory`, `copyToClipboard`, `openEditorAfterCapture`, `includeCursor` via `scripts/screenshot.sh` (grim). Video: `screenshots.videoDirectory`, `videoFilenameTemplate`, `recordAudio` via `scripts/screencast.sh` (`wf-recorder`). |
+| Apps | Gaming | `gaming` | `gaming.autoFullscreen` / `gaming.autoOptimize` for Steam, gamescope, Wine, and native titles such as Project Zomboid. Per-window Hyprland rules only — see `docs/GAMING.md`. |
 | Apps | AI | `ai` | `accounts.ai` (Ollama or Off). Model list comes from a running Ollama daemon. If Ollama is missing or stopped, Settings defaults the assistant to Off and shows the install steps. |
 | Keyboard & Region | Language & Time | `language` | `language.ui`, `firstDayOfWeek`, `dateFormat`, `timeFormat`. Clock weekday/seconds live under Settings → Bar. |
 | Keyboard & Region | Keyboard | `keyboard` | `input.kbLayout`, `repeatRate`, `repeatDelay`, `numlockOnBoot` (off by default) applied live (`hyprctl eval`). Cheat sheet button opens `Cheatsheet` (Super+K). |
@@ -45,16 +47,40 @@ Six groups, 20 pages. Catalog lives in
 | Devices | Bluetooth | `bluetooth` | Adapter power, nearby/connected lists, connect/disconnect/forget via `Bluetooth` (BlueZ). |
 | System | Storage | `storage` | Internal and external drive cards via `Storage` (`lsblk`, sysfs link speed). Eject uses `udisksctl` unmount + power-off. |
 | System | Backup | `backup` | Live Snapper status (`Snapshots`). `backup.preUpdateSnapshot` drives `modern update`. Create/delete via `pkexec snapper`. Restore is gated. |
-| System | Firewall | `firewall` | Live UFW (`Firewall`). Enable/disable and allow/deny rules via `pkexec /usr/bin/ufw`. Rules persist in `/etc/ufw`. Enable forces deny incoming, allow outgoing, deny routed. No `config.json` keys, no Restore, no `ufw reset`. |
+| System | Firewall | `firewall` | Live UFW (`Firewall`). Listing, enable/disable, and allow/deny rules via `pkexec /usr/bin/ufw` (same polkit action as the store). Rules persist in `/etc/ufw`. Enable forces deny incoming, allow outgoing, deny routed. No `config.json` keys, no Restore, no `ufw reset`. |
 | System | Update | `system` | Pending packages via `checkupdates` (`Update`). `modern update` / `modern mirrors` (pkexec from Settings). |
+
+## App Store
+
+A Hyprland `FloatingWindow` titled `modern.store` (control panel header
+opens it; Super+Q is `killactive`). Chrome title is **App Store**. It
+installs and removes official Arch packages only — no `-Sy`/`-Syu`.
+System upgrades stay on Settings → System.
+
+- Catalog: `~/.config/modern/store/catalog.json` (popular grid +
+  category allowlists). Discover shows Popular (6) then each category
+  (6, three per row). Installed is `pacman -Qe`, not a name list.
+- Search: `scripts/pkg-search.sh` (`pacman -Ss`). Info:
+  `scripts/pkg-info.sh`. Mutate: `scripts/pkg-mutate.sh` via
+  `/usr/bin/pkexec /usr/bin/pacman` only (no `PACMAN=` override, no
+  shell). Install preflights `pacman -Si`; remove preflights `pacman -Q`
+  and refuses a protected set (glibc, pacman, systemd, hyprland,
+  quickshell, …). Remove is `-R` of that name only (`-s`/`-n` stay off).
+  The shell never SIGKILLs an in-flight transaction. `pkg-mutate.sh`
+  starts `phylax.service` if it is down so the password window can
+  appear; Cancel is allowed only while still waiting for that prompt.
+- Updates button appears only when `Update.pending` is non-empty
+  (label without a count; `MBadge` pill is the count) and opens
+  Settings → System. IPC: `qs -c modern ipc call store toggle`.
+
 
 ## Restore defaults
 
 Privacy, Energy, Design, Bar, Launcher, Applications, Screenshot,
-Language & Time, and Keyboard show **Restore** on the page header.
+Gaming, Language & Time, and Keyboard show **Restore** on the page header.
 Confirm copies that page’s keys from `config.default.json` via
 `modern config restore` (one jq write). Privacy also clears session
-DND. Design re-runs `theme-apply.sh` so the palette matches the
+DND and does not reset `accounts.calendarIcsUrl`. Design re-runs `theme-apply.sh` so the palette matches the
 restored profile. Overview, Users, AI, devices, Storage, Backup, Firewall, and
 Update have no Restore control.
 

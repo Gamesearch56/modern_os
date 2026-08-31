@@ -113,21 +113,26 @@ bell stay on disk under `Modules/Bar/widgets/` if a leftover
 
 ## Cross-toolkit consistency
 
-- **GTK 3/4** — `gtk.css` generated from `tokens.json` (see
-  `stow/theme/.config/matugen/templates/gtk.css`), selection color derived
-  from `primary` (not hardcoded `#FFFFFF` as the old Wallust setup did).
+- **GTK 3/4 / Nautilus** — `gtk.css` generated from `tokens.json` (see
+  `stow/theme/.config/matugen/templates/gtk.css.template`), libadwaita
+  named colors plus `.nautilus-window` rules from MD3 roles. GTK3 Adwaita
+  aliases theme Sushi. Folder icons use Papirus-Dark (emblem folders).
+  KDE/Dolphin keep `modern-folders`. SUPER+E launches
+  `apps.defaults.fileManager` (Nautilus by default). Restart Nautilus
+  after `theme-apply.sh`. The window is opaque. Sushi floats over it
+  (`nautilus-previewer` window rule, `dim_around` scrim). Video/audio
+  start muted; changing the Nautilus selection replaces the preview.
 - **Qt / Dolphin** — `kdeglobals` `[UiSettings] ColorScheme=modern` plus
   `modern.colors` (KF6 KColorSchemeManager; qt6ct reports
   `ColorScheme::Unknown` and otherwise applies a light Active palette),
-  qt6ct-style, and generated `qt6ct` palette (`#AARRGGBB`). SUPER+E
-  launches Dolphin through `scripts/modern-launch` so
-  `QT_QPA_PLATFORMTHEME=qt6ct` actually reaches the process (Hyprland
-  `hl.env` does not stick after reload). Restart Dolphin after
-  `theme-apply.sh`. The window is opaque (wallpaper in the gaps, not
-  through the view). No `QT_QPA_PLATFORM=xcb`.
-- **hyprpolkitagent** — hyprtoolkit palette in `hyprtoolkit.conf`
-  (surface / primary / Inter / radius.medium), plus a Hyprland window
-  rule for glass opacity and `dim_around`. Not QSS. See `docs/THEMING.md`.
+  qt6ct-style, and generated `qt6ct` palette (`#AARRGGBB`). Launch
+  through `scripts/modern-launch` so `QT_QPA_PLATFORMTHEME=qt6ct` reaches
+  the process (Hyprland `hl.env` does not stick after reload). Restart
+  Dolphin after `theme-apply.sh`. The window is opaque (wallpaper in the
+  gaps, not through the view). No `QT_QPA_PLATFORM=xcb`.
+- **Phylax** — GTK4 polkit dialog, CSS from `~/.config/phylax/style.css`
+  (matugen tokens + chrome radii/type), plus a Hyprland window rule for
+  glass opacity, `pin`, and `dim_around`. See `docs/THEMING.md`.
 - **Vivaldi** — native theme object plus CSS overlay and a copied wallpaper
   at `~/.config/vivaldi/custom_css/wallpaper` when
   `design.bootScreen.wallpaperOnVivaldi` is on. CSS mods need

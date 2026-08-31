@@ -34,13 +34,16 @@ Singleton {
         if (!t)
             return false;
         const fs = t.fullscreen;
-        if (fs === true || fs === 2)
+        if (fs === true || fs === 2 || fs === 3)
             return true;
         const ipc = t.lastIpcObject;
         if (!ipc)
             return false;
         const v = ipc.fullscreen;
-        return v === true || v === 2 || v === "2";
+        if (v === true || v === 2 || v === 3 || v === "2" || v === "3")
+            return true;
+        const c = ipc.fullscreenClient;
+        return c === 2 || c === 3 || c === "2" || c === "3";
     }
 
     readonly property bool _lua: Hyprland.usingLua === true
@@ -224,7 +227,7 @@ Singleton {
         const p = String(path || "");
         const input = Config.input || {};
         if (p === "input.kbLayout")
-            root.keyword("input:kb_layout", String(value || input.kbLayout || "de"));
+            root.keyword("input:kb_layout", String(value || input.kbLayout || "us"));
         else if (p === "input.repeatRate")
             root.keyword("input:repeat_rate", String(Math.round(Number(value ?? input.repeatRate ?? 25))));
         else if (p === "input.repeatDelay")

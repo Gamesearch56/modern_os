@@ -101,7 +101,7 @@ Item {
         hoverEnabled: true
         preventStealing: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: (root.enabled && !root.busy) ? Qt.PointingHandCursor : Qt.ArrowCursor
         onEntered: {
             if (!root._suppressHover)
                 root._hover = true;

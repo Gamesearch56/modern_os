@@ -33,6 +33,8 @@ Singleton {
         readonly property real md: 12
         readonly property real lg: 16
         readonly property real xl: 24
+        // Toast banners sit 10px tighter than xl so the glyph hugs the title.
+        readonly property real bannerIconText: 14
         readonly property real xxl: 32
     }
 
@@ -79,10 +81,14 @@ Singleton {
     readonly property QtObject window: QtObject {
         readonly property real settingsWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real settingsHeight: root.spacing.xxl * 22 + root.spacing.lg
+        readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
+        readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real overviewWidth: root.spacing.xxl * 22
         readonly property real overviewHeight: root.spacing.xxl * 16
         readonly property real overlayWidth: root.spacing.xxl * 24
         readonly property real overlayHeight: root.spacing.xxl * 20
+        readonly property real chatWidth: root.spacing.xxl * 14
+        readonly property real chatHeight: root.spacing.xxl * 18
         readonly property real providerWidth: 1200
         readonly property real providerHeight: 800
     }

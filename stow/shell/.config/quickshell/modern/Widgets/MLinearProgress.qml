@@ -1,4 +1,7 @@
 // Determinate track or an indeterminate pulse. Token colors only.
+// `enclosureRadius` paints this bar as the bottom slice of a taller
+// rounded rect so a toast can flush the bar to the card edge without
+// square corners leaking past the banner radius (Item.clip is axis-aligned).
 import QtQuick
 import "../Commons"
 
@@ -7,6 +10,13 @@ Item {
 
     property real value: 0
     property bool indeterminate: false
+    property real radius: Tokens.radius.full
+    property real enclosureRadius: 0
+    property real enclosureHeight: 0
+
+    readonly property bool _enclose: root.enclosureRadius > 0 && root.enclosureHeight > root.height
+    readonly property real _bodyH: root._enclose ? root.enclosureHeight : height
+    readonly property real _bodyR: root._enclose ? root.enclosureRadius : root.radius
 
     implicitWidth: Tokens.spacing.xxl * 10
     implicitHeight: Tokens.spacing.sm
@@ -14,19 +24,31 @@ Item {
 
     Rectangle {
         id: track
-        anchors.fill: parent
-        radius: Tokens.radius.full
+        width: parent.width
+        height: root._bodyH
+        y: parent.height - height
+        radius: root._bodyR
         color: Colors.color.surfaceContainerHighest
+        antialiasing: true
+    }
+
+    Item {
+        id: fillClip
+        width: root.indeterminate
+            ? parent.width
+            : parent.width * Math.max(0, Math.min(1, root.value))
+        height: parent.height
+        clip: true
 
         Rectangle {
             id: fill
-            width: root.indeterminate
-                ? parent.width
-                : parent.width * Math.max(0, Math.min(1, root.value))
-            height: parent.height
-            radius: parent.radius
+            width: root._enclose ? root.width : fillClip.width
+            height: root._bodyH
+            y: fillClip.height - height
+            radius: root._bodyR
             color: Colors.color.primary
             opacity: root.indeterminate ? pulse.opacity : 1
+            antialiasing: true
         }
     }
 

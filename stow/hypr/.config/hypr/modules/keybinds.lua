@@ -83,7 +83,7 @@ local bindings = {
     terminal = app_cmd("terminal", "kitty.desktop"),
     browser = app_cmd("browser", "vivaldi-stable.desktop"),
     browserIncognito = browser_incognito(),
-    fileManager = app_cmd("fileManager", "org.kde.dolphin.desktop"),
+    fileManager = app_cmd("fileManager", "org.gnome.Nautilus.desktop"),
     spotify = hl.dsp.exec_cmd("spotify-launcher"),
     -- killactive would close the window behind layer-shell HUD/popups.
     -- modern window close dismisses those first, then killactive.
@@ -130,26 +130,69 @@ local bindings = {
     filePreview = hl.dsp.exec_cmd(modern .. " filepreview"),
 }
 
+-- SPACE is a typing key. Non-consuming so fields still receive it.
+-- filepreview.sh no-ops in Nautilus (Sushi owns Space there) and only
+-- opens Quick Look in Dolphin.
+-- Overlay HUDs (launcher, AI, taskbar, control panel, …) bypass both
+-- shortcut-inhibit (games, Electron) and input capture (Quickshell
+-- HyprlandFocusGrab, some clients). They still consume the key so the
+-- focused app does not also see it. SUPER+F is the same: exclusive
+-- fullscreen must be undoable.
+local overlay_actions = {
+    launcher = true,
+    aiChat = true,
+    taskbar = true,
+    controlCenter = true,
+    powerMenu = true,
+    cheatsheet = true,
+    overview = true,
+    wallpaperPicker = true,
+    settings = true,
+    fullscreen = true,
+}
+
+local function bind_opts(action)
+    local opts = nil
+    if action == "filePreview" then
+        opts = { non_consuming = true }
+    end
+    if overlay_actions[action] then
+        opts = opts or {}
+        opts.dont_inhibit = true
+        opts.allow_input_capture = true
+    end
+    return opts
+end
+
+local function bind_combo(combo, dispatcher, action)
+    local opts = bind_opts(action)
+    if opts then
+        hl.bind(combo, dispatcher, opts)
+    else
+        hl.bind(combo, dispatcher)
+    end
+end
+
 for action, dispatcher in pairs(bindings) do
     local key = combo(action)
     if key then
         local skip = false
         for n = 1, 10 do
             if action == ("workspace" .. n) and key == default_number_combo(n, false) then
-                hl.bind("SUPER + " .. number_row_code(n), dispatcher)
+                bind_combo("SUPER + " .. number_row_code(n), dispatcher, action)
                 skip = true
             elseif action == ("moveToWorkspace" .. n) and key == default_number_combo(n, true) then
-                hl.bind("SUPER + SHIFT + " .. number_row_code(n), dispatcher)
+                bind_combo("SUPER + SHIFT + " .. number_row_code(n), dispatcher, action)
                 skip = true
             end
         end
         local named = xkb.named[action]
         if named and key == named.combo then
-            hl.bind(named.bind, dispatcher)
+            bind_combo(named.bind, dispatcher, action)
             skip = true
         end
         if not skip then
-            hl.bind(key, dispatcher)
+            bind_combo(key, dispatcher, action)
         end
     end
 end

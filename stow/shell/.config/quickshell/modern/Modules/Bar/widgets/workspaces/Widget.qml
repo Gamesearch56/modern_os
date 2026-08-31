@@ -6,8 +6,8 @@ import "../../../../Services"
 Item {
     id: root
     property var barScreen: null
-    implicitWidth: row.implicitWidth + root._inset * 2
-    implicitHeight: Config.bar.height
+    implicitWidth: BarLayout.vertical ? Config.bar.height : (row.implicitWidth + root._inset * 2)
+    implicitHeight: BarLayout.vertical ? (row.implicitHeight + root._inset * 2) : Config.bar.height
 
     readonly property real _inset: Tokens.spacing.xs
     readonly property real _chip: Config.bar.height - root._inset * 2
@@ -62,103 +62,94 @@ Item {
         return root.nextId > 0 && root.activeId > 0 && Hypr._workspaceHasWindows(root.activeId);
     }
 
-    Row {
+    Grid {
         id: row
         anchors.centerIn: parent
+        columns: BarLayout.vertical ? 1 : 32
+        flow: BarLayout.vertical ? Grid.TopToBottom : Grid.LeftToRight
         spacing: Tokens.spacing.xs
+        horizontalItemAlignment: Grid.AlignHCenter
+        verticalItemAlignment: Grid.AlignVCenter
 
-        Row {
-            anchors.verticalCenter: parent.verticalCenter
-            height: root._chip
-            spacing: Tokens.spacing.xs
+        Repeater {
+            model: root.ids.length
 
-            Repeater {
-                model: root.ids.length
+            Item {
+                id: chip
+                required property int index
+                readonly property int wsId: root.ids[index] || 0
+                readonly property var ws: Hypr.workspaceById(chip.wsId)
+                readonly property bool current: Hypr.isActiveOnScreen(root.barScreen, chip.wsId)
+                readonly property bool urgent: !!(chip.ws && chip.ws.urgent)
 
-                Item {
-                    id: chip
-                    required property int index
-                    readonly property int wsId: root.ids[index] || 0
-                    readonly property var ws: Hypr.workspaceById(chip.wsId)
-                    readonly property bool current: Hypr.isActiveOnScreen(root.barScreen, chip.wsId)
-                    readonly property bool urgent: !!(chip.ws && chip.ws.urgent)
+                width: root._chip
+                height: root._chip
 
-                    width: root._chip
-                    height: root._chip
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: Tokens.radius.full
-                        color: {
-                            if (chip.current)
-                                return Chrome.navSelected.bg;
-                            if (chip.urgent)
-                                return Colors.color.error;
-                            return Chrome.navIdle.bg;
-                        }
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Tokens.radius.full
+                    color: {
+                        if (chip.current)
+                            return Chrome.navSelected.bg;
+                        if (chip.urgent)
+                            return Colors.color.error;
+                        return Colors.color.surfaceContainerHighest;
                     }
+                }
 
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: Tokens.radius.full
-                        color: Colors.color.primary
-                        opacity: chip.current ? 0 : Chrome.stateLayer(hit.containsMouse, false)
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Tokens.radius.full
+                    color: Colors.color.primary
+                    opacity: chip.current ? 0 : Chrome.stateLayer(hit.containsMouse, false)
+                }
+
+                MText {
+                    id: label
+                    anchors.fill: parent
+                    z: 1
+                    value: String(chip.wsId)
+                    styleName: "labelSmall"
+                    elide: Text.ElideNone
+                    wrapMode: Text.NoWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    lineHeightMode: Text.ProportionalHeight
+                    color: {
+                        if (chip.current)
+                            return Chrome.navSelected.fg;
+                        if (chip.urgent)
+                            return Colors.color.onError;
+                        return Chrome.navIdle.fg;
                     }
+                }
 
-                    MText {
-                        id: label
-                        anchors.centerIn: parent
-                        value: String(chip.wsId)
-                        styleName: "labelSmall"
-                        color: {
-                            if (chip.current)
-                                return Chrome.navSelected.fg;
-                            if (chip.urgent)
-                                return Colors.color.onError;
-                            return Chrome.navIdle.fg;
-                        }
-                    }
-
-                    MouseArea {
-                        id: hit
-                        anchors.fill: parent
-                        z: 2
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: (mouse) => {
-                            if (mouse.button === Qt.RightButton)
-                                Hypr.closeWorkspace(chip.wsId);
-                            else
-                                Hypr.focusWorkspace(chip.wsId);
-                        }
+                MouseArea {
+                    id: hit
+                    anchors.fill: parent
+                    z: 2
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: (mouse) => {
+                        if (mouse.button === Qt.RightButton)
+                            Hypr.closeWorkspace(chip.wsId);
+                        else
+                            Hypr.focusWorkspace(chip.wsId);
                     }
                 }
             }
         }
 
-        Item {
-            visible: root.canAdd
-            width: Tokens.spacing.xs
-            height: 1
-        }
-
         MIconButton {
             tabFocus: false
             visible: root.canAdd
-            anchors.verticalCenter: parent.verticalCenter
             iconName: "list-add-symbolic"
             key: "bar.workspaceAdd"
             size: Tokens.spacing.xl
             iconSize: Tokens.icon.sm - Tokens.spacing.xxs
             checked: false
             onClicked: Hypr.focusWorkspace(root.nextId)
-        }
-
-        Item {
-            visible: root.canAdd
-            width: Tokens.spacing.xs
-            height: 1
         }
     }
 }

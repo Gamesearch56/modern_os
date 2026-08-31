@@ -37,7 +37,7 @@ ColumnLayout {
             to: 100
             value: Config.screenshots.quality ?? 90
             showValue: true
-            onMoved: (v) => ConfigWrite.set("screenshots.quality", Math.round(v))
+            onCommitted: (v) => ConfigWrite.set("screenshots.quality", Math.round(v))
         }
     }
 

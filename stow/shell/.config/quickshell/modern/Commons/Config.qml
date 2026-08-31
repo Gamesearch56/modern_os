@@ -46,7 +46,7 @@ Singleton {
             id: adapter
 
             property JsonObject general: JsonObject {
-                property list<string> autostart: ["proton-mail.desktop"]
+                property list<string> autostart: ["proton-mail.desktop", "proton-calendar.desktop", "whatsapp.desktop"]
                 property int notificationTimeoutMs: 6000
                 property JsonObject dndSchedule: JsonObject {
                     property bool enabled: false
@@ -77,6 +77,7 @@ Singleton {
 
             property JsonObject design: JsonObject {
                 property string activeProfile: "tonal-spot-dark"
+                property string sourceSeed: ""
                 property real cornerRounding: 1.0
                 property real transparency: 0.85
                 property real surfaceTint: 0.7
@@ -85,6 +86,7 @@ Singleton {
                 property string cursorTheme: "Bibata-Modern-Classic"
                 property int cursorSize: 24
                 property string wallpaperProvider: "https://4kwallpapers.com"
+                property string wallpaperTransition: "fade"
                 property JsonObject bootScreen: JsonObject {
                     property string mode: "static"
                     property bool wallpaperOnSplash: true
@@ -135,17 +137,18 @@ Singleton {
 
             property var windowRules: [
                 {
-                    name: "steam-game",
-                    match: { class: "steam_app_.*" },
-                    workspace: "special:game",
-                    fullscreen: true
-                },
-                {
                     name: "jetbrains-dialogs",
                     match: { class: "jetbrains-.*", title: "win0" },
                     float: true
                 }
             ]
+
+            property JsonObject gaming: JsonObject {
+                property bool autoFullscreen: true
+                property bool autoOptimize: true
+                property string matchClass: "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl"
+                property string matchTitle: ".*\\.exe|Project Zomboid"
+            }
 
             property JsonObject windows: JsonObject {
                 property bool titlebar: true
@@ -157,10 +160,10 @@ Singleton {
             property JsonObject apps: JsonObject {
                 property JsonObject defaults: JsonObject {
                     property string browser: "vivaldi-stable.desktop"
-                    property string calendar: "proton-mail.desktop"
+                    property string calendar: "proton-calendar.desktop"
                     property string mail: "proton-mail.desktop"
-                    property string communication: ""
-                    property string fileManager: "org.kde.dolphin.desktop"
+                    property string communication: "whatsapp.desktop"
+                    property string fileManager: "org.gnome.Nautilus.desktop"
                     property string videoPlayer: "mpv.desktop"
                     property string imageViewer: "imv.desktop"
                     property string terminal: "kitty.desktop"
@@ -168,7 +171,7 @@ Singleton {
             }
 
             property JsonObject input: JsonObject {
-                property string kbLayout: "de"
+                property string kbLayout: "us"
                 property string kbVariant: ""
                 property int repeatRate: 25
                 property int repeatDelay: 600
@@ -247,7 +250,7 @@ Singleton {
                 launcher: "SUPER + SPACE",
                 aiChat: "SUPER + A",
                 powerMenu: "SUPER + M",
-                controlCenter: "SUPER + O",
+                controlCenter: "SUPER + N",
                 lockScreen: "SUPER + L",
                 exitSession: "SUPER + SHIFT + M",
                 cheatsheet: "SUPER + K",
@@ -301,6 +304,7 @@ Singleton {
     readonly property alias widgets: adapter.widgets
     readonly property alias monitors: adapter.monitors
     readonly property alias windowRules: adapter.windowRules
+    readonly property alias gaming: adapter.gaming
     readonly property alias windows: adapter.windows
     readonly property alias apps: adapter.apps
     readonly property alias launcher: adapter.launcher

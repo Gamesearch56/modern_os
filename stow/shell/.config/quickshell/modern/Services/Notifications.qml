@@ -19,6 +19,10 @@ Singleton {
     property var _lastLocal: ({ key: "", at: 0 })
     property int _minute: 0
     property int _nextId: 1
+    readonly property int timeoutMs: {
+        const n = Number(Config.general.notificationTimeoutMs);
+        return n > 0 ? n : 6000;
+    }
 
     readonly property bool scheduledDnd: {
         void root._minute;
@@ -103,7 +107,7 @@ Singleton {
     }
 
     function _timeoutMs() {
-        return Config.general.notificationTimeoutMs ?? 6000;
+        return root.timeoutMs;
     }
 
     function _wrap(n) {
@@ -145,7 +149,7 @@ Singleton {
             local: true,
             toastVisible: true,
             read: false,
-            expireTimeout: expireTimeout,
+            expireTimeout: Number(expireTimeout) > 0 ? Number(expireTimeout) : 0,
             shownAt: Date.now()
         };
     }
@@ -155,7 +159,6 @@ Singleton {
         next.unshift(item);
         root.list = next;
         root._syncToasts();
-        root._armHide(item);
     }
 
     function _syncToasts() {
@@ -169,38 +172,42 @@ Singleton {
         root.toasts = shown;
     }
 
-    function _armHide(item) {
-        if (!item.expireTimeout || item.expireTimeout <= 0)
-            return;
-        item._timer = hideTimer.createObject(root, { item: item, interval: item.expireTimeout });
+    // Scan the live list. createObject(Timer) stored a QVariant copy of
+    // the JS item, so hideToast mutated a clone and the banner stayed.
+    Timer {
+        interval: Motion.shortMs > 0 ? Motion.shortMs : Motion.durationShort
+        repeat: true
+        running: root.toasts.length > 0
+        onTriggered: root._expireDue()
     }
 
-    function _stopTimer(item) {
-        if (!item?._timer)
-            return;
-        item._timer.stop();
-        item._timer.destroy();
-        item._timer = null;
-    }
-
-    Component {
-        id: hideTimer
-        Timer {
-            property var item
-            running: true
-            repeat: false
-            onTriggered: {
-                item._timer = null;
-                root.hideToast(item);
-                destroy();
-            }
+    function _expireDue() {
+        const now = Date.now();
+        let changed = false;
+        for (const n of root.list) {
+            if (!n || !n.toastVisible)
+                continue;
+            const ms = Number(n.expireTimeout);
+            if (!(ms > 0))
+                continue;
+            const shown = Number(n.shownAt);
+            if (!(shown > 0) || now < shown + ms)
+                continue;
+            n.toastVisible = false;
+            changed = true;
         }
+        if (!changed)
+            return;
+        root.list = root.list.slice();
+        root._syncToasts();
     }
 
     function hideToast(item) {
-        if (!item || !item.toastVisible)
+        const live = root._live(item);
+        if (!live || !live.toastVisible)
             return;
-        item.toastVisible = false;
+        live.toastVisible = false;
+        root.list = root.list.slice();
         root._syncToasts();
     }
 
@@ -239,12 +246,13 @@ Singleton {
     }
 
     function attachmentPath(item): string {
-        if (!item)
+        const live = root._live(item) || item;
+        if (!live)
             return "";
-        const img = root._str(item.image);
+        const img = root._str(live.image);
         if (root._isLocalPath(img))
             return img;
-        const h = item.hints || ({});
+        const h = live.hints || ({});
         const ip = root._str(h["image-path"] || h["image_path"]);
         if (root._isLocalPath(ip))
             return ip;
@@ -253,22 +261,31 @@ Singleton {
             if (root._isLocalPath(urls[i]))
                 return urls[i];
         }
-        const m = root._str(item.body).match(/file:\/\/[^\s<>"']+/);
+        const m = root._str(live.body).match(/file:\/\/[^\s<>"']+/);
         if (m && root._isLocalPath(m[0]))
             return m[0];
         return "";
     }
 
-    function _live(item) {
-        if (!item)
+    function _byUid(uid) {
+        const id = Number(uid);
+        if (!(id > 0))
             return null;
-        const uid = Number(item.uid);
-        if (uid > 0) {
-            for (const n of root.list) {
-                if (Number(n.uid) === uid)
-                    return n;
-            }
+        for (const n of root.list) {
+            if (Number(n.uid) === id)
+                return n;
         }
+        return null;
+    }
+
+    function _live(item) {
+        if (item === undefined || item === null)
+            return null;
+        if (typeof item === "number" || typeof item === "string")
+            return root._byUid(item);
+        const byUid = root._byUid(item.uid);
+        if (byUid)
+            return byUid;
         for (const n of root.list) {
             if (n === item || (item.raw && n.raw === item.raw))
                 return n;
@@ -284,7 +301,6 @@ Singleton {
         let hit = false;
         for (const n of root.list) {
             if (Number(n.uid) === id) {
-                root._stopTimer(n);
                 hit = true;
                 continue;
             }
@@ -315,7 +331,6 @@ Singleton {
         root.list = [];
         root.toasts = [];
         for (const n of items) {
-            root._stopTimer(n);
             try {
                 if (n.raw)
                     n.raw.dismiss();

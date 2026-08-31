@@ -2,5 +2,5 @@ import QtQuick
 import "../../../../Commons"
 
 QtObject {
-    readonly property string kbLayout: Config.input.kbLayout ?? "de"
+    readonly property string kbLayout: Config.input.kbLayout ?? "us"
 }

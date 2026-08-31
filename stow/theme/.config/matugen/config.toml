@@ -63,3 +63,7 @@ output_path = "~/.config/qt6ct/qss/modern.qss"
 [templates.folder_svg]
 input_path = "~/.config/matugen/templates/folder.svg.template"
 output_path = "~/.local/share/icons/modern-folders/scalable/places/folder.svg"
+
+[templates.phylax_css]
+input_path = "~/.config/matugen/templates/phylax.css.template"
+output_path = "~/.config/phylax/style.css"

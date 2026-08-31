@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=WhatsApp
+Name[de]=WhatsApp
+Comment=WhatsApp Web
+Comment[de]=WhatsApp Web
+Exec=vivaldi-stable --app=https://web.whatsapp.com
+TryExec=vivaldi-stable
+Icon=whatsapp
+Terminal=false
+StartupNotify=true
+Categories=Network;InstantMessaging;
+StartupWMClass=whatsapp

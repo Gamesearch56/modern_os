@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Proton Calendar
+Name[de]=Proton Kalender
+Comment=Proton Calendar web app
+Comment[de]=Proton Kalender als Web-App
+Exec=vivaldi-stable --app=https://calendar.proton.me
+TryExec=vivaldi-stable
+Icon=proton-pass
+Terminal=false
+StartupNotify=true
+Categories=Office;Calendar;
+StartupWMClass=proton-calendar

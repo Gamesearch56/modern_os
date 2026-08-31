@@ -42,6 +42,7 @@ Item {
             anchors.fill: parent
             radius: Tokens.radius.small
             color: Colors.color.surfaceContainerHigh
+            opacity: Config.design.transparency ?? 0.85
             border.width: Tokens.stroke.hairline
             border.color: Colors.color.outlineVariant
         }

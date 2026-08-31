@@ -126,7 +126,7 @@ ColumnLayout {
             to: 56
             value: Config.bar.height
             showValue: true
-            onMoved: (v) => ConfigWrite.set("bar.height", Math.round(v))
+            onCommitted: (v) => ConfigWrite.set("bar.height", Math.round(v))
         }
     }
     MField {
@@ -136,7 +136,7 @@ ColumnLayout {
             to: 24
             value: Config.bar.edgeGap ?? 8
             showValue: true
-            onMoved: (v) => ConfigWrite.set("bar.edgeGap", Math.round(v))
+            onCommitted: (v) => ConfigWrite.set("bar.edgeGap", Math.round(v))
         }
     }
     MField {
@@ -146,7 +146,7 @@ ColumnLayout {
             to: 24
             value: Config.bar.endGap ?? 8
             showValue: true
-            onMoved: (v) => ConfigWrite.set("bar.endGap", Math.round(v))
+            onCommitted: (v) => ConfigWrite.set("bar.endGap", Math.round(v))
         }
     }
     RowLayout {

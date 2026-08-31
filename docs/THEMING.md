@@ -25,7 +25,8 @@ matugen -c ~/.config/matugen/config.toml ...
         ├─▶ kdeglobals                            (Dolphin, other KDE apps)
         ├─▶ qt6ct/qss/modern.qss                  (Fusion stylesheet)
         ├─▶ hypr/application-style.conf           (hyprland-qt-support radii)
-        ├─▶ hypr/hyprtoolkit.conf                 (hyprpolkitagent chrome)
+        ├─▶ hypr/hyprtoolkit.conf                 (other hyprtoolkit apps)
+        ├─▶ phylax/style.css                      (Phylax polkit dialog)
         └─▶ vivaldi/custom_css/00-modern.css
             + 01-chrome.css (fonts/radii)
 ```
@@ -38,7 +39,7 @@ Every *color* output in that list is written by **one** `matugen`
 invocation from **one** seed color, so nothing can drift out of sync the
 way hand-rolled per-app Wallust templates could. Radii, fonts, and
 motion for toolkit chrome (`01-chrome.css`, QSS placeholders,
-`application-style.conf`, `hyprtoolkit.conf`) are patched afterwards from `config.json`.
+`application-style.conf`, `hyprtoolkit.conf`, `phylax/style.css`) are patched afterwards from `config.json`.
 `tokens.json` is also readable directly
 by anything that isn't a matugen template consumer (e.g. a shell script
 via `jq`, or the future Settings > Diagnostics color preview).
@@ -64,7 +65,7 @@ via `jq`, or the future Settings > Diagnostics color preview).
 `tokens.json` and restyles the bar/overlays immediately. GTK apps pick
 up `gtk.css` on restart. Vivaldi's CSS overlay is already on disk
 (reload the tab); the native theme object is merged only while Vivaldi
-is not running. Dolphin must be fully quit after `theme-apply.sh`.
+is not running. Nautilus and Dolphin must be fully quit after `theme-apply.sh`.
 
 ## Profile resolution
 
@@ -82,11 +83,19 @@ remembers the last one used at `$XDG_STATE_HOME/modern/current-wallpaper`
 to the shipped `~/.config/modern/wallpapers/default.jpg`. Switching
 *profiles* without picking a new image reuses the remembered path.
 
-`matugen image <path>` is called with `--source-color-index 0` (most
-dominant color, deterministic) rather than letting matugen prompt
-interactively — it would otherwise ask "which of these N colors did you
-mean?" on stdin, which hangs forever when invoked from a keybind, a
-`hyprctl` dispatcher, or a future GUI button with no attached terminal.
+`matugen image <path>` is called with `--prefer saturation` so a
+wallpaper's most chromatic candidate becomes the seed (dark skies and
+walls are often the *dominant* color and made every image look the same).
+`--prefer` still picks non-interactively — without it matugen prompts
+"which of these N colors?" on stdin, which hangs forever from a keybind
+or Settings with no attached terminal.
+
+Settings → Design shows one card per matugen scheme (`scripts/theme-previews.sh`
+dry-runs the wallpaper's `--prefer saturation` seed through each type,
+in the current light or dark mode). Choosing a card applies that
+variant. A new wallpaper, or a light/dark switch, regenerates the
+cards. Apply uses `--extract` so the chrome follows the image until a
+card locks a seed.
 
 ## `mode` and `contrast` mapping
 
@@ -124,23 +133,36 @@ kdeglobals. KF6 apps (Dolphin) ignore that QPalette: KColorSchemeManager
 treats qt6ct's `ColorScheme::Unknown` as light, so a focused window goes
 white. `kdeglobals` `[UiSettings] ColorScheme=modern` pins
 `~/.local/share/color-schemes/modern.colors`. Widget style is
-`qt6ct-style`. Dolphin is an opaque overlay card (`dolphin-opaque`).
-Fully quit Dolphin after `theme-apply.sh`. Wallpaper stays in the
+`qt6ct-style`. Dolphin is an opaque overlay card (`dolphin-opaque`);
+Nautilus is the same (`nautilus-opaque`). Nautilus Space preview is
+GNOME Sushi (`nautilus-previewer`: float, center, `dim_around`, no
+hyprbars), colored from the same `gtk.css` GTK3 Adwaita aliases. GTK icon theme is
+Papirus-Dark so Nautilus keeps emblem folders; KDE/Dolphin use
+`modern-folders` (token-colored folder SVGs). Fully quit Nautilus or
+Dolphin after `theme-apply.sh`. Wallpaper stays in the
 compositor gaps around the window. `hyprctl reload` picks up the rule.
 `theme-apply.sh` writes absolute paths into `qt6ct.conf` because qt6ct
 does not expand `~`.
 
-**hyprpolkitagent** is hyprtoolkit (not Qt Quick / QSS). Colors, Inter,
-and `Tokens.radius.medium`/`small` are written to
-`~/.config/hypr/hyprtoolkit.conf` from `tokens.json` + `config.json`.
-The compositor applies `design.transparency` and `dim_around` via the
-`polkit-auth-dialog` window rule so the prompt reads as glass over a
-scrim, like Super+W. The next dialog picks up toolkit colors without a
-restart; `theme-apply.sh` still restarts the user unit after a palette
-swap. The agent's error string is hardcoded `"red"` upstream and cannot
-follow `error`. The files these
-templates write are always correct on disk, so a restarted app always
-picks up the current theme.
+**Phylax** is the polkit agent (GTK4, not hyprtoolkit). Colors, Inter,
+and radii are written to `~/.config/phylax/style.css` from `tokens.json`
++ `config.json`. CSS hot-reloads when the next prompt maps — do not
+restart the unit on a palette swap. The compositor applies
+`design.transparency` and `dim_around` via the `polkit-auth-dialog`
+window rule (`class` `io.github.jakebgrant.phylax`) so the prompt reads
+as glass over a scrim, like Super+W. Wrong-password text uses the
+`error` role. Confirm is filled primary; Cancel is outlined — Adwaita
+wins unless `background-image: none` is set on the FlowBox buttons.
+The identity dropdown is hidden: Confirm uses `$USER` (the session
+account). Upstream Phylax rebuilds that DropDown on every Relm4 watch,
+so the selected admin resets to the first wheel uid and cannot be
+changed; `scripts/build-phylax.sh` installs a patched binary to
+`~/.local/bin/phylax` and `phylax.service` prefers it over the AUR
+file. `theme-apply.sh` starts `phylax.service` if it is down and stops
+`hyprpolkitagent` so only one agent is registered. Preview with
+`PHYLAX_DEMO=1 phylax` or `pkexec true`. The files these templates
+write are always correct on disk, so a restarted app always picks up
+the current theme.
 
 **Vivaldi CSS modifications** must be enabled once in the browser:
 open `vivaldi://experiments` and turn on “Allow CSS modifications”, then
@@ -154,7 +176,7 @@ the current wallpaper to `custom_css/wallpaper` and `01-chrome.css` sets
 `--no-reload` skips all of the above — used by CI/lint checks and the M0
 verification script, where no Hyprland/kitty session exists to reload.
 
-`--chrome-only` skips matugen and rewrites GTK/Qt/KDE/Vivaldi radii,
+`--chrome-only` skips matugen and rewrites GTK/Qt/KDE/Vivaldi/Phylax radii,
 fonts, cursor, and motion from the current `config.json`. Settings uses
 this after Design knobs that are not a palette swap (rounding, type
 scale, animations, transparency, cursor).

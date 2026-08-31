@@ -21,6 +21,13 @@ Singleton {
         audio: root
     }
 
+    AudioNowPlaying {
+        id: nowPlaying
+        streams: root.streams
+    }
+
+    readonly property var playback: nowPlaying.playback
+
     // Hardware endpoints only — application streams are not switchable
     // outputs. Tracked so nickname/description bind (docs/DECISIONS.md
     // never-hardcode-device-ids: labels come from PipeWire).
@@ -118,6 +125,11 @@ Singleton {
         const _ = n.ready;
         const p = n.properties || {};
         return String(p["application.icon-name"] || p["application.icon_name"] || p["media.icon-name"] || "").trim();
+    }
+
+    function streamTitle(n: var): string {
+        const title = nowPlaying.streamTitle(n);
+        return title.length ? title : root.streamLabel(n);
     }
 
     function setVolume(percent: real) {

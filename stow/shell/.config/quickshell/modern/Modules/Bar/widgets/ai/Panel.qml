@@ -7,9 +7,15 @@ import "../../"
 
 Item {
     id: root
+    anchors.fill: parent
 
-    readonly property bool _off: (Config.accounts?.ai?.provider ?? "none") === "none"
-    readonly property bool _blocked: root._off || !Ai.ready
+    readonly property bool _blocked: (Config.accounts?.ai?.provider ?? "none") === "none" || !Ai.ready
+
+    function focusInput() {
+        if (root._blocked)
+            return;
+        field.focusInput();
+    }
 
     function send() {
         if (root._blocked || Ai.busy)
@@ -26,95 +32,46 @@ Item {
     }
 
     function _scrollEnd() {
-        flick.contentY = Math.max(0, col.implicitHeight - flick.height);
+        if (threadLoader.item && threadLoader.item.scrollEnd)
+            threadLoader.item.scrollEnd();
     }
 
-    function focusInput() {
-        if (root._blocked)
-            return;
-        field.forceActiveFocus();
-    }
-
-    function _close() {
+    function _openSettings() {
         Ai.hide();
         Popups.dismiss();
+        Settings.openAt("ai", "");
     }
 
     BarPanelChrome {
+        id: chrome
         anchors.fill: parent
         titleKey: "ai.title"
 
-        actions: MButton {
-            kind: "text"
-            key: "ai.clear"
-            enabled: Ai.history.length > 0
-            onClicked: Ai.clear()
+        actions: RowLayout {
+            spacing: Tokens.spacing.xs
+
+            MButton {
+                kind: "text"
+                key: "ai.clear"
+                enabled: Ai.history.length > 0 && !Ai.busy
+                onClicked: Ai.clear()
+            }
+            MIconButton {
+                iconName: "preferences-system-symbolic"
+                key: "ai.settings"
+                onClicked: root._openSettings()
+            }
         }
 
-        MPane {
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Flickable {
-                id: flick
+            Loader {
+                id: threadLoader
                 anchors.fill: parent
-                clip: true
-                contentWidth: width
-                contentHeight: col.implicitHeight
-                boundsBehavior: Flickable.StopAtBounds
-                visible: !root._blocked && Ai.history.length > 0
-
-                ColumnLayout {
-                    id: col
-                    width: flick.width
-                    spacing: Tokens.spacing.xxs
-
-                    Repeater {
-                        model: Ai.history.length
-                        delegate: ColumnLayout {
-                            required property int index
-                            readonly property var row: Ai.history[index] || ({})
-                            readonly property bool mine: row.role === "user"
-                            Layout.fillWidth: true
-                            spacing: Tokens.spacing.xxs
-
-                            MText {
-                                key: mine ? "ai.you" : "ai.assistant"
-                                styleName: "labelSmall"
-                                color: Colors.color.onSurfaceVariant
-                                font.capitalization: Font.AllUppercase
-                                Layout.fillWidth: true
-                            }
-                            MText {
-                                value: row.text || ""
-                                styleName: "bodyMedium"
-                                wrapMode: Text.WordWrap
-                                elide: Text.ElideNone
-                                lineHeightMode: Text.ProportionalHeight
-                                Layout.fillWidth: true
-                            }
-                        }
-                    }
-
-                    MHint {
-                        visible: Ai.busy
-                        key: "ai.thinking"
-                    }
-                }
+                source: Qt.resolvedUrl("Thread.qml")
             }
-
-                MEmptyState {
-                    visible: root._blocked || Ai.history.length === 0
-                    anchors.fill: parent
-                    iconName: "applications-science-symbolic"
-                    titleKey: root._blocked ? "ai.needSetup" : "ai.empty"
-                    hintKey: root._blocked ? "" : "ai.hint"
-                    actionKey: root._blocked ? "ai.setup" : ""
-                    onActionClicked: {
-                        root._close();
-                        Settings.openAt("ai", "");
-                    }
-                }
         }
 
         RowLayout {
@@ -124,31 +81,20 @@ Item {
             MTextField {
                 id: field
                 Layout.fillWidth: true
-                enabled: !root._blocked && !Ai.busy
+                enabled: !root._blocked
                 placeholderKey: "ai.placeholder"
+                maximumLength: 2000
                 escapeCloses: true
                 onAccepted: root.send()
-                onEscaped: root._close()
+                onEscaped: Ai.hide()
             }
             MButton {
                 kind: "filled"
                 key: "ai.send"
                 enabled: !root._blocked && !Ai.busy && field.text.trim().length > 0
+                busy: Ai.busy
                 onClicked: root.send()
             }
         }
     }
-
-    Connections {
-        target: Ai
-        function onHistoryChanged() {
-            Qt.callLater(root._scrollEnd);
-        }
-        function onBusyChanged() {
-            if (!Ai.busy)
-                Qt.callLater(root.focusInput);
-        }
-    }
-
-    Component.onCompleted: Qt.callLater(root.focusInput)
 }

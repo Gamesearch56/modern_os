@@ -4,6 +4,7 @@ HyprMonitors 1.0 HyprMonitors.qml
 HyprWindows 1.0 HyprWindows.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml
+AudioNowPlaying 1.0 AudioNowPlaying.qml
 singleton Network 1.0 Network.qml
 singleton Bluetooth 1.0 Bluetooth.qml
 singleton Brightness 1.0 Brightness.qml
@@ -27,7 +28,10 @@ singleton Weather 1.0 Weather.qml
 singleton Calendar 1.0 Calendar.qml
 singleton Ai 1.0 Ai.qml
 AiStatus 1.0 AiStatus.qml
+AiChat 1.0 AiChat.qml
+AiStore 1.0 AiStore.qml
 singleton Wallpaper 1.0 Wallpaper.qml
+WallpaperThumbs 1.0 WallpaperThumbs.qml
 singleton FilePreview 1.0 FilePreview.qml
 singleton FilePick 1.0 FilePick.qml
 singleton Session 1.0 Session.qml
@@ -42,9 +46,13 @@ singleton Battery 1.0 Battery.qml
 singleton Alarm 1.0 Alarm.qml
 singleton Taskbar 1.0 Taskbar.qml
 singleton Theme 1.0 Theme.qml
+singleton ThemePalettes 1.0 ThemePalettes.qml
 singleton Passwd 1.0 Passwd.qml
 singleton Storage 1.0 Storage.qml
 singleton Update 1.0 Update.qml
 singleton Snapshots 1.0 Snapshots.qml
 singleton Firewall 1.0 Firewall.qml
 FirewallParse 1.0 FirewallParse.qml
+singleton Store 1.0 Store.qml
+StoreCatalog 1.0 StoreCatalog.qml
+StoreMutate 1.0 StoreMutate.qml

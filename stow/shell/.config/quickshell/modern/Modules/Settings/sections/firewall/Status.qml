@@ -9,6 +9,7 @@ MStatusCard {
 
     iconName: "preferences-security-firewall"
     preferSymbolic: false
+    iconColor: Colors.color.primary
     titleKey: "settings.firewall.engine"
     subtitleKey: {
         if (Firewall.status === "active")

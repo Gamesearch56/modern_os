@@ -62,7 +62,7 @@ Item {
                         return "";
                     return hit.icon || "application-x-executable";
                 }
-                tintIcon: hit.kind === "settings" || hit.kind === "power"
+                tintIcon: hit.kind === "settings" || hit.kind === "store" || hit.kind === "power"
                 titleValue: hit.name
                 subtitleValue: (Config.launcher.showDescriptions ?? true)
                     ? (hit.genericName || "")

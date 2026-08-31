@@ -53,17 +53,23 @@ wire up the Linguist toolchain, so `qsTr()` calls are silently untranslated
 dead code in this environment. `noctalia-shell` independently converged on
 the same JSON-singleton pattern, which is a useful sanity check.
 
-## 5. Qt-first toolkit over GTK-first
+## 5. Qt-first toolkit; Nautilus as default file manager
 
-**Decision:** Dolphin as the file manager; Qt/KDE apps preferred where a
-choice exists; matugen writes `kdeglobals` + a Qt color scheme as a
-first-class output, not an afterthought.
+**Decision:** Nautilus is the shipped default file manager so GTK/libadwaita
+can follow matugen tokens (`gtk.css` named colors; Papirus-Dark icons).
+Space preview in Nautilus is GNOME Sushi (`org.gnome.NautilusPreviewer`),
+themed from the same `gtk.css` and floated over Nautilus with
+`dim_around` — not the Quickshell Quick Look overlay. Media starts muted
+(`scripts/sushi-previewer.sh` overlays gst/audio viewers). Selecting
+another file replaces the preview (Nautilus `notify::selection`; the
+window is not `stay_focused`). Dolphin stays
+packaged and selectable in Settings → Applications and keeps Quick Look.
+Qt/KDE apps are still first-class: matugen writes `kdeglobals` + a Qt
+color scheme, and `QT_QPA_PLATFORM=xcb` stays out of `.bashrc`.
 
-**Rejected:** GTK-first (Nautilus, etc.) — the previous setup was
-GTK-first and still needed `QT_QPA_PLATFORM=xcb` in `.bashrc` to make Qt
-apps tolerable, which forces every Qt app onto XWayland — incompatible
-with a Wayland-first design. Committing to Qt-first and theming it
-properly removes the need for that variable entirely.
+**Rejected:** Dropping Dolphin, or going GTK-first for Qt apps. The old
+setup needed `QT_QPA_PLATFORM=xcb` to make Qt tolerable, which forces
+every Qt app onto XWayland — incompatible with a Wayland-first design.
 
 ## 6. From-scratch build over forking end-4/dots-hyprland
 
@@ -262,7 +268,7 @@ wonder about the inherited `tr()` again) but is not fixing a real bug.
 
 ## 21. Settings and picker menus are Hyprland windows, not layer overlays
 
-**Decision:** Settings, wallpaper, cheatsheet, power menu, launcher, and overview are Quickshell `FloatingWindow`s with unique titles (`modern.settings`, …). Super+Q is `killactive` on those. The screenshot HUD, bar `MPopup`s, and Super+L control panel stay layer-shell. Lock stays on the power menu; Super+L is the control panel.
+**Decision:** Settings, wallpaper, cheatsheet, power menu, launcher, and overview are Quickshell `FloatingWindow`s with unique titles (`modern.settings`, …). Super+Q is `killactive` on those. The screenshot HUD, bar `MPopup`s, and Super+N control panel stay layer-shell. Lock stays on Super+L; Super+N is the control panel.
 
 **Rejected:** keeping Settings as an `MOverlay` PanelWindow (no compositor focus border, Super+Q had to special-case it), or faking a Hyprland highlight ring on layers.
 

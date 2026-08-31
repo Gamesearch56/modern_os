@@ -32,7 +32,7 @@ intend to run (`main` may lag the working branch).
 
 The desktop is a daily Hyprland + Quickshell session: Material You widget
 kit, Settings as a real window, island bar (including vertical), compact
-control panel (Super+L; not lock), overlay menus as floating windows,
+control panel (Super+N; not lock), overlay menus as floating windows,
 tokenized GTK/Qt/Dolphin/Vivaldi chrome. The lock screen is a **visual
 overlay** (any non-empty password), not a real session lock. Verify with:
 
@@ -257,6 +257,7 @@ modern_dotfile/
 | Keys | Action |
 |---|---|
 | `SUPER` + `Space` | Application launcher |
+| `SUPER` + `A` | AI chat |
 | `SUPER` + `M` | Power menu (Lock is a preview overlay, not a real lock) |
 | `SUPER` + `L` | Control panel (not lock) |
 | `SUPER` + `SHIFT` + `M` | Exit compositor |
@@ -268,13 +269,17 @@ modern_dotfile/
 | `SUPER` + `T` | Terminal (kitty; always bound) |
 | `SUPER` + `Return` | Terminal (always bound) |
 | `SUPER` + `B` | Browser (Vivaldi) |
-| `SUPER` + `E` | File manager (Dolphin) |
+| `SUPER` + `E` | File manager (Nautilus; Dolphin selectable in Settings) |
 | `SUPER` + `Q` | Close window |
 
 Full list: `SUPER`+`K`, `docs/KEYBINDS.md`, or
 `stow/modern/.config/modern/config.default.json` → `keybinds`.
 Design → wallpaper provider opens a **separate** `qml6` window
-(`qt6-webengine`), not an in-shell WebEngine view.
+(`qt6-webengine`), not an in-shell WebEngine view. That window reads
+`tokens.json` for MD3 chrome and filters ads/cookie CMPs with an
+AdGuard-derived hostname denylist (local CONNECT proxy) plus an injected
+cosmetic/auto-decline script — Qt WebEngine cannot load the AdGuard
+extension.
 
 ## Verify (from the daily-driver account)
 

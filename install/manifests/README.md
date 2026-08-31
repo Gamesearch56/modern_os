@@ -16,7 +16,7 @@ Layers, applied in order by `install.sh --profile <name>`:
 |---|---|---|
 | `00-base` | all profiles | kernel/firmware, filesystem tools, shell essentials, `stow`, `yay` bootstrap deps |
 | `00-hw-*` | auto or `--hw` | CPU microcode (`amd` / `intel`) |
-| `10-desktop` | all profiles | Hyprland, Quickshell, portals, audio/network/bluetooth stack, clipboard/screenshot tools |
+| `10-desktop` | all profiles | Hyprland, Quickshell, portals, audio/network/bluetooth stack, clipboard/screenshot tools. AUR: `phylax-git` (`10-desktop.aur.txt`) |
 | `20-theming` | all profiles | fonts, matugen, GTK/Qt theming support |
 | `30-apps` | `m0`+ | terminal, file manager, browser, minimal daily-driver apps |
 | `40-dev` | `dev`, `full` | languages, toolchains, containers, Cursor |

@@ -8,8 +8,10 @@ import "../../"
 
 Item {
     id: root
-    implicitWidth: label.implicitWidth + Tokens.spacing.md * 2
+    implicitWidth: BarLayout.vertical ? Config.bar.height : (label.implicitWidth + Tokens.spacing.md * 2)
     implicitHeight: Config.bar.height
+
+    readonly property color _fg: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
 
     SystemClock {
         id: clock
@@ -21,8 +23,18 @@ Item {
         onClicked: popup.open = !popup.open
     }
 
+    MIcon {
+        visible: BarLayout.vertical
+        anchors.centerIn: parent
+        z: 1
+        name: "preferences-system-time-symbolic"
+        size: Tokens.icon.md
+        color: root._fg
+    }
+
     MText {
         id: label
+        visible: !BarLayout.vertical
         anchors.centerIn: parent
         z: 1
         value: {
@@ -37,7 +49,7 @@ Item {
                 Config.widgets.clock?.showWeekday ?? false);
         }
         styleName: "labelLarge"
-        color: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+        color: root._fg
     }
 
     BarPopup {

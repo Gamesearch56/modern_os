@@ -1,8 +1,7 @@
 # Hyprland desktop core — every profile past 00-base installs this.
 hyprland                       # the compositor
 hypridle                       # idle handling (screen off, suspend) — see Services/Power
-hyprpolkitagent                 # polkit auth agent, required for pkexec prompts to render
-hyprland-qt-support             # org.hyprland.style QML chrome for hyprpolkitagent (application-style.conf)
+hyprland-qt-support             # org.hyprland.style QML chrome (application-style.conf); polkit UI is phylax-git (10-desktop.aur.txt)
 xdg-desktop-portal-hyprland     # screen share / screenshot portal backend
 xdg-desktop-portal-gtk          # fallback portal backend (file chooser when KDE one is absent)
 quickshell                      # the shell itself — bar, panels, launcher, lock, greeter

@@ -17,4 +17,6 @@ Singleton {
         ? 0 : Math.max(0, root.strip + root.windowPad - (Config.windows.gapsOut ?? 10))
     readonly property real windowInset: root.strip + root.windowPad
     readonly property real popupGap: root.edge + root.windowPad
+    // Side bars are too narrow for labels; widgets show icons (cover for media).
+    readonly property bool vertical: Config.bar.position === "left" || Config.bar.position === "right"
 }

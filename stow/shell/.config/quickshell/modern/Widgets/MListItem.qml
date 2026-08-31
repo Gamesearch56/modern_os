@@ -26,6 +26,7 @@ Item {
     property int badgeCount: 0
 
     property bool compact: false
+    property bool preferSymbolic: !root._nav
 
     default property alias extra: trailing.data
 
@@ -150,7 +151,7 @@ Item {
             name: root.iconName
             size: root._glyph
             tint: root.tintIcon
-            preferSymbolic: !root._nav
+            preferSymbolic: root.preferSymbolic
             color: root._fg
         }
 

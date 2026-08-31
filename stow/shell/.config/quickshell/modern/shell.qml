@@ -14,6 +14,7 @@ import "Modules/Onboarding" as Onboarding
 import "Modules/Overview" as OverviewMod
 import "Modules/Notifications" as NotificationsMod
 import "Modules/Settings" as SettingsMod
+import "Modules/Store" as StoreMod
 import "Modules/Plugins" as PluginsMod
 import "Modules/Session" as SessionMod
 import "Modules/Wallpaper" as WallpaperMod
@@ -29,6 +30,7 @@ ShellRoot {
     OverviewMod.Module {}
     NotificationsMod.Module {}
     SettingsMod.Module {}
+    StoreMod.Module {}
     PluginsMod.Module {}
     SessionMod.Module {}
     WallpaperMod.Module {}
@@ -67,6 +69,7 @@ ShellRoot {
             Wallpaper.hide();
             Cheatsheet.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -81,6 +84,7 @@ ShellRoot {
             Wallpaper.hide();
             Cheatsheet.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -95,6 +99,7 @@ ShellRoot {
             Wallpaper.hide();
             Cheatsheet.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -109,6 +114,7 @@ ShellRoot {
             PowerMenu.hide();
             Cheatsheet.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -123,6 +129,7 @@ ShellRoot {
             PowerMenu.hide();
             Wallpaper.hide();
             FilePreview.hide();
+            Ai.hide();
         }
     }
 
@@ -137,6 +144,22 @@ ShellRoot {
             PowerMenu.hide();
             Wallpaper.hide();
             Cheatsheet.hide();
+            Ai.hide();
+        }
+    }
+
+    Connections {
+        target: Ai
+        function onPanelOpenChanged() {
+            if (!Ai.panelOpen)
+                return;
+            Launcher.hide();
+            Notifications.hide();
+            PowerMenu.hide();
+            Wallpaper.hide();
+            Cheatsheet.hide();
+            FilePreview.hide();
+            Taskbar.hide();
         }
     }
 
@@ -183,6 +206,10 @@ ShellRoot {
             }
             if (FilePreview.open) {
                 FilePreview.hide();
+                closed = true;
+            }
+            if (Ai.panelOpen) {
+                Ai.hide();
                 closed = true;
             }
             if (Alarm.dialogOpen) {

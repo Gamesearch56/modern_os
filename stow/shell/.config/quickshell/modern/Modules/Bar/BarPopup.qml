@@ -131,21 +131,35 @@ PopupWindow {
             }
         }
 
-        MCard {
-            id: card
+        Item {
+            id: cardHost
             anchors.top: bridge.bottom
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            level: root.elevation
-            padding: root.padding
-            color: Colors.color.surface
-            radius: root.barIslandChrome ? Tokens.radius.full : Tokens.radius.medium
-            opacity: Config.design.transparency ?? 0.85
-            borderWidth: root.barIslandChrome ? Tokens.stroke.hairline : (root.open ? Tokens.stroke.focus : Tokens.stroke.hairline)
-            borderColor: root.barIslandChrome ? Colors.color.outlineVariant : (root.open ? Colors.color.primary : Colors.color.outlineVariant)
             scale: Motion.overlayScale(root.open)
             transformOrigin: Item.Top
+
+            // Fill only — same as MWindowShell. Opacity on MCard would
+            // fade labels with the chrome and make dense panels unreadable.
+            Rectangle {
+                anchors.fill: parent
+                radius: root.barIslandChrome ? Tokens.radius.full : Tokens.radius.medium
+                color: Colors.color.surface
+                opacity: Config.design.transparency ?? 0.85
+                border.width: root.barIslandChrome ? Tokens.stroke.hairline : (root.open ? Tokens.stroke.focus : Tokens.stroke.hairline)
+                border.color: root.barIslandChrome ? Colors.color.outlineVariant : (root.open ? Colors.color.primary : Colors.color.outlineVariant)
+            }
+
+            MCard {
+                id: card
+                anchors.fill: parent
+                level: root.elevation
+                padding: root.padding
+                color: "transparent"
+                radius: root.barIslandChrome ? Tokens.radius.full : Tokens.radius.medium
+                borderWidth: 0
+            }
 
             HoverHandler {
                 id: cardHover

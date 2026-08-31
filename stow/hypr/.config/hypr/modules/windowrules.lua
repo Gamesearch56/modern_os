@@ -55,7 +55,10 @@ local function apply(rule)
 end
 
 for _, rule in ipairs(config.value("windowRules", {})) do
-    apply(rule)
+    -- Replaced by modules/games.lua; leftover special:game hid titles.
+    if rule.name ~= "steam-game" then
+        apply(rule)
+    end
 end
 
 -- One default, kept even with an empty user rule list: JetBrains IDEs
@@ -68,36 +71,57 @@ apply({
     no_initial_focus = true,
 })
 
--- hyprpolkitagent has no .desktop file; Wayland app_id is the binary
--- name or the QApplication name. Glass like the wallpaper overlay:
+-- Phylax (GTK4 polkit agent) app_id. Glass like the wallpaper overlay:
 -- float+center, dim_around as scrim, design.transparency, no hyprbars.
+-- pin keeps the prompt above modern.store / modern.settings.
 apply({
     name = "polkit-auth-dialog",
-    match = { class = "hyprpolkitagent|hyprland-polkit-agent" },
+    match = { class = "io.github.jakebgrant.phylax" },
     float = true,
     center = true,
+    pin = true,
     dim_around = true,
+    stay_focused = true,
     border_size = 1,
     opacity = config.value("design.transparency", 0.85),
     ["hyprbars:no_bar"] = true,
 })
 
--- Dolphin is a tiled app window, not a HUD. Punching wallpaper through
--- the icon view (design.transparency) washed out labels and toolbar
--- icons. Opaque surface; wallpaper stays in the compositor gaps.
+-- Dolphin / Nautilus are tiled app windows, not HUDs. Punching wallpaper
+-- through the icon view (design.transparency) washed out labels and
+-- toolbar icons. Opaque surface; wallpaper stays in the compositor gaps.
 apply({
     name = "dolphin-opaque",
     match = { class = "org.kde.dolphin|dolphin" },
     opaque = true,
 })
+apply({
+    name = "nautilus-opaque",
+    match = { class = "org.gnome.Nautilus|org.gnome.nautilus|nautilus" },
+    opaque = true,
+})
 
--- Spacebar Quick Look video (mpv). Image/text previews are a QML overlay.
+-- Spacebar Quick Look video (mpv, Dolphin). Image/text use a Quickshell overlay.
 apply({
     name = "modern-quicklook",
     match = { class = "modern.quicklook" },
     float = true,
     center = true,
     dim_around = true,
+    ["hyprbars:no_bar"] = true,
+})
+
+-- GNOME Sushi (Nautilus Space). Toplevel on Hyprland unless floated;
+-- dim_around is the overlay scrim. No stay_focused: Nautilus selection
+-- changes must reach the view so the preview auto-replaces.
+apply({
+    name = "nautilus-previewer",
+    match = { class = "org.gnome.NautilusPreviewer|sushi" },
+    float = true,
+    center = true,
+    dim_around = true,
+    opaque = true,
+    border_size = 1,
     ["hyprbars:no_bar"] = true,
 })
 
