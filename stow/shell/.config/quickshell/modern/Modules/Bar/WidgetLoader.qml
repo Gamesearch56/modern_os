@@ -14,8 +14,9 @@ Loader {
     readonly property string widgetId: String(root.modelData ?? "")
 
     active: root.widgetId.length > 0
-    // Hidden widgets (e.g. battery on AC) must not keep a GridLayout cell.
     visible: !root.item || root.item.visible
+    Layout.fillWidth: false
+    Layout.fillHeight: true
     source: Qt.resolvedUrl("widgets/" + root.widgetId + "/Widget.qml")
     onLoaded: {
         if (root.item && root.item.barScreen !== undefined)

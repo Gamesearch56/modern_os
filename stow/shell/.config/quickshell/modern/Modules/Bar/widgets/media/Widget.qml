@@ -6,8 +6,10 @@ import "../../../../Services"
 
 Item {
     id: root
-    visible: Media.hasPlayer || !!Audio.playback
-    implicitWidth: visible ? (BarLayout.vertical ? Config.bar.height : row.implicitWidth + Tokens.spacing.md * 2) : 0
+    // Island empty hides this pill. Do not set visible:false here —
+    // the first frame has no player, implicitWidth stays 0, and the
+    // island then shows a hollow circle after MPRIS appears.
+    implicitWidth: BarLayout.vertical ? Config.bar.height : row.implicitWidth + Tokens.spacing.md * 2
     implicitHeight: Config.bar.height
 
     readonly property bool _mpris: Media.hasPlayer

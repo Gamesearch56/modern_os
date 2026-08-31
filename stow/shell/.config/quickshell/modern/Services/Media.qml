@@ -3,6 +3,7 @@
 pragma Singleton
 
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Mpris
 import QtQuick
 
@@ -11,21 +12,18 @@ Singleton {
 
     property int _gen: 0
 
-    readonly property string _playKey: {
-        const vals = Mpris.players.values;
-        if (!vals)
-            return "";
-        let s = String(vals.length);
-        for (let i = 0; i < vals.length; i++) {
-            const p = vals[i];
-            s += "|" + String(p?.dbusName || "") + ":" + String(p?.isPlaying) + ":"
-                + String(p?.playbackState) + ":" + String(p?.trackTitle || "");
-        }
-        return s;
+    MediaRoster {
+        id: roster
+        onChanged: root._bump()
     }
+
+    Connections {
+        target: Mpris.players
+        function onValuesChanged() { root._bump(); }
+    }
+
     readonly property var players: Mpris.players
     readonly property var active: {
-        void root._playKey;
         void root._gen;
         return root._pickActive();
     }
@@ -33,18 +31,15 @@ Singleton {
     readonly property string identity: root.active?.identity ?? ""
     readonly property string desktopEntry: String(root.active?.desktopEntry || "").replace(/\.desktop$/i, "")
     readonly property string trackTitle: root._titleOf(root.active)
-    readonly property string trackArtist: root.active?.trackArtist ?? ""
+    readonly property string trackArtist: root._artistOf(root.active)
     readonly property string trackAlbum: root.active?.trackAlbum ?? ""
     readonly property string trackArtUrl: root.active?.trackArtUrl ?? ""
     readonly property real position: root.active?.position ?? 0
     readonly property real length: root.active?.length ?? 0
     readonly property bool playing: root._isPlaying(root.active)
     readonly property bool anyPlaying: {
-        void root._playKey;
         void root._gen;
-        const vals = Mpris.players.values;
-        if (!vals)
-            return false;
+        const vals = roster.list();
         for (let i = 0; i < vals.length; i++) {
             if (root._isPlaying(vals[i]))
                 return true;
@@ -59,18 +54,17 @@ Singleton {
     readonly property int loopState: root.active?.loopState ?? 0
     readonly property bool shuffle: root.active?.shuffle ?? false
 
-    Instantiator {
-        model: Mpris.players
-        onObjectAdded: () => root._bump()
-        onObjectRemoved: () => root._bump()
-        delegate: Connections {
-            required property var modelData
-            target: modelData
-            function onIsPlayingChanged() { root._bump(); }
-            function onPlaybackStateChanged() { root._bump(); }
-            function onIdentityChanged() { root._bump(); }
-            function onTrackTitleChanged() { root._bump(); }
-            Component.onCompleted: root._bump()
+    IpcHandler {
+        target: "media"
+        function dump(): string {
+            const vals = roster.list();
+            let s = "n=" + vals.length + " has=" + root.hasPlayer
+                + " title=[" + root.trackTitle + "] ident=[" + root.identity + "]";
+            for (let i = 0; i < vals.length; i++) {
+                const p = vals[i];
+                s += " | " + String(p?.dbusName || "") + " t=" + root._titleOf(p);
+            }
+            return s;
         }
     }
 
@@ -78,24 +72,12 @@ Singleton {
         root._gen++;
     }
 
-    function play() {
-        root.active?.play();
-    }
-    function pause() {
-        root.active?.pause();
-    }
-    function togglePlaying() {
-        root.active?.togglePlaying();
-    }
-    function stop() {
-        root.active?.stop();
-    }
-    function next() {
-        root.active?.next();
-    }
-    function previous() {
-        root.active?.previous();
-    }
+    function play() { root.active?.play(); }
+    function pause() { root.active?.pause(); }
+    function togglePlaying() { root.active?.togglePlaying(); }
+    function stop() { root.active?.stop(); }
+    function next() { root.active?.next(); }
+    function previous() { root.active?.previous(); }
     function seek(seconds: real) {
         if (root.active?.canSeek)
             root.active.seek(seconds);
@@ -113,9 +95,7 @@ Singleton {
             return;
         root.active.loopState = (root.active.loopState + 1) % 3;
     }
-    function openUri(uri: string) {
-        root.active?.openUri(uri);
-    }
+    function openUri(uri: string) { root.active?.openUri(uri); }
     function launchSpotify() {
         Quickshell.execDetached(["spotify-launcher"]);
     }
@@ -123,9 +103,7 @@ Singleton {
         if (player)
             player.raise();
     }
-    function raise() {
-        root.setActive(root.active);
-    }
+    function raise() { root.setActive(root.active); }
 
     function _isSpotify(player: var): bool {
         const ident = String(player?.identity || "").toLowerCase();
@@ -135,14 +113,14 @@ Singleton {
             || desk.indexOf("spotify") !== -1;
     }
 
-    function _playerList(): var {
-        const m = Mpris.players;
-        if (!m)
-            return [];
-        const vals = m.values;
-        if (vals && vals.length !== undefined)
-            return vals;
-        return [];
+    function _metaStr(player: var, key: string): string {
+        const meta = player?.metadata || {};
+        const v = meta[key];
+        if (v === undefined || v === null)
+            return "";
+        if (typeof v === "object" && v.length !== undefined)
+            return String(v[0] || "").trim();
+        return String(v).trim();
     }
 
     function _titleOf(player: var): string {
@@ -151,11 +129,16 @@ Singleton {
         const t = String(player.trackTitle || "").trim();
         if (t.length)
             return t;
+        return root._metaStr(player, "xesam:title");
+    }
+
+    function _artistOf(player: var): string {
+        if (!player)
+            return "";
         const a = String(player.trackArtist || "").trim();
         if (a.length)
             return a;
-        const meta = player.metadata || {};
-        return String(meta["xesam:title"] || meta["xesam:artist"] || "").trim();
+        return root._metaStr(player, "xesam:artist");
     }
 
     function _isPlaying(player: var): bool {
@@ -171,9 +154,8 @@ Singleton {
     }
 
     function _pickActive(): var {
-        void root._playKey;
         void root._gen;
-        const vals = root._playerList();
+        const vals = roster.list();
         if (!vals || vals.length === 0)
             return null;
         let spotify = null;
@@ -194,6 +176,8 @@ Singleton {
             return spotify;
         if (playing)
             return playing;
-        return titled;
+        if (titled)
+            return titled;
+        return vals[0];
     }
 }

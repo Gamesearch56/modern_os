@@ -87,6 +87,7 @@ Item {
                     void Media.hasPlayer;
                     void Media.playing;
                     void Media.trackTitle;
+                    void Media.identity;
                     void Audio.playback;
                     void Battery.onBattery;
                     return root._empty(modelData);
