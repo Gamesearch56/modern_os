@@ -231,12 +231,28 @@ effect is `dim_around`, not `dimaround`. Qt apps set
 `QT_WAYLAND_DISABLE_WINDOWDECORATION=1` so they do not draw a second
 CSD under the SSD.
 
+## App Store hangs on “Waiting for confirmation” with no password window
+
+`pkexec` talks to `hyprpolkitagent`. If that user unit is `failed`
+(`start-limit-hit` from a restart storm), no dialog maps and the store
+overlay waits forever. Clear it:
+
+```bash
+systemctl --user reset-failed hyprpolkitagent.service
+systemctl --user start hyprpolkitagent.service
+pkexec true
+```
+
+`scripts/doctor.sh` warns when the unit is not active. Install/remove
+from the store starts the agent first; Cancel is safe only while still
+waiting for the prompt (not after pacman has started writing).
+
 ## Polkit prompt is light / unthemed / tiled
 
 hyprpolkitagent is hyprtoolkit, not Fusion+QSS. Colors live in
 `~/.config/hypr/hyprtoolkit.conf` (written by `theme-apply.sh`). After
-`theme-apply.sh`, Hyprland reloads (glass opacity) and the agent is
-restarted. By hand:
+`theme-apply.sh`, Hyprland reloads (glass opacity). If the agent is
+down, it is started (not bounced). By hand:
 
 ```bash
 scripts/theme-apply.sh

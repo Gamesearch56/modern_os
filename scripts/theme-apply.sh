@@ -658,7 +658,12 @@ finish_live() {
     if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
         hyprctl reload >/dev/null 2>&1 || true
     fi
-    systemctl --user try-restart hyprpolkitagent.service >/dev/null 2>&1 || true
+    # Do not try-restart: a chrome-only burst hits StartLimit and pkexec
+    # then waits forever with no password window. Colors apply on the
+    # next dialog without a bounce (docs/THEMING.md).
+    # shellcheck source=lib/polkit-agent.sh
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/polkit-agent.sh"
+    ensure_polkit_agent || true
 }
 
 if [ "$RELOAD" -eq 0 ]; then

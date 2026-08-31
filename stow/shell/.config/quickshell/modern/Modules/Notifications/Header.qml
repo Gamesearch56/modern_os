@@ -59,7 +59,7 @@ RowLayout {
             key: "bar.settings"
             onClicked: {
                 Notifications.hide();
-                Settings.show();
+                Settings.openAt("overview", "");
             }
         }
         MIconButton {

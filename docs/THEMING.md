@@ -149,8 +149,9 @@ and `Tokens.radius.medium`/`small` are written to
 The compositor applies `design.transparency` and `dim_around` via the
 `polkit-auth-dialog` window rule so the prompt reads as glass over a
 scrim, like Super+W. The next dialog picks up toolkit colors without a
-restart; `theme-apply.sh` still restarts the user unit after a palette
-swap. The agent's error string is hardcoded `"red"` upstream and cannot
+restart. `theme-apply.sh` starts the user unit if it is down; it does
+not `try-restart` on every chrome patch (that hits systemd StartLimit
+and leaves `pkexec` with no password window). The agent's error string is hardcoded `"red"` upstream and cannot
 follow `error`. The files these
 templates write are always correct on disk, so a restarted app always
 picks up the current theme.

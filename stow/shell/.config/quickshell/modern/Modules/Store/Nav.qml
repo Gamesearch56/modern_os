@@ -8,6 +8,27 @@ import "../../Services"
 Item {
     id: root
 
+    readonly property var mainCats: {
+        void Store.categories;
+        const all = Store.categories || [];
+        const out = [];
+        for (let i = 0; i < all.length; i++) {
+            if (all[i].id !== "installed")
+                out.push(all[i]);
+        }
+        return out;
+    }
+    readonly property var installedCats: {
+        void Store.categories;
+        const all = Store.categories || [];
+        const out = [];
+        for (let i = 0; i < all.length; i++) {
+            if (all[i].id === "installed")
+                out.push(all[i]);
+        }
+        return out;
+    }
+
     function focusSearch() {
         search.forceActiveFocus();
     }
@@ -37,18 +58,41 @@ Item {
                 spacing: Tokens.spacing.xxs
 
                 Repeater {
-                    model: Store.categories.length
+                    model: root.mainCats.length
 
                     delegate: MListItem {
                         id: row
                         required property int index
-                        readonly property var rowData: Store.categories[index] || ({})
+                        readonly property var rowData: root.mainCats[index] || ({})
                         Layout.fillWidth: true
                         variant: "nav"
                         iconName: row.rowData.icon || Store.iconFor(row.rowData.id)
                         titleKey: "store.categories." + (row.rowData.id || "")
                         selected: Store.categoryId === row.rowData.id && Store.query.trim().length === 0
                         onClicked: Store.setCategory(row.rowData.id)
+                    }
+                }
+
+                MDivider {
+                    visible: root.installedCats.length > 0
+                    Layout.fillWidth: true
+                    Layout.topMargin: Tokens.spacing.sm
+                    Layout.bottomMargin: Tokens.spacing.sm
+                }
+
+                Repeater {
+                    model: root.installedCats.length
+
+                    delegate: MListItem {
+                        id: installedRow
+                        required property int index
+                        readonly property var rowData: root.installedCats[index] || ({})
+                        Layout.fillWidth: true
+                        variant: "nav"
+                        iconName: installedRow.rowData.icon || Store.iconFor(installedRow.rowData.id)
+                        titleKey: "store.categories." + (installedRow.rowData.id || "")
+                        selected: Store.categoryId === installedRow.rowData.id && Store.query.trim().length === 0
+                        onClicked: Store.setCategory(installedRow.rowData.id)
                     }
                 }
             }

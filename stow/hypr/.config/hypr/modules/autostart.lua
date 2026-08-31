@@ -22,6 +22,7 @@ hl.on("hyprland.start", function()
         .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true; "
         .. "timeout 2 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true; "
         .. "timeout 2 systemctl --user stop modern-shell.service || true; "
+        .. "timeout 2 systemctl --user reset-failed hyprpolkitagent.service || true; "
         .. "timeout 2 systemctl --user start hyprpolkitagent || true'")
 
     hl.exec_cmd("hypridle")

@@ -25,6 +25,21 @@
     "godot",
     "gparted"
   ],
+  "icons": {
+    "libreoffice-fresh": "libreoffice-writer",
+    "obs-studio": "com.obsproject.Studio",
+    "telegram-desktop": "telegram",
+    "code": "visual-studio-code",
+    "nextcloud-client": "nextcloud",
+    "signal-desktop": "signal-desktop",
+    "element-desktop": "im.riot.Riot",
+    "transmission-gtk": "transmission",
+    "gnome-calculator": "org.gnome.Calculator",
+    "file-roller": "org.gnome.FileRoller",
+    "qalculate-gtk": "qalculate",
+    "simple-scan": "org.gnome.SimpleScan",
+    "pdfarranger": "com.github.jeromerobert.pdfarranger"
+  },
   "categories": [
     {
       "id": "discover",

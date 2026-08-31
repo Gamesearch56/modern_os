@@ -39,19 +39,19 @@ Scope {
                 titleKey: "store.title"
                 titleColumnWidth: Tokens.spacing.xxl * 9
                 busy: Store.loading || Store.mutating.length > 0
-                subtitleKey: Store.mutating.length > 0 ? "store.working" : ""
                 onClosed: Store.hide()
 
                 trailing: Item {
-                    implicitWidth: updBtn.implicitWidth
-                    implicitHeight: updBtn.implicitHeight
+                    readonly property bool show: Update.pending.length > 0
+                    visible: show
+                    implicitWidth: show ? updBtn.implicitWidth + Tokens.spacing.xs : 0
+                    implicitHeight: show ? updBtn.implicitHeight : 0
 
                     MButton {
                         id: updBtn
                         kind: "tonal"
                         iconName: "system-software-update"
-                        key: Update.pending.length > 0 ? "store.updates" : "store.updatesNone"
-                        params: ({ n: String(Update.pending.length) })
+                        key: "store.updates"
                         onClicked: Settings.openAt("system", "")
                     }
 
@@ -59,7 +59,6 @@ Scope {
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.topMargin: -Tokens.spacing.xs
-                        anchors.rightMargin: -Tokens.spacing.xs
                         count: Update.pending.length
                     }
                 }
@@ -101,6 +100,14 @@ Scope {
                         Store.cancel();
                         return;
                     }
+                    if (Store.mutating.length > 0) {
+                        Store.cancel();
+                        return;
+                    }
+                    if (Store.errorKey.length > 0) {
+                        Store.dismissError();
+                        return;
+                    }
                     Store.hide();
                 }
             }
@@ -111,10 +118,18 @@ Scope {
                 open: Store.pendingName.length > 0
                 titleKey: Store.pendingAction === "remove" ? "store.confirmRemove" : "store.confirmInstall"
                 titleParams: ({ name: Store.pendingName })
+                bodyKey: Store.pendingAction === "remove" ? "store.confirmRemoveBody" : "store.confirmInstallBody"
+                bodyParams: ({ name: Store.pendingName })
                 confirmKey: Store.pendingAction === "remove" ? "store.remove" : "store.install"
+                confirmEnabled: Store.mutating.length === 0
                 destructive: Store.pendingAction === "remove"
                 onConfirmed: Store.confirm()
                 onCancelled: Store.cancel()
+            }
+
+            Progress {
+                parent: win.contentItem
+                anchors.fill: parent
             }
         }
     }

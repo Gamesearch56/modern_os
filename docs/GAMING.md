@@ -130,8 +130,8 @@ native titles such as Project Zomboid (`ProjectZomboid*`, window title
   `window.title`, then leaves that window alone. Listeners re-read
   `gaming.autoFullscreen` so the Settings toggle still stops new
   windows from being forced. The bar hides while the focused window is
-  exclusive fullscreen; `SUPER+F` is `dont_inhibit` so the game cannot
-  swallow it.
+  exclusive fullscreen; HUD binds and `SUPER+F` set `dont_inhibit` and
+  `allow_input_capture` so the game cannot swallow them.
 - **Tearing** (`immediate`) — only that window, and only while it is
   exclusive fullscreen. Other clients stay vsync.
 - **No blur / no shadow / opaque / content: game** on the game surface

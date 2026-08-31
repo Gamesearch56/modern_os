@@ -9,7 +9,7 @@ if [ -z "$query" ] || [[ "$query" == -* ]]; then
     exit 0
 fi
 
-PACMAN="${PACMAN:-/usr/bin/pacman}"
+PACMAN="/usr/bin/pacman"
 python3 -c '
 import json, re, sys
 text = sys.stdin.read()

@@ -12,7 +12,7 @@ if [ "${#names[@]}" -eq 0 ]; then
     exit 0
 fi
 
-PACMAN="${PACMAN:-/usr/bin/pacman}"
+PACMAN="/usr/bin/pacman"
 info="$(LC_ALL=C "$PACMAN" -Si -- "${names[@]}" 2>/dev/null || true)"
 installed="$(LC_ALL=C "$PACMAN" -Qq -- "${names[@]}" 2>/dev/null || true)"
 

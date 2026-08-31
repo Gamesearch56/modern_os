@@ -102,7 +102,7 @@ fi
 if systemctl --user is-active hyprpolkitagent.service >/dev/null 2>&1; then
     ok "hyprpolkitagent.service is active"
 else
-    warn "hyprpolkitagent.service is not active — pkexec prompts will not render"
+    warn "hyprpolkitagent.service is not active — pkexec prompts will not render (systemctl --user reset-failed hyprpolkitagent.service && systemctl --user start hyprpolkitagent.service)"
 fi
 TOOLKIT_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprtoolkit.conf"
 if [ -f "$TOOLKIT_CONF" ]; then

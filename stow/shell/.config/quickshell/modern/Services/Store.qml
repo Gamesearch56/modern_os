@@ -1,5 +1,5 @@
-// Official-repo package store. Search/info/install/remove via scripts;
-// upgrades stay in Settings → System (Update).
+// Official-repo package store. Search/info via scripts; mutate is
+// StoreMutate (pkexec pacman). Upgrades stay in Settings → System.
 pragma Singleton
 
 import Quickshell
@@ -14,17 +14,19 @@ Singleton {
     property string categoryId: "discover"
     property string query: ""
     property var results: []
-    property var featured: []
+    property var sections: []
     property bool loading: false
-    property string mutating: ""
-    property string error: ""
-    property string log: ""
-    property string pendingName: ""
-    property string pendingAction: ""
     property string _mode: ""
-    property string _mutAction: ""
     readonly property alias categories: catalog.categories
     readonly property alias popular: catalog.popular
+    readonly property alias pendingName: mutate.pendingName
+    readonly property alias pendingAction: mutate.pendingAction
+    readonly property alias mutating: mutate.mutating
+    readonly property alias mutAction: mutate.mutAction
+    readonly property alias errorKey: mutate.errorKey
+    readonly property alias lastName: mutate.lastName
+    readonly property alias log: mutate.log
+    readonly property alias authWait: mutate.authWait
     signal notify(string summary, string body)
 
     StoreCatalog {
@@ -32,6 +34,20 @@ Singleton {
         onLoaded: {
             if (root.open)
                 root.reload();
+        }
+    }
+
+    StoreMutate {
+        id: mutate
+        onNotify: (summary, body) => root.notify(summary, body)
+        onFinished: (ok) => {
+            if (!ok)
+                return;
+            try {
+                root.reload();
+            } catch (e) {
+                Logger.error("Store", String(e));
+            }
         }
     }
 
@@ -47,18 +63,6 @@ Singleton {
         stdout: StdioCollector { id: procOut }
         stderr: StdioCollector { id: procErr }
         onExited: (code) => root._procDone(code, procOut.text, procErr.text)
-    }
-
-    Process {
-        id: mutProc
-        running: false
-        stdout: SplitParser {
-            onRead: line => root._append(line)
-        }
-        stderr: SplitParser {
-            onRead: line => root._append(line)
-        }
-        onExited: (code) => root._mutDone(code === 0)
     }
 
     Connections {
@@ -82,8 +86,13 @@ Singleton {
     }
 
     function hide() {
+        if (mutate.busy && !mutate.authWait)
+            return;
+        if (mutate.authWait)
+            mutate.cancel();
         root.open = false;
-        root.cancel();
+        mutate.cancel();
+        mutate.dismissError();
         if (!Settings.open || Settings.sectionId !== "system")
             Update.watching = false;
     }
@@ -96,7 +105,7 @@ Singleton {
     }
 
     function setQuery(text: string) {
-        root.query = String(text || "");
+        root.query = String(text || "").slice(0, 80);
         if (root.query.trim().length > 0) {
             searchDebounce.restart();
             return;
@@ -111,38 +120,11 @@ Singleton {
         root.reload();
     }
 
-    function requestInstall(name: string) {
-        if (!root._valid(name) || root.mutating.length > 0)
-            return;
-        root.pendingName = name;
-        root.pendingAction = "install";
-    }
-
-    function requestRemove(name: string) {
-        if (!root._valid(name) || root.mutating.length > 0)
-            return;
-        root.pendingName = name;
-        root.pendingAction = "remove";
-    }
-
-    function cancel() {
-        root.pendingName = "";
-        root.pendingAction = "";
-    }
-
-    function confirm() {
-        const name = root.pendingName;
-        const action = root.pendingAction;
-        root.cancel();
-        if (!root._valid(name) || (action !== "install" && action !== "remove"))
-            return;
-        root._mutAction = action;
-        root.mutating = name;
-        root.error = "";
-        root.log = "";
-        mutProc.command = [Paths.script("pkg-mutate.sh"), action, name];
-        mutProc.running = true;
-    }
+    function requestInstall(name: string) { mutate.requestInstall(name); }
+    function requestRemove(name: string) { mutate.requestRemove(name); }
+    function cancel() { mutate.cancel(); }
+    function confirm() { mutate.confirm(); }
+    function dismissError() { mutate.dismissError(); }
 
     function reload() {
         if (root.query.trim().length > 0) {
@@ -154,7 +136,7 @@ Singleton {
             return;
         }
         if (root.categoryId === "discover") {
-            root._loadNames(root.popular, "featured");
+            root._loadNames(catalog.discoverNames(), "featured");
             return;
         }
         root._loadNames(catalog.packages(root.categoryId), "info");
@@ -164,8 +146,12 @@ Singleton {
         return catalog.iconFor(id);
     }
 
+    function iconForPkg(name: string): string {
+        return catalog.iconForPkg(name);
+    }
+
     function _valid(name: string): bool {
-        return /^[a-z0-9][a-z0-9.+_-]*$/.test(String(name || ""));
+        return mutate.validName(name);
     }
 
     function _loadNames(names, mode: string) {
@@ -177,7 +163,7 @@ Singleton {
         }
         if (argv.length < 2) {
             if (mode === "featured")
-                root.featured = [];
+                root.sections = [];
             else
                 root.results = [];
             root.loading = false;
@@ -196,12 +182,16 @@ Singleton {
     }
 
     function _start(cmd, mode: string) {
-        proc.running = false;
-        root._mode = mode;
-        root.loading = true;
-        root.error = "";
-        proc.command = cmd;
-        proc.running = true;
+        try {
+            proc.running = false;
+            root._mode = mode;
+            root.loading = true;
+            proc.command = cmd;
+            proc.running = true;
+        } catch (e) {
+            root.loading = false;
+            Logger.error("Store", String(e));
+        }
     }
 
     function _rows(text: string) {
@@ -209,47 +199,38 @@ Singleton {
             const parsed = JSON.parse(String(text || "").trim() || "[]");
             return Array.isArray(parsed) ? parsed : [];
         } catch (e) {
+            Logger.warn("Store", "package list parse failed");
             return [];
         }
     }
 
     function _procDone(code: int, out: string, err: string) {
-        if (root._mode === "explicit") {
-            root._loadNames(root._rows(out), "info");
-            return;
+        try {
+            if (root._mode === "explicit") {
+                if (code !== 0) {
+                    root.results = [];
+                    root.loading = false;
+                    Logger.warn("Store", "explicit list failed");
+                    return;
+                }
+                root._loadNames(root._rows(out), "info");
+                return;
+            }
+            const rows = root._rows(out);
+            if (root._mode === "featured")
+                root.sections = catalog.groupRows(rows);
+            else
+                root.results = rows;
+            root.loading = false;
+            if (code !== 0 && rows.length === 0) {
+                const t = String(err || "").trim();
+                if (t.length)
+                    Logger.warn("Store", t);
+            }
+        } catch (e) {
+            root.loading = false;
+            Logger.error("Store", String(e));
         }
-        const rows = root._rows(out);
-        if (root._mode === "featured")
-            root.featured = rows;
-        else
-            root.results = rows;
-        root.loading = false;
-        if (code !== 0 && rows.length === 0) {
-            const t = String(err || "").trim();
-            if (t.length)
-                root.error = t;
-        }
-    }
-
-    function _append(line: string) {
-        const t = String(line || "").trim();
-        if (t.length)
-            root.log += t + "\n";
-    }
-
-    function _mutDone(ok: bool) {
-        const name = root.mutating;
-        const action = root._mutAction;
-        root.mutating = "";
-        root._mutAction = "";
-        if (!ok) {
-            root.error = root.log.trim().length ? root.log.trim() : I18n.t("store.failed");
-            root.notify(I18n.t("store.failed"), name);
-            return;
-        }
-        const key = action === "remove" ? "store.doneRemove" : "store.doneInstall";
-        root.notify(I18n.t(key, ({ name: name })), "");
-        root.reload();
     }
 
     IpcHandler {

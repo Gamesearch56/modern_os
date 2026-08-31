@@ -76,10 +76,11 @@ apply({
 -- float+center, dim_around as scrim, design.transparency, no hyprbars.
 apply({
     name = "polkit-auth-dialog",
-    match = { class = "hyprpolkitagent|hyprland-polkit-agent" },
+    match = { class = "hyprpolkitagent|hyprland-polkit-agent|org.hyprland.hyprpolkitagent" },
     float = true,
     center = true,
     dim_around = true,
+    stay_focused = true,
     border_size = 1,
     opacity = config.value("design.transparency", 0.85),
     ["hyprbars:no_bar"] = true,

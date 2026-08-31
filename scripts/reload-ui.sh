@@ -15,7 +15,9 @@ if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
         pkill -u "$USER_NAME" -x hypridle || true
         hyprctl dispatch exec hypridle >/dev/null 2>&1 || true
     fi
-    systemctl --user try-restart hyprpolkitagent.service >/dev/null 2>&1 || true
+    # shellcheck source=lib/polkit-agent.sh
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/polkit-agent.sh"
+    ensure_polkit_agent || true
 fi
 
 if command -v qs >/dev/null 2>&1; then

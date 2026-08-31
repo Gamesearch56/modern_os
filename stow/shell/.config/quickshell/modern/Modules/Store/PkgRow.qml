@@ -12,12 +12,12 @@ MListItem {
     readonly property bool _on: !!(pkg && pkg.installed)
     readonly property string _name: String(pkg && pkg.name || "")
 
-    iconName: root._name.length ? root._name : "package-x-generic-symbolic"
+    iconName: Store.iconForPkg(root._name)
     tintIcon: false
+    preferSymbolic: false
     hoverHighlight: false
     titleValue: root._name
     subtitleValue: String(pkg && pkg.desc || "")
-    badgeIcon: root._on ? "object-select-symbolic" : ""
 
     MButton {
         kind: root._on ? "destructive" : "filled"

@@ -19,6 +19,68 @@ Item {
 
     function focusSearch() {
         search.forceActiveFocus();
+        root.revealActive();
+    }
+
+    function revealActive() {
+        if (root._indexOfActive() < 0 && root.query.length > 0) {
+            root.query = "";
+            if (search.text.length)
+                search.text = "";
+        }
+        scrollSoon.restart();
+    }
+
+    function _indexOfActive(): int {
+        const id = Settings.sectionId;
+        const rows = root.rows;
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].kind !== "group" && rows[i].id === id)
+                return i;
+        }
+        return -1;
+    }
+
+    function _scrollToActive() {
+        try {
+            if (list.height <= 0)
+                return;
+            const idx = root._indexOfActive();
+            if (idx < 0)
+                return;
+            const item = navRepeater.itemAt(idx);
+            if (!item)
+                return;
+            const pos = item.mapToItem(list.contentItem, 0, 0);
+            const top = pos.y;
+            const bottom = top + item.height;
+            const viewTop = list.contentY;
+            const viewBottom = viewTop + list.height;
+            const maxY = Math.max(0, list.contentHeight - list.height);
+            const pad = Tokens.spacing.md;
+            let y = list.contentY;
+            if (top < viewTop + pad)
+                y = top - pad;
+            else if (bottom > viewBottom - pad)
+                y = bottom - list.height + pad;
+            list.contentY = Math.max(0, Math.min(maxY, y));
+        } catch (e) {
+        }
+    }
+
+    Timer {
+        id: scrollSoon
+        interval: Math.max(1, Motion.shortMs)
+        onTriggered: root._scrollToActive()
+    }
+
+    Connections {
+        target: Settings
+        function onSectionIdChanged() { root.revealActive(); }
+        function onOpenChanged() {
+            if (Settings.open)
+                root.revealActive();
+        }
     }
 
     ColumnLayout {
@@ -33,6 +95,7 @@ Item {
         }
 
         Flickable {
+            id: list
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
@@ -46,7 +109,12 @@ Item {
                 spacing: Tokens.spacing.xxs
 
                 Repeater {
+                    id: navRepeater
                     model: root.rows.length
+                    onItemAdded: (_, item) => {
+                        if (item && !item._group && item.rowData && item.rowData.id === Settings.sectionId)
+                            scrollSoon.restart();
+                    }
 
                     delegate: Item {
                         id: row

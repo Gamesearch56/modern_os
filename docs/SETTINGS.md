@@ -58,11 +58,20 @@ installs and removes official Arch packages only — no `-Sy`/`-Syu`.
 System upgrades stay on Settings → System.
 
 - Catalog: `~/.config/modern/store/catalog.json` (popular grid +
-  category allowlists). Installed is `pacman -Qe`, not a name list.
+  category allowlists). Discover shows Popular (6) then each category
+  (6, three per row). Installed is `pacman -Qe`, not a name list.
 - Search: `scripts/pkg-search.sh` (`pacman -Ss`). Info:
-  `scripts/pkg-info.sh`. Mutate: `scripts/pkg-mutate.sh` via `pkexec`.
-- Updates button (badge = `Update.pending.length`) calls
-  `Settings.openAt("system")`. IPC: `qs -c modern ipc call store toggle`.
+  `scripts/pkg-info.sh`. Mutate: `scripts/pkg-mutate.sh` via
+  `/usr/bin/pkexec /usr/bin/pacman` only (no `PACMAN=` override, no
+  shell). Install preflights `pacman -Si`; remove preflights `pacman -Q`
+  and refuses a protected set (glibc, pacman, systemd, hyprland,
+  quickshell, …). Remove is `-R` of that name only (`-s`/`-n` stay off).
+  The shell never SIGKILLs an in-flight transaction. `pkg-mutate.sh`
+  starts `hyprpolkitagent` if it is down so the password window can
+  appear; Cancel is allowed only while still waiting for that prompt.
+- Updates button appears only when `Update.pending` is non-empty
+  (label without a count; `MBadge` pill is the count) and opens
+  Settings → System. IPC: `qs -c modern ipc call store toggle`.
 
 
 ## Restore defaults

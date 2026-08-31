@@ -133,10 +133,11 @@ local bindings = {
 -- SPACE is a typing key. Non-consuming so fields still receive it.
 -- filepreview.sh no-ops in Nautilus (Sushi owns Space there) and only
 -- opens Quick Look in Dolphin.
--- Overlay HUDs (launcher, AI, taskbar, control panel, …) set
--- dont_inhibit so a fullscreen game's shortcut-inhibit cannot swallow
--- them. They still consume the key so the game does not also see it.
--- SUPER+F is the same: auto-fullscreen must be undoable.
+-- Overlay HUDs (launcher, AI, taskbar, control panel, …) bypass both
+-- shortcut-inhibit (games, Electron) and input capture (Quickshell
+-- HyprlandFocusGrab, some clients). They still consume the key so the
+-- focused app does not also see it. SUPER+F is the same: exclusive
+-- fullscreen must be undoable.
 local overlay_actions = {
     launcher = true,
     aiChat = true,
@@ -158,6 +159,7 @@ local function bind_opts(action)
     if overlay_actions[action] then
         opts = opts or {}
         opts.dont_inhibit = true
+        opts.allow_input_capture = true
     end
     return opts
 end
