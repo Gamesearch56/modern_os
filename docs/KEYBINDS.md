@@ -12,7 +12,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 |-------|--------|-----|
 | `SUPER + SPACE` | Launcher | `qs -c modern ipc call launcher toggle` |
 | `SUPER + M` | Power menu | `qs -c modern ipc call powermenu toggle` |
-| `SUPER + O` | Control panel | `qs -c modern ipc call notifications toggle` |
+| `SUPER + N` | Control panel | `qs -c modern ipc call notifications toggle` |
 | `SUPER + L` | Lock screen | `qs -c modern ipc call session lock` |
 | `SUPER + SHIFT + M` | Exit compositor | `hyprctl dispatch "hl.dsp.exit()"` |
 | `SUPER + K` | Cheatsheet | `qs -c modern ipc call cheatsheet toggle` |
@@ -25,7 +25,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + B` | Browser | Configured `apps.defaults.browser` via `modern-launch` |
 | `SUPER + SHIFT + B` | Browser private window | Same desktop id, with `--incognito` or `--private-window` |
 | `SUPER + E` | File manager | Configured `apps.defaults.fileManager` via `modern-launch` |
-| `SPACE` | Quick Look in Dolphin (non-consuming, so Space still types elsewhere) | `modern filepreview` |
+| `SPACE` | Nautilus: Sushi overlay (native). Dolphin: Quick Look (non-consuming bind; no-op in Nautilus) | `modern filepreview` (Dolphin only) |
 | `SUPER + R` | Spotify | `spotify-launcher` |
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |

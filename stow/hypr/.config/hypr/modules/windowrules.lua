@@ -85,22 +85,41 @@ apply({
     ["hyprbars:no_bar"] = true,
 })
 
--- Dolphin is a tiled app window, not a HUD. Punching wallpaper through
--- the icon view (design.transparency) washed out labels and toolbar
--- icons. Opaque surface; wallpaper stays in the compositor gaps.
+-- Dolphin / Nautilus are tiled app windows, not HUDs. Punching wallpaper
+-- through the icon view (design.transparency) washed out labels and
+-- toolbar icons. Opaque surface; wallpaper stays in the compositor gaps.
 apply({
     name = "dolphin-opaque",
     match = { class = "org.kde.dolphin|dolphin" },
     opaque = true,
 })
+apply({
+    name = "nautilus-opaque",
+    match = { class = "org.gnome.Nautilus|org.gnome.nautilus|nautilus" },
+    opaque = true,
+})
 
--- Spacebar Quick Look video (mpv). Image/text previews are a QML overlay.
+-- Spacebar Quick Look video (mpv, Dolphin). Image/text use a Quickshell overlay.
 apply({
     name = "modern-quicklook",
     match = { class = "modern.quicklook" },
     float = true,
     center = true,
     dim_around = true,
+    ["hyprbars:no_bar"] = true,
+})
+
+-- GNOME Sushi (Nautilus Space). Toplevel on Hyprland unless floated;
+-- dim_around is the overlay scrim. No stay_focused: Nautilus selection
+-- changes must reach the view so the preview auto-replaces.
+apply({
+    name = "nautilus-previewer",
+    match = { class = "org.gnome.NautilusPreviewer|sushi" },
+    float = true,
+    center = true,
+    dim_around = true,
+    opaque = true,
+    border_size = 1,
     ["hyprbars:no_bar"] = true,
 })
 

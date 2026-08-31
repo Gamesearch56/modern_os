@@ -39,7 +39,7 @@ Item {
         }
         onCountChanged: root.scrollEnd()
         onContentHeightChanged: {
-            if (Ai.busy || list.atYEnd)
+            if (Ai.busy && list.atYEnd)
                 root.scrollEnd();
         }
     }
@@ -63,7 +63,6 @@ Item {
 
     Connections {
         target: Ai
-        function onHistoryChanged() { root.scrollEnd(); }
         function onPanelOpenChanged() {
             if (Ai.panelOpen)
                 Qt.callLater(root.scrollEnd);

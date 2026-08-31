@@ -38,5 +38,5 @@ function argv(desktopId, path, select) {
         return ["thunar", target];
     if (id.length > 0)
         return ["gtk-launch", id, target];
-    return select ? ["dolphin", "--new-window", "--select", path] : ["dolphin", "--new-window", path];
+    return select ? ["nautilus", "--select", path] : ["nautilus", path];
 }

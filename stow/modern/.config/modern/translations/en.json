@@ -140,7 +140,8 @@
     "errorMissing": "Ollama is not installed or not on PATH.",
     "errorModel": "That model is not available. Pull it with ollama, or pick another in Settings → AI.",
     "errorStderr": "The assistant reported: {detail}",
-    "errorEmpty": "The assistant returned an empty reply."
+    "errorEmpty": "The assistant returned an empty reply.",
+    "errorTooLong": "That message is too long."
   },
   "session": {
     "unlock": "Unlock",
@@ -189,6 +190,7 @@
     "providerTitle": "Wallpaper provider",
     "providerHint": "Save an image from the site to add it to your wallpaper folder.",
     "providerBack": "Back",
+    "providerForward": "Forward",
     "fetched": "Wallpaper saved",
     "fetchedHint": "Set it as active from the gallery.",
     "fetchFailed": "Could not save that image",

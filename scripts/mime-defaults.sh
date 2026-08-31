@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Write XDG default apps for video/image/folders into mimeapps.list so
-# Dolphin and xdg-open follow Settings → Applications. Settings itself
-# never touches this file; ConfigWrite runs this after apps.defaults
-# changes. Folders are set explicitly: kitty-open.desktop also claims
-# inode/directory, which is why Steam "Browse files" opened a terminal.
+# Nautilus/Dolphin and xdg-open follow Settings → Applications. Settings
+# itself never touches this file; ConfigWrite runs this after
+# apps.defaults changes. Folders are set explicitly: kitty-open.desktop
+# also claims inode/directory, which is why Steam "Browse files" opened
+# a terminal.
 #
 # Usage:
 #   mime-defaults.sh
-#   mime-defaults.sh --video mpv.desktop --image imv.desktop --files org.kde.dolphin.desktop
+#   mime-defaults.sh --video mpv.desktop --image imv.desktop --files org.gnome.Nautilus.desktop
 #
 # Desktop ids default to config.json apps.defaults.videoPlayer /
 # imageViewer / fileManager. Video/image MIME types come from each
@@ -79,7 +80,7 @@ mime_types() {
 [ -n "$FILES_ID" ] || FILES_ID="$(from_config fileManager)"
 [ -n "$VIDEO_ID" ] || VIDEO_ID="mpv.desktop"
 [ -n "$IMAGE_ID" ] || IMAGE_ID="imv.desktop"
-[ -n "$FILES_ID" ] || FILES_ID="org.kde.dolphin.desktop"
+[ -n "$FILES_ID" ] || FILES_ID="org.gnome.Nautilus.desktop"
 VIDEO_ID="$(desktop_id "$VIDEO_ID")"
 IMAGE_ID="$(desktop_id "$IMAGE_ID")"
 FILES_ID="$(desktop_id "$FILES_ID")"

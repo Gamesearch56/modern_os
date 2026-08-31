@@ -227,7 +227,7 @@
     "launcher": "SUPER + SPACE",
     "aiChat": "SUPER + A",
     "powerMenu": "SUPER + M",
-    "controlCenter": "SUPER + O",
+    "controlCenter": "SUPER + N",
     "lockScreen": "SUPER + L",
     "exitSession": "SUPER + SHIFT + M",
     "cheatsheet": "SUPER + K",
@@ -285,7 +285,7 @@
       "calendar": "proton-mail.desktop",
       "mail": "proton-mail.desktop",
       "communication": "",
-      "fileManager": "org.kde.dolphin.desktop",
+      "fileManager": "org.gnome.Nautilus.desktop",
       "videoPlayer": "mpv.desktop",
       "imageViewer": "imv.desktop",
       "terminal": "kitty.desktop"

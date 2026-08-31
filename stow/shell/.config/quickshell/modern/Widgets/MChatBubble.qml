@@ -16,8 +16,8 @@ Item {
     readonly property real _pad: Tokens.spacing.sm * 2
     readonly property real _inner: Math.max(1, root._max - root._pad)
     readonly property real _bodyW: Math.min(root._inner, Math.max(1, body.implicitWidth))
-    readonly property bool _wait: !root.mine && root.pending && root.text.length === 0 && root.thinking.length === 0
-    readonly property bool _reason: !root.mine && root.thinking.length > 0
+    readonly property bool _wait: !root.mine && root.pending && root.text.length === 0
+    readonly property bool _reason: false
     readonly property real _colW: {
         if (root._wait)
             return dots.implicitWidth + root._pad;
@@ -81,14 +81,6 @@ Item {
             radius: Tokens.radius.medium
             color: root.mine ? Chrome.tonal.bg : Colors.color.surfaceContainerHighest
 
-            Behavior on implicitHeight {
-                enabled: root.pending
-                NumberAnimation {
-                    duration: Motion.mediumMs
-                    easing.bezierCurve: Motion.easingStandard
-                }
-            }
-
             ColumnLayout {
                 id: inner
                 anchors.left: parent.left
@@ -125,7 +117,8 @@ Item {
                     styleName: "bodyMedium"
                     color: root.mine ? Chrome.tonal.fg : Colors.color.onSurface
                     wrapMode: Text.WordWrap
-                    elide: Text.ElideNone
+                    elide: Text.ElideRight
+                    maximumLineCount: 48
                     Layout.fillWidth: true
                 }
             }

@@ -32,7 +32,7 @@ intend to run (`main` may lag the working branch).
 
 The desktop is a daily Hyprland + Quickshell session: Material You widget
 kit, Settings as a real window, island bar (including vertical), compact
-control panel (Super+L; not lock), overlay menus as floating windows,
+control panel (Super+N; not lock), overlay menus as floating windows,
 tokenized GTK/Qt/Dolphin/Vivaldi chrome. The lock screen is a **visual
 overlay** (any non-empty password), not a real session lock. Verify with:
 
@@ -268,7 +268,7 @@ modern_dotfile/
 | `SUPER` + `T` | Terminal (kitty; always bound) |
 | `SUPER` + `Return` | Terminal (always bound) |
 | `SUPER` + `B` | Browser (Vivaldi) |
-| `SUPER` + `E` | File manager (Dolphin) |
+| `SUPER` + `E` | File manager (Nautilus; Dolphin selectable in Settings) |
 | `SUPER` + `Q` | Close window |
 
 Full list: `SUPER`+`K`, `docs/KEYBINDS.md`, or

@@ -229,9 +229,13 @@ patch_toolkit_chrome() {
     apply_color_scheme "$prefer_dark"
     overlay_folder_icons "$icon"
     local kde_icon="$icon"
+    local gtk_icon="$icon"
     if [ -f "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places/folder.svg" ]; then
         case "$icon" in
-            Papirus|Papirus-Dark|Papirus-Light) kde_icon=modern-folders ;;
+            Papirus|Papirus-Dark|Papirus-Light)
+                # Nautilus keeps Papirus emblem folders; Dolphin uses the overlay.
+                kde_icon=modern-folders
+                ;;
         esac
     fi
     local sm md lg
@@ -407,7 +411,7 @@ EOF
         "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini" \
         "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0/settings.ini"; do
         if [ -f "$gini" ]; then
-            awk -v font="$font $pt" -v cursor="$cursor_theme" -v csize="$cursor_size" -v icon="$icon" -v dark="$prefer_dark" '
+            awk -v font="$font $pt" -v cursor="$cursor_theme" -v csize="$cursor_size" -v icon="$gtk_icon" -v dark="$prefer_dark" '
                 /^gtk-font-name=/ { print "gtk-font-name=" font; next }
                 /^gtk-cursor-theme-name=/ { print "gtk-cursor-theme-name=" cursor; next }
                 /^gtk-cursor-theme-size=/ { print "gtk-cursor-theme-size=" csize; next }
@@ -424,7 +428,7 @@ EOF
         gsettings set org.gnome.desktop.interface monospace-font-name "$mono $pt" >/dev/null 2>&1 || true
         gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" >/dev/null 2>&1 || true
         gsettings set org.gnome.desktop.interface cursor-size "$cursor_size" >/dev/null 2>&1 || true
-        gsettings set org.gnome.desktop.interface icon-theme "$icon" >/dev/null 2>&1 || true
+        gsettings set org.gnome.desktop.interface icon-theme "$gtk_icon" >/dev/null 2>&1 || true
     fi
 }
 

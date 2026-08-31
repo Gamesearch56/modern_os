@@ -10,7 +10,8 @@ Item {
 
     property bool ready: false
 
-    readonly property int keep: 40
+    readonly property int keep: 24
+    readonly property int maxText: 8000
     readonly property string path: Paths.stateHome + "/modern/ai-history.json"
 
     signal restored(var rows)
@@ -50,9 +51,17 @@ Item {
     }
 
     function _ingest(raw) {
+        const s = String(raw || "[]");
+        if (s.length > 262144) {
+            Logger.warn("Ai", "history too large, discarding");
+            root.ready = true;
+            root.restored([]);
+            root.save([]);
+            return;
+        }
         let rows = [];
         try {
-            const data = JSON.parse(String(raw || "[]"));
+            const data = JSON.parse(s);
             if (Array.isArray(data))
                 rows = root._serial(data);
         } catch (e) {
@@ -72,11 +81,12 @@ Item {
             if (!r || r.streaming)
                 continue;
             const role = r.role === "user" ? "user" : "assistant";
-            const text = String(r.text || "");
-            const thinking = String(r.thinking || "");
-            if (!text.length && !thinking.length)
+            let text = String(r.text || "").replace(/\0/g, "");
+            if (text.length > root.maxText)
+                text = text.substring(0, root.maxText);
+            if (!text.length)
                 continue;
-            out.push({ role: role, text: text, thinking: thinking });
+            out.push({ role: role, text: text, thinking: "" });
         }
         return out.slice(Math.max(0, out.length - root.keep));
     }

@@ -17,6 +17,10 @@ Singleton {
         const e = Quickshell.env("XDG_STATE_HOME");
         return (e && e.length > 0) ? e : (root.home + "/.local/state");
     }
+    readonly property string runtimeHome: {
+        const e = Quickshell.env("XDG_RUNTIME_DIR");
+        return (e && e.length > 0) ? e : root.stateHome;
+    }
     readonly property string repo: root.home + "/modern_dotfile"
     readonly property string scripts: root.repo + "/scripts"
     readonly property string modern: root.scripts + "/modern"

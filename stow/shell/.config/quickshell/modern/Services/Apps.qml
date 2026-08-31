@@ -162,7 +162,7 @@ Singleton {
         if (role === "browser")
             return ["vivaldi"];
         if (role === "fileManager")
-            return ["dolphin"];
+            return ["nautilus"];
         if (role === "terminal")
             return ["kitty"];
         if (role === "videoPlayer")

@@ -1,14 +1,16 @@
 # Daily-driver apps. This is the M0 bar: minimal, but enough to be
 # usable day to day without switching back to the old account.
 kitty                   # terminal — SUPER+T
-dolphin                 # file manager — SUPER+E (replaces Nautilus, Qt-first: docs/DECISIONS.md #5)
+nautilus                # default file manager — SUPER+E (docs/DECISIONS.md #5)
+sushi                   # Nautilus Space previewer (org.gnome.NautilusPreviewer)
+dolphin                 # optional file manager — Settings → Applications can switch back
 vivaldi                 # browser — SUPER+B, themed per docs/THEMING.md
 fastfetch                # terminal banner, themed via matugen (docs/DECISIONS.md, .bashrc migration)
-imv                      # image viewer — Settings + Dolphin default
-mpv                      # video player — Settings + Dolphin default; seekbar thumbs via ffmpeg
+imv                      # image viewer — Settings + Nautilus/Dolphin default
+mpv                      # video player — Settings + Nautilus/Dolphin default; seekbar thumbs via ffmpeg
 vlc                      # video playback fallback / disc & format coverage mpv lacks
 ffmpeg                    # mpv_thumbnail_script stills (prefer_mpv=no)
-ffmpegthumbnailer         # Dolphin video thumbnails
+ffmpegthumbnailer         # Nautilus/Dolphin video thumbnails
 gst-plugins-base          # GStreamer codecs for mpv/browser media
 gst-plugins-good
 gst-plugins-bad

@@ -83,7 +83,7 @@ local bindings = {
     terminal = app_cmd("terminal", "kitty.desktop"),
     browser = app_cmd("browser", "vivaldi-stable.desktop"),
     browserIncognito = browser_incognito(),
-    fileManager = app_cmd("fileManager", "org.kde.dolphin.desktop"),
+    fileManager = app_cmd("fileManager", "org.gnome.Nautilus.desktop"),
     spotify = hl.dsp.exec_cmd("spotify-launcher"),
     -- killactive would close the window behind layer-shell HUD/popups.
     -- modern window close dismisses those first, then killactive.
@@ -130,8 +130,9 @@ local bindings = {
     filePreview = hl.dsp.exec_cmd(modern .. " filepreview"),
 }
 
--- SPACE is a typing key. Non-consuming so xdg popups (AI chat) and
--- other fields still receive it; filepreview.sh only acts in Dolphin.
+-- SPACE is a typing key. Non-consuming so fields still receive it.
+-- filepreview.sh no-ops in Nautilus (Sushi owns Space there) and only
+-- opens Quick Look in Dolphin.
 local function bind_opts(action)
     if action == "filePreview" then
         return { non_consuming = true }

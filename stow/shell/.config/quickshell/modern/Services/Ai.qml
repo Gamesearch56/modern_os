@@ -175,10 +175,14 @@ Singleton {
 
     function _resolveModel(): string {
         const want = String(Config.accounts?.ai?.ollamaModel || "").replace(/:latest$/, "");
+        if (!stream._safeModel(want).length && want.length > 0)
+            return "";
         const list = root.models || [];
         let family = "";
         for (let i = 0; i < list.length; i++) {
             const n = String(list[i] || "");
+            if (!stream._safeModel(n).length)
+                continue;
             const stem = n.replace(/:latest$/, "");
             if (stem === want || n === want || (want.length > 0 && n.indexOf(want + ":") === 0))
                 return n;
@@ -190,9 +194,13 @@ Singleton {
     }
 
     function chat(text: string) {
-        const q = (text || "").trim();
+        const q = (text || "").replace(/\0/g, "").trim();
         if (!q || root.busy)
             return;
+        if (q.length > stream.maxPrompt) {
+            root.lastError = I18n.t("ai.errorTooLong");
+            return;
+        }
         if ((Config.accounts?.ai?.provider ?? "none") === "none" || !root.ready)
             return;
         const model = root._resolveModel();
@@ -215,13 +223,7 @@ Singleton {
             root.busy = true;
             root.lastError = "";
             store.save(root.history);
-            const body = JSON.stringify({
-                model: model,
-                messages: prior,
-                stream: true,
-                think: true
-            });
-            stream.start(body);
+            stream.start(model, prior);
         } catch (e) {
             root.busy = false;
             Logger.error("Ai", String(e));
@@ -239,13 +241,15 @@ Singleton {
     function _apiMessages(): var {
         const out = [];
         const list = root.history || [];
-        const start = Math.max(0, list.length - 20);
+        const start = Math.max(0, list.length - stream.maxMsgs);
         for (let i = start; i < list.length; i++) {
             const r = list[i];
             if (!r || r.streaming)
                 continue;
             const role = r.role === "user" ? "user" : "assistant";
-            const t = String(r.text || "").trim();
+            let t = String(r.text || "").replace(/\0/g, "").trim();
+            if (t.length > stream.maxPrompt)
+                t = t.substring(0, stream.maxPrompt);
             if (!t.length)
                 continue;
             out.push({ role: role, content: t });
@@ -267,17 +271,16 @@ Singleton {
 
     function _end(ok: bool, err: string) {
         const text = stream.content;
-        const thinking = stream.thinking;
         root.busy = false;
         if (!ok || !String(text || "").trim().length) {
             const msg = String(err || "").trim() || I18n.t("ai.errorEmpty");
             root.lastError = msg;
-            root._patchTail(msg, thinking, false);
+            root._patchTail(msg, "", false);
             store.save(root.history);
             return;
         }
         root.lastError = "";
-        root._patchTail(root._collapse(text), thinking, false);
+        root._patchTail(root._collapse(text), "", false);
         store.save(root.history);
     }
 

@@ -72,8 +72,7 @@ Scope {
             }
             Shortcut {
                 sequence: "Space"
-                context: Qt.WindowShortcut
-                enabled: FilePreview.showOverlay
+                context: Qt.ApplicationShortcut
                 onActivated: FilePreview.hide()
             }
 

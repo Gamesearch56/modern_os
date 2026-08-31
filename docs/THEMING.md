@@ -64,7 +64,7 @@ via `jq`, or the future Settings > Diagnostics color preview).
 `tokens.json` and restyles the bar/overlays immediately. GTK apps pick
 up `gtk.css` on restart. Vivaldi's CSS overlay is already on disk
 (reload the tab); the native theme object is merged only while Vivaldi
-is not running. Dolphin must be fully quit after `theme-apply.sh`.
+is not running. Nautilus and Dolphin must be fully quit after `theme-apply.sh`.
 
 ## Profile resolution
 
@@ -130,8 +130,13 @@ kdeglobals. KF6 apps (Dolphin) ignore that QPalette: KColorSchemeManager
 treats qt6ct's `ColorScheme::Unknown` as light, so a focused window goes
 white. `kdeglobals` `[UiSettings] ColorScheme=modern` pins
 `~/.local/share/color-schemes/modern.colors`. Widget style is
-`qt6ct-style`. Dolphin is an opaque overlay card (`dolphin-opaque`).
-Fully quit Dolphin after `theme-apply.sh`. Wallpaper stays in the
+`qt6ct-style`. Dolphin is an opaque overlay card (`dolphin-opaque`);
+Nautilus is the same (`nautilus-opaque`). Nautilus Space preview is
+GNOME Sushi (`nautilus-previewer`: float, center, `dim_around`, no
+hyprbars), colored from the same `gtk.css` GTK3 Adwaita aliases. GTK icon theme is
+Papirus-Dark so Nautilus keeps emblem folders; KDE/Dolphin use
+`modern-folders` (token-colored folder SVGs). Fully quit Nautilus or
+Dolphin after `theme-apply.sh`. Wallpaper stays in the
 compositor gaps around the window. `hyprctl reload` picks up the rule.
 `theme-apply.sh` writes absolute paths into `qt6ct.conf` because qt6ct
 does not expand `~`.

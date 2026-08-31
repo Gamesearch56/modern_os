@@ -83,6 +83,7 @@ Item {
                 Layout.fillWidth: true
                 enabled: !root._blocked
                 placeholderKey: "ai.placeholder"
+                maximumLength: 2000
                 escapeCloses: true
                 onAccepted: root.send()
                 onEscaped: Ai.hide()

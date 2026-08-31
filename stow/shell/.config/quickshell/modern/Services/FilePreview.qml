@@ -95,14 +95,22 @@ Singleton {
     function openPath(raw: string) {
         const p = root._normalize(raw);
         if (!p) {
-            root._fail("filePreview.noSelection");
+            if (!root.open)
+                root._fail("filePreview.noSelection");
             return;
         }
-        root.hide();
         root._openToken += 1;
-        root._mimeToken = root._openToken;
+        mimeProc.running = false;
+        root._videoPath = "";
+        videoProc.running = false;
+        root.kind = "";
+        root.mime = "";
+        root.textContent = "";
+        root.imageFailed = false;
         root.path = p;
         root.fileName = p.split("/").pop();
+        root.open = true;
+        root._mimeToken = root._openToken;
         mimeProc.command = ["file", "--brief", "--mime-type", "--", p];
         mimeProc.running = true;
     }

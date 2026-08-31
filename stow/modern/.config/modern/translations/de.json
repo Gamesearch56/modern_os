@@ -140,7 +140,8 @@
     "errorMissing": "Ollama ist nicht installiert oder nicht im PATH.",
     "errorModel": "Dieses Modell ist nicht verfügbar. Mit ollama laden oder unter Einstellungen → KI ein anderes wählen.",
     "errorStderr": "Der Assistent meldete: {detail}",
-    "errorEmpty": "Der Assistent hat eine leere Antwort geliefert."
+    "errorEmpty": "Der Assistent hat eine leere Antwort geliefert.",
+    "errorTooLong": "Die Nachricht ist zu lang."
   },
   "session": {
     "unlock": "Entsperren",
@@ -189,6 +190,7 @@
     "providerTitle": "Hintergrund-Anbieter",
     "providerHint": "Speichere ein Bild von der Seite, um es in den Hintergrundordner zu legen.",
     "providerBack": "Zurück",
+    "providerForward": "Vor",
     "fetched": "Hintergrund gespeichert",
     "fetchedHint": "Lege es in der Galerie als aktiv fest.",
     "fetchFailed": "Bild konnte nicht gespeichert werden",

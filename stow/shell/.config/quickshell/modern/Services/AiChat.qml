@@ -1,5 +1,5 @@
-// Streams POST /api/chat. Ai.qml owns history; this Item owns curl.
-// `think: true` 400s on models without a thinking capability — retry once.
+// Localhost Ollama /api/chat only. Body is a temp file (never argv).
+// Caps, CPU-only, and a UI throttle so a stream cannot stall qs/Hyprland.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -8,24 +8,69 @@ import "../Commons"
 Item {
     id: root
 
+    readonly property int maxPrompt: 2000
+    readonly property int maxReply: 12000
+    readonly property int maxLine: 4096
+    readonly property int maxMsgs: 12
+
     property bool running: false
     property string thinking: ""
     property string content: ""
     property string lastError: ""
     property string _body: ""
-    property bool _droppedThink: false
     property bool _restarting: false
+    property bool _dirty: false
+    property bool _capped: false
 
     signal chunk(string content, string thinking)
     signal finished(bool ok, string error)
 
-    function start(body: string) {
-        root._droppedThink = false;
+    FileView {
+        id: req
+        path: Paths.runtimeHome + "/modern-ai-request.json"
+        watchChanges: false
+        printErrors: false
+    }
+
+    Timer {
+        interval: 150
+        running: root.running && root._dirty
+        repeat: true
+        onTriggered: {
+            root._dirty = false;
+            root.chunk(root.content, "");
+        }
+    }
+
+    function start(model: string, messages: var) {
+        const safe = root._safeModel(model);
+        if (!safe.length) {
+            root.finished(false, I18n.t("ai.errorModel"));
+            return;
+        }
+        root._capped = false;
         root._restarting = false;
-        root._body = body;
         root.thinking = "";
         root.content = "";
         root.lastError = "";
+        root._dirty = false;
+        try {
+            root._body = JSON.stringify({
+                model: safe,
+                messages: root._clipMessages(messages),
+                stream: true,
+                keep_alive: "0",
+                options: {
+                    num_gpu: 0,
+                    num_thread: 4,
+                    num_ctx: 2048,
+                    num_predict: 512
+                }
+            });
+        } catch (e) {
+            root.finished(false, I18n.t("ai.error"));
+            return;
+        }
         if (proc.running) {
             root._restarting = true;
             proc.running = false;
@@ -36,45 +81,75 @@ Item {
 
     function stop() {
         root._restarting = false;
+        root._dirty = false;
         if (proc.running)
             proc.running = false;
         root.running = false;
     }
 
-    function _launch() {
-        root.running = true;
-        proc.command = [
-            "curl", "-sS", "-N", "--max-time", "180",
-            "-H", "Content-Type: application/json",
-            "--data-binary", root._body,
-            "http://127.0.0.1:11434/api/chat"
-        ];
-        proc.running = true;
+    function _safeModel(s: string): string {
+        const m = String(s || "");
+        if (m.length < 1 || m.length > 96 || m.indexOf("..") !== -1)
+            return "";
+        for (let i = 0; i < m.length; i++) {
+            const c = m.charCodeAt(i);
+            const ok = (c >= 48 && c <= 57) || (c >= 65 && c <= 90)
+                || (c >= 97 && c <= 122) || c === 46 || c === 95 || c === 58 || c === 45;
+            if (!ok)
+                return "";
+        }
+        return m;
     }
 
-    function _retryWithoutThink(): bool {
-        if (root._droppedThink)
-            return false;
-        const e = String(root.lastError || "");
-        if (e.indexOf("does not support thinking") === -1)
-            return false;
-        try {
-            const data = JSON.parse(root._body);
-            delete data.think;
-            root._body = JSON.stringify(data);
-        } catch (err) {
-            return false;
+    function _clipMessages(messages: var): var {
+        const src = messages || [];
+        const out = [];
+        const start = Math.max(0, src.length - root.maxMsgs);
+        for (let i = start; i < src.length; i++) {
+            const r = src[i];
+            if (!r)
+                continue;
+            const role = r.role === "user" ? "user" : "assistant";
+            let t = String(r.content || r.text || "").replace(/\0/g, "").trim();
+            if (t.length > root.maxPrompt)
+                t = t.substring(0, root.maxPrompt);
+            if (!t.length)
+                continue;
+            out.push({ role: role, content: t });
         }
-        root._droppedThink = true;
-        root.lastError = "";
-        root._launch();
-        return true;
+        return out;
+    }
+
+    function _launch() {
+        try {
+            req.setText(root._body);
+        } catch (e) {
+            root.finished(false, I18n.t("ai.error"));
+            return;
+        }
+        root.running = true;
+        Qt.callLater(() => {
+            if (!root.running)
+                return;
+            proc.command = [
+                "curl", "-sS", "-N", "--noproxy", "*",
+                "--connect-timeout", "5", "--max-time", "90",
+                "-H", "Content-Type: application/json",
+                "--data-binary", "@" + req.path,
+                "http://127.0.0.1:11434/api/chat"
+            ];
+            proc.running = true;
+        });
     }
 
     function _onLine(line: string) {
-        const raw = String(line || "").trim();
+        const raw = String(line || "");
         if (!raw.length)
             return;
+        if (raw.length > root.maxLine) {
+            root._overflow();
+            return;
+        }
         let data = null;
         try {
             data = JSON.parse(raw);
@@ -82,25 +157,37 @@ Item {
             return;
         }
         if (data.error) {
-            root.lastError = String(data.error);
+            root.lastError = String(data.error).substring(0, 240);
             return;
         }
         const msg = data.message || ({});
-        if (msg.thinking)
-            root.thinking += String(msg.thinking);
         if (msg.content)
-            root.content += String(msg.content);
-        root.chunk(root.content, root.thinking);
+            root.content += String(msg.content).replace(/\0/g, "");
+        if (root.content.length > root.maxReply) {
+            root.content = root.content.substring(0, root.maxReply);
+            root._overflow();
+            return;
+        }
+        root._dirty = true;
         if (data.done)
             root._finish(true, "");
+    }
+
+    function _overflow() {
+        root._capped = true;
+        root._finish(true, "");
+        if (proc.running)
+            proc.running = false;
     }
 
     function _finish(ok: bool, err: string) {
         if (!root.running)
             return;
         root.running = false;
+        root._dirty = false;
+        root.chunk(root.content, "");
         const e = err || root.lastError;
-        root.finished(ok && !e, e);
+        root.finished((ok || root._capped) && !e, e);
     }
 
     Process {
@@ -113,7 +200,7 @@ Item {
             onStreamFinished: {
                 const t = this.text.trim();
                 if (t.length > 0)
-                    root.lastError = t.split("\n")[0];
+                    root.lastError = t.split("\n")[0].substring(0, 240);
             }
         }
         onExited: (code) => {
@@ -122,8 +209,10 @@ Item {
                 root._launch();
                 return;
             }
-            if (root._retryWithoutThink())
+            if (root._capped) {
+                root._finish(true, "");
                 return;
+            }
             if (code === 28) {
                 root._finish(false, I18n.t("ai.timeout"));
                 return;

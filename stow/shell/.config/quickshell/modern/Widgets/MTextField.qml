@@ -12,6 +12,7 @@ Item {
     property string iconName: ""
     property int echoMode: TextInput.Normal
     property bool enabled: true
+    property int maximumLength: 32767
     property bool escapeCloses: false
 
     signal accepted()
@@ -71,6 +72,7 @@ Item {
         renderType: TextInput.QtRendering
         echoMode: root.echoMode
         enabled: root.enabled
+        maximumLength: root.maximumLength
         activeFocusOnPress: true
         selectByMouse: true
         clip: true

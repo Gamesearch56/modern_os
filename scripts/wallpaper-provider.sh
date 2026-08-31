@@ -59,15 +59,18 @@ i18n_json() {
     esac
     local trans="$CONFIG_HOME/modern/translations/${lang}.json"
     local back="Back"
+    local forward="Forward"
     local close="Close"
     if command -v jq >/dev/null 2>&1 && [ -f "$trans" ]; then
         back="$(jq -r '.wallpaper.providerBack // "Back"' "$trans" 2>/dev/null || printf 'Back')"
+        forward="$(jq -r '.wallpaper.providerForward // "Forward"' "$trans" 2>/dev/null || printf 'Forward')"
         close="$(jq -r '.bar.close // "Close"' "$trans" 2>/dev/null || printf 'Close')"
     fi
     if command -v jq >/dev/null 2>&1; then
-        jq -nc --arg back "$back" --arg close "$close" '{back:$back,close:$close}'
+        jq -nc --arg back "$back" --arg forward "$forward" --arg close "$close" \
+            '{back:$back,forward:$forward,close:$close}'
     else
-        printf '{"back":"Back","close":"Close"}\n'
+        printf '{"back":"Back","forward":"Forward","close":"Close"}\n'
     fi
 }
 
@@ -169,6 +172,6 @@ start_filter_proxy
 ) &
 watch_pid=$!
 
-"$QML" -- "$SCRIPT_DIR/wallpaper-provider.qml" "$URL" "$DEST" "$(theme_json)" "$(i18n_json)" &
+"$QML" -f "$SCRIPT_DIR/wallpaper-provider.qml" -- "$URL" "$DEST" "$(theme_json)" "$(i18n_json)" &
 qml_pid=$!
 wait "$qml_pid"

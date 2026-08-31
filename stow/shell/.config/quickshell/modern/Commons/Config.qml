@@ -163,7 +163,7 @@ Singleton {
                     property string calendar: "proton-mail.desktop"
                     property string mail: "proton-mail.desktop"
                     property string communication: ""
-                    property string fileManager: "org.kde.dolphin.desktop"
+                    property string fileManager: "org.gnome.Nautilus.desktop"
                     property string videoPlayer: "mpv.desktop"
                     property string imageViewer: "imv.desktop"
                     property string terminal: "kitty.desktop"
@@ -250,7 +250,7 @@ Singleton {
                 launcher: "SUPER + SPACE",
                 aiChat: "SUPER + A",
                 powerMenu: "SUPER + M",
-                controlCenter: "SUPER + O",
+                controlCenter: "SUPER + N",
                 lockScreen: "SUPER + L",
                 exitSession: "SUPER + SHIFT + M",
                 cheatsheet: "SUPER + K",

@@ -158,7 +158,7 @@ Singleton {
             return "cpu";
         if (n.indexOf("hypr") !== -1 || n.indexOf("quickshell") === 0)
             return "preferences-desktop-display";
-        if (n === "dolphin")
+        if (n === "nautilus" || n === "dolphin")
             return "system-file-manager";
         if (n === "kitty")
             return "utilities-terminal";
@@ -166,7 +166,7 @@ Singleton {
     }
 
     function _stem(id: string): string {
-        return String(id || "").replace(/\.desktop$/i, "").replace(/^org\.kde\./, "").replace(/-stable$/, "").toLowerCase();
+        return String(id || "").replace(/\.desktop$/i, "").replace(/^org\.kde\./, "").replace(/^org\.gnome\./, "").replace(/-stable$/, "").toLowerCase();
     }
 
     function _isSystem(name: string): bool {
@@ -179,7 +179,7 @@ Singleton {
             if (stems[i].length && (n === stems[i] || n.indexOf(stems[i] + "-") === 0))
                 return true;
         }
-        return "pipewire wireplumber systemd greetd grim slurp matugen pacman reflector bluez networkmanager polkit stow qt6-base qt6-declarative kitty dolphin vivaldi".split(" ").indexOf(n) !== -1;
+        return "pipewire wireplumber systemd greetd grim slurp matugen pacman reflector bluez networkmanager polkit stow qt6-base qt6-declarative kitty nautilus dolphin vivaldi".split(" ").indexOf(n) !== -1;
     }
 
     function _parseCheck(text: string) {

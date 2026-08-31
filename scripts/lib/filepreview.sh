@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Spacebar Quick Look: Dolphin selection via the copy_location QAction
-# (KF6 does not export the selection over D-Bus), then Quickshell IPC.
-# Not Dolphin → return; SPACE is a non-consuming bind so the focused
-# field (AI chat, kitty, …) already received the key.
-# Source from scripts/modern, never execute directly.
-
+# Spacebar Quick Look for Dolphin only. Nautilus Space is GNOME Sushi
+# (themed + floated in windowrules.lua); this script must not steal it.
+# Dolphin: copy_location QAction (KF6 has no selection D-Bus).
+# Other windows: return; SPACE is non-consuming so the focused field
+# already received the key. Source from scripts/modern, never execute.
 filepreview_trim() {
     printf '%s' "$1" | tr -d '[:space:]"'
 }
@@ -27,15 +26,49 @@ filepreview_class_is_dolphin() {
     esac
 }
 
+filepreview_class_is_nautilus() {
+    local class="$1"
+    case "$class" in
+        org.gnome.Nautilus | org.gnome.Nautilus-* | org.gnome.nautilus | nautilus | nautilus-*)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+filepreview_class_is_preview() {
+    local class="$1"
+    local title="$2"
+    case "$class" in
+        modern.quicklook | modern.filepreview)
+            return 0
+            ;;
+    esac
+    case "$title" in
+        modern.filepreview | modern.quicklook)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
 filepreview_uri_to_path() {
     python3 -c '
 import sys, urllib.parse
-p = sys.argv[1].strip().splitlines()[0].strip() if len(sys.argv) > 1 else ""
-if p.startswith("file://"):
-    p = urllib.parse.unquote(p[7:])
-    if not p.startswith("/"):
-        p = "/" + p
-print(p)
+raw = sys.argv[1] if len(sys.argv) > 1 else ""
+for line in raw.splitlines():
+    p = line.strip()
+    if not p or p in ("copy", "cut", "link"):
+        continue
+    if p.startswith("file://"):
+        p = urllib.parse.unquote(p[7:])
+        if not p.startswith("/"):
+            p = "/" + p
+    if p.startswith("/") and p != " ":
+        print(p)
+        break
 ' "$1"
 }
 
@@ -66,10 +99,12 @@ filepreview_copy_location() {
 }
 
 filepreview_wait_path() {
-    local i p
-    for i in 1 2 3 4 5 6 7 8; do
-        p="$(wl-paste -n -t text 2>/dev/null || true)"
-        p="$(filepreview_uri_to_path "$p")"
+    local i p raw
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        raw="$(wl-paste -n -t text/uri-list 2>/dev/null || true)"
+        [ -n "$raw" ] || raw="$(wl-paste -n -t x-special/gnome-copied-files 2>/dev/null || true)"
+        [ -n "$raw" ] || raw="$(wl-paste -n -t text 2>/dev/null || true)"
+        p="$(filepreview_uri_to_path "$raw")"
         if [ -n "$p" ] && [ "$p" != " " ] && [ -e "$p" ]; then
             printf '%s\n' "$p"
             return 0
@@ -79,7 +114,7 @@ filepreview_wait_path() {
     return 1
 }
 
-filepreview_selection() {
+filepreview_dolphin_selection() {
     local pid="$1"
     local dest old path
     dest="$(filepreview_dolphin_dest "$pid")"
@@ -99,23 +134,46 @@ filepreview_selection() {
     return 1
 }
 
+filepreview_open_or_toast() {
+    local path="$1"
+    if [ -n "$path" ]; then
+        qs -c modern ipc call filepreview open "$path" >/dev/null 2>&1 || true
+        return 0
+    fi
+    if filepreview_is_open; then
+        return 0
+    fi
+    qs -c modern ipc call notifications toast "$(t filePreview.noSelection)" "" >/dev/null 2>&1 || true
+    return 0
+}
+
 filepreview_run() {
+    local lock="${XDG_RUNTIME_DIR:-/tmp}/modern-filepreview.lock"
+    exec 9>"$lock"
+    flock -n 9 || return 0
+
+    local json class title pid path
+    json="$(hyprctl activewindow -j 2>/dev/null || true)"
+    class="$(printf '%s' "$json" | jq -r '.class // empty' 2>/dev/null || true)"
+    title="$(printf '%s' "$json" | jq -r '.title // empty' 2>/dev/null || true)"
+    pid="$(printf '%s' "$json" | jq -r '.pid // empty' 2>/dev/null || true)"
+
+    if filepreview_class_is_nautilus "$class"; then
+        return 0
+    fi
+
     if filepreview_is_open; then
         qs -c modern ipc call filepreview hide >/dev/null 2>&1 || true
         return 0
     fi
 
-    local json class pid path
-    json="$(hyprctl activewindow -j 2>/dev/null || true)"
-    class="$(printf '%s' "$json" | jq -r '.class // empty' 2>/dev/null || true)"
-    pid="$(printf '%s' "$json" | jq -r '.pid // empty' 2>/dev/null || true)"
-
     if filepreview_class_is_dolphin "$class"; then
-        if path="$(filepreview_selection "$pid")" && [ -n "$path" ]; then
-            qs -c modern ipc call filepreview open "$path" >/dev/null 2>&1 || true
-            return 0
-        fi
-        qs -c modern ipc call notifications toast "$(t filePreview.noSelection)" "" >/dev/null 2>&1 || true
+        path="$(filepreview_dolphin_selection "$pid" || true)"
+        filepreview_open_or_toast "$path"
+        return 0
+    fi
+    if filepreview_class_is_preview "$class" "$title"; then
+        qs -c modern ipc call filepreview hide >/dev/null 2>&1 || true
         return 0
     fi
 }
