@@ -14,6 +14,7 @@
     "bluetooth": "Bluetooth",
     "notifications": "Notifications",
     "settings": "Settings",
+    "store": "App Store",
     "controlPanel": "Control panel",
     "power": "Power",
     "taskbar": "Applications",
@@ -946,5 +947,38 @@
   "theme": {
     "applyFailed": "Could not apply the theme",
     "invalidSlug": "Theme name can only use letters, numbers, and dashes"
+  },
+  "store": {
+    "title": "App Store",
+    "search": "Search packages",
+    "empty": "No packages",
+    "emptyHint": "Pick a category or search official repositories",
+    "emptySearch": "No packages match that search",
+    "install": "Install",
+    "remove": "Remove",
+    "installed": "Installed",
+    "confirmInstall": "Install {name}?",
+    "confirmRemove": "Remove {name}?",
+    "updates": "{n} updates available",
+    "updatesNone": "Updates",
+    "working": "Changing packages…",
+    "failed": "Could not change the package",
+    "doneInstall": "Installed {name}",
+    "doneRemove": "Removed {name}",
+    "hintUpdates": "System upgrades live in Settings → System",
+    "popular": "Popular",
+    "resultsTitle": "Results for {q}",
+    "categories": {
+      "discover": "Discover",
+      "internet": "Internet",
+      "office": "Office",
+      "graphics": "Graphics",
+      "multimedia": "Multimedia",
+      "games": "Games",
+      "development": "Development",
+      "system": "System",
+      "utilities": "Utilities",
+      "installed": "Installed"
+    }
   }
 }

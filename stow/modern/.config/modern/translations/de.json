@@ -14,6 +14,7 @@
     "bluetooth": "Bluetooth",
     "notifications": "Benachrichtigungen",
     "settings": "Einstellungen",
+    "store": "App-Store",
     "controlPanel": "Kontrollzentrum",
     "power": "Ein/Aus",
     "taskbar": "Anwendungen",
@@ -946,5 +947,38 @@
   "theme": {
     "applyFailed": "Thema konnte nicht angewendet werden",
     "invalidSlug": "Themenname nur Buchstaben, Zahlen und Bindestriche"
+  },
+  "store": {
+    "title": "App-Store",
+    "search": "Pakete suchen",
+    "empty": "Keine Pakete",
+    "emptyHint": "Wähle eine Kategorie oder suche in den offiziellen Repositories",
+    "emptySearch": "Keine Pakete passen zur Suche",
+    "install": "Installieren",
+    "remove": "Entfernen",
+    "installed": "Installiert",
+    "confirmInstall": "{name} installieren?",
+    "confirmRemove": "{name} entfernen?",
+    "updates": "{n} Updates verfügbar",
+    "updatesNone": "Updates",
+    "working": "Pakete werden geändert…",
+    "failed": "Paket konnte nicht geändert werden",
+    "doneInstall": "{name} installiert",
+    "doneRemove": "{name} entfernt",
+    "hintUpdates": "System-Updates findest du unter Einstellungen → System",
+    "popular": "Beliebt",
+    "resultsTitle": "Ergebnisse für {q}",
+    "categories": {
+      "discover": "Entdecken",
+      "internet": "Internet",
+      "office": "Büro",
+      "graphics": "Grafik",
+      "multimedia": "Multimedia",
+      "games": "Spiele",
+      "development": "Entwicklung",
+      "system": "System",
+      "utilities": "Werkzeuge",
+      "installed": "Installiert"
+    }
   }
 }

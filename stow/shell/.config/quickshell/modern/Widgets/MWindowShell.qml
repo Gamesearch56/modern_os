@@ -16,6 +16,7 @@ Item {
     property real titleColumnWidth: 0
     property real chromeOpacity: Config.design.transparency ?? 0.85
     property bool busy: false
+    property alias trailing: chrome.trailing
 
     signal closed()
     signal actionClicked()
@@ -38,6 +39,7 @@ Item {
         spacing: Tokens.spacing.md
 
         MWindowChrome {
+            id: chrome
             Layout.fillWidth: true
             titleKey: root.titleKey
             titleValue: root.titleValue

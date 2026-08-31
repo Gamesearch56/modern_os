@@ -48,6 +48,8 @@ Item {
         onGrabReady: {
             if (panelLoader.item && panelLoader.item.focusInput)
                 panelLoader.item.focusInput();
+            if (panelLoader.item && panelLoader.item._scrollEnd)
+                panelLoader.item._scrollEnd();
         }
 
         Connections {

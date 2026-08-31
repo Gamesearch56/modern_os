@@ -113,7 +113,7 @@ done < <(find "$SHELL_ROOT" -name '*.qml' ! -path '*/Colors.qml')
 # --- module-internal imports (a Module may only use another Module's Module.qml) ---
 while IFS= read -r hit; do
     err "module imported another module's internals: $hit"
-done < <(grep -RIn --include='*.qml' -E 'import ["'\'']\.\./(Bar|Settings|Launcher|Notifications|Wallpaper|PowerMenu|Cheatsheet|Overview|Session|Plugins|Onboarding|FilePreview|Screenshot)/' "$SHELL_ROOT/Modules" \
+done < <(grep -RIn --include='*.qml' -E 'import ["'\'']\.\./(Bar|Settings|Launcher|Notifications|Wallpaper|PowerMenu|Cheatsheet|Overview|Session|Plugins|Onboarding|FilePreview|Screenshot|Store)/' "$SHELL_ROOT/Modules" \
     | grep -v 'Module.qml' || true)
 
 # --- hardcoded repo scripts path (must go through Commons/Paths.qml) ---

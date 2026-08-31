@@ -50,6 +50,21 @@ Six groups, 21 pages. Catalog lives in
 | System | Firewall | `firewall` | Live UFW (`Firewall`). Enable/disable and allow/deny rules via `pkexec /usr/bin/ufw`. Rules persist in `/etc/ufw`. Enable forces deny incoming, allow outgoing, deny routed. No `config.json` keys, no Restore, no `ufw reset`. |
 | System | Update | `system` | Pending packages via `checkupdates` (`Update`). `modern update` / `modern mirrors` (pkexec from Settings). |
 
+## App Store
+
+A Hyprland `FloatingWindow` titled `modern.store` (control panel header
+opens it; Super+Q is `killactive`). Chrome title is **App Store**. It
+installs and removes official Arch packages only — no `-Sy`/`-Syu`.
+System upgrades stay on Settings → System.
+
+- Catalog: `~/.config/modern/store/catalog.json` (popular grid +
+  category allowlists). Installed is `pacman -Qe`, not a name list.
+- Search: `scripts/pkg-search.sh` (`pacman -Ss`). Info:
+  `scripts/pkg-info.sh`. Mutate: `scripts/pkg-mutate.sh` via `pkexec`.
+- Updates button (badge = `Update.pending.length`) calls
+  `Settings.openAt("system")`. IPC: `qs -c modern ipc call store toggle`.
+
+
 ## Restore defaults
 
 Privacy, Energy, Design, Bar, Launcher, Applications, Screenshot,

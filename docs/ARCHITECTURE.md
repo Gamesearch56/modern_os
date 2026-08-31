@@ -51,7 +51,7 @@ Widgets/   MButton MIconButton MSwitch MSlider MCard MChip MListItem
            — MD3 primitives. Stateless, token-driven, zero system access.
 
 Modules/   Bar/ Launcher/ Panels/ PowerMenu/ Notifications/ Wallpaper/
-           Settings/ Overview/ Session/ Cheatsheet/ Onboarding/
+           Settings/ Store/ Overview/ Session/ Cheatsheet/ Onboarding/
            — features. Composes Widgets, reads Services.
 ```
 

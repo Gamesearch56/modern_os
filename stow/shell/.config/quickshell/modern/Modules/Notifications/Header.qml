@@ -47,12 +47,11 @@ RowLayout {
             }
         }
         MIconButton {
-            iconName: "focus-windows-symbolic"
-            key: "bar.taskbar"
-            checked: Taskbar.open
+            iconName: "go-home-symbolic"
+            key: "bar.store"
             onClicked: {
                 Notifications.hide();
-                Taskbar.toggle(null);
+                Store.show();
             }
         }
         MIconButton {

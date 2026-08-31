@@ -14,6 +14,7 @@ import "Modules/Onboarding" as Onboarding
 import "Modules/Overview" as OverviewMod
 import "Modules/Notifications" as NotificationsMod
 import "Modules/Settings" as SettingsMod
+import "Modules/Store" as StoreMod
 import "Modules/Plugins" as PluginsMod
 import "Modules/Session" as SessionMod
 import "Modules/Wallpaper" as WallpaperMod
@@ -29,6 +30,7 @@ ShellRoot {
     OverviewMod.Module {}
     NotificationsMod.Module {}
     SettingsMod.Module {}
+    StoreMod.Module {}
     PluginsMod.Module {}
     SessionMod.Module {}
     WallpaperMod.Module {}

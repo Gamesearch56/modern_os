@@ -9,7 +9,7 @@ Row {
     property bool running: true
 
     spacing: Tokens.spacing.xs
-    Accessible.role: Accessible.Status
+    Accessible.role: Accessible.StaticText
     Accessible.name: I18n.t("ai.generating")
 
     Repeater {

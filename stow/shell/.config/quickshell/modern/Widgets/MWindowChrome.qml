@@ -15,6 +15,7 @@ RowLayout {
     property string actionIcon: ""
     property real titleColumnWidth: 0
     property bool busy: false
+    property alias trailing: trailingSlot.data
 
     readonly property bool _hasSubtitle: root.subtitleKey.length > 0 || root.subtitleValue.length > 0
 
@@ -48,6 +49,14 @@ RowLayout {
 
     Item {
         Layout.fillWidth: true
+    }
+
+    Item {
+        id: trailingSlot
+        visible: children.length > 0
+        implicitWidth: children.length > 0 ? children[0].implicitWidth : 0
+        implicitHeight: children.length > 0 ? children[0].implicitHeight : 0
+        Layout.alignment: Qt.AlignVCenter
     }
 
     MIconButton {

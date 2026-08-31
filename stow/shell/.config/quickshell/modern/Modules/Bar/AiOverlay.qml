@@ -76,6 +76,8 @@ Scope {
                     onLoaded: {
                         if (panelLoader.item && panelLoader.item.focusInput)
                             Qt.callLater(() => panelLoader.item.focusInput());
+                        if (panelLoader.item && panelLoader.item._scrollEnd)
+                            Qt.callLater(() => panelLoader.item._scrollEnd());
                     }
                 }
             }

@@ -52,3 +52,5 @@ singleton Update 1.0 Update.qml
 singleton Snapshots 1.0 Snapshots.qml
 singleton Firewall 1.0 Firewall.qml
 FirewallParse 1.0 FirewallParse.qml
+singleton Store 1.0 Store.qml
+StoreCatalog 1.0 StoreCatalog.qml

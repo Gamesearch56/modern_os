@@ -6,11 +6,21 @@ import "../../../../Services"
 Item {
     id: root
 
+    property bool _followEnd: true
+
     function scrollEnd() {
-        if (list.count <= 0)
-            return;
-        list.positionViewAtEnd();
-        Qt.callLater(() => list.positionViewAtEnd());
+        root._followEnd = true;
+        endSoon.restart();
+    }
+
+    Timer {
+        id: endSoon
+        interval: Motion.shortMs
+        onTriggered: {
+            if (!root._followEnd || list.count <= 0 || list.height <= 0)
+                return;
+            list.positionViewAtEnd();
+        }
     }
 
     ListView {
@@ -37,11 +47,20 @@ Item {
                 pending: !!row.streaming
             }
         }
-        onCountChanged: root.scrollEnd()
-        onContentHeightChanged: {
-            if (Ai.busy && list.atYEnd)
-                root.scrollEnd();
+        onCountChanged: {
+            if (root._followEnd)
+                endSoon.restart();
         }
+        onContentHeightChanged: {
+            if (root._followEnd)
+                endSoon.restart();
+        }
+        onHeightChanged: {
+            if (root._followEnd)
+                endSoon.restart();
+        }
+        onMovementEnded: root._followEnd = list.atYEnd
+        onFlickEnded: root._followEnd = list.atYEnd
     }
 
     readonly property bool _blocked: (Config.accounts?.ai?.provider ?? "none") === "none" || !Ai.ready
@@ -65,9 +84,9 @@ Item {
         target: Ai
         function onPanelOpenChanged() {
             if (Ai.panelOpen)
-                Qt.callLater(root.scrollEnd);
+                root.scrollEnd();
         }
     }
 
-    Component.onCompleted: Qt.callLater(root.scrollEnd)
+    Component.onCompleted: root.scrollEnd()
 }
