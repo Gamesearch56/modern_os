@@ -112,9 +112,9 @@ Item {
                     styleName: "labelSmall"
                     elide: Text.ElideNone
                     wrapMode: Text.NoWrap
+                    maximumLineCount: 1
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    lineHeightMode: Text.ProportionalHeight
                     color: {
                         if (chip.current)
                             return Chrome.navSelected.fg;

@@ -149,22 +149,22 @@ Singleton {
             return null;
         let spotify = null;
         let playing = null;
-        let other = null;
+        let titled = null;
         for (let i = 0; i < vals.length; i++) {
             const p = vals[i];
             if (root._isSpotify(p)) {
                 spotify = p;
                 continue;
             }
-            if (!other)
-                other = p;
             if (!playing && root._isPlaying(p))
                 playing = p;
+            if (!titled && String(p?.trackTitle || p?.trackArtist || "").trim().length)
+                titled = p;
         }
         if (spotify)
             return spotify;
         if (playing)
             return playing;
-        return other;
+        return titled;
     }
 }

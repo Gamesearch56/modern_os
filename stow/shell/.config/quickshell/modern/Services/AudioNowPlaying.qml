@@ -15,6 +15,19 @@ QtObject {
                 continue;
             if (n.isSink === false)
                 continue;
+            void n.ready;
+            void n.properties;
+            if (n.ready === false)
+                continue;
+            const p = n.properties || {};
+            const corked = String(p["pulse.corked"] || "").toLowerCase();
+            if (corked === "true" || corked === "1")
+                continue;
+            const state = String(p["stream.activity"] || p["node.state"] || "").toLowerCase();
+            if (state === "idle" || state === "suspended" || state === "corked")
+                continue;
+            if (!root.streamTitle(n).length)
+                continue;
             return n;
         }
         return null;

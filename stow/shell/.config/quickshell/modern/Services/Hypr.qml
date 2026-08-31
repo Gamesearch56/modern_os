@@ -459,6 +459,12 @@ Singleton {
             if (awId > 0 && !(mode === "fixed" && range && (awId < range.from || awId > range.to)))
                 add(awId);
         }
+        if (shown.length === 0) {
+            const fw = Hyprland.focusedWorkspace;
+            const fwId = Number(fw && fw.id);
+            if (fwId > 0)
+                add(fwId);
+        }
         shown.sort((a, b) => a - b);
         return shown;
     }

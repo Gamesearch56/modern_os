@@ -32,6 +32,7 @@ Singleton {
 
     property var _connectTried: ({})
     property bool refreshing: false
+    property bool _uiReady: false
 
     Timer {
         id: refreshBusy
@@ -39,19 +40,32 @@ Singleton {
         onTriggered: root.refreshing = false
     }
 
-    on_DevSigChanged: root._syncAutoAudio()
+    on_DevSigChanged: {
+        if (root._uiReady)
+            root._syncAutoAudio();
+    }
     onAutoAudioChanged: {
         if (root.autoAudio)
             root._connectTried = ({});
-        root._syncAutoAudio();
+        if (root._uiReady)
+            root._syncAutoAudio();
     }
     onPoweredChanged: {
         if (root.powered)
             root._connectTried = ({});
-        root._syncAutoAudio();
+        if (root._uiReady)
+            root._syncAutoAudio();
     }
 
-    Component.onCompleted: Qt.callLater(root._syncAutoAudio)
+    Timer {
+        interval: Math.max(Motion.extraLongMs, 1)
+        running: true
+        repeat: false
+        onTriggered: {
+            root._uiReady = true;
+            root._syncAutoAudio();
+        }
+    }
 
     function _list(model: var): var {
         if (!model)
@@ -179,7 +193,7 @@ Singleton {
             if (d.connected || tried[addr])
                 continue;
             tried[addr] = true;
-            d.connect();
+            Qt.callLater(() => root.connectDevice(d));
         }
         const next = {};
         for (const k in tried) {
