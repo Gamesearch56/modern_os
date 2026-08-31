@@ -34,6 +34,9 @@ Singleton {
     readonly property int durationMedium: 250
     readonly property int durationLong: 400
     readonly property int durationExtraLong: 600
+    readonly property int durationConfigWrite: 1000
+    // Wall-clock hide for recording chrome — not MD3 motion, never scaled.
+    readonly property int durationRecordingChrome: 3000
 
     readonly property real scale: Config.motion.scale ?? 1.0 // 0 = off (accessibility/slow machine), 1.5 = slow-mo for demos
     readonly property string overlay: Config.motion.overlay ?? "fadeZoom"
@@ -44,6 +47,8 @@ Singleton {
     readonly property int mediumMs: Math.round(durationMedium * root.scale)
     readonly property int longMs: Math.round(durationLong * root.scale)
     readonly property int extraLongMs: Math.round(durationExtraLong * root.scale)
+    readonly property int configWriteMs: Math.round(durationConfigWrite * (root.scale === 0 ? 1 : root.scale))
+    readonly property int recordingChromeMs: root.durationRecordingChrome
     readonly property bool overlaysFade: root.scale !== 0 && root.overlay !== "zoom"
     readonly property bool overlaysZoom: root.scale !== 0 && root.overlay !== "fade"
 

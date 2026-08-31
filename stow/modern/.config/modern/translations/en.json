@@ -129,9 +129,13 @@
     "hint": "Ask a question. Replies come from the local Ollama model.",
     "needSetup": "The assistant has to be set up",
     "setup": "Set up assistant",
+    "settings": "Assistant settings",
     "clear": "Clear chat",
     "send": "Send",
     "thinking": "Thinking…",
+    "generating": "Writing a reply…",
+    "reasoning": "Reasoning",
+    "timeout": "The assistant timed out. Try again, or pick a smaller model in Settings → AI.",
     "error": "The assistant could not reply.",
     "errorMissing": "Ollama is not installed or not on PATH.",
     "errorModel": "That model is not available. Pull it with ollama, or pick another in Settings → AI.",
@@ -302,7 +306,8 @@
       "controlCenter": "Control panel",
       "lockScreen": "Lock screen",
       "browserIncognito": "Browser (incognito)",
-      "filePreview": "Quick Look"
+      "filePreview": "Quick Look",
+      "clipboardHistory": "Clipboard history"
     },
     "category": {
       "applications": "Applications",
@@ -348,6 +353,7 @@
     "restoreBody": "This resets every option on this page to the shipped defaults.",
     "restoreDone": "{name} settings restored",
     "restoreFailed": "Could not restore {name} settings",
+    "saving": "Saving…",
     "typePreview": "Type preview",
     "typePreviewBody": "The quick brown fox jumps over the lazy dog.",
     "barTop": "Top",
@@ -857,7 +863,7 @@
   "recording": {
     "start": "Record",
     "stop": "Stop",
-    "stopHint": "Escape or Super+Print to stop",
+    "stopHint": "Super+Print to stop",
     "saved": "Recording saved",
     "savedHint": "Saved to your recordings folder",
     "failed": "Recording failed"

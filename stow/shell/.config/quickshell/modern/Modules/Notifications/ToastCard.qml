@@ -6,7 +6,8 @@ import "../../Services"
 
 // Overlay glass toast. Fields are bound by the Repeater (same pattern
 // as the control-panel MListItem) — do not rely on injected modelData.
-Item {
+// Dismiss/hide by uid so Repeater copies of the JS item still resolve.
+MouseArea {
     id: root
 
     property string summary: ""
@@ -15,6 +16,7 @@ Item {
     property string appIcon: ""
     property int expireTimeout: 0
     property var shownAt: 0
+    property int uid: 0
     property var notification: null
 
     readonly property string _thumb: {
@@ -47,31 +49,50 @@ Item {
     }
 
     readonly property int _timeout: root.expireTimeout
-    property real remain: root._timeout > 0 ? 1 : 0
+    property real remain: 1
 
     width: Tokens.spacing.xxl * 12
     implicitWidth: width
     implicitHeight: inner.implicitHeight + Tokens.spacing.md * 2
+    hoverEnabled: true
+    cursorShape: Qt.PointingHandCursor
+    acceptedButtons: Qt.LeftButton
     Accessible.role: Accessible.Button
     Accessible.name: root.summary
     Accessible.onPressAction: root._activate()
+    onClicked: root._activate()
+
+    function _remainNow(): real {
+        if (root._timeout <= 0)
+            return 0;
+        const shown = Number(root.shownAt);
+        if (!(shown > 0))
+            return 1;
+        return Math.max(0, Math.min(1, ((shown + root._timeout) - Date.now()) / root._timeout));
+    }
+
+    function _id() {
+        return root.uid > 0 ? root.uid : root.notification;
+    }
+
+    function _close() {
+        const id = root._id();
+        Qt.callLater(() => Notifications.dismiss(id));
+    }
 
     function _activate() {
+        const id = root._id();
         const path = Notifications.attachmentPath(root.notification);
-        if (path.length)
-            Apps.openInFileManager(path);
-        Notifications.dismiss(root.notification);
+        Qt.callLater(() => {
+            if (path.length)
+                Apps.openInFileManager(path);
+            Notifications.dismiss(id);
+        });
     }
 
-    Component.onCompleted: {
-        if (root._timeout <= 0)
-            return;
-        const shown = Number(root.shownAt) || Date.now();
-        const left = Math.max(0, (shown + root._timeout) - Date.now());
-        root.remain = left / root._timeout;
-        drain.duration = left;
-        drain.start();
-    }
+    onShownAtChanged: root._startDrain()
+    onExpireTimeoutChanged: root._startDrain()
+    Component.onCompleted: root._startDrain()
 
     NumberAnimation {
         id: drain
@@ -81,11 +102,35 @@ Item {
         easing.type: Easing.Linear
     }
 
+    function _startDrain() {
+        drain.stop();
+        if (root._timeout <= 0) {
+            root.remain = 0;
+            return;
+        }
+        const left = root._remainNow();
+        root.remain = left;
+        drain.from = left;
+        drain.duration = Math.max(1, Math.round(left * root._timeout));
+        drain.start();
+    }
+
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.medium
         color: Colors.color.surface
         opacity: Config.design.transparency ?? 0.85
+    }
+
+    MLinearProgress {
+        visible: root._timeout > 0
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: Tokens.spacing.xs
+        value: root.remain
+        enclosureRadius: Tokens.radius.medium
+        enclosureHeight: root.height
     }
 
     Rectangle {
@@ -96,12 +141,6 @@ Item {
         border.width: Tokens.stroke.hairline
     }
 
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root._activate()
-    }
-
     RowLayout {
         id: inner
         anchors.left: parent.left
@@ -109,7 +148,6 @@ Item {
         anchors.top: parent.top
         anchors.margins: Tokens.spacing.md
         spacing: Tokens.spacing.xl
-        z: 1
 
         Rectangle {
             visible: root._thumb.length > 0
@@ -169,48 +207,17 @@ Item {
         }
     }
 
-    MouseArea {
+    MIconButton {
         z: 20
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.margins: Tokens.spacing.md
-        width: Tokens.spacing.xl
-        height: Tokens.spacing.xl
-        cursorShape: Qt.PointingHandCursor
-        preventStealing: true
-        Accessible.role: Accessible.Button
-        Accessible.name: I18n.t("bar.close")
-        onClicked: (mouse) => {
-            mouse.accepted = true;
-            Notifications.dismiss(root.notification);
-        }
-
-        MIcon {
-            anchors.centerIn: parent
-            name: "window-close"
-            size: Tokens.icon.sm
-            color: Colors.color.error
-            tint: true
-        }
-    }
-
-    // Clip a matching rounded rect so the drain is the bottom stroke,
-    // including the corner radius — not a square bar under the pill.
-    Item {
-        visible: root._timeout > 0
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
-        width: parent.width * root.remain
-        height: Tokens.stroke.focus
-        clip: true
-
-        Rectangle {
-            width: root.width
-            height: root.height
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            radius: Tokens.radius.medium
-            color: Colors.color.primary
-        }
+        anchors.margins: Tokens.spacing.xs
+        close: true
+        tabFocus: false
+        iconName: "window-close"
+        key: "bar.close"
+        size: Tokens.spacing.xl
+        iconSize: Tokens.icon.sm
+        onClicked: root._close()
     }
 }

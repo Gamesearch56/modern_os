@@ -7,7 +7,8 @@ import "../../Widgets"
 import "../../Services"
 
 // Compact stop chrome while wf-recorder runs. Must not be fullscreen —
-// a pick HUD would steal clicks and dim the video.
+// a pick HUD would steal clicks and dim the video. After a few seconds
+// the chrome hides; a thin top/bottom band brings it back on hover.
 Scope {
     id: root
 
@@ -15,13 +16,48 @@ Scope {
 
     readonly property real _barReserve: Config.bar.position !== "top"
         ? Tokens.spacing.xl : BarLayout.windowInset
+    readonly property real _hot: Tokens.spacing.xl
+    property bool chromeOpen: true
+    property bool topHot: false
+    property bool bottomHot: false
+    readonly property bool edgeHot: root.topHot || root.bottomHot
+
+    onEdgeHotChanged: {
+        if (root.edgeHot) {
+            hideLeave.stop();
+            root.chromeOpen = true;
+            return;
+        }
+        if (!hideAfterStart.running)
+            hideLeave.restart();
+    }
+
+    Timer {
+        id: hideAfterStart
+        interval: Motion.recordingChromeMs
+        onTriggered: {
+            if (!root.edgeHot)
+                root.chromeOpen = false;
+        }
+    }
+
+    Timer {
+        id: hideLeave
+        interval: Math.max(Motion.extraLongMs, 1)
+        onTriggered: {
+            if (!root.edgeHot)
+                root.chromeOpen = false;
+        }
+    }
+
+    Component.onCompleted: hideAfterStart.start()
 
     PanelWindow {
         id: barWin
         screen: root.screen
         visible: Recording.active
         color: "transparent"
-        implicitHeight: strip.height
+        implicitHeight: Math.max(strip.height, root._hot)
         anchors.top: true
         anchors.left: true
         anchors.right: true
@@ -30,27 +66,34 @@ Scope {
         aboveWindows: true
         WlrLayershell.namespace: "modern-recording"
         WlrLayershell.layer: WlrLayer.Overlay
+        mask: Region {
+            item: root.chromeOpen ? strip : hotTop
+        }
 
         Item {
             id: strip
             width: barWin.width
-            height: card.height + root._barReserve
+            height: Math.max(card.height + root._barReserve, root._hot)
 
-            Rectangle {
+            HoverHandler {
+                onHoveredChanged: root.topHot = hovered
+            }
+
+            Item {
+                id: hotTop
+                width: parent.width
+                height: root._hot
+            }
+
+            RecordingChrome {
                 id: card
+                open: root.chromeOpen
+                origin: Item.Top
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: root._barReserve
                 width: inner.implicitWidth + Tokens.spacing.md * 2
                 height: inner.implicitHeight + Tokens.spacing.md * 2
-                color: Colors.color.surface
                 radius: Tokens.radius.medium
-                border.color: Colors.color.outlineVariant
-                border.width: Tokens.stroke.hairline
-                opacity: Config.design.transparency ?? 0.85
-
-                MouseArea {
-                    anchors.fill: parent
-                }
 
                 RowLayout {
                     id: inner
@@ -61,6 +104,7 @@ Scope {
                         kind: "destructive"
                         key: "recording.stop"
                         iconName: "media-playback-stop"
+                        enabled: root.chromeOpen
                         onClicked: Recording.stop()
                     }
                 }
@@ -79,7 +123,7 @@ Scope {
         screen: root.screen
         visible: Recording.active
         color: "transparent"
-        implicitHeight: hint.height + Tokens.spacing.xl * 2
+        implicitHeight: Math.max(hint.height + Tokens.spacing.xl * 2, root._hot)
         anchors.bottom: true
         anchors.left: true
         anchors.right: true
@@ -87,29 +131,43 @@ Scope {
         aboveWindows: true
         WlrLayershell.namespace: "modern-recording"
         WlrLayershell.layer: WlrLayer.Overlay
+        mask: Region {
+            item: root.chromeOpen ? hintBand : hotBottom
+        }
 
-        Rectangle {
-            id: hint
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: Tokens.spacing.xl
-            width: hintLabel.implicitWidth + Tokens.spacing.md * 2
-            height: hintLabel.implicitHeight + Tokens.spacing.sm * 2
-            color: Colors.color.surface
-            radius: Tokens.radius.full
-            border.color: Colors.color.outlineVariant
-            border.width: Tokens.stroke.hairline
-            opacity: Config.design.transparency ?? 0.85
+        Item {
+            id: hintBand
+            width: hintWin.width
+            height: Math.max(hint.height + Tokens.spacing.xl * 2, root._hot)
 
-            MouseArea {
-                anchors.fill: parent
+            HoverHandler {
+                onHoveredChanged: root.bottomHot = hovered
             }
 
-            MText {
-                id: hintLabel
-                anchors.centerIn: parent
-                key: "recording.stopHint"
-                styleName: "labelLarge"
+            Item {
+                id: hotBottom
+                width: parent.width
+                height: root._hot
+                anchors.bottom: parent.bottom
+            }
+
+            RecordingChrome {
+                id: hint
+                open: root.chromeOpen
+                origin: Item.Bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: Tokens.spacing.xl
+                width: hintLabel.implicitWidth + Tokens.spacing.md * 2
+                height: hintLabel.implicitHeight + Tokens.spacing.sm * 2
+                radius: Tokens.radius.full
+
+                MText {
+                    id: hintLabel
+                    anchors.centerIn: parent
+                    key: "recording.stopHint"
+                    styleName: "labelLarge"
+                }
             }
         }
 

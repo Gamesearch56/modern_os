@@ -129,9 +129,13 @@
     "hint": "Stell eine Frage. Antworten kommen vom lokalen Ollama-Modell.",
     "needSetup": "Der Assistent muss eingerichtet werden",
     "setup": "Assistent einrichten",
+    "settings": "Assistent-Einstellungen",
     "clear": "Chat leeren",
     "send": "Senden",
     "thinking": "Denkt nach…",
+    "generating": "Schreibt eine Antwort…",
+    "reasoning": "Überlegung",
+    "timeout": "Der Assistent hat nicht rechtzeitig geantwortet. Nochmal versuchen, oder in Einstellungen → KI ein kleineres Modell wählen.",
     "error": "Der Assistent konnte nicht antworten.",
     "errorMissing": "Ollama ist nicht installiert oder nicht im PATH.",
     "errorModel": "Dieses Modell ist nicht verfügbar. Mit ollama laden oder unter Einstellungen → KI ein anderes wählen.",
@@ -302,7 +306,8 @@
       "controlCenter": "Kontrollzentrum",
       "lockScreen": "Sperrbildschirm",
       "browserIncognito": "Browser (Inkognito)",
-      "filePreview": "Schnellansicht"
+      "filePreview": "Schnellansicht",
+      "clipboardHistory": "Zwischenablageverlauf"
     },
     "category": {
       "applications": "Anwendungen",
@@ -348,6 +353,7 @@
     "restoreBody": "Damit werden alle Optionen dieser Seite auf die Standardwerte gesetzt.",
     "restoreDone": "{name}-Einstellungen wurden zurückgesetzt",
     "restoreFailed": "{name}-Einstellungen konnten nicht zurückgesetzt werden",
+    "saving": "Wird gespeichert…",
     "typePreview": "Schriftvorschau",
     "typePreviewBody": "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.",
     "barTop": "Oben",
@@ -857,7 +863,7 @@
   "recording": {
     "start": "Aufnehmen",
     "stop": "Stopp",
-    "stopHint": "Escape oder Super+Druck zum Beenden",
+    "stopHint": "Super+Druck zum Beenden",
     "saved": "Aufnahme gespeichert",
     "savedHint": "Im Aufnahmeordner gespeichert",
     "failed": "Aufnahme fehlgeschlagen"
