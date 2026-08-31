@@ -93,7 +93,7 @@ Item {
                             return Chrome.navSelected.bg;
                         if (chip.urgent)
                             return Colors.color.error;
-                        return Chrome.navIdle.bg;
+                        return Colors.color.surfaceContainerHighest;
                     }
                 }
 
@@ -106,9 +106,15 @@ Item {
 
                 MText {
                     id: label
-                    anchors.centerIn: parent
+                    anchors.fill: parent
+                    z: 1
                     value: String(chip.wsId)
                     styleName: "labelSmall"
+                    elide: Text.ElideNone
+                    wrapMode: Text.NoWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    lineHeightMode: Text.ProportionalHeight
                     color: {
                         if (chip.current)
                             return Chrome.navSelected.fg;

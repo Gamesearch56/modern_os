@@ -59,7 +59,7 @@ Item {
         if (group.length !== 1)
             return false;
         if (group[0] === "media")
-            return !Media.hasPlayer;
+            return !Media.hasPlayer && !Audio.playback;
         if (group[0] === "battery")
             return !Battery.onBattery;
         if (group[0] === "workspaces")

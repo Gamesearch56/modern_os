@@ -4,6 +4,7 @@ HyprMonitors 1.0 HyprMonitors.qml
 HyprWindows 1.0 HyprWindows.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml
+AudioNowPlaying 1.0 AudioNowPlaying.qml
 singleton Network 1.0 Network.qml
 singleton Bluetooth 1.0 Bluetooth.qml
 singleton Brightness 1.0 Brightness.qml

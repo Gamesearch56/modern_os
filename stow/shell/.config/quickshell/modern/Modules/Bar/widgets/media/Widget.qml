@@ -6,29 +6,48 @@ import "../../../../Services"
 
 Item {
     id: root
-    visible: Media.hasPlayer
+    visible: Media.hasPlayer || !!Audio.playback
     implicitWidth: visible ? (BarLayout.vertical ? Config.bar.height : row.implicitWidth + Tokens.spacing.md * 2) : 0
     implicitHeight: Config.bar.height
     clip: true
 
+    readonly property bool _mpris: Media.hasPlayer
     readonly property real _art: BarLayout.vertical
         ? Config.bar.height - Tokens.spacing.sm
         : Tokens.spacing.xl - Tokens.spacing.xxs
     readonly property real _titleMax: Tokens.spacing.xxl * 4
     readonly property string _label: {
-        const title = Media.trackTitle || "";
-        const artist = Media.trackArtist || "";
-        if (title.length > 0 && artist.length > 0)
-            return artist + " — " + title;
-        return title || artist;
+        if (root._mpris) {
+            const title = Media.trackTitle || "";
+            const artist = Media.trackArtist || "";
+            if (title.length > 0 && artist.length > 0)
+                return artist + " — " + title;
+            return title || artist;
+        }
+        return Audio.streamTitle(Audio.playback);
     }
+    readonly property string _artUrl: root._mpris ? Media.trackArtUrl : ""
+    readonly property string _streamIcon: root._mpris ? "" : Audio.streamIcon(Audio.playback)
 
     function _raise() {
-        const desk = Media.desktopEntry;
-        const ident = Media.identity;
-        if ((desk.length > 0 && Hypr.raiseDesktop(desk)) || (ident.length > 0 && Hypr.raiseDesktop(ident)))
+        if (root._mpris) {
+            const desk = Media.desktopEntry;
+            const ident = Media.identity;
+            if ((desk.length > 0 && Hypr.raiseDesktop(desk)) || (ident.length > 0 && Hypr.raiseDesktop(ident)))
+                return;
+            Media.raise();
             return;
-        Media.raise();
+        }
+        const app = Audio.streamAppId(Audio.playback);
+        if (app.length)
+            Hypr.raiseDesktop(app);
+    }
+
+    function _toggle() {
+        if (root._mpris)
+            Media.togglePlaying();
+        else
+            Audio.toggleStreamMute(Audio.playback);
     }
 
     RowLayout {
@@ -37,7 +56,7 @@ Item {
         spacing: Tokens.spacing.sm
 
         Rectangle {
-            visible: BarLayout.vertical || Media.trackArtUrl.length > 0
+            visible: BarLayout.vertical || root._artUrl.length > 0 || !root._mpris
             Layout.preferredWidth: root._art
             Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
@@ -47,8 +66,8 @@ Item {
 
             Image {
                 anchors.fill: parent
-                visible: Media.trackArtUrl.length > 0
-                source: Media.trackArtUrl
+                visible: root._artUrl.length > 0
+                source: root._artUrl
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 smooth: true
@@ -58,8 +77,8 @@ Item {
 
             MIcon {
                 anchors.centerIn: parent
-                visible: Media.trackArtUrl.length === 0
-                name: "audio-x-generic-symbolic"
+                visible: root._artUrl.length === 0
+                name: root._streamIcon.length ? root._streamIcon : "audio-x-generic-symbolic"
                 size: Tokens.icon.md
                 color: Colors.color.onSurface
             }
@@ -93,7 +112,7 @@ Item {
 
         MIconButton {
             tabFocus: false
-            visible: !BarLayout.vertical
+            visible: !BarLayout.vertical && root._mpris
             iconName: "media-skip-backward-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
@@ -104,15 +123,15 @@ Item {
         MIconButton {
             tabFocus: false
             visible: !BarLayout.vertical
-            iconName: Media.playing ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
+            iconName: (root._mpris ? Media.playing : !!Audio.playback) ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
             Layout.alignment: Qt.AlignVCenter
-            onClicked: Media.togglePlaying()
+            onClicked: root._toggle()
         }
         MIconButton {
             tabFocus: false
-            visible: !BarLayout.vertical
+            visible: !BarLayout.vertical && root._mpris
             iconName: "media-skip-forward-symbolic"
             size: root._art
             iconSize: Tokens.icon.sm
