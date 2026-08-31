@@ -62,8 +62,6 @@ Item {
             return !Media.hasPlayer && !Audio.playback;
         if (group[0] === "battery")
             return !Battery.onBattery;
-        if (group[0] === "workspaces")
-            return Hypr.workspaceIdsFor(root.barScreen).length === 0;
         return false;
     }
 
@@ -81,7 +79,16 @@ Item {
                 id: island
                 required property var modelData
                 vertical: root.vertical
-                empty: root._empty(modelData)
+                empty: {
+                    void Hypr.workspaces;
+                    void Hypr.monitors;
+                    void Hypr.toplevels;
+                    void Hypr.focusedWorkspace;
+                    void Media.hasPlayer;
+                    void Audio.playback;
+                    void Battery.onBattery;
+                    return root._empty(modelData);
+                }
                 singleHit: root._singleHit(modelData)
 
                 Repeater {

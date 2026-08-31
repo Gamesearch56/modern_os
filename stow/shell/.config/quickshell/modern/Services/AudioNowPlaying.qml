@@ -38,6 +38,8 @@ QtObject {
             return "";
         const p = n.properties || {};
         const title = String(p["media.name"] || p["media.title"] || "").trim();
-        return title.length ? title : "";
+        if (title.length)
+            return title;
+        return String(p["application.name"] || p["application.id"] || "").trim();
     }
 }

@@ -336,18 +336,34 @@ Singleton {
         return out;
     }
 
-    function reservedRange(screen: var): var {
+    function _screenIndex(screen: var): int {
+        if (!screen)
+            return -1;
         const mon = root.monitorForScreen(screen);
-        if (!mon)
-            return null;
-        const mons = root._sortedMonitors();
-        let idx = -1;
-        for (let i = 0; i < mons.length; i++) {
-            if (mons[i].name === mon.name) {
-                idx = i;
-                break;
+        if (mon) {
+            const mons = root._sortedMonitors();
+            for (let i = 0; i < mons.length; i++) {
+                if (mons[i].name === mon.name)
+                    return i;
             }
         }
+        const raw = Quickshell.screens?.values ?? Quickshell.screens ?? [];
+        const screens = [];
+        for (let i = 0; i < raw.length; i++) {
+            if (raw[i])
+                screens.push(raw[i]);
+        }
+        screens.sort((a, b) => (a.x ?? 0) - (b.x ?? 0));
+        for (let i = 0; i < screens.length; i++) {
+            const s = screens[i];
+            if (s === screen || (s.name && screen.name && s.name === screen.name))
+                return i;
+        }
+        return -1;
+    }
+
+    function reservedRange(screen: var): var {
+        const idx = root._screenIndex(screen);
         if (idx === 0)
             return ({ from: 1, to: 5 });
         if (idx === 1)
@@ -428,6 +444,7 @@ Singleton {
         void root.monitors;
         void root.toplevels;
         void root.focusedWorkspace;
+        void Quickshell.screens;
         const seen = ({});
         const shown = [];
         function add(id) {
@@ -440,6 +457,8 @@ Singleton {
         const mon = root.monitorForScreen(screen);
         const mode = Config.monitors?.workspaceMode || "dynamic";
         const range = root.reservedRange(screen);
+        if (range)
+            add(range.from);
         const raw = Hyprland.workspaces?.values ?? [];
         for (let i = 0; i < raw.length; i++) {
             const ws = raw[i];
