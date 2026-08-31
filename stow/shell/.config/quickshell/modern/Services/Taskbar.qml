@@ -12,6 +12,7 @@ Singleton {
     id: root
 
     property bool open: false
+    property bool coverFullscreen: false
     property string hostScreenName: ""
 
     IpcHandler {
@@ -29,18 +30,21 @@ Singleton {
         }
         Hypr.refreshToplevels();
         root.hostScreenName = name;
+        root.coverFullscreen = Hypr.focusedFullscreen;
         root.open = true;
     }
 
     function show(screen: var) {
         Hypr.refreshToplevels();
         root.hostScreenName = root._nameOf(screen) || root._focusedName();
+        root.coverFullscreen = Hypr.focusedFullscreen;
         root.open = true;
     }
 
     function hide() {
         root.open = false;
         root.hostScreenName = "";
+        root.coverFullscreen = false;
     }
 
     function openOn(screen: var): bool {

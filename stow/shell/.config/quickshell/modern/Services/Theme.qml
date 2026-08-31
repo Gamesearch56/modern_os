@@ -145,7 +145,12 @@ Singleton {
             writeProc.running = true;
         }
         ConfigWrite.set("design.activeProfile", slug);
-        const seed = root.pendingSeed || String(Config.design.sourceSeed || "") || String(Colors.sourceColor || "");
+        const locked = root.pendingSeed || String(Config.design.sourceSeed || "");
+        if (root.extractNext && !locked) {
+            root._runApply("", slug, true, "", true);
+            return;
+        }
+        const seed = locked || String(Colors.sourceColor || "");
         root._runApply("", slug, true, seed, false);
     }
 
@@ -256,6 +261,8 @@ Singleton {
         }
         onExited: (code) => {
             Colors.refresh();
+            if (code === 0)
+                root.extractNext = false;
             const next = root._queuedApply;
             root._queuedApply = null;
             if (code !== 0) {

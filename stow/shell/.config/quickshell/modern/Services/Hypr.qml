@@ -34,13 +34,16 @@ Singleton {
         if (!t)
             return false;
         const fs = t.fullscreen;
-        if (fs === true || fs === 2)
+        if (fs === true || fs === 2 || fs === 3)
             return true;
         const ipc = t.lastIpcObject;
         if (!ipc)
             return false;
         const v = ipc.fullscreen;
-        return v === true || v === 2 || v === "2";
+        if (v === true || v === 2 || v === 3 || v === "2" || v === "3")
+            return true;
+        const c = ipc.fullscreenClient;
+        return c === 2 || c === 3 || c === "2" || c === "3";
     }
 
     readonly property bool _lua: Hyprland.usingLua === true

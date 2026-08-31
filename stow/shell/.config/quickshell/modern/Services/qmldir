@@ -30,6 +30,7 @@ AiStatus 1.0 AiStatus.qml
 AiChat 1.0 AiChat.qml
 AiStore 1.0 AiStore.qml
 singleton Wallpaper 1.0 Wallpaper.qml
+WallpaperThumbs 1.0 WallpaperThumbs.qml
 singleton FilePreview 1.0 FilePreview.qml
 singleton FilePick 1.0 FilePick.qml
 singleton Session 1.0 Session.qml

@@ -11,7 +11,7 @@ Item {
     property bool ready: false
 
     readonly property int keep: 24
-    readonly property int maxText: 8000
+    readonly property int maxText: 12000
     readonly property string path: Paths.stateHome + "/modern/ai-history.json"
 
     signal restored(var rows)

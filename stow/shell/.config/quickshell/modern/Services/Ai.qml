@@ -14,6 +14,7 @@ Singleton {
     property var history: []
     property bool busy: false
     property bool panelOpen: false
+    property bool coverFullscreen: false
     property string hostScreenName: ""
     property string lastError: ""
     property bool installed: false
@@ -59,8 +60,27 @@ Singleton {
 
     Component.onCompleted: root.refreshStatus()
 
-    function refreshStatus() {
-        status.refresh();
+    function refreshStatus() { status.refresh(); }
+
+    function toggle(screen: var) {
+        const name = root._nameOf(screen);
+        if (root.panelOpen && root.hostScreenName === name) {
+            root.hide();
+            return;
+        }
+        root._openOn(name);
+    }
+
+    function toggleFocused() { root.toggle({ name: root._focusedScreenName() }); }
+
+    function showFocused() { root._openOn(root._focusedScreenName()); }
+
+    function _openOn(name: string) {
+        root.hostScreenName = name;
+        root.coverFullscreen = Hypr.focusedFullscreen;
+        root.panelOpen = true;
+        root.watching = true;
+        root.refreshStatus();
     }
 
     function modelChoices(): var {
@@ -104,32 +124,10 @@ Singleton {
         root.probed = true;
     }
 
-    function toggle(screen: var) {
-        const name = root._nameOf(screen);
-        if (root.panelOpen && root.hostScreenName === name) {
-            root.hide();
-            return;
-        }
-        root.hostScreenName = name;
-        root.panelOpen = true;
-        root.watching = true;
-        root.refreshStatus();
-    }
-
-    function toggleFocused() {
-        root.toggle({ name: root._focusedScreenName() });
-    }
-
-    function showFocused() {
-        root.hostScreenName = root._focusedScreenName();
-        root.panelOpen = true;
-        root.watching = true;
-        root.refreshStatus();
-    }
-
     function hide() {
         root.panelOpen = false;
         root.hostScreenName = "";
+        root.coverFullscreen = false;
         root.watching = false;
     }
 

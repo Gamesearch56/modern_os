@@ -13,8 +13,9 @@ PanelWindow {
     readonly property bool _auto: !!(Config.bar.autoHide)
     readonly property real _strip: Tokens.spacing.xs
     readonly property bool _hold: Popups.openCount > 0
-    readonly property bool _shown: !root._auto || root._peek || root._hold
-    readonly property bool _expanded: !root._auto || root._shown || root._slidingOut
+    readonly property bool _cover: Hypr.focusedFullscreen
+    readonly property bool _shown: !root._cover && (!root._auto || root._peek || root._hold)
+    readonly property bool _expanded: !root._cover && (!root._auto || root._shown || root._slidingOut)
     readonly property string _layoutKey: String(Config.bar.position || "top")
     readonly property real _fullH: BarLayout.strip
     readonly property real _fullW: BarLayout.strip
@@ -28,7 +29,8 @@ PanelWindow {
     anchors.right: Config.bar.position !== "left"
     implicitHeight: root.vertical ? 0 : (root._expanded ? root._fullH : root._strip)
     implicitWidth: root.vertical ? (root._expanded ? root._fullW : root._strip) : 0
-    exclusiveZone: BarLayout.exclusive
+    exclusiveZone: root._cover ? 0 : BarLayout.exclusive
+    visible: !root._cover
     color: "transparent"
     focusable: Popups.active !== null
 

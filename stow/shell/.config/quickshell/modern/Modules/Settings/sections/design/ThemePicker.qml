@@ -53,6 +53,15 @@ ColumnLayout {
         return Theme._norm({ mode: "dark" });
     }
 
+    function _bindPalettes(item) {
+        if (!item)
+            return;
+        item.width = Qt.binding(() => palettesHost.width);
+        item.variant = Qt.binding(() => String(root.seed.variant || "tonal-spot"));
+        item.mode = Qt.binding(() => root.seed.mode === "light" ? "light" : "dark");
+        item.contrast = Qt.binding(() => String(root.seed.contrast || "standard"));
+    }
+
     MField {
         labelKey: "settings.fields.themeMode"
         MSegmented {
@@ -67,12 +76,25 @@ ColumnLayout {
 
     MField {
         labelKey: "settings.fields.themeVariant"
-        MSelect {
-            model: root.variantChoices
-            value: String(root.seed.variant || "tonal-spot")
-            enabled: !Theme.busy
-            onSelected: (v) => {
-                Theme.selectSpec(Object.assign({}, root.seed, { variant: v }));
+        hintKey: "settings.hints.themeVariant"
+        ColumnLayout {
+            id: palettesHost
+            spacing: Tokens.spacing.sm
+            Loader {
+                Layout.fillWidth: true
+                Layout.preferredHeight: item ? item.implicitHeight : 0
+                source: Qt.resolvedUrl("Palettes.qml")
+                onLoaded: root._bindPalettes(item)
+            }
+            MSelect {
+                visible: ThemePalettes.palettes.length === 0
+                Layout.fillWidth: true
+                model: root.variantChoices
+                value: String(root.seed.variant || "tonal-spot")
+                enabled: !Theme.busy
+                onSelected: (v) => {
+                    Theme.selectSpec(Object.assign({}, root.seed, { variant: v }));
+                }
             }
         }
     }

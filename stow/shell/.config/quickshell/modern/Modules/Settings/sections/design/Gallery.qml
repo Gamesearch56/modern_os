@@ -59,7 +59,12 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.preferredWidth: 2
             Layout.preferredHeight: Tokens.spacing.xxl * 7
-            source: Wallpaper.currentPath.length > 0 ? ("file://" + Wallpaper.currentPath) : ""
+            source: {
+                void Wallpaper.thumbsRev;
+                return Wallpaper.currentPath.length > 0
+                    ? Wallpaper.tileSource(Wallpaper.currentPath)
+                    : "";
+            }
             selected: Wallpaper.currentPath.length > 0
         }
 
@@ -79,7 +84,10 @@ ColumnLayout {
                     readonly property string path: String(root.previews[index] || "")
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    source: path.length > 0 ? ("file://" + path) : ""
+                    source: {
+                        void Wallpaper.thumbsRev;
+                        return path.length > 0 ? Wallpaper.tileSource(path) : "";
+                    }
                     onClicked: root._pick(index)
                 }
             }

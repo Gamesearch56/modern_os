@@ -257,6 +257,7 @@ modern_dotfile/
 | Keys | Action |
 |---|---|
 | `SUPER` + `Space` | Application launcher |
+| `SUPER` + `A` | AI chat |
 | `SUPER` + `M` | Power menu (Lock is a preview overlay, not a real lock) |
 | `SUPER` + `L` | Control panel (not lock) |
 | `SUPER` + `SHIFT` + `M` | Exit compositor |

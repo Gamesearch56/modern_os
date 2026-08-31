@@ -15,6 +15,7 @@ Singleton {
     property bool fetching: false
     property var images: []
     property string pendingSelect: ""
+    readonly property int thumbsRev: thumbs.rev
 
     readonly property string home: Quickshell.env("HOME")
     readonly property string libraryDir: root.home + "/Pictures/Wallpapers"
@@ -40,6 +41,7 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.images = this.text.trim().split("\n").filter(l => l.length > 0);
+                thumbs.rebuild(root.images);
             }
         }
     }
@@ -119,6 +121,12 @@ Singleton {
             }
         }
     }
+
+    WallpaperThumbs {
+        id: thumbs
+    }
+
+    Component.onCompleted: root._refresh()
 
     IpcHandler {
         target: "wallpaper"
@@ -201,6 +209,10 @@ Singleton {
 
     function clearPendingSelect() { root.pendingSelect = ""; }
     function refresh() { root._refresh(); }
+
+    function tileSource(path: string): string {
+        return thumbs.url(path);
+    }
 
     function _refresh() {
         listProc.running = false;

@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
@@ -14,7 +13,9 @@ Item {
 
     signal removeRequested(string path)
     readonly property int columns: 3
-    readonly property real contentHeight: layout.implicitHeight
+    readonly property real _gap: Tokens.spacing.xxs
+    readonly property real _tileH: Tokens.spacing.xxl * 7
+    readonly property real contentHeight: grid.contentHeight
 
     function _inRange(i: int): bool {
         return i >= 0 && i < Wallpaper.images.length;
@@ -50,7 +51,7 @@ Item {
         root.currentIndex = n > 0 ? 0 : -1;
         root._pendingSync = false;
         Wallpaper.clearPendingSelect();
-        flick.contentY = 0;
+        grid.positionViewAtBeginning();
     }
 
     function _clamp() {
@@ -66,15 +67,9 @@ Item {
     }
 
     function _ensureVisible() {
-        const tile = tiles.itemAt(root.currentIndex);
-        if (!tile || flick.height <= 0)
+        if (!root._inRange(root.currentIndex) || grid.height <= 0)
             return;
-        const top = tile.y;
-        const bottom = tile.y + tile.height;
-        if (top < flick.contentY)
-            flick.contentY = Math.max(0, top);
-        else if (bottom > flick.contentY + flick.height)
-            flick.contentY = Math.max(0, bottom - flick.height);
+        grid.positionViewAtIndex(root.currentIndex, GridView.Contain);
     }
 
     function _hoverAt(index: int, moved: bool) {
@@ -103,48 +98,50 @@ Item {
         }
     }
 
-    Flickable {
-        id: flick
+    GridView {
+        id: grid
         anchors.fill: parent
         clip: true
-        contentWidth: width
-        contentHeight: layout.implicitHeight
         boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.VerticalFlick
+        cellWidth: count === 1 ? width : Math.max(1, Math.floor(width / root.columns))
+        cellHeight: root._tileH + root._gap
+        cacheBuffer: cellHeight * 3
+        reuseItems: true
+        model: Wallpaper.images
+        highlightFollowsCurrentItem: false
+        keyNavigationEnabled: false
+        interactive: true
 
-        GridLayout {
-            id: layout
-            width: flick.width
-            columns: root.columns
-            columnSpacing: Tokens.spacing.xxs
-            rowSpacing: Tokens.spacing.xxs
+        delegate: Item {
+            id: cell
+            required property int index
+            required property var modelData
+            readonly property string path: String(modelData || "")
+            width: grid.cellWidth
+            height: grid.cellHeight
 
-            Repeater {
-                id: tiles
-                model: Wallpaper.images
-                delegate: MImageTile {
-                    required property int index
-                    required property var modelData
-                    readonly property string path: String(modelData || "")
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    Layout.preferredWidth: (layout.width - layout.columnSpacing * Math.max(0, root.columns - 1)) / root.columns
-                    Layout.preferredHeight: Tokens.spacing.xxl * 7
-                    Layout.columnSpan: tiles.count === 1 ? root.columns : 1
-                    source: path.length > 0 ? ("file://" + path) : ""
-                    selected: path === Wallpaper.currentPath
-                    current: root.currentIndex === index
-                    hoverRing: false
-                    removable: Wallpaper.canRemove(path)
-                    onClicked: {
-                        if (path === Wallpaper.currentPath)
-                            return;
-                        root.currentIndex = index;
-                        Wallpaper.setWallpaper(path);
-                    }
-                    onHovered: root._hoverAt(index, false)
-                    onPointerMoved: root._hoverAt(index, true)
-                    onRemoveClicked: root.removeRequested(path)
+            MImageTile {
+                anchors.fill: parent
+                anchors.rightMargin: (grid.count === 1 || (cell.index % root.columns) === root.columns - 1) ? 0 : root._gap
+                anchors.bottomMargin: root._gap
+                source: {
+                    void Wallpaper.thumbsRev;
+                    return cell.path.length > 0 ? Wallpaper.tileSource(cell.path) : "";
                 }
+                selected: cell.path === Wallpaper.currentPath
+                current: root.currentIndex === cell.index
+                hoverRing: false
+                removable: Wallpaper.canRemove(cell.path)
+                onClicked: {
+                    if (cell.path === Wallpaper.currentPath)
+                        return;
+                    root.currentIndex = cell.index;
+                    Wallpaper.setWallpaper(cell.path);
+                }
+                onHovered: root._hoverAt(cell.index, false)
+                onPointerMoved: root._hoverAt(cell.index, true)
+                onRemoveClicked: root.removeRequested(cell.path)
             }
         }
     }

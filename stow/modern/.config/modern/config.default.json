@@ -189,8 +189,8 @@
   "gaming": {
     "autoFullscreen": true,
     "autoOptimize": true,
-    "matchClass": "steam_app_.*|gamescope|.*\\.exe",
-    "matchTitle": ".*\\.exe"
+    "matchClass": "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl",
+    "matchTitle": ".*\\.exe|Project Zomboid"
   },
   "audio": {
     "autoSwitchBluetooth": "on",

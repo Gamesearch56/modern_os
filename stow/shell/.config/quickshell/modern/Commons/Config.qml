@@ -146,8 +146,8 @@ Singleton {
             property JsonObject gaming: JsonObject {
                 property bool autoFullscreen: true
                 property bool autoOptimize: true
-                property string matchClass: "steam_app_.*|gamescope|.*\\.exe"
-                property string matchTitle: ".*\\.exe"
+                property string matchClass: "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl"
+                property string matchTitle: ".*\\.exe|Project Zomboid"
             }
 
             property JsonObject windows: JsonObject {

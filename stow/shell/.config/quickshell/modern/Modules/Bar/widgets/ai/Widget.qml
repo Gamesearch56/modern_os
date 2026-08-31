@@ -13,8 +13,10 @@ Item {
     readonly property bool _mine: {
         void Ai.panelOpen;
         void Ai.hostScreenName;
+        void Ai.coverFullscreen;
         return Ai.openOn(root.barScreen);
     }
+    readonly property bool _barPopup: root._mine && !Ai.coverFullscreen
     readonly property color _fg: root._mine ? Colors.color.onPrimaryContainer : Colors.color.onSurface
 
     BarIslandHit {
@@ -40,7 +42,7 @@ Item {
         implicitHeight: Tokens.window.chatHeight
         hAlign: Qt.AlignLeft
         onOpenChanged: {
-            if (!popup.open && root._mine)
+            if (!popup.open && root._barPopup)
                 Ai.hide();
         }
         onGrabReady: {
@@ -56,6 +58,9 @@ Item {
             function onHostScreenNameChanged() {
                 root._sync();
             }
+            function onCoverFullscreenChanged() {
+                root._sync();
+            }
         }
 
         Loader {
@@ -66,7 +71,7 @@ Item {
     }
 
     function _sync() {
-        const mine = Ai.openOn(root.barScreen);
+        const mine = root._barPopup;
         if (popup.open !== mine)
             popup.open = mine;
     }

@@ -11,6 +11,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | Combo | Action | IPC |
 |-------|--------|-----|
 | `SUPER + SPACE` | Launcher | `qs -c modern ipc call launcher toggle` |
+| `SUPER + A` | AI chat | `qs -c modern ipc call ai toggle` |
 | `SUPER + M` | Power menu | `qs -c modern ipc call powermenu toggle` |
 | `SUPER + N` | Control panel | `qs -c modern ipc call notifications toggle` |
 | `SUPER + L` | Lock screen | `qs -c modern ipc call session lock` |

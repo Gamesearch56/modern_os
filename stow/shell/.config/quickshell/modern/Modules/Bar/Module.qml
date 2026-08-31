@@ -13,4 +13,7 @@ Scope {
             screen: modelData
         }
     }
+
+    AiOverlay {}
+    TaskbarOverlay {}
 }

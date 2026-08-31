@@ -116,10 +116,10 @@ Item {
                     value: root.text
                     styleName: "bodyMedium"
                     color: root.mine ? Chrome.tonal.fg : Colors.color.onSurface
-                    wrapMode: Text.WordWrap
-                    elide: Text.ElideRight
-                    maximumLineCount: 48
-                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    elide: Text.ElideNone
+                    Layout.fillWidth: !root.mine
+                    Layout.maximumWidth: root._inner
                 }
             }
         }

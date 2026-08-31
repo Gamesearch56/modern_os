@@ -11,11 +11,6 @@ ColumnLayout {
 
     Model { id: model }
 
-    MHint {
-        key: "settings.hints.games"
-        Layout.fillWidth: true
-    }
-
     RowLayout {
         Layout.fillWidth: true
         spacing: Tokens.spacing.md

@@ -573,16 +573,15 @@ case "$SOURCE_MODE" in
         else
             die "profile '$PROFILE' needs a wallpaper and none is set yet — pass --wallpaper /path/to/image.jpg once (Settings > Design and the wallpaper picker do this for you once built, see docs/DECISIONS.md's wallpaper-assets entry)"
         fi
-        # A Settings palette card passes --seed (one of the unique
-        # colors matugen extracted). --extract or an empty seed falls
-        # back to the most saturated candidate so a new wallpaper still
-        # changes the chrome before the user picks a card.
+        # --seed is a palette card (or a locked sourceSeed). --extract
+        # must ignore tokens.json's last sourceColor — that is the
+        # previous wallpaper's seed and would freeze every later apply.
         if [ "$EXTRACT" -eq 1 ]; then
             SEED=""
         elif [ -z "$SEED" ]; then
             SEED="$(merged_config | jq -r '.design.sourceSeed // empty')"
         fi
-        if [ -z "$SEED" ] && [ -f "$MODERN_DIR/tokens.json" ]; then
+        if [ "$EXTRACT" -eq 0 ] && [ -z "$SEED" ] && [ -f "$MODERN_DIR/tokens.json" ]; then
             SEED="$(jq -r '.sourceColor // empty' "$MODERN_DIR/tokens.json")"
         fi
         if [ -n "$SEED" ]; then

@@ -89,10 +89,12 @@ walls are often the *dominant* color and made every image look the same).
 "which of these N colors?" on stdin, which hangs forever from a keybind
 or Settings with no attached terminal.
 
-Settings → Design lists those candidate palettes as cards (`scripts/theme-previews.sh`
-dry-runs each seed). Choosing a card reapplies with `--seed HEX`. A new
-wallpaper passes `--extract` so the chrome follows the image until a
-card is picked again.
+Settings → Design shows one card per matugen scheme (`scripts/theme-previews.sh`
+dry-runs the wallpaper's `--prefer saturation` seed through each type,
+in the current light or dark mode). Choosing a card applies that
+variant. A new wallpaper, or a light/dark switch, regenerates the
+cards. Apply uses `--extract` so the chrome follows the image until a
+card locks a seed.
 
 ## `mode` and `contrast` mapping
 
