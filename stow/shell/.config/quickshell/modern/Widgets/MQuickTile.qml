@@ -69,6 +69,8 @@ Item {
             name: root.iconName
             size: Tokens.icon.lg
             color: root.tintIcon ? Colors.color.primary : Colors.color.onSurface
+            tint: root.tintIcon
+            preferSymbolic: true
         }
 
         MText {
@@ -113,6 +115,8 @@ Item {
             name: root.iconName
             size: Tokens.icon.md
             color: root.tintIcon ? Colors.color.primary : Colors.color.onSurface
+            tint: root.tintIcon
+            preferSymbolic: true
             Layout.alignment: Qt.AlignVCenter
         }
 

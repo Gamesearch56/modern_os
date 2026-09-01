@@ -47,11 +47,9 @@ ColumnLayout {
             iconName: Notifications.dnd ? "notifications-disabled-symbolic" : "notifications-symbolic"
             titleKey: "notifications.dnd"
             checked: Notifications.dnd
-            tintIcon: false
             onClicked: Notifications.toggleDnd()
         }
         MQuickTile {
-            id: alarmTile
             Layout.fillWidth: true
             iconName: "alarm-symbolic"
             titleKey: "alarm.title"
@@ -64,9 +62,7 @@ ColumnLayout {
                     Alarm.toggleDialog();
             }
 
-            AlarmPicker {
-                anchorItem: alarmTile
-            }
+            AlarmPicker {}
         }
         MQuickTile {
             Layout.fillWidth: true

@@ -153,7 +153,8 @@
     "title": "Alarm",
     "running": "Alarm running",
     "start": "Start",
-    "fired": "Alarm"
+    "fired": "Alarm",
+    "minutesHint": "The number is the alarm duration in minutes"
   },
   "cli": {
     "usage": "Usage: modern <command>",

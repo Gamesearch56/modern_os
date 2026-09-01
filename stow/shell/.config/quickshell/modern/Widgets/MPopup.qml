@@ -33,7 +33,13 @@ Item {
     x: {
         if (root.parent !== root._host || !root._field || !root._host)
             return 0;
-        return root._field.mapToItem(root._host, 0, 0).x;
+        const field = root._field;
+        const host = root._host;
+        const w = root.width > 0 ? root.width : root.implicitWidth;
+        let raw = field.mapToItem(host, 0, 0).x;
+        if (raw + w > host.width - Tokens.spacing.md)
+            raw = field.mapToItem(host, field.width, 0).x - w;
+        return root._clamp(raw, w, host.width);
     }
     y: {
         if (!root.autoPlace)
@@ -43,7 +49,8 @@ Item {
         const ly = root.opensAbove ? -(root.height + root.gap) : h + root.gap;
         if (root.parent !== root._host || !field || !root._host)
             return ly;
-        return field.mapToItem(root._host, 0, ly).y;
+        const ph = root.height > 0 ? root.height : root.implicitHeight;
+        return root._clamp(field.mapToItem(root._host, 0, ly).y, ph, root._host.height);
     }
 
     Component.onCompleted: root._syncParent()
@@ -93,6 +100,14 @@ Item {
         if (below >= h)
             return false;
         return (top - root.gap) > below;
+    }
+
+    function _clamp(raw: real, size: real, hostSize: real): real {
+        const pad = Tokens.spacing.md;
+        const max = hostSize - size - pad;
+        if (max <= pad)
+            return Math.max(0, (hostSize - size) / 2);
+        return Math.min(Math.max(pad, raw), max);
     }
 
     function _updatePlace() {

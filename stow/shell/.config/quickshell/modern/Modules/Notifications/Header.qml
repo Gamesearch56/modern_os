@@ -39,6 +39,7 @@ RowLayout {
         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
         MIconButton {
+            Layout.alignment: Qt.AlignVCenter
             iconName: "input-keyboard-symbolic"
             key: "cheatsheet.title"
             onClicked: {
@@ -47,7 +48,8 @@ RowLayout {
             }
         }
         MIconButton {
-            iconName: "go-home-symbolic"
+            Layout.alignment: Qt.AlignVCenter
+            iconName: "system-software-install-symbolic"
             key: "bar.store"
             onClicked: {
                 Notifications.hide();
@@ -55,6 +57,7 @@ RowLayout {
             }
         }
         MIconButton {
+            Layout.alignment: Qt.AlignVCenter
             iconName: "preferences-system-symbolic"
             key: "bar.settings"
             onClicked: {
@@ -63,8 +66,9 @@ RowLayout {
             }
         }
         MIconButton {
+            Layout.alignment: Qt.AlignVCenter
             close: true
-            iconName: "window-close"
+            iconName: "window-close-symbolic"
             key: "bar.close"
             onClicked: Notifications.hide()
         }

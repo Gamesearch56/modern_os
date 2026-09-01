@@ -153,7 +153,8 @@
     "title": "Wecker",
     "running": "Wecker läuft",
     "start": "Start",
-    "fired": "Wecker"
+    "fired": "Wecker",
+    "minutesHint": "Die Zahl ist die Weckdauer in Minuten"
   },
   "cli": {
     "usage": "Aufruf: modern <Befehl>",
