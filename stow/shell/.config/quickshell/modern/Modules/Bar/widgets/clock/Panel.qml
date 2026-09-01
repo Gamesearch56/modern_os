@@ -51,6 +51,7 @@ Item {
                     Notifications.toast(I18n.t("calendar.needApp"), "");
                     Settings.openAt("applications", "calendar");
                 }
+                Popups.dismiss();
             }
         }
     }
