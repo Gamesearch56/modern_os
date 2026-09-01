@@ -16,6 +16,8 @@ collect_packages() {
     local pattern="$1"; shift
     local files=("$@")
     for f in "${files[@]}"; do
+        # $pattern is a glob (*.txt / *.aur.txt), not a literal.
+        # shellcheck disable=SC2053
         [[ "$f" == $pattern ]] && parse_manifest "$f"
     done | sort -u
 }
@@ -29,7 +31,8 @@ bootstrap_yay() {
     local build_dir
     build_dir="$(mktemp -d)"
     run git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$build_dir/yay-bin"
-    (cd "$build_dir/yay-bin" && run makepkg -si --noconfirm)
+    # --dir is inside run(), so --dry-run only prints and never cds.
+    run makepkg --dir "$build_dir/yay-bin" -si --noconfirm
     rm -rf "$build_dir"
     log_ok "yay installed"
 }

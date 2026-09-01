@@ -99,8 +99,8 @@ filepreview_copy_location() {
 }
 
 filepreview_wait_path() {
-    local i p raw
-    for i in 1 2 3 4 5 6 7 8 9 10; do
+    local p raw
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
         raw="$(wl-paste -n -t text/uri-list 2>/dev/null || true)"
         [ -n "$raw" ] || raw="$(wl-paste -n -t x-special/gnome-copied-files 2>/dev/null || true)"
         [ -n "$raw" ] || raw="$(wl-paste -n -t text 2>/dev/null || true)"

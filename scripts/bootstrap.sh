@@ -136,4 +136,4 @@ fi
 if [ -z "$DISK" ]; then
     log "DISK= empty — dry-run only (set DISK= in hardware.conf or pass --disk)."
 fi
-log "dry-run complete (no disks touched)."
+log "dry-run complete (no disks touched, dry-run=$DRY_RUN)."

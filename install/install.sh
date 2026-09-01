@@ -43,7 +43,6 @@ TARGET="$HOME"
 for arg in "$@"; do
     case "$arg" in
         --profile=*) PROFILE="${arg#*=}" ;;
-        --profile) shift_next=1 ;;
         --dry-run) DRY_RUN=1 ;;
         --yes|-y) ASSUME_YES=1 ;;
         --allow-live-home) ALLOW_LIVE_HOME=1 ;;
@@ -93,7 +92,12 @@ source "$REPO_ROOT/install/lib/stow.sh"
 source "$REPO_ROOT/install/lib/preflight.sh"
 
 : > "$LOG_FILE"
-trap 'rc=$?; log_error "install aborted at line $LINENO (exit $rc). See $LOG_FILE"; exit "$rc"' ERR
+_err_trap() {
+    local rc=$?
+    log_error "install aborted at line ${1:-?} (exit $rc). See $LOG_FILE"
+    exit "$rc"
+}
+trap '_err_trap $LINENO' ERR
 
 log_info "modern_dotfile installer — profile '$PROFILE', gpu='$HW', cpu='$CPU', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN"
 
