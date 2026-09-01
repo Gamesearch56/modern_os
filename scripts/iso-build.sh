@@ -210,6 +210,9 @@ fi
 if [ -f "$ROOT/iso/releng/packages.x86_64" ]; then
     cat "$ROOT/iso/releng/packages.x86_64" >>"$PROFILE_WORK/packages.x86_64"
 fi
+# shellcheck source=lib/iso-aur-repo.sh
+source "$ROOT/scripts/lib/iso-aur-repo.sh"
+iso_attach_aur_repo "$PROFILE_WORK"
 mkdir -p "$PROFILE_WORK/airootfs"
 cp -a "$AIROOTFS_OUT/." "$PROFILE_WORK/airootfs/"
 ISO_VERSION="$pin" mkarchiso -v -w "$WORK/mkarchiso" -o "$abs_out" "$PROFILE_WORK"

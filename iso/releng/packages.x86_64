@@ -2,7 +2,7 @@
 # the installed system gets linux-zen from packages.conf (not stock linux).
 hyprland
 quickshell
-calamares
+calamares                       # AUR — built into a local repo by iso-build.sh
 networkmanager
 mesa
 git

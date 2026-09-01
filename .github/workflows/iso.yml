@@ -37,13 +37,15 @@ jobs:
           esac
           test ! -d /home/bastianweigand
 
+      # Scripts come from main so a later ISO-script fix can rebuild an
+      # older pin. --tag still writes iso-pin / Settings Update target.
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.TAG }}
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: mkarchiso
         run: |
-          pacman -Syu --noconfirm --needed archiso git python jq
+          pacman -Syu --noconfirm --needed archiso base-devel git python jq sudo
           mkdir -p /tmp/modern-iso
           ./scripts/iso-build.sh --mkarchiso --out /tmp/modern-iso --tag "$TAG"
           find /tmp/modern-iso -name '*.iso' -ls
