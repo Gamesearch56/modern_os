@@ -26,6 +26,11 @@ Singleton {
         streams: root.streams
     }
 
+    AudioPersist {
+        id: persist
+        audio: root
+    }
+
     readonly property var playback: nowPlaying.playback
 
     // Hardware endpoints only — application streams are not switchable
@@ -132,6 +137,10 @@ Singleton {
         return title.length ? title : root.streamLabel(n);
     }
 
+    function findStream(hint: string): var {
+        return nowPlaying.findStream(hint);
+    }
+
     function setVolume(percent: real) {
         if (!root.sink?.audio)
             return;
@@ -182,9 +191,19 @@ Singleton {
     function setStreamVolume(node: var, percent: real) {
         if (!node?.audio)
             return;
-        node.audio.volume = Math.max(0, Math.min(100, percent)) / 100;
-        if (percent > 0)
+        const v = Math.max(0, Math.min(100, percent));
+        node.audio.volume = v / 100;
+        if (v > 0)
             node.audio.muted = false;
+        const key = root.streamAppId(node);
+        if (key.length)
+            ConfigWrite.set("audio.perAppVolume", persist.remember(key, v));
+    }
+
+    function adjustStreamVolume(node: var, deltaPercent: real) {
+        if (!node?.audio)
+            return;
+        root.setStreamVolume(node, Math.round(node.audio.volume * 100) + deltaPercent);
     }
 
     function toggleStreamMute(node: var) {

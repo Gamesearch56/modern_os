@@ -17,11 +17,12 @@ Item {
     property bool busy: false
     property bool tabFocus: true
     property bool pointer: true
+    property bool acceptWheel: false
 
     signal clicked()
     signal middleClicked()
     signal rightClicked()
-    signal wheel(real steps)
+    signal wheel(real steps, bool fine)
 
     implicitWidth: root.size
     implicitHeight: root.size
@@ -133,7 +134,10 @@ Item {
             root._hover = true;
             root._suppressHover = false;
         }
-        onWheel: (w) => root.wheel(w.angleDelta.y > 0 ? 1 : -1)
+        onWheel: (w) => {
+            w.accepted = root.acceptWheel;
+            root.wheel(w.angleDelta.y > 0 ? 1 : -1, !!(w.modifiers & Qt.ShiftModifier));
+        }
     }
 
     onBusyChanged: {

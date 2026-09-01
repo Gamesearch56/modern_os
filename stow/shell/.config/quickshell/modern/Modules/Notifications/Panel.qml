@@ -85,6 +85,8 @@ Item {
 
             MPane {
                 Layout.fillWidth: true
+                Layout.fillHeight: list.visible
+                Layout.minimumHeight: Tokens.spacing.xxl * 4
                 Layout.preferredHeight: list.visible
                     ? Math.min(list.contentHeight + Tokens.spacing.sm * 2, Tokens.spacing.xxl * 16)
                     : Tokens.spacing.xxl * 6
@@ -95,6 +97,8 @@ Item {
                     anchors.fill: parent
                     clip: true
                     spacing: Tokens.spacing.sm
+                    boundsBehavior: Flickable.StopAtBounds
+                    bottomMargin: Tokens.spacing.sm
                     model: Notifications.list
                     delegate: MListItem {
                         required property var modelData

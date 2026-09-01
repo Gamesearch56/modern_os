@@ -3,5 +3,5 @@
   "key": "bar.media",
   "defaultEnabled": true,
   "bubble": true,
-  "services": ["Media"]
+  "services": ["Media", "Audio"]
 }

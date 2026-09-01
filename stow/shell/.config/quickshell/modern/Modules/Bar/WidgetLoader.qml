@@ -15,10 +15,12 @@ Loader {
 
     active: root.widgetId.length > 0
     visible: !root.item || root.item.visible
-    Layout.minimumWidth: (root.item && root.visible) ? root.item.implicitWidth : 0
-    Layout.preferredWidth: (root.item && root.visible) ? root.item.implicitWidth : 0
-    Layout.minimumHeight: (root.item && root.visible) ? root.item.implicitHeight : 0
-    Layout.preferredHeight: (root.item && root.visible) ? root.item.implicitHeight : 0
+    width: (root.item && root.visible) ? root.item.implicitWidth : 0
+    height: (root.item && root.visible) ? root.item.implicitHeight : 0
+    Layout.minimumWidth: width
+    Layout.preferredWidth: width
+    Layout.minimumHeight: height
+    Layout.preferredHeight: height
     Layout.fillWidth: false
     Layout.fillHeight: true
     source: Qt.resolvedUrl("widgets/" + root.widgetId + "/Widget.qml")

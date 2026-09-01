@@ -17,6 +17,18 @@ Item {
     Component.onCompleted: Firewall.watching = true
     Component.onDestruction: Firewall.watching = false
 
+    Connections {
+        target: Store
+        function onOpenChanged() {
+            if (!Store.open)
+                Firewall.refresh();
+        }
+        function onLastNameChanged() {
+            if (String(Store.lastName) === "ufw")
+                Firewall.refresh();
+        }
+    }
+
     ColumnLayout {
         id: col
         width: parent.width

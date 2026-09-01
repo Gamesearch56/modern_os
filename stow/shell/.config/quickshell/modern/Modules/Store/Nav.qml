@@ -42,6 +42,10 @@ Item {
             Layout.fillWidth: true
             placeholderKey: "store.search"
             onTextEdited: Store.setQuery(text)
+            Component.onCompleted: {
+                if (Store.query.length > 0)
+                    text = Store.query;
+            }
         }
 
         Flickable {

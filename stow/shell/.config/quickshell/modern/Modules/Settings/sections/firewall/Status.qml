@@ -16,10 +16,26 @@ MStatusCard {
             return "settings.firewall.active";
         if (Firewall.status === "inactive")
             return "settings.firewall.inactive";
-        return "settings.firewall.missing";
+        if (Firewall.status === "missing")
+            return "settings.firewall.missing";
+        return "";
+    }
+
+    trailing: Loader {
+        active: Firewall.status === "missing"
+        visible: active
+        sourceComponent: Component {
+            MButton {
+                kind: "filled"
+                key: "store.title"
+                onClicked: Store.showQuery("ufw")
+            }
+        }
     }
 
     MHint {
+        visible: Firewall.status === "active" || Firewall.status === "inactive"
+            || Firewall.status === "missing"
         key: {
             if (Firewall.status === "active")
                 return "settings.hints.firewallActive";

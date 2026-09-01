@@ -44,6 +44,15 @@ Item {
     }
     readonly property string _artUrl: root._mpris ? (Media.trackArtUrl || "") : ""
     readonly property string _streamIcon: root._mpris ? "" : Audio.streamIcon(Audio.playback)
+    readonly property bool _appActive: Media.hasPlayer || !!Audio.playback
+    readonly property var _stream: {
+        void Audio.streams;
+        if (Media.hasPlayer)
+            return Audio.findStream(Media.desktopEntry)
+                || Audio.findStream(Media.identity)
+                || Audio.playback;
+        return Audio.playback;
+    }
 
     function _raise() {
         if (root._mpris) {
@@ -64,6 +73,18 @@ Item {
             Media.togglePlaying();
         else
             Audio.toggleStreamMute(Audio.playback);
+    }
+
+    function _nudge(steps, fine) {
+        const step = fine
+            ? (Config.widgets.audio?.scrollStepFinePercent ?? 1)
+            : (Config.widgets.audio?.scrollStepPercent ?? 5);
+        Audio.adjustStreamVolume(root._stream, steps > 0 ? step : -step);
+    }
+
+    function _onWheel(w) {
+        root._nudge(w.angleDelta.y > 0 ? 1 : -1, !!(w.modifiers & Qt.ShiftModifier));
+        w.accepted = true;
     }
 
     RowLayout {
@@ -103,8 +124,10 @@ Item {
 
             MouseArea {
                 anchors.fill: parent
-                cursorShape: root._sound ? Qt.PointingHandCursor : Qt.ArrowCursor
+                hoverEnabled: true
+                cursorShape: root._appActive ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onClicked: root._raise()
+                onWheel: (w) => root._onWheel(w)
             }
         }
 
@@ -117,6 +140,14 @@ Item {
             elide: Text.ElideRight
             wrapMode: Text.NoWrap
             verticalAlignment: Text.AlignVCenter
+
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: root._appActive ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root._raise()
+                onWheel: (w) => root._onWheel(w)
+            }
         }
 
         MIconButton {
@@ -129,8 +160,10 @@ Item {
             Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
             enabled: Media.canGoPrevious
-            pointer: root._sound
+            pointer: root._appActive
+            acceptWheel: true
             onClicked: Media.previous()
+            onWheel: (steps, fine) => root._nudge(steps, fine)
         }
         MIconButton {
             tabFocus: false
@@ -141,8 +174,10 @@ Item {
             Layout.preferredWidth: root._art
             Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
-            pointer: root._sound
+            pointer: root._appActive
+            acceptWheel: true
             onClicked: root._toggle()
+            onWheel: (steps, fine) => root._nudge(steps, fine)
         }
         MIconButton {
             tabFocus: false
@@ -154,15 +189,41 @@ Item {
             Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
             enabled: Media.canGoNext
-            pointer: root._sound
+            pointer: root._appActive
+            acceptWheel: true
             onClicked: Media.next()
+            onWheel: (steps, fine) => root._nudge(steps, fine)
         }
     }
 
     MouseArea {
         anchors.fill: parent
         z: -1
-        cursorShape: root._sound ? Qt.PointingHandCursor : Qt.ArrowCursor
+        hoverEnabled: true
+        cursorShape: root._appActive ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: root._raise()
+        onWheel: (w) => root._onWheel(w)
+    }
+
+    HoverHandler {
+        enabled: root._appActive && !!root._stream
+        onHoveredChanged: {
+            const p = sliderLoader.item;
+            if (p)
+                p.setPillHovered(hovered);
+        }
+    }
+
+    Loader {
+        id: sliderLoader
+        source: Qt.resolvedUrl("HoverSlider.qml")
+        onLoaded: {
+            const p = sliderLoader.item;
+            if (!p)
+                return;
+            p.anchorItem = root;
+            p.stream = Qt.binding(() => root._stream);
+            p.appActive = Qt.binding(() => root._appActive);
+        }
     }
 }

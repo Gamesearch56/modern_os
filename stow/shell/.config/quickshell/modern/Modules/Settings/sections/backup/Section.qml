@@ -10,15 +10,32 @@ Item {
     id: root
 
     property var pending: null
+    property bool pendingSetup: false
 
     implicitHeight: col.implicitHeight
 
     Component.onCompleted: Snapshots.watching = true
     Component.onDestruction: Snapshots.watching = false
 
-    readonly property string _emptyKey: Snapshots.status === "unconfigured"
-        ? "settings.backup.unconfigured"
-        : "settings.backup.missing"
+    Connections {
+        target: Store
+        function onOpenChanged() {
+            if (!Store.open)
+                Snapshots.refresh();
+        }
+        function onLastNameChanged() {
+            if (String(Store.lastName) === "snapper")
+                Snapshots.refresh();
+        }
+    }
+
+    readonly property string _emptyKey: {
+        if (Snapshots.status === "unconfigured")
+            return "settings.backup.unconfigured";
+        if (Snapshots.status === "missing")
+            return "settings.backup.missing";
+        return "settings.snapshotEmpty";
+    }
 
     ColumnLayout {
         id: col
@@ -27,6 +44,7 @@ Item {
 
         Status {
             Layout.fillWidth: true
+            onSetupRequested: root.pendingSetup = true
         }
 
         ColumnLayout {
@@ -109,6 +127,7 @@ Item {
         }
         MEmptyState {
             visible: Snapshots.items.length === 0 && !Snapshots.running
+                && Snapshots.status !== "unknown"
             Layout.fillWidth: true
             Layout.preferredHeight: Tokens.spacing.xxl * 4
             iconName: "document-save"
@@ -140,5 +159,20 @@ Item {
             root.pending = null;
         }
         onCancelled: root.pending = null
+    }
+
+    MDialog {
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        open: root.pendingSetup
+        titleKey: "settings.backup.setupTitle"
+        bodyKey: "settings.backup.setupBody"
+        confirmKey: "settings.backup.setup"
+        cancelKey: "powerMenu.cancel"
+        onConfirmed: {
+            Snapshots.setupRoot();
+            root.pendingSetup = false;
+        }
+        onCancelled: root.pendingSetup = false
     }
 }

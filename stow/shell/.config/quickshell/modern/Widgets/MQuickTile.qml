@@ -39,6 +39,7 @@ Item {
     }
 
     readonly property color _fg: root.checked ? Chrome.tonal.fg : Colors.color.onSurface
+    readonly property color _icon: Colors.color.primary
     readonly property int _textAlign: root.centerAlign ? Text.AlignHCenter : Text.AlignLeft
 
     Rectangle {
@@ -68,7 +69,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             name: root.iconName
             size: Tokens.icon.lg
-            color: root.tintIcon ? Colors.color.primary : Colors.color.onSurface
+            color: root._icon
             tint: root.tintIcon
             preferSymbolic: true
         }
@@ -114,7 +115,7 @@ Item {
         MIcon {
             name: root.iconName
             size: Tokens.icon.md
-            color: root.tintIcon ? Colors.color.primary : Colors.color.onSurface
+            color: root._icon
             tint: root.tintIcon
             preferSymbolic: true
             Layout.alignment: Qt.AlignVCenter

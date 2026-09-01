@@ -85,6 +85,11 @@ Singleton {
         root.reload();
     }
 
+    function showQuery(text: string) {
+        root.query = String(text || "").slice(0, 80);
+        root.show();
+    }
+
     function hide() {
         if (mutate.busy && !mutate.authWait)
             return;

@@ -22,6 +22,8 @@ the full architecture and `docs/DECISIONS.md` for why things are this way.
 4. **Every user-visible string goes through `I18n.t()`.** Never a bare
    string literal in a `Text`/`MText` binding. Add the key to both
    `translations/en.json` and `translations/de.json` in the same change.
+   Labels, hints, and dialogs describe this desktop only — never the
+   previous setup, other backup tools, other accounts, or cutover.
 5. **Never poll where a signal or socket exists.** Hyprland state comes from
    its event socket, MPRIS from D-Bus signals. Where polling is genuinely
    necessary (sensors), use one shared timer and stop it while the

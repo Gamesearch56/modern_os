@@ -6,11 +6,24 @@ import "../../../../Services"
 Item {
     id: root
     property var barScreen: null
-    implicitWidth: BarLayout.vertical ? Config.bar.height : (row.implicitWidth + root._inset * 2)
-    implicitHeight: BarLayout.vertical ? (row.implicitHeight + root._inset * 2) : Config.bar.height
+    implicitWidth: BarLayout.vertical ? Config.bar.height : (root._content + root._inset * 2)
+    implicitHeight: BarLayout.vertical ? (root._content + root._inset * 2) : Config.bar.height
+    width: implicitWidth
+    height: implicitHeight
+    clip: true
 
     readonly property real _inset: Tokens.spacing.xs
     readonly property real _chip: Config.bar.height - root._inset * 2
+    readonly property real _addSize: Tokens.spacing.xl
+    readonly property int _n: (root.ids || []).length
+    readonly property real _content: {
+        const n = root._n;
+        const add = root.canAdd ? 1 : 0;
+        if (n + add <= 0)
+            return 0;
+        return n * root._chip + (root.canAdd ? root._addSize : 0)
+            + Math.max(0, n + add - 1) * Tokens.spacing.xs;
+    }
 
     readonly property var ids: {
         void Hypr.workspaces;
@@ -64,7 +77,12 @@ Item {
 
     Grid {
         id: row
-        anchors.centerIn: parent
+        anchors.left: BarLayout.vertical ? undefined : parent.left
+        anchors.leftMargin: BarLayout.vertical ? 0 : root._inset
+        anchors.verticalCenter: BarLayout.vertical ? undefined : parent.verticalCenter
+        anchors.horizontalCenter: BarLayout.vertical ? parent.horizontalCenter : undefined
+        anchors.top: BarLayout.vertical ? parent.top : undefined
+        anchors.topMargin: BarLayout.vertical ? root._inset : 0
         columns: BarLayout.vertical ? 1 : 32
         flow: BarLayout.vertical ? Grid.TopToBottom : Grid.LeftToRight
         spacing: Tokens.spacing.xs
@@ -141,15 +159,17 @@ Item {
             }
         }
 
-        MIconButton {
-            tabFocus: false
-            visible: root.canAdd
-            iconName: "list-add-symbolic"
-            key: "bar.workspaceAdd"
-            size: Tokens.spacing.xl
-            iconSize: Tokens.icon.sm - Tokens.spacing.xxs
-            checked: false
-            onClicked: Hypr.focusWorkspace(root.nextId)
+        Repeater {
+            model: root.canAdd ? 1 : 0
+            MIconButton {
+                tabFocus: false
+                iconName: "list-add-symbolic"
+                key: "bar.workspaceAdd"
+                size: root._addSize
+                iconSize: Tokens.icon.sm - Tokens.spacing.xxs
+                checked: false
+                onClicked: Hypr.focusWorkspace(root.nextId)
+            }
         }
     }
 }

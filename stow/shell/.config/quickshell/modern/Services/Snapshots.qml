@@ -1,5 +1,5 @@
 // Snapper list/create/delete. Restore stays gated (docs/BACKUP.md).
-// Probe and list as the user; create/delete go through pkexec.
+// Probe and list as the user; create/delete/setup go through pkexec.
 pragma Singleton
 
 import Quickshell
@@ -13,10 +13,12 @@ Singleton {
     property bool watching: false
     property var items: []
     property bool running: false
-    property string status: "missing"
+    property string status: "unknown"
     property string step: ""
     property string mutating: ""
     property string error: ""
+    property var _queue: []
+    property string _stderr: ""
 
     readonly property bool ready: root.status === "ready"
 
@@ -49,22 +51,21 @@ Singleton {
         id: mutProc
         running: false
         stderr: StdioCollector {
-            onStreamFinished: {
-                const t = String(this.text || "").trim();
-                if (t.length)
-                    root.error = t;
-            }
+            onStreamFinished: root._stderr = String(this.text || "").trim()
         }
         onExited: (code) => {
-            root.running = false;
-            root.mutating = "";
-            root.step = "";
-            if (code !== 0 && root.error.length === 0)
-                root.error = I18n.t("cli.snapshotFailed");
-            if (code === 0)
-                root.error = "";
-            if (root.watching)
-                root.refresh();
+            if (code !== 0) {
+                root._queue = [];
+                root.running = false;
+                root.mutating = "";
+                root.step = "";
+                root.error = root._stderr.length ? root._stderr : I18n.t("cli.snapshotFailed");
+                if (root.watching)
+                    root.refresh();
+                return;
+            }
+            root.error = "";
+            Qt.callLater(root._kick);
         }
     }
 
@@ -80,26 +81,55 @@ Singleton {
         probeProc.running = true;
     }
 
+    function setupRoot() {
+        if (root.status !== "unconfigured" || root.running)
+            return;
+        root._start("setup", [
+            ["pkexec", "/usr/bin/snapper", "-c", "root", "create-config", "/"],
+            ["pkexec", "/usr/bin/snapper", "-c", "root", "set-config", "TIMELINE_CREATE=no"]
+        ], I18n.t("settings.backup.settingUp"));
+    }
+
     function create() {
         if (!root.ready || root.running)
             return;
-        root.running = true;
-        root.mutating = "create";
-        root.error = "";
-        root.step = I18n.t("settings.backup.creating");
-        mutProc.command = ["pkexec", "/usr/bin/snapper", "-c", "root", "create", "--description", I18n.t("settings.backup.manual")];
-        mutProc.running = true;
+        root._start("create", [[
+            "pkexec", "/usr/bin/snapper", "-c", "root", "create",
+            "--description", I18n.t("settings.backup.manual")
+        ]], I18n.t("settings.backup.creating"));
     }
 
     function remove(num: string) {
         const n = String(num || "").replace(/[^0-9]/g, "");
         if (!n || n === "0" || root.running)
             return;
+        root._start(n, [["pkexec", "/usr/bin/snapper", "-c", "root", "delete", n]], I18n.t("settings.snapshotDelete"));
+    }
+
+    function _start(kind: string, cmds: var, step: string) {
+        if (root.running || !Array.isArray(cmds) || cmds.length === 0)
+            return;
         root.running = true;
-        root.mutating = n;
+        root.mutating = kind;
         root.error = "";
-        root.step = I18n.t("settings.snapshotDelete");
-        mutProc.command = ["pkexec", "/usr/bin/snapper", "-c", "root", "delete", n];
+        root._stderr = "";
+        root.step = step || "";
+        root._queue = cmds;
+        root._kick();
+    }
+
+    function _kick() {
+        if (root._queue.length === 0) {
+            root.running = false;
+            root.mutating = "";
+            root.step = "";
+            if (root.watching)
+                root.refresh();
+            return;
+        }
+        const next = root._queue[0];
+        root._queue = root._queue.slice(1);
+        mutProc.command = next;
         mutProc.running = true;
     }
 

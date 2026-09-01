@@ -12,7 +12,7 @@ Singleton {
     readonly property string bin: "/usr/bin/ufw"
     property bool watching: false
     property bool running: false
-    property string status: "missing"
+    property string status: "unknown"
     property string error: ""
     property string mutating: ""
     property var allow: []
@@ -36,7 +36,7 @@ Singleton {
                 root.deny = [];
                 return;
             }
-            if (root.status === "missing")
+            if (root.status === "missing" || root.status === "unknown")
                 root.status = "inactive";
             if (root.watching)
                 listProc.running = true;

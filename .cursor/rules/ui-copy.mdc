@@ -1,0 +1,15 @@
+---
+description: User-visible copy describes this desktop only
+alwaysApply: true
+---
+
+# UI copy stays in this desktop
+
+Labels, hints, dialogs, toasts, and notifications (`I18n.t()` keys) describe
+this environment only.
+
+Do not mention the previous desktop, other backup products, other user
+accounts, or migration/cutover in UI strings.
+
+Docs and comments may still explain isolation. The shell the user reads
+must not.
