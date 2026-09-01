@@ -14,7 +14,7 @@
     "bluetooth": "Bluetooth",
     "notifications": "Benachrichtigungen",
     "settings": "Einstellungen",
-    "store": "App-Store",
+    "store": "App Store",
     "controlPanel": "Kontrollzentrum",
     "power": "Ein/Aus",
     "taskbar": "Anwendungen",
@@ -960,7 +960,7 @@
     "invalidSlug": "Themenname nur Buchstaben, Zahlen und Bindestriche"
   },
   "store": {
-    "title": "App-Store",
+    "title": "App Store",
     "search": "Pakete suchen",
     "empty": "Keine Pakete",
     "emptyHint": "Wähle eine Kategorie oder suche in den offiziellen Repositories",
@@ -971,7 +971,7 @@
     "confirmInstall": "{name} installieren?",
     "confirmInstallBody": "{name} wird aus den offiziellen Repositories installiert. Du kannst es später wieder entfernen.",
     "confirmRemove": "{name} entfernen?",
-    "confirmRemoveBody": "{name} wird von diesem System entfernt. Du kannst es später wieder über den App-Store installieren.",
+    "confirmRemoveBody": "{name} wird von diesem System entfernt. Du kannst es später wieder über den App Store installieren.",
     "updates": "Updates verfügbar",
     "working": "Pakete werden geändert…",
     "installing": "{name} wird installiert",

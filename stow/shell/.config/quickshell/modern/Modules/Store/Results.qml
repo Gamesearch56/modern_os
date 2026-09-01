@@ -9,6 +9,7 @@ Item {
 
     readonly property bool installed: Store.categoryId === "installed" && Store.query.trim().length === 0
     readonly property bool empty: !Store.loading && Store.results.length === 0 && (!root.installed || Store.systemPkgs.length === 0)
+    readonly property Flickable flick: installedPane.visible ? installedPane : listView
 
     ColumnLayout {
         anchors.fill: parent
@@ -36,6 +37,7 @@ Item {
         }
 
         ListView {
+            id: listView
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
@@ -53,6 +55,7 @@ Item {
         }
 
         Flickable {
+            id: installedPane
             visible: !root.empty && root.installed
             Layout.fillWidth: true
             Layout.fillHeight: true
