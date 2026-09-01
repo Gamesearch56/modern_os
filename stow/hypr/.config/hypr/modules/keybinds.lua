@@ -96,13 +96,12 @@ local bindings = {
     moveFocusRight = hl.dsp.focus({ direction = "r" }),
     moveFocusUp = hl.dsp.focus({ direction = "u" }),
     moveFocusDown = hl.dsp.focus({ direction = "d" }),
-    -- Directional window swap-in-layout isn't yet in the confirmed
-    -- hl.dsp table (see docs/TROUBLESHOOTING.md) — hyprctl fallback,
-    -- functionally identical to the classic movewindow dispatcher.
-    moveWindowLeft = hl.dsp.exec_cmd("hyprctl dispatch movewindow l"),
-    moveWindowRight = hl.dsp.exec_cmd("hyprctl dispatch movewindow r"),
-    moveWindowUp = hl.dsp.exec_cmd("hyprctl dispatch movewindow u"),
-    moveWindowDown = hl.dsp.exec_cmd("hyprctl dispatch movewindow d"),
+    -- Classic hyprctl `movewindow` is not a 0.56 dispatcher; the
+    -- compositor only accepts hl.dsp.window.move({ direction }).
+    moveWindowLeft = hl.dsp.window.move({ direction = "l" }),
+    moveWindowRight = hl.dsp.window.move({ direction = "r" }),
+    moveWindowUp = hl.dsp.window.move({ direction = "u" }),
+    moveWindowDown = hl.dsp.window.move({ direction = "d" }),
     workspace1 = focus_ws(1),
     workspace2 = focus_ws(2),
     workspace3 = focus_ws(3),

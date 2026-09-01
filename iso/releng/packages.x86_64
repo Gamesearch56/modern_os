@@ -1,8 +1,11 @@
 # Overlay on top of archiso releng. ISO kernel stays the live image;
 # the installed system gets linux-zen from packages.conf (not stock linux).
+# Package names must be the whole line. mkarchiso keeps trailing spaces
+# as part of the pacman target (v0.1.2 failed as "calamares                       ").
 hyprland
 quickshell
-calamares                       # AUR — built into a local repo by iso-build.sh
+# AUR: built into a local repo by iso-build.sh (packages.aur.x86_64).
+calamares
 networkmanager
 mesa
 git

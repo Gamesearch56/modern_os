@@ -34,12 +34,14 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `PRINT` | Screenshot region (HUD: still or video) | `modern screenshot region` → stills `~/Pictures/Screenshots`, recordings `~/Videos/Recordings` |
 | `SHIFT + PRINT` | Screenshot window | `modern screenshot window` |
 | `SUPER + PRINT` | Screenshot full; stops an active recording | `modern screenshot full` |
+| `SUPER + LEFT` / `RIGHT` / `UP` / `DOWN` | Move focus | `hl.dsp.focus({ direction })` |
+| `SUPER + SHIFT + LEFT` / `RIGHT` / `UP` / `DOWN` | Move the focused window in that direction | `hl.dsp.window.move({ direction })` |
 | `SUPER + mouse 272 / 273` | Drag / resize window | |
 | `SUPER + scroll` | Next/prev workspace on this monitor | `workspace m±1` |
 | `SUPER + SHIFT + C` | Color picker | |
 
-Workspace `SUPER + 1`…`0` and `SUPER + SHIFT + 1`…`0` (move), plus
-focus/move arrows, match the cheatsheet categories.
+Workspace `SUPER + 1`…`0` and `SUPER + SHIFT + 1`…`0` (move window to
+that workspace) match the cheatsheet categories.
 
 Live list: press `SUPER + K`. CLI: `scripts/modern <target> <function>`
 (`qs -c modern ipc` wrapper).
