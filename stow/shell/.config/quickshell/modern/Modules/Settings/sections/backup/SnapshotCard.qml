@@ -34,7 +34,7 @@ MCard {
             MIcon {
                 name: "document-save"
                 size: Tokens.spacing.xxl * 2
-                color: Colors.color.onSurface
+                color: Colors.color.primary
                 tint: true
                 preferSymbolic: false
                 Layout.alignment: Qt.AlignTop

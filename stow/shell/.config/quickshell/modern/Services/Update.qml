@@ -179,7 +179,7 @@ Singleton {
             if (stems[i].length && (n === stems[i] || n.indexOf(stems[i] + "-") === 0))
                 return true;
         }
-        return "pipewire wireplumber systemd greetd grim slurp matugen pacman reflector bluez networkmanager polkit stow qt6-base qt6-declarative kitty nautilus dolphin vivaldi".split(" ").indexOf(n) !== -1;
+        return "pipewire wireplumber systemd greetd grim slurp matugen pacman reflector bluez networkmanager polkit stow qt6-base qt6-declarative kitty nautilus vivaldi".split(" ").indexOf(n) !== -1;
     }
 
     function _parseCheck(text: string) {

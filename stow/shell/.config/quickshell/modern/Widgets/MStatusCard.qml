@@ -16,7 +16,7 @@ MCard {
     property string subtitleKey: ""
     property string subtitleValue: ""
     property bool preferSymbolic: true
-    property color iconColor: Colors.color.onSurface
+    property color iconColor: Colors.color.primary
     property bool iconTint: true
 
     default property alias extra: extraSlot.data

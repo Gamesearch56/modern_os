@@ -45,6 +45,11 @@ Item {
             return Colors.color.onSurface;
         return root._nav ? Chrome.navSelected.fg : Chrome.tonal.fg;
     }
+    readonly property color _iconColor: {
+        if (root.destructive)
+            return Colors.color.error;
+        return Colors.color.primary;
+    }
 
     implicitHeight: {
         if (root.compact)
@@ -152,7 +157,7 @@ Item {
             size: root._glyph
             tint: root.tintIcon
             preferSymbolic: root.preferSymbolic
-            color: root._fg
+            color: root._iconColor
         }
 
         ColumnLayout {

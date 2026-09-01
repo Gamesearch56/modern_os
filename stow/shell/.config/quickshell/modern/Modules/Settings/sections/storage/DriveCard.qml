@@ -74,7 +74,7 @@ MCard {
             MIcon {
                 name: drive.iconName || "drive-harddisk"
                 size: Tokens.spacing.xxl * 2
-                color: Colors.color.onSurface
+                color: Colors.color.primary
                 tint: true
                 preferSymbolic: false
                 Layout.alignment: Qt.AlignTop

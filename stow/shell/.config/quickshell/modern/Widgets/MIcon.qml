@@ -1,7 +1,7 @@
 // Freedesktop icon by name, sized from Tokens. `tint` recolors onto a
-// role. Symbolic glyphs (bar, chrome) are often dark grey — lift them
-// with brightness 1 so they land on onSurface. Full-color Settings nav
-// icons keep luminance (brightness 0) so inner shapes stay visible.
+// role. Symbolic glyphs are lifted (brightness 1). Full-color Papirus
+// keeps luminance (brightness 0) so inner shapes stay visible. Callers
+// that change `color` on hover will flatten that look — freeze the role.
 import QtQuick
 import QtQuick.Effects
 import Quickshell
@@ -19,6 +19,7 @@ Item {
     property bool preferSymbolic: true
 
     readonly property bool _file: root.source.toString().length > 0
+    readonly property int _raster: Math.max(root.size * 2, Tokens.icon.lg)
 
     readonly property string _source: {
         if (root._file)
@@ -39,12 +40,12 @@ Item {
         return p.charAt(0) === "/" ? ("file://" + p) : p;
     }
 
-    // Brightness 1 flattens full-color Papirus badges (inner arrows
-    // become the same as the disc). Only lift true symbolic glyphs.
     readonly property bool _symbolicFile: {
+        const n = root.name.toLowerCase();
         const s = root._source.toLowerCase();
-        return s.indexOf("-symbolic") !== -1 || s.indexOf("/symbolic") !== -1;
+        return n.indexOf("-symbolic") !== -1 || s.indexOf("-symbolic") !== -1 || s.indexOf("/symbolic/") !== -1;
     }
+    readonly property bool _colorize: root.tint
 
     implicitWidth: root.size
     implicitHeight: root.size
@@ -57,11 +58,11 @@ Item {
         height: root.size
         source: root._file ? root._source : ""
         fillMode: Image.PreserveAspectFit
-        sourceSize.width: root.size
-        sourceSize.height: root.size
+        sourceSize.width: root._raster
+        sourceSize.height: root._raster
         asynchronous: false
-        opacity: root.tint ? 0 : 1
-        layer.enabled: root.tint
+        opacity: root._colorize ? 0 : 1
+        layer.enabled: root._colorize
     }
 
     IconImage {
@@ -74,13 +75,13 @@ Item {
         source: root._file ? "" : root._source
         mipmap: true
         asynchronous: false
-        opacity: root.tint ? 0 : 1
-        layer.enabled: root.tint
+        opacity: root._colorize ? 0 : 1
+        layer.enabled: root._colorize
     }
 
     MultiEffect {
         anchors.fill: root._file ? fileImg : img
-        visible: root.tint && (root._file ? fileImg.visible : img.visible)
+        visible: root._colorize && (root._file ? fileImg.visible : img.visible)
         source: root._file ? fileImg : img
         colorization: 1
         colorizationColor: root.color

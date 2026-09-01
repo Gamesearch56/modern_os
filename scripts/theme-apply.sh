@@ -57,6 +57,17 @@ log()  { printf '\033[36m[theme-apply]\033[0m %s\n' "$*" || true; }
 warn() { printf '\033[33m[theme-apply] WARN\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[31m[theme-apply] ERROR\033[0m %s\n' "$*" >&2; exit 1; }
 
+# Stow may leave ~/.config/fastfetch as a dangling symlink if this
+# package's tree was missing. matugen then prints "folder doesnt exist,
+# trying to create" and dies with EEXIST — wallpaper apply toasts that.
+ensure_writable_dir() {
+    local dir="$1"
+    if [ -L "$dir" ] && [ ! -e "$dir" ]; then
+        rm -f "$dir"
+    fi
+    mkdir -p "$dir"
+}
+
 # Variant-mode slugs Settings creates on the fly (tonal-spot-light, …)
 # when no JSON was shipped. Longest variant names first.
 KNOWN_VARIANTS="fruit-salad tonal-spot monochrome expressive fidelity rainbow vibrant content neutral"
@@ -624,7 +635,11 @@ if [ "$SOURCE_MODE" = "wallpaper" ] && [ "$RELOAD" -eq 1 ] && [ "$SKIP_WALLPAPER
     fi
 fi
 
-mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/phylax"
+cfg="${XDG_CONFIG_HOME:-$HOME/.config}"
+ensure_writable_dir "$cfg/phylax"
+ensure_writable_dir "$cfg/fastfetch"
+ensure_writable_dir "$cfg/kitty"
+ensure_writable_dir "$cfg/vivaldi/custom_css"
 
 log "running matugen (${MATUGEN_ARGS[*]})"
 mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places"

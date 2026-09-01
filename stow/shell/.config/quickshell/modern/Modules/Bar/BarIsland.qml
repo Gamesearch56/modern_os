@@ -12,7 +12,8 @@ Item {
     property bool singleHit: true
 
     visible: !root.empty
-    implicitHeight: Config.bar.height
+    clip: true
+    implicitHeight: root.vertical ? Math.max(Config.bar.height, inner.implicitHeight) : Config.bar.height
     implicitWidth: root.vertical ? Config.bar.height : Math.max(Config.bar.height, inner.implicitWidth)
 
     default property alias extra: inner.data
@@ -28,10 +29,14 @@ Item {
 
     Grid {
         id: inner
-        anchors.left: parent.left
-        anchors.top: parent.top
+        anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
+        anchors.left: root.vertical ? undefined : parent.left
+        anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
+        anchors.top: root.vertical ? parent.top : undefined
         columns: root.vertical ? 1 : 32
         flow: root.vertical ? Grid.TopToBottom : Grid.LeftToRight
         spacing: 0
+        horizontalItemAlignment: Grid.AlignHCenter
+        verticalItemAlignment: Grid.AlignVCenter
     }
 }

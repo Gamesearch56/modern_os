@@ -34,7 +34,7 @@ Singleton {
     readonly property int durationMedium: 250
     readonly property int durationLong: 400
     readonly property int durationExtraLong: 600
-    readonly property int durationConfigWrite: 1000
+    readonly property int durationConfigWrite: 200
     // Wall-clock hide for recording chrome — not MD3 motion, never scaled.
     readonly property int durationRecordingChrome: 3000
 

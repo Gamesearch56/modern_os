@@ -17,11 +17,12 @@ Rectangle {
 
     readonly property alias listBox: listBox
     readonly property real _rowH: Tokens.spacing.xxl + Tokens.spacing.sm
+    readonly property bool _dropHover: !!(board && board._dragId.length && board._hoverSlot === slotId && board._hoverIndex >= 0)
 
     radius: Tokens.radius.medium
     color: Colors.color.surfaceContainerHigh
     border.width: Tokens.stroke.hairline
-    border.color: Colors.color.outlineVariant
+    border.color: root._dropHover ? Colors.color.primary : Colors.color.outlineVariant
     clip: false
     implicitHeight: Tokens.spacing.sm * 2 + col.implicitHeight
 
@@ -56,6 +57,13 @@ Rectangle {
             Layout.fillWidth: true
             implicitHeight: listCol.implicitHeight
 
+            MSlotDropMark {
+                active: root._dropHover
+                insertIndex: root.board ? root.board._hoverIndex : -1
+                rowHeight: root._rowH
+                count: (root.items || []).length
+            }
+
             ColumnLayout {
                 id: listCol
                 anchors.left: parent.left
@@ -74,7 +82,6 @@ Rectangle {
                         Layout.fillWidth: true
                         implicitHeight: root._rowH
                         z: drag.drag.active ? 20 : 0
-
                         Rectangle {
                             id: tile
                             width: row.width
@@ -100,7 +107,8 @@ Rectangle {
                                     visible: root.iconName(row.itemId).length > 0
                                     name: root.iconName(row.itemId)
                                     size: Tokens.icon.sm
-                                    color: Colors.color.onSurface
+                                    color: Colors.color.primary
+                                    preferSymbolic: false
                                 }
                                 Item {
                                     Layout.fillWidth: true
@@ -137,7 +145,6 @@ Rectangle {
                                 active: row.canEdit && drag.containsMouse && !drag.drag.active
                             }
                         }
-
                         MouseArea {
                             id: drag
                             anchors.fill: parent
@@ -151,9 +158,13 @@ Rectangle {
                                 if (root.board)
                                     root.board.beginDrag(root.slotId, row.index, row.itemId);
                             }
-                            onPositionChanged: {
-                                if (pressed && (Math.abs(tile.x) > Tokens.spacing.xs || Math.abs(tile.y) > Tokens.spacing.xs))
+                            onPositionChanged: (mouse) => {
+                                if (!pressed)
+                                    return;
+                                if (Math.abs(tile.x) > Tokens.spacing.xs || Math.abs(tile.y) > Tokens.spacing.xs)
                                     row._moved = true;
+                                if (row._moved && root.board)
+                                    root.board.hoverFrom(drag, mouse.x, mouse.y);
                             }
                             onReleased: (mouse) => {
                                 if (row._moved && root.board)
@@ -174,7 +185,6 @@ Rectangle {
                         }
                     }
                 }
-
                 MText {
                     visible: (root.items || []).length === 0
                     key: root.board ? root.board.emptyKey : ""

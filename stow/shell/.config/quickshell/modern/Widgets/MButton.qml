@@ -22,6 +22,19 @@ Item {
     readonly property bool _hovered: ma.containsMouse && root.enabled && !root.busy
     readonly property bool _pressed: ma.pressed
 
+    // Icon stays on the rest role. Hover recolor of Papirus badges
+    // flattens inner shapes; the label still follows `_colors.fg`.
+    readonly property color _iconColor: {
+        switch (root.kind) {
+        case "tonal":
+            return Chrome.tonal.fg;
+        case "destructive":
+            return Colors.color.onError;
+        default:
+            return Colors.color.primary;
+        }
+    }
+
     readonly property var _colors: {
         const hot = root._hovered || root._pressed;
         switch (root.kind) {
@@ -107,8 +120,9 @@ Item {
         MIcon {
             visible: root.iconName.length > 0 || root.busy
             name: root.busy ? (root.iconName.length > 0 ? root.iconName : "view-refresh") : root.iconName
-            size: Tokens.icon.sm
-            color: root._colors.fg
+            size: Tokens.icon.md
+            color: root._iconColor
+            preferSymbolic: false
             RotationAnimation on rotation {
                 running: root.busy
                 from: 0

@@ -22,8 +22,9 @@ Item {
     implicitHeight: Config.bar.height
 
     readonly property bool _mpris: Media.hasPlayer
+    readonly property bool _sound: Media.playing || (!root._mpris && !!Audio.playback)
     readonly property real _art: BarLayout.vertical
-        ? Config.bar.height - Tokens.spacing.sm
+        ? Config.bar.height - Tokens.spacing.md
         : Tokens.spacing.xl - Tokens.spacing.xxs
     readonly property real _titleMax: Tokens.spacing.xxl * 4
     readonly property string _label: {
@@ -67,16 +68,17 @@ Item {
 
     RowLayout {
         id: row
-        anchors.left: parent.left
-        anchors.leftMargin: Tokens.spacing.md
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: Tokens.spacing.sm
+        anchors.centerIn: BarLayout.vertical ? parent : undefined
+        anchors.left: BarLayout.vertical ? undefined : parent.left
+        anchors.leftMargin: BarLayout.vertical ? 0 : Tokens.spacing.md
+        anchors.verticalCenter: BarLayout.vertical ? undefined : parent.verticalCenter
+        spacing: BarLayout.vertical ? 0 : Tokens.spacing.sm
 
         Rectangle {
             Layout.preferredWidth: root._art
             Layout.preferredHeight: root._art
-            Layout.alignment: Qt.AlignVCenter
-            radius: BarLayout.vertical ? Tokens.radius.full : Tokens.radius.small
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+            radius: Tokens.radius.small
             color: Colors.color.surfaceContainerHighest
             clip: true
 
@@ -101,7 +103,7 @@ Item {
 
             MouseArea {
                 anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
+                cursorShape: root._sound ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onClicked: root._raise()
             }
         }
@@ -127,6 +129,7 @@ Item {
             Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
             enabled: Media.canGoPrevious
+            pointer: root._sound
             onClicked: Media.previous()
         }
         MIconButton {
@@ -138,6 +141,7 @@ Item {
             Layout.preferredWidth: root._art
             Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
+            pointer: root._sound
             onClicked: root._toggle()
         }
         MIconButton {
@@ -150,6 +154,7 @@ Item {
             Layout.preferredHeight: root._art
             Layout.alignment: Qt.AlignVCenter
             enabled: Media.canGoNext
+            pointer: root._sound
             onClicked: Media.next()
         }
     }
@@ -157,6 +162,7 @@ Item {
     MouseArea {
         anchors.fill: parent
         z: -1
+        cursorShape: root._sound ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: root._raise()
     }
 }

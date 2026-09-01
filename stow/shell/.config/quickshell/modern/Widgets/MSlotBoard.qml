@@ -24,6 +24,8 @@ ColumnLayout {
     property string _dragId: ""
     property string _dragSlot: ""
     property int _dragIndex: -1
+    property string _hoverSlot: ""
+    property int _hoverIndex: -1
 
     spacing: Tokens.spacing.sm
     Layout.fillWidth: true
@@ -63,7 +65,7 @@ ColumnLayout {
         root.slotsChanged(left, center, right);
     }
 
-    function dropFrom(ma: var, mx: real, my: real) {
+    function _hitLane(ma: var, mx: real, my: real) {
         const cols = [
             { slot: "left", lane: leftLane },
             { slot: "center", lane: centerLane },
@@ -72,17 +74,35 @@ ColumnLayout {
         for (let i = 0; i < cols.length; i++) {
             const lane = cols[i].lane;
             const p = lane.listBox.mapFromItem(ma, mx, my);
-            if (p.x >= 0 && p.x <= lane.listBox.width && p.y >= -Tokens.spacing.sm && p.y <= lane.listBox.height + Tokens.spacing.sm) {
-                root.dropOn(cols[i].slot, lane.indexAt(p.y));
-                return;
-            }
+            if (p.x >= 0 && p.x <= lane.listBox.width && p.y >= -Tokens.spacing.sm && p.y <= lane.listBox.height + Tokens.spacing.sm)
+                return { slot: cols[i].slot, index: lane.indexAt(p.y) };
         }
+        return null;
+    }
+
+    function hoverFrom(ma: var, mx: real, my: real) {
+        const hit = root._hitLane(ma, mx, my);
+        if (!hit) {
+            root._hoverSlot = "";
+            root._hoverIndex = -1;
+            return;
+        }
+        root._hoverSlot = hit.slot;
+        root._hoverIndex = hit.index;
+    }
+
+    function dropFrom(ma: var, mx: real, my: real) {
+        const hit = root._hitLane(ma, mx, my);
+        if (hit)
+            root.dropOn(hit.slot, hit.index);
     }
 
     function endDrag() {
         root._dragId = "";
         root._dragSlot = "";
         root._dragIndex = -1;
+        root._hoverSlot = "";
+        root._hoverIndex = -1;
         root._lockFlick(false);
     }
 

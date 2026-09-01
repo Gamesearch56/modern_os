@@ -68,7 +68,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             name: root.iconName
             size: Tokens.icon.lg
-            color: root.tintIcon ? root._fg : Colors.color.onSurface
+            color: root.tintIcon ? Colors.color.primary : Colors.color.onSurface
         }
 
         MText {
@@ -112,7 +112,7 @@ Item {
         MIcon {
             name: root.iconName
             size: Tokens.icon.md
-            color: root.tintIcon ? root._fg : Colors.color.onSurface
+            color: root.tintIcon ? Colors.color.primary : Colors.color.onSurface
             Layout.alignment: Qt.AlignVCenter
         }
 

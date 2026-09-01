@@ -16,6 +16,7 @@ Item {
     property bool tint: true
     property bool busy: false
     property bool tabFocus: true
+    property bool pointer: true
 
     signal clicked()
     signal middleClicked()
@@ -101,7 +102,7 @@ Item {
         hoverEnabled: true
         preventStealing: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-        cursorShape: (root.enabled && !root.busy) ? Qt.PointingHandCursor : Qt.ArrowCursor
+        cursorShape: (root.enabled && !root.busy && root.pointer) ? Qt.PointingHandCursor : Qt.ArrowCursor
         onEntered: {
             if (!root._suppressHover)
                 root._hover = true;
