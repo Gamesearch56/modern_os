@@ -113,7 +113,6 @@ FocusScope {
                     escapeClicks: false
                     iconName: "edit-delete-symbolic"
                     key: root.destructiveKey
-                    size: Tokens.spacing.xl
                     iconSize: Tokens.icon.xs
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                     onClicked: root.destructiveClicked()
