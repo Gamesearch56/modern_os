@@ -72,7 +72,9 @@ if [ -d "$CURRENT_USER_HOME/.config" ]; then
         ok "no symlink in ~/.config points into modern_dotfile or devuser"
     else
         bad "found symlinks pointing into modern_dotfile/devuser:"
-        echo "$bad_links" | sed 's/^/    /'
+        while IFS= read -r line; do
+            printf '    %s\n' "$line"
+        done <<< "$bad_links"
     fi
 else
     ok "no ~/.config to check"
@@ -84,18 +86,20 @@ fi
 # Plymouth in mkinitcpio is not checked: this machine may already use it.
 if [ "$ALLOW_GATED" -eq 0 ]; then
     gated_hits=""
-    systemctl is-enabled greetd.service >/dev/null 2>&1 && gated_hits="${gated_hits}greetd.service enabled\n"
-    [ -e /etc/polkit-1/actions/link.modern.usermanager.policy ] && gated_hits="${gated_hits}modern-usersd polkit action installed\n"
-    [ -e /usr/local/bin/modern-usersd ] && gated_hits="${gated_hits}modern-usersd binary installed\n"
-    [ -e /etc/tmpfiles.d/modern-session.conf ] && gated_hits="${gated_hits}/etc/tmpfiles.d/modern-session.conf present\n"
-    [ -e /etc/sysctl.d/99-modern-gaming.conf ] && gated_hits="${gated_hits}/etc/sysctl.d/99-modern-gaming.conf present\n"
-    [ -e /etc/pacman.d/hooks/esp-backup.hook ] && gated_hits="${gated_hits}/etc/pacman.d/hooks/esp-backup.hook present\n"
+    systemctl is-enabled greetd.service >/dev/null 2>&1 && gated_hits="${gated_hits}greetd.service enabled"$'\n'
+    [ -e /etc/polkit-1/actions/link.modern.usermanager.policy ] && gated_hits="${gated_hits}modern-usersd polkit action installed"$'\n'
+    [ -e /usr/local/bin/modern-usersd ] && gated_hits="${gated_hits}modern-usersd binary installed"$'\n'
+    [ -e /etc/tmpfiles.d/modern-session.conf ] && gated_hits="${gated_hits}/etc/tmpfiles.d/modern-session.conf present"$'\n'
+    [ -e /etc/sysctl.d/99-modern-gaming.conf ] && gated_hits="${gated_hits}/etc/sysctl.d/99-modern-gaming.conf present"$'\n'
+    [ -e /etc/pacman.d/hooks/esp-backup.hook ] && gated_hits="${gated_hits}/etc/pacman.d/hooks/esp-backup.hook present"$'\n'
 
     if [ -z "$gated_hits" ]; then
         ok "no gated system-wide change has been applied"
     else
         bad "gated system-wide changes detected (pass --allow-gated if deliberate):"
-        printf "$gated_hits" | sed 's/^/    /'
+        while IFS= read -r line; do
+            [ -n "$line" ] && printf '    %s\n' "$line"
+        done <<< "$gated_hits"
     fi
 else
     echo "  (gated-state checks skipped: --allow-gated)"

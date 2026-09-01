@@ -70,7 +70,7 @@ installed_tag() {
 }
 
 highest_tag() {
-    local url line name best
+    local url name best
     url="$(remote_url)"
     best=""
     while read -r _ name; do

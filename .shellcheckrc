@@ -1,0 +1,4 @@
+# Follow `# shellcheck source=` so install/lib and scripts/lib resolve.
+# CI runs `shellcheck` with no extra flags.
+external-sources=true
+source-path=SCRIPTDIR

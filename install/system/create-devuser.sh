@@ -16,7 +16,7 @@
 set -euo pipefail
 
 USERNAME="${1:-devuser}"
-GROUPS="wheel,video,input,audio,render,seat,i2c"
+account_groups="wheel,video,input,audio,render,seat,i2c"
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "Run as root: sudo $0 [username]" >&2
@@ -29,14 +29,14 @@ if id "$USERNAME" >/dev/null 2>&1; then
 fi
 
 echo "== Creating $USERNAME =="
-echo "Groups: $GROUPS"
+echo "Groups: $account_groups"
 read -r -p "Proceed? [y/N] " confirm
 [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] || { echo "Aborted."; exit 1; }
 
 # Drop groups that don't exist on this system (e.g. 'seat' without
 # seatd/elogind) rather than failing the whole command.
 existing_groups=""
-IFS=',' read -ra requested <<< "$GROUPS"
+IFS=',' read -ra requested <<< "$account_groups"
 for g in "${requested[@]}"; do
     if getent group "$g" >/dev/null 2>&1; then
         existing_groups="${existing_groups:+$existing_groups,}$g"

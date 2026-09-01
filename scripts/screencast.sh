@@ -67,6 +67,8 @@ mkdir -p "$DIR"
 FILE="$DIR/$(date +"$TEMPLATE").mp4"
 WF_PID=""
 
+# Invoked from trap INT TERM; shellcheck cannot see that.
+# shellcheck disable=SC2317
 cleanup() {
     trap - INT TERM
     if [ -n "${WF_PID:-}" ]; then
@@ -108,8 +110,7 @@ region_to_global() {
 }
 
 wait_hud_gone() {
-    local i
-    for i in $(seq 1 24); do
+    for _ in $(seq 1 24); do
         if ! hyprctl layers -j 2>/dev/null | jq -e '
             [.. | objects | select(.namespace? == "modern-screenshot")] | length > 0
         ' >/dev/null; then
