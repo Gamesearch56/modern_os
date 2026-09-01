@@ -28,6 +28,17 @@ MCard {
     implicitHeight: body.implicitHeight + Tokens.spacing.md * 2
     Layout.preferredHeight: implicitHeight
 
+    function _slotOpen(item: var): bool {
+        if (!item)
+            return false;
+        const kids = item.children;
+        for (let i = 0; i < kids.length; i++) {
+            if (kids[i].visible)
+                return true;
+        }
+        return false;
+    }
+
     ColumnLayout {
         id: body
         width: parent.width
@@ -55,6 +66,7 @@ MCard {
 
             ColumnLayout {
                 Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
                 spacing: Tokens.spacing.xs
 
                 MText {
@@ -74,7 +86,7 @@ MCard {
                 }
                 ColumnLayout {
                     id: detailSlot
-                    visible: children.length > 0
+                    visible: root._slotOpen(detailSlot)
                     Layout.fillWidth: true
                     Layout.topMargin: Tokens.spacing.sm
                     spacing: Tokens.spacing.xs
@@ -83,14 +95,14 @@ MCard {
 
             ColumnLayout {
                 id: trailingSlot
-                visible: children.length > 0
+                visible: root._slotOpen(trailingSlot)
                 Layout.alignment: Qt.AlignVCenter
             }
         }
 
         ColumnLayout {
             id: extraSlot
-            visible: children.length > 0
+            visible: root._slotOpen(extraSlot)
             Layout.fillWidth: true
             spacing: Tokens.spacing.sm
         }

@@ -26,3 +26,5 @@ brightnessctl                    # XF86 brightness keys in modules/keybinds.lua
 kdialog                          # Qt file picker (wallpaper Add; pick-directory.sh)
 hyprpicker                       # color picker widget backend
 inotify-tools                    # wallpaper-provider.sh watches the download folder
+gamemode                         # CPU governor while a game runs — started from autostart.lua
+lib32-gamemode                   # 32-bit GameMode hook for older titles
