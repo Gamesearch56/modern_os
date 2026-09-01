@@ -990,6 +990,7 @@
     "popular": "Popular",
     "seeAll": "See all",
     "resultsTitle": "Results for {q}",
+    "systemPackages": "System packages",
     "categories": {
       "discover": "Discover",
       "internet": "Internet",

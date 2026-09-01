@@ -11,6 +11,7 @@ MListItem {
 
     readonly property bool _on: !!(pkg && pkg.installed)
     readonly property string _name: String(pkg && pkg.name || "")
+    property bool removable: true
 
     iconName: Store.iconForPkg(root._name)
     tintIcon: false
@@ -20,6 +21,7 @@ MListItem {
     subtitleValue: String(pkg && pkg.desc || "")
 
     MButton {
+        visible: root.removable
         kind: root._on ? "destructive" : "filled"
         key: root._on ? "store.remove" : "store.install"
         enabled: Store.mutating.length === 0
