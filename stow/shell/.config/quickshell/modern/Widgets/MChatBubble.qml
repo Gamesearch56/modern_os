@@ -15,6 +15,10 @@ Item {
     readonly property real _max: Math.min(width * 0.82, Tokens.spacing.xxl * 12)
     readonly property real _pad: Tokens.spacing.sm * 2
     readonly property real _inner: Math.max(1, root._max - root._pad)
+    readonly property var _bodyStyle: {
+        void Typography.scale;
+        return Typography.style("bodyMedium");
+    }
     readonly property real _bodyW: Math.min(root._inner, Math.max(1, body.implicitWidth))
     readonly property bool _wait: !root.mine && root.pending && root.text.length === 0
     readonly property bool _reason: false
@@ -110,16 +114,46 @@ Item {
                     visible: root._wait
                     running: root._wait
                 }
-                MText {
+                TextEdit {
                     id: body
                     visible: root.text.length > 0
-                    value: root.text
-                    styleName: "bodyMedium"
+                    readOnly: true
+                    selectByMouse: false
+                    cursorVisible: false
+                    persistentSelection: true
+                    text: root.text
+                    textFormat: root.mine ? TextEdit.PlainText : TextEdit.MarkdownText
                     color: root.mine ? Chrome.tonal.fg : Colors.color.onSurface
-                    wrapMode: Text.Wrap
-                    elide: Text.ElideNone
+                    selectionColor: Colors.color.primary
+                    selectedTextColor: Colors.color.onPrimary
+                    wrapMode: TextEdit.Wrap
+                    font.family: Typography.family.ui
+                    font.pixelSize: root._bodyStyle.pixelSize
+                    font.weight: root._bodyStyle.weight
+                    font.letterSpacing: root._bodyStyle.letterSpacing
+                    font.hintingPreference: Font.PreferNoHinting
+                    renderType: TextEdit.QtRendering
                     Layout.fillWidth: !root.mine
                     Layout.maximumWidth: root._inner
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.ArrowCursor
+                        preventStealing: true
+                        property int _anchor: 0
+                        onPressed: (mouse) => {
+                            body.forceActiveFocus();
+                            _anchor = body.positionAt(mouse.x, mouse.y);
+                            body.cursorPosition = _anchor;
+                            body.deselect();
+                        }
+                        onPositionChanged: (mouse) => {
+                            if (pressed)
+                                body.select(_anchor, body.positionAt(mouse.x, mouse.y));
+                        }
+                        onDoubleClicked: body.selectWord()
+                    }
                 }
             }
         }

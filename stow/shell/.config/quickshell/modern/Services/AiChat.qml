@@ -1,5 +1,8 @@
 // Localhost Ollama /api/chat only. Body is a temp file (never argv).
-// Caps, CPU-only, and a UI throttle so a stream cannot stall qs/Hyprland.
+// Caps, a 4-thread ceiling, and a UI throttle so a stream cannot stall
+// qs/Hyprland. think:false so Qwen3 cannot spend num_predict on hidden
+// chain-of-thought and return an empty bubble. 1024 predicted tokens so
+// a how-to is not cut off mid-heading.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -12,6 +15,8 @@ Item {
     readonly property int maxReply: 12000
     readonly property int maxLine: 4096
     readonly property int maxMsgs: 12
+    readonly property int maxPredict: 1024
+    readonly property int curlMaxSec: 180
 
     property bool running: false
     property string thinking: ""
@@ -38,7 +43,7 @@ Item {
         repeat: true
         onTriggered: {
             root._dirty = false;
-            root.chunk(root.content, "");
+            root.chunk(root.content, root.thinking);
         }
     }
 
@@ -59,12 +64,11 @@ Item {
                 model: safe,
                 messages: root._clipMessages(messages),
                 stream: true,
-                keep_alive: "0",
+                think: false,
                 options: {
-                    num_gpu: 0,
                     num_thread: 4,
                     num_ctx: 2048,
-                    num_predict: 512
+                    num_predict: root.maxPredict
                 }
             });
         } catch (e) {
@@ -133,7 +137,7 @@ Item {
                 return;
             proc.command = [
                 "curl", "-sS", "-N", "--noproxy", "*",
-                "--connect-timeout", "5", "--max-time", "90",
+                "--connect-timeout", "5", "--max-time", String(root.curlMaxSec),
                 "-H", "Content-Type: application/json",
                 "--data-binary", "@" + req.path,
                 "http://127.0.0.1:11434/api/chat"
@@ -161,6 +165,8 @@ Item {
             return;
         }
         const msg = data.message || ({});
+        if (msg.thinking)
+            root.thinking += String(msg.thinking).replace(/\0/g, "");
         if (msg.content)
             root.content += String(msg.content).replace(/\0/g, "");
         if (root.content.length > root.maxReply) {
@@ -185,7 +191,7 @@ Item {
             return;
         root.running = false;
         root._dirty = false;
-        root.chunk(root.content, "");
+        root.chunk(root.content, root.thinking);
         const e = err || root.lastError;
         root.finished((ok || root._capped) && !e, e);
     }
