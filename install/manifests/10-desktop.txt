@@ -1,5 +1,10 @@
 # Hyprland desktop core — every profile past 00-base installs this.
 hyprland                       # the compositor
+mesa                           # OpenGL/EGL (Hyprland also pulls this; listed so m0 is explicit)
+greetd                         # login (enabled only by provision-iso.sh, never install.sh)
+xdg-user-dirs                  # Desktop/Pictures before wallpaper copy
+gvfs                           # Nautilus trash/network mounts
+gvfs-mtp                       # phone MTP in Nautilus
 hypridle                       # idle handling (screen off, suspend) — see Services/Power
 hyprland-qt-support             # org.hyprland.style QML chrome (application-style.conf); polkit UI is phylax-git (10-desktop.aur.txt)
 xdg-desktop-portal-hyprland     # screen share / screenshot portal backend

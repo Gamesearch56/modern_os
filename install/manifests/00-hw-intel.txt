@@ -1,2 +1,2 @@
-# CPU microcode for Intel. Selected by install.sh --hw intel (or auto-detect).
+# Compatibility alias: CPU ucode only. GPU packages live in 00-hw-gpu-intel.txt.
 intel-ucode

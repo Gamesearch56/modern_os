@@ -56,18 +56,54 @@ install_flatpak() {
     run flatpak install -y --noninteractive flathub "${ids[@]}"
 }
 
-# CPU vendor + GPU class for hardware manifest layers. Override with --hw.
-detect_hw() {
-    local cpu gpu
+# CPU vendor for 00-hw-cpu-*. Override with --cpu.
+detect_cpu() {
+    local cpu
     cpu="$(awk -F: '/^vendor_id/{gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo 2>/dev/null || true)"
-    gpu="$(lspci 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /VGA compatible controller|3D controller/{print; exit}')"
-    if printf '%s' "$gpu" | grep -qi nvidia; then
-        printf 'nvidia\n'
-        return
-    fi
     if printf '%s' "$cpu" | grep -qi intel; then
         printf 'intel\n'
         return
     fi
     printf 'amd\n'
+}
+
+# GPU class for 00-hw-gpu-*. Override with --hw / --gpu.
+detect_gpu() {
+    local gpu
+    gpu="$(lspci 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /VGA compatible controller|3D controller/{print; exit}')"
+    if printf '%s' "$gpu" | grep -qi nvidia; then
+        printf 'nvidia\n'
+        return
+    fi
+    if printf '%s' "$gpu" | grep -qi 'intel'; then
+        printf 'intel\n'
+        return
+    fi
+    printf 'amd\n'
+}
+
+# Turing+ vs Maxwell/Pascal/Volta. Uses lspci chip names, not board names.
+detect_nvidia_family() {
+    local gpu
+    gpu="$(lspci 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /VGA compatible controller|3D controller/{print; exit}')"
+    if printf '%s' "$gpu" | grep -Eqi 'TU1|TU2|GA1|AD1|GB2|GTX 16|RTX'; then
+        printf 'nvidia\n'
+        return
+    fi
+    if printf '%s' "$gpu" | grep -Eqi 'GM1|GM2|GP1|GV1|GK|GF'; then
+        printf 'nvidia-legacy\n'
+        return
+    fi
+    printf 'nvidia\n'
+}
+
+# Legacy single-token helper (cpu-or-gpu). Prefer detect_cpu + detect_gpu.
+detect_hw() {
+    local gpu
+    gpu="$(detect_gpu)"
+    if [ "$gpu" = "nvidia" ]; then
+        printf 'nvidia\n'
+        return
+    fi
+    detect_cpu
 }

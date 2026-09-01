@@ -1,0 +1,3 @@
+# NVIDIA Turing and newer (GTX 16 / RTX 20+). linux-zen-headers is in 00-base.
+nvidia-open-dkms
+nvidia-utils

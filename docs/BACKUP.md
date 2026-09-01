@@ -58,8 +58,9 @@ exists.**
 ## `modern update`
 
 If `backup.preUpdateSnapshot` is true, `modern update` runs `snapper
-create` then `yay -Syu`. It refuses when snapper is missing or has no
-configs — not Timeshift.
+create`, then `desktop-sync.sh apply` when a newer release tag is
+pending, then `pacman -Syu` if packages are pending. It still runs the
+desktop/package steps when snapper is missing — not Timeshift.
 
 
 ## Restore kit

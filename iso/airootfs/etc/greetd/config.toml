@@ -1,0 +1,12 @@
+# Live ISO only — autologin liveuser into Hyprland + Calamares.
+# Installed systems use install/system/greetd/ (greeter kiosk), never this file.
+[terminal]
+vt = 1
+
+[default_session]
+command = "Hyprland --config /etc/modern/live-hyprland.conf"
+user = "liveuser"
+
+[initial_session]
+command = "Hyprland --config /etc/modern/live-hyprland.conf"
+user = "liveuser"

@@ -25,3 +25,5 @@ samba                   # LAN file sharing (kept from the audited setup)
 wsdd                    # Windows discovery for the samba share above
 zram-generator          # swap-on-zram, standard low-RAM-pressure tuning
 ufw                     # firewall — see docs/SECURITY.md and the KDE Connect port rule
+sof-firmware            # laptop audio (Intel/AMD SOF)
+alsa-firmware           # older Broadwell-era and similar codecs

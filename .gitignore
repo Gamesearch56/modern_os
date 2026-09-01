@@ -49,3 +49,6 @@ install/*.log
 # Editor/OS
 .idea/
 .DS_Store
+
+# ISO artifacts (branding + mkarchiso). Never under a live home.
+iso/out/

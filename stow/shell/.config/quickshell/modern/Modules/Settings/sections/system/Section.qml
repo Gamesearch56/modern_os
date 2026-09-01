@@ -55,20 +55,20 @@ ColumnLayout {
     }
 
     PkgGroup {
-        visible: Update.pending.length > 0
+        visible: Update.systemPkgs.length > 0
         titleKey: "settings.update.packages"
         packages: Update.systemPkgs
-        expanded: false
+        expanded: Update.pending.length === 0
     }
     PkgGroup {
-        visible: Update.pending.length > 0
+        visible: Update.otherPkgs.length > 0
         titleKey: "settings.update.otherPackages"
         packages: Update.otherPkgs
         expanded: false
     }
 
     MEmptyState {
-        visible: Update.pending.length === 0 && !Update.checking
+        visible: Update.systemPkgs.length === 0 && Update.otherPkgs.length === 0 && !Update.checking
         Layout.fillWidth: true
         Layout.preferredHeight: Tokens.spacing.xxl * 4
         iconName: "system-software-update"

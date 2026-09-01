@@ -4,10 +4,14 @@
 #
 # Usage:
 #   install.sh --profile <m0|dev|gaming|full> [--dry-run] [--yes] [--target DIR]
-#              [--allow-live-home] [--hw amd|intel|nvidia] [--extra proton]
+#              [--allow-live-home] [--hw amd|intel|nvidia] [--cpu amd|intel]
+#              [--extra proton]
 #
-# --hw selects CPU microcode and (for gaming/full) GPU Vulkan packages.
-# Default is auto-detect. --extra proton installs 90-accounts.aur.txt.
+# --hw / --gpu selects the GPU stack (mesa/RADV, Intel, or NVIDIA DKMS).
+# --cpu selects microcode. Both default to auto-detect so Intel CPU +
+# NVIDIA GPU gets intel-ucode *and* the NVIDIA driver. --extra proton
+# installs 90-accounts.aur.txt.
+# Calamares late: --profile m0 --yes as the new user (never as root).
 #
 # Profiles (see install/manifests/README.md for exact layer membership):
 #   m0       base + desktop + theming + minimal apps  (default, matches the plan's M0)
@@ -29,6 +33,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_FILE="$REPO_ROOT/install/install.log"
 PROFILE="m0"
 HW="auto"
+CPU="auto"
 EXTRA=""
 DRY_RUN=0
 ASSUME_YES=0
@@ -43,6 +48,8 @@ for arg in "$@"; do
         --yes|-y) ASSUME_YES=1 ;;
         --allow-live-home) ALLOW_LIVE_HOME=1 ;;
         --hw=*) HW="${arg#*=}" ;;
+        --gpu=*) HW="${arg#*=}" ;;
+        --cpu=*) CPU="${arg#*=}" ;;
         --extra=*) EXTRA="${arg#*=}" ;;
         --target=*) TARGET="${arg#*=}" ;;
         --help|-h)
@@ -60,6 +67,12 @@ for i in "${!args[@]}"; do
     fi
     if [ "${args[$i]}" = "--hw" ] && [ -n "${args[$((i+1))]:-}" ]; then
         HW="${args[$((i+1))]}"
+    fi
+    if [ "${args[$i]}" = "--gpu" ] && [ -n "${args[$((i+1))]:-}" ]; then
+        HW="${args[$((i+1))]}"
+    fi
+    if [ "${args[$i]}" = "--cpu" ] && [ -n "${args[$((i+1))]:-}" ]; then
+        CPU="${args[$((i+1))]}"
     fi
     if [ "${args[$i]}" = "--extra" ] && [ -n "${args[$((i+1))]:-}" ]; then
         EXTRA="${args[$((i+1))]}"
@@ -82,18 +95,30 @@ source "$REPO_ROOT/install/lib/preflight.sh"
 : > "$LOG_FILE"
 trap 'rc=$?; log_error "install aborted at line $LINENO (exit $rc). See $LOG_FILE"; exit "$rc"' ERR
 
-log_info "modern_dotfile installer — profile '$PROFILE', hw='$HW', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN"
+log_info "modern_dotfile installer — profile '$PROFILE', gpu='$HW', cpu='$CPU', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN"
 
 case "$PROFILE" in
     m0|dev|gaming|full) ;;
     *) die "unknown profile '$PROFILE' — expected m0|dev|gaming|full" ;;
 esac
 
+case "$CPU" in
+    auto) CPU="$(detect_cpu)"; log_info "detected CPU vendor: $CPU" ;;
+    amd|intel) ;;
+    *) die "unknown --cpu '$CPU' — expected auto|amd|intel" ;;
+esac
+
 case "$HW" in
-    auto) HW="$(detect_hw)"; log_info "detected hardware class: $HW" ;;
+    auto) HW="$(detect_gpu)"; log_info "detected GPU class: $HW" ;;
     amd|intel|nvidia) ;;
     *) die "unknown --hw '$HW' — expected auto|amd|intel|nvidia" ;;
 esac
+
+GPU_FAMILY="$HW"
+if [ "$HW" = "nvidia" ]; then
+    GPU_FAMILY="$(detect_nvidia_family)"
+    log_info "NVIDIA driver family: $GPU_FAMILY"
+fi
 
 case "$EXTRA" in
     ""|proton) ;;
@@ -133,14 +158,18 @@ for layer in "${layers[@]}"; do
     [ -f "$aur_file" ] && mapfile -t -O "${#aur_pkgs[@]}" aur_pkgs < <(parse_manifest "$aur_file")
 done
 
-hw_cpu="$MANIFEST_DIR/00-hw-${HW}.txt"
+hw_cpu="$MANIFEST_DIR/00-hw-cpu-${CPU}.txt"
 if [ -f "$hw_cpu" ]; then
     mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_cpu")
 fi
+hw_gpu="$MANIFEST_DIR/00-hw-gpu-${GPU_FAMILY}.txt"
+if [ -f "$hw_gpu" ]; then
+    mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_gpu")
+fi
 if [ "$PROFILE" = "gaming" ] || [ "$PROFILE" = "full" ]; then
-    hw_gpu="$MANIFEST_DIR/50-hw-${HW}.txt"
-    if [ -f "$hw_gpu" ]; then
-        mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_gpu")
+    hw_game="$MANIFEST_DIR/50-hw-${HW}.txt"
+    if [ -f "$hw_game" ]; then
+        mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_game")
     fi
 fi
 if [ "$EXTRA" = "proton" ]; then
@@ -179,13 +208,35 @@ fi
 # ---------------------------------------------------------------------------
 log_phase "Phase 5/5: post-install"
 
-run systemctl --user daemon-reload 2>/dev/null || true
-
+# When --target is another home, theme-apply and nautilus-prefs must write
+# there — they read $HOME / XDG_*, not TARGET.
+theme_env=()
 if [ "$TARGET" != "$HOME" ]; then
+    theme_env=(
+        env
+        "HOME=$TARGET"
+        "XDG_CONFIG_HOME=$TARGET/.config"
+        "XDG_STATE_HOME=$TARGET/.local/state"
+        "XDG_DATA_HOME=$TARGET/.local/share"
+    )
     log_warn "stow target ($TARGET) is not this account's HOME ($HOME)."
-    log_warn "  systemctl --user above applies to the user who ran install.sh."
-    log_warn "  Enable modern-shell.service after logging in as the target user."
+    log_warn "  systemctl --user below applies to the user who ran install.sh."
+    log_warn "  Theme files are written under the target home."
 fi
+
+STATE_DIR="${XDG_STATE_HOME:-$TARGET/.local/state}/modern"
+if [ "$TARGET" != "$HOME" ]; then
+    STATE_DIR="$TARGET/.local/state/modern"
+fi
+run mkdir -p "$STATE_DIR"
+if [ "${DRY_RUN:-0}" -eq 1 ]; then
+    log_info "would write $STATE_DIR/hw.json gpu=$HW cpu=$CPU"
+else
+    printf '{"gpu":"%s","cpu":"%s"}\n' "$HW" "$CPU" >"$STATE_DIR/hw.json"
+    log_ok "wrote $STATE_DIR/hw.json"
+fi
+
+run systemctl --user daemon-reload 2>/dev/null || true
 
 # tokens.json + lock/login assets come from the shipped default wallpaper
 # (stow/modern/.../wallpapers/default.jpg) so a first session is not
@@ -210,18 +261,18 @@ if [ -d "$shipped_wp_dir" ]; then
         fi
     done
 fi
-wallpaper_state="${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper"
+wallpaper_state="$STATE_DIR/current-wallpaper"
 if command -v matugen >/dev/null 2>&1; then
     if [ -f "$wallpaper_state" ]; then
-        run "$REPO_ROOT/scripts/theme-apply.sh" --no-reload \
+        run "${theme_env[@]}" "$REPO_ROOT/scripts/theme-apply.sh" --no-reload \
             || log_warn "theme-apply.sh failed — re-run it after Hyprland is up"
     elif [ -f "$default_wp" ]; then
         log_info "applying shipped default wallpaper and generating tokens"
-        run "$REPO_ROOT/scripts/theme-apply.sh" --wallpaper "$default_wp" --no-reload \
+        run "${theme_env[@]}" "$REPO_ROOT/scripts/theme-apply.sh" --wallpaper "$default_wp" --no-reload \
             || log_warn "theme-apply.sh failed — the shell still starts with the Colors.qml fallback"
     else
         log_info "no wallpaper set — generating tokens from the fixed-brand seed"
-        run "$REPO_ROOT/scripts/theme-apply.sh" --profile fixed-brand --no-reload \
+        run "${theme_env[@]}" "$REPO_ROOT/scripts/theme-apply.sh" --profile fixed-brand --no-reload \
             || log_warn "theme-apply.sh failed — the shell still starts with the Colors.qml fallback"
         log_info "Later: scripts/theme-apply.sh --wallpaper /path/to/image.jpg"
     fi
@@ -234,7 +285,7 @@ run "$REPO_ROOT/scripts/mime-defaults.sh" \
     --config "$TARGET/.config/modern/config.json" \
     --mimeapps "$TARGET/.config/mimeapps.list" \
     || log_warn "mime-defaults.sh failed — set video/image/folder defaults in Settings → Applications"
-run "$REPO_ROOT/scripts/nautilus-prefs.sh" \
+run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
     || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
 
 kitty_colors="$TARGET/.config/kitty/colors.conf"

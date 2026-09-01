@@ -1,0 +1,8 @@
+# GATED — copied only by install/system/provision-iso.sh in a Calamares
+# chroot. Never enable greetd on the development PC.
+[terminal]
+vt = 1
+
+[default_session]
+command = "Hyprland --config /etc/greetd/hyprland.conf"
+user = "greeter"

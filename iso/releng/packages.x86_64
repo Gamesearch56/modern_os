@@ -1,0 +1,19 @@
+# Overlay on top of archiso releng. ISO kernel stays the live image;
+# the installed system gets linux-zen from packages.conf (not stock linux).
+hyprland
+quickshell
+calamares
+networkmanager
+mesa
+git
+sudo
+base-devel
+awww
+inter-font
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-emoji
+greetd
+btrfs-progs
+linux-zen
+linux-zen-headers

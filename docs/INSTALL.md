@@ -1,9 +1,12 @@
 # Install
 
-Two paths: packages + stow onto an Arch user (`install.sh`), or a live-ISO
-bootstrap that **prints** partitioning (`scripts/bootstrap.sh`). System-wide
-files under `install/system/` are **never** applied by either default run —
-`docs/ISOLATION.md`. Session switch (this machine): `README.md`.
+Three paths: packages + stow onto an Arch user (`install.sh`), a live-ISO
+bootstrap that **prints** partitioning (`scripts/bootstrap.sh`), or a
+**friend ISO** (Calamares + late `install.sh --profile m0 --yes`).
+System-wide files under `install/system/` are **never** applied by
+`install.sh` — `docs/ISOLATION.md`. `provision-iso.sh` is Calamares-late
+only and refuses this development PC. Session switch (this machine):
+`README.md`. Git / release tags: `docs/GIT.md`.
 
 ## Prerequisites
 
@@ -47,8 +50,13 @@ Profiles: `m0` (bar/launcher/session), `dev` (+ Cursor/toolchain),
 `install.sh` only installs packages and stows listed packages into
 `--target` (default `$HOME`): hypr, shell, theme, kitty, dolphin, gtk,
 qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, mpv, imv. It does **not** stow
-`greeter`. It never copies `install/system/` (no greetd tree exists).
+`greeter`. It never copies `install/system/` and never enables greetd.
 Stow conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
+
+Calamares late on a friend machine is `./install/install.sh --profile m0 --yes`
+as the new user, then `MODERN_ISO_PROVISION=1 install/system/provision-iso.sh`.
+That gated script is the only allowed applier of greetd / NetworkManager
+enable. Do not run it here.
 
 Clone + install is the **designed** desktop (`config.default.json`:
 English UI, `kbLayout` `us`), not this machine’s live `config.json`.
@@ -83,6 +91,18 @@ arch-chroot → chain `install.sh`). Disks are not wiped unless you pass
 ./scripts/bootstrap.sh --vm          # QEMU recipe only
 ```
 
+## Friend ISO (Calamares)
+
+Built with `scripts/iso-build.sh` on a spare box or CI — **not this PC**.
+Branding lands under gitignored `iso/out/` (throwaway `HOME` for matugen).
+`--mkarchiso` is refused when `/home/bastianweigand` exists. The ISO
+clones the baked-in release tag (`vX.Y.Z`, `docs/GIT.md`), runs
+`install.sh --profile m0 --yes`, then `provision-iso.sh`. First boot is
+greetd + password; the friend does not run extra `systemctl` or `pacman`.
+
+Settings → Update later tracks the latest GitHub **release tag**, not
+`dev` or the tip of `main`.
+
 ## After stow (on the **target** user)
 
 `install.sh` phase 5 applies `~/.config/modern/wallpapers/default.jpg`
@@ -102,8 +122,9 @@ To use a different image later:
 3. `scripts/doctor.sh`
 4. Optional gated files that **exist**: Plymouth README, sysctl, ufw
    KDE Connect, tmpfiles, ESP hook, snapper, `create-devuser.sh` —
-   each file's header comment has the copy command. Do **not** enable
-   greetd; that config is not in the repo.
+   each file's header comment has the copy command. Greetd drop-ins live
+   under `install/system/greetd/` but stay gated — only `provision-iso.sh`
+   in a Calamares chroot applies them. Do **not** enable greetd on this PC.
 
 Hand-edit reference is `config.default.json` (no `config.schema.json`).
 

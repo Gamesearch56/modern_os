@@ -834,7 +834,10 @@
       "success": "Systemupdate abgeschlossen",
       "failed": "Systemupdate fehlgeschlagen",
       "mirrorsDone": "Spiegelliste aktualisiert",
-      "mirrorsFailed": "Spiegelliste konnte nicht aktualisiert werden"
+      "mirrorsFailed": "Spiegelliste konnte nicht aktualisiert werden",
+      "desktop": "ModernOS",
+      "desktopCurrent": "Diese Version ist aktuell",
+      "desktopUnavailable": "Desktop-Update konnte nicht geprüft werden"
     },
     "overview": {
       "stats": "Live-Werte",

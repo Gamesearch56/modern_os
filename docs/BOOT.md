@@ -7,15 +7,19 @@ what is shared with an unprivileged greeter. Plymouth and greetd are
 ## Session graph
 
 ```
-TTY: start-hyprland   →  Hyprland (stow/hypr)
-                      │     (greetd is not shipped; future path only)
-                      ├─ autostart.lua
-                      │     exec qs -c modern  (compositor child)
-                      │     timeout 2 systemctl/dbus/polkit/stop
-                      ├─ modern-shell.service  (optional UWSM watchdog)
-                      │     ExecStart=quickshell -c modern
-                      └─ portals (xdg-desktop-portal-hyprland + gtk/kde)
+Friend install (after Calamares late):
+  greetd (greeter kiosk)  →  start-hyprland  →  Hyprland (stow/hypr)
+This development PC (untouched greetd):
+  TTY: start-hyprland     →  Hyprland (stow/hypr)
+                              ├─ autostart.lua
+                              │     exec qs -c modern  (compositor child)
+                              ├─ modern-shell.service  (optional UWSM watchdog)
+                              └─ portals (xdg-desktop-portal-hyprland + gtk/kde)
 ```
+
+Greetd files are staged under `install/system/greetd/` and applied only
+by `provision-iso.sh` in a friend chroot. Enabling greetd here would
+steal the daily-driver autologin session.
 
 Autostart in Hyprland already starts Quickshell as a child of this
 compositor. Enable `modern-shell.service` on the **target** user
@@ -64,8 +68,9 @@ force.
 
 ## Shared session state
 
-Runtime a future greeter must read without touching `$HOME` lives under
-`/var/lib/modern/session/` (gated tmpfiles.d, not applied yet).
+Runtime the greeter reads without touching `$HOME` lives under
+`/var/lib/modern/session/` (gated tmpfiles.d; applied by ISO
+`provision-iso.sh`, not on this PC).
 `wallpaper-sync.sh` currently writes to
 `$XDG_STATE_HOME/modern/session/` when that directory is missing.
 Per-user state stays in `$XDG_STATE_HOME/modern/` and
@@ -76,7 +81,7 @@ Per-user state stays in `$XDG_STATE_HOME/modern/` and
 | Surface | Owner | Notes |
 |---------|--------|------|
 | Plymouth splash | gated theme + mkinitcpio hook | `plymouth-sync.sh`; never rewrite initramfs from `install.sh` |
-| greetd greeter | `stow/greeter` stub | **Not installed.** No `install/system/greetd/`. Autologin/getty unchanged. |
+| greetd greeter | `stow/greeter` + `install/system/greetd/` | Staged. Applied only by ISO `provision-iso.sh`. This PC stays on getty/autologin. |
 | lock screen | `Modules/Session` overlay | Power menu preview. Any non-empty password unlocks. Idle/lid run `loginctl lock-session` and do **not** show the overlay. Not `WlSessionLock`. |
 
 `config.json` → `design.bootScreen` chooses whether the current wallpaper

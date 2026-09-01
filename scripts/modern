@@ -79,6 +79,22 @@ case "$TARGET" in
                 t cli.snapperUnconfigured >&2 || true
             fi
         fi
+        if [ -x "$SCRIPT_DIR/desktop-sync.sh" ]; then
+            desk_json="$("$SCRIPT_DIR/desktop-sync.sh" status 2>/dev/null || true)"
+            if printf '%s' "$desk_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("pending") else 1)' 2>/dev/null; then
+                "$SCRIPT_DIR/desktop-sync.sh" apply || exit 1
+                if [ -x "$SCRIPT_DIR/reload-ui.sh" ]; then
+                    "$SCRIPT_DIR/reload-ui.sh" || true
+                fi
+            fi
+        fi
+        has_pkgs=0
+        if command -v checkupdates >/dev/null 2>&1 && checkupdates 2>/dev/null | grep -q .; then
+            has_pkgs=1
+        fi
+        if [ "$has_pkgs" -eq 0 ]; then
+            exit 0
+        fi
         if [ -t 0 ]; then
             exec yay -Syu
         fi

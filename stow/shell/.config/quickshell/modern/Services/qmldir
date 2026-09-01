@@ -56,6 +56,7 @@ singleton ThemePalettes 1.0 ThemePalettes.qml
 singleton Passwd 1.0 Passwd.qml
 singleton Storage 1.0 Storage.qml
 singleton Update 1.0 Update.qml
+UpdateClassify 1.0 UpdateClassify.qml
 singleton Snapshots 1.0 Snapshots.qml
 singleton Firewall 1.0 Firewall.qml
 FirewallParse 1.0 FirewallParse.qml

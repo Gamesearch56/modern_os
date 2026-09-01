@@ -1,0 +1,24 @@
+---
+componentName: modern
+welcomeStyle: "widget"
+welcomeScrolling: false
+strings:
+    productName:         ModernOS
+    shortProductName:    ModernOS
+    version:             "release"
+    shortVersion:        "release"
+    versionedName:       ModernOS
+    shortVersionedName:  ModernOS
+    bootloaderEntryName: ModernOS
+    productUrl:          https://github.com/Gamesearch56/modern_dotfile
+    supportUrl:          https://github.com/Gamesearch56/modern_dotfile
+    knownIssuesUrl:      https://github.com/Gamesearch56/modern_dotfile/issues
+    releaseNotesUrl:     https://github.com/Gamesearch56/modern_dotfile
+images:
+    productLogo:         "default.jpg"
+    productIcon:         "default.jpg"
+    productWelcome:      "default.jpg"
+slideshow:               "show.qml"
+slideshowAPI:            2
+welcomeStyleCalamares:   false
+sidebarBackgroundLightnessScale: 1

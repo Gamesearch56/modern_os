@@ -99,7 +99,7 @@ a bar popup is showing.
 
 | Action | CLI | Notes |
 |--------|-----|--------|
-| System update | `modern update` | Overlay with live log and progress. Auto-closes on success and posts a notification. Snapshot-before-update if `backup.preUpdateSnapshot` and Snapper is ready; otherwise the update still runs. |
+| System update | `modern update` | Overlay with live log and progress. **ModernOS** is always first under System packages (`desktop-sync.sh`). Pending only when this clone is behind the latest GitHub release tag `vX.Y.Z` (`docs/GIT.md`) — not `dev` / `main` tip. Apply (ff-only checkout of that tag + `install.sh --profile m0 --yes`) runs before `pacman -Syu`; a failed apply does not start pacman. Snapshot-before-update if `backup.preUpdateSnapshot` and Snapper is ready. |
 | Mirrorlist | `modern mirrors` | `reflector` using `network.mirrorCountry`. **Update mirrors** sits next to **Update system**. **Search for Updates** on the status card re-runs `checkupdates` and shows a spinner while it runs. |
 | Snapshots | `snapper -c root list` / `create` / `delete` | Settings lists snapshots with timestamps, can create (pkexec), and can request delete. **Restore** is gated (`docs/BACKUP.md`). The Snapper/Restic enable toggles were removed: they did not write `/etc/snapper` or configure a restic repo. |
 | Firewall | `ufw-status.sh` / `ufw-apply.sh` / `allow` / `deny` / `delete NUM` | Settings lists numbered allow/deny rules from `/etc/ufw` without a password. Enable and disable are one `pkexec` of `ufw-apply.sh` (defaults + `--force enable` in that process). Add and delete use `pkexec /usr/bin/ufw`. Disable asks for confirmation. No `reset`, no default-allow, no config.json copy of rules. |

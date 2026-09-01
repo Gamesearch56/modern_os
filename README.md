@@ -7,17 +7,21 @@ replaces Wallust for dynamic, wallpaper-derived color; one JSON config file
 drives both the shell and Hyprland's Lua config. German and English are
 both first-class throughout.
 
-Two install paths exist:
+Three install paths exist:
 
 - **This machine (now):** keep using `bastianweigand` as the daily driver.
   Create `devuser`, install *only* into that home, and start Hyprland on a
   **second TTY** so the current session is never replaced.
 - **New PC / bare metal:** `scripts/bootstrap.sh` (print-only until you
   pass `--yes --disk`) then `install/install.sh` as the new user.
+- **Friend ISO:** Calamares on a spare box / QEMU (never this PC). Late
+  clone of a release tag + `install.sh --profile m0 --yes`. See
+  `docs/INSTALL.md` and `docs/GIT.md`.
 
 Full plan: `docs/ARCHITECTURE.md`. Isolation rules: `docs/ISOLATION.md`.
-When `devuser` testing is done and this account should run the new
-desktop (with a rewind path, then a later clean cut): `docs/CUTOVER.md`.
+Git / releases: `docs/GIT.md`. When `devuser` testing is done and this
+account should run the new desktop (with a rewind path, then a later
+clean cut): `docs/CUTOVER.md`.
 
 ## What a clone installs
 
@@ -49,8 +53,9 @@ System-wide boot/login/`/etc` files stay under `install/system/` and are
 
 If you follow the **this machine** path below and **do not** apply
 `install/system/` (Plymouth/mkinitcpio, sysctl, polkit, ufw, tmpfiles,
-usersd, portals, snapper, ESP hook). There is **no** `install/system/greetd/`
-tree yet — `sudo systemctl enable greetd` is not a supported step:
+usersd, portals, snapper, ESP hook, greetd). Greetd drop-ins exist under
+`install/system/greetd/` but stay gated — `sudo systemctl enable greetd`
+is still not a supported step on this PC:
 
 - `install.sh` **refuses** to stow into `/home/bastianweigand` (even
   `--dry-run`). Override only with `--allow-live-home` for a deliberate
@@ -76,7 +81,7 @@ remove anything the daily driver uses. The existing
 **Do not run** while testing:
 
 ```text
-sudo systemctl enable greetd   # unit/config are not shipped
+sudo systemctl enable greetd   # staged for the friend ISO only
 # anything that copies install/system/ into /etc
 # install.sh without --target if you are logged in as bastianweigand
 # install.sh --allow-live-home

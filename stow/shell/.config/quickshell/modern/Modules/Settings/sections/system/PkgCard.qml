@@ -41,6 +41,14 @@ MCard {
                 Layout.fillWidth: true
             }
             MText {
+                visible: String(pkg.subtitle || "").length > 0
+                value: pkg.subtitle || ""
+                styleName: "bodyMedium"
+                color: Colors.color.onSurfaceVariant
+                Layout.fillWidth: true
+            }
+            MText {
+                visible: String(pkg.subtitle || "").length === 0
                 key: "settings.update.fromTo"
                 params: ({ from: pkg.from || "", to: pkg.to || "" })
                 styleName: "bodyMedium"

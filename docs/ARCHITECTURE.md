@@ -75,7 +75,7 @@ modern_dotfile/
 │   ARCHITECTURE.md DESIGN.md MOTION.md DECISIONS.md INSTALL.md
 │   CURSOR-SETUP.md KEYBINDS.md THEMING.md BOOT.md I18N.md WIDGETS.md
 │   ISOLATION.md BACKUP.md SECURITY.md GAMING.md TROUBLESHOOTING.md
-│   CUTOVER.md SETTINGS.md
+│   CUTOVER.md SETTINGS.md GIT.md
 ├── install/
 │   ├── install.sh              phased, idempotent, set -euo pipefail
 │   ├── lib/                    log.sh ui.sh pkg.sh stow.sh i18n.sh preflight.sh
@@ -93,7 +93,8 @@ modern_dotfile/
 │   └── modern/.config/modern/               config.default.json, themes/, translations/
 ├── scripts/    theme-apply.sh wallpaper.sh optiscaler.sh game-profile.sh
 │               lint-layers.sh snapshot-packages.sh check-isolation.sh
-│               doctor.sh modern (IPC CLI)
+│               doctor.sh modern (IPC CLI) desktop-sync.sh iso-build.sh
+├── iso/        releng overlay + airootfs Calamares late (not applied by install.sh)
 ```
 
 ## Config layer

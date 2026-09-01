@@ -15,13 +15,14 @@ Layers, applied in order by `install.sh --profile <name>`:
 | Layer | Profile membership | Content |
 |---|---|---|
 | `00-base` | all profiles | kernel/firmware, filesystem tools, shell essentials, `stow`, `yay` bootstrap deps |
-| `00-hw-*` | auto or `--hw` | CPU microcode (`amd` / `intel`) |
+| `00-hw-cpu-*` | auto or `--cpu` | CPU microcode (`amd` / `intel`) |
+| `00-hw-gpu-*` | auto or `--hw` | GPU stack for every profile (RADV, Intel, NVIDIA DKMS) |
 | `10-desktop` | all profiles | Hyprland, Quickshell, portals, audio/network/bluetooth stack, clipboard/screenshot tools, GameMode. AUR: `phylax-git` (`10-desktop.aur.txt`) |
 | `20-theming` | all profiles | fonts, matugen, GTK/Qt theming support |
 | `30-apps` | `m0`+ | terminal, file manager, browser, minimal daily-driver apps |
 | `40-dev` | `dev`, `full` | languages, toolchains, containers, Cursor |
 | `50-gaming` | `gaming`, `full` | Steam, launchers, gamescope |
-| `50-hw-*` | gaming/full + `--hw` | GPU Vulkan (`amd` RADV/ROCm, `nvidia` utils) |
+| `50-hw-*` | gaming/full + `--hw` | GPU extras (`lib32-*`, ROCm) |
 | `60-flatpak` | `full` | flatpak-distributed apps |
 | `90-accounts.aur` | `--extra proton` | Proton Mail / Pass |
 

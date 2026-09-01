@@ -834,7 +834,10 @@
       "success": "System update finished",
       "failed": "System update failed",
       "mirrorsDone": "Mirror list updated",
-      "mirrorsFailed": "Could not update mirrors"
+      "mirrorsFailed": "Could not update mirrors",
+      "desktop": "ModernOS",
+      "desktopCurrent": "This version is current",
+      "desktopUnavailable": "Could not check for a desktop update"
     },
     "overview": {
       "stats": "Live stats",

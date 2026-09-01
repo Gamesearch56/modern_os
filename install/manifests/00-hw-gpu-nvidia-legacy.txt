@@ -1,0 +1,3 @@
+# NVIDIA Maxwell / Pascal / Volta. Conflicts with nvidia-open-dkms — install one.
+nvidia-dkms
+nvidia-utils

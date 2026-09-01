@@ -1,8 +1,7 @@
 // Duplicate of Modules/Session/SessionSurface.qml for the greetd
 // package. Relative imports into the desktop shell do not survive
 // stow (different target user / prefix), so the layout is copied
-// rather than imported. Quickshell.Services.Greetd belongs in
-// authenticate() once the gated greetd unit is enabled.
+// rather than imported. GreetdAuth owns Quickshell.Services.Greetd.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -23,7 +22,8 @@ Item {
         onPrimary: "#381E72",
         surfaceContainerHighest: "#36343B",
         outline: "#938F99",
-        scrim: "#000000"
+        scrim: "#000000",
+        error: "#ffb4ab"
     })
 
     property var chrome: ({ strings: { unlock: "Unlock", password: "Password" }, typography: { ui: "Inter", scale: 1 } })
@@ -116,6 +116,37 @@ Item {
         }
 
         TextInput {
+            id: username
+            Layout.fillWidth: true
+            Layout.preferredHeight: 36
+            color: root.color.onSurface
+            font.family: root._font
+            font.pixelSize: Math.round(16 * root._typeScale)
+            padding: 12
+            text: root._defaultUser
+            onAccepted: password.forceActiveFocus()
+
+            Rectangle {
+                anchors.fill: parent
+                z: -1
+                radius: 8
+                color: root.color.surfaceContainerHighest
+                border.color: username.activeFocus ? root.color.primary : root.color.outline
+            }
+
+            Text {
+                visible: username.text.length === 0
+                anchors.fill: parent
+                anchors.leftMargin: 12
+                verticalAlignment: Text.AlignVCenter
+                text: root._t("session.user")
+                color: root.color.onSurfaceVariant
+                font.family: root._font
+                font.pixelSize: Math.round(16 * root._typeScale)
+            }
+        }
+
+        TextInput {
             id: password
             Layout.fillWidth: true
             Layout.preferredHeight: 36
@@ -124,7 +155,7 @@ Item {
             font.family: root._font
             font.pixelSize: Math.round(16 * root._typeScale)
             padding: 12
-            onAccepted: root.authenticate(text)
+            onAccepted: root.authenticate(username.text, text)
 
             Rectangle {
                 anchors.fill: parent
@@ -146,6 +177,16 @@ Item {
             }
         }
 
+        Text {
+            visible: auth.failText.length > 0
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            color: root.color.error
+            font.family: root._font
+            font.pixelSize: Math.round(12 * root._typeScale)
+            text: auth.failText
+        }
+
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
             implicitWidth: unlockLabel.implicitWidth + 32
@@ -164,18 +205,30 @@ Item {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: root.authenticate(password.text)
+                onClicked: root.authenticate(username.text, password.text)
             }
         }
     }
 
-    function authenticate(passwordText: string) {
-        // Quickshell.Services.Greetd (`import Quickshell.Services.Greetd`)
-        // is the real login path. Importing it in the desktop tree would
-        // fail hosts that have not applied the gated greetd unit, so the
-        // greeter instance owns that import when it lands.
-        if (!passwordText || passwordText.length === 0)
-            return;
+    GreetdAuth {
+        id: auth
+    }
+
+    FileView {
+        path: "/var/lib/modern/session/default-user"
+        watchChanges: true
+        printErrors: false
+        onLoaded: {
+            const t = String(text() || "").trim();
+            if (t.length)
+                root._defaultUser = t;
+        }
+    }
+
+    property string _defaultUser: ""
+
+    function authenticate(userText: string, passwordText: string) {
+        auth.login(userText, passwordText);
     }
 
     function _t(key: string): string {
@@ -184,6 +237,8 @@ Item {
             return s.unlock || "Unlock";
         if (key === "session.password")
             return s.password || "Password";
+        if (key === "session.user")
+            return s.user || "User";
         return key;
     }
 

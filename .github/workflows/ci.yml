@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    tags: ["v*"]
+    branches: [dev, main]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq python3 shellcheck git
+      - name: Layer lint
+        run: scripts/lint-layers.sh
+      - name: Shellcheck
+        run: |
+          mapfile -t files < <(git ls-files '*.sh' | grep -E '^(install/|scripts/|iso/airootfs/)')
+          shellcheck "${files[@]}"
+      - name: Settings catalog
+        run: scripts/test-settings-catalog.sh
+      - name: Desktop-sync fixture
+        run: scripts/test-desktop-sync.sh
+
+  install-dry:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pacman + builder user
+        run: |
+          pacman -Syu --noconfirm --needed git jq sudo
+          useradd -m builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+      - name: install.sh dry-run
+        run: |
+          sudo -u builder ./install/install.sh --dry-run --profile m0 \
+            --target /tmp/modern-dry
+        # check-isolation.sh is this machine only — do not run it here.

@@ -1,0 +1,3 @@
+# Intel GPU for every profile (not gaming-only).
+vulkan-intel
+intel-media-driver

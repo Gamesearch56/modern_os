@@ -1,2 +1,3 @@
-# CPU microcode for AMD. Selected by install.sh --hw amd (or auto-detect).
+# Compatibility alias: CPU ucode only. GPU packages live in 00-hw-gpu-amd.txt.
+# install.sh loads 00-hw-cpu-* + 00-hw-gpu-* separately.
 amd-ucode

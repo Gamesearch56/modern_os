@@ -16,16 +16,24 @@ Singleton {
     property var pending: []
     property var systemPkgs: []
     property var otherPkgs: []
+    property var _pacmanAll: []
+    property var _pacmanSys: []
+    property var _pacmanOther: []
     property string log: ""
     property string step: ""
     property bool open: false
     property real progress: -1
     property string error: ""
     property string _notified: ""
+    property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, iconName: "preferences-desktop-display", subtitle: "" })
     signal finished(bool ok)
     signal notify(string summary, string body)
 
     readonly property bool indeterminate: root.running && root.progress < 0
+
+    UpdateClassify {
+        id: classify
+    }
 
     Process {
         id: checkProc
@@ -38,6 +46,20 @@ Singleton {
             root.checking = false;
             if (code !== 0 && code !== 2)
                 root.error = I18n.t("settings.update.checkFailed");
+        }
+    }
+
+    Process {
+        id: desktopProc
+        command: [Paths.script("desktop-sync.sh"), "status"]
+        running: false
+        stdout: StdioCollector {
+            id: desktopOut
+            onStreamFinished: root._parseDesktop(this.text)
+        }
+        onExited: () => {
+            if (!String(desktopOut.text || "").trim().length)
+                root._parseDesktop("");
         }
     }
 
@@ -65,7 +87,7 @@ Singleton {
         }
         onExited: (code) => {
             root.mirrorsRunning = false;
-            root._notify(code === 0 ? I18n.t("settings.update.mirrorsDone") : I18n.t("settings.update.mirrorsFailed"), "");
+            root.notify(code === 0 ? I18n.t("settings.update.mirrorsDone") : I18n.t("settings.update.mirrorsFailed"), "");
             if (code === 0)
                 root.refresh();
         }
@@ -93,11 +115,14 @@ Singleton {
             root.refresh();
     }
 
+    Component.onCompleted: root._rebuildLists()
+
     function refresh() {
         if (root.checking || root.running)
             return;
         root.checking = true;
         root.error = "";
+        desktopProc.running = true;
         checkProc.running = true;
     }
 
@@ -152,61 +177,30 @@ Singleton {
         }
     }
 
-    function _icon(name: string): string {
-        const n = String(name || "");
-        if (n.indexOf("linux") === 0)
-            return "cpu";
-        if (n.indexOf("hypr") !== -1 || n.indexOf("quickshell") === 0)
-            return "preferences-desktop-display";
-        if (n === "nautilus" || n === "dolphin")
-            return "system-file-manager";
-        if (n === "kitty")
-            return "utilities-terminal";
-        return n === "vivaldi" ? "web-browser" : "package-x-generic-symbolic";
-    }
-
-    function _stem(id: string): string {
-        return String(id || "").replace(/\.desktop$/i, "").replace(/^org\.kde\./, "").replace(/^org\.gnome\./, "").replace(/-stable$/, "").toLowerCase();
-    }
-
-    function _isSystem(name: string): bool {
-        const n = String(name || "");
-        if (/^(linux|mesa|nvidia|wayland|wlroots)/.test(n) || n.indexOf("hypr") !== -1 || n.indexOf("quickshell") === 0)
-            return true;
-        const defs = Config.apps.defaults || {};
-        const stems = [root._stem(defs.browser), root._stem(defs.fileManager), root._stem(defs.terminal)];
-        for (let i = 0; i < stems.length; i++) {
-            if (stems[i].length && (n === stems[i] || n.indexOf(stems[i] + "-") === 0))
-                return true;
-        }
-        return "pipewire wireplumber systemd greetd grim slurp matugen pacman reflector bluez networkmanager polkit stow qt6-base qt6-declarative kitty nautilus vivaldi".split(" ").indexOf(n) !== -1;
-    }
-
     function _parseCheck(text: string) {
-        const all = [];
-        const sys = [];
-        const other = [];
-        const lines = String(text || "").trim().split("\n");
-        for (let i = 0; i < lines.length; i++) {
-            const m = lines[i].match(/^(\S+)\s+(\S+)\s+->\s+(\S+)/);
-            if (!m)
-                continue;
-            const row = { name: m[1], from: m[2], to: m[3], iconName: root._icon(m[1]) };
-            all.push(row);
-            if (root._isSystem(m[1]))
-                sys.push(row);
-            else
-                other.push(row);
-        }
-        root.pending = all;
-        root.systemPkgs = sys;
-        root.otherPkgs = other;
-        const key = all.map(p => p.name).join(" ");
-        if (all.length > 0 && key !== root._notified) {
+        const parsed = classify.parseCheck(text);
+        root._pacmanAll = parsed.all;
+        root._pacmanSys = parsed.sys;
+        root._pacmanOther = parsed.other;
+        root._rebuildLists();
+    }
+
+    function _parseDesktop(text: string) {
+        root.desktop = classify.parseDesktop(text);
+        root._rebuildLists();
+    }
+
+    function _rebuildLists() {
+        const lists = classify.rebuild(root.desktop, root._pacmanAll, root._pacmanSys, root._pacmanOther);
+        root.systemPkgs = lists.systemPkgs;
+        root.otherPkgs = lists.otherPkgs;
+        root.pending = lists.pending;
+        const key = lists.pending.map(p => p.name).join(" ");
+        if (lists.pending.length > 0 && key !== root._notified) {
             root._notified = key;
-            root.notify(I18n.t("settings.update.available", ({ n: String(all.length) })), "");
+            root.notify(I18n.t("settings.update.available", ({ n: String(lists.pending.length) })), "");
         }
-        if (all.length === 0)
+        if (lists.pending.length === 0)
             root._notified = "";
     }
 }

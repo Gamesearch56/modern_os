@@ -54,7 +54,8 @@ comment for the exact command.
 
 | Change | Why it's gated | Rollback |
 |---|---|---|
-| `greetd` (planned, **not staged**) | Would replace autologin machine-wide. There is no `install/system/greetd/` file yet. Do not `systemctl enable greetd`. | If someone enabled a foreign greetd unit: `sudo systemctl disable greetd`, restore getty autologin, reboot. |
+| `greetd` (staged, **gated**) | `install/system/greetd/` exists for the friend ISO. Only `install/system/provision-iso.sh` (Calamares late, `MODERN_ISO_PROVISION=1`) copies it and runs `systemctl enable greetd`. That script aborts if `/home/bastianweigand` exists. Do not enable greetd on this PC. | If someone enabled it here: `sudo systemctl disable greetd`, restore getty autologin, reboot. |
+| Friend ISO late (`provision-iso.sh`, `calamares-late.sh`) | Enables NM/bluetooth/greetd and clones a release tag. **This PC never runs it.** | Not applied; files stay under `install/system/` and `iso/`. |
 | Plymouth theme + `mkinitcpio` hooks | Rewrites the initramfs. A bad rebuild can leave the machine unable to boot. | `sudo mkinitcpio -P` after reverting `/etc/mkinitcpio.conf`; the previous initramfs stays as a fallback boot entry — never delete it. |
 | `sysctl.d`, `polkit` actions, `tmpfiles.d`, udev rules, gaming perf sysctls | System-wide kernel/session policy. | Remove the dropped-in file under `/etc/{sysctl.d,polkit-1,tmpfiles.d,udev/rules.d}/modern-*` and reload (`sysctl --system`, `systemctl restart polkit`, `systemd-tmpfiles --create`). |
 | `modern-usersd` + its polkit action | Privileged account/group mutation. | Remove `/usr/local/bin/modern-usersd` and the `.policy` file; nothing else depends on it. |
@@ -87,12 +88,17 @@ between the machine and the manifests.
 
 ## Verification
 
-Run before every commit and before/after any install step, **from
-`bastianweigand`**:
+Run before every commit and before/after any local test command that
+might have written outside the clone, **from `bastianweigand`**:
 
 ```bash
 scripts/check-isolation.sh
 ```
+
+Do not run `scripts/iso-build.sh --mkarchiso`, `provision-iso.sh`,
+Calamares, or a live `install.sh` (use `--dry-run --target /tmp/…`) on
+this host. ISO branding, if generated, stays under `iso/out/` or
+`$TMPDIR/modern-iso-*`.
 
 It asserts:
 
