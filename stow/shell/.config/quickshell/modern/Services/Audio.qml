@@ -114,7 +114,8 @@ Singleton {
             return "";
         const _ = n.ready;
         const p = n.properties || {};
-        return String(p["application.name"] || p["application.id"] || n.nickname || "").trim();
+        return String(p["application.name"] || p["application.id"]
+            || p["application.process.binary"] || p["application.desktop"] || "").trim();
     }
 
     function streamLabel(n: var): string {

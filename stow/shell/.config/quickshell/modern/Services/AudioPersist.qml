@@ -1,5 +1,6 @@
-// Remember per-app PipeWire stream volume in config.json so a
-// Quickshell reload does not snap every sink-input back to 100%.
+// Remember per-app PipeWire stream volume in config.json. Spotify (and
+// similar clients) drop the sink-input and start a new one at 100% on
+// every track; WirePlumber may also restore 100% a beat later.
 import QtQuick
 import "../Commons"
 
@@ -22,19 +23,53 @@ QtObject {
                 continue;
             void n.ready;
             void n.properties;
-            s += String(n.id) + ":" + a.streamAppId(n) + ",";
+            void n.audio;
+            const vol = n.audio ? Math.round(n.audio.volume * 100) : -1;
+            s += String(n.id) + ":" + (n.ready ? "1" : "0") + ":"
+                + a.streamAppId(n) + ":" + vol + ",";
         }
         return s;
     }
 
-    onStreamSigChanged: root.applyAll()
+    onStreamSigChanged: root.schedule()
 
     readonly property var disk: Config.audio.perAppVolume || ({})
-    onDiskChanged: root.applyAll()
+    onDiskChanged: root.schedule()
+
+    // QtObject has no default child list — Timer must be a named property.
+    property Timer settle: Timer {
+        interval: Motion.mediumMs
+        onTriggered: root.applyAll()
+    }
+
+    function schedule() {
+        root.applyAll();
+        settle.restart();
+    }
 
     function lookup(key: string): real {
         if (!key.length)
             return -1;
+        const hit = root._lookupExact(key);
+        if (hit >= 0)
+            return hit;
+        const lower = key.toLowerCase();
+        const mem = root.live || {};
+        for (const k in mem) {
+            if (String(k).toLowerCase() === lower)
+                return Number(mem[k]);
+        }
+        const disk = root.disk;
+        if (disk) {
+            for (const k in disk) {
+                if (String(k).toLowerCase() === lower)
+                    return Number(disk[k]);
+            }
+        }
+        return -1;
+    }
+
+    function _lookupExact(key: string): real {
         const mem = root.live || {};
         if (mem[key] !== undefined && mem[key] !== null)
             return Number(mem[key]);
@@ -72,6 +107,8 @@ QtObject {
     function applyOne(n: var) {
         const a = root.audio;
         if (!a || !n || !n.audio)
+            return;
+        if (n.ready === false)
             return;
         const want = root.lookup(a.streamAppId(n));
         if (want < 0)
