@@ -18,21 +18,34 @@ Item {
     property bool tint: true
     property bool preferSymbolic: true
 
-    readonly property bool _file: root.source.toString().length > 0
+    readonly property bool _file: {
+        if (root.source.toString().length > 0)
+            return true;
+        const n = root.name;
+        return n.indexOf("://") !== -1 || (n.length > 0 && n.charAt(0) === "/");
+    }
     readonly property int _raster: Math.max(root.size * 2, Tokens.icon.lg)
 
     readonly property string _source: {
-        if (root._file)
-            return root.source.toString();
+        if (root.source.toString().length > 0) {
+            const s = root.source.toString();
+            if (s.indexOf("://") !== -1 || s.indexOf("image:") === 0)
+                return s;
+            return s.charAt(0) === "/" ? ("file://" + s) : s;
+        }
+        if (root.name.indexOf("://") !== -1)
+            return root.name;
+        if (root.name.length > 0 && root.name.charAt(0) === "/")
+            return "file://" + root.name;
         if (root.name.length === 0)
             return "";
-        const symbolic = Quickshell.iconPath(root.name, true);
+        const checked = Quickshell.iconPath(root.name, true);
         const full = Quickshell.iconPath(root.name);
         let p = "";
         if (root.preferSymbolic)
-            p = (symbolic && symbolic.length > 0) ? symbolic : full;
+            p = (checked && checked.length > 0) ? checked : full;
         else
-            p = (full && full.length > 0) ? full : symbolic;
+            p = (full && full.length > 0) ? full : checked;
         if (!p || p.length === 0)
             return "";
         if (p.indexOf("://") !== -1 || p.indexOf("image:") === 0)

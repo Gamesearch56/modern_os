@@ -13,6 +13,8 @@ Item {
 
     property string menuAddress: ""
     property bool menuBackground: false
+    property string menuKind: "window"
+    property var menuEntry: null
     property real menuRowY: 0
     property real menuRowH: 0
 
@@ -61,9 +63,9 @@ Item {
                 iconName: "focus-windows-symbolic"
                 titleKey: "bar.taskbarShow"
                 onClicked: {
-                    const addr = root.menuAddress;
+                    const entry = root.menuEntry;
                     root.closed();
-                    Hypr.activateWindow(addr);
+                    Taskbar.activate(entry);
                     Popups.dismiss();
                     Taskbar.hide();
                 }
@@ -71,7 +73,7 @@ Item {
             MListItem {
                 Layout.fillWidth: true
                 compact: true
-                visible: !root.menuBackground
+                visible: !root.menuBackground && root.menuKind === "window"
                 iconName: "window-minimize-symbolic"
                 titleKey: "bar.taskbarHide"
                 onClicked: {
@@ -85,6 +87,7 @@ Item {
             MListItem {
                 Layout.fillWidth: true
                 compact: true
+                visible: root.menuKind === "window"
                 iconName: "view-restore-symbolic"
                 titleKey: "bar.taskbarFloat"
                 onClicked: {
@@ -96,6 +99,7 @@ Item {
             MListItem {
                 Layout.fillWidth: true
                 compact: true
+                visible: root.menuKind === "window"
                 iconName: "view-fullscreen-symbolic"
                 titleKey: "bar.taskbarFullscreen"
                 onClicked: {
@@ -107,6 +111,7 @@ Item {
             MListItem {
                 Layout.fillWidth: true
                 compact: true
+                visible: root.menuKind === "window"
                 iconName: "window-close-symbolic"
                 titleKey: "bar.close"
                 destructive: true

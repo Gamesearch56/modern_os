@@ -1,0 +1,107 @@
+// StatusNotifier tray. Owns D-Bus SNI; the bar tray widget and the
+// taskbar (apps with no Hyprland window, e.g. Discord closed to tray)
+// only read this singleton.
+pragma Singleton
+
+import Quickshell
+import Quickshell.Services.SystemTray
+import QtQuick
+
+Singleton {
+    id: root
+
+    property int _gen: 0
+
+    TrayRoster {
+        id: roster
+        onChanged: root._gen++
+    }
+
+    readonly property var items: {
+        void root._gen;
+        return roster.list();
+    }
+
+    function isApp(item: var): bool {
+        if (!item)
+            return false;
+        const cat = item.category;
+        if (cat === Category.Hardware || cat === Category.SystemServices)
+            return false;
+        const title = String(item.title || item.tooltipTitle || "").trim();
+        const id = String(item.id || "").trim();
+        return title.length > 0 || id.length > 0;
+    }
+
+    function _norm(s: string): string {
+        return String(s || "").replace(/\.desktop$/i, "").toLowerCase().replace(/[\s._-]+/g, "");
+    }
+
+    function _hayFields(toplevel: var): var {
+        if (!toplevel)
+            return [];
+        const ipc = toplevel.lastIpcObject || ({});
+        return [
+            root._norm(ipc.class),
+            root._norm(ipc.initialClass),
+            root._norm(toplevel.class),
+            root._norm(ipc.title),
+            root._norm(toplevel.title)
+        ];
+    }
+
+    function matchesWindow(item: var, toplevel: var): bool {
+        if (!item || !toplevel)
+            return false;
+        const fields = root._hayFields(toplevel);
+        const names = [root._norm(item.title), root._norm(item.tooltipTitle)];
+        for (let i = 0; i < names.length; i++) {
+            const n = names[i];
+            if (n.length < 3)
+                continue;
+            for (let j = 0; j < fields.length; j++) {
+                const f = fields[j];
+                if (f.length < 3)
+                    continue;
+                if (f === n)
+                    return true;
+                if (n.length >= 5 && (f.indexOf(n) !== -1 || n.indexOf(f) !== -1))
+                    return true;
+            }
+        }
+        const idn = root._norm(item.id);
+        if (idn.length >= 3) {
+            for (let k = 0; k < fields.length; k++) {
+                if (fields[k] === idn)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    function orphans(windows: var): var {
+        const wins = windows || [];
+        const list = root.items;
+        const out = [];
+        for (let i = 0; i < list.length; i++) {
+            const it = list[i];
+            if (!root.isApp(it))
+                continue;
+            let hit = false;
+            for (let j = 0; j < wins.length; j++) {
+                if (root.matchesWindow(it, wins[j])) {
+                    hit = true;
+                    break;
+                }
+            }
+            if (!hit)
+                out.push(it);
+        }
+        return out;
+    }
+
+    function activate(item: var) {
+        if (item && item.activate)
+            item.activate();
+    }
+}

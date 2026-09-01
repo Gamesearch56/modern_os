@@ -3,15 +3,68 @@
 # does not keep after display-server init (hl.env only applies at start).
 # --background parks the next window on special:background so mail/chat
 # keep running (and notifying) without occupying a workspace.
+# --raise restores a running single-instance app (Electron with no window)
+# via its x-scheme-handler, else gtk-launch, on the current workspace.
 # Extra args after the desktop id are appended to Exec= (incognito, etc.).
 set -euo pipefail
 export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
 export QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}"
 export QT_WAYLAND_DISABLE_WINDOWDECORATION="${QT_WAYLAND_DISABLE_WINDOWDECORATION:-1}"
+
+desktop_file() {
+    local id="$1.desktop"
+    local dirs="${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+    local IFS=:
+    local d
+    for d in $dirs; do
+        if [[ -f "$d/applications/$id" ]]; then
+            printf '%s\n' "$d/applications/$id"
+            return 0
+        fi
+    done
+    return 1
+}
+
+scheme_for_desktop() {
+    local path="$1"
+    local mime t
+    mime="$(awk -F= '/^MimeType=/{ print substr($0, 10); exit }' "$path")"
+    IFS=';' read -ra parts <<< "${mime:-}"
+    for t in "${parts[@]}"; do
+        t="${t// /}"
+        case "$t" in
+            x-scheme-handler/*)
+                printf '%s\n' "${t#x-scheme-handler/}"
+                return 0
+                ;;
+        esac
+    done
+    return 1
+}
+
 if [[ "${1:-}" == "--background" ]]; then
     shift
     inner=$(printf '%q ' "$0" "$@")
     exec hyprctl dispatch exec "[workspace special:background silent] ${inner% }"
+fi
+
+if [[ "${1:-}" == "--raise" ]]; then
+    shift
+    desktop="${1:-}"
+    desktop="${desktop%.desktop}"
+    if [[ -z "$desktop" ]]; then
+        echo "modern-launch: missing desktop id" >&2
+        exit 1
+    fi
+    path="$(desktop_file "$desktop" || true)"
+    scheme=""
+    if [[ -n "$path" ]]; then
+        scheme="$(scheme_for_desktop "$path" || true)"
+    fi
+    if [[ -n "$scheme" ]]; then
+        exec xdg-open "${scheme}://-/"
+    fi
+    exec gtk-launch "$desktop"
 fi
 
 desktop="${1:-}"
@@ -42,20 +95,6 @@ esac
 if [[ $# -eq 0 ]]; then
     exec gtk-launch "$desktop"
 fi
-
-desktop_file() {
-    local id="$1.desktop"
-    local dirs="${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
-    local IFS=:
-    local d
-    for d in $dirs; do
-        if [[ -f "$d/applications/$id" ]]; then
-            printf '%s\n' "$d/applications/$id"
-            return 0
-        fi
-    done
-    return 1
-}
 
 path="$(desktop_file "$desktop" || true)"
 if [[ -z "$path" ]]; then

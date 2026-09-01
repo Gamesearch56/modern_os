@@ -14,6 +14,10 @@ Singleton {
 
     readonly property var defaults: Config.apps?.defaults ?? ({})
 
+    AppsIcons {
+        id: icons
+    }
+
     function allEntries(): var {
         return root._list("");
     }
@@ -105,7 +109,13 @@ Singleton {
 
     function iconForId(id: string): string {
         const e = root._entryById(id);
-        return e?.icon ? String(e.icon) : "application-x-executable";
+        if (e)
+            return icons.resolve(String(e.icon || e.startupClass || e.id || id));
+        return icons.resolve(id);
+    }
+
+    function resolveIcon(hint: string): string {
+        return icons.resolve(hint);
     }
 
     function launch(role: string): bool {
@@ -187,6 +197,14 @@ Singleton {
         if (!name.length)
             return false;
         Quickshell.execDetached([Paths.modernLaunch, "--background", name]);
+        return true;
+    }
+
+    function launchId(desktopId: string): bool {
+        const name = String(desktopId || "").replace(/\.desktop$/, "");
+        if (!name.length)
+            return false;
+        Quickshell.execDetached([Paths.modernLaunch, "--raise", name]);
         return true;
     }
 

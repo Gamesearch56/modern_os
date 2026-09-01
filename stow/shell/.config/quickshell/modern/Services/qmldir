@@ -39,6 +39,7 @@ singleton FilePick 1.0 FilePick.qml
 singleton Session 1.0 Session.qml
 singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
+AppsIcons 1.0 AppsIcons.qml
 singleton IdleInhibit 1.0 IdleInhibit.qml
 singleton IdleDaemon 1.0 IdleDaemon.qml
 singleton Screenshot 1.0 Screenshot.qml
@@ -47,6 +48,9 @@ singleton Popups 1.0 Popups.qml
 singleton Battery 1.0 Battery.qml
 singleton Alarm 1.0 Alarm.qml
 singleton Taskbar 1.0 Taskbar.qml
+singleton Tray 1.0 Tray.qml
+TrayRoster 1.0 TrayRoster.qml
+singleton RunningApps 1.0 RunningApps.qml
 singleton Theme 1.0 Theme.qml
 singleton ThemePalettes 1.0 ThemePalettes.qml
 singleton Passwd 1.0 Passwd.qml

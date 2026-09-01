@@ -1,1 +1,1 @@
-{"id":"taskbar","key":"bar.taskbar","defaultEnabled":true,"bubble":true,"services":["Hypr"]}
+{"id":"taskbar","key":"bar.taskbar","defaultEnabled":true,"bubble":true,"services":["Hypr","Tray","RunningApps"]}

@@ -71,6 +71,7 @@ ColumnLayout {
             Layout.fillWidth: true
             hoverHighlight: false
             tintIcon: false
+            preferSymbolic: false
             iconName: Apps.iconForId(appId)
             titleValue: Apps.labelForId(appId)
             MIconButton {

@@ -80,7 +80,7 @@ Singleton {
                     id: e.id || e.name,
                     name: e.name,
                     genericName: e.genericName,
-                    icon: e.icon,
+                    icon: Apps.resolveIcon(e.icon || e.startupClass || e.id),
                     exec: e,
                     score: rank
                 });

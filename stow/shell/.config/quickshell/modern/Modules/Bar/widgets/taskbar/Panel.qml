@@ -13,10 +13,12 @@ Item {
     property int menuIndex: -1
     property string menuAddress: ""
     property bool menuBackground: false
+    property string menuKind: "window"
+    property var menuEntry: null
     property real menuRowY: 0
     property real menuRowH: 0
 
-    readonly property int count: Hypr.taskbarCount(root.barScreen)
+    readonly property int count: Taskbar.count
 
     function workspaceLabel(id: int): string {
         const p = {};
@@ -28,6 +30,8 @@ Item {
         root.menuIndex = -1;
         root.menuAddress = "";
         root.menuBackground = false;
+        root.menuKind = "window";
+        root.menuEntry = null;
     }
 
     function focusFirst() {
@@ -71,24 +75,25 @@ Item {
                         MListItem {
                             id: item
                             required property int index
-                            readonly property var win: (Hypr.toplevelList || [])[index]
-                            readonly property string address: String(item.win?.address || "")
-                            readonly property int wsId: item.win?.workspace ? Number(item.win.workspace.id) : 0
-                            readonly property string cls: item.win?.lastIpcObject?.class ?? "application-x-executable"
-                            readonly property bool background: {
-                                const ipc = item.win?.lastIpcObject;
-                                return item.wsId < 0 || !!(ipc && (ipc.hidden === true || ipc.mapped === false));
-                            }
+                            readonly property var entry: (Taskbar.entries || [])[index]
+                            readonly property string address: String(item.entry?.address || "")
+                            readonly property int wsId: Number(item.entry?.wsId || 0)
+                            readonly property string cls: String(item.entry?.cls || "application-x-executable")
+                            readonly property bool background: !!(item.entry?.background)
+                            readonly property bool headless: item.entry?.kind === "tray" || item.entry?.kind === "process"
+                            readonly property bool tray: item.entry?.kind === "tray"
 
                             Layout.fillWidth: true
-                            iconName: item.cls
+                            iconName: item.tray ? "" : String(item.entry?.icon || item.cls)
+                            imageSource: item.tray ? String(item.entry?.iconUrl || "") : ""
                             tintIcon: false
-                            titleValue: item.win?.title || item.cls
+                            preferSymbolic: false
+                            titleValue: String(item.entry?.title || item.cls)
                             subtitleValue: item.background ? I18n.t("bar.taskbarBackground") : (item.wsId > 0 ? root.workspaceLabel(item.wsId) : "")
-                            selected: item.win?.activated === true || root.menuIndex === item.index
+                            selected: !!(item.entry?.activated) || root.menuIndex === item.index
                             onClicked: {
                                 root.closeMenu();
-                                Hypr.activateWindow(item.address);
+                                Taskbar.activate(item.entry);
                                 Popups.dismiss();
                                 Taskbar.hide();
                             }
@@ -103,16 +108,19 @@ Item {
                                 root.menuRowH = item.height;
                                 root.menuAddress = item.address;
                                 root.menuBackground = item.background;
+                                root.menuKind = item.headless ? (item.tray ? "tray" : "process") : "window";
+                                root.menuEntry = item.entry;
                                 root.menuIndex = item.index;
                             }
 
                             MIconButton {
                                 close: true
+                                visible: !item.headless
                                 iconName: "window-close-symbolic"
                                 key: "bar.close"
                                 size: Tokens.spacing.xl
                                 iconSize: Tokens.icon.xs
-                                onClicked: Hypr.closeWindow(item.address)
+                                onClicked: Taskbar.close(item.entry)
                             }
                         }
                     }
@@ -138,6 +146,8 @@ Item {
                 return;
             item.menuAddress = Qt.binding(() => root.menuAddress);
             item.menuBackground = Qt.binding(() => root.menuBackground);
+            item.menuKind = Qt.binding(() => root.menuKind);
+            item.menuEntry = Qt.binding(() => root.menuEntry);
             item.menuRowY = Qt.binding(() => root.menuRowY);
             item.menuRowH = Qt.binding(() => root.menuRowH);
             item.closed.connect(root.closeMenu);

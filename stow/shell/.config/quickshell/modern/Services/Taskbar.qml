@@ -15,6 +15,95 @@ Singleton {
     property bool coverFullscreen: false
     property string hostScreenName: ""
 
+    readonly property var entries: {
+        void Hypr.toplevelList;
+        void Tray.items;
+        void RunningApps.apps;
+        const wins = Hypr.toplevelList || [];
+        const out = [];
+        for (let i = 0; i < wins.length; i++) {
+            const t = wins[i];
+            if (!t)
+                continue;
+            const ipc = t.lastIpcObject || ({});
+            const cls = String(ipc.class || t.class || "").toLowerCase();
+            if (cls.indexOf("quickshell") !== -1)
+                continue;
+            const wsId = t.workspace ? Number(t.workspace.id) : 0;
+            const hidden = !!(ipc.hidden === true || ipc.mapped === false);
+            out.push({
+                kind: "window",
+                address: String(t.address || ""),
+                title: String(t.title || ipc.class || cls),
+                cls: String(ipc.class || t.class || "application-x-executable"),
+                icon: Apps.resolveIcon(String(ipc.class || t.class || ipc.initialClass || "")),
+                iconUrl: "",
+                wsId: wsId,
+                background: wsId < 0 || hidden,
+                activated: t.activated === true,
+                item: null,
+                desktopId: ""
+            });
+        }
+        const bg = Tray.orphans(wins);
+        for (let j = 0; j < bg.length; j++) {
+            const it = bg[j];
+            const title = String(it.title || it.tooltipTitle || it.id || "");
+            out.push({
+                kind: "tray",
+                address: "",
+                title: title,
+                cls: title,
+                icon: "",
+                iconUrl: String(it.icon || ""),
+                wsId: 0,
+                background: true,
+                activated: false,
+                item: it,
+                desktopId: ""
+            });
+        }
+        const procs = RunningApps.hidden(wins, Tray.items);
+        for (let k = 0; k < procs.length; k++) {
+            const app = procs[k];
+            out.push({
+                kind: "process",
+                address: "",
+                title: String(app.name || app.id || ""),
+                cls: String(app.icon || app.class || app.id || ""),
+                icon: Apps.resolveIcon(String(app.icon || app.class || app.id || "")),
+                iconUrl: "",
+                wsId: 0,
+                background: true,
+                activated: false,
+                item: null,
+                desktopId: String(app.id || "")
+            });
+        }
+        return out;
+    }
+
+    readonly property int count: {
+        void root.entries;
+        return (root.entries || []).length;
+    }
+
+    property string _raiseAfter: ""
+
+    Timer {
+        id: raiseWait
+        interval: 500
+        repeat: false
+        onTriggered: {
+            const id = root._raiseAfter;
+            root._raiseAfter = "";
+            if (!id.length)
+                return;
+            Hypr.refreshToplevels();
+            Hypr.raiseDesktop(id);
+        }
+    }
+
     IpcHandler {
         target: "taskbar"
         function toggle() { root.toggle(null); }
@@ -29,6 +118,7 @@ Singleton {
             return;
         }
         Hypr.refreshToplevels();
+        RunningApps.refresh();
         root.hostScreenName = name;
         root.coverFullscreen = Hypr.focusedFullscreen;
         root.open = true;
@@ -36,6 +126,7 @@ Singleton {
 
     function show(screen: var) {
         Hypr.refreshToplevels();
+        RunningApps.refresh();
         root.hostScreenName = root._nameOf(screen) || root._focusedName();
         root.coverFullscreen = Hypr.focusedFullscreen;
         root.open = true;
@@ -45,6 +136,31 @@ Singleton {
         root.open = false;
         root.hostScreenName = "";
         root.coverFullscreen = false;
+    }
+
+    function activate(entry: var) {
+        if (!entry)
+            return;
+        if (entry.kind === "tray") {
+            Tray.activate(entry.item);
+            return;
+        }
+        if (entry.kind === "process") {
+            const id = String(entry.desktopId || "");
+            if (Hypr.raiseDesktop(id))
+                return;
+            Apps.launchId(id);
+            root._raiseAfter = id;
+            raiseWait.restart();
+            return;
+        }
+        Hypr.activateWindow(String(entry.address || ""));
+    }
+
+    function close(entry: var) {
+        if (!entry || entry.kind === "tray" || entry.kind === "process")
+            return;
+        Hypr.closeWindow(String(entry.address || ""));
     }
 
     function openOn(screen: var): bool {
