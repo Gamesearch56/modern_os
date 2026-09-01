@@ -62,6 +62,9 @@ When `dev` is what friends should get:
 1. Open a PR **`dev` → `main`**. Title: `Release vX.Y.Z`.
 2. Merge when CI is green.
 3. Create a GitHub Release / annotated tag `vX.Y.Z` on that `main` commit.
+4. After this workflow is on `main`, the `ISO` Action builds the friend
+   image and attaches `*.iso` to that Release. Never `iso-build.sh
+   --mkarchiso` on this PC.
 
 ```bash
 git checkout main
@@ -70,7 +73,8 @@ git tag -a v0.1.0 -m "ModernOS v0.1.0"
 git push origin v0.1.0
 ```
 
-That tag is what Settings → Update and the ISO pin look at.
+That tag is what Settings → Update and the ISO pin look at. Friends
+download the image from the Release page, not from this machine.
 
 **Semver:** `MAJOR.MINOR.PATCH`. Breaking desktop/install behavior bumps
 MAJOR; features MINOR; fixes PATCH. Start at `v0.1.0` until you want
