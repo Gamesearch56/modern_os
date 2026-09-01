@@ -15,5 +15,6 @@ Rectangle {
     border.color: root.ringColor
     border.width: root.active ? Tokens.stroke.focus : 0
     visible: root.active
+    enabled: false
     z: 20
 }

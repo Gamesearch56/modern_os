@@ -5,4 +5,5 @@ import "../Commons"
 
 MTextField {
     iconName: "edit-find-symbolic"
+    captureArrows: true
 }

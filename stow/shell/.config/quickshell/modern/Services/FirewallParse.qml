@@ -40,7 +40,9 @@ QtObject {
         const t = String(text || "");
         const low = t.toLowerCase();
         let status = "";
-        if (low.indexOf("status: active") !== -1)
+        if (low.indexOf("status: missing") !== -1)
+            status = "missing";
+        else if (low.indexOf("status: active") !== -1)
             status = "active";
         else if (low.indexOf("status: inactive") !== -1)
             status = "inactive";

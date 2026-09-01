@@ -23,6 +23,7 @@ RowLayout {
     Repeater {
         model: root.mons
         MCard {
+            id: card
             required property var modelData
             readonly property string desc: String(modelData.description || "")
             readonly property bool active: desc.length > 0 && desc === root.selectedDesc
@@ -30,7 +31,21 @@ RowLayout {
             Layout.preferredWidth: 1
             implicitHeight: Tokens.icon.lg + Tokens.spacing.xxl * 3
             level: active ? 3 : 1
-            highlighted: active
+            highlighted: active || activeFocus
+            activeFocusOnTab: true
+            Accessible.role: Accessible.Button
+            Accessible.name: modelData.description || modelData.name || ""
+            Accessible.onPressAction: {
+                if (desc.length)
+                    root.picked(desc);
+            }
+            Keys.onPressed: (event) => {
+                if (event.key !== Qt.Key_Return && event.key !== Qt.Key_Enter && event.key !== Qt.Key_Space)
+                    return;
+                if (desc.length)
+                    root.picked(desc);
+                event.accepted = true;
+            }
 
             ColumnLayout {
                 anchors.fill: parent
@@ -75,8 +90,10 @@ RowLayout {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    if (desc.length)
+                    if (desc.length) {
+                        card.forceActiveFocus();
                         root.picked(desc);
+                    }
                 }
             }
         }

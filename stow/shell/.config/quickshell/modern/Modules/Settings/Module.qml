@@ -67,47 +67,101 @@ Scope {
                             id: nav
                             anchors.fill: parent
                             catalog: catalog
+                            tabTarget: contentScope
+                            onContentRequested: contentScope.focusFirst()
                         }
                     }
 
-                    ColumnLayout {
+                    FocusScope {
+                        id: contentScope
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        spacing: Tokens.spacing.md
 
-                        PageHeader { id: pageHeader; catalog: catalog }
+                        MFocusWalk {
+                            id: contentWalk
+                            scope: contentScope
+                            flick: pane
+                        }
 
-                        Flickable {
-                            id: pane
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            clip: true
-                            focus: false
-                            contentWidth: width
-                            contentHeight: sectionLoader.item
-                                ? sectionLoader.item.implicitHeight
-                                : 0
-                            readonly property string pageId: Settings.sectionId
-                            onPageIdChanged: contentY = 0
+                        function focusFirst() {
+                            if (!contentWalk.focusFirst())
+                                contentScope.forceActiveFocus();
+                        }
 
-                            MouseArea {
-                                z: -1
-                                width: pane.width
-                                height: Math.max(pane.height, pane.contentHeight)
-                                onPressed: (mouse) => {
-                                    pane.forceActiveFocus();
-                                    mouse.accepted = false;
+                        function arrowMove(dx: int, dy: int): bool {
+                            if (SelectMenus.current)
+                                return false;
+                            if (contentWalk.move(dx, dy))
+                                return true;
+                            if (dx < 0 || dy < 0)
+                                nav.focusActive();
+                            return true;
+                        }
+
+                        onActiveFocusChanged: {
+                            if (!contentScope.activeFocus || contentWalk.ownsFocus())
+                                return;
+                            contentScope.focusFirst();
+                        }
+
+                        Keys.onPressed: (event) => {
+                            if (SelectMenus.current)
+                                return;
+                            if (event.key === Qt.Key_Down)
+                                contentScope.arrowMove(0, 1);
+                            else if (event.key === Qt.Key_Up)
+                                contentScope.arrowMove(0, -1);
+                            else if (event.key === Qt.Key_Right)
+                                contentScope.arrowMove(1, 0);
+                            else if (event.key === Qt.Key_Left)
+                                contentScope.arrowMove(-1, 0);
+                            else if (event.key === Qt.Key_Home)
+                                contentWalk.focusFirst();
+                            else if (event.key === Qt.Key_End)
+                                contentWalk.focusLast();
+                            else
+                                return;
+                            event.accepted = true;
+                        }
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: Tokens.spacing.md
+
+                            PageHeader { id: pageHeader; catalog: catalog }
+
+                            Flickable {
+                                id: pane
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                clip: true
+                                focus: false
+                                contentWidth: width
+                                contentHeight: sectionLoader.item
+                                    ? sectionLoader.item.implicitHeight
+                                    : 0
+                                readonly property string pageId: Settings.sectionId
+                                onPageIdChanged: contentY = 0
+
+                                MouseArea {
+                                    z: -1
+                                    width: pane.width
+                                    height: Math.max(pane.height, pane.contentHeight)
+                                    onPressed: (mouse) => {
+                                        contentScope.forceActiveFocus();
+                                        mouse.accepted = false;
+                                    }
                                 }
-                            }
 
-                            Loader {
-                                id: sectionLoader
-                                width: pane.width
-                                source: Qt.resolvedUrl("sections/" + Settings.sectionId + "/Section.qml")
-                                onLoaded: {
-                                    pane.contentY = 0;
-                                    if (item)
-                                        item.width = Qt.binding(() => sectionLoader.width);
+                                Loader {
+                                    id: sectionLoader
+                                    width: pane.width
+                                    source: Qt.resolvedUrl("sections/" + Settings.sectionId + "/Section.qml")
+                                    onLoaded: {
+                                        pane.contentY = 0;
+                                        if (item)
+                                            item.width = Qt.binding(() => sectionLoader.width);
+                                    }
                                 }
                             }
                         }

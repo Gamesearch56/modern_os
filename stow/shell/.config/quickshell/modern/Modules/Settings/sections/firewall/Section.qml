@@ -59,8 +59,12 @@ Item {
                 }
                 MSwitch {
                     checked: Firewall.active
-                    enabled: Firewall.present && !Firewall.running
-                    onToggled: (v) => root.pendingToggle = v ? "enable" : "disable"
+                    enabled: Firewall.present && !Firewall.running && root.pendingToggle.length === 0
+                    onToggled: (v) => {
+                        if (Firewall.running || root.pendingToggle.length)
+                            return;
+                        root.pendingToggle = v ? "enable" : "disable";
+                    }
                 }
             }
         }

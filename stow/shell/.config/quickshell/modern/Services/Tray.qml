@@ -22,6 +22,46 @@ Singleton {
         return roster.list();
     }
 
+    property var dismissed: ({})
+
+    function _key(item: var): string {
+        return String(item?.id || item?.title || item?.tooltipTitle || "");
+    }
+
+    function dismiss(item: var) {
+        const k = root._key(item);
+        if (!k.length)
+            return;
+        const next = Object.assign({}, root.dismissed);
+        next[k] = true;
+        root.dismissed = next;
+        root._gen++;
+    }
+
+    function pidsOf(item: var): var {
+        const apps = RunningApps.apps || [];
+        const out = [];
+        const seen = {};
+        for (let i = 0; i < apps.length; i++) {
+            const app = apps[i];
+            if (!RunningApps.matchesTray(app, item))
+                continue;
+            const pids = app.pids || [];
+            for (let p = 0; p < pids.length; p++) {
+                const n = Number(pids[p] || 0);
+                if (n <= 1 || seen[n])
+                    continue;
+                seen[n] = true;
+                out.push(n);
+            }
+        }
+        return out;
+    }
+
+    function _live(item: var): bool {
+        return root.pidsOf(item).length > 0;
+    }
+
     function isApp(item: var): bool {
         if (!item)
             return false;
@@ -80,12 +120,17 @@ Singleton {
     }
 
     function orphans(windows: var): var {
+        void RunningApps.apps;
+        void root.dismissed;
         const wins = windows || [];
         const list = root.items;
         const out = [];
         for (let i = 0; i < list.length; i++) {
             const it = list[i];
             if (!root.isApp(it))
+                continue;
+            const key = root._key(it);
+            if (key.length && root.dismissed[key] && !root._live(it))
                 continue;
             let hit = false;
             for (let j = 0; j < wins.length; j++) {
@@ -94,8 +139,11 @@ Singleton {
                     break;
                 }
             }
-            if (!hit)
-                out.push(it);
+            if (hit)
+                continue;
+            if (!root._live(it))
+                continue;
+            out.push(it);
         }
         return out;
     }

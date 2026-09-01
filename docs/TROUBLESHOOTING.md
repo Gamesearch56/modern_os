@@ -289,21 +289,25 @@ looking unfilled next to an outlined Cancel is Adwaita `background-image`
 winning; re-run `scripts/theme-apply.sh --chrome-only`. The dialog always
 authenticates as the logged-in user — if Confirm still names a different
 admin, `~/.local/bin/phylax` is missing (`scripts/build-phylax.sh`).
+Tab and arrows cycle password → Cancel → Confirm; they only reach Phylax
+after the window takes the keyboard (the rule sets `focus_on_activate`
+and `stay_focused` so Settings does not keep the keys while the cursor
+stays over it). Rebuild the agent after changing that keyboard handling.
 
 ## Firewall page does not ask for a password
 
-Settings → Firewall lists rules with `pkexec /usr/bin/ufw status numbered`,
-the same `org.freedesktop.policykit.exec` action as the App Store. Phylax
-does register for it. Opening the page with hyprpolkit prompted every
-time because that action is `auth_admin` (no keep-cookie). A missing
-prompt now is not a different, quieter policy.
+Settings → Firewall reads `/etc/ufw` as the user (`scripts/ufw-status.sh`).
+A password prompt should appear only for enable, disable, add, or delete.
+Enable/disable is one `pkexec` of `scripts/ufw-apply.sh`; add/delete use
+`pkexec /usr/bin/ufw`. Those actions use `org.freedesktop.policykit.exec`
+(`auth_admin`). Opening the page no longer calls `pkexec`. Four stacked
+`pkexec` calls used to open a new Phylax window after every successful
+password — that is a bug, not keep-alive.
 
 Phylax only handles **one** auth cookie at a time: a second `pkexec`
-(Firewall while the store prompt is still up) is ignored and the list
-hangs with no window. The Firewall singleton can still show the last
-successful list, so the page looks populated. Enable / disable / add /
-delete still call `pkexec` and should prompt when no dialog is already
-open. Check with `pkexec /usr/bin/ufw status numbered` in a terminal.
+(Firewall while the store prompt is still up) is ignored and the mutate
+hangs with no window. Check with `pkexec /usr/bin/ufw status numbered`
+in a terminal.
 
 ## Dolphin is light / has a File menu / ignores the wallpaper palette
 

@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../Commons"
 
-Item {
+FocusScope {
     id: root
 
     property bool open: false
@@ -32,8 +32,15 @@ Item {
     Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
 
     onOpenChanged: {
-        if (root.open)
-            root.forceActiveFocus();
+        if (!root.open)
+            return;
+        root.forceActiveFocus();
+        Qt.callLater(() => {
+            if (extraCol.children.length > 0)
+                dialogWalk.focusFirst();
+            else
+                dialogWalk.focusLast();
+        });
     }
 
     Rectangle {
@@ -151,5 +158,32 @@ Item {
     Keys.onEnterPressed: {
         if (root.open && root.confirmEnabled)
             root.confirmed();
+    }
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Down)
+            root.arrowMove(0, 1);
+        else if (event.key === Qt.Key_Up)
+            root.arrowMove(0, -1);
+        else if (event.key === Qt.Key_Right)
+            root.arrowMove(1, 0);
+        else if (event.key === Qt.Key_Left)
+            root.arrowMove(-1, 0);
+        else if (event.key === Qt.Key_Home)
+            dialogWalk.focusFirst();
+        else if (event.key === Qt.Key_End)
+            dialogWalk.focusLast();
+        else
+            return;
+        event.accepted = true;
+    }
+
+    MFocusWalk {
+        id: dialogWalk
+        scope: card
+    }
+
+    function arrowMove(dx: int, dy: int): bool {
+        dialogWalk.move(dx, dy);
+        return true;
     }
 }

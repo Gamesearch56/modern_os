@@ -94,8 +94,8 @@ Item {
         anchors.fill: parent
         radius: Tokens.radius.full
         color: Colors.color.surfaceContainerHighest
-        border.color: menu.open ? Colors.color.primary : Colors.color.outline
-        border.width: menu.open ? 2 : 1
+        border.color: menu.open || root.activeFocus ? Colors.color.primary : Colors.color.outline
+        border.width: menu.open || root.activeFocus ? 2 : 1
 
         Behavior on border.color {
             ColorAnimation {
@@ -131,15 +131,17 @@ Item {
         anchors.fill: parent
         enabled: root.enabled
         cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onClicked: menu.open = !menu.open
+        onClicked: {
+            root.forceActiveFocus();
+            menu.open = !menu.open;
+        }
     }
 
     Keys.onPressed: (event) => {
         if (!root.enabled)
             return;
         if (!menu.open) {
-            if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter
-                    || event.key === Qt.Key_Down) {
+            if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 menu.open = true;
                 event.accepted = true;
             }
@@ -194,6 +196,13 @@ Item {
             root._raise(open);
             if (open) {
                 SelectMenus.claim(root);
+                const rows = root._filtered;
+                for (let i = 0; i < rows.length; i++) {
+                    if (String(rows[i].value) === String(root.value)) {
+                        list.currentIndex = i;
+                        break;
+                    }
+                }
                 if (root._searchable) {
                     Qt.callLater(() => {
                         if (menu.open)
@@ -224,6 +233,15 @@ Item {
                 placeholderKey: "settings.selectSearch"
                 escapeCloses: true
                 onTextEdited: root.query = text
+                onDownPressed: list.incrementCurrentIndex()
+                onUpPressed: list.decrementCurrentIndex()
+                onAccepted: {
+                    const opt = root._filtered[list.currentIndex];
+                    if (!opt)
+                        return;
+                    root.selected(opt.value);
+                    menu.open = false;
+                }
                 onEscaped: {
                     if (text.length > 0) {
                         text = "";
@@ -249,6 +267,7 @@ Item {
                     titleKey: opt.titleKey || ""
                     titleParams: opt.params || ({})
                     titleValue: opt.titleValue || ""
+                    tabFocus: false
                     selected: String(opt.value) === String(root.value)
                     onClicked: {
                         root.selected(opt.value);

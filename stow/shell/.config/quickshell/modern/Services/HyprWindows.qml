@@ -129,29 +129,42 @@ QtObject {
         return false;
     }
 
+    function _addrKey(address: string): string {
+        return String(address || "").replace(/^address:/i, "").toLowerCase();
+    }
+
     function toplevelByAddress(address: string): var {
-        const addr = String(address || "");
+        const addr = root._addrKey(address);
+        if (!addr.length)
+            return null;
         const list = Hyprland.toplevels?.values ?? [];
         for (let i = 0; i < list.length; i++) {
-            if (list[i] && String(list[i].address || "") === addr)
+            if (list[i] && root._addrKey(list[i].address) === addr)
                 return list[i];
         }
         return null;
     }
 
     function closeWindow(address: string) {
-        const addr = String(address || "");
-        if (!addr.length) {
-            if (root.host._lua)
-                root.host.dispatch("hl.dsp.window.close()");
-            else
-                root.host.dispatch("killactive");
+        const addr = String(address || "").replace(/^address:/i, "");
+        if (!addr.length)
+            return;
+        const t = root.toplevelByAddress(addr);
+        if (t && t.wayland && t.wayland.close) {
+            t.wayland.close();
             return;
         }
         if (root.host._lua)
-            root.host.dispatch("hl.dsp.window.close({ window = \"address:" + addr + "\" })");
+            root.host.dispatch("hl.dsp.window.close({ window = 'address:" + addr + "' })");
         else
             root.host.dispatch("closewindow address:" + addr);
+    }
+
+    function killWindow(address: string) {
+        const addr = String(address || "").replace(/^address:/i, "");
+        if (!addr.length || !root.host._lua)
+            return;
+        root.host.dispatch("hl.dsp.window.kill({ window = 'address:" + addr + "' })");
     }
 
     function windowOnScreen(toplevel: var, screen: var): bool {

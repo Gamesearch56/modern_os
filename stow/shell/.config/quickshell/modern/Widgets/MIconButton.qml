@@ -18,6 +18,8 @@ Item {
     property bool tabFocus: true
     property bool pointer: true
     property bool acceptWheel: false
+    property bool escapeClicks: root.close
+    property bool highlighted: false
 
     signal clicked()
     signal middleClicked()
@@ -44,7 +46,7 @@ Item {
         }
     }
     Keys.onEscapePressed: (event) => {
-        if (!root.close || root.busy || !root.enabled)
+        if (!root.escapeClicks || root.busy || !root.enabled)
             return;
         root.clicked();
         event.accepted = true;
@@ -153,5 +155,11 @@ Item {
         }
         root._hover = false;
         root._suppressHover = true;
+    }
+
+    MFocusRing {
+        radius: Tokens.radius.full
+        ringColor: root.close ? Colors.color.error : Colors.color.primary
+        active: root.activeFocus || root.highlighted
     }
 }

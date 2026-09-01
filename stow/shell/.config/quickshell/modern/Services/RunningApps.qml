@@ -57,6 +57,74 @@ Singleton {
         ];
     }
 
+    Timer {
+        id: afterKill
+        interval: 250
+        repeat: false
+        onTriggered: root.refresh()
+    }
+
+    function _skipName(n: string): bool {
+        const s = String(n || "").toLowerCase();
+        return !s.length || s.indexOf("/") !== -1 || s.indexOf("application-x-") === 0;
+    }
+
+    function _namesOf(entry: var): var {
+        const out = [];
+        const seen = {};
+        function add(raw) {
+            const t = String(raw || "").replace(/\.desktop$/i, "").trim().toLowerCase();
+            if (root._skipName(t) || t.length < 3 || seen[t])
+                return;
+            seen[t] = true;
+            out.push(t);
+            const w = t.split(/[\s._-]+/)[0];
+            if (w.length >= 3 && !seen[w] && !root._skipName(w)) {
+                seen[w] = true;
+                out.push(w);
+            }
+            const stem = t.endsWith("-launcher") ? t.slice(0, -9) : "";
+            if (stem.length >= 3 && !seen[stem] && !root._skipName(stem)) {
+                seen[stem] = true;
+                out.push(stem);
+            }
+        }
+        add(entry?.desktopId);
+        add(entry?.cls);
+        add(entry?.icon);
+        if (entry?.kind === "tray" || entry?.kind === "process")
+            add(entry?.title);
+        return out;
+    }
+
+    function killEntry(entry: var) {
+        if (!entry)
+            return;
+        const args = [Paths.script("kill-app.sh")];
+        const seenPid = {};
+        function addPid(v) {
+            const n = Number(v || 0);
+            if (n <= 1 || seenPid[n])
+                return;
+            seenPid[n] = true;
+            args.push("--pid");
+            args.push(String(n));
+        }
+        addPid(entry.pid);
+        const extra = entry.pids || [];
+        for (let i = 0; i < extra.length; i++)
+            addPid(extra[i]);
+        const names = root._namesOf(entry);
+        for (let j = 0; j < names.length; j++) {
+            args.push("--name");
+            args.push(names[j]);
+        }
+        if (args.length < 3)
+            return;
+        Quickshell.execDetached(args);
+        afterKill.restart();
+    }
+
     function _hits(needles: var, fields: var): bool {
         for (let i = 0; i < needles.length; i++) {
             const n = needles[i];

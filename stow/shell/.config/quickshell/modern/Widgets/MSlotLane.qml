@@ -82,6 +82,20 @@ Rectangle {
                         Layout.fillWidth: true
                         implicitHeight: root._rowH
                         z: drag.drag.active ? 20 : 0
+                        activeFocusOnTab: true
+                        Accessible.role: Accessible.Button
+                        Accessible.name: I18n.t(root.labelKey(row.itemId))
+                        Accessible.onPressAction: {
+                            if (row.canEdit && root.board)
+                                root.board.itemClicked(row.itemId);
+                        }
+                        Keys.onPressed: (event) => {
+                            if (event.key !== Qt.Key_Return && event.key !== Qt.Key_Enter && event.key !== Qt.Key_Space)
+                                return;
+                            if (row.canEdit && root.board)
+                                root.board.itemClicked(row.itemId);
+                            event.accepted = true;
+                        }
                         Rectangle {
                             id: tile
                             width: row.width
@@ -142,7 +156,7 @@ Rectangle {
 
                             MFocusRing {
                                 radius: Tokens.radius.small
-                                active: row.canEdit && drag.containsMouse && !drag.drag.active
+                                active: row.activeFocus || (row.canEdit && drag.containsMouse && !drag.drag.active)
                             }
                         }
                         MouseArea {

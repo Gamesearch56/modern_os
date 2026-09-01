@@ -14,6 +14,7 @@ Item {
     property bool enabled: true
     property int maximumLength: 32767
     property bool escapeCloses: false
+    property bool captureArrows: false
 
     signal accepted()
     signal textEdited()
@@ -25,10 +26,16 @@ Item {
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
+    activeFocusOnTab: root.enabled
 
     HoverHandler {
         enabled: root.enabled
         cursorShape: Qt.IBeamCursor
+    }
+
+    onActiveFocusChanged: {
+        if (root.activeFocus && !input.activeFocus)
+            input.forceActiveFocus();
     }
 
     Rectangle {
@@ -73,6 +80,7 @@ Item {
         echoMode: root.echoMode
         enabled: root.enabled
         maximumLength: root.maximumLength
+        activeFocusOnTab: false
         activeFocusOnPress: true
         selectByMouse: true
         clip: true
@@ -88,10 +96,10 @@ Item {
             }
             if (event.key === Qt.Key_Down) {
                 root.downPressed();
-                event.accepted = true;
+                event.accepted = root.captureArrows || root._arrowMove(0, 1);
             } else if (event.key === Qt.Key_Up) {
                 root.upPressed();
-                event.accepted = true;
+                event.accepted = root.captureArrows || root._arrowMove(0, -1);
             }
         }
     }
@@ -102,6 +110,16 @@ Item {
         key: root.placeholderKey
         styleName: "bodyLarge"
         color: Colors.color.onSurfaceVariant
+    }
+
+    function _arrowMove(dx: int, dy: int): bool {
+        let p = root.parent;
+        while (p) {
+            if (typeof p.arrowMove === "function")
+                return p.arrowMove(dx, dy);
+            p = p.parent;
+        }
+        return false;
     }
 
     function focusInput() {

@@ -27,12 +27,20 @@ Item {
 
     property bool compact: false
     property bool preferSymbolic: !root._nav
+    property bool tabFocus: true
 
     default property alias extra: trailing.data
 
     signal clicked()
     signal rightClicked()
     signal activated()
+
+    function _onTrailing(px: real, py: real): bool {
+        if (!trailing.visible || trailing.width <= 0)
+            return false;
+        const p = trailing.mapFromItem(root, px, py);
+        return p.x >= 0 && p.y >= 0 && p.x < trailing.width && p.y < trailing.height;
+    }
 
     readonly property bool _nav: root.variant === "nav"
     readonly property real _padH: root.compact ? Tokens.spacing.sm : Tokens.spacing.md
@@ -60,7 +68,7 @@ Item {
     }
     implicitWidth: root.compact ? Tokens.spacing.xxl * 7 : Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
-    activeFocusOnTab: root.enabled && root.hoverHighlight
+    activeFocusOnTab: root.tabFocus && root.enabled && root.hoverHighlight
     Accessible.role: root.hoverHighlight ? Accessible.Button : Accessible.StaticText
     Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
     Accessible.description: root.badgeCount > 0 ? String(root.badgeCount) : ""
@@ -112,9 +120,16 @@ Item {
         anchors.fill: parent
         enabled: root.enabled && root.hoverHighlight
         hoverEnabled: true
+        propagateComposedEvents: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: root.hoverHighlight ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onPressed: (mouse) => {
+            if (root._onTrailing(mouse.x, mouse.y))
+                mouse.accepted = false;
+        }
         onClicked: (mouse) => {
+            if (root._onTrailing(mouse.x, mouse.y))
+                return;
             if (root.hoverHighlight)
                 root.forceActiveFocus();
             if (mouse.button === Qt.RightButton)
@@ -122,7 +137,11 @@ Item {
             else
                 root.clicked();
         }
-        onDoubleClicked: root.activated()
+        onDoubleClicked: (mouse) => {
+            if (root._onTrailing(mouse.x, mouse.y))
+                return;
+            root.activated();
+        }
     }
 
     RowLayout {
@@ -223,7 +242,8 @@ Item {
 
     MFocusRing {
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
-        active: !root.compact && !root._nav && (root.selected || (root.hoverHighlight && (root.activeFocus || hover.hovered)))
+        active: (root._nav && root.activeFocus)
+            || (!root.compact && !root._nav && (root.selected || (root.hoverHighlight && (root.activeFocus || hover.hovered))))
         ringColor: Colors.color.primary
     }
 }

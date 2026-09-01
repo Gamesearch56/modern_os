@@ -86,9 +86,9 @@ def load_desktops():
                 by_stem[stem] = parsed
     return list(by_stem.values())
 
-def running_names():
+def running_procs():
     uid = os.getuid()
-    found = set()
+    found = []
     try:
         pids = os.listdir("/proc")
     except OSError:
@@ -129,13 +129,16 @@ def running_names():
             exe = os.path.basename(os.readlink(base / "exe")).lower()
         except OSError:
             exe = ""
-        for n in (argv0, comm, exe):
-            if n and len(n) >= 3:
-                found.add(n)
+        names = {n for n in (argv0, comm, exe) if n and len(n) >= 3}
+        if names:
+            found.append({"pid": int(pid), "names": names})
     return found
 
 desktops = load_desktops()
-running = running_names()
+procs = running_procs()
+running = set()
+for p in procs:
+    running |= p["names"]
 out = []
 seen = set()
 for d in desktops:
@@ -145,11 +148,13 @@ for d in desktops:
     if stem in seen:
         continue
     seen.add(stem)
+    pids = [p["pid"] for p in procs if d["needles"] & p["names"]]
     out.append({
         "id": d["id"],
         "name": d["name"],
         "icon": d["icon"],
         "class": d["class"],
+        "pids": pids,
     })
 out.sort(key=lambda x: x["name"].lower())
 print(json.dumps(out, ensure_ascii=False))

@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../Commons"
 
-Item {
+FocusScope {
     id: root
 
     property bool open: true
@@ -31,6 +31,41 @@ Item {
 
     property bool _entered: false
     readonly property bool _shown: root.open && root._entered
+
+    MFocusWalk {
+        id: overlayWalk
+        scope: contentSlot
+    }
+
+    function arrowMove(dx: int, dy: int): bool {
+        overlayWalk.move(dx, dy);
+        return true;
+    }
+
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Down)
+            root.arrowMove(0, 1);
+        else if (event.key === Qt.Key_Up)
+            root.arrowMove(0, -1);
+        else if (event.key === Qt.Key_Right)
+            root.arrowMove(1, 0);
+        else if (event.key === Qt.Key_Left)
+            root.arrowMove(-1, 0);
+        else if (event.key === Qt.Key_Home)
+            overlayWalk.focusFirst();
+        else if (event.key === Qt.Key_End)
+            overlayWalk.focusLast();
+        else
+            return;
+        event.accepted = true;
+    }
+
+    onOpenChanged: {
+        if (!root.open)
+            return;
+        root.forceActiveFocus();
+        Qt.callLater(() => overlayWalk.focusFirst());
+    }
 
     anchors.fill: parent
 

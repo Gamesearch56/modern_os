@@ -14,11 +14,19 @@ ColumnLayout {
     Layout.fillWidth: true
 
     Item {
+        id: head
         Layout.fillWidth: true
         implicitHeight: header.implicitHeight
+        activeFocusOnTab: true
         Accessible.role: Accessible.Button
         Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey) : ""
         Accessible.onPressAction: root.expanded = !root.expanded
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                root.expanded = !root.expanded;
+                event.accepted = true;
+            }
+        }
 
         RowLayout {
             id: header
@@ -46,7 +54,14 @@ ColumnLayout {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: root.expanded = !root.expanded
+            onClicked: {
+                head.forceActiveFocus();
+                root.expanded = !root.expanded;
+            }
+        }
+
+        MFocusRing {
+            radius: Tokens.radius.small
         }
     }
 

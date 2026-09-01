@@ -60,14 +60,16 @@ the binary and the `.policy` file; existing accounts are untouched.
 
 ## Settings → Firewall (UFW)
 
-Settings talks to `/usr/bin/ufw` through `pkexec` after admin
-authentication (`org.freedesktop.policykit.exec`, `auth_admin` — a
-prompt per call, not a session keep), the same way Backup talks to
-snapper. The Service builds argv itself: no shell, no `reset`, no
-`default allow incoming`. Listing on open is also `pkexec`; Phylax
-handles that action. A second `pkexec` while another prompt is live is
-dropped by Phylax (one cookie). Enable always applies **deny incoming / allow outgoing / deny routed**
-before `--force enable`. Add requires a port (or a range of at most
-512 ports); From is IP/CIDR only. Rules live in `/etc/ufw` and survive
-reboot. KDE Connect ports stay staged and are not opened from this
-page.
+Settings talks to UFW through `pkexec` after admin authentication
+(`org.freedesktop.policykit.exec`, `auth_admin` — a prompt per call,
+not a session keep) for enable, disable, add, and delete, the same
+way Backup talks to snapper for create/delete. Enable/disable is one
+`pkexec` of `scripts/ufw-apply.sh` (as root it sets deny incoming /
+allow outgoing / deny routed, then `--force enable`). Add/delete
+build argv onto `/usr/bin/ufw` itself: no shell, no `reset`, no
+`default allow incoming`. Listing on open is unprivileged
+(`scripts/ufw-status.sh` reads `/etc/ufw/ufw.conf` and `user*.rules`).
+A second `pkexec` while another prompt is live is dropped by Phylax
+(one cookie). Add requires a port (or a range of at most 512 ports);
+From is IP/CIDR only. Rules live in `/etc/ufw` and survive reboot.
+KDE Connect ports stay staged and are not opened from this page.

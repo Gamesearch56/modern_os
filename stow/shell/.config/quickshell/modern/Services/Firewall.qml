@@ -1,4 +1,6 @@
-// Live UFW via pkexec /usr/bin/ufw. Argv allowlist only; no shell, no reset.
+// Live UFW. Status is unprivileged (`ufw-status.sh`). Enable/disable
+// is one pkexec of `ufw-apply.sh` (defaults + enable in that process).
+// Rule add/delete still pkexec /usr/bin/ufw with an argv allowlist.
 pragma Singleton
 
 import Quickshell
@@ -26,36 +28,11 @@ Singleton {
     FirewallParse { id: rules }
 
     Process {
-        id: probeProc
-        command: ["/usr/bin/test", "-x", root.bin]
-        running: false
-        onExited: (code) => {
-            if (code !== 0) {
-                root.status = "missing";
-                root.allow = [];
-                root.deny = [];
-                return;
-            }
-            if (root.status === "missing" || root.status === "unknown")
-                root.status = "inactive";
-            if (root.watching)
-                listProc.running = true;
-        }
-    }
-
-    Process {
         id: listProc
-        command: ["pkexec", root.bin, "status", "numbered"]
+        command: [Paths.script("ufw-status.sh")]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._applyList(this.text)
-        }
-        stderr: StdioCollector {
-            onStreamFinished: {
-                const t = String(this.text || "").trim();
-                if (t.length)
-                    root.error = t;
-            }
         }
         onExited: (code) => {
             if (code !== 0 && root.error.length === 0)
@@ -72,6 +49,7 @@ Singleton {
             onStreamFinished: root._stderr = String(this.text || "").trim()
         }
         onExited: (code) => {
+            mutProc.running = false;
             if (code !== 0) {
                 root._queue = [];
                 root.running = false;
@@ -89,28 +67,26 @@ Singleton {
     onWatchingChanged: {
         if (root.watching)
             root.refresh();
+        else
+            listProc.running = false;
     }
 
     function refresh() {
         if (!root.watching)
             return;
         root.error = "";
-        probeProc.running = true;
+        listProc.running = false;
+        Qt.callLater(() => {
+            if (root.watching)
+                listProc.running = true;
+        });
     }
 
     function setEnabled(on) {
         if (root.running || root.status === "missing")
             return;
-        if (on) {
-            root._start("enable", [
-                ["pkexec", root.bin, "default", "deny", "incoming"],
-                ["pkexec", root.bin, "default", "allow", "outgoing"],
-                ["pkexec", root.bin, "default", "deny", "routed"],
-                ["pkexec", root.bin, "--force", "enable"]
-            ]);
-            return;
-        }
-        root._start("disable", [["pkexec", root.bin, "disable"]]);
+        const apply = Paths.script("ufw-apply.sh");
+        root._start(on ? "enable" : "disable", [["pkexec", apply, on ? "enable" : "disable"]]);
     }
 
     function add(policy, fields) {
@@ -156,8 +132,12 @@ Singleton {
         }
         const next = root._queue[0];
         root._queue = root._queue.slice(1);
+        mutProc.running = false;
         mutProc.command = next;
-        mutProc.running = true;
+        Qt.callLater(() => {
+            if (root.running)
+                mutProc.running = true;
+        });
     }
 
     function _addArgv(policy, fields) {

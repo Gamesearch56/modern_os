@@ -72,17 +72,20 @@ entry.auth-password:focus-within {
     margin-top: @SPACE_SM@px;
 }
 
-window.auth-window flowbox.auth-buttons > flowboxchild {
+window.auth-window flowbox.auth-buttons > flowboxchild,
+window.auth-window box.auth-buttons {
     background: none;
     box-shadow: none;
     padding: 0;
 }
 
-window.auth-window flowbox.auth-buttons > flowboxchild + flowboxchild {
+window.auth-window flowbox.auth-buttons > flowboxchild + flowboxchild,
+window.auth-window box.auth-buttons > button + button {
     margin-left: @SPACE_MD@px;
 }
 
 window.auth-window flowbox.auth-buttons > flowboxchild > button.auth-cancel,
+window.auth-window box.auth-buttons > button.auth-cancel,
 window.auth-window button.auth-cancel {
     background-image: none;
     background-color: transparent;
@@ -94,9 +97,9 @@ window.auth-window button.auth-cancel {
     color: {{colors.on_surface.default.hex}};
     padding: @SPACE_SM@px @SPACE_LG@px;
 }
-}
 
 window.auth-window flowbox.auth-buttons > flowboxchild > button.auth-cancel:hover,
+window.auth-window box.auth-buttons > button.auth-cancel:hover,
 window.auth-window button.auth-cancel:hover {
     background-image: none;
     background-color: alpha({{colors.on_surface.default.hex}}, 0.08);
@@ -104,7 +107,15 @@ window.auth-window button.auth-cancel:hover {
     cursor: pointer;
 }
 
+window.auth-window flowbox.auth-buttons > flowboxchild > button.auth-cancel:focus,
+window.auth-window box.auth-buttons > button.auth-cancel:focus,
+window.auth-window button.auth-cancel:focus {
+    outline: @STROKE_FOCUS@px solid {{colors.primary.default.hex}};
+    outline-offset: @STROKE_FOCUS@px;
+}
+
 window.auth-window flowbox.auth-buttons > flowboxchild > button.auth-confirm,
+window.auth-window box.auth-buttons > button.auth-confirm,
 window.auth-window button.auth-confirm,
 window.auth-window button.auth-confirm.suggested-action {
     background-image: none;
@@ -117,9 +128,9 @@ window.auth-window button.auth-confirm.suggested-action {
     color: {{colors.on_primary.default.hex}};
     padding: @SPACE_SM@px @SPACE_LG@px;
 }
-}
 
 window.auth-window flowbox.auth-buttons > flowboxchild > button.auth-confirm:hover,
+window.auth-window box.auth-buttons > button.auth-confirm:hover,
 window.auth-window button.auth-confirm:hover,
 window.auth-window button.auth-confirm.suggested-action:hover {
     background-image: none;
@@ -127,4 +138,12 @@ window.auth-window button.auth-confirm.suggested-action:hover {
     border-color: {{colors.primary_container.default.hex}};
     color: {{colors.on_primary_container.default.hex}};
     cursor: pointer;
+}
+
+window.auth-window flowbox.auth-buttons > flowboxchild > button.auth-confirm:focus,
+window.auth-window box.auth-buttons > button.auth-confirm:focus,
+window.auth-window button.auth-confirm:focus,
+window.auth-window button.auth-confirm.suggested-action:focus {
+    outline: @STROKE_FOCUS@px solid {{colors.primary.default.hex}};
+    outline-offset: @STROKE_FOCUS@px;
 }

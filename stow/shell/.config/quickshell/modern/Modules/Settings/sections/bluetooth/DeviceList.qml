@@ -17,11 +17,10 @@ ColumnLayout {
 
     Repeater {
         model: root.devices.length
-        MouseArea {
+        MListItem {
             required property int index
             readonly property var dev: root.devices[index]
             readonly property string label: Bluetooth.deviceLabel(dev)
-            readonly property string iconName: Bluetooth.deviceIcon(dev)
             readonly property string address: dev && dev.address ? String(dev.address) : ""
             readonly property bool showAddress: address.length > 0 && address !== label
             readonly property bool remembered: {
@@ -31,47 +30,13 @@ ColumnLayout {
             }
 
             Layout.fillWidth: true
-            implicitHeight: row.implicitHeight
-            implicitWidth: row.implicitWidth
-            cursorShape: Qt.PointingHandCursor
+            iconName: Bluetooth.deviceIcon(dev)
+            preferSymbolic: false
+            tintIcon: false
+            titleValue: label
+            subtitleValue: showAddress ? address : ""
+            badgeIcon: remembered ? "bookmark" : ""
             onClicked: root.deviceClicked(dev)
-
-            RowLayout {
-                id: row
-                width: parent.width
-                spacing: Tokens.spacing.md
-
-                MIcon {
-                    name: iconName
-                    size: Tokens.icon.md
-                    tint: false
-                    preferSymbolic: false
-                }
-                ColumnLayout {
-                    spacing: Tokens.spacing.xxs
-                    Layout.fillWidth: true
-                    MText {
-                        value: label
-                        styleName: "bodyLarge"
-                        Layout.fillWidth: true
-                    }
-                    MText {
-                        visible: showAddress
-                        value: address
-                        styleName: "bodySmall"
-                        color: Colors.color.onSurfaceVariant
-                        Layout.fillWidth: true
-                    }
-                }
-                MIcon {
-                    visible: remembered
-                    name: "bookmark"
-                    size: Tokens.icon.sm
-                    color: Colors.color.primary
-                    Accessible.role: Accessible.StaticText
-                    Accessible.name: I18n.t("settings.bluetooth.remembered")
-                }
-            }
         }
     }
 

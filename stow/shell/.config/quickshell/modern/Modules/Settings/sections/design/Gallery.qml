@@ -89,6 +89,7 @@ ColumnLayout {
                         return path.length > 0 ? Wallpaper.tileSource(path) : "";
                     }
                     onClicked: root._pick(index)
+                    tabFocus: true
                 }
             }
         }

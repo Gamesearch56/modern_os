@@ -33,7 +33,7 @@ Singleton {
             const hidden = !!(ipc.hidden === true || ipc.mapped === false);
             out.push({
                 kind: "window",
-                address: String(t.address || ""),
+                address: String(t.address || ipc.address || ""),
                 title: String(t.title || ipc.class || cls),
                 cls: String(ipc.class || t.class || "application-x-executable"),
                 icon: Apps.resolveIcon(String(ipc.class || t.class || ipc.initialClass || "")),
@@ -42,12 +42,17 @@ Singleton {
                 background: wsId < 0 || hidden,
                 activated: t.activated === true,
                 item: null,
-                desktopId: ""
+                desktopId: "",
+                pid: Number(ipc.pid || 0),
+                pids: []
             });
         }
         const bg = Tray.orphans(wins);
         for (let j = 0; j < bg.length; j++) {
             const it = bg[j];
+            const pids = Tray.pidsOf(it);
+            if (!pids.length)
+                continue;
             const title = String(it.title || it.tooltipTitle || it.id || "");
             out.push({
                 kind: "tray",
@@ -60,12 +65,17 @@ Singleton {
                 background: true,
                 activated: false,
                 item: it,
-                desktopId: ""
+                desktopId: "",
+                pid: 0,
+                pids: pids
             });
         }
         const procs = RunningApps.hidden(wins, Tray.items);
         for (let k = 0; k < procs.length; k++) {
             const app = procs[k];
+            const pids = app.pids || [];
+            if (!pids.length)
+                continue;
             out.push({
                 kind: "process",
                 address: "",
@@ -77,7 +87,9 @@ Singleton {
                 background: true,
                 activated: false,
                 item: null,
-                desktopId: String(app.id || "")
+                desktopId: String(app.id || ""),
+                pid: 0,
+                pids: app.pids || []
             });
         }
         return out;
@@ -102,6 +114,13 @@ Singleton {
             Hypr.refreshToplevels();
             Hypr.raiseDesktop(id);
         }
+    }
+
+    Timer {
+        interval: 1500
+        running: root.open
+        repeat: true
+        onTriggered: RunningApps.refresh()
     }
 
     IpcHandler {
@@ -158,9 +177,15 @@ Singleton {
     }
 
     function close(entry: var) {
-        if (!entry || entry.kind === "tray" || entry.kind === "process")
+        if (!entry)
             return;
-        Hypr.closeWindow(String(entry.address || ""));
+        RunningApps.killEntry(entry);
+        if (entry.kind === "window")
+            Hypr.killWindow(String(entry.address || ""));
+        if (entry.kind === "tray")
+            Tray.dismiss(entry.item);
+        Hypr.refreshToplevels();
+        RunningApps.refresh();
     }
 
     function openOn(screen: var): bool {

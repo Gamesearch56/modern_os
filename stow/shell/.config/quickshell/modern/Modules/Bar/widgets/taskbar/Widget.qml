@@ -36,8 +36,11 @@ Item {
         implicitHeight: Tokens.spacing.xxl * 14
         hAlign: Qt.AlignRight
         onOpenChanged: {
-            if (!popup.open && root._barPopup)
-                Taskbar.hide();
+            if (!popup.open) {
+                root._grabFocused = false;
+                if (root._barPopup)
+                    Taskbar.hide();
+            }
         }
 
         Connections {
@@ -54,12 +57,28 @@ Item {
         }
 
         Loader {
+            id: panelLoader
             anchors.fill: parent
             source: Qt.resolvedUrl("Panel.qml")
             onLoaded: {
                 if (item && item.barScreen !== undefined)
                     item.barScreen = Qt.binding(() => root.barScreen);
             }
+        }
+    }
+
+    property bool _grabFocused: false
+
+    Connections {
+        target: popup
+        function onGrabReady() {
+            if (root._grabFocused)
+                return;
+            const p = panelLoader.item;
+            if (!p || !p.focusFirst)
+                return;
+            root._grabFocused = true;
+            p.focusFirst();
         }
     }
 

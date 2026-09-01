@@ -431,6 +431,7 @@ EOF
             -e "s|@SPACE_SM@|8|g" \
             -e "s|@SPACE_MD@|12|g" \
             -e "s|@SPACE_LG@|16|g" \
+            -e "s|@STROKE_FOCUS@|2|g" \
             "$phylax_css" > "$tmp" && mv "$tmp" "$phylax_css"
     fi
 

@@ -18,16 +18,17 @@ ColumnLayout {
 
     Repeater {
         model: Network.networks.length
-        MouseArea {
+        MListItem {
             required property int index
             readonly property var net: Network.networks[index] || ({})
             readonly property bool locked: Network.needsPassword(net)
             readonly property bool online: !!(net.connected)
 
             Layout.fillWidth: true
-            implicitHeight: row.implicitHeight
-            implicitWidth: row.implicitWidth
-            cursorShape: Qt.PointingHandCursor
+            iconName: locked ? "network-wireless-encrypted" : "network-wireless"
+            titleValue: net.name || net.ssid || ""
+            subtitleKey: online ? "settings.network.wifiConnected" : ""
+            selected: online
             onClicked: {
                 if (online) {
                     Network.disconnect();
@@ -39,37 +40,11 @@ ColumnLayout {
                     Network.connect(net, "");
             }
 
-            RowLayout {
-                id: row
-                width: parent.width
-                spacing: Tokens.spacing.md
-
-                MIcon {
-                    name: locked ? "network-wireless-encrypted" : "network-wireless"
-                    size: Tokens.icon.md
-                }
-                ColumnLayout {
-                    spacing: Tokens.spacing.xxs
-                    Layout.fillWidth: true
-                    MText {
-                        value: net.name || net.ssid || ""
-                        styleName: "bodyLarge"
-                        Layout.fillWidth: true
-                    }
-                    MText {
-                        visible: online
-                        key: "settings.network.wifiConnected"
-                        styleName: "bodySmall"
-                        color: Colors.color.onSurfaceVariant
-                        Layout.fillWidth: true
-                    }
-                }
-                MButton {
-                    visible: online
-                    kind: "tonal"
-                    key: "settings.disconnect"
-                    onClicked: Network.disconnect()
-                }
+            MButton {
+                visible: online
+                kind: "tonal"
+                key: "settings.disconnect"
+                onClicked: Network.disconnect()
             }
         }
     }

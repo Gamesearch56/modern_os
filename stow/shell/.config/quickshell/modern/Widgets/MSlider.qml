@@ -30,11 +30,17 @@ Item {
 
     Keys.onPressed: (event) => {
         const step = root._span / 20;
-        if (event.key === Qt.Key_Left || event.key === Qt.Key_Down) {
+        if (event.key === Qt.Key_Left) {
             root._emit(Math.max(root.from, root._shown - step), true);
             event.accepted = true;
-        } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Up) {
+        } else if (event.key === Qt.Key_Right) {
             root._emit(Math.min(root.to, root._shown + step), true);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Home) {
+            root._emit(root.from, true);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_End) {
+            root._emit(root.to, true);
             event.accepted = true;
         }
     }
@@ -96,6 +102,7 @@ Item {
                 preventStealing: true
                 cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onPressed: (mouse) => {
+                    root.forceActiveFocus();
                     root._dragging = true;
                     root._lockFlick(true);
                     root._setFromX(mouse.x);
@@ -152,6 +159,10 @@ Item {
         if (Math.abs(root._live - root.value) <= root._span / 1000)
             return;
         root.committed(root._live);
+    }
+
+    MFocusRing {
+        radius: Tokens.radius.full
     }
 
     function _setFromX(px: real) {

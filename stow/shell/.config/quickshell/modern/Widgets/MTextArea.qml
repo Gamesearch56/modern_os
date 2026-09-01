@@ -13,6 +13,7 @@ Item {
 
     implicitHeight: root.expanded ? Tokens.spacing.xxl * 8 : Tokens.spacing.xxl * 4
     implicitWidth: Tokens.spacing.xxl * 12
+    activeFocusOnTab: true
 
     Rectangle {
         anchors.fill: parent
@@ -71,11 +72,20 @@ Item {
             font.hintingPreference: Font.PreferNoHinting
             renderType: TextEdit.QtRendering
             selectByMouse: true
+            activeFocusOnTab: false
             onTextChanged: root.textEdited()
             onCursorRectangleChanged: flick.ensureVisible(cursorRectangle)
+            Keys.priority: Keys.BeforeItem
             Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Up || event.key === Qt.Key_Down)
-                    event.accepted = false;
+                if (event.key === Qt.Key_Up && input.cursorRectangle.y <= 1) {
+                    event.accepted = root._arrowMove(0, -1);
+                    return;
+                }
+                if (event.key === Qt.Key_Down) {
+                    const bottom = input.cursorRectangle.y + input.cursorRectangle.height;
+                    if (bottom >= input.contentHeight - 1)
+                        event.accepted = root._arrowMove(0, 1);
+                }
             }
         }
     }
@@ -86,6 +96,21 @@ Item {
         key: root.placeholderKey
         styleName: "bodyMedium"
         color: Colors.color.onSurfaceVariant
+    }
+
+    onActiveFocusChanged: {
+        if (root.activeFocus && !input.activeFocus)
+            input.forceActiveFocus();
+    }
+
+    function _arrowMove(dx: int, dy: int): bool {
+        let p = root.parent;
+        while (p) {
+            if (typeof p.arrowMove === "function")
+                return p.arrowMove(dx, dy);
+            p = p.parent;
+        }
+        return false;
     }
 
     function _lockParent(lock: bool) {

@@ -74,6 +74,8 @@ apply({
 -- Phylax (GTK4 polkit agent) app_id. Glass like the wallpaper overlay:
 -- float+center, dim_around as scrim, design.transparency, no hyprbars.
 -- pin keeps the prompt above modern.store / modern.settings.
+-- focus_on_activate honours GTK present(); stay_focused holds the seat
+-- after that. follow_mouse=1 otherwise leaves keys on Settings.
 apply({
     name = "polkit-auth-dialog",
     match = { class = "io.github.jakebgrant.phylax" },
@@ -82,10 +84,42 @@ apply({
     pin = true,
     dim_around = true,
     stay_focused = true,
+    focus_on_activate = true,
     border_size = 1,
     opacity = config.value("design.transparency", 0.85),
     ["hyprbars:no_bar"] = true,
 })
+
+local function phylax_focus(w)
+    if type(w) ~= "table" then
+        return
+    end
+    local class = tostring(w.class or w.initial_class or "")
+    if not class:find("phylax", 1, true) then
+        return
+    end
+    if w.mapped == false then
+        return
+    end
+    if not (hl.dispatch and hl.dsp and hl.dsp.focus) then
+        return
+    end
+    local function go()
+        pcall(function()
+            hl.dispatch(hl.dsp.focus({ window = w }))
+        end)
+    end
+    go()
+    if hl.timer then
+        pcall(hl.timer, go, { timeout = 80, type = "oneshot" })
+    end
+end
+
+if hl.on then
+    hl.on("window.open_early", phylax_focus)
+    hl.on("window.open", phylax_focus)
+    hl.on("window.urgent", phylax_focus)
+end
 
 -- Dolphin / Nautilus are tiled app windows, not HUDs. Punching wallpaper
 -- through the icon view (design.transparency) washed out labels and

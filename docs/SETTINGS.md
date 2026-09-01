@@ -47,7 +47,7 @@ Six groups, 21 pages. Catalog lives in
 | Devices | Bluetooth | `bluetooth` | Adapter power, nearby/connected lists, connect/disconnect/forget via `Bluetooth` (BlueZ). |
 | System | Storage | `storage` | Internal and external drive cards via `Storage` (`lsblk`, sysfs link speed). Eject uses `udisksctl` unmount + power-off. |
 | System | Backup | `backup` | Live Snapper status (`Snapshots`). `backup.preUpdateSnapshot` drives `modern update`. Create/delete via `pkexec snapper`. Restore is gated. |
-| System | Firewall | `firewall` | Live UFW (`Firewall`). Listing, enable/disable, and allow/deny rules via `pkexec /usr/bin/ufw` (same polkit action as the store). Rules persist in `/etc/ufw`. Enable forces deny incoming, allow outgoing, deny routed. No `config.json` keys, no Restore, no `ufw reset`. |
+| System | Firewall | `firewall` | Live UFW (`Firewall`). Status is unprivileged (`scripts/ufw-status.sh` reads `/etc/ufw`). Enable/disable is one `pkexec` of `scripts/ufw-apply.sh`. Allow/deny add/delete via `pkexec /usr/bin/ufw`. Rules persist in `/etc/ufw`. Enable forces deny incoming, allow outgoing, deny routed. No `config.json` keys, no Restore, no `ufw reset`. |
 | System | Update | `system` | Pending packages via `checkupdates` (`Update`). `modern update` / `modern mirrors` (pkexec from Settings). |
 
 ## App Store
@@ -102,7 +102,7 @@ a bar popup is showing.
 | System update | `modern update` | Overlay with live log and progress. Auto-closes on success and posts a notification. Snapshot-before-update if `backup.preUpdateSnapshot` and Snapper is ready; otherwise the update still runs. |
 | Mirrorlist | `modern mirrors` | `reflector` using `network.mirrorCountry`. **Update mirrors** sits next to **Update system**. **Search for Updates** on the status card re-runs `checkupdates` and shows a spinner while it runs. |
 | Snapshots | `snapper -c root list` / `create` / `delete` | Settings lists snapshots with timestamps, can create (pkexec), and can request delete. **Restore** is gated (`docs/BACKUP.md`). The Snapper/Restic enable toggles were removed: they did not write `/etc/snapper` or configure a restic repo. |
-| Firewall | `ufw status numbered` / `enable` / `disable` / `allow` / `deny` / `delete NUM` | Settings lists numbered allow/deny rules, can add (port required) and delete. Enable sets deny incoming, allow outgoing, deny routed, then `--force enable`. Disable asks for confirmation. No `reset`, no default-allow, no config.json copy of rules. |
+| Firewall | `ufw-status.sh` / `ufw-apply.sh` / `allow` / `deny` / `delete NUM` | Settings lists numbered allow/deny rules from `/etc/ufw` without a password. Enable and disable are one `pkexec` of `ufw-apply.sh` (defaults + `--force enable` in that process). Add and delete use `pkexec /usr/bin/ufw`. Disable asks for confirmation. No `reset`, no default-allow, no config.json copy of rules. |
 
 ## How to add a page
 

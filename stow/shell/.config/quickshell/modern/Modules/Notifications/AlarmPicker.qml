@@ -46,6 +46,7 @@ MPopup {
             Layout.fillWidth: true
             wrapMode: Text.Wrap
             elide: Text.ElideNone
+            horizontalAlignment: Text.AlignHCenter
         }
 
         RowLayout {
