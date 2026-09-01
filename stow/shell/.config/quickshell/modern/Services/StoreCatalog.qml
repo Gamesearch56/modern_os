@@ -63,7 +63,16 @@ Item {
             }
         } catch (err) {
         }
-        return n;
+        for (let s = 0; s < stems.length; s++) {
+            if (root._themeIcon(stems[s]))
+                return stems[s];
+        }
+        return "";
+    }
+
+    function _themeIcon(name: string): bool {
+        const p = Quickshell.iconPath(String(name || ""), true);
+        return String(p || "").length > 0;
     }
 
     function packages(id: string) {

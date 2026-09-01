@@ -14,6 +14,7 @@ Singleton {
     property string categoryId: "discover"
     property string query: ""
     property var results: []
+    property var systemPkgs: []
     property var sections: []
     property bool loading: false
     property string _mode: ""
@@ -33,6 +34,14 @@ Singleton {
         id: catalog
         onLoaded: {
             if (root.open)
+                root.reload();
+        }
+    }
+
+    StoreClassify {
+        id: classify
+        onShippedReadyChanged: {
+            if (classify.shippedReady && root.open)
                 root.reload();
         }
     }
@@ -152,7 +161,14 @@ Singleton {
     }
 
     function iconForPkg(name: string): string {
-        return catalog.iconForPkg(name);
+        const found = catalog.iconForPkg(name);
+        if (String(found || "").length)
+            return found;
+        return classify.iconFor(name);
+    }
+
+    function isSystem(name: string): bool {
+        return classify.isSystem(name, catalog.categories);
     }
 
     function _valid(name: string): bool {
@@ -169,8 +185,10 @@ Singleton {
         if (argv.length < 2) {
             if (mode === "featured")
                 root.sections = [];
-            else
+            else {
                 root.results = [];
+                root.systemPkgs = [];
+            }
             root.loading = false;
             return;
         }
@@ -199,6 +217,17 @@ Singleton {
         }
     }
 
+    function _applyRows(rows) {
+        if (root.categoryId === "installed" && root.query.trim().length === 0) {
+            const split = classify.splitInstalled(rows, catalog.categories);
+            root.results = split.apps;
+            root.systemPkgs = split.system;
+            return;
+        }
+        root.results = rows;
+        root.systemPkgs = [];
+    }
+
     function _rows(text: string) {
         try {
             const parsed = JSON.parse(String(text || "").trim() || "[]");
@@ -214,6 +243,7 @@ Singleton {
             if (root._mode === "explicit") {
                 if (code !== 0) {
                     root.results = [];
+                    root.systemPkgs = [];
                     root.loading = false;
                     Logger.warn("Store", "explicit list failed");
                     return;
@@ -225,7 +255,7 @@ Singleton {
             if (root._mode === "featured")
                 root.sections = catalog.groupRows(rows);
             else
-                root.results = rows;
+                root._applyRows(rows);
             root.loading = false;
             if (code !== 0 && rows.length === 0) {
                 const t = String(err || "").trim();

@@ -12,9 +12,15 @@ Item {
 
     signal browse()
 
+    property bool _pointer: false
+
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     activeFocusOnTab: true
+    onActiveFocusChanged: {
+        if (!root.activeFocus)
+            root._pointer = false;
+    }
     Accessible.role: Accessible.Button
     Accessible.name: I18n.t(root.titleKey)
     Accessible.onPressAction: root.browse()
@@ -30,8 +36,8 @@ Item {
         anchors.fill: parent
         radius: Tokens.radius.full
         color: Colors.color.surfaceContainerHighest
-        border.color: root.activeFocus || hover.hovered ? Colors.color.primary : Colors.color.outline
-        border.width: root.activeFocus ? 2 : 1
+        border.color: root.activeFocus && !root._pointer ? Colors.color.primary : Colors.color.outline
+        border.width: root.activeFocus && !root._pointer ? Tokens.stroke.focus : Tokens.stroke.hairline
 
         Behavior on border.color {
             ColorAnimation {
@@ -61,15 +67,11 @@ Item {
         }
     }
 
-    HoverHandler {
-        id: hover
-    }
-
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            root.forceActiveFocus();
+            root._pointer = true;
             root.browse();
         }
     }

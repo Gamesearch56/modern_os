@@ -7,7 +7,9 @@ import "../../Services"
 Item {
     id: root
 
-    readonly property bool empty: !Store.loading && Store.results.length === 0
+    readonly property bool installed: Store.categoryId === "installed" && Store.query.trim().length === 0
+    readonly property bool empty: !Store.loading && Store.results.length === 0 && (!root.installed || Store.systemPkgs.length === 0)
+    readonly property Flickable flick: installedPane.visible ? installedPane : listView
 
     ColumnLayout {
         anchors.fill: parent
@@ -35,6 +37,7 @@ Item {
         }
 
         ListView {
+            id: listView
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
@@ -42,11 +45,42 @@ Item {
             reuseItems: true
             boundsBehavior: Flickable.StopAtBounds
             model: Store.results.length
-            visible: !root.empty
+            visible: !root.empty && !root.installed
             delegate: PkgRow {
                 required property int index
                 width: ListView.view.width
                 pkg: Store.results[index] || ({})
+                removable: !Store.isSystem(String(pkg && pkg.name || ""))
+            }
+        }
+
+        Flickable {
+            id: installedPane
+            visible: !root.empty && root.installed
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            contentWidth: width
+            contentHeight: installedCol.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
+
+            ColumnLayout {
+                id: installedCol
+                width: parent.width
+                spacing: Tokens.spacing.xs
+
+                Repeater {
+                    model: Store.results.length
+                    PkgRow {
+                        required property int index
+                        Layout.fillWidth: true
+                        pkg: Store.results[index] || ({})
+                    }
+                }
+
+                SystemGroup {
+                    packages: Store.systemPkgs
+                }
             }
         }
 

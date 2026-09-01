@@ -74,6 +74,7 @@ Scope {
 
                     FocusScope {
                         id: contentScope
+                        property bool _pointer: false
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
@@ -100,6 +101,8 @@ Scope {
 
                         onActiveFocusChanged: {
                             if (!contentScope.activeFocus || contentWalk.ownsFocus())
+                                return;
+                            if (contentScope._pointer)
                                 return;
                             contentScope.focusFirst();
                         }
@@ -148,8 +151,12 @@ Scope {
                                     width: pane.width
                                     height: Math.max(pane.height, pane.contentHeight)
                                     onPressed: (mouse) => {
+                                        contentScope._pointer = true;
                                         contentScope.forceActiveFocus();
                                         mouse.accepted = false;
+                                        Qt.callLater(() => {
+                                            contentScope._pointer = false;
+                                        });
                                     }
                                 }
 

@@ -117,13 +117,12 @@ GridLayout {
                 anchors.fill: parent
                 enabled: root.enabled
                 cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    card.forceActiveFocus();
-                    root._pick(modelData);
-                }
+                onPressed: ring.markPointer()
+                onClicked: root._pick(modelData)
             }
 
             MFocusRing {
+                id: ring
                 radius: card.radius
             }
         }
