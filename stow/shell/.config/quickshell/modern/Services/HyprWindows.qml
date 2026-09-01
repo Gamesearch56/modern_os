@@ -167,32 +167,6 @@ QtObject {
         root.host.dispatch("hl.dsp.window.kill({ window = 'address:" + addr + "' })");
     }
 
-    function exclusiveFullscreen(t: var): bool {
-        if (!t)
-            return false;
-        const fs = t.fullscreen;
-        if (fs === true || fs === 2 || fs === 3)
-            return true;
-        const ipc = t.lastIpcObject;
-        if (!ipc)
-            return false;
-        const v = ipc.fullscreen;
-        if (v === true || v === 2 || v === 3 || v === "2" || v === "3")
-            return true;
-        const c = ipc.fullscreenClient;
-        return c === 2 || c === 3 || c === "2" || c === "3";
-    }
-
-    function fullscreenOnScreen(screen: var): bool {
-        const list = Hyprland.toplevels?.values ?? [];
-        for (let i = 0; i < list.length; i++) {
-            const t = list[i];
-            if (root.exclusiveFullscreen(t) && root.windowOnScreen(t, screen))
-                return true;
-        }
-        return false;
-    }
-
     function windowOnScreen(toplevel: var, screen: var): bool {
         const mon = root.host.monitorForScreen(screen);
         if (!mon || !toplevel)
