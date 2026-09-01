@@ -7,7 +7,6 @@ Item {
 
     property bool checked: false
     property bool enabled: true
-    property bool _pointerFocus: false
 
     signal toggled(bool value)
 
@@ -19,11 +18,6 @@ Item {
     Accessible.checkable: true
     Accessible.checked: root.checked
     Accessible.onToggleAction: root.toggled(!root.checked)
-
-    onActiveFocusChanged: {
-        if (!root.activeFocus)
-            root._pointerFocus = false;
-    }
 
     Keys.onPressed: (event) => {
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
@@ -76,14 +70,14 @@ Item {
         enabled: root.enabled
         cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: {
-            root._pointerFocus = true;
+            ring.markPointer();
             root.forceActiveFocus();
             root.toggled(!root.checked);
         }
     }
 
     MFocusRing {
+        id: ring
         radius: Tokens.radius.full
-        active: root.activeFocus && !root._pointerFocus
     }
 }

@@ -77,16 +77,15 @@ Item {
                     anchors.fill: parent
                     enabled: root.enabled
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        root.forceActiveFocus();
-                        root.selected(opt.value);
-                    }
+                    onPressed: ring.markPointer()
+                    onClicked: root.selected(opt.value)
                 }
             }
         }
     }
 
     MFocusRing {
+        id: ring
         radius: Tokens.radius.full
     }
 }

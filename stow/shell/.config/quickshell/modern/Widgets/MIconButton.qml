@@ -126,6 +126,7 @@ Item {
             root._hover = false;
             root._suppressHover = false;
         }
+        onPressed: ring.markPointer()
         onClicked: (mouse) => {
             if (mouse.button === Qt.MiddleButton)
                 root.middleClicked();
@@ -158,8 +159,9 @@ Item {
     }
 
     MFocusRing {
+        id: ring
         radius: Tokens.radius.full
         ringColor: root.close ? Colors.color.error : Colors.color.primary
-        active: root.activeFocus || root.highlighted
+        active: root.highlighted || (root.activeFocus && !ring._pointer)
     }
 }

@@ -16,6 +16,7 @@ Item {
     property bool allowEmpty: false
     property string emptyValue: ""
     property string emptyKey: "settings.selectNone"
+    property bool _pointer: false
 
     signal selected(var value)
 
@@ -23,6 +24,10 @@ Item {
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
+    onActiveFocusChanged: {
+        if (!root.activeFocus)
+            root._pointer = false;
+    }
     Accessible.role: Accessible.ComboBox
     Accessible.name: root._label.length > 0 ? root._label : (root.placeholderKey.length > 0 ? I18n.t(root.placeholderKey) : "")
     Accessible.onPressAction: {
@@ -94,8 +99,8 @@ Item {
         anchors.fill: parent
         radius: Tokens.radius.full
         color: Colors.color.surfaceContainerHighest
-        border.color: menu.open || root.activeFocus ? Colors.color.primary : Colors.color.outline
-        border.width: menu.open || root.activeFocus ? 2 : 1
+        border.color: root.activeFocus && !root._pointer ? Colors.color.primary : Colors.color.outline
+        border.width: root.activeFocus && !root._pointer ? Tokens.stroke.focus : Tokens.stroke.hairline
 
         Behavior on border.color {
             ColorAnimation {
@@ -132,7 +137,7 @@ Item {
         enabled: root.enabled
         cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: {
-            root.forceActiveFocus();
+            root._pointer = true;
             menu.open = !menu.open;
         }
     }
@@ -206,7 +211,7 @@ Item {
                 if (root._searchable) {
                     Qt.callLater(() => {
                         if (menu.open)
-                            search.editor.forceActiveFocus();
+                            search.focusToType();
                     });
                 }
                 return;

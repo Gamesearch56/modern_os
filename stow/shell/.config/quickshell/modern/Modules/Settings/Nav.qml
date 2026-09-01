@@ -21,7 +21,7 @@ FocusScope {
     signal contentRequested()
 
     function focusSearch() {
-        search.forceActiveFocus();
+        search.focusToType();
         root.revealActive();
     }
 

@@ -56,13 +56,12 @@ ColumnLayout {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: {
-                head.forceActiveFocus();
-                root.expanded = !root.expanded;
-            }
+            onPressed: ring.markPointer()
+            onClicked: root.expanded = !root.expanded
         }
 
         MFocusRing {
+            id: ring
             radius: Tokens.radius.small
         }
     }

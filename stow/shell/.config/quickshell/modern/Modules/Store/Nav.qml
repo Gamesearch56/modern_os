@@ -30,7 +30,7 @@ Item {
     }
 
     function focusSearch() {
-        search.forceActiveFocus();
+        search.focusToType();
     }
 
     ColumnLayout {

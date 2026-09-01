@@ -90,10 +90,8 @@ RowLayout {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    if (desc.length) {
-                        card.forceActiveFocus();
+                    if (desc.length)
                         root.picked(desc);
-                    }
                 }
             }
         }
