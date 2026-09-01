@@ -39,7 +39,7 @@ jobs:
 
       # Scripts come from main so a later ISO-script fix can rebuild an
       # older pin. --tag still writes iso-pin / Settings Update target.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.repository.default_branch }}
 
@@ -50,7 +50,7 @@ jobs:
           ./scripts/iso-build.sh --mkarchiso --out /tmp/modern-iso --tag "$TAG"
           find /tmp/modern-iso -name '*.iso' -ls
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: modernos-iso
           path: /tmp/modern-iso/*.iso
@@ -64,7 +64,7 @@ jobs:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: modernos-iso
           path: iso-out

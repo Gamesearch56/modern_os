@@ -4,6 +4,25 @@
 # come from the caller.
 # shellcheck disable=SC2154
 
+# mkarchiso does s/#.*// and keeps leftover spaces as the package name.
+iso_sanitize_package_list() {
+    local src="$1"
+    local tmp line
+    local -A seen=()
+    [ -f "$src" ] || return 0
+    tmp="$(mktemp)"
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%%#*}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [ -n "$line" ] || continue
+        [ -n "${seen[$line]:-}" ] && continue
+        seen[$line]=1
+        printf '%s\n' "$line"
+    done <"$src" >"$tmp"
+    mv "$tmp" "$src"
+}
+
 iso_attach_aur_repo() {
     local profile="$1"
     local list="$ROOT/iso/releng/packages.aur.x86_64"
@@ -37,6 +56,9 @@ iso_attach_aur_repo() {
         sudo -u "$builder" makepkg --dir "$src" -s --noconfirm
         find "$src" -maxdepth 1 -name '*.pkg.tar.*' ! -name '*.sig' \
             -exec cp -a {} "$repo/" \;
+        if [ -f "$profile/packages.x86_64" ] && ! grep -qxF "$pkg" "$profile/packages.x86_64"; then
+            printf '%s\n' "$pkg" >>"$profile/packages.x86_64"
+        fi
     done <"$list"
 
     shopt -s nullglob
