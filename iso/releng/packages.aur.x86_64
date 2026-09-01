@@ -1,0 +1,3 @@
+# AUR-only overlay. iso-build.sh builds these into a file:// repo
+# mkarchiso can see. Official extra already has hyprland/quickshell/awww.
+calamares
