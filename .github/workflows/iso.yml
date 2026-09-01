@@ -1,0 +1,74 @@
+# Friend ISO for a GitHub Release. Runs on Actions, never on the
+# development PC (iso-build.sh refuses --mkarchiso when
+# /home/bastianweigand exists).
+name: ISO
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build and attach (vX.Y.Z)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  iso:
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || (github.event_name == 'release' && !github.event.release.prerelease)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    container:
+      image: archlinux:latest
+      options: --privileged
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: Require vX.Y.Z
+        run: |
+          case "$TAG" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "ISO pin must be vX.Y.Z (got $TAG)" >&2; exit 1 ;;
+          esac
+          test ! -d /home/bastianweigand
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: mkarchiso
+        run: |
+          pacman -Syu --noconfirm --needed archiso git python jq
+          mkdir -p /tmp/modern-iso
+          ./scripts/iso-build.sh --mkarchiso --out /tmp/modern-iso --tag "$TAG"
+          find /tmp/modern-iso -name '*.iso' -ls
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: modernos-iso
+          path: /tmp/modern-iso/*.iso
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: iso
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: modernos-iso
+          path: iso-out
+      - name: Attach ISO to Release
+        run: |
+          shopt -s nullglob
+          files=(iso-out/*.iso)
+          [ ${#files[@]} -gt 0 ] || { echo "no ISO artifact" >&2; exit 1; }
+          gh release upload "$TAG" "${files[@]}" --clobber
