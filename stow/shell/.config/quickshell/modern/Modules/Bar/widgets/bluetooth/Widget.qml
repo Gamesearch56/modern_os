@@ -1,13 +1,13 @@
 import QtQuick
-import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "../../"
 
 Item {
     id: root
-    implicitWidth: row.implicitWidth + Tokens.spacing.xs
-    implicitHeight: Tokens.spacing.xxl
+    implicitWidth: chip.implicitWidth
+    implicitHeight: Config.bar.height
 
     readonly property string _device: {
         const list = Bluetooth.devices?.values ?? [];
@@ -18,24 +18,14 @@ Item {
         return "";
     }
 
-    RowLayout {
-        id: row
+    BarIconLabel {
+        id: chip
         anchors.centerIn: parent
-        spacing: Tokens.spacing.xs
-
-        MIconButton {
-            tabFocus: false
-            iconName: Bluetooth.powered ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
-            key: "bar.bluetooth"
-            onClicked: Settings.openAt("bluetooth", "")
-        }
-
-        MText {
-            visible: !BarLayout.vertical && root._device.length > 0
-            value: root._device
-            styleName: "labelSmall"
-            elide: Text.ElideRight
-            Layout.maximumWidth: Tokens.spacing.xxl * 4
-        }
+        iconName: Bluetooth.powered ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
+        key: "bar.bluetooth"
+        label: root._device
+        showLabel: !BarLayout.vertical
+        checked: Settings.open && Settings.sectionId === "bluetooth"
+        onClicked: Settings.openAt("bluetooth", "")
     }
 }

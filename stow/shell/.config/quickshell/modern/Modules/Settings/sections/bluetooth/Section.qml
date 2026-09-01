@@ -11,7 +11,7 @@ Item {
 
     property var dialogDevice: null
     readonly property bool _online: !!(root.dialogDevice && root.dialogDevice.connected)
-    readonly property bool _paired: !!(root.dialogDevice && root.dialogDevice.paired)
+    readonly property bool _paired: !!(root.dialogDevice && (root.dialogDevice.paired || root.dialogDevice.bonded))
 
     implicitHeight: col.implicitHeight
 
@@ -90,6 +90,8 @@ Item {
                 Layout.fillWidth: true
                 devices: Bluetooth.availableDevices
                 emptyKey: "settings.bluetooth.emptyAvailable"
+                scanningKey: "settings.bluetooth.searching"
+                scanning: Bluetooth.refreshing
                 onDeviceClicked: (d) => root.dialogDevice = d
             }
         }

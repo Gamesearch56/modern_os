@@ -107,10 +107,14 @@ FocusScope {
                     Layout.fillWidth: true
                 }
 
-                MButton {
+                MIconButton {
                     visible: root.destructiveKey.length > 0
-                    kind: "text"
+                    close: true
+                    escapeClicks: false
+                    iconName: "edit-delete-symbolic"
                     key: root.destructiveKey
+                    size: Tokens.spacing.xl
+                    iconSize: Tokens.icon.xs
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                     onClicked: root.destructiveClicked()
                 }

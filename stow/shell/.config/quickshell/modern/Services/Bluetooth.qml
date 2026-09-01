@@ -25,22 +25,36 @@ Singleton {
         let s = "";
         for (let i = 0; i < list.length; i++) {
             const d = list[i];
-            s += String(d.address || "") + ":" + (d.paired ? "1" : "0") + ":" + (d.connected ? "1" : "0") + ",";
+            s += String(d.address || "") + ":" + (d.paired ? "1" : "0") + ":"
+                + (d.bonded ? "1" : "0") + ":" + (d.connected ? "1" : "0") + ":"
+                + String(d.name || d.deviceName || "") + ",";
         }
         return s;
     }
 
     property var _connectTried: ({})
+    property var _seenAt: ({})
+    property int _seenSeq: 0
     property bool refreshing: false
     property bool _uiReady: false
 
     Timer {
         id: refreshBusy
-        interval: Math.max(Motion.extraLongMs, 1)
+        interval: Math.max(Motion.bluetoothScanMs, 1)
         onTriggered: root.refreshing = false
     }
 
+    Timer {
+        id: refreshKick
+        interval: Math.max(Motion.shortMs, 1)
+        onTriggered: {
+            if (root.adapter && root.powered)
+                root.adapter.discovering = true;
+        }
+    }
+
     on_DevSigChanged: {
+        root._stampSeen();
         if (root._uiReady)
             root._syncAutoAudio();
     }
@@ -90,19 +104,12 @@ Singleton {
 
     function refresh() {
         const a = root.adapter;
-        if (!a || !root.powered)
+        if (!a || !root.powered || root.refreshing)
             return;
         root.refreshing = true;
         refreshBusy.restart();
-        if (a.discovering) {
-            a.discovering = false;
-            Qt.callLater(() => {
-                if (root.adapter && root.powered)
-                    root.adapter.discovering = true;
-            });
-        } else {
-            a.discovering = true;
-        }
+        a.discovering = false;
+        refreshKick.restart();
     }
 
     function connectDevice(device: var) {
@@ -150,6 +157,14 @@ Singleton {
         if (!device)
             return "";
         return String(device.name || device.deviceName || device.address || "").trim();
+    }
+
+    // BlueZ uses the MAC as Alias when a BLE advertiser has no GAP name.
+    function isNamed(device: var): bool {
+        const label = String(device?.name || device?.deviceName || "").trim();
+        if (!label.length)
+            return false;
+        return !/^([0-9A-F]{2}[:-]){5}[0-9A-F]{2}$/i.test(label);
     }
 
     function deviceIcon(device: var): string {
@@ -203,18 +218,73 @@ Singleton {
         root._connectTried = next;
     }
 
+    function _stampSeen() {
+        const list = root._list(root.devices);
+        const present = {};
+        const next = Object.assign({}, root._seenAt);
+        let seq = root._seenSeq;
+        let changed = false;
+        for (let i = 0; i < list.length; i++) {
+            const d = list[i];
+            const addr = String(d?.address || "");
+            if (!addr.length)
+                continue;
+            if (!(d.connected || d.paired || d.bonded || d.trusted || root.isNamed(d)))
+                continue;
+            present[addr] = true;
+            if (next[addr] === undefined) {
+                seq += 1;
+                next[addr] = seq;
+                changed = true;
+            }
+        }
+        if (list.length > 0) {
+            for (const k in next) {
+                if (!present[k]) {
+                    delete next[k];
+                    changed = true;
+                }
+            }
+        }
+        if (!changed)
+            return;
+        root._seenAt = next;
+        root._seenSeq = seq;
+    }
+
     function _byConnected(want: bool): var {
         const out = [];
         const list = root._list(root.devices);
         for (let i = 0; i < list.length; i++) {
             const d = list[i];
             void d.connected;
-            if (!!d.connected === want)
-                out.push(d);
+            void d.paired;
+            void d.bonded;
+            void d.name;
+            void d.deviceName;
+            if (!!d.connected !== want)
+                continue;
+            if (!want && !(d.paired || d.bonded || d.trusted || root.isNamed(d)))
+                continue;
+            out.push(d);
+        }
+        if (!want) {
+            const seen = root._seenAt;
+            out.sort((a, b) => {
+                const ak = !!(a && (a.paired || a.bonded));
+                const bk = !!(b && (b.paired || b.bonded));
+                if (ak !== bk)
+                    return ak ? -1 : 1;
+                return (seen[String(b?.address || "")] || 0) - (seen[String(a?.address || "")] || 0);
+            });
         }
         return out;
     }
 
     readonly property var connectedDevices: { void root._devSig; return root._byConnected(true); }
-    readonly property var availableDevices: { void root._devSig; return root._byConnected(false); }
+    readonly property var availableDevices: {
+        void root._devSig;
+        void root._seenSeq;
+        return root._byConnected(false);
+    }
 }
