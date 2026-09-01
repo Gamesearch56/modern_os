@@ -25,7 +25,7 @@ MPopup {
         if (Alarm.dialogOpen !== root.open)
             Alarm.dialogOpen = root.open;
         if (root.open)
-            Qt.callLater(() => minutesField.editor.forceActiveFocus());
+            Qt.callLater(() => minutesField.focusToType());
     }
 
     Component.onCompleted: root.open = Alarm.dialogOpen

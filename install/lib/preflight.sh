@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Pre-install sanity checks. Source, never execute directly.
+# TARGET is exported by install.sh before this file is sourced.
+: "${TARGET:=}"
 
 preflight_checks() {
     local failures=0

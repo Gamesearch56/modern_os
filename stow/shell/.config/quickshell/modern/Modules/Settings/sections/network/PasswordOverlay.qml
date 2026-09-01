@@ -15,7 +15,7 @@ MOverlay {
     onClosed: root.password = ""
     onOpenChanged: {
         if (root.open)
-            Qt.callLater(() => pwdField.forceActiveFocus());
+            Qt.callLater(() => pwdField.focusToType());
     }
 
     ColumnLayout {

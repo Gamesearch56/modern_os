@@ -48,7 +48,7 @@ done
 
 [ -f "$WALLPAPER" ] || die "missing wallpaper $WALLPAPER"
 
-abs_out="$(python3 -c 'import os,sys; print(os.path.realpath(os.path.abspath(sys.argv[1])))' "$OUT")"
+abs_out="$(mkdir -p "$OUT" && readlink -f "$OUT")"
 case "$abs_out" in
     /home/bastianweigand/*)
         case "$abs_out" in
@@ -62,7 +62,6 @@ case "$abs_out" in
         die "refusing to write live config paths"
         ;;
 esac
-mkdir -p "$abs_out"
 
 if [ -d /home/bastianweigand ] && [ "$DO_MKARCHISO" -eq 1 ]; then
     die "refusing mkarchiso on the development PC"
@@ -77,7 +76,7 @@ if [ -z "$pin" ]; then
 fi
 if [ -z "$pin" ]; then
     pin="v0.1.0"
-    log "no release tag in this clone — pinning $pin (create a GitHub Release before friends install)"
+    log "no release tag in this clone — pinning $pin"
 fi
 [[ "$pin" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "ISO pin must be vX.Y.Z (got $pin)"
 

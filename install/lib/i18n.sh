@@ -13,7 +13,7 @@ I18N_LANG="${I18N_LANG:-${LANG%%_*}}"
 # file has it. There is no install.* tree — installer copy is English.
 t() {
     local key="$1"; shift || true
-    local jq_path=".$(echo "$key" | sed 's/\./\./g')"
+    local jq_path=".$key"
     local value
     value="$(jq -r "$jq_path // empty" "$TRANSLATIONS_DIR/$I18N_LANG.json" 2>/dev/null)"
     if [ -z "$value" ] && [ "$I18N_LANG" != "en" ]; then

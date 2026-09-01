@@ -124,14 +124,13 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: root.hoverHighlight ? Qt.PointingHandCursor : Qt.ArrowCursor
         onPressed: (mouse) => {
+            ring.markPointer();
             if (root._onTrailing(mouse.x, mouse.y))
                 mouse.accepted = false;
         }
         onClicked: (mouse) => {
             if (root._onTrailing(mouse.x, mouse.y))
                 return;
-            if (root.hoverHighlight)
-                root.forceActiveFocus();
             if (mouse.button === Qt.RightButton)
                 root.rightClicked();
             else
@@ -241,9 +240,10 @@ Item {
     }
 
     MFocusRing {
+        id: ring
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
-        active: (root._nav && root.activeFocus)
-            || (!root.compact && !root._nav && (root.selected || (root.hoverHighlight && (root.activeFocus || hover.hovered))))
+        active: ring.parent && ring.parent.activeFocus && !ring._pointer
+            && (root._nav || (!root.compact && root.hoverHighlight))
         ringColor: Colors.color.primary
     }
 }

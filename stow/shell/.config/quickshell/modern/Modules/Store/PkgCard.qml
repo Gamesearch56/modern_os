@@ -35,8 +35,8 @@ MCard {
                 anchors.centerIn: parent
                 name: root.iconName
                 size: Tokens.icon.lg
-                tint: false
-                preferSymbolic: false
+                tint: root.iconName.indexOf("-symbolic") !== -1
+                preferSymbolic: root.iconName.indexOf("-symbolic") !== -1
             }
         }
 

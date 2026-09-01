@@ -8,6 +8,9 @@ Item {
     property alias text: input.text
     property string placeholderKey: ""
     property bool expanded: false
+    property bool _pointer: false
+
+    readonly property bool _a11yFocus: input.activeFocus && !root._pointer
 
     signal textEdited()
 
@@ -19,8 +22,8 @@ Item {
         anchors.fill: parent
         radius: Tokens.radius.medium
         color: Colors.color.surfaceContainerHighest
-        border.color: input.activeFocus ? Colors.color.primary : Colors.color.outline
-        border.width: input.activeFocus ? 2 : 1
+        border.color: root._a11yFocus ? Colors.color.primary : Colors.color.outline
+        border.width: root._a11yFocus ? Tokens.stroke.focus : Tokens.stroke.hairline
 
         Behavior on border.color {
             ColorAnimation {
@@ -96,6 +99,23 @@ Item {
         key: root.placeholderKey
         styleName: "bodyMedium"
         color: Colors.color.onSurfaceVariant
+    }
+
+    TapHandler {
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        grabPermissions: PointerHandler.TakeOverForbidden
+        onPressedChanged: {
+            if (pressed)
+                root._pointer = true;
+        }
+    }
+
+    Connections {
+        target: input
+        function onActiveFocusChanged() {
+            if (!input.activeFocus)
+                root._pointer = false;
+        }
     }
 
     onActiveFocusChanged: {

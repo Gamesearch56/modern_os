@@ -102,6 +102,7 @@ Item {
                 preventStealing: true
                 cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onPressed: (mouse) => {
+                    ring.markPointer();
                     root.forceActiveFocus();
                     root._dragging = true;
                     root._lockFlick(true);
@@ -162,6 +163,7 @@ Item {
     }
 
     MFocusRing {
+        id: ring
         radius: Tokens.radius.full
     }
 

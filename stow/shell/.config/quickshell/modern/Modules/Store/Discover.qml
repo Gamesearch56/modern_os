@@ -7,6 +7,7 @@ import "../../Services"
 Item {
     id: root
 
+    property alias flick: pane
     readonly property bool empty: !Store.loading && Store.sections.length === 0
 
     ColumnLayout {
@@ -20,6 +21,7 @@ Item {
         }
 
         Flickable {
+            id: pane
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true

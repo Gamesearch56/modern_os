@@ -15,6 +15,9 @@ Item {
     property int maximumLength: 32767
     property bool escapeCloses: false
     property bool captureArrows: false
+    property bool _pointer: false
+
+    readonly property bool _a11yFocus: input.activeFocus && !root._pointer
 
     signal accepted()
     signal textEdited()
@@ -38,12 +41,29 @@ Item {
             input.forceActiveFocus();
     }
 
+    TapHandler {
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        grabPermissions: PointerHandler.TakeOverForbidden
+        onPressedChanged: {
+            if (pressed)
+                root._pointer = true;
+        }
+    }
+
+    Connections {
+        target: input
+        function onActiveFocusChanged() {
+            if (!input.activeFocus)
+                root._pointer = false;
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.full
         color: Colors.color.surfaceContainerHighest
-        border.color: input.activeFocus ? Colors.color.primary : Colors.color.outline
-        border.width: input.activeFocus ? 2 : 1
+        border.color: root._a11yFocus ? Colors.color.primary : Colors.color.outline
+        border.width: root._a11yFocus ? Tokens.stroke.focus : Tokens.stroke.hairline
 
         Behavior on border.color {
             ColorAnimation {
@@ -127,6 +147,11 @@ Item {
     }
 
     function forceActiveFocus() {
+        input.forceActiveFocus();
+    }
+
+    function focusToType() {
+        root._pointer = true;
         input.forceActiveFocus();
     }
 }

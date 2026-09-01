@@ -73,22 +73,16 @@ Scope {
                         Nav {
                             id: nav
                             anchors.fill: parent
+                            tabTarget: content
+                            onContentRequested: content.focusFirst()
                         }
                     }
 
-                    Item {
+                    Content {
+                        id: content
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-
-                        Discover {
-                            anchors.fill: parent
-                            visible: Store.query.trim().length === 0 && Store.categoryId === "discover"
-                        }
-
-                        Results {
-                            anchors.fill: parent
-                            visible: Store.query.trim().length > 0 || Store.categoryId !== "discover"
-                        }
+                        onNavRequested: nav.focusActive()
                     }
                 }
             }

@@ -147,16 +147,17 @@ Item {
         enabled: root.enabled && !root.busy
         hoverEnabled: true
         cursorShape: (root.enabled && !root.busy) ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onClicked: {
-            root.forceActiveFocus();
-            root.clicked();
+        onClicked: root.clicked()
+        onPressed: {
+            ring.markPointer();
+            bg.scale = 0.97;
         }
-        onPressed: bg.scale = 0.97
         onReleased: bg.scale = 1
         onCanceled: bg.scale = 1
     }
 
     MFocusRing {
+        id: ring
         radius: Tokens.radius.full
     }
 

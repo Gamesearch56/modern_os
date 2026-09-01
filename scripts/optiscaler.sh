@@ -49,7 +49,9 @@ cmd_fetch() {
         die "network failed talking to GitHub API (${API}). Check connectivity and retry."
     fi
     tag="$(printf '%s' "$json" | jq -r '.tag_name // empty')"
-    [ -n "$tag" ] && [ "$tag" != "null" ] || die "GitHub API returned no tag_name"
+    if [ -z "$tag" ] || [ "$tag" = "null" ]; then
+        die "GitHub API returned no tag_name"
+    fi
     url="$(printf '%s' "$json" | jq -r '.assets[]? | select(.name | test("\\.(7z|zip)$")) | .browser_download_url' | head -n1)"
     name="$(printf '%s' "$json" | jq -r '.assets[]? | select(.name | test("\\.(7z|zip)$")) | .name' | head -n1)"
     [ -n "$url" ] || die "no .7z/.zip asset on release ${tag}"

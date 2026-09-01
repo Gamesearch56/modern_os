@@ -155,8 +155,9 @@ Rectangle {
                             }
 
                             MFocusRing {
+                                id: ring
                                 radius: Tokens.radius.small
-                                active: row.activeFocus || (row.canEdit && drag.containsMouse && !drag.drag.active)
+                                active: row.activeFocus && !ring._pointer
                             }
                         }
                         MouseArea {
@@ -168,6 +169,7 @@ Rectangle {
                             drag.target: tile
                             drag.axis: Drag.XAndYAxis
                             onPressed: {
+                                ring.markPointer();
                                 row._moved = false;
                                 if (root.board)
                                     root.board.beginDrag(root.slotId, row.index, row.itemId);
