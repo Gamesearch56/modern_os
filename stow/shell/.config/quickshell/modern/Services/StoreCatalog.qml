@@ -63,7 +63,7 @@ Item {
             }
         } catch (err) {
         }
-        return n;
+        return "";
     }
 
     function packages(id: string) {

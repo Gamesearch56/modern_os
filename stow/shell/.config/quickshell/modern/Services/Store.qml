@@ -40,6 +40,10 @@ Singleton {
 
     StoreClassify {
         id: classify
+        onShippedReadyChanged: {
+            if (classify.shippedReady && root.open)
+                root.reload();
+        }
     }
 
     StoreMutate {
@@ -157,7 +161,10 @@ Singleton {
     }
 
     function iconForPkg(name: string): string {
-        return catalog.iconForPkg(name);
+        const found = catalog.iconForPkg(name);
+        if (String(found || "").length)
+            return found;
+        return classify.iconFor(name);
     }
 
     function isSystem(name: string): bool {

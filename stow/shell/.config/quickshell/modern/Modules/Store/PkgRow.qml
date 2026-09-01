@@ -13,9 +13,12 @@ MListItem {
     readonly property string _name: String(pkg && pkg.name || "")
     property bool removable: true
 
-    iconName: Store.iconForPkg(root._name)
-    tintIcon: false
-    preferSymbolic: false
+    readonly property string _icon: Store.iconForPkg(root._name)
+    readonly property bool _themeIcon: root._icon.indexOf("-symbolic") !== -1
+
+    iconName: root._icon
+    tintIcon: root._themeIcon
+    preferSymbolic: root._themeIcon
     hoverHighlight: false
     titleValue: root._name
     subtitleValue: String(pkg && pkg.desc || "")

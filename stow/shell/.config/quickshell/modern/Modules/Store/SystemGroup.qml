@@ -12,6 +12,7 @@ ColumnLayout {
 
     spacing: Tokens.spacing.md
     Layout.fillWidth: true
+    Layout.topMargin: Tokens.spacing.xxl
     visible: root.packages.length > 0
 
     Item {
