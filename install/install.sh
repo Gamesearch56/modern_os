@@ -191,7 +191,25 @@ fi
 # (stow/modern/.../wallpapers/default.jpg) so a first session is not
 # unstyled. --no-reload: no Hyprland on this TTY yet. Failure must not
 # abort the install — Colors.qml already ships a dark baseline.
-default_wp="$TARGET/.config/modern/wallpapers/default.jpg"
+# The rest of that directory is the preinstalled picker library; seed
+# missing names into Pictures/Wallpapers and never overwrite user files.
+shipped_wp_dir="$TARGET/.config/modern/wallpapers"
+default_wp="$shipped_wp_dir/default.jpg"
+pictures="$TARGET/Pictures/Wallpapers"
+if [ -d "$shipped_wp_dir" ]; then
+    run mkdir -p "$pictures"
+    for f in "$shipped_wp_dir"/*; do
+        [ -f "$f" ] || continue
+        case "${f,,}" in
+            *.jpg|*.jpeg|*.png|*.webp) ;;
+            *) continue ;;
+        esac
+        dest="$pictures/$(basename "$f")"
+        if [ ! -e "$dest" ]; then
+            run cp "$f" "$dest"
+        fi
+    done
+fi
 wallpaper_state="${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper"
 if command -v matugen >/dev/null 2>&1; then
     if [ -f "$wallpaper_state" ]; then
@@ -201,11 +219,6 @@ if command -v matugen >/dev/null 2>&1; then
         log_info "applying shipped default wallpaper and generating tokens"
         run "$REPO_ROOT/scripts/theme-apply.sh" --wallpaper "$default_wp" --no-reload \
             || log_warn "theme-apply.sh failed — the shell still starts with the Colors.qml fallback"
-        pictures="$HOME/Pictures/Wallpapers"
-        run mkdir -p "$pictures"
-        if [ ! -e "$pictures/default.jpg" ]; then
-            run cp "$default_wp" "$pictures/default.jpg"
-        fi
     else
         log_info "no wallpaper set — generating tokens from the fixed-brand seed"
         run "$REPO_ROOT/scripts/theme-apply.sh" --profile fixed-brand --no-reload \

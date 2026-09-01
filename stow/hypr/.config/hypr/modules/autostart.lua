@@ -40,9 +40,11 @@ hl.on("hyprland.start", function()
     -- on the second parse once the .so is in.
     hl.exec_cmd("sh -lc 'if [ -d /var/cache/hyprpm/\"$USER\" ]; then hyprpm reload -n; fi'")
 
-    -- Wallpaper daemon, then restore the last (or shipped default) image.
+    -- Wallpaper daemon, then restore via wallpaper-show.sh so filter/resize
+    -- match live picks. Transition none: login is instant, not a 3s simple fade.
+    local show = paths.scripts .. "/wallpaper-show.sh"
     hl.exec_cmd("awww-daemon")
-    hl.exec_cmd("sh -lc 'state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; default=\"$HOME/.config/modern/wallpapers/default.jpg\"; if [ -f \"$state\" ]; then img=$(cat \"$state\"); elif [ -f \"$default\" ]; then img=\"$default\"; else exit 0; fi; [ -f \"$img\" ] && awww img \"$img\"'")
+    hl.exec_cmd("sh -lc 'state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; default=\"$HOME/.config/modern/wallpapers/default.jpg\"; show=\"" .. show .. "\"; if [ -f \"$state\" ]; then img=$(cat \"$state\"); elif [ -f \"$default\" ]; then img=\"$default\"; else exit 0; fi; [ -f \"$img\" ] && [ -f \"$show\" ] && bash \"$show\" \"$img\" none'")
 
     if config.value("kdeconnect.enabled", true) then
         -- Package unit is kdeconnectd via XDG autostart; kdeconnect.service

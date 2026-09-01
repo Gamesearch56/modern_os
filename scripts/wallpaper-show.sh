@@ -4,16 +4,32 @@
 # stalling the fade for seconds. Duration is Motion.longMs (400).
 # Optional $2 is the awww transition type (Settings preview); otherwise
 # design.wallpaperTransition from config.json.
+# Filter/resize are explicit so picker, theme-apply, and session restore
+# share one scaler (Lanczos3 crop) instead of whatever the daemon default
+# happens to be that day.
 set -euo pipefail
 
 IMAGE="${1:-}"
 KIND="${2:-}"
 [ -n "$IMAGE" ] && [ -f "$IMAGE" ] || exit 1
 
-if ! command -v awww >/dev/null 2>&1 || ! pgrep -x awww-daemon >/dev/null 2>&1; then
-    printf '[wallpaper-show] WARN awww-daemon not running\n' >&2
+if ! command -v awww >/dev/null 2>&1; then
+    printf '[wallpaper-show] WARN awww not on PATH\n' >&2
     exit 0
 fi
+
+# Autostart launches awww-daemon then this script in the next exec_cmd.
+waited=0
+while ! pgrep -x awww-daemon >/dev/null 2>&1; do
+    if [ "$waited" -ge 20 ]; then
+        printf '[wallpaper-show] WARN awww-daemon not running\n' >&2
+        exit 0
+    fi
+    sleep 0.1
+    waited=$((waited + 1))
+done
+
+QUALITY=(--filter Lanczos3 --resize crop --crop-gravity center)
 
 DEFAULT_JSON="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.default.json"
 LIVE_JSON="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
@@ -45,6 +61,7 @@ esac
 
 if awk -v s="$scale" 'BEGIN { exit !(s + 0 > 0) }'; then
     dur="$(awk -v s="$scale" 'BEGIN { printf "%.3f", 0.4 * s }')"
-    exec awww img "$IMAGE" --transition-type "$KIND" --transition-duration "$dur" --transition-fps 60
+    exec awww img "$IMAGE" "${QUALITY[@]}" --transition-type "$KIND" \
+        --transition-duration "$dur" --transition-fps 60
 fi
-exec awww img "$IMAGE"
+exec awww img "$IMAGE" "${QUALITY[@]}"

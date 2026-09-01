@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Print wallpaper paths, one per line. Used by Services/Wallpaper.qml.
-# User library first so full-resolution imports win over the shipped
-# fallback (Cursor chat attachments in the stow pack are 1024px).
+# User library first so a seeded Pictures copy wins over the same
+# basename in the shipped ~/.config/modern/wallpapers pack.
 # xdg-user-dir PICTURES returns $HOME when user-dirs.dirs is missing, so
 # we always also scan $HOME/Pictures/{Wallpaper,Wallpapers}.
 set -euo pipefail
@@ -47,15 +47,19 @@ fi
     done
 } | {
     declare -A seen=()
+    declare -A seen_base=()
     while IFS= read -r -d '' rec; do
         ts="${rec%%$'\t'*}"
         f="${rec#*$'\t'}"
         real="$(realpath "$f" 2>/dev/null || true)"
         [ -n "$real" ] || continue
-        if [ -n "${seen[$real]+x}" ]; then
+        base="${real##*/}"
+        base="${base,,}"
+        if [ -n "${seen[$real]+x}" ] || [ -n "${seen_base[$base]+x}" ]; then
             continue
         fi
         seen[$real]=1
+        seen_base[$base]=1
         printf '%s\t%s\n' "$ts" "$real"
     done
 } | sort -nr -k1,1 | cut -f2-
