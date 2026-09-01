@@ -185,7 +185,19 @@ case "$TARGET" in
         esac
         ;;
     shell)
-        ipc shell "${1:-reload}"
+        ACTION="${1:-reload}"
+        if [ "$ACTION" = "reload" ]; then
+            # shellcheck source=lib/restore-fullscreen.sh
+            source "$SCRIPT_DIR/lib/restore-fullscreen.sh"
+            fs_save
+            qs -c modern ipc call shell reload >/dev/null 2>&1 \
+                || echo "modern: Quickshell IPC reload failed" >&2
+            fs_restore
+            sleep 0.2
+            fs_restore
+            exit 0
+        fi
+        ipc shell "$ACTION"
         ;;
     window)
         ACTION="${1:-close}"

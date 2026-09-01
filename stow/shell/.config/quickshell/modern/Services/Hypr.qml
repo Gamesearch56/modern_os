@@ -30,20 +30,7 @@ Singleton {
     readonly property var focusedToplevel: Hyprland.focusedToplevel
     readonly property bool focusedFullscreen: {
         void root.focusedToplevel;
-        const t = root.focusedToplevel;
-        if (!t)
-            return false;
-        const fs = t.fullscreen;
-        if (fs === true || fs === 2 || fs === 3)
-            return true;
-        const ipc = t.lastIpcObject;
-        if (!ipc)
-            return false;
-        const v = ipc.fullscreen;
-        if (v === true || v === 2 || v === 3 || v === "2" || v === "3")
-            return true;
-        const c = ipc.fullscreenClient;
-        return c === 2 || c === 3 || c === "2" || c === "3";
+        return wins.exclusiveFullscreen(root.focusedToplevel);
     }
 
     readonly property bool _lua: Hyprland.usingLua === true
@@ -182,6 +169,8 @@ Singleton {
     function closeWindow(address: string) { wins.closeWindow(address); }
     function killWindow(address: string) { wins.killWindow(address); }
     function windowOnScreen(toplevel: var, screen: var): bool { return wins.windowOnScreen(toplevel, screen); }
+    function exclusiveFullscreen(t: var): bool { return wins.exclusiveFullscreen(t); }
+    function fullscreenOnScreen(screen: var): bool { return wins.fullscreenOnScreen(screen); }
     function toggleFloating(address: string) { wins.toggleFloating(address); }
     function toggleFullscreen(address: string) { wins.toggleFullscreen(address); }
 

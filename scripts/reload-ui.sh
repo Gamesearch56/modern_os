@@ -4,6 +4,9 @@
 # Quickshell-only: `modern shell reload`.
 set -euo pipefail
 
+# shellcheck source=lib/restore-fullscreen.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/restore-fullscreen.sh"
+
 USER_NAME="${USER:-$(id -un)}"
 
 # Hyprland 0.56 Lua dispatchers reject `hyprctl dispatch exec`. Spawn
@@ -20,6 +23,7 @@ start_quickshell() {
 }
 
 if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
+    fs_save
     hyprctl reload >/dev/null 2>&1 || echo "reload-ui: hyprctl reload failed" >&2
     if [ -d "/var/cache/hyprpm/${USER_NAME}" ] && command -v hyprpm >/dev/null 2>&1; then
         hyprpm reload -n >/dev/null 2>&1 || true
@@ -48,6 +52,10 @@ if command -v qs >/dev/null 2>&1; then
             || echo "reload-ui: Quickshell IPC reload failed" >&2
     fi
 fi
+
+fs_restore
+sleep 0.2
+fs_restore
 
 if command -v kitty >/dev/null 2>&1; then
     kitty @ load-config >/dev/null 2>&1 || true

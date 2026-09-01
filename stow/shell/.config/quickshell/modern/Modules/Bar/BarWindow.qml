@@ -13,7 +13,12 @@ PanelWindow {
     readonly property bool _auto: !!(Config.bar.autoHide)
     readonly property real _strip: Tokens.spacing.xs
     readonly property bool _hold: Popups.openCount > 0
-    readonly property bool _cover: Hypr.focusedFullscreen
+    readonly property bool _cover: {
+        void Hypr.toplevelList;
+        void Hypr.focusedToplevel;
+        return Hypr.fullscreenOnScreen(root.screen);
+    }
+    property bool _hyprWarm: false
     readonly property bool _shown: !root._cover && (!root._auto || root._peek || root._hold)
     readonly property bool _expanded: !root._cover && (!root._auto || root._shown || root._slidingOut)
     readonly property string _layoutKey: String(Config.bar.position || "top")
@@ -29,8 +34,8 @@ PanelWindow {
     anchors.right: Config.bar.position !== "left"
     implicitHeight: root.vertical ? 0 : (root._expanded ? root._fullH : root._strip)
     implicitWidth: root.vertical ? (root._expanded ? root._fullW : root._strip) : 0
-    exclusiveZone: root._cover ? 0 : BarLayout.exclusive
-    visible: !root._cover
+    exclusiveZone: (root._cover || !root._hyprWarm) ? 0 : BarLayout.exclusive
+    visible: root._hyprWarm && !root._cover
     color: "transparent"
     focusable: Popups.active !== null
 
@@ -78,6 +83,13 @@ PanelWindow {
     Component.onCompleted: {
         if (!root._shown)
             root._slide = 1;
+        hyprWarm.start();
+    }
+
+    Timer {
+        id: hyprWarm
+        interval: Math.max(Motion.mediumMs, 1)
+        onTriggered: root._hyprWarm = true
     }
 
     Timer {
