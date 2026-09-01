@@ -85,7 +85,15 @@ Singleton {
 
     function displayName(role: string): string {
         const e = root.entryFor(role);
-        return (e && e.name) ? String(e.name) : "";
+        if (e && e.name)
+            return String(e.name);
+        const id = root.desktopId(role);
+        if (id.length)
+            return root.labelForId(id);
+        const fb = root._fallbackIds(role) || [];
+        if (fb.length)
+            return root.labelForId(fb[0]);
+        return "";
     }
 
     function labelForId(id: string): string {
