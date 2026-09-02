@@ -16,11 +16,9 @@ Singleton {
     property real ramPercent: 0
     property real gpuPercent: 0
     property real cpuTemp: 0
-    property real gpuTemp: 0
     property real diskPercent: 0
-    property int fanRpm: 0
-    property int fanRpmPeak: 1
-    readonly property real fanPercent: 100 * root.fanRpm / Math.max(1, root.fanRpmPeak)
+    // Chassis fans often have no tach; amdgpu fan*_input stays 0 here.
+    readonly property real tempPercent: Math.min(100, Math.max(0, root.cpuTemp))
 
     property var _prev: ({ idle: 0, total: 0 })
     property var cpuSamples: []
@@ -29,7 +27,7 @@ Singleton {
 
     Process {
         id: proc
-        command: ["sh", "-c", "grep -m1 '^cpu ' /proc/stat; awk '/MemTotal/{t=$2}/MemAvailable/{a=$2} END{print t,a}' /proc/meminfo; df -P -k / | awk 'NR==2{print $2,$3}'; (cat /sys/class/drm/card*/device/gpu_busy_percent /sys/class/drm/card*/gt/gt0/busy_percent 2>/dev/null | head -1; nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null; echo 0) | awk 'NF{print $1; exit}'; (cat /sys/class/hwmon/hwmon*/fan*_input 2>/dev/null || echo 0) | awk 'NR==1{print $1+0}'"]
+        command: ["sh", "-c", "grep -m1 '^cpu ' /proc/stat; awk '/MemTotal/{t=$2}/MemAvailable/{a=$2} END{print t,a}' /proc/meminfo; df -P -k / | awk 'NR==2{print $2,$3}'; (cat /sys/class/drm/card*/device/gpu_busy_percent /sys/class/drm/card*/gt/gt0/busy_percent 2>/dev/null | head -1; nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null; echo 0) | awk 'NF{print $1; exit}'; awk 'BEGIN{best=0;br=99} FNR==1{dir=FILENAME;sub(/\\/[^\\/]+$/,\"\",dir);n=\"\";getline n<(dir\"/name\");close(dir\"/name\");r=8;if(n==\"k10temp\"||n==\"coretemp\"||n==\"zenpower\")r=0;else if(n==\"cpu_thermal\"||n==\"acpitz\")r=1;else if(n==\"amdgpu\"||n==\"nouveau\"||n==\"i915\")r=3}{c=int($1/1000);if(c>0&&c<125&&(r<br||(r==br&&c>best))){best=c;br=r}} END{print best+0}' /sys/class/hwmon/hwmon*/temp*_input 2>/dev/null || echo 0"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parse(this.text)
@@ -70,12 +68,9 @@ Singleton {
             const gpu = Number((lines[3] ?? "").trim().split(/\s+/)[0]);
             if (!isNaN(gpu))
                 root.gpuPercent = gpu;
-            const fan = Number((lines[4] ?? "").trim());
-            if (!isNaN(fan)) {
-                root.fanRpm = fan;
-                if (fan > root.fanRpmPeak)
-                    root.fanRpmPeak = fan;
-            }
+            const temp = Number((lines[4] ?? "").trim());
+            if (!isNaN(temp))
+                root.cpuTemp = temp;
             root.cpuSamples = root._push(root.cpuSamples, root.cpuPercent);
             root.ramSamples = root._push(root.ramSamples, root.ramPercent);
             root.diskSamples = root._push(root.diskSamples, root.diskPercent);

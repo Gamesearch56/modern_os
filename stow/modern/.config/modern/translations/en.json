@@ -103,7 +103,8 @@
     "ram": "RAM",
     "gpu": "GPU",
     "disk": "Disk",
-    "fan": "Fan"
+    "temp": "Temp",
+    "tempValue": "{c} °C"
   },
   "calendar": {
     "title": "Calendar",
