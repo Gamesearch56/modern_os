@@ -1,6 +1,8 @@
 -- Live ISO kiosk only. Installed sessions use ~/.config/hypr/hyprland.lua.
 -- Autostart must be inside hyprland.start — file-scope exec is ignored
 -- on reload and is how .conf exec-once failed to open Calamares.
+-- v0.1.6 (liveuser + start-hyprland + exec calamares) is the last
+-- combination that drew a frame and showed the installer.
 
 hl.env("QT_QPA_PLATFORM", "wayland")
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
@@ -29,9 +31,16 @@ hl.window_rule({
     center = true,
     size = { "90%", "90%" },
 })
+hl.window_rule({
+    name = "live-browser",
+    match = { class = ".*[Ff]irefox.*" },
+    float = true,
+    center = true,
+    size = { "85%", "85%" },
+})
 
-hl.bind("SUPER, Return", hl.dsp.exec_cmd("calamares"))
-hl.bind("SUPER, Space", hl.dsp.exec_cmd("calamares"))
+hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("calamares"))
+hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("calamares"))
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("awww-daemon")

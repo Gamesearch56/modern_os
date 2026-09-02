@@ -45,12 +45,9 @@ Forks also open PRs into `dev`. Maintainers commit on `dev` and PR
 GitHub Actions on every PR to `main` or `dev`, on pushes to `dev` /
 `main`, and on tags `v*`:
 
-- `scripts/lint-layers.sh`
-- `shellcheck` on `install/` and `scripts/`
-- `scripts/test-settings-catalog.sh`
-- `scripts/test-desktop-sync.sh` (local fake remote, no GitHub)
-- `scripts/test-iso-package-list.sh`
-- `scripts/test-release-notes.sh`
+- `scripts/ci-check.sh` (jq / python3 / git / shellcheck, then
+  `lint-layers.sh`, `shellcheck` on `install/` `scripts/` `iso/airootfs/`,
+  and the catalog / sync / nautilus / ISO / release-notes tests)
 - `./install/install.sh --dry-run --profile m0 --target $RUNNER_TEMP/…`
 
 `scripts/check-isolation.sh` is **local only**. Do not add it to GitHub.
@@ -73,7 +70,9 @@ The `Release` Action writes [Keep a Changelog](https://keepachangelog.com/)
 notes (Added / Changed / Fixed / …) from commits since the previous
 tag, publishes the GitHub Release, then dispatches the `ISO` workflow
 to attach the image (`GITHUB_TOKEN` does not chain `release: published`).
-Never `iso-build.sh --mkarchiso` on a machine you live on.
+Local test images: `sudo ./scripts/iso-build.sh --mkarchiso` then
+`./scripts/iso-qemu.sh`. Never run `provision-iso.sh` or Calamares on
+the session you live in.
 
 That tag is what Settings → Update and the ISO pin look at. Friends
 download the image from the Release page.
@@ -103,8 +102,8 @@ pending only when a **newer** `vX.Y.Z` exists on GitHub. It never tracks
 - Point a friend’s PC at `dev` (`git pull` / Settings against `dev`).
 - Run `desktop-sync.sh apply` on a development clone while `HEAD` is
   dirty or not `dev`.
-- Run Calamares, `provision-iso.sh`, or `iso-build.sh --mkarchiso` on
-  a machine you live on.
+- Run Calamares or `provision-iso.sh` on a machine you live on.
+  `iso-build.sh --mkarchiso` is allowed; it writes `iso/out/` only.
 
 ## Flip day (history rewrite, then public)
 

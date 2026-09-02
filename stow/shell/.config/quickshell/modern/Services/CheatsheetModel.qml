@@ -1,5 +1,6 @@
 // Builds the searchable cheatsheet rows from Config.keybinds — the
-// same table Settings > Keyboard edits. No second list to drift.
+// same table Settings > Keyboard lists — plus static mouse gestures
+// that are not remappable and must not go in keybinds.
 pragma Singleton
 
 import Quickshell
@@ -37,6 +38,26 @@ Singleton {
         filePreview: "utilities", clipboardHistory: "utilities"
     })
 
+    // Chrome / Super+mouse gestures — not remappable, not in keybinds.
+    readonly property var mouseGestures: [
+        { action: "mouseMoveSuper", combo: "SUPER + LMB" },
+        { action: "mouseResizeSuper", combo: "SUPER + RMB" },
+        { action: "mouseWorkspaceScroll", combo: "SUPER + SCROLL" },
+        { action: "mouseResizeBorder", combo: "BORDER + LMB" },
+        { action: "mouseToggleSplit", combo: "TASKBAR + SPLIT" }
+    ]
+
+    function _rowMatches(action: string, combo: string, category: string, needle: string): bool {
+        if (!needle.length)
+            return true;
+        const label = I18n.t("cheatsheet.action." + action).toLowerCase();
+        const catLabel = I18n.t("cheatsheet.category." + category).toLowerCase();
+        return label.indexOf(needle) !== -1
+            || combo.toLowerCase().indexOf(needle) !== -1
+            || catLabel.indexOf(needle) !== -1
+            || category.toLowerCase().indexOf(needle) !== -1;
+    }
+
     function rows(filter: string): var {
         const binds = Config.keybinds || ({});
         const needle = (filter || "").trim().toLowerCase();
@@ -52,14 +73,25 @@ Singleton {
             const cat = root.categoryOf[action];
             if (!cat)
                 continue;
-            const label = I18n.t("cheatsheet.action." + action);
-            if (needle.length > 0 && label.toLowerCase().indexOf(needle) === -1 && combo.toLowerCase().indexOf(needle) === -1)
+            if (!root._rowMatches(action, combo, cat, needle))
                 continue;
             out.push({
                 action: action,
                 category: cat,
                 combo: combo,
                 caps: combo.split(" + ")
+            });
+        }
+        const gestures = root.mouseGestures;
+        for (let i = 0; i < gestures.length; i++) {
+            const g = gestures[i];
+            if (!root._rowMatches(g.action, g.combo, "mouse", needle))
+                continue;
+            out.push({
+                action: g.action,
+                category: "mouse",
+                combo: g.combo,
+                caps: g.combo.split(" + ")
             });
         }
         out.sort((a, b) => a.category.localeCompare(b.category) || a.action.localeCompare(b.action));
@@ -70,12 +102,12 @@ Singleton {
         const all = root.rows(filter);
         return {
             left: root._pack(all, ["applications", "system", "utilities", "screenshots"]),
-            right: root._pack(all, ["windowManagement", "workspaces"])
+            right: root._pack(all, ["windowManagement", "workspaces", "mouse"])
         };
     }
 
     function categoryIds(): var {
-        return ["applications", "system", "utilities", "screenshots", "windowManagement", "workspaces"];
+        return ["applications", "system", "utilities", "screenshots", "windowManagement", "workspaces", "mouse"];
     }
 
     function categories(filter: string): var {

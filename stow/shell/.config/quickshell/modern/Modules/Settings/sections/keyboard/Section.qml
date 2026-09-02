@@ -78,6 +78,11 @@ ColumnLayout {
         }
     }
 
+    MHint {
+        key: "settings.hints.mouseWindow"
+        Layout.fillWidth: true
+    }
+
     MButton {
         kind: "tonal"
         key: "settings.openCheatsheet"

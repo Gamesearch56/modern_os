@@ -1,5 +1,5 @@
-// CPU / GPU / RAM / DISK tiles with Fan full-width below. Bind percents
-// from SystemStats in the Module — Widgets must not import Services.
+// CPU / GPU / RAM / DISK tiles with temperature full-width below. Bind
+// percents from SystemStats in the Module — Widgets must not import Services.
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"
@@ -11,8 +11,8 @@ GridLayout {
     property real gpuPercent: 0
     property real ramPercent: 0
     property real diskPercent: 0
-    property real fanPercent: 0
-    property int fanRpm: 0
+    property real cpuTemp: 0
+    property real tempPercent: 0
     property bool showGpu: Config.widgets.performance?.showGpu ?? true
 
     columns: 2
@@ -47,8 +47,8 @@ GridLayout {
     MPercentTile {
         Layout.fillWidth: true
         Layout.columnSpan: 2
-        titleKey: "performance.fan"
-        valueText: String(root.fanRpm)
-        percent: root.fanPercent
+        titleKey: "performance.temp"
+        valueText: I18n.t("performance.tempValue", { c: Math.round(root.cpuTemp) })
+        percent: root.tempPercent
     }
 }

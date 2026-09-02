@@ -112,17 +112,17 @@ run. See `docs/ISOLATION.md` before touching anything there.
 ## Verifying your work
 
 ```bash
-scripts/lint-layers.sh        # layer direction + i18n key parity + perf lint
+scripts/ci-check.sh           # deps + lint-layers + shellcheck + CI unit tests
 scripts/check-isolation.sh    # confirm the current account is untouched
-scripts/test-settings-catalog.sh
-scripts/test-desktop-sync.sh
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-iso-dryrun
 ```
 
-Work on `dev` and PR into `main` (`docs/GIT.md`). Do not create
-`feature/*` or `fix/*` branches.
-Do not run `iso-build.sh --mkarchiso`, `provision-iso.sh`, or a live
-`install.sh` on a machine you live on.
+Run `scripts/ci-check.sh` before every commit and push. Git hooks in
+`.githooks/` call it (copy to `.git/hooks/` if this clone does not).
+
+`iso-build.sh --mkarchiso` may write `iso/out/` on this PC. Do not run
+`provision-iso.sh`, Calamares, or a live `install.sh` on a machine you
+live on.
 
 ## Directory map
 

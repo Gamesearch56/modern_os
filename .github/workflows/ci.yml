@@ -17,20 +17,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Dependencies
         run: sudo apt-get update && sudo apt-get install -y jq python3 shellcheck git
-      - name: Layer lint
-        run: scripts/lint-layers.sh
-      - name: Shellcheck
-        run: |
-          mapfile -t files < <(git ls-files '*.sh' | grep -E '^(install/|scripts/|iso/airootfs/)')
-          shellcheck "${files[@]}"
-      - name: Settings catalog
-        run: scripts/test-settings-catalog.sh
-      - name: Desktop-sync fixture
-        run: scripts/test-desktop-sync.sh
-      - name: ISO package list
-        run: scripts/test-iso-package-list.sh
-      - name: Release notes
-        run: scripts/test-release-notes.sh
+      - name: Layer lint, shellcheck, and tests
+        run: scripts/ci-check.sh
 
   install-dry:
     runs-on: ubuntu-latest

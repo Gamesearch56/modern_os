@@ -31,7 +31,7 @@ ColumnLayout {
         gpuPercent: SystemStats.gpuPercent
         ramPercent: SystemStats.ramPercent
         diskPercent: SystemStats.diskPercent
-        fanPercent: SystemStats.fanPercent
-        fanRpm: SystemStats.fanRpm
+        cpuTemp: SystemStats.cpuTemp
+        tempPercent: SystemStats.tempPercent
     }
 }

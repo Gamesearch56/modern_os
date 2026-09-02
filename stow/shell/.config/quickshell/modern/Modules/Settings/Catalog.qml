@@ -86,7 +86,7 @@ QtObject {
         gaming: { icon: "input-gaming", order: 33, group: "apps", keywords: ["game", "steam", "proton", "fullscreen", "gamescope", "wine", "tearing", "gamemode"], restore: ["gaming"] },
         ai: { icon: "applications-science-symbolic", order: 34, group: "apps", keywords: ["ollama", "gemini", "google", "assistant", "model", "chat"] },
         language: { icon: "preferences-desktop-locale", order: 40, group: "input", keywords: ["locale", "date", "time", "format", "week"], restore: ["language"] },
-        keyboard: { icon: "input-keyboard", order: 42, group: "input", keywords: ["keybinds", "layout", "cheatsheet", "repeat", "numlock"], restore: ["input", "keybinds"] },
+        keyboard: { icon: "input-keyboard", order: 42, group: "input", keywords: ["keybinds", "layout", "cheatsheet", "repeat", "numlock", "mouse"], restore: ["input", "keybinds"] },
         displays: { icon: "video-display", order: 50, group: "devices", keywords: ["monitors", "workspace", "hdr", "scale", "display", "brightness", "refresh", "resolution", "color"] },
         audio: { icon: "audio-volume-high", order: 52, group: "devices", keywords: ["volume", "speakers", "microphone", "headphones", "mute", "bluetooth"] },
         network: { icon: "network-wireless", order: 54, group: "devices", keywords: ["wifi", "ethernet", "speed"] },

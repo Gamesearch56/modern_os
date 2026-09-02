@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Installed as .git/hooks/pre-commit. Same gates as pre-push / CI checks.
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+exec "$ROOT/scripts/ci-check.sh"

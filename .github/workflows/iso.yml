@@ -1,5 +1,5 @@
 # ISO for a GitHub Release. Runs on Actions. Never on pull_request.
-# iso-build.sh refuses --mkarchiso when MODERN_PROTECT_HOME is set.
+# Local builds: sudo ./scripts/iso-build.sh --mkarchiso (iso/out/ only).
 name: ISO
 
 on:

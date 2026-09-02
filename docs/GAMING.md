@@ -135,7 +135,7 @@ native titles such as Project Zomboid (`ProjectZomboid*`, window title
 - **Tearing** (`immediate`) — only that window, and only while it is
   exclusive fullscreen. Other clients stay vsync.
 - **No blur / no shadow / opaque / content: game** on the game surface
-  (and no hyprbars titlebar)
+  (no compositor titlebar)
 
 `general.allow_tearing` is the master switch; it does not tear browsers
 or terminals. Blur and animations stay on for everything else.

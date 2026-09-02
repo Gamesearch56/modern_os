@@ -293,7 +293,6 @@
     }
   },
   "windows": {
-    "titlebar": true,
     "opacity": 1.0,
     "gapsIn": 5,
     "gapsOut": 10

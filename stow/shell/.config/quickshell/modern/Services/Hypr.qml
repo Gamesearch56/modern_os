@@ -11,8 +11,6 @@ import "../Commons"
 Singleton {
     id: root
 
-    property bool hyprbarsLoaded: false
-
     readonly property var monitors: Hyprland.monitors
     readonly property var workspaces: Hyprland.workspaces
     readonly property var toplevels: Hyprland.toplevels
@@ -76,13 +74,17 @@ Singleton {
 
     // Hyprland 0.55+ Lua IPC ignores hyprlang strings like "workspace 3".
     // Fixed mode jumps to the assigned monitor; dynamic stays on this one.
+    function _rangeForIndex(idx: int): var {
+        if (idx < 0)
+            return null;
+        const from = idx * 5 + 1;
+        return ({ from: from, to: from + 4 });
+    }
+
     function _monitorSelectorForWorkspace(id: int): string {
-        const mons = root._sortedMonitors();
-        let mon = null;
-        if (id >= 1 && id <= 5)
-            mon = mons[0];
-        else if (id >= 6 && id <= 10)
-            mon = mons[1];
+        if (id < 1)
+            return "";
+        const mon = root._sortedMonitors()[Math.floor((id - 1) / 5)];
         if (!mon)
             return "";
         const desc = String(mon.description || "");
@@ -112,29 +114,46 @@ Singleton {
         }
     }
 
-    function moveToWorkspace(id: int) {
+    function _pinWorkspace(id: int) {
         const mode = Config.monitors?.workspaceMode || "dynamic";
-        if (mode === "fixed") {
-            const sel = root._monitorSelectorForWorkspace(id);
-            if (sel.length > 0) {
-                if (root._lua)
-                    root.dispatch("hl.dsp.workspace.move({ workspace = \"" + id + "\", monitor = \"" + sel + "\" })");
-                else
-                    root.dispatch("moveworkspacetomonitor " + id + " " + sel);
-            }
-        }
+        if (mode !== "fixed")
+            return;
+        const sel = root._monitorSelectorForWorkspace(id);
+        if (!sel.length)
+            return;
         if (root._lua)
-            root.dispatch("hl.dsp.window.move({ workspace = " + id + " })");
+            root.dispatch("hl.dsp.workspace.move({ workspace = \"" + id + "\", monitor = \"" + sel + "\" })");
         else
-            root.dispatch("movetoworkspace " + id);
+            root.dispatch("moveworkspacetomonitor " + id + " " + sel);
+    }
+
+    function moveToWorkspace(id: int) {
+        wins.moveWindowToWorkspace("", id);
+    }
+
+    function moveWindowToWorkspace(address: string, id: int) {
+        wins.moveWindowToWorkspace(address, id);
     }
 
     function _rangeForId(id: int): var {
-        if (id >= 1 && id <= 5)
-            return ({ from: 1, to: 5 });
-        if (id >= 6 && id <= 10)
-            return ({ from: 6, to: 10 });
-        return null;
+        if (id < 1)
+            return null;
+        return root._rangeForIndex(Math.floor((id - 1) / 5));
+    }
+
+    function nextFreeWorkspaceId(): int {
+        const used = ({});
+        const raw = Hyprland.workspaces?.values ?? [];
+        for (let i = 0; i < raw.length; i++) {
+            const n = Number(raw[i]?.id);
+            if (n > 0)
+                used[n] = true;
+        }
+        for (let id = 1; id <= 99; id++) {
+            if (!used[id])
+                return id;
+        }
+        return 0;
     }
 
     function closeWorkspace(id: int) {
@@ -184,6 +203,7 @@ Singleton {
     function windowOnScreen(toplevel: var, screen: var): bool { return wins.windowOnScreen(toplevel, screen); }
     function toggleFloating(address: string) { wins.toggleFloating(address); }
     function toggleFullscreen(address: string) { wins.toggleFullscreen(address); }
+    function toggleSplit(address: string) { wins.toggleSplit(address); }
 
     function reload() {
         if (root._lua)
@@ -364,25 +384,28 @@ Singleton {
     }
 
     function reservedRange(screen: var): var {
-        const idx = root._screenIndex(screen);
-        if (idx === 0)
-            return ({ from: 1, to: 5 });
-        if (idx === 1)
-            return ({ from: 6, to: 10 });
-        return null;
+        const mode = Config.monitors?.workspaceMode || "dynamic";
+        if (mode !== "fixed")
+            return null;
+        return root._rangeForIndex(root._screenIndex(screen));
     }
 
     function _onMonitor(ws: var, mon: var): bool {
         if (!ws || !mon)
-            return true;
+            return false;
+        let name = "";
         const wm = ws.monitor;
-        if (!wm)
-            return true;
         if (typeof wm === "string")
-            return wm === mon.name;
-        if (wm.name)
-            return wm.name === mon.name;
-        return true;
+            name = wm;
+        else if (wm && wm.name)
+            name = String(wm.name);
+        if (!name.length) {
+            const ipc = ws.lastIpcObject || ({});
+            name = String(ipc.monitor || "");
+        }
+        if (!name.length)
+            return false;
+        return name === mon.name;
     }
 
     function workspaceById(id: int): var {
@@ -446,6 +469,7 @@ Singleton {
         void root.toplevels;
         void root.focusedWorkspace;
         void Quickshell.screens;
+        void Config.monitors;
         const seen = ({});
         const shown = [];
         function add(id) {
@@ -465,7 +489,7 @@ Singleton {
             const ws = raw[i];
             if (!ws || Number(ws.id) <= 0)
                 continue;
-            if (mon && !root._onMonitor(ws, mon))
+            if (!mon || !root._onMonitor(ws, mon))
                 continue;
             const id = Number(ws.id);
             if (mode === "fixed" && range && (id < range.from || id > range.to))
@@ -482,7 +506,7 @@ Singleton {
         if (shown.length === 0) {
             const fw = Hyprland.focusedWorkspace;
             const fwId = Number(fw && fw.id);
-            if (fwId > 0)
+            if (fwId > 0 && mon && root._onMonitor(fw, mon))
                 add(fwId);
         }
         shown.sort((a, b) => a - b);
@@ -499,17 +523,6 @@ Singleton {
     Component.onCompleted: {
         root.refreshToplevels();
         root.refreshMonitorDump();
-    }
-
-    Process {
-        id: pluginProc
-        command: ["hyprctl", "plugin", "list"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.hyprbarsLoaded = this.text.toLowerCase().indexOf("hyprbars") !== -1;
-            }
-        }
     }
 
     Process {

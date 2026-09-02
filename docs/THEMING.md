@@ -134,8 +134,8 @@ white. `kdeglobals` `[UiSettings] ColorScheme=modern` pins
 `~/.local/share/color-schemes/modern.colors`. Widget style is
 `qt6ct-style`. Dolphin is an opaque overlay card (`dolphin-opaque`);
 Nautilus is the same (`nautilus-opaque`). Nautilus Space preview is
-GNOME Sushi (`nautilus-previewer`: float, center, `dim_around`, no
-hyprbars), colored from the same `gtk.css` GTK3 Adwaita aliases. GTK icon theme is
+GNOME Sushi (`nautilus-previewer`: float, center, `dim_around`),
+colored from the same `gtk.css` GTK3 Adwaita aliases. GTK icon theme is
 Papirus-Dark so Nautilus keeps emblem folders; KDE/Dolphin use
 `modern-folders` (token-colored folder SVGs). Fully quit Nautilus or
 Dolphin after `theme-apply.sh`. Wallpaper stays in the

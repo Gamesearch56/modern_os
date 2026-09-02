@@ -9,7 +9,7 @@ directory plus an id in those arrays — no central switch.
 | id | i18n key | services | role |
 |---|---|---|---|
 | `launcher` | `bar.launcher` | Launcher | Opens the application launcher |
-| `workspaces` | `bar.workspaces` | Hypr | Per-monitor strip (`Hypr.workspaceIdsFor`); `monitors.workspaceMode` `dynamic` or `fixed` (1–5 / 6–10 by x-position) |
+| `workspaces` | `bar.workspaces` | Hypr | Per-monitor strip (`Hypr.workspaceIdsFor`); `monitors.workspaceMode` `dynamic` (this output only, + always shown) or `fixed` (1–5 / 6–10 / 11–15 / … by x-position) |
 | `tray` | `bar.tray` | — | Status notifier / system tray |
 | `taskbar` | `bar.taskbar` | Hypr | Open windows (`Hypr.toplevelList`; refreshes when the popup opens) |
 | `clock` | `bar.clock` | Calendar | Date/time; click opens Calendar / Events tabs (month grid + today's ICS events) |
@@ -18,7 +18,7 @@ directory plus an id in those arrays — no central switch.
 | `weather` | `bar.weather` | Weather | Location-based conditions |
 | `network` | `bar.network` | Network | Wi-Fi / ethernet indicator |
 | `microphone` | `bar.microphone` | Audio | Source volume / mute |
-| `performance` | `bar.performance` | SystemStats | CPU / RAM / GPU poll (timer off when hidden) |
+| `performance` | `bar.performance` | SystemStats | CPU / RAM / GPU / temp poll (timer off when hidden) |
 | `vpn` | `bar.vpn` | Vpn | VPN connection state |
 | `bluetooth` | `bar.bluetooth` | Bluetooth | Adapter + connected devices |
 | `notifications` | `bar.notifications` | Notifications | Unread / DND affordance |

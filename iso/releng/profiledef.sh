@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # archiso profile overlay. iso-build.sh copies releng + this file.
-# Do not run mkarchiso when MODERN_PROTECT_HOME is set.
+# mkarchiso writes only --out (iso/out/). Never run provision-iso.sh
+# on a machine you live on.
 iso_name="modernos"
 iso_label="MODERNOS"
 iso_publisher="ModernOS"
@@ -20,6 +21,9 @@ file_permissions=(
   ["/usr/lib/modern/calamares-late.sh"]="0:0:755"
   ["/usr/lib/modern/live-setup.sh"]="0:0:755"
   ["/usr/lib/modern/live-session.sh"]="0:0:755"
+  ["/usr/lib/modern/live-calamares.sh"]="0:0:755"
+  ["/usr/lib/modern/live-xdg-open.sh"]="0:0:755"
+  ["/usr/lib/modern/live-xkb-filter.py"]="0:0:755"
   ["/root/.automated_script.sh"]="0:0:755"
   ["/etc/sudoers.d/99-liveuser"]="0:0:440"
 )

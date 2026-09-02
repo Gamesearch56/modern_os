@@ -68,7 +68,7 @@ FILE="$DIR/$(date +"$TEMPLATE").mp4"
 WF_PID=""
 
 # Invoked from trap INT TERM; shellcheck cannot see that.
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 cleanup() {
     trap - INT TERM
     if [ -n "${WF_PID:-}" ]; then

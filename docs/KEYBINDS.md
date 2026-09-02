@@ -38,10 +38,13 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + SHIFT + LEFT` / `RIGHT` / `UP` / `DOWN` | Move the focused window in that direction | `hl.dsp.window.move({ direction })` |
 | `SUPER + mouse 272 / 273` | Drag / resize window | |
 | `SUPER + scroll` | Next/prev workspace on this monitor | `workspace m±1` |
+| Window edge + drag | Resize window | |
+| Applications right-click | Float, fullscreen, togglesplit, close | |
 | `SUPER + SHIFT + C` | Color picker | |
 
 Workspace `SUPER + 1`…`0` and `SUPER + SHIFT + 1`…`0` (move window to
 that workspace) match the cheatsheet categories.
 
-Live list: press `SUPER + K`. CLI: `scripts/modern <target> <function>`
+Live list: press `SUPER + K` (Mouse category lists chrome and Super+mouse
+gestures). CLI: `scripts/modern <target> <function>`
 (`qs -c modern ipc` wrapper).

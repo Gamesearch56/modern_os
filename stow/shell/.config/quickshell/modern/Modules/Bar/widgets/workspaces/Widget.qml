@@ -38,8 +38,15 @@ Item {
         void Hypr.monitors;
         void Hypr.focusedWorkspace;
         const range = Hypr.reservedRange(root.barScreen);
-        if (!range)
+        if (!range) {
+            const shown = root.ids || [];
+            for (let i = 0; i < shown.length; i++) {
+                const id = Number(shown[i]);
+                if (Hypr.isActiveOnScreen(root.barScreen, id))
+                    return id;
+            }
             return 0;
+        }
         for (let id = range.from; id <= range.to; id++) {
             if (Hypr.isActiveOnScreen(root.barScreen, id))
                 return id;
@@ -47,13 +54,18 @@ Item {
         return 0;
     }
 
-    // First unused id after the active one in this monitor's range
-    // (1-5 left, 6-10 next). Skip workspaces already on the strip.
+    // Fixed: first unused id after the active one in this monitor's
+    // five-slot range. Dynamic: first free global id (opens on the
+    // monitor under the cursor).
     readonly property int nextId: {
         void Hypr.workspaces;
         void Hypr.monitors;
         void Hypr.focusedWorkspace;
         void Hypr.toplevels;
+        void Config.monitors;
+        const mode = Config.monitors?.workspaceMode || "dynamic";
+        if (mode !== "fixed")
+            return Hypr.nextFreeWorkspaceId();
         const range = Hypr.reservedRange(root.barScreen);
         if (!range || root.activeId <= 0)
             return 0;
@@ -72,6 +84,9 @@ Item {
         void Hypr.toplevelList;
         void Hypr.workspaces;
         void Hypr.focusedWorkspace;
+        void Config.monitors;
+        if ((Config.monitors?.workspaceMode || "dynamic") !== "fixed")
+            return true;
         return root.nextId > 0 && root.activeId > 0 && Hypr._workspaceHasWindows(root.activeId);
     }
 
@@ -168,7 +183,10 @@ Item {
                 size: root._addSize
                 iconSize: Tokens.icon.sm - Tokens.spacing.xxs
                 checked: false
-                onClicked: Hypr.focusWorkspace(root.nextId)
+                onClicked: {
+                    if (root.nextId > 0)
+                        Hypr.focusWorkspace(root.nextId);
+                }
             }
         }
     }

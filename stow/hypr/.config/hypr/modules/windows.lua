@@ -1,5 +1,5 @@
--- Overlay / chrome window titles shared by windowrules.lua and
--- titlebar.lua so a new FloatingWindow is listed once.
+-- Overlay / chrome window titles for windowrules.lua so a new
+-- FloatingWindow is listed once.
 
 return {
     { name = "modern-settings", title = "modern.settings", size = { 1040, 720 }, opaque = false },

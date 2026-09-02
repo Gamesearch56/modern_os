@@ -1,23 +1,34 @@
 #!/usr/bin/env bash
-# Live ISO: greetd (or a root TTY fallback) starts the compositor here.
-# start-hyprland owns the session; hyprland.lua is the only config format.
+# Live ISO: greetd starts a kiosk compositor whose only client is
+# Calamares. Hyprland Lua autostart never reliably opened the installer
+# (hl.exec_cmd races / emergency mode / root seat). cage is what greetd
+# documents for a single fullscreen app. pixman so QEMU still paints
+# when virtio-gl is flaky.
 set -euo pipefail
 
-CONF=/etc/modern/live-hyprland.lua
-export QT_QPA_PLATFORM=wayland
-export XDG_CURRENT_DESKTOP=Hyprland
 export XDG_SESSION_TYPE=wayland
+export QT_QPA_PLATFORM=wayland
+export WLR_RENDERER="${WLR_RENDERER:-pixman}"
+export WLR_NO_HARDWARE_CURSORS="${WLR_NO_HARDWARE_CURSORS:-1}"
 
-cfg_dir="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
-mkdir -p "$cfg_dir"
-ln -sfn "$CONF" "$cfg_dir/hyprland.lua"
+log() {
+    printf '%s\n' "$*" >>/tmp/live-session.log 2>/dev/null || true
+    if [ -w /dev/ttyS0 ]; then
+        printf '%s\n' "$*" >/dev/ttyS0 || true
+    fi
+}
 
-args=()
-if [ "$(id -u)" -eq 0 ]; then
-    args+=(--i-am-really-stupid)
+log "live-session uid=$(id -u) HOME=${HOME:-} RUNTIME=${XDG_RUNTIME_DIR:-} cage=$(command -v cage || true)"
+
+if ! command -v cage >/dev/null 2>&1; then
+    log "cage missing"
+    exit 1
 fi
 
-if command -v start-hyprland >/dev/null 2>&1; then
-    exec start-hyprland "${args[@]}"
+if command -v dbus-run-session >/dev/null 2>&1 \
+    && [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+    log "exec dbus-run-session -- cage -s -- live-calamares.sh"
+    exec dbus-run-session -- cage -s -- /usr/lib/modern/live-calamares.sh
 fi
-exec Hyprland "${args[@]}" --config "$CONF"
+log "exec cage -s -- /usr/lib/modern/live-calamares.sh"
+exec cage -s -- /usr/lib/modern/live-calamares.sh

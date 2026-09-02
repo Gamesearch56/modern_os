@@ -29,6 +29,8 @@ Item {
             return "preferences-system-windows";
         case "workspaces":
             return "view-grid";
+        case "mouse":
+            return "input-mouse";
         default:
             return "view-app-grid-symbolic";
         }
