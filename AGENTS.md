@@ -119,7 +119,8 @@ scripts/test-desktop-sync.sh
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-iso-dryrun
 ```
 
-Gitflow-lite (PRs to `dev`, release tags on `main`): `docs/GIT.md`.
+Work on `dev` and PR into `main` (`docs/GIT.md`). Do not create
+`feature/*` or `fix/*` branches.
 Do not run `iso-build.sh --mkarchiso`, `provision-iso.sh`, or a live
 `install.sh` on this host.
 
