@@ -120,6 +120,7 @@ Singleton {
             body: root._str(n.body),
             appName: root._str(n.appName),
             appIcon: root._str(n.appIcon),
+            desktopEntry: root._str(n.desktopEntry),
             image: root._str(n.image),
             hints: n.hints || ({}),
             local: false,
@@ -144,6 +145,7 @@ Singleton {
             body: body || "",
             appName: "modern",
             appIcon: "",
+            desktopEntry: "",
             image: image || "",
             hints: ({}),
             local: true,
@@ -233,6 +235,101 @@ Singleton {
     function _isLocalPath(s: string): bool {
         const t = String(s || "");
         return t.indexOf("/") === 0 || t.indexOf("file://") === 0;
+    }
+
+    function _themeName(s: string): bool {
+        const t = String(s || "");
+        return t.length > 0 && t.indexOf("/") === -1 && t.indexOf("://") === -1;
+    }
+
+    function _fileUrl(s: string): string {
+        const t = String(s || "");
+        if (!t.length)
+            return "";
+        if (t.indexOf("://") !== -1)
+            return t;
+        return t.indexOf("/") === 0 ? ("file://" + t) : "";
+    }
+
+    // Pixmap/file only — an icon *name* in image becomes file://name and
+    // Qt paints the missing-image texture in the control panel list.
+    function _rasterUrl(s: string): string {
+        const t = String(s || "");
+        if (!t.length || root._themeName(t))
+            return "";
+        const lower = t.toLowerCase();
+        const fileish = root._isLocalPath(t)
+            || lower.indexOf(".png") !== -1 || lower.indexOf(".jpg") !== -1
+            || lower.indexOf(".jpeg") !== -1 || lower.indexOf(".webp") !== -1
+            || lower.indexOf(".svg") !== -1
+            || lower.indexOf("screenshot") !== -1
+            || lower.indexOf("/pictures/") !== -1;
+        if (!fileish)
+            return "";
+        return root._fileUrl(t) || t;
+    }
+
+    function _iconFile(name: string): string {
+        if (!root._themeName(name))
+            return "";
+        const full = Quickshell.iconPath(name);
+        const checked = Quickshell.iconPath(name, true);
+        const p = (full && String(full).length) ? String(full) : String(checked || "");
+        if (!p.length)
+            return "";
+        if (p.indexOf("://") !== -1 || p.indexOf("image:") === 0)
+            return p;
+        return p.charAt(0) === "/" ? ("file://" + p) : "";
+    }
+
+    function displayImage(item): string {
+        const live = root._live(item) || item;
+        if (!live)
+            return "";
+        const fromImage = root._rasterUrl(root._str(live.image));
+        if (fromImage.length)
+            return fromImage;
+        const h = live.hints || ({});
+        const fromHint = root._rasterUrl(root._str(h["image-path"] || h["image_path"]));
+        if (fromHint.length)
+            return fromHint;
+        const fromApp = root._fileUrl(root._str(live.appIcon));
+        if (fromApp.length)
+            return fromApp;
+        const named = root._iconFile(root._str(live.appIcon))
+            || root._iconFile(root._str(live.image))
+            || root._iconFile(root._str(live.desktopEntry).replace(/\.desktop$/i, ""));
+        return named;
+    }
+
+    function displayIcon(item): string {
+        const live = root._live(item) || item;
+        if (!live)
+            return "dialog-information-symbolic";
+        const a = root._str(live.appIcon);
+        if (root._themeName(a))
+            return a;
+        const img = root._str(live.image);
+        if (root._themeName(img))
+            return img;
+        const d = root._str(live.desktopEntry).replace(/\.desktop$/i, "");
+        if (d.length)
+            return d;
+        return "dialog-information-symbolic";
+    }
+
+    // Durable app icon (theme file or on-disk SVG). Notification pixmaps
+    // under /tmp are valid for the banner and often gone in the list.
+    function displayIconSource(item): string {
+        const live = root._live(item) || item;
+        if (!live)
+            return "";
+        const fromApp = root._fileUrl(root._str(live.appIcon));
+        if (fromApp.length)
+            return fromApp;
+        return root._iconFile(root._str(live.appIcon))
+            || root._iconFile(root._str(live.image))
+            || root._iconFile(root._str(live.desktopEntry).replace(/\.desktop$/i, ""));
     }
 
     function _hintUrls(v): var {
