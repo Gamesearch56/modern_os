@@ -199,6 +199,16 @@ fi
 command -v mkarchiso >/dev/null 2>&1 || die "mkarchiso not on PATH"
 [ ! -d /home/bastianweigand ] || die "refusing mkarchiso on the development PC"
 
+# Squashfs plus the ISO both live under --out. /tmp is often a small
+# tmpfs (v0.1.3: 1.7G squashfs left 1.5G, ISO needed 2.7G).
+avail_kib="$(df -Pk "$abs_out" | awk 'NR==2 { print $4 }')"
+[[ "$avail_kib" =~ ^[0-9]+$ ]] || die "could not read free space on $abs_out"
+need_kib=$((8 * 1024 * 1024))
+if [ "$avail_kib" -lt "$need_kib" ]; then
+    die "need 8G free on $abs_out for squashfs+ISO (have $((avail_kib / 1024))M). Avoid /tmp."
+fi
+log "mkarchiso out $abs_out ($((avail_kib / 1024))M free)"
+
 PROFILE_WORK="$WORK/profile"
 mkdir -p "$PROFILE_WORK"
 if [ -d /usr/share/archiso/configs/releng ]; then
