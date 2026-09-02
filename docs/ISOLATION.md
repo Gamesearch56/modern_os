@@ -79,10 +79,9 @@ might have written outside the clone:
 scripts/check-isolation.sh
 ```
 
-Do not run `scripts/iso-build.sh --mkarchiso`, `provision-iso.sh`,
-Calamares, or a live `install.sh` (use `--dry-run --target /tmp/…`)
-on a machine you live on. ISO branding, if generated, stays under
-`iso/out/` or `$TMPDIR/modern-iso-*`.
+`iso-build.sh --mkarchiso` may write `iso/out/` on this PC (needs root).
+Do not run `provision-iso.sh`, Calamares, or a live `install.sh` (use
+`--dry-run --target /tmp/…`) on a machine you live on.
 
 It asserts:
 

@@ -1,1 +1,4 @@
+# Calamares is root on XWayland; keep DISPLAY so sudo env is not the
+# only path. pam_systemd still rewrites XDG_RUNTIME_DIR.
+Defaults:liveuser env_keep += "DISPLAY XAUTHORITY WAYLAND_DISPLAY XDG_RUNTIME_DIR QT_QPA_PLATFORM XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP"
 liveuser ALL=(ALL) NOPASSWD: ALL

@@ -1,4 +1,4 @@
-# Live ISO only — autologin liveuser into Hyprland + Calamares.
+# Live ISO only — autologin liveuser into cage + Calamares.
 # Installed systems use install/system/greetd/ (greeter kiosk), never this file.
 [terminal]
 vt = 1

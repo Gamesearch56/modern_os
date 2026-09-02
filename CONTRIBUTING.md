@@ -21,8 +21,9 @@ scripts/test-desktop-sync.sh
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
 ```
 
-Do not run `iso-build.sh --mkarchiso`, `provision-iso.sh`, or a live
-`install.sh` on a machine you live on. Isolation: [`docs/ISOLATION.md`](docs/ISOLATION.md).
+`iso-build.sh --mkarchiso` may write `iso/out/` on this PC. Do not run
+`provision-iso.sh`, Calamares, or a live `install.sh` on a machine you
+live on. Isolation: [`docs/ISOLATION.md`](docs/ISOLATION.md).
 
 ## Layer rules
 

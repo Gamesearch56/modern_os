@@ -20,8 +20,15 @@ SPDX-License-Identifier: Apache-2.0
 3. First boot is greetd + password. Settings → Update tracks newer
    `vX.Y.Z` tags.
 
-Do not run `iso-build.sh --mkarchiso` on a machine you live on. Build
-the image on CI or a spare box (`docs/INSTALL.md`).
+To rebuild the live image on this PC (writes `iso/out/` only):
+
+```bash
+sudo ./scripts/iso-build.sh --mkarchiso
+./scripts/iso-qemu.sh
+```
+
+Never run `provision-iso.sh` or Calamares on the session you live in
+(`docs/INSTALL.md`).
 
 ## Install from git
 

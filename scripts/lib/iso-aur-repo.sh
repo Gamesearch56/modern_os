@@ -2,9 +2,16 @@
 # Build AUR packages into a file:// repo for mkarchiso. Source from
 # iso-build.sh after PROFILE_WORK exists. ROOT, WORK, die, and log
 # come from the caller.
+#
+# Live homes are 0700, so modernisoaur cannot mkdir under iso/out/.
+# Bind-mount $WORK/aur onto /tmp so the builder writes a traversable
+# path while packages stay on the ISO output disk. User + sudoers +
+# mount are removed on EXIT.
 # shellcheck disable=SC2154
 
-# mkarchiso does s/#.*// and keeps leftover spaces as the package name.
+ISO_AUR_BUILDER=modernisoaur
+ISO_AUR_MNT=""
+
 iso_sanitize_package_list() {
     local src="$1"
     local tmp line
@@ -23,27 +30,66 @@ iso_sanitize_package_list() {
     mv "$tmp" "$src"
 }
 
+iso_aur_cleanup() {
+    if [ -n "${ISO_AUR_MNT:-}" ]; then
+        if mountpoint -q "$ISO_AUR_MNT"; then
+            umount "$ISO_AUR_MNT" >/dev/null 2>&1 || umount -l "$ISO_AUR_MNT" >/dev/null 2>&1 || true
+        fi
+        rmdir "$ISO_AUR_MNT" >/dev/null 2>&1 || true
+        ISO_AUR_MNT=""
+    fi
+    rm -f "/etc/sudoers.d/${ISO_AUR_BUILDER}"
+    if id "$ISO_AUR_BUILDER" >/dev/null 2>&1; then
+        pkill -u "$ISO_AUR_BUILDER" >/dev/null 2>&1 || true
+        userdel "$ISO_AUR_BUILDER" >/dev/null 2>&1 || true
+    fi
+}
+
+iso_calamares_limit_languages() {
+    local src="$1"
+    local hook="$ROOT/iso/releng/calamares-limit-languages.py"
+    [ -f "$hook" ] || die "missing $hook"
+    install -m 0644 "$hook" "$src/calamares-limit-languages.py"
+    chown "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" "$src/calamares-limit-languages.py"
+    if ! grep -F 'calamares-limit-languages.py' "$src/PKGBUILD" >/dev/null; then
+        cat >>"$src/PKGBUILD" <<'EOF'
+
+prepare() {
+  python3 "$startdir/calamares-limit-languages.py" \
+    "$srcdir/$_pkgname-$pkgver/src/libcalamares/locale/TranslationsModel.cpp"
+}
+EOF
+        chown "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" "$src/PKGBUILD"
+    fi
+}
+
+# mkarchiso does s/#.*// and keeps leftover spaces as the package name.
 iso_attach_aur_repo() {
     local profile="$1"
     local list="$ROOT/iso/releng/packages.aur.x86_64"
-    local repo="$WORK/aur-repo"
-    local build="$WORK/aur-build"
-    local builder="isoaur"
+    local store repo build home
     local pkg line src dest
     [ -f "$list" ] || return 0
     [ "$(id -u)" -eq 0 ] || die "AUR repo build needs root (same as mkarchiso)"
 
-    mkdir -p "$repo" "$build"
+    iso_aur_cleanup
+
+    store="$WORK/aur"
+    mkdir -p "$store/repo" "$store/build" "$store/home"
+    ISO_AUR_MNT="$(mktemp -d /tmp/modern-iso-aur.XXXXXX)"
+    mount --bind "$store" "$ISO_AUR_MNT"
+    repo="$ISO_AUR_MNT/repo"
+    build="$ISO_AUR_MNT/build"
+    home="$ISO_AUR_MNT/home"
+
     command -v repo-add >/dev/null 2>&1 || pacman -S --needed --noconfirm pacman-contrib
     pacman -S --needed --noconfirm base-devel git sudo
 
-    if ! id "$builder" >/dev/null 2>&1; then
-        useradd -m -d "$WORK/isoaur-home" "$builder"
-    fi
-    printf '%s ALL=(ALL) NOPASSWD: /usr/bin/pacman\n' "$builder" \
-        >"/etc/sudoers.d/$builder"
-    chmod 0440 "/etc/sudoers.d/$builder"
-    chown -R "$builder:$builder" "$build"
+    useradd -M -d "$home" -s /usr/bin/nologin "$ISO_AUR_BUILDER"
+    printf '%s ALL=(ALL) NOPASSWD: /usr/bin/pacman\n' "$ISO_AUR_BUILDER" \
+        >"/etc/sudoers.d/${ISO_AUR_BUILDER}"
+    chmod 0440 "/etc/sudoers.d/${ISO_AUR_BUILDER}"
+    chown -R "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" "$store"
 
     while IFS= read -r line || [ -n "$line" ]; do
         line="${line%%#*}"
@@ -52,8 +98,15 @@ iso_attach_aur_repo() {
         src="$build/$pkg"
         dest="https://aur.archlinux.org/${pkg}.git"
         log "building AUR $pkg for the ISO local repo"
-        sudo -u "$builder" git clone --depth 1 "$dest" "$src"
-        sudo -u "$builder" makepkg --dir "$src" -s --noconfirm
+        if [ ! -d "$src/.git" ]; then
+            sudo -u "$ISO_AUR_BUILDER" git clone --depth 1 "$dest" "$src"
+        fi
+        if [ "$pkg" = calamares ]; then
+            iso_calamares_limit_languages "$src"
+            sudo -u "$ISO_AUR_BUILDER" makepkg --dir "$src" -sf --noconfirm
+        else
+            sudo -u "$ISO_AUR_BUILDER" makepkg --dir "$src" -s --noconfirm
+        fi
         find "$src" -maxdepth 1 -name '*.pkg.tar.*' ! -name '*.sig' \
             -exec cp -a {} "$repo/" \;
         if [ -f "$profile/packages.x86_64" ] && ! grep -qxF "$pkg" "$profile/packages.x86_64"; then

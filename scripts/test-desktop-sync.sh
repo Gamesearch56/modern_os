@@ -125,6 +125,18 @@ fi
 if [ -e "$fake_home/scratch" ]; then
     err "iso-build created a protected-home path"
 fi
+if grep -F 'refusing mkarchiso while MODERN_PROTECT_HOME' "$ISO" >/dev/null; then
+    err "iso-build still refuses mkarchiso on a live PC"
+else
+    ok "iso-build allows mkarchiso (output still cannot be under protect home)"
+fi
+if grep -F 'iso_aur_cleanup' "$ROOT/scripts/lib/iso-aur-repo.sh" >/dev/null \
+    && grep -F "userdel" "$ROOT/scripts/lib/iso-aur-repo.sh" >/dev/null \
+    && grep -F 'mount --bind' "$ROOT/scripts/lib/iso-aur-repo.sh" >/dev/null; then
+    ok "AUR ISO builder bind-mounts out of a 0700 home and removes its user"
+else
+    err "iso-aur-repo.sh must bind-mount AUR build and delete modernisoaur on EXIT"
+fi
 
 if [ "$FAIL" -ne 0 ]; then
     exit 1

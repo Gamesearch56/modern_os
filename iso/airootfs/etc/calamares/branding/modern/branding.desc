@@ -1,9 +1,9 @@
 ---
 componentName: modern
 welcomeStyleCalamares: false
-welcomeExpandingLogo: true
+welcomeExpandingLogo: false
 windowExpanding: normal
-windowSize: 800px,520px
+windowSize: 1100px,720px
 windowPlacement: center
 sidebar: widget
 navigation: widget
@@ -19,10 +19,11 @@ strings:
     supportUrl:          https://github.com/Gamesearch56/modern_dotfile
     knownIssuesUrl:      https://github.com/Gamesearch56/modern_dotfile/issues
     releaseNotesUrl:     https://github.com/Gamesearch56/modern_dotfile
+    donateUrl:           ""
 images:
-    productLogo:         "default.jpg"
-    productIcon:         "default.jpg"
-    productWelcome:      "default.jpg"
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "logo.png"
 style:
     SidebarBackground:        "#141218"
     SidebarText:              "#E6E0E9"

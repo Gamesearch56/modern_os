@@ -90,37 +90,43 @@ arch-chroot → chain `install.sh`). Disks are not wiped unless you pass
 
 ## ISO (Calamares)
 
-Built with `scripts/iso-build.sh` on a spare box or CI. Branding lands
-under gitignored `iso/out/` (throwaway `HOME` for matugen). `--mkarchiso`
-is refused when `MODERN_PROTECT_HOME` is set and that directory exists.
-The ISO clones the baked-in release tag (`vX.Y.Z`, `docs/GIT.md`), runs
-`install.sh --profile m0 --yes`, then `provision-iso.sh`. First boot of
-the **installed** system is greetd + password.
-
-The **live** image autologins `liveuser` via `start-hyprland` and opens
-Calamares. Config is Lua (`/etc/modern/live-hyprland.lua`), not `.conf`.
-If you land on a root TTY, this image never started greetd:
+Build on this PC or CI. Output is gitignored `iso/out/` (throwaway
+`HOME` for matugen). `--mkarchiso` needs **root**, `archiso`, and about
+**8G free** on that directory — not `/tmp`. It does **not** run
+`provision-iso.sh` or touch live `/etc` except a throwaway AUR builder
+user that is deleted when the script exits.
 
 ```bash
-export XDG_RUNTIME_DIR=/run/user/0
-mkdir -p "$XDG_RUNTIME_DIR"
-chmod 700 "$XDG_RUNTIME_DIR"
+sudo pacman -S --needed archiso qemu-desktop
+sudo ./scripts/iso-build.sh --mkarchiso
+./scripts/iso-qemu.sh          # live image + 64G qcow2 (Calamares needs ≥ 16 GiB)
+```
+
+The **live** ISO is this clone (kiosk, branding, Calamares). After
+install, Calamares late clones the baked-in **release tag** (`--tag` or
+the latest `vX.Y.Z`). First boot of the **installed** system is greetd
++ password.
+
+The **live** image autologins `liveuser` into `cage`. Cage's client is
+Xwayland; Calamares runs as root on X11 (`sudo` + `xhost`) so partitioning
+works. Root cannot be a Wayland client of liveuser's compositor, and a
+root compositor never painted in QEMU. `iso-qemu.sh` writes guest serial
+to `iso/out/vm-serial.log`.
+
+After **Install**, the exec page copies the squashfs (`unpackfs`), then
+checks packages already on the image (`linux-zen` is shipped so this is
+not a network download), then three named late jobs: clone the pin,
+`install.sh --profile m0 --yes`, `provision-iso.sh`. The bar only moves
+when a job reports; unpack in QEMU can sit still for many minutes. Late
+git has a 180s timeout instead of hanging for two hours.
+If you land on a TTY, this image never started greetd:
+
+```bash
 /usr/lib/modern/live-session.sh
 ```
 
-On an older ISO that still has `live-hyprland.conf`, Hyprland can start
-without Calamares (`exec-once` is ignored). From another TTY
-(`Ctrl+Alt+F2`), with the compositor still running on tty1:
-
-```bash
-export XDG_RUNTIME_DIR=/run/user/0
-export WAYLAND_DISPLAY=wayland-1
-ls /run/user/0
-QT_QPA_PLATFORM=wayland calamares
-```
-
-Try `wayland-0` if `wayland-1` is missing. SUPER+Return also launches
-Calamares on a rebuilt image. The VM needs virtio 3D.
+Welcome **Support** / **Known issues** open GitHub in Firefox on the
+same session. There is no Donate button. The VM needs virtio 3D.
 
 Settings → Update later tracks the latest GitHub **release tag**, not
 `dev` or the tip of `main`.

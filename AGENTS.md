@@ -119,10 +119,9 @@ scripts/test-desktop-sync.sh
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-iso-dryrun
 ```
 
-Work on `dev` and PR into `main` (`docs/GIT.md`). Do not create
-`feature/*` or `fix/*` branches.
-Do not run `iso-build.sh --mkarchiso`, `provision-iso.sh`, or a live
-`install.sh` on a machine you live on.
+`iso-build.sh --mkarchiso` may write `iso/out/` on this PC. Do not run
+`provision-iso.sh`, Calamares, or a live `install.sh` on a machine you
+live on.
 
 ## Directory map
 
