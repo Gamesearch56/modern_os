@@ -1,0 +1,36 @@
+# Keep a Changelog (keepachangelog.com) on every vX.Y.Z tag.
+# Publishing the Release triggers the ISO workflow. Never mkarchiso here.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]*.[0-9]*.[0-9]*"
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Publish patch notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          case "$tag" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "skip $tag" >&2; exit 0 ;;
+          esac
+          notes="$(mktemp)"
+          ./scripts/release-notes.sh "$tag" >"$notes"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --notes-file "$notes"
+          else
+            gh release create "$tag" --title "ModernOS $tag" --notes-file "$notes"
+          fi

@@ -26,6 +26,8 @@ jobs:
         run: scripts/test-desktop-sync.sh
       - name: ISO package list
         run: scripts/test-iso-package-list.sh
+      - name: Release notes
+        run: scripts/test-release-notes.sh
 
   install-dry:
     runs-on: ubuntu-latest
