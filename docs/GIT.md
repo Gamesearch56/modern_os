@@ -47,6 +47,8 @@ on tags `v*`:
 - `shellcheck` on `install/` and `scripts/`
 - `scripts/test-settings-catalog.sh`
 - `scripts/test-desktop-sync.sh` (local fake remote, no GitHub)
+- `scripts/test-iso-package-list.sh`
+- `scripts/test-release-notes.sh`
 - `./install/install.sh --dry-run --profile m0 --target $RUNNER_TEMP/…`
 
 `scripts/check-isolation.sh` is **this PC only**. Do not add it to GitHub.
@@ -55,10 +57,8 @@ on tags `v*`:
 
 1. Open a PR **`dev` → `main`**. Title: `Release vX.Y.Z`.
 2. Merge when CI is green.
-3. Create a GitHub Release / annotated tag `vX.Y.Z` on that `main` commit.
-4. After this workflow is on `main`, the `ISO` Action builds the friend
-   image and attaches `*.iso` to that Release. Never `iso-build.sh
-   --mkarchiso` on this PC.
+3. Annotated tag on that `main` commit, then push the tag. Do **not**
+   write the GitHub Release by hand.
 
 ```bash
 git checkout main
@@ -66,6 +66,11 @@ git pull
 git tag -a v0.1.0 -m "ModernOS v0.1.0"
 git push origin v0.1.0
 ```
+
+The `Release` Action writes [Keep a Changelog](https://keepachangelog.com/)
+notes (Added / Changed / Fixed / …) from commits since the previous
+tag, publishes the GitHub Release, and then the `ISO` Action attaches
+the friend image. Never `iso-build.sh --mkarchiso` on this PC.
 
 That tag is what Settings → Update and the ISO pin look at. Friends
 download the image from the Release page, not from this machine.
