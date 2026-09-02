@@ -52,8 +52,8 @@ Item {
     onValueChanged: {
         if (root._dragging)
             return;
-        if (Math.abs(root.value - root._live) <= root._span / 1000)
-            root._hold = false;
+        root._live = root.value;
+        root._hold = false;
     }
 
     RowLayout {
