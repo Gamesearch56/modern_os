@@ -151,7 +151,6 @@ Singleton {
             }
 
             property JsonObject windows: JsonObject {
-                property bool titlebar: true
                 property real opacity: 1.0
                 property int gapsIn: 5
                 property int gapsOut: 10

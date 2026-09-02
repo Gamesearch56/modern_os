@@ -5,8 +5,8 @@
 --
 -- Effect names must match 0.56's WINDOW_RULE_EFFECT_DESCS exactly:
 -- dim_around (not dimaround), size as {w, h}, opacity as a string.
--- Plugin effects (hyprbars:no_bar, …) are unknown until hyprbars is
--- loaded — same gate as modules/titlebar.lua.
+-- Leftover plugin effects (hyprbars:no_bar, …) are unknown without
+-- that plugin and must not be applied.
 
 local config = require("modules.config")
 local overlays = require("modules.windows")
@@ -72,7 +72,7 @@ apply({
 })
 
 -- Phylax (GTK4 polkit agent) app_id. Glass like the wallpaper overlay:
--- float+center, dim_around as scrim, design.transparency, no hyprbars.
+-- float+center, dim_around as scrim, design.transparency.
 -- pin keeps the prompt above modern.store / modern.settings.
 -- focus_on_activate honours GTK present(); stay_focused holds the seat
 -- after that. follow_mouse=1 otherwise leaves keys on Settings.
@@ -87,7 +87,6 @@ apply({
     focus_on_activate = true,
     border_size = 1,
     opacity = config.value("design.transparency", 0.85),
-    ["hyprbars:no_bar"] = true,
 })
 
 local function phylax_focus(w)
@@ -142,7 +141,6 @@ apply({
     float = true,
     center = true,
     dim_around = true,
-    ["hyprbars:no_bar"] = true,
 })
 
 -- GNOME Sushi (Nautilus Space). Toplevel on Hyprland unless floated;
@@ -156,7 +154,6 @@ apply({
     dim_around = true,
     opaque = true,
     border_size = 1,
-    ["hyprbars:no_bar"] = true,
 })
 
 for _, w in ipairs(overlays) do
@@ -167,7 +164,6 @@ for _, w in ipairs(overlays) do
         center = true,
         size = w.size,
         dim_around = true,
-        ["hyprbars:no_bar"] = true,
         opaque = w.opaque == true,
     })
 end

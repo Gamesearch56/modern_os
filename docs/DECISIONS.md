@@ -258,11 +258,11 @@ wonder about the inherited `tr()` again) but is not fixing a real bug.
 
 **Consequence:** `AGENTS.md`'s "add a new Commons/Widgets file" instructions must include "add it to that directory's `qmldir`" as a required step, not an optional one — forgetting it doesn't error at all for most files (auto-synthesis still finds them), so this is an easy step to skip and only surfous as this exact class of silent, hard-to-diagnose bug for whichever file the scanner happens to mis-detect next.
 
-## 20. Traffic-light window controls are functional colors, not MD3 roles
+## 20. No compositor titlebars
 
-**Decision:** hyprbars titlebar buttons use orange (fullscreen), green (float), and red (close) as OS window-control affordances (macOS/Windows traffic lights). Close stays in the error-red family. Orange and green have no Material Design 3 role, so they are the one documented hex exception in compositor chrome. Titlebar *surface* (`bar_color`, text, height, padding, rounding) still comes from matugen tokens and `Tokens` / `typography` via `titlebar.lua` + `hyprland-colors.lua.template`. `windows.titlebar` in `config.json` gates the plugin options, and `titlebar.lua` no-ops when `hl.plugin.hyprbars` is absent so a session without the plugin does not fill the error overlay with unknown `plugin.hyprbars` keys.
+**Decision:** This desktop does not use hyprbars or any other SSD titlebar. The plugin did not stay reliable (missing bars, unknown `plugin.hyprbars` keys, hyprpm store/pkexec on login). Window chrome is Super+mouse move/resize, Hyprland `resize_on_border`, and the Applications right-click menu (float, fullscreen, togglesplit, close). `windows.titlebar` and `modules/titlebar.lua` are gone.
 
-**Rejected:** mapping all three buttons onto `primary` / `tertiary` / `error` (float would not read as “safe”), or drawing titlebars in Quickshell (fights the compositor; hyprbars is the SSD path).
+**Rejected:** shipping hyprbars behind a Settings toggle, drawing titlebars in Quickshell, or keeping a no-op `titlebar.lua` that only ran when the plugin happened to load.
 
 ## 21. Settings and picker menus are Hyprland windows, not layer overlays
 

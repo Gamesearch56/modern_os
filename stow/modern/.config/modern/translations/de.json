@@ -24,6 +24,7 @@
     "taskbarHide": "In den Hintergrund",
     "taskbarFloat": "Schwebend",
     "taskbarFullscreen": "Vollbild",
+    "taskbarSplit": "Teilung umschalten",
     "taskbarWorkspace": "Arbeitsbereich {id}",
     "taskbarBackground": "Hintergrund",
     "soundSettings": "Klangeinstellungen",
@@ -319,7 +320,12 @@
       "lockScreen": "Sperrbildschirm",
       "browserIncognito": "Browser (Inkognito)",
       "filePreview": "Schnellansicht",
-      "clipboardHistory": "Zwischenablageverlauf"
+      "clipboardHistory": "Zwischenablageverlauf",
+      "mouseMoveSuper": "Fenster verschieben",
+      "mouseResizeSuper": "Fenstergröße ändern",
+      "mouseWorkspaceScroll": "Nächster oder vorheriger Arbeitsbereich",
+      "mouseResizeBorder": "Fenster am Rand skalieren",
+      "mouseToggleSplit": "Teilung umschalten"
     },
     "category": {
       "applications": "Anwendungen",
@@ -328,7 +334,8 @@
       "windowManagement": "Fensterverwaltung",
       "workspaces": "Arbeitsbereiche",
       "screenshots": "Aufnahme",
-      "media": "Medien"
+      "media": "Medien",
+      "mouse": "Maus"
     }
   },
   "launcher": {
@@ -479,7 +486,6 @@
       "wifi": "WLAN",
       "bluetoothPower": "Bluetooth",
       "workspaceMode": "Workspace-Anordnung",
-      "titlebar": "Titelleisten",
       "barLeft": "Linke Insel",
       "barCenter": "Mittlere Insel",
       "barRight": "Rechte Insel",
@@ -675,14 +681,13 @@
       "geminiModel": "Nutzt der Leisten-Assistent, wenn Gemini gewählt ist.",
       "calendarIcs": "Proton Calendar → Einstellungen → Kalender → Freigabelink erstellen und hier einfügen.",
       "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken.",
-      "hyprbarsOn": "hyprbars-Plugin ist geladen.",
-      "hyprbarsOff": "hyprbars ist nicht geladen. scripts/doctor.sh und hyprpm prüfen.",
       "windowRulesJson": "JSON-Array der Hyprland-Fensterregeln. Speichern prüft vor dem Schreiben.",
       "gameFullscreen": "Erzwingt exklusives Vollbild, sobald das Spielfenster erscheint, statt auf die Anfrage der Engine zu warten.",
       "gameOptimize": "Schaltet zusätzliche Fenstereffekte am Spiel aus, damit es flüssiger läuft. Andere Fenster behalten ihr gewohntes Aussehen.",
       "repeatRate": "Wie schnell eine gehaltene Taste wiederholt.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn Hyprland startet.",
+      "mouseWindow": "Am Fensterrand ziehen, um die Größe zu ändern. Super+Links verschiebt ein Fenster, Super+Rechts ändert die Größe. Rechtsklick auf ein Fenster in Anwendungen zum Schweben, Vollbild, Teilen oder Schließen. Super+K listet das unter Maus.",
       "autoSwitchBluetooth": "Gekoppelte Kopfhörer verbinden sich und werden zum Lautsprecher, sobald sie verwendet werden.",
       "restoreGated": "Ein Snapshot-Rollback ist abgeschottet.",
       "preUpdateSnapshot": "Legt vor einem Systemupdate einen Snapper-Snapshot von / an, damit du zurückrollen kannst.",

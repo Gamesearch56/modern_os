@@ -23,7 +23,6 @@ end
 local class = config.value("gaming.matchClass",
     "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl")
 local title = config.value("gaming.matchTitle", ".*\\.exe|Project Zomboid")
-local hyprbars = hl.plugin and hl.plugin.hyprbars ~= nil
 
 local function magic(s)
     return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1"))
@@ -95,9 +94,6 @@ end
 
 local function effects(name, match)
     local rule = { name = name, match = match }
-    if hyprbars then
-        rule["hyprbars:no_bar"] = true
-    end
     if auto_opt then
         rule.immediate = true
         rule.no_blur = true

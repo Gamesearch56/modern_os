@@ -11,8 +11,6 @@ import "../Commons"
 Singleton {
     id: root
 
-    property bool hyprbarsLoaded: false
-
     readonly property var monitors: Hyprland.monitors
     readonly property var workspaces: Hyprland.workspaces
     readonly property var toplevels: Hyprland.toplevels
@@ -116,21 +114,25 @@ Singleton {
         }
     }
 
-    function moveToWorkspace(id: int) {
+    function _pinWorkspace(id: int) {
         const mode = Config.monitors?.workspaceMode || "dynamic";
-        if (mode === "fixed") {
-            const sel = root._monitorSelectorForWorkspace(id);
-            if (sel.length > 0) {
-                if (root._lua)
-                    root.dispatch("hl.dsp.workspace.move({ workspace = \"" + id + "\", monitor = \"" + sel + "\" })");
-                else
-                    root.dispatch("moveworkspacetomonitor " + id + " " + sel);
-            }
-        }
+        if (mode !== "fixed")
+            return;
+        const sel = root._monitorSelectorForWorkspace(id);
+        if (!sel.length)
+            return;
         if (root._lua)
-            root.dispatch("hl.dsp.window.move({ workspace = " + id + " })");
+            root.dispatch("hl.dsp.workspace.move({ workspace = \"" + id + "\", monitor = \"" + sel + "\" })");
         else
-            root.dispatch("movetoworkspace " + id);
+            root.dispatch("moveworkspacetomonitor " + id + " " + sel);
+    }
+
+    function moveToWorkspace(id: int) {
+        wins.moveWindowToWorkspace("", id);
+    }
+
+    function moveWindowToWorkspace(address: string, id: int) {
+        wins.moveWindowToWorkspace(address, id);
     }
 
     function _rangeForId(id: int): var {
@@ -201,6 +203,7 @@ Singleton {
     function windowOnScreen(toplevel: var, screen: var): bool { return wins.windowOnScreen(toplevel, screen); }
     function toggleFloating(address: string) { wins.toggleFloating(address); }
     function toggleFullscreen(address: string) { wins.toggleFullscreen(address); }
+    function toggleSplit(address: string) { wins.toggleSplit(address); }
 
     function reload() {
         if (root._lua)
@@ -520,17 +523,6 @@ Singleton {
     Component.onCompleted: {
         root.refreshToplevels();
         root.refreshMonitorDump();
-    }
-
-    Process {
-        id: pluginProc
-        command: ["hyprctl", "plugin", "list"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.hyprbarsLoaded = this.text.toLowerCase().indexOf("hyprbars") !== -1;
-            }
-        }
     }
 
     Process {

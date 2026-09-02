@@ -24,6 +24,7 @@
     "taskbarHide": "Send to background",
     "taskbarFloat": "Float",
     "taskbarFullscreen": "Fullscreen",
+    "taskbarSplit": "Toggle split",
     "taskbarWorkspace": "Workspace {id}",
     "taskbarBackground": "Background",
     "soundSettings": "Sound settings",
@@ -319,7 +320,12 @@
       "lockScreen": "Lock screen",
       "browserIncognito": "Browser (incognito)",
       "filePreview": "Quick Look",
-      "clipboardHistory": "Clipboard history"
+      "clipboardHistory": "Clipboard history",
+      "mouseMoveSuper": "Move window",
+      "mouseResizeSuper": "Resize window",
+      "mouseWorkspaceScroll": "Next or previous workspace",
+      "mouseResizeBorder": "Resize window from edge",
+      "mouseToggleSplit": "Toggle split"
     },
     "category": {
       "applications": "Applications",
@@ -328,7 +334,8 @@
       "windowManagement": "Window management",
       "workspaces": "Workspaces",
       "screenshots": "Recording",
-      "media": "Media"
+      "media": "Media",
+      "mouse": "Mouse"
     }
   },
   "launcher": {
@@ -479,7 +486,6 @@
       "wifi": "Wi-Fi",
       "bluetoothPower": "Bluetooth",
       "workspaceMode": "Workspace arrangement",
-      "titlebar": "Title bars",
       "barLeft": "Left island",
       "barCenter": "Middle island",
       "barRight": "Right island",
@@ -675,14 +681,13 @@
       "geminiModel": "Used by the bar assistant when Gemini is selected.",
       "calendarIcs": "Proton Calendar → Settings → Calendars → Create a share link and paste it here.",
       "audioDevices": "The highlighted device is the default. Click another to send sound there.",
-      "hyprbarsOn": "hyprbars plugin is loaded.",
-      "hyprbarsOff": "hyprbars is not loaded. Run scripts/doctor.sh and hyprpm.",
       "windowRulesJson": "JSON array of Hyprland window rules. Save validates before writing.",
       "gameFullscreen": "Forces exclusive fullscreen as soon as the game window appears, instead of waiting for the engine to request it.",
       "gameOptimize": "Turns off extra window effects on the game so it can run smoother. Other windows keep their usual look.",
       "repeatRate": "How fast a held key types again.",
       "repeatDelay": "Wait before a held key starts repeating.",
       "numlockOnBoot": "Turns Num Lock on when Hyprland starts.",
+      "mouseWindow": "Drag a window edge to resize it. Super+left moves a window, Super+right resizes it. Right-click a window in Applications to float, fullscreen, split, or close. Super+K lists these under Mouse.",
       "autoSwitchBluetooth": "Paired headphones connect and become the sound speaker when they are used.",
       "restoreGated": "Restoring a snapshot needs a gated snapper rollback.",
       "preUpdateSnapshot": "Creates a Snapper snapshot of / before a system update so you can roll back.",

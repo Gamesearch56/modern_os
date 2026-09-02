@@ -116,7 +116,7 @@ Singleton {
         root._patchChrome = root._chromePath(job.path);
         root._applyMime = root._mimePath(job.path);
         root._reloadHypr = job.path === "monitors" || job.path.indexOf("monitors.") === 0
-            || job.path === "windows.titlebar" || job.path === "windowRules"
+            || job.path === "windowRules"
             || job.path === "motion.scale" || job.path === "motion"
             || job.path === "gaming" || job.path.indexOf("gaming.") === 0;
         proc.command = [Paths.modern, "config", "set", job.path, job.encoded];

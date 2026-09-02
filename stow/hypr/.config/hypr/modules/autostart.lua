@@ -35,9 +35,7 @@ hl.on("hyprland.start", function()
     -- to create that tree the first time. Calling reload before the
     -- store exists dies with "Failed to run a superuser cmd" and the
     -- -n flag turns that into the startup "plugin loaded failed"
-    -- overlay. Skip until the user has run `hyprpm add` once. hyprbars
-    -- itself reloads config from PLUGIN_INIT, so titlebar.lua applies
-    -- on the second parse once the .so is in.
+    -- overlay. Skip until the user has run `hyprpm add` once.
     hl.exec_cmd("sh -lc 'if [ -d /var/cache/hyprpm/\"$USER\" ]; then hyprpm reload -n; fi'")
 
     -- Wallpaper daemon, then restore via wallpaper-show.sh so filter/resize

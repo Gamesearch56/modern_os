@@ -34,15 +34,24 @@ QtObject {
     }
 
     function moveToCurrentWorkspace(address: string) {
-        const addr = String(address || "");
-        if (!addr.length)
-            return;
         const fw = root.host.focusedWorkspace;
         const id = (fw && Number(fw.id) > 0) ? Number(fw.id) : 1;
+        root.moveWindowToWorkspace(address, id);
+    }
+
+    function moveWindowToWorkspace(address: string, id: int) {
+        const n = Number(id);
+        if (n <= 0 || !root.host)
+            return;
+        root.host._pinWorkspace(n);
+        const addr = String(address || "").replace(/^address:/i, "");
+        const win = addr.length ? ", window = \"address:" + addr + "\"" : "";
         if (root.host._lua)
-            root.host.dispatch("hl.dsp.window.move({ workspace = " + id + ", window = \"address:" + addr + "\" })");
+            root.host.dispatch("hl.dsp.window.move({ workspace = " + n + win + " })");
+        else if (addr.length)
+            root.host.dispatch("movetoworkspace " + n + ",address:" + addr);
         else
-            root.host.dispatch("movetoworkspace " + id + ",address:" + addr);
+            root.host.dispatch("movetoworkspace " + n);
     }
 
     function moveToBackground(address: string) {
@@ -209,5 +218,15 @@ QtObject {
         if (!addr.length)
             return;
         root.host.dispatch("fullscreen 0,address:" + addr);
+    }
+
+    function toggleSplit(address: string) {
+        const addr = String(address || "").replace(/^address:/i, "");
+        if (addr.length)
+            root.focusWindow(addr);
+        if (root.host._lua)
+            root.host.dispatch("hl.dsp.layout(\"togglesplit\")");
+        else
+            root.host.dispatch("togglesplit");
     }
 }

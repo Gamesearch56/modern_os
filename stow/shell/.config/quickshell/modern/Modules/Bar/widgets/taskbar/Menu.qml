@@ -29,6 +29,7 @@ FocusScope {
         if (root.menuKind === "window") {
             k.push("float");
             k.push("full");
+            k.push("split");
         }
         k.push("close");
         return k;
@@ -169,6 +170,21 @@ FocusScope {
                     const addr = root.menuAddress;
                     root.closed();
                     Hypr.toggleFullscreen(addr);
+                }
+            }
+            MListItem {
+                objectName: "split"
+                Layout.fillWidth: true
+                compact: true
+                tabFocus: false
+                selected: (root.actionIds || [])[root.actionIndex] === "split"
+                visible: root.menuKind === "window"
+                iconName: "view-dual-symbolic"
+                titleKey: "bar.taskbarSplit"
+                onClicked: {
+                    const addr = root.menuAddress;
+                    root.closed();
+                    Hypr.toggleSplit(addr);
                 }
             }
             MListItem {

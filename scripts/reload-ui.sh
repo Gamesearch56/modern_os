@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Reload compositor UI without regenerating the theme.
-# Hyprland Lua, hyprbars, hypridle, Quickshell, kitty colors, polkit agent.
+# Hyprland Lua, hypridle, Quickshell, kitty colors, polkit agent.
 # Quickshell-only: `modern shell reload`.
 set -euo pipefail
 
