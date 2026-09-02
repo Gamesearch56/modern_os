@@ -66,6 +66,7 @@ jobs:
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/download-artifact@v7
         with:
@@ -76,4 +77,4 @@ jobs:
           shopt -s nullglob
           files=(iso-out/*.iso)
           [ ${#files[@]} -gt 0 ] || { echo "no ISO artifact" >&2; exit 1; }
-          gh release upload "$TAG" "${files[@]}" --clobber
+          gh release upload "$TAG" "${files[@]}" --clobber --repo "${GITHUB_REPOSITORY}"
