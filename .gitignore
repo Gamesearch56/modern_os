@@ -9,6 +9,8 @@ stow/qt/.config/qt6ct/colors/modern.conf
 stow/hypr/.config/hypr/application-style.conf
 stow/hypr/.config/hypr/hyprtoolkit.conf
 stow/hypr/.config/hypr/modules/colors.lua
+stow/kitty/.config/kitty/colors.conf
+**/.config/kitty/colors.conf
 **/.config/phylax/style.css
 **/.cache/
 **/__pycache__/

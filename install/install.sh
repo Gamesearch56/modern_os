@@ -291,14 +291,8 @@ run "$REPO_ROOT/scripts/mime-defaults.sh" \
 run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
     || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
 
-kitty_colors="$TARGET/.config/kitty/colors.conf"
-kitty_stub="$REPO_ROOT/stow/kitty/.config/kitty/colors.conf"
-if [ ! -f "$kitty_colors" ] && [ -f "$kitty_stub" ]; then
-    run mkdir -p "$TARGET/.config/kitty"
-    run rm -f "$kitty_colors"
-    run cp "$kitty_stub" "$kitty_colors"
-    log_info "seeded kitty colors.conf so SUPER+T can open a window before theme-apply"
-fi
+# kitty.conf globincludes colors.conf; fallbacks in kitty.conf keep
+# SUPER+T working until theme-apply writes the live file.
 
 log_ok "Install complete for profile '$PROFILE'."
 log_info "Start the session with start-hyprland (not the Hyprland binary) — see README.md."
