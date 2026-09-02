@@ -62,7 +62,7 @@ System-wide boot/login/`/etc` files stay under `install/system/` and are
 `config.json` only.
 
 ```bash
-scripts/lint-layers.sh
+scripts/ci-check.sh
 scripts/doctor.sh
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
 ```

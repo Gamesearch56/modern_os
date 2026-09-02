@@ -45,14 +45,9 @@ Forks also open PRs into `dev`. Maintainers commit on `dev` and PR
 GitHub Actions on every PR to `main` or `dev`, on pushes to `dev` /
 `main`, and on tags `v*`:
 
-- `scripts/lint-layers.sh`
-- `shellcheck` on `install/` and `scripts/`
-- `scripts/test-settings-catalog.sh`
-- `scripts/test-desktop-sync.sh` (local fake remote, no GitHub)
-- `scripts/test-nautilus-prefs.sh`
-- `scripts/test-iso-package-list.sh`
-- `scripts/test-iso-live-kiosk.sh`
-- `scripts/test-release-notes.sh`
+- `scripts/ci-check.sh` (jq / python3 / git / shellcheck, then
+  `lint-layers.sh`, `shellcheck` on `install/` `scripts/` `iso/airootfs/`,
+  and the catalog / sync / nautilus / ISO / release-notes tests)
 - `./install/install.sh --dry-run --profile m0 --target $RUNNER_TEMP/…`
 
 `scripts/check-isolation.sh` is **local only**. Do not add it to GitHub.

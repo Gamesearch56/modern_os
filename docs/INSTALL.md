@@ -165,7 +165,7 @@ shell itself.
 ## Verify
 
 ```bash
-scripts/lint-layers.sh
+scripts/ci-check.sh
 scripts/check-isolation.sh
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
 scripts/doctor.sh

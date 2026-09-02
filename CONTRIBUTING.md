@@ -15,9 +15,7 @@ branches. Details: [`docs/GIT.md`](docs/GIT.md).
    `install.sh --dry-run`.
 
 ```bash
-scripts/lint-layers.sh
-scripts/test-settings-catalog.sh
-scripts/test-desktop-sync.sh
+scripts/ci-check.sh           # deps, layer lint, shellcheck, unit tests
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
 ```
 

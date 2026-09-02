@@ -1,7 +1,7 @@
--- Workspace-to-monitor assignment. `fixed` keeps 1-5 on the leftmost
--- display and 6-10 on the next, keyed on description never connector
--- name. Profile positions are applied at parse so the second output
--- does not land on Hyprland's default workspace 11.
+-- Workspace-to-monitor assignment. `fixed` keeps five workspaces per
+-- display from left to right (1-5, 6-10, 11-15, …), keyed on
+-- description never connector name. Live outputs win over profiles so
+-- a third panel is not stuck on Hyprland's default workspace 11.
 
 local config = require("modules.config")
 
@@ -65,22 +65,24 @@ local function list_from_profiles()
 end
 
 local function assignment_monitors()
-    local profiles = list_from_profiles()
-    if #profiles >= 2 then
-        return profiles
+    local live = list_monitors()
+    if #live > 0 then
+        return live
     end
-    return list_monitors()
+    return list_from_profiles()
+end
+
+local function range_for_index(i)
+    local from = (i - 1) * 5 + 1
+    return from, from + 4
 end
 
 local function assigned_monitor(n)
+    if type(n) ~= "number" or n < 1 then
+        return nil
+    end
     local monitors = assignment_monitors()
-    if n >= 1 and n <= 5 then
-        return monitors[1]
-    end
-    if n >= 6 and n <= 10 then
-        return monitors[2]
-    end
-    return nil
+    return monitors[math.floor((n - 1) / 5) + 1]
 end
 
 local function pin(n, mon)
@@ -160,16 +162,16 @@ local function apply_fixed(boot)
         return
     end
     local monitors = assignment_monitors()
-    bind_range(monitors[1], 1, 5)
-    bind_range(monitors[2], 6, 10)
+    for i, mon in ipairs(monitors) do
+        local from, to = range_for_index(i)
+        bind_range(mon, from, to)
+    end
     if not boot then
         return
     end
-    if monitors[2] then
-        show(live_match(monitors[2]) or monitors[2], 6)
-    end
-    if monitors[1] then
-        show(live_match(monitors[1]) or monitors[1], 1)
+    for i = #monitors, 1, -1 do
+        local from = range_for_index(i)
+        show(live_match(monitors[i]) or monitors[i], from)
     end
 end
 
