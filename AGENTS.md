@@ -7,9 +7,9 @@ was rejected; this file is the practical "how do I add X" reference.
 ## What this is
 
 A from-scratch Material Design 3 desktop environment for Hyprland: a
-Quickshell (QML) shell replaces Waybar/SwayNC/Rofi, `matugen` replaces
-Wallust for colors, and everything behavioural lives in one JSON config
-file instead of scattered shell scripts. Full plan: `docs/ARCHITECTURE.md`.
+Quickshell (QML) shell, matugen for wallpaper-derived color, and
+everything behavioural in one JSON config file. Full plan:
+`docs/ARCHITECTURE.md`.
 Status: `README.md`. Settings is a Hyprland window (`modern.settings`);
 it still writes `config.json` only.
 
@@ -122,7 +122,7 @@ scripts/test-desktop-sync.sh
 Work on `dev` and PR into `main` (`docs/GIT.md`). Do not create
 `feature/*` or `fix/*` branches.
 Do not run `iso-build.sh --mkarchiso`, `provision-iso.sh`, or a live
-`install.sh` on this host.
+`install.sh` on a machine you live on.
 
 ## Directory map
 

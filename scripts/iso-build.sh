@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Build Calamares branding (and optionally the ISO). Never mkarchiso on
-# the development PC. Branding matugen uses a throwaway HOME.
+# Build Calamares branding (and optionally the ISO). Never mkarchiso
+# when MODERN_PROTECT_HOME is set and that directory exists. Branding
+# matugen uses a throwaway HOME.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -18,11 +19,11 @@ usage() {
 Usage: iso-build.sh [--mkarchiso] [--out DIR] [--tag vX.Y.Z]
 
 Generates Calamares QSS/tokens from default.jpg under a throwaway HOME.
-Writes gitignored artifacts under iso/out/. Refuses paths under
-/home/bastianweigand except a clone's iso/out.
+Writes gitignored artifacts under iso/out/. If MODERN_PROTECT_HOME is
+set, refuses output under that path except a clone's iso/out.
 
---mkarchiso runs mkarchiso. Refused when /home/bastianweigand exists.
-Missing mkarchiso is not an error (branding still succeeds).
+--mkarchiso runs mkarchiso. Refused when MODERN_PROTECT_HOME is set and
+that directory exists. Missing mkarchiso is not an error (branding still succeeds).
 EOF
 }
 
@@ -48,24 +49,34 @@ done
 
 [ -f "$WALLPAPER" ] || die "missing wallpaper $WALLPAPER"
 
-abs_out="$(mkdir -p "$OUT" && readlink -f "$OUT")"
-case "$abs_out" in
-    /home/bastianweigand/*)
-        case "$abs_out" in
-            */modern_dotfile/iso/out|*/modern_dotfile/iso/out/*) ;;
-            *) die "refusing to write under /home/bastianweigand ($abs_out)" ;;
-        esac
-        ;;
-esac
-case "$abs_out" in
-    /home/bastianweigand/.config|/*/.config/modern)
-        die "refusing to write live config paths"
-        ;;
-esac
-
-if [ -d /home/bastianweigand ] && [ "$DO_MKARCHISO" -eq 1 ]; then
-    die "refusing mkarchiso on the development PC"
+if command -v realpath >/dev/null 2>&1; then
+    abs_out="$(realpath -m "$OUT")"
+else
+    abs_out="$(mkdir -p "$OUT" && readlink -f "$OUT")"
 fi
+protect="${MODERN_PROTECT_HOME:-}"
+protect="${protect%/}"
+if [ -n "$protect" ]; then
+    case "$abs_out" in
+        "$protect"|"$protect"/*)
+            case "$abs_out" in
+                */modern_dotfile/iso/out|*/modern_dotfile/iso/out/*) ;;
+                *) die "refusing to write under protected home $protect ($abs_out)" ;;
+            esac
+            ;;
+    esac
+    case "$abs_out" in
+        "$protect"/.config|/*/.config/modern)
+            die "refusing to write live config paths"
+            ;;
+    esac
+fi
+
+if [ -n "$protect" ] && [ -d "$protect" ] && [ "$DO_MKARCHISO" -eq 1 ]; then
+    die "refusing mkarchiso while MODERN_PROTECT_HOME=$protect exists"
+fi
+
+mkdir -p "$abs_out"
 
 pin="${MODERN_ISO_TAG:-}"
 if [ -z "$pin" ]; then
@@ -197,7 +208,9 @@ if [ "$DO_MKARCHISO" -eq 0 ]; then
     exit 0
 fi
 command -v mkarchiso >/dev/null 2>&1 || die "mkarchiso not on PATH"
-[ ! -d /home/bastianweigand ] || die "refusing mkarchiso on the development PC"
+if [ -n "${MODERN_PROTECT_HOME:-}" ] && [ -d "${MODERN_PROTECT_HOME%/}" ]; then
+    die "refusing mkarchiso while MODERN_PROTECT_HOME is set and exists"
+fi
 
 # Squashfs plus the ISO both live under --out. /tmp is often a small
 # tmpfs (v0.1.3: 1.7G squashfs left 1.5G, ISO needed 2.7G).

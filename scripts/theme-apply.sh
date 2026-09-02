@@ -7,7 +7,7 @@
 #
 # tokens.json is the single source of truth: everything else in this
 # list is generated from the same matugen run, so nothing can drift out
-# of sync the way the old Wallust templates could.
+# of sync across per-app templates.
 #
 # Usage:
 #   theme-apply.sh [--profile NAME] [--wallpaper PATH] [--skip-wallpaper]

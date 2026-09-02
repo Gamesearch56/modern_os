@@ -52,8 +52,8 @@ stow_package() {
     local pkg="$1"
     local target="${2:-$HOME}"
     local pkg_dir="$STOW_DIR/$pkg"
-    # Backups stay under the *target* home so a --target /home/devuser run
-    # from another account never writes into the daily-driver $HOME.
+    # Backups stay under the *target* home so a --target run from another
+    # account never writes into the invoking user's $HOME.
     local backup_root="${STOW_BACKUP_ROOT:-$target/.local/state/modern/stow-backups}"
 
     [ -d "$pkg_dir" ] || { log_warn "stow package '$pkg' not found at $pkg_dir, skipping"; return 0; }

@@ -1,10 +1,7 @@
 # Installing Cursor on `devuser`
 
 Cursor is installed as `cursor-bin` from the AUR — this is what
-`install/manifests/40-dev.aur.txt` lists, and it's the same package
-already used on the `bastianweigand` account (confirmed in
-`install/baseline/pkglist_aur.txt`), so this path is known to work on
-this machine.
+`install/manifests/40-dev.aur.txt` lists.
 
 ## 1. Via the installer (recommended)
 
@@ -36,13 +33,12 @@ cursor
 
 On a fresh `devuser` with no display session yet, run this over SSH or a
 TTY with `cursor --no-sandbox` if the Wayland/X11 session isn't up yet —
-but normally you'll do this after Hyprland is running (M0, step 5 onward)
-so the GUI launches on the real desktop.
+but normally you'll do this after Hyprland is running so the GUI launches
+on the real desktop.
 
 ## 4. Sign in and open the repo
 
-1. Sign in with your Cursor account (same account as your main machine —
-   settings sync is optional but convenient).
+1. Sign in with your Cursor account (settings sync is optional).
 2. `File > Open Folder` → `~/modern_dotfile`.
 3. Cursor should pick up `.cursorrules` and `AGENTS.md` automatically —
    verify by asking it "what are the layer rules in this repo?" and
@@ -54,9 +50,8 @@ so the GUI launches on the real desktop.
   later (none are wired up yet — `scripts/lint-layers.sh` is the current
   enforcement mechanism, not a formatter).
 - Terminal default shell: `bash` (matches `stow/bash/.bashrc`).
-- If you use Cursor's own settings sync, be aware it will pull in
-  extensions/keybindings from your main account — check nothing there
-  assumes paths from the old `~/dotfiles` setup.
+- If you use Cursor's own settings sync, check nothing there assumes
+  paths from another machine's layout.
 
 ## 6. Live-verification checklist
 
@@ -72,7 +67,7 @@ read:
       a freshly-created `$HOME`)
 
 Until these boxes are checked by hand on real hardware, treat this guide
-as "should work, not yet flown" — see `README.md`'s status table.
+as "should work, not yet flown" — see `README.md`.
 
 ## Troubleshooting
 
@@ -84,5 +79,5 @@ as "should work, not yet flown" — see `README.md`'s status table.
   base-devel` again; individual split packages sometimes get pruned from
   a minimal `base` install.
 - **No `$DISPLAY`/`$WAYLAND_DISPLAY`** — you're on a bare TTY with no
-  compositor running yet. Either finish M0's Hyprland setup first, or
+  compositor running yet. Either finish Hyprland setup first, or
   install/verify Cursor headlessly and launch it once Hyprland is up.

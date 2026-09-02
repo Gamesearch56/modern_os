@@ -19,7 +19,7 @@ Layers, applied in order by `install.sh --profile <name>`:
 | `00-hw-gpu-*` | auto or `--hw` | GPU stack for every profile (RADV, Intel, NVIDIA DKMS) |
 | `10-desktop` | all profiles | Hyprland, Quickshell, portals, audio/network/bluetooth stack, clipboard/screenshot tools, GameMode. AUR: `phylax-git` (`10-desktop.aur.txt`) |
 | `20-theming` | all profiles | fonts, matugen, GTK/Qt theming support |
-| `30-apps` | `m0`+ | terminal, file manager, browser, minimal daily-driver apps |
+| `30-apps` | `m0`+ | terminal, file manager, browser, and other everyday apps |
 | `40-dev` | `dev`, `full` | languages, toolchains, containers, Cursor |
 | `50-gaming` | `gaming`, `full` | Steam, launchers, gamescope |
 | `50-hw-*` | gaming/full + `--hw` | GPU extras (`lib32-*`, ROCm) |

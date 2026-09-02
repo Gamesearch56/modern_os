@@ -14,19 +14,18 @@
 # Calamares late: --profile m0 --yes as the new user (never as root).
 #
 # Profiles (see install/manifests/README.md for exact layer membership):
-#   m0       base + desktop + theming + minimal apps  (default, matches the plan's M0)
+#   m0       base + desktop + theming + minimal apps  (default)
 #   dev      m0 + 40-dev
 #   gaming   m0 + 50-gaming
-#   full     everything, including 60-flatpak and personal AUR extras
+#   full     everything, including 60-flatpak and optional AUR extras
 #
 # This script only ever touches packages and stows this repo's dotfiles
 # into $TARGET (default $HOME). It NEVER touches anything under
 # install/system/ — those are gated, separately-invoked changes. See
 # docs/ISOLATION.md.
 #
-# Live-home guard: refuses to stow into /home/bastianweigand (override
-# with MODERN_PROTECT_HOME). Pass --allow-live-home only for a deliberate
-# cutover onto that account (new-PC install as that username).
+# Live-home guard: if MODERN_PROTECT_HOME is set, refuses to stow there
+# unless --allow-live-home is passed. See docs/ISOLATION.md.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -302,6 +301,5 @@ if [ ! -f "$kitty_colors" ] && [ -f "$kitty_stub" ]; then
 fi
 
 log_ok "Install complete for profile '$PROFILE'."
-log_info "Start the session with start-hyprland (not Hyprland) — see README.md; a second TTY keeps the daily-driver session."
-log_info "From the daily-driver account, run scripts/check-isolation.sh to confirm nothing leaked."
+log_info "Start the session with start-hyprland (not the Hyprland binary) — see README.md."
 log_info "Log: $LOG_FILE"

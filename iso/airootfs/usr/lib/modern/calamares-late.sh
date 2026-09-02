@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Calamares late: clone the ISO pin, install.sh --profile m0 --yes, provision.
-# Runs as root inside the target. Never on the development PC.
+# Runs as root inside the target. Refuses when MODERN_PROTECT_HOME is
+# set and exists.
 set -euo pipefail
 
 ALLOWED_URL="https://github.com/Gamesearch56/modern_dotfile.git"
@@ -9,8 +10,8 @@ TAG_RE='^v[0-9]+\.[0-9]+\.[0-9]+$'
 die() { printf 'calamares-late: ERROR: %s\n' "$*" >&2; exit 1; }
 log() { printf 'calamares-late: %s\n' "$*"; }
 
-if [ -d /home/bastianweigand ]; then
-    die "refusing to run on the development PC"
+if [ -n "${MODERN_PROTECT_HOME:-}" ] && [ -d "${MODERN_PROTECT_HOME%/}" ]; then
+    die "refusing to run while MODERN_PROTECT_HOME is set and exists"
 fi
 if [ "$(id -u)" -ne 0 ]; then
     die "must run as root in the install target"

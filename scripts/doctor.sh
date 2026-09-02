@@ -155,12 +155,15 @@ if command -v pacman >/dev/null 2>&1; then
 fi
 
 section "isolation"
-PROTECTED="${MODERN_PROTECT_HOME:-/home/bastianweigand}"
-if [ "$HOME" = "$PROTECTED" ]; then
-    warn "this shell is the daily-driver account ($HOME) — do not run install.sh without --target /home/devuser"
+PROTECTED="${MODERN_PROTECT_HOME:-}"
+PROTECTED="${PROTECTED%/}"
+if [ -z "$PROTECTED" ]; then
+    ok "live-home guard idle (MODERN_PROTECT_HOME unset)"
+elif [ "$HOME" = "$PROTECTED" ]; then
+    warn "HOME is the protected path ($HOME) — pass --target to install.sh, or --allow-live-home if this account should own the desktop"
     ok "install.sh will refuse this home unless --allow-live-home is passed"
 else
-    ok "HOME=$HOME is not the protected daily-driver path ($PROTECTED)"
+    ok "HOME=$HOME is not the protected path ($PROTECTED)"
 fi
 
 echo

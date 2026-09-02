@@ -15,29 +15,27 @@ preflight_checks() {
         log_ok "not running as root"
     fi
 
-    # Never stow onto the daily-driver home on this machine. Creating
-    # /home/devuser and installing there is the supported test path.
-    # --allow-live-home is the explicit cutover for a new PC that reuses
-    # this username. See docs/ISOLATION.md.
-    local protected="${MODERN_PROTECT_HOME:-/home/bastianweigand}"
+    # Optional live-home guard: set MODERN_PROTECT_HOME to a directory
+    # this installer must never stow into. Unset means the guard is idle.
+    # --allow-live-home overrides it. See docs/ISOLATION.md.
+    local protected="${MODERN_PROTECT_HOME:-}"
     local target="${TARGET%/}"
     protected="${protected%/}"
     if [ "${ALLOW_LIVE_HOME:-0}" -eq 1 ]; then
         log_warn "live-home guard disabled (--allow-live-home); stow target is $target"
-    elif [ -d "$protected" ]; then
+    elif [ -n "$protected" ] && [ -d "$protected" ]; then
         case "$target" in
             "$protected"|"$protected"/*)
-                log_error "Refusing to stow into the daily-driver home ($protected)."
-                log_error "  Run as devuser, or pass --target /home/devuser."
-                log_error "  For a deliberate cutover onto that account, pass --allow-live-home."
+                log_error "Refusing to stow into protected home ($protected)."
+                log_error "  Use --target with another home, or pass --allow-live-home."
                 failures=$((failures + 1))
                 ;;
             *)
-                log_ok "stow target is not the daily-driver home ($target)"
+                log_ok "stow target is not the protected home ($target)"
                 ;;
         esac
     else
-        log_ok "daily-driver home $protected is not on this machine — live-home guard idle"
+        log_ok "live-home guard idle (MODERN_PROTECT_HOME unset or missing)"
     fi
 
     if ! command -v pacman >/dev/null 2>&1; then

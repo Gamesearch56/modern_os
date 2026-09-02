@@ -141,8 +141,8 @@ Optional `monitors.rules` pin extra workspaces by description.
 `I18n.t("bar.volume")`) and `install/lib/i18n.sh` for shell scripts.
 Quickshell's QML does not integrate with Qt Linguist (`qsTr()` is dead
 code in this environment), so this JSON approach is used everywhere
-instead of the mix of `envsubst` + duplicated 12-line shell loaders the
-old dotfiles used. The lookup function is named `t()`, not `tr()` — every
+instead of mixing `envsubst` with duplicated shell loaders. The lookup
+function is named `t()`, not `tr()` — every
 QtObject inherits a built-in `tr()` from Qt Linguist that silently shadows
 a same-named custom function (docs/DECISIONS.md).
 
