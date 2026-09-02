@@ -55,7 +55,7 @@ jobs:
           ./scripts/iso-build.sh --mkarchiso --out "$ISO_OUT" --tag "$TAG"
           find "$ISO_OUT" -name '*.iso' -ls
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: modernos-iso
           path: ${{ github.workspace }}/iso-out/*.iso
