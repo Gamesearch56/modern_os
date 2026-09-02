@@ -44,12 +44,26 @@ git_cfg -C "$REPO" remote add origin git@github.com:Gamesearch56/modern_dotfile.
 git_cfg -C "$REPO" tag -a v0.1.1 -m "v0.1.1"
 
 out="$("$NOTES" --repo "$REPO" v0.1.1)"
-printf '%s\n' "$out" | grep -q '## \[0.1.1\] - ' && ok "version heading" || err "missing Keep a Changelog heading"
-printf '%s\n' "$out" | grep -q '### Fixed' && ok "Fixed section" || err "missing Fixed"
-printf '%s\n' "$out" | grep -q 'Fix the spaced calamares name' && ok "fix subject" || err "missing fix subject"
-printf '%s\n' "$out" | grep -q 'Write the ISO onto runner disk instead of tmpfs' && ok "instead-of is Fixed" || err "instead-of not classified Fixed"
-printf '%s\n' "$out" | grep -q 'Add the first thing' && err "v0.1.0 commit leaked into v0.1.1" || ok "range excludes previous tag"
-printf '%s\n' "$out" | grep -q 'compare/v0.1.0...v0.1.1' && ok "compare link" || err "missing compare link"
-printf '%s\n' "$out" | grep -q 'ISO workflow' && ok "ISO footer" || err "missing ISO footer"
+
+expect() {
+    local pat="$1" good="$2" bad="$3"
+    if printf '%s\n' "$out" | grep -q "$pat"; then
+        ok "$good"
+    else
+        err "$bad"
+    fi
+}
+
+expect '## \[0.1.1\] - ' "version heading" "missing Keep a Changelog heading"
+expect '### Fixed' "Fixed section" "missing Fixed"
+expect 'Fix the spaced calamares name' "fix subject" "missing fix subject"
+expect 'Write the ISO onto runner disk instead of tmpfs' "instead-of is Fixed" "instead-of not classified Fixed"
+if printf '%s\n' "$out" | grep -q 'Add the first thing'; then
+    err "v0.1.0 commit leaked into v0.1.1"
+else
+    ok "range excludes previous tag"
+fi
+expect 'compare/v0.1.0...v0.1.1' "compare link" "missing compare link"
+expect 'ISO workflow' "ISO footer" "missing ISO footer"
 
 [ "$FAIL" -eq 0 ]

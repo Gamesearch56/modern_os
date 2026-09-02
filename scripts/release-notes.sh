@@ -124,4 +124,4 @@ if [ -n "$web" ] && [ -n "$prev" ]; then
     printf '[Full changelog](%s/compare/%s...%s)\n\n' "$web" "$prev" "$TAG"
 fi
 
-printf 'The `.iso` appears on this page when the ISO workflow finishes. It is not built on the development PC.\n'
+printf 'The `%s` appears on this page when the ISO workflow finishes. It is not built on the development PC.\n' '.iso'
