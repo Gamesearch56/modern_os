@@ -8,6 +8,7 @@ Item {
     id: root
 
     property string iconName: ""
+    property string iconSource: ""
     property string imageSource: ""
     property real imageSize: Tokens.icon.lg
     property bool tintIcon: true
@@ -152,7 +153,7 @@ Item {
         spacing: root.compact ? Tokens.spacing.sm : Tokens.spacing.md
 
         Rectangle {
-            visible: root.imageSource.length > 0
+            visible: root.imageSource.length > 0 && thumb.status === Image.Ready
             Layout.preferredWidth: root.imageSize
             Layout.preferredHeight: root.imageSize
             radius: Tokens.radius.small
@@ -160,6 +161,7 @@ Item {
             clip: true
 
             Image {
+                id: thumb
                 anchors.fill: parent
                 source: root.imageSource
                 fillMode: Image.PreserveAspectCrop
@@ -170,11 +172,13 @@ Item {
         }
 
         MIcon {
-            visible: root.iconName.length > 0 && root.imageSource.length === 0
-            name: root.iconName
+            visible: (root.iconName.length > 0 || root.iconSource.length > 0)
+                && thumb.status !== Image.Ready
+            name: root.iconSource.length > 0 ? "" : root.iconName
+            source: root.iconSource
             size: root._glyph
-            tint: root.tintIcon
-            preferSymbolic: root.preferSymbolic
+            tint: root.tintIcon && root.iconSource.length === 0
+            preferSymbolic: root.preferSymbolic && root.iconSource.length === 0
             color: root._iconColor
         }
 

@@ -103,19 +103,11 @@ Item {
                     delegate: MListItem {
                         required property var modelData
                         width: list.width
-                        tintIcon: (modelData.image || "").length === 0
-                        iconName: {
-                            const a = String(modelData.appIcon || "");
-                            if (a.length && a.indexOf("/") === -1 && a.indexOf(":") === -1)
-                                return a;
-                            return "dialog-information-symbolic";
-                        }
-                        imageSource: {
-                            const img = modelData.image || "";
-                            if (!img.length)
-                                return "";
-                            return String(img).indexOf("://") !== -1 ? String(img) : ("file://" + img);
-                        }
+                        tintIcon: Notifications.displayIconSource(modelData).length === 0
+                        preferSymbolic: Notifications.displayIconSource(modelData).length === 0
+                        iconName: Notifications.displayIcon(modelData)
+                        iconSource: Notifications.displayIconSource(modelData)
+                        imageSource: Notifications.displayImage(modelData)
                         imageSize: Tokens.icon.lg
                         titleValue: modelData.summary || modelData.appName || ""
                         subtitleValue: modelData.body || ""

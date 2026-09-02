@@ -19,34 +19,11 @@ MouseArea {
     property int uid: 0
     property var notification: null
 
-    readonly property string _thumb: {
-        const img = root.image;
-        if (!img.length)
-            return "";
-        const lower = img.toLowerCase();
-        const shot = lower.indexOf("screenshot") !== -1
-            || lower.indexOf("/pictures/") !== -1
-            || lower.indexOf("/tmp/") !== -1;
-        if (!shot && lower.indexOf(".png") === -1 && lower.indexOf(".jpg") === -1)
-            return "";
-        return img.indexOf("://") !== -1 ? img : ("file://" + img);
-    }
+    readonly property string _thumb: Notifications.displayImage(root.notification || root)
 
-    readonly property string _iconName: {
-        const a = root.appIcon;
-        if (!a.length || a.indexOf("/") !== -1 || a.indexOf(":") !== -1)
-            return "dialog-information-symbolic";
-        return a;
-    }
+    readonly property string _iconName: Notifications.displayIcon(root.notification || root)
 
-    readonly property url _iconSource: {
-        const a = root.appIcon;
-        if (a.indexOf("/") === 0)
-            return "file://" + a;
-        if (a.indexOf("://") !== -1)
-            return a;
-        return "";
-    }
+    readonly property url _iconSource: Notifications.displayIconSource(root.notification || root)
 
     readonly property int _timeout: root.expireTimeout
     property real remain: 1
@@ -150,7 +127,7 @@ MouseArea {
         spacing: Tokens.spacing.xl
 
         Rectangle {
-            visible: root._thumb.length > 0
+            visible: root._thumb.length > 0 && toastThumb.status === Image.Ready
             Layout.preferredWidth: Tokens.icon.lg
             Layout.preferredHeight: Tokens.icon.lg
             Layout.alignment: Qt.AlignTop
@@ -159,6 +136,7 @@ MouseArea {
             clip: true
 
             Image {
+                id: toastThumb
                 anchors.fill: parent
                 source: root._thumb
                 fillMode: Image.PreserveAspectCrop
@@ -169,7 +147,7 @@ MouseArea {
         }
 
         MIcon {
-            visible: root._thumb.length === 0
+            visible: toastThumb.status !== Image.Ready
             Layout.alignment: Qt.AlignVCenter
             Layout.preferredWidth: Tokens.icon.md
             Layout.preferredHeight: Tokens.icon.md
