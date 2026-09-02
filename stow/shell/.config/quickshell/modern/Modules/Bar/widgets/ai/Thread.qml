@@ -7,6 +7,7 @@ Item {
     id: root
 
     property bool _followEnd: true
+    readonly property var _hist: Ai.history
 
     function scrollEnd() {
         root._followEnd = true;
@@ -30,10 +31,10 @@ Item {
         spacing: Tokens.spacing.md
         boundsBehavior: Flickable.StopAtBounds
         visible: !root._empty
-        model: Ai.history.length
+        model: (root._hist || []).length
         delegate: Item {
             required property int index
-            readonly property var row: (Ai.history || [])[index] || ({})
+            readonly property var row: (root._hist || [])[index] || ({})
             width: ListView.view.width
             implicitHeight: bubble.implicitHeight
             height: implicitHeight
@@ -65,13 +66,15 @@ Item {
 
     readonly property bool _blocked: (Config.accounts?.ai?.provider ?? "none") === "none" || !Ai.ready
     readonly property bool _empty: root._blocked || Ai.history.length === 0
+    readonly property string _hintKey: (Config.accounts?.ai?.provider ?? "none") === "gemini"
+        ? "ai.hintGemini" : "ai.hint"
 
     MEmptyState {
         visible: root._empty
         anchors.fill: parent
         iconName: "applications-science-symbolic"
         titleKey: root._blocked ? "ai.needSetup" : "ai.empty"
-        hintKey: root._blocked ? "" : "ai.hint"
+            hintKey: root._blocked ? "" : root._hintKey
         actionKey: root._blocked ? "ai.setup" : ""
         onActionClicked: {
             Ai.hide();

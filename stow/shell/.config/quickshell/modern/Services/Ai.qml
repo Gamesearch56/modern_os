@@ -1,6 +1,4 @@
-// Local assistant via Ollama's HTTP chat API. History is the
-// conversation (AiStore writes it to XDG state). AiChat owns curl so a
-// hung `ollama run` cannot steal stdin. Missing daemon fails soft.
+// Local Ollama or Gemini Developer API. History is XDG state (AiStore).
 pragma Singleton
 
 import Quickshell
@@ -22,7 +20,13 @@ Singleton {
     property bool probed: false
     property bool watching: false
     property var models: []
-    readonly property bool ready: root.installed && root.running
+    readonly property string _provider: String(Config.accounts?.ai?.provider ?? "none")
+    readonly property bool ready: root._provider === "gemini"
+        ? gemini.ready
+        : (root._provider === "ollama" && root.installed && root.running)
+    readonly property bool geminiHasKey: gemini.hasKey
+    readonly property var geminiModels: gemini.models
+    signal cancelled(string text)
 
     IpcHandler {
         target: "ai"
@@ -39,7 +43,13 @@ Singleton {
     AiChat {
         id: stream
         onChunk: (content, thinking) => root._patchTail(content, thinking, true)
-        onFinished: (ok, err) => root._end(ok, err)
+        onFinished: (ok, err) => root._end(ok, err, stream.content)
+    }
+
+    AiGemini {
+        id: gemini
+        onChunk: (content, thinking) => root._patchTail(content, thinking, true)
+        onFinished: (ok, err) => root._end(ok, err, gemini.content)
     }
 
     AiStore {
@@ -60,7 +70,16 @@ Singleton {
 
     Component.onCompleted: root.refreshStatus()
 
-    function refreshStatus() { status.refresh(); }
+    function refreshStatus() {
+        status.refresh();
+        if (root._provider === "gemini" && gemini.hasKey && !gemini.ready)
+            gemini.probe();
+    }
+
+    function setGeminiKey(raw: string) { gemini.setKey(raw); }
+    function clearGeminiKey() { gemini.setKey(""); }
+    function openGeminiStudio() { gemini.openStudio(); }
+    function geminiModelChoices(): var { return gemini.modelChoices(); }
 
     function toggle(screen: var) {
         const name = root._nameOf(screen);
@@ -72,7 +91,6 @@ Singleton {
     }
 
     function toggleFocused() { root.toggle({ name: root._focusedScreenName() }); }
-
     function showFocused() { root._openOn(root._focusedScreenName()); }
 
     function _openOn(name: string) {
@@ -83,46 +101,7 @@ Singleton {
         root.refreshStatus();
     }
 
-    function modelChoices(): var {
-        const out = [];
-        const seen = {};
-        const list = root.models || [];
-        for (let i = 0; i < list.length; i++) {
-            const stem = String(list[i] || "").replace(/:latest$/, "");
-            if (!stem.length || seen[stem])
-                continue;
-            seen[stem] = true;
-            out.push({ value: stem, titleValue: stem });
-        }
-        const cur = String(Config.accounts?.ai?.ollamaModel || "").replace(/:latest$/, "");
-        if (cur.length > 0 && !seen[cur])
-            out.unshift({ value: cur, titleValue: cur });
-        return out;
-    }
-
-    function _parseStatus(text: string) {
-        const raw = String(text || "");
-        const brace = raw.indexOf("{");
-        let names = [];
-        let on = false;
-        if (brace !== -1) {
-            try {
-                const data = JSON.parse(raw.substring(brace));
-                const list = data.models || [];
-                on = true;
-                for (let i = 0; i < list.length; i++) {
-                    const n = String(list[i].name || list[i].model || "");
-                    if (n.length)
-                        names.push(n);
-                }
-            } catch (e) {
-                Logger.warn("Ai", String(e));
-            }
-        }
-        root.running = on;
-        root.models = names;
-        root.probed = true;
-    }
+    function modelChoices(): var { return status.modelChoices(); }
 
     function hide() {
         root.panelOpen = false;
@@ -150,7 +129,6 @@ Singleton {
             return String(screen.name);
         return "";
     }
-
     function _focusedScreenName(): string {
         const hyprName = Hypr.focusedMonitorName();
         const screens = Quickshell.screens;
@@ -171,26 +149,6 @@ Singleton {
         return "";
     }
 
-    function _resolveModel(): string {
-        const want = String(Config.accounts?.ai?.ollamaModel || "").replace(/:latest$/, "");
-        if (!stream._safeModel(want).length && want.length > 0)
-            return "";
-        const list = root.models || [];
-        let family = "";
-        for (let i = 0; i < list.length; i++) {
-            const n = String(list[i] || "");
-            if (!stream._safeModel(n).length)
-                continue;
-            const stem = n.replace(/:latest$/, "");
-            if (stem === want || n === want || (want.length > 0 && n.indexOf(want + ":") === 0))
-                return n;
-            if (!family.length && want.length >= 3
-                    && (stem.indexOf(want + ".") === 0 || stem.indexOf(want + "-") === 0))
-                family = n;
-        }
-        return family;
-    }
-
     function chat(text: string) {
         const q = (text || "").replace(/\0/g, "").trim();
         if (!q || root.busy)
@@ -199,15 +157,31 @@ Singleton {
             root.lastError = I18n.t("ai.errorTooLong");
             return;
         }
-        if ((Config.accounts?.ai?.provider ?? "none") === "none" || !root.ready)
+        if (root._provider === "none" || !root.ready)
             return;
-        const model = root._resolveModel();
+        const geminiOn = root._provider === "gemini";
+        const want = geminiOn
+            ? String(Config.accounts?.ai?.geminiModel || "").trim()
+            : String(Config.accounts?.ai?.ollamaModel || "").trim();
+        if (geminiOn && !want.length) {
+            root.history = root.history.concat([
+                { role: "user", text: q },
+                { role: "assistant", text: I18n.t("ai.errorNoModel"), thinking: "", streaming: false }
+            ]);
+            root.lastError = I18n.t("ai.errorNoModel");
+            store.save(root.history);
+            return;
+        }
+        const model = geminiOn
+            ? gemini.resolveModel(want)
+            : status.resolveModel(want);
+        const modelErr = geminiOn ? I18n.t("ai.errorGeminiModel") : I18n.t("ai.errorModel");
         if (!model.length) {
             root.history = root.history.concat([
                 { role: "user", text: q },
-                { role: "assistant", text: I18n.t("ai.errorModel"), thinking: "", streaming: false }
+                { role: "assistant", text: modelErr, thinking: "", streaming: false }
             ]);
-            root.lastError = I18n.t("ai.errorModel");
+            root.lastError = modelErr;
             store.save(root.history);
             return;
         }
@@ -221,15 +195,41 @@ Singleton {
             root.busy = true;
             root.lastError = "";
             store.save(root.history);
-            stream.start(model, prior);
+            if (geminiOn)
+                gemini.start(model, prior);
+            else
+                stream.start(model, prior);
         } catch (e) {
             root.busy = false;
             Logger.error("Ai", String(e));
         }
     }
 
+    function cancel() {
+        stream.stop();
+        gemini.stop();
+        const live = !!(root.history.length && root.history[root.history.length - 1]
+            && root.history[root.history.length - 1].streaming);
+        if (!root.busy && !live)
+            return;
+        const list = (root.history || []).slice();
+        if (list.length && list[list.length - 1] && list[list.length - 1].role !== "user")
+            list.pop();
+        let draft = "";
+        if (list.length && list[list.length - 1] && list[list.length - 1].role === "user") {
+            draft = String(list[list.length - 1].text || "");
+            list.pop();
+        }
+        root.history = list;
+        root.busy = false;
+        root.lastError = "";
+        store.save(list);
+        root.cancelled(draft);
+    }
+
     function clear() {
         stream.stop();
+        gemini.stop();
         root.busy = false;
         root.history = [];
         root.lastError = "";
@@ -250,7 +250,7 @@ Singleton {
                 t = t.substring(0, stream.maxPrompt);
             if (!t.length)
                 continue;
-            out.push({ role: role, content: t });
+            out.push({ role: role, content: t, sig: String(r.sig || "") });
         }
         return out;
     }
@@ -263,12 +263,17 @@ Singleton {
         last.text = content;
         last.thinking = thinking;
         last.streaming = streaming;
+        if (root._provider === "gemini" && gemini.signature)
+            last.sig = gemini.signature;
         list[list.length - 1] = last;
         root.history = list;
     }
 
-    function _end(ok: bool, err: string) {
-        const text = stream.content;
+    function _end(ok: bool, err: string, text: string) {
+        const live = !!(root.history.length && root.history[root.history.length - 1]
+            && root.history[root.history.length - 1].streaming);
+        if (!root.busy && !live)
+            return;
         root.busy = false;
         if (!ok || !String(text || "").trim().length) {
             const msg = String(err || "").trim() || I18n.t("ai.errorEmpty");
@@ -278,11 +283,7 @@ Singleton {
             return;
         }
         root.lastError = "";
-        root._patchTail(root._collapse(text), "", false);
+        root._patchTail(String(text || "").replace(/\r/g, "").replace(/\n{4,}/g, "\n\n\n").replace(/([^\n])\n(?![ \t]*[-*•]|\d+\.\s)([^\n])/g, "$1\n\n$2").trim(), "", false);
         store.save(root.history);
-    }
-
-    function _collapse(text: string): string {
-        return String(text || "").replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim();
     }
 }

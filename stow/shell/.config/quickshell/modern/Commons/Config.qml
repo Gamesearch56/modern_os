@@ -233,7 +233,7 @@ Singleton {
             property var accounts: ({
                 protonDrive: { enabled: false },
                 calendarIcsUrl: "",
-                ai: { provider: "none", ollamaModel: "llama3" }
+                ai: { provider: "none", ollamaModel: "llama3", geminiModel: "" }
             })
 
             property JsonObject backup: JsonObject {

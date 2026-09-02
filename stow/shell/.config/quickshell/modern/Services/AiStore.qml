@@ -86,7 +86,10 @@ Item {
                 text = text.substring(0, root.maxText);
             if (!text.length)
                 continue;
-            out.push({ role: role, text: text, thinking: "" });
+            const row = ({ role: role, text: text, thinking: "" });
+            if (r.sig)
+                row.sig = String(r.sig);
+            out.push(row);
         }
         return out.slice(Math.max(0, out.length - root.keep));
     }
