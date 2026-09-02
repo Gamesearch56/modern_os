@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # GATED — sourced by provision-iso.sh in a Calamares chroot only.
-# NVIDIA modeset + initramfs. Never run on the development PC.
+# NVIDIA modeset + initramfs. Gated; not applied by install.sh.
 set -euo pipefail
 
 nvidia_apply() {

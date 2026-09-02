@@ -1,39 +1,32 @@
-# Isolation: keeping the current user safe
+# Isolation: installer never applies `/etc`
 
-`modern_dotfile` is built and iterated on while `bastianweigand` remains the
-daily-driver account on this machine. Nothing here may break that account
-until you explicitly decide the new system is ready and run the gated
-system-wide phase yourself.
+`install.sh` only installs packages and stows this repo into `--target`
+(default `$HOME`). Anything that touches `/etc`, systemd *system* units,
+polkit, mkinitcpio, or creates accounts lives under `install/system/`
+and is applied only by an explicit, separately-invoked command.
 
-How to create `devuser`, start Hyprland on a second TTY, and return to
-this session: **`README.md`**. Install flags: `docs/INSTALL.md`. Switching
-**this** account onto the new desktop, with rewind then a clean cut:
-**`docs/CUTOVER.md`**.
+Optional extra-user testing: `sudo install/system/create-devuser.sh`,
+then clone and install as that user. Session switch: log in on another
+TTY and run `start-hyprland`. Install flags: `docs/INSTALL.md`. Putting
+this desktop on an existing account: `docs/CUTOVER.md`.
 
 ## Safe by construction
 
-- All development lives in this repo, at
-  `/home/bastianweigand/CursorProjects/modern_dotfile`. Nothing is ever
-  written to `~/.config/`, `~/.local/`, `~/dotfiles/` or `~/.bashrc` for the
-  `bastianweigand` account by this project's default commands.
-- `install.sh` **refuses** a stow target of `/home/bastianweigand` (or any
-  path under it). Override with `MODERN_PROTECT_HOME` if the protected
-  path differs; override the refuse with `--allow-live-home` only for a
-  deliberate cutover (`docs/CUTOVER.md` Phase 1 — rewind archive first).
-- `stow` therefore never runs against the daily-driver home during testing.
-  Conflict backups are stored under `$TARGET/.local/state/modern/stow-backups`.
-- All runtime state this project creates lives under the **target** user's
-  home or the new `/var/lib/modern/` path — nothing pre-existing reads either.
-- `~/dotfiles` (the old repo) is read-only reference material. It is never
-  committed to, never modified, from this repo or its scripts.
-- Creating the `devuser` **account** is the intended test path. It does not
-  change autologin, greetd, or `/etc`. Isolation check treats that account
-  as OK, not as a leak.
+- Stow writes only under `--target`. Conflict backups land in
+  `$TARGET/.local/state/modern/stow-backups`.
+- Set `MODERN_PROTECT_HOME` to a directory `install.sh` must never stow
+  into (optional; unset means the guard is idle). Override with
+  `--allow-live-home` only when that home *is* the intended target.
+- Runtime state lives under the target user's home or, after gated
+  tmpfiles, `/var/lib/modern/`.
+- Creating a `devuser` account is the intended extra-user test path. It
+  does not change autologin, greetd, or `/etc`. Isolation check treats
+  that account as OK, not as a leak.
 
-## Switching sessions without touching the main user
+## Switching sessions without replacing another user
 
-1. Leave the `bastianweigand` Hyprland session running.
-2. `Ctrl+Alt+F3`, log in as `devuser`, run `start-hyprland`
+1. Leave the other graphical session running.
+2. `Ctrl+Alt+F3`, log in as the test user, run `start-hyprland`
    (not the `Hyprland` binary). One Hyprland per user — exit the old
    one before starting another TTY.
 3. Return with `Ctrl+Alt+F1` or `F2`. End the test compositor with
@@ -41,9 +34,9 @@ this session: **`README.md`**. Install flags: `docs/INSTALL.md`. Switching
    If a terminal is available: `hyprctl dispatch "hl.dsp.exit()"`, then
    `exit` on the TTY.
 
-A reboot still autologins the daily-driver account as long as greetd was
-never enabled. Removing the test account (`sudo userdel -r devuser`)
-deletes `/home/devuser` only.
+A reboot still uses whatever login path was already configured as long
+as greetd was never enabled from this repo. Removing the test account
+(`sudo userdel -r devuser`) deletes `/home/devuser` only.
 
 ## Gated: system-wide changes
 
@@ -54,8 +47,8 @@ comment for the exact command.
 
 | Change | Why it's gated | Rollback |
 |---|---|---|
-| `greetd` (staged, **gated**) | `install/system/greetd/` exists for the friend ISO. Only `install/system/provision-iso.sh` (Calamares late, `MODERN_ISO_PROVISION=1`) copies it and runs `systemctl enable greetd`. That script aborts if `/home/bastianweigand` exists. Do not enable greetd on this PC. | If someone enabled it here: `sudo systemctl disable greetd`, restore getty autologin, reboot. |
-| Friend ISO late (`provision-iso.sh`, `calamares-late.sh`) | Enables NM/bluetooth/greetd and clones a release tag. **This PC never runs it.** | Not applied; files stay under `install/system/` and `iso/`. |
+| `greetd` (staged, **gated**) | `install/system/greetd/` exists for the ISO. Only `install/system/provision-iso.sh` (Calamares late, `MODERN_ISO_PROVISION=1`) copies it and runs `systemctl enable greetd`. That script aborts if `MODERN_PROTECT_HOME` is set and exists. Do not enable greetd on a machine you did not intend to convert to greetd. | `sudo systemctl disable greetd`, restore the previous login path, reboot. |
+| ISO late (`provision-iso.sh`, `calamares-late.sh`) | Enables NM/bluetooth/greetd and clones a release tag. Refused when `MODERN_PROTECT_HOME` is set. | Not applied; files stay under `install/system/` and `iso/`. |
 | Plymouth theme + `mkinitcpio` hooks | Rewrites the initramfs. A bad rebuild can leave the machine unable to boot. | `sudo mkinitcpio -P` after reverting `/etc/mkinitcpio.conf`; the previous initramfs stays as a fallback boot entry — never delete it. |
 | `sysctl.d`, `polkit` actions, `tmpfiles.d`, udev rules, gaming perf sysctls | System-wide kernel/session policy. | Remove the dropped-in file under `/etc/{sysctl.d,polkit-1,tmpfiles.d,udev/rules.d}/modern-*` and reload (`sysctl --system`, `systemctl restart polkit`, `systemd-tmpfiles --create`). |
 | `modern-usersd` + its polkit action | Privileged account/group mutation. | Remove `/usr/local/bin/modern-usersd` and the `.policy` file; nothing else depends on it. |
@@ -70,18 +63,9 @@ anything in the table — see each script's own `--help`.
 ## The one side effect that isn't gated: packages
 
 Installing packages is inherently system-wide (pacman has no per-user
-scope) and is additive, so it isn't gated. It won't remove or break
-anything `bastianweigand` uses.
+scope) and is additive, so it isn't gated.
 
-One live fact worth knowing: `/etc/pacman.d/hooks/package_list.hook` on
-this machine runs `backup_lists.sh` as `bastianweigand` after every pacman
-transaction, rewriting `~/dotfiles/install/pkglist_*.txt`. Installing
-`quickshell`, `matugen`, etc. will therefore show up as uncommitted churn
-in the *old* dotfiles repo. **Decision: leave that hook alone, ignore the
-diff.** We do not disable it, modify it, or commit to `~/dotfiles`. It's
-hardcoded to `bastianweigand` and never fires for `devuser`.
-
-The new system ships **no pacman hook** — package manifests under
+This repo ships **no pacman hook**. Package manifests under
 `install/manifests/` are hand-curated files, not auto-generated. Run
 `scripts/snapshot-packages.sh` manually whenever you want to audit drift
 between the machine and the manifests.
@@ -89,32 +73,31 @@ between the machine and the manifests.
 ## Verification
 
 Run before every commit and before/after any local test command that
-might have written outside the clone, **from `bastianweigand`**:
+might have written outside the clone:
 
 ```bash
 scripts/check-isolation.sh
 ```
 
 Do not run `scripts/iso-build.sh --mkarchiso`, `provision-iso.sh`,
-Calamares, or a live `install.sh` (use `--dry-run --target /tmp/…`) on
-this host. ISO branding, if generated, stays under `iso/out/` or
-`$TMPDIR/modern-iso-*`.
+Calamares, or a live `install.sh` (use `--dry-run --target /tmp/…`)
+on a machine you live on. ISO branding, if generated, stays under
+`iso/out/` or `$TMPDIR/modern-iso-*`.
 
 It asserts:
 
-1. `/etc/pacman.d/hooks/package_list.hook` is byte-identical to the
-   snapshot taken at first run (`--init`).
-2. No symlink inside `/home/bastianweigand/.config` points into this repo
-   or into `/home/devuser`.
-3. Gated files are absent (`greetd` enabled, `modern-usersd`,
+1. If `MODERN_PROTECT_HOME` is set, no symlink inside that home's
+   `.config` points into this clone.
+2. Gated files are absent (`greetd` enabled, `modern-usersd`,
    `tmpfiles.d/modern-session.conf`, `sysctl.d/99-modern-gaming.conf`,
    `esp-backup.hook`), unless `--allow-gated` is passed. Creating
    `devuser` is **not** a failure. Pre-existing Plymouth in mkinitcpio is
    not treated as a leak from this repo.
-4. Home mtime under `bastianweigand` is **advisory** (WARN): a live
-   account keeps writing caches. Real isolation is checks 1–3.
+3. Home mtime under the protected path is **advisory** (WARN): a live
+   account keeps writing caches. Real isolation is checks 1–2.
 
 The script exits non-zero and prints exactly what changed if any check
 fails, rather than a generic warning.
 
 First-time baseline (once): `scripts/check-isolation.sh --init`.
+Do not add this script to GitHub Actions.

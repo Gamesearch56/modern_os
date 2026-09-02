@@ -9,7 +9,7 @@ what is shared with an unprivileged greeter. Plymouth and greetd are
 ```
 Friend install (after Calamares late):
   greetd (greeter kiosk)  →  start-hyprland  →  Hyprland (stow/hypr)
-This development PC (untouched greetd):
+Getty / extra-user testing (untouched greetd):
   TTY: start-hyprland     →  Hyprland (stow/hypr)
                               ├─ autostart.lua
                               │     exec qs -c modern  (compositor child)
@@ -18,13 +18,13 @@ This development PC (untouched greetd):
 ```
 
 Greetd files are staged under `install/system/greetd/` and applied only
-by `provision-iso.sh` in a friend chroot. Enabling greetd here would
-steal the daily-driver autologin session.
+by `provision-iso.sh` in a Calamares chroot. Enabling greetd on a getty
+machine would replace the existing login path.
 
 Autostart in Hyprland already starts Quickshell as a child of this
 compositor. Enable `modern-shell.service` on the **target** user
-(`devuser` while testing; the live account only after CUTOVER Phase 1).
-Do not enable it on the daily-driver account while isolation is in force.
+(`devuser` while testing; the live account after `docs/CUTOVER.md`).
+Do not enable it on an account that should keep a different session.
 
 From a TTY, always run **`start-hyprland`**, not the `Hyprland` binary.
 Hyprland ≥ 0.53’s wrapper sets up crash recovery and the user session;
@@ -63,14 +63,13 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
 systemctl --user enable modern-shell.service
 ```
 
-Do not enable the unit on the daily-driver account while isolation is in
-force.
+Do not enable the unit on an account that should keep a different session.
 
 ## Shared session state
 
 Runtime the greeter reads without touching `$HOME` lives under
 `/var/lib/modern/session/` (gated tmpfiles.d; applied by ISO
-`provision-iso.sh`, not on this PC).
+`provision-iso.sh`, not by `install.sh`).
 `wallpaper-sync.sh` currently writes to
 `$XDG_STATE_HOME/modern/session/` when that directory is missing.
 Per-user state stays in `$XDG_STATE_HOME/modern/` and
@@ -81,7 +80,7 @@ Per-user state stays in `$XDG_STATE_HOME/modern/` and
 | Surface | Owner | Notes |
 |---------|--------|------|
 | Plymouth splash | gated theme + mkinitcpio hook | `plymouth-sync.sh`; never rewrite initramfs from `install.sh` |
-| greetd greeter | `stow/greeter` + `install/system/greetd/` | Staged. Applied only by ISO `provision-iso.sh`. This PC stays on getty/autologin. |
+| greetd greeter | `stow/greeter` + `install/system/greetd/` | Staged. Applied only by ISO `provision-iso.sh`. Getty/autologin stays until that runs. |
 | lock screen | `Modules/Session` overlay | Power menu preview. Any non-empty password unlocks. Idle/lid run `loginctl lock-session` and do **not** show the overlay. Not `WlSessionLock`. |
 
 `config.json` → `design.bootScreen` chooses whether the current wallpaper
@@ -102,7 +101,7 @@ Screenshot and ScreenCast are Hyprland.
 If the graphical session is up (wallpaper, `SUPER+B`) but you have no
 terminal, try `SUPER+RETURN` (emergency `/usr/bin/kitty`). Do **not**
 wait only on `SUPER+T` if `modern-launch` is broken. From the
-daily-driver TTY:
+another TTY:
 
 1. `loginctl list-sessions` — note the `devuser` / `tty3` id
 2. Optional: `loginctl terminate-session <id>`

@@ -17,9 +17,13 @@ TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-dsync-XXXXXX")"
 cleanup() { rm -rf "$TMP"; }
 trap cleanup EXIT
 
-case "$TMP" in
-    /home/bastianweigand/*) echo "test-desktop-sync: refusing live home" >&2; exit 1 ;;
-esac
+protect="${MODERN_PROTECT_HOME:-}"
+protect="${protect%/}"
+if [ -n "$protect" ]; then
+    case "$TMP" in
+        "$protect"|"$protect"/*) echo "test-desktop-sync: refusing protected home" >&2; exit 1 ;;
+    esac
+fi
 
 git_cfg() {
     git -c core.hooksPath=/dev/null "$@"
@@ -109,20 +113,17 @@ else
 fi
 unset GIT_CONFIG_GLOBAL
 
-# iso-build refuse: must not mkdir under the live home
+# iso-build refuse: must not mkdir under MODERN_PROTECT_HOME
 ISO="$ROOT/scripts/iso-build.sh"
-if [ -d /home/bastianweigand ]; then
-    if "$ISO" --out /home/bastianweigand/modern-iso-scratch-test >/dev/null 2>&1; then
-        err "iso-build accepted a live-home output path"
-    else
-        ok "iso-build refuses /home/bastianweigand output"
-    fi
-    if [ -e /home/bastianweigand/modern-iso-scratch-test ]; then
-        err "iso-build created a live-home path"
-        rm -rf /home/bastianweigand/modern-iso-scratch-test
-    fi
+fake_home="$TMP/protect-home"
+mkdir -p "$fake_home"
+if MODERN_PROTECT_HOME="$fake_home" "$ISO" --out "$fake_home/scratch" >/dev/null 2>&1; then
+    err "iso-build accepted a protected-home output path"
 else
-    ok "live home absent — iso-build live-home refuse skipped"
+    ok "iso-build refuses MODERN_PROTECT_HOME output"
+fi
+if [ -e "$fake_home/scratch" ]; then
+    err "iso-build created a protected-home path"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

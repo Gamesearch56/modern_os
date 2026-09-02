@@ -1,6 +1,5 @@
-# Friend ISO for a GitHub Release. Runs on Actions, never on the
-# development PC (iso-build.sh refuses --mkarchiso when
-# /home/bastianweigand exists).
+# ISO for a GitHub Release. Runs on Actions. Never on pull_request.
+# iso-build.sh refuses --mkarchiso when MODERN_PROTECT_HOME is set.
 name: ISO
 
 on:
@@ -14,15 +13,19 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   iso:
     if: >-
-      github.event_name == 'workflow_dispatch'
-      || (github.event_name == 'release' && !github.event.release.prerelease)
+      github.repository == 'Gamesearch56/modern_dotfile'
+      && !github.event.repository.fork
+      && (github.event_name == 'workflow_dispatch'
+          || (github.event_name == 'release' && !github.event.release.prerelease))
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    permissions:
+      contents: read
     container:
       image: archlinux:latest
       options: --privileged
@@ -35,7 +38,6 @@ jobs:
             v[0-9]*.[0-9]*.[0-9]*) ;;
             *) echo "ISO pin must be vX.Y.Z (got $TAG)" >&2; exit 1 ;;
           esac
-          test ! -d /home/bastianweigand
 
       # Scripts come from main so a later ISO-script fix can rebuild an
       # older pin. --tag still writes iso-pin / Settings Update target.
@@ -62,10 +64,16 @@ jobs:
 
   publish:
     needs: iso
+    if: >-
+      github.repository == 'Gamesearch56/modern_dotfile'
+      && !github.event.repository.fork
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/download-artifact@v7
         with:
@@ -76,4 +84,4 @@ jobs:
           shopt -s nullglob
           files=(iso-out/*.iso)
           [ ${#files[@]} -gt 0 ] || { echo "no ISO artifact" >&2; exit 1; }
-          gh release upload "$TAG" "${files[@]}" --clobber
+          gh release upload "$TAG" "${files[@]}" --clobber --repo "${GITHUB_REPOSITORY}"

@@ -1,5 +1,5 @@
 # Keep a Changelog (keepachangelog.com) on every vX.Y.Z tag.
-# Publishing the Release triggers the ISO workflow. Never mkarchiso here.
+# Then dispatch ISO — GITHUB_TOKEN does not chain release: published.
 name: Release
 
 on:
@@ -9,9 +9,11 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   notes:
+    if: github.repository == 'Gamesearch56/modern_dotfile' && !github.event.repository.fork
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -34,3 +36,4 @@ jobs:
           else
             gh release create "$tag" --title "ModernOS $tag" --notes-file "$notes"
           fi
+          gh workflow run ISO --ref "${{ github.event.repository.default_branch }}" -f "tag=$tag"

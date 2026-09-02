@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# GATED — Calamares late / friend chroot only. Enables greetd, NetworkManager,
-# bluetooth. Never run on the development PC. See docs/ISOLATION.md.
+# GATED — Calamares late / ISO chroot only. Enables greetd, NetworkManager,
+# bluetooth. Refuses when MODERN_PROTECT_HOME is set and exists.
+# See docs/ISOLATION.md.
 #
 # Usage: MODERN_ISO_PROVISION=1 provision-iso.sh <username>
 set -euo pipefail
@@ -15,8 +16,8 @@ USERNAME="${1:-}"
 [ -n "$USERNAME" ] || die "usage: $0 <username>"
 id "$USERNAME" >/dev/null 2>&1 || die "user $USERNAME does not exist"
 
-if [ -d /home/bastianweigand ]; then
-    die "refusing to run on the development PC (/home/bastianweigand exists)"
+if [ -n "${MODERN_PROTECT_HOME:-}" ] && [ -d "${MODERN_PROTECT_HOME%/}" ]; then
+    die "refusing to run while MODERN_PROTECT_HOME is set and exists"
 fi
 if [ "${MODERN_ISO_PROVISION:-}" != "1" ]; then
     die "refusing to run without MODERN_ISO_PROVISION=1 (Calamares late only)"

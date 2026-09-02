@@ -51,19 +51,19 @@ passwd "$USERNAME"
 echo
 echo "Created $USERNAME with groups: $existing_groups"
 echo
-echo "This does not change autologin or greetd. Your graphical session stays"
-echo "on the daily-driver account until you log in as $USERNAME on another TTY."
+echo "This does not change autologin or greetd. Log in as $USERNAME on"
+echo "another TTY to start a session."
 echo
-echo "Next steps (as $USERNAME — clone a copy; the daily-driver home is 700):"
+echo "Next steps (as $USERNAME — clone a copy if the other home is 700):"
 echo "  sudo -iu $USERNAME"
 echo "  git clone <this-repo-url> ~/modern_dotfile"
 echo "  cd ~/modern_dotfile && ./install/install.sh --profile m0 --dry-run"
 echo "  ./install/install.sh --profile m0"
 echo
-echo "Start a test session without leaving the main desktop:"
+echo "Start a test session without leaving another desktop:"
 echo "  Ctrl+Alt+F3  →  login as $USERNAME  →  start-hyprland"
-echo "Return: Ctrl+Alt+F1 or F2 (whichever still shows your main session)."
+echo "Return: Ctrl+Alt+F1 or F2 (whichever still shows your other session)."
 echo
 echo "Rollback this account: sudo userdel -r $USERNAME"
-echo "Verify isolation from the daily-driver account:"
+echo "Verify gated files were not applied:"
 echo "  scripts/check-isolation.sh"

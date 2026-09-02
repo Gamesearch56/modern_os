@@ -15,9 +15,13 @@ TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-rnotes-XXXXXX")"
 cleanup() { rm -rf "$TMP"; }
 trap cleanup EXIT
 
-case "$TMP" in
-    /home/bastianweigand/*) echo "test-release-notes: refusing live home" >&2; exit 1 ;;
-esac
+protect="${MODERN_PROTECT_HOME:-}"
+protect="${protect%/}"
+if [ -n "$protect" ]; then
+    case "$TMP" in
+        "$protect"|"$protect"/*) echo "test-release-notes: refusing protected home" >&2; exit 1 ;;
+    esac
+fi
 
 git_cfg() {
     git -c core.hooksPath=/dev/null \

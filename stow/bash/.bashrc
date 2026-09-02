@@ -3,8 +3,8 @@
 # not here — QT_QPA_PLATFORM=xcb and a hardcoded GTK_THEME would force
 # XWayland and fight the token pipeline (docs/DECISIONS.md #5).
 #
-# Stow target: $HOME/.bashrc for the install user (never the live
-# daily-driver account). Machine-local extras go in bashrc.local.
+# Stow target: $HOME/.bashrc for the install user.
+# Machine-local extras go in bashrc.local.
 
 export EDITOR="${EDITOR:-nvim}"
 
@@ -128,9 +128,6 @@ alias system_find='modern pkg find'
 alias system_fix='modern repair'
 alias fsr_on='optiscaler.sh on'
 alias fsr_off='optiscaler.sh off'
-
-# SSH
-alias connect_macbook='kitty +kitten ssh bastianweigand@192.168.178.103'
 
 shopt -s histappend checkwinsize
 HISTSIZE=5000

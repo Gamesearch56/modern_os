@@ -48,7 +48,12 @@ install/*.log
 
 # Editor/OS
 .idea/
+.vscode/
 .DS_Store
+Thumbs.db
+*~
+.env
 
 # ISO artifacts (branding + mkarchiso). Never under a live home.
 iso/out/
+*.iso

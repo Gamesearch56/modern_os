@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # archiso profile overlay. iso-build.sh copies releng + this file.
-# Do not run mkarchiso on the development PC.
+# Do not run mkarchiso when MODERN_PROTECT_HOME is set.
 iso_name="modernos"
 iso_label="MODERNOS"
 iso_publisher="ModernOS"

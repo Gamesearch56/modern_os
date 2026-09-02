@@ -1,5 +1,5 @@
 # GATED — copied only by install/system/provision-iso.sh in a Calamares
-# chroot. Never enable greetd on the development PC.
+# chroot. Not applied by install.sh.
 [terminal]
 vt = 1
 

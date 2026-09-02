@@ -4,8 +4,7 @@ Friends install a **version** (`v1.2.3`), not every commit. Daily work
 is on `dev`. A PR into `main` plus a tag is what they get.
 
 Do **not** test a release on the machine you live on. Build the ISO and
-try Calamares on a spare box, QEMU, or CI — never against
-`/home/bastianweigand` or this PC’s disk. Isolation: `docs/ISOLATION.md`.
+try Calamares on a spare box, QEMU, or CI. Isolation: `docs/ISOLATION.md`.
 
 ```
 dev  --PR, CI green-->  main  -->  tag vX.Y.Z  -->  friends
@@ -20,8 +19,8 @@ dev  --PR, CI green-->  main  -->  tag vX.Y.Z  -->  friends
 
 Do **not** create `feature/*` or `fix/*` branches. Commit on `dev` and
 push it. Never commit on `main`. Never `git push --force` to `main` or
-`dev`. GitHub branch protection on `main` should require the CI checks
-below.
+`dev` **except the documented flip-day rewrite below**. GitHub branch
+protection on `main` requires the CI checks below.
 
 ## Daily work
 
@@ -38,10 +37,13 @@ When `dev` should become a release (or a hotfix friends need now), open
 a PR **`dev` → `main`**. Title says why. Description says how to try it.
 Wait until CI is green, then merge.
 
+Forks also open PRs into `dev`. Maintainers commit on `dev` and PR
+`dev` → `main`. See `CONTRIBUTING.md`.
+
 ## What “CI green” means
 
-GitHub Actions on every PR to `main`, on pushes to `dev` / `main`, and
-on tags `v*`:
+GitHub Actions on every PR to `main` or `dev`, on pushes to `dev` /
+`main`, and on tags `v*`:
 
 - `scripts/lint-layers.sh`
 - `shellcheck` on `install/` and `scripts/`
@@ -51,7 +53,7 @@ on tags `v*`:
 - `scripts/test-release-notes.sh`
 - `./install/install.sh --dry-run --profile m0 --target $RUNNER_TEMP/…`
 
-`scripts/check-isolation.sh` is **this PC only**. Do not add it to GitHub.
+`scripts/check-isolation.sh` is **local only**. Do not add it to GitHub.
 
 ## How to cut a release
 
@@ -69,11 +71,12 @@ git push origin v0.1.0
 
 The `Release` Action writes [Keep a Changelog](https://keepachangelog.com/)
 notes (Added / Changed / Fixed / …) from commits since the previous
-tag, publishes the GitHub Release, and then the `ISO` Action attaches
-the friend image. Never `iso-build.sh --mkarchiso` on this PC.
+tag, publishes the GitHub Release, then dispatches the `ISO` workflow
+to attach the image (`GITHUB_TOKEN` does not chain `release: published`).
+Never `iso-build.sh --mkarchiso` on a machine you live on.
 
 That tag is what Settings → Update and the ISO pin look at. Friends
-download the image from the Release page, not from this machine.
+download the image from the Release page.
 
 **Semver:** `MAJOR.MINOR.PATCH`. Breaking desktop/install behavior bumps
 MAJOR; features MINOR; fixes PATCH. Start at `v0.1.0` until you want
@@ -96,9 +99,104 @@ pending only when a **newer** `vX.Y.Z` exists on GitHub. It never tracks
 
 - Commit on `main`.
 - Open PRs from `feature/*` / `fix/*` branches.
-- `git push --force` to `main` or `dev`.
+- `git push --force` to `main` or `dev` except flip day (below).
 - Point a friend’s PC at `dev` (`git pull` / Settings against `dev`).
-- Run `desktop-sync.sh apply` on this development clone while `HEAD` is
+- Run `desktop-sync.sh apply` on a development clone while `HEAD` is
   dirty or not `dev`.
 - Run Calamares, `provision-iso.sh`, or `iso-build.sh --mkarchiso` on
-  this PC.
+  a machine you live on.
+
+## Flip day (history rewrite, then public)
+
+The repo can stay **private** indefinitely. When you choose to make it
+public, history still contains names and older README copy until this
+rewrite. Do this **once**, then change visibility.
+
+1. Secret scan: [TruffleHog](https://github.com/trufflesecurity/trufflehog)
+   plus a path scan for `secrets.json`, `.env`, and API-shaped strings.
+2. Orphan-squash `main` and `dev` onto a new root (one commit each, or
+   `dev` replayed on the squashed `main`). This is the only allowed
+   force-push to those branches.
+3. Delete leftover `feature/*` / `fix/*` remotes.
+4. Tag **`v0.2.0`** on the new `main` (history break). Settings Update
+   follows tags; friends on `v0.1.x` will see this as the next update.
+5. GitHub → Settings → Danger Zone → Change visibility → Public.
+6. Optional: topics, Issues, Discussions.
+
+Until then, do not force-push and do not change visibility.
+
+## GitHub settings (branch + Actions)
+
+The repo stays **private**. Do not use Settings → Change visibility
+until flip day.
+
+**Already applied (works on a private user repo):**
+
+- Actions → Workflow permissions: **Read** repository contents
+  (`default_workflow_permissions=read`). `GITHUB_TOKEN` cannot approve
+  PRs.
+- Fork pull-request workflows in this private repo are **off** (no write
+  tokens, no secrets). First-time-contributor approval is a GitHub
+  setting that only exists once the repo is public.
+- No `pull_request_target` workflows.
+
+**Branch protection / rulesets:** GitHub returns 403 on this private
+user-owned repo (`Upgrade to GitHub Pro or make this repository public`).
+Apply the following **on flip day after the repo is public** (public
+repos get branch protection on the free plan), or sooner if the account
+has Pro.
+
+`main` — require a PR, require status checks `checks` and `install-dry`,
+no force-push, include administrators:
+
+```bash
+gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/main/protection \
+  --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "checks": [
+      {"context": "checks"},
+      {"context": "install-dry"}
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false,
+    "required_approving_review_count": 0
+  },
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF
+```
+
+`dev` — do **not** require a PR; block force-push; include administrators:
+
+```bash
+gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/dev/protection \
+  --input - <<'EOF'
+{
+  "required_status_checks": null,
+  "enforce_admins": true,
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF
+```
+
+After the repo is public, also set fork PRs to require approval for
+first-time contributors:
+
+```bash
+gh api --method PUT repos/Gamesearch56/modern_dotfile/actions/permissions/fork-pr-contributor-approval \
+  -f approval_policy=first_time_contributors_new_to_github
+```
+
+User-owned repos cannot restrict “who can push” via the `restrictions`
+object (organization-only). Collaborators are still granted in Settings
+→ Collaborators.

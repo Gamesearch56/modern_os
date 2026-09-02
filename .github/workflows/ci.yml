@@ -2,10 +2,13 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   push:
     tags: ["v*"]
     branches: [dev, main]
+
+permissions:
+  contents: read
 
 jobs:
   checks:
@@ -43,4 +46,4 @@ jobs:
         run: |
           sudo -u builder ./install/install.sh --dry-run --profile m0 \
             --target /tmp/modern-dry
-        # check-isolation.sh is this machine only — do not run it here.
+        # check-isolation.sh is local only — do not run it here.

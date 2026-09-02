@@ -37,7 +37,7 @@ for the island bar. Enable CSS mods once at `vivaldi://experiments`.
 
 Every *color* output in that list is written by **one** `matugen`
 invocation from **one** seed color, so nothing can drift out of sync the
-way hand-rolled per-app Wallust templates could. Radii, fonts, and
+way hand-rolled per-app templates could. Radii, fonts, and
 motion for toolkit chrome (`01-chrome.css`, QSS placeholders,
 `application-style.conf`, `hyprtoolkit.conf`, `phylax/style.css`) are patched afterwards from `config.json`.
 `tokens.json` is also readable directly

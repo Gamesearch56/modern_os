@@ -1,0 +1,16 @@
+name: Feature request
+description: A change or addition to the desktop
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What do you want
+      description: The problem this would solve, not only the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Extra context
+      description: Mockups, related docs, or settings keys if you know them.

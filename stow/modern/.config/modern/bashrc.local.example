@@ -1,5 +1,5 @@
 # Machine-local interactive extras. Copied from this example to
 # ~/.config/modern/bashrc.local (gitignored). Never commit hosts or keys.
 #
-# alias connect_macbook='ssh user@192.168.0.10'
+# alias ssh-lan='ssh user@192.168.0.10'
 # export ANDROID_HOME="$HOME/Android/Sdk"

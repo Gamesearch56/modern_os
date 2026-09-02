@@ -1,258 +1,87 @@
-# modern_dotfile
+# ModernOS
 
-A from-scratch Material Design 3 desktop environment for Arch Linux +
-Hyprland: a [Quickshell](https://quickshell.outfoxxed.me/) (QML) shell
-replaces Waybar, SwayNC and Rofi; [`matugen`](https://github.com/InioX/matugen)
-replaces Wallust for dynamic, wallpaper-derived color; one JSON config file
-drives both the shell and Hyprland's Lua config. German and English are
-both first-class throughout.
+Material Design 3 desktop for [Arch Linux](https://archlinux.org/) +
+[Hyprland](https://hypr.land/): a [Quickshell](https://quickshell.outfoxxed.me/)
+(QML) shell, [`matugen`](https://github.com/InioX/matugen) for
+wallpaper-derived color, and one JSON config for both the shell and
+Hyprland. English and German are first-class.
 
-Three install paths exist:
+SPDX-License-Identifier: Apache-2.0
 
-- **This machine (now):** keep using `bastianweigand` as the daily driver.
-  Create `devuser`, install *only* into that home, and start Hyprland on a
-  **second TTY** so the current session is never replaced.
-- **New PC / bare metal:** `scripts/bootstrap.sh` (print-only until you
-  pass `--yes --disk`) then `install/install.sh` as the new user.
-- **Friend ISO:** Calamares on a spare box / QEMU (never this PC). Late
-  clone of a release tag + `install.sh --profile m0 --yes`. See
-  `docs/INSTALL.md` and `docs/GIT.md`.
+## Requirements
 
-Full plan: `docs/ARCHITECTURE.md`. Isolation rules: `docs/ISOLATION.md`.
-Git / releases: `docs/GIT.md`. When `devuser` testing is done and this
-account should run the new desktop (with a rewind path, then a later
-clean cut): `docs/CUTOVER.md`.
+- Arch Linux, 64-bit (`x86_64`)
+- A user you can log in as (ISO creates one; git install uses yours)
 
-## What a clone installs
+## Try it
+
+1. Download the ISO from [Releases](https://github.com/Gamesearch56/modern_dotfile/releases).
+2. Boot it in a VM first (QEMU/VirtualBox). Calamares installs to disk.
+3. First boot is greetd + password. Settings → Update tracks newer
+   `vX.Y.Z` tags.
+
+Do not run `iso-build.sh --mkarchiso` on a machine you live on. Build
+the image on CI or a spare box (`docs/INSTALL.md`).
+
+## Install from git
+
+Clone a **release tag**, not `dev`:
+
+```bash
+git clone --branch v0.1.4 https://github.com/Gamesearch56/modern_dotfile.git
+cd modern_dotfile
+./install/install.sh --profile m0 --dry-run
+./install/install.sh --profile m0
+```
+
+Then start the session with `start-hyprland` (not the `Hyprland` binary).
+Hyprland ≥ 0.53 needs the wrapper or the bar never appears.
+
+Profiles: `m0` (desktop), `dev` (+ toolchain), `gaming`, `full`.
+`--target DIR` stows into another home. Optional
+`MODERN_PROTECT_HOME` refuses that path unless you pass
+`--allow-live-home`. Details: `docs/INSTALL.md`, `docs/ISOLATION.md`,
+existing-account install: `docs/CUTOVER.md`.
 
 `git clone` plus `install.sh` reproduces the **designed** desktop
-(`config.default.json`, package manifests, stow), not this machine’s
-live `config.json`. Displays, wallpaper, calendar, Ollama, Proton,
-Vivaldi profile, and SSH stay out of git. The shipped UI language is
-**English**; keyboard layout default is `de`. Clone the branch you
-intend to run (`main` may lag the working branch).
+(`config.default.json`, package manifests, stow). Displays, wallpaper,
+calendar, API keys, browser profile, and SSH stay out of git. The
+shipped UI is **English**; default keyboard layout is `us`.
 
-## Status
+## After install
 
-The desktop is a daily Hyprland + Quickshell session: Material You widget
-kit, Settings as a real window, island bar (including vertical), compact
-control panel (Super+N; not lock), overlay menus as floating windows,
-tokenized GTK/Qt/Dolphin/Vivaldi chrome. The lock screen is a **visual
-overlay** (any non-empty password), not a real session lock. Verify with:
+System-wide boot/login/`/etc` files stay under `install/system/` and are
+**never** applied by `install.sh` or Settings. Settings writes
+`config.json` only.
 
 ```bash
 scripts/lint-layers.sh
 scripts/doctor.sh
-scripts/check-isolation.sh
+./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
 ```
 
-System-wide boot/login/`/etc` files stay under `install/system/` and are
-**never** applied by `install.sh` or Settings.
+`scripts/check-isolation.sh` is for local gated-file checks. Do not add
+it to GitHub Actions.
 
-## Safety — testing will not replace your current session
+## Docs
 
-If you follow the **this machine** path below and **do not** apply
-`install/system/` (Plymouth/mkinitcpio, sysctl, polkit, ufw, tmpfiles,
-usersd, portals, snapper, ESP hook, greetd). Greetd drop-ins exist under
-`install/system/greetd/` but stay gated — `sudo systemctl enable greetd`
-is still not a supported step on this PC:
+| | |
+|---|---|
+| Install paths | [`docs/INSTALL.md`](docs/INSTALL.md) |
+| Git / releases | [`docs/GIT.md`](docs/GIT.md) |
+| Architecture | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Isolation | [`docs/ISOLATION.md`](docs/ISOLATION.md) |
+| Keybinds | Super+K, [`docs/KEYBINDS.md`](docs/KEYBINDS.md) |
+| Contributing | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| Security | [`SECURITY.md`](SECURITY.md) |
 
-- `install.sh` **refuses** to stow into `/home/bastianweigand` (even
-  `--dry-run`). Override only with `--allow-live-home` for a deliberate
-  cutover, not for testing.
-- Stow backups go under the *target* home, never into the daily-driver
-  `$HOME`.
-- Creating `devuser` does **not** change autologin. Your existing
-  graphical session stays on TTY1/TTY2.
-- Coming back: `Ctrl+Alt+F1` or `F2` — the `bastianweigand` session is
-  still running. Log out of the `devuser` Hyprland if you started one;
-  that does not log you out of the main account.
-- Optional rollback of the test account only:
-  `sudo userdel -r devuser` (deletes `/home/devuser`; does not touch
-  `/home/bastianweigand`).
-
-The one machine-wide side effect of a real (non-dry-run) install is
-**packages**: pacman/yay install is system-wide and additive. It will not
-remove anything the daily driver uses. The existing
-`/etc/pacman.d/hooks/package_list.hook` will rewrite lists in the *old*
-`~/dotfiles` repo — leave that hook alone and ignore the diff. See
-`docs/ISOLATION.md`.
-
-**Do not run** while testing:
-
-```text
-sudo systemctl enable greetd   # staged for the friend ISO only
-# anything that copies install/system/ into /etc
-# install.sh without --target if you are logged in as bastianweigand
-# install.sh --allow-live-home
-```
-
-Verify from this account before and after:
-
-```bash
-scripts/check-isolation.sh
-```
-
-## This machine — install and switch to `devuser`
-
-Your home is mode `700`, so `devuser` cannot read this checkout. Clone a
-**copy** as `devuser`. Prefer a second TTY so you never log out of
-`bastianweigand`.
-
-### 1. Create the test account (gated, once)
-
-From `bastianweigand`:
-
-```bash
-cd /home/bastianweigand/CursorProjects/modern_dotfile
-scripts/check-isolation.sh
-sudo install/system/create-devuser.sh
-```
-
-Set a password when asked. Rollback: `sudo userdel -r devuser`.
-
-### 2. Clone and install **as `devuser`**
-
-```bash
-sudo -iu devuser
-git clone git@github.com:Gamesearch56/modern_dotfile.git ~/modern_dotfile
-# or: git clone https://github.com/Gamesearch56/modern_dotfile.git ~/modern_dotfile
-cd ~/modern_dotfile
-./install/install.sh --profile m0 --dry-run
-./install/install.sh --profile m0
-```
-
-Use `--profile dev` if you want Cursor on that account
-(`docs/CURSOR-SETUP.md`).
-
-If you must run the installer from `bastianweigand` instead, you still
-cannot target your own home:
-
-```bash
-./install/install.sh --profile m0 --target /home/devuser --dry-run
-```
-
-That only works if `devuser`'s home is writable by you (it usually is
-not). `sudo -iu devuser` is the supported path.
-
-### 3. Start the new desktop without leaving the current one
-
-Stay logged in as `bastianweigand`. On another virtual terminal:
-
-1. `Ctrl+Alt+F3` (F4 also works if F3 is busy).
-2. Log in as `devuser`.
-3. Start the compositor with **`start-hyprland`** (Hyprland ≥ 0.53).
-   Do **not** run the `Hyprland` binary — that skips the session wrapper,
-   shows a warning, and leaves `systemd --user` without `WAYLAND_DISPLAY`
-   (no bar, no shell). Optional UWSM:
-   `uwsm start hyprland-uwsm.desktop`.
-   Autostart starts `qs -c modern` as a child of this compositor
-   (`docs/BOOT.md`). Skip `systemctl --user enable` — a text login
-   often has no `$XDG_RUNTIME_DIR` / session bus, and the bar does not
-   need that unit.
-
-You now have two sessions: the old desktop on TTY1/TTY2, the new one on
-TTY3.
-
-### 4. Switch back to your main user
-
-- **Keep both sessions:** `Ctrl+Alt+F1` or `Ctrl+Alt+F2` until you see
-  the `bastianweigand` desktop. Nothing in the main home was rewritten.
-- **End the test session:** `SUPER+SHIFT+M`, or from another TTY
-  `loginctl terminate-session <id>` (`docs/BOOT.md`). If the bar is
-  up, `SUPER+T` then `hyprctl dispatch "hl.dsp.exit()"` also works.
-  You land back on the TTY prompt — `exit` or Ctrl+D logs out of that
-  TTY. Then `Ctrl+Alt+F1`/`F2`. Do not open a second `start-hyprland`
-  while the first is still running; one user gets one graphical session.
-- **After a reboot:** autologin is still the daily-driver account,
-  because greetd was never enabled. Log in as usual.
-
-Putting **this** account on the new desktop (not `devuser`) is a
-different, two-phase procedure: reversible stow first, delete the old
-`~/dotfiles` stack only after days of use — `docs/CUTOVER.md`. Do not
-use `--allow-live-home` until that document’s Phase 1.
-
-### 5. Cursor on `devuser`
-
-Follow `docs/CURSOR-SETUP.md` inside the `devuser` session (`--profile
-dev` installs `cursor-bin`). Open `~/modern_dotfile` there — not the
-copy under `/home/bastianweigand`.
-
-## New PC — install from scratch
-
-Gated `/etc` files are still **not** applied by default. You get a
-working TTY session first. Plymouth and other staged files under
-`install/system/` are a later, explicit step. A greetd login greeter is
-**not shipped** (`docs/BOOT.md`, `docs/ISOLATION.md`).
-
-### Already running Arch (one empty user)
-
-```bash
-git clone git@github.com:Gamesearch56/modern_dotfile.git ~/modern_dotfile
-cd ~/modern_dotfile
-./install/install.sh --profile m0 --dry-run
-./install/install.sh --profile m0
-start-hyprland
-```
-
-Autostart starts `qs -c modern` as a compositor child (`docs/BOOT.md`).
-Do not run `systemctl --user enable` before `start-hyprland` — a TTY
-often has no user bus, so that command fails and is not required.
-
-If that user is named `bastianweigand` **and** `/home/bastianweigand`
-exists (this machine, or a restore of this username), the live-home
-guard will refuse. That is intentional on the current PC. On a **new**
-machine where this *is* the account you want to own, pass
-`--allow-live-home` after reading `docs/ISOLATION.md`.
-
-### Bare metal (live ISO)
-
-Default is **print-only**. Disks are not wiped unless `--yes` and
-`--disk /dev/X` are both passed, and even then this script prints the
-plan rather than calling `mkfs` from the repo (see
-`scripts/bootstrap.sh`).
-
-```bash
-cp install/hardware.conf.example install/hardware.conf
-# set DISK=, HOSTNAME=, USERNAME=, TIMEZONE=, LOCALE=
-./scripts/bootstrap.sh --dry-run
-# review the plan, then on the ISO run the printed partition/pacstrap steps
-# as root. After chroot + first boot, as the new user:
-cd ~/modern_dotfile
-./install/install.sh --profile m0
-```
-
-QEMU recipe only: `./scripts/bootstrap.sh --vm`.
-
-## Logging and errors
-
-Installer: terminal + `install/install.log` (gitignored) +
-`journalctl -t modern-install`. Shell: Quickshell log + Settings →
-System ring. User-visible toasts are described in
-`docs/TROUBLESHOOTING.md`.
-
-## Architecture at a glance
-
-```
-Wallpaper + theme profile → matugen → tokens.json (single source of truth)
-                                          │
-                     ┌────────────────────┼─────────────────────┐
-                     ▼                    ▼                     ▼
-                Colors.qml         GTK3/4 + Qt CSS      kitty / Vivaldi / Plymouth
-
-config.json (behaviour, written only by Settings) ──► hyprland.lua + Quickshell
-```
-
-QML layers (enforced by `scripts/lint-layers.sh`):
-`Commons → Services → Widgets → Modules`. See `AGENTS.md`.
-
-## Repository layout
+## Layout
 
 ```
 modern_dotfile/
-├── AGENTS.md, README.md, LICENSE
+├── AGENTS.md, README.md, LICENSE, NOTICE
 ├── docs/           architecture, design, decisions, install & ops guides
-├── install/        install.sh, manifests/, baseline/, system/ (gated)
+├── install/        install.sh, manifests/, system/ (gated)
 ├── stow/           everything that becomes a dotfile on the target user
 └── scripts/        theme-apply, doctor, isolation check, `modern` IPC CLI
 ```
@@ -279,27 +108,10 @@ modern_dotfile/
 
 Full list: `SUPER`+`K`, `docs/KEYBINDS.md`, or
 `stow/modern/.config/modern/config.default.json` → `keybinds`.
-Design → wallpaper provider opens a **separate** `qml6` window
-(`qt6-webengine`), not an in-shell WebEngine view. That window reads
-`tokens.json` for MD3 chrome and filters ads/cookie CMPs with an
-AdGuard-derived hostname denylist (local CONNECT proxy) plus an injected
-cosmetic/auto-decline script — Qt WebEngine cannot load the AdGuard
-extension.
 
-## Verify (from the daily-driver account)
-
-These commands do not stow onto your live home:
-
-```bash
-scripts/lint-layers.sh
-scripts/check-isolation.sh
-./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
-scripts/doctor.sh
-```
-
-Troubleshooting: `docs/TROUBLESHOOTING.md`. `scripts/doctor.sh` never
-mutates the machine.
+The lock screen is a **visual overlay** (any non-empty password), not a
+real session lock.
 
 ## License
 
-MIT, see `LICENSE`.
+Apache License 2.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).

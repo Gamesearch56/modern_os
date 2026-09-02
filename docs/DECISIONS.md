@@ -7,7 +7,7 @@ Chronological. Each entry: decision, rejected alternatives, why.
 **Decision:** one Quickshell (QML) process owns bar, panels, launcher,
 notifications, lock screen, greeter and Settings.
 
-**Rejected:** Waybar+SwayNC+Rofi (current setup) — three separate flat
+**Rejected:** Waybar+SwayNC+Rofi — three separate flat
 CSS/RASI configs (204+211+108 lines) that can't share a component system
 or a state model; styling MD3 elevation/tonal surfaces in flat CSS means
 hand-duplicating the same values three times. AGS (GJS) — viable, but
@@ -21,7 +21,7 @@ model, would mean re-inventing one.
 **Decision:** matugen generates `tokens.json` as the single color source
 of truth.
 
-**Rejected:** Wallust (current setup) — emits 19 slots; MD3 needs ~30
+**Rejected:** Wallust — emits 19 slots; MD3 needs ~30
 semantic roles plus 0–100 tonal steps per key color. In the audited
 config, `surface` and `background` collapsed to the same value and GTK
 selection was hardcoded `#FFFFFF` because there weren't enough slots.
@@ -132,12 +132,10 @@ for what a launcher button and an ICS subscription already cover.
 **Decision:** `install/manifests/*.txt` are hand-curated, no hook rewrites
 them.
 
-**Rejected:** an auto-generating hook like the current
-`/etc/pacman.d/hooks/package_list.hook` — it's exactly what produced the
-live bug where ~12 AUR-only packages (`cursor-bin`, `proton-mail-bin`,
-`wowup-cf-bin`, …) ended up in `pkglist_native.txt`, where `pacman -S`
-hard-fails on them. `scripts/snapshot-packages.sh --diff` covers the
-"what drifted" need manually instead.
+**Rejected:** an auto-generating pacman hook — AUR-only packages can
+land in the native list, where `pacman -S` hard-fails on them.
+`scripts/snapshot-packages.sh --diff` covers the "what drifted" need
+manually instead.
 
 ## 12. Local-first notes with a custom reconciliation loop
 

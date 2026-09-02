@@ -2,7 +2,7 @@
 # Logging helpers shared by install.sh, bootstrap.sh and scripts/.
 # Source, never execute directly. Tees to $LOG_FILE and, when available,
 # the systemd journal (logger -t modern-install). Never notify-send —
-# that would toast on the daily-driver session if you ran this by mistake.
+# that would toast on whatever session owns notify-send if you ran this by mistake.
 
 LOG_FILE="${LOG_FILE:-$REPO_ROOT/install/install.log}"
 
