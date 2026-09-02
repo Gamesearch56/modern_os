@@ -11,15 +11,19 @@ ColumnLayout {
 
     property bool _didDefault: false
 
-    readonly property bool on: (Config.accounts?.ai?.provider ?? "none") === "ollama"
+    readonly property string provider: Config.accounts?.ai?.provider ?? "none"
+    readonly property bool ollamaOn: root.provider === "ollama"
+    readonly property bool geminiOn: root.provider === "gemini"
     readonly property string modelId: String(Config.accounts?.ai?.ollamaModel || "").replace(/:latest$/, "")
+    readonly property string geminiModel: String(Config.accounts?.ai?.geminiModel || "")
 
     function _defaultOff() {
         if (root._didDefault || !Ai.probed || Ai.ready)
             return;
+        if (root.provider !== "ollama")
+            return;
         root._didDefault = true;
-        if ((Config.accounts?.ai?.provider ?? "none") !== "none")
-            ConfigWrite.set("accounts.ai.provider", "none");
+        ConfigWrite.set("accounts.ai.provider", "none");
     }
 
     Component.onCompleted: {
@@ -37,9 +41,10 @@ ColumnLayout {
     MField {
         labelKey: "settings.fields.aiProvider"
         MSegmented {
-            value: Config.accounts?.ai?.provider ?? "none"
+            value: root.provider
             model: [
                 { value: "ollama", titleKey: "settings.aiOllama" },
+                { value: "gemini", titleKey: "settings.aiGemini" },
                 { value: "none", titleKey: "settings.aiNone" }
             ]
             onSelected: (v) => ConfigWrite.set("accounts.ai.provider", v)
@@ -47,7 +52,7 @@ ColumnLayout {
     }
 
     MField {
-        visible: root.on
+        visible: root.ollamaOn
         labelKey: "settings.fields.aiModel"
         MSelect {
             enabled: Ai.running
@@ -62,8 +67,31 @@ ColumnLayout {
         }
     }
 
+    Gemini {
+        visible: root.geminiOn
+        Layout.fillWidth: true
+    }
+
+    MField {
+        visible: root.geminiOn
+        labelKey: "settings.fields.aiModel"
+        hintKey: "settings.hints.geminiModel"
+        Layout.topMargin: Tokens.spacing.xxl
+        MSelect {
+            enabled: Ai.geminiHasKey
+            placeholderKey: "settings.gemini.noModels"
+            model: {
+                void Ai.geminiModels;
+                void Config.accounts?.ai?.geminiModel;
+                return Ai.geminiModelChoices();
+            }
+            value: root.geminiModel
+            onSelected: (v) => ConfigWrite.set("accounts.ai.geminiModel", v)
+        }
+    }
+
     Install {
-        visible: root.on && !Ai.ready
+        visible: root.ollamaOn && !Ai.ready
         Layout.fillWidth: true
     }
 }

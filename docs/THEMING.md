@@ -117,9 +117,8 @@ Hyprland (`hyprctl reload` picks up the freshly-written
 `modules/colors.lua`) and kitty (`kitty @ load-config`, best-effort —
 requires `allow_remote_control` in `stow/kitty/.config/kitty/kitty.conf`).
 That file `globinclude`s `colors.conf` so a missing theme file does not
-abort kitty. A shipped MD3 dark stub lives at
-`stow/kitty/.config/kitty/colors.conf`; matugen overwrites the live copy.
-Do not commit generated output from a theme-apply run. GTK/Qt live-reload (re-reading `settings.ini`/`qt6ct.conf` in
+abort kitty (`kitty.conf` has fallback colors). matugen writes the live
+`~/.config/kitty/colors.conf`; do not commit it. GTK/Qt live-reload (re-reading `settings.ini`/`qt6ct.conf` in
 already-running apps) and the Vivaldi `Preferences` merge are out of
 scope of a running-app live-reload: CSS overlay + `01-chrome.css` are
 always rewritten; the native theme object is merged only while Vivaldi is

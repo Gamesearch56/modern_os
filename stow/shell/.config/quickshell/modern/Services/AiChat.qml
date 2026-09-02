@@ -1,8 +1,8 @@
 // Localhost Ollama /api/chat only. Body is a temp file (never argv).
 // Caps, a 4-thread ceiling, and a UI throttle so a stream cannot stall
 // qs/Hyprland. think:false so Qwen3 cannot spend num_predict on hidden
-// chain-of-thought and return an empty bubble. 1024 predicted tokens so
-// a how-to is not cut off mid-heading.
+// chain-of-thought and return an empty bubble. A short predict cap plus
+// the shared brief instruction keeps bar replies light.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -15,7 +15,7 @@ Item {
     readonly property int maxReply: 12000
     readonly property int maxLine: 4096
     readonly property int maxMsgs: 12
-    readonly property int maxPredict: 1024
+    readonly property int maxPredict: 768
     readonly property int curlMaxSec: 180
 
     property bool running: false
@@ -107,7 +107,7 @@ Item {
 
     function _clipMessages(messages: var): var {
         const src = messages || [];
-        const out = [];
+        const out = [{ role: "system", content: I18n.t("ai.systemBrief") }];
         const start = Math.max(0, src.length - root.maxMsgs);
         for (let i = start; i < src.length; i++) {
             const r = src[i];

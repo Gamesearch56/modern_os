@@ -10,6 +10,11 @@ Item {
     anchors.fill: parent
 
     readonly property bool _blocked: (Config.accounts?.ai?.provider ?? "none") === "none" || !Ai.ready
+    readonly property bool _live: {
+        void Ai.history;
+        const list = Ai.history || [];
+        return Ai.busy || !!(list.length && list[list.length - 1] && list[list.length - 1].streaming);
+    }
 
     function focusInput() {
         if (root._blocked)
@@ -18,7 +23,7 @@ Item {
     }
 
     function send() {
-        if (root._blocked || Ai.busy)
+        if (root._blocked || root._live)
             return;
         const t = field.text.trim();
         if (!t.length)
@@ -42,6 +47,16 @@ Item {
         Settings.openAt("ai", "");
     }
 
+    Connections {
+        target: Ai
+        function onCancelled(text) {
+            const t = String(text || "");
+            if (t.length)
+                field.text = t;
+            root.focusInput();
+        }
+    }
+
     BarPanelChrome {
         id: chrome
         anchors.fill: parent
@@ -53,7 +68,7 @@ Item {
             MButton {
                 kind: "text"
                 key: "ai.clear"
-                enabled: Ai.history.length > 0 && !Ai.busy
+                enabled: Ai.history.length > 0 && !root._live
                 onClicked: Ai.clear()
             }
             MIconButton {
@@ -89,10 +104,16 @@ Item {
                 onEscaped: Ai.hide()
             }
             MButton {
+                kind: "outlined"
+                key: "ai.stop"
+                visible: root._live
+                onClicked: Ai.cancel()
+            }
+            MButton {
                 kind: "filled"
                 key: "ai.send"
-                enabled: !root._blocked && !Ai.busy && field.text.trim().length > 0
-                busy: Ai.busy
+                visible: !root._live
+                enabled: !root._blocked && field.text.trim().length > 0
                 onClicked: root.send()
             }
         }

@@ -122,7 +122,7 @@ Item {
                     cursorVisible: false
                     persistentSelection: true
                     text: root.text
-                    textFormat: root.mine ? TextEdit.PlainText : TextEdit.MarkdownText
+                    textFormat: TextEdit.PlainText
                     color: root.mine ? Chrome.tonal.fg : Colors.color.onSurface
                     selectionColor: Colors.color.primary
                     selectedTextColor: Colors.color.onPrimary

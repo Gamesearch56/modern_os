@@ -32,6 +32,8 @@ singleton Ai 1.0 Ai.qml
 AiStatus 1.0 AiStatus.qml
 AiChat 1.0 AiChat.qml
 AiStore 1.0 AiStore.qml
+AiGemini 1.0 AiGemini.qml
+AiGeminiAccount 1.0 AiGeminiAccount.qml
 singleton Wallpaper 1.0 Wallpaper.qml
 WallpaperThumbs 1.0 WallpaperThumbs.qml
 singleton FilePreview 1.0 FilePreview.qml

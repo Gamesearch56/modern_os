@@ -94,9 +94,33 @@ Built with `scripts/iso-build.sh` on a spare box or CI. Branding lands
 under gitignored `iso/out/` (throwaway `HOME` for matugen). `--mkarchiso`
 is refused when `MODERN_PROTECT_HOME` is set and that directory exists.
 The ISO clones the baked-in release tag (`vX.Y.Z`, `docs/GIT.md`), runs
-`install.sh --profile m0 --yes`, then `provision-iso.sh`. First boot is
-greetd + password; the installed user does not run extra `systemctl` or
-`pacman`.
+`install.sh --profile m0 --yes`, then `provision-iso.sh`. First boot of
+the **installed** system is greetd + password.
+
+The **live** image autologins `liveuser` via `start-hyprland` and opens
+Calamares. Config is Lua (`/etc/modern/live-hyprland.lua`), not `.conf`.
+If you land on a root TTY, this image never started greetd:
+
+```bash
+export XDG_RUNTIME_DIR=/run/user/0
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+/usr/lib/modern/live-session.sh
+```
+
+On an older ISO that still has `live-hyprland.conf`, Hyprland can start
+without Calamares (`exec-once` is ignored). From another TTY
+(`Ctrl+Alt+F2`), with the compositor still running on tty1:
+
+```bash
+export XDG_RUNTIME_DIR=/run/user/0
+export WAYLAND_DISPLAY=wayland-1
+ls /run/user/0
+QT_QPA_PLATFORM=wayland calamares
+```
+
+Try `wayland-0` if `wayland-1` is missing. SUPER+Return also launches
+Calamares on a rebuilt image. The VM needs virtio 3D.
 
 Settings → Update later tracks the latest GitHub **release tag**, not
 `dev` or the tip of `main`.

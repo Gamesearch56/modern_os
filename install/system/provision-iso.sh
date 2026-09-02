@@ -35,7 +35,7 @@ systemctl set-default graphical.target
 
 install -d -m 0755 /etc/greetd
 install -m 0644 "$PROVISION_ROOT/install/system/greetd/config.toml" /etc/greetd/config.toml
-install -m 0644 "$PROVISION_ROOT/install/system/greetd/hyprland.conf" /etc/greetd/hyprland.conf
+install -m 0644 "$PROVISION_ROOT/install/system/greetd/hyprland.lua" /etc/greetd/hyprland.lua
 
 if ! getent group modern >/dev/null 2>&1; then
     groupadd --system modern

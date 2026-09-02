@@ -4,9 +4,9 @@
 vt = 1
 
 [default_session]
-command = "Hyprland --config /etc/modern/live-hyprland.conf"
+command = "/usr/lib/modern/live-session.sh"
 user = "liveuser"
 
 [initial_session]
-command = "Hyprland --config /etc/modern/live-hyprland.conf"
+command = "/usr/lib/modern/live-session.sh"
 user = "liveuser"

@@ -214,7 +214,8 @@
     "calendarIcsUrl": "",
     "ai": {
       "provider": "none",
-      "ollamaModel": "llama3"
+      "ollamaModel": "llama3",
+      "geminiModel": ""
     }
   },
   "backup": {
