@@ -1,7 +1,12 @@
 ---
 componentName: modern
-welcomeStyle: "widget"
-welcomeScrolling: false
+welcomeStyleCalamares: false
+welcomeExpandingLogo: true
+windowExpanding: normal
+windowSize: 800px,520px
+windowPlacement: center
+sidebar: widget
+navigation: widget
 strings:
     productName:         ModernOS
     shortProductName:    ModernOS
@@ -18,7 +23,10 @@ images:
     productLogo:         "default.jpg"
     productIcon:         "default.jpg"
     productWelcome:      "default.jpg"
+style:
+    SidebarBackground:        "#141218"
+    SidebarText:              "#E6E0E9"
+    SidebarTextCurrent:       "#141218"
+    SidebarBackgroundCurrent: "#D0BCFF"
 slideshow:               "show.qml"
 slideshowAPI:            2
-welcomeStyleCalamares:   false
-sidebarBackgroundLightnessScale: 1

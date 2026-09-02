@@ -1,0 +1,12 @@
+[Unit]
+Description=Create liveuser for the ModernOS installer kiosk
+Before=greetd.service
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/modern/live-setup.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=greetd.service

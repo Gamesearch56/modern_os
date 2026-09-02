@@ -18,5 +18,8 @@ file_permissions=(
   ["/etc/shadow"]="0:0:400"
   ["/root"]="0:0:750"
   ["/usr/lib/modern/calamares-late.sh"]="0:0:755"
+  ["/usr/lib/modern/live-setup.sh"]="0:0:755"
+  ["/usr/lib/modern/live-session.sh"]="0:0:755"
+  ["/root/.automated_script.sh"]="0:0:755"
   ["/etc/sudoers.d/99-liveuser"]="0:0:440"
 )

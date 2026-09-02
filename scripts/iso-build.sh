@@ -106,6 +106,10 @@ mkdir -p "$BRAND_HOME/.config/modern/themes" \
 cp -a "$ROOT/iso/airootfs/." "$AIROOTFS_OUT/"
 install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/calamares-late.sh"
+install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-setup.sh" \
+    "$AIROOTFS_OUT/usr/lib/modern/live-setup.sh"
+install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-session.sh" \
+    "$AIROOTFS_OUT/usr/lib/modern/live-session.sh"
 printf '%s\n' "$pin" >"$AIROOTFS_OUT/usr/lib/modern/iso-pin"
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/etc/calamares/branding/modern/default.jpg"
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/usr/share/modern/wallpaper.jpg"

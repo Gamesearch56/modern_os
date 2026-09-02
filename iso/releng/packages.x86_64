@@ -17,4 +17,6 @@ ttf-jetbrains-mono-nerd
 noto-fonts
 noto-fonts-emoji
 greetd
+polkit
+qt6-wayland
 btrfs-progs
