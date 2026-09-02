@@ -24,6 +24,8 @@ Singleton {
     signal fetched(string path)
     signal fetchFailed()
     signal openedInBrowser()
+    signal chooserStarted(string kind)
+    signal chooserFinished(bool reopenPicker)
 
     FileView {
         id: stateFile
@@ -61,8 +63,7 @@ Singleton {
             }
             const reopen = root._reopenPicker;
             root._reopenPicker = false;
-            if (reopen)
-                Qt.callLater(() => root.setPickerOpen(true));
+            root.chooserFinished(reopen);
         }
     }
 
@@ -109,16 +110,9 @@ Singleton {
             const reopen = root._reopenPicker && code !== 127;
             root._reopenPicker = false;
             root.providerOpen = false;
-            if (code === 127) {
+            if (code === 127)
                 root.openInBrowser();
-                return;
-            }
-            if (reopen) {
-                Qt.callLater(() => {
-                    root.pickerOpen = true;
-                    root._refresh();
-                });
-            }
+            root.chooserFinished(reopen);
         }
     }
 
@@ -172,10 +166,9 @@ Singleton {
             Quickshell.execDetached(["hyprctl", "dispatch", "focuswindow", "title:modern.wallpaper-provider"]);
             return;
         }
-        providerProc.command = [Paths.script("wallpaper-provider.sh"), root.providerUrl(), root.libraryDir];
         root._reopenPicker = true;
         root.providerOpen = true;
-        providerProc.running = true;
+        root.chooserStarted("provider");
     }
 
     function closeProvider() {
@@ -222,10 +215,20 @@ Singleton {
     function importWallpaper() {
         root.pickerOpen = false;
         root._reopenPicker = true;
-        Qt.callLater(() => {
+        root.chooserStarted("import");
+    }
+
+    function beginChooser(kind: string) {
+        const k = String(kind || "");
+        if (k === "import") {
             importProc.running = false;
             importProc.running = true;
-        });
+            return;
+        }
+        if (k === "provider") {
+            providerProc.command = [Paths.script("wallpaper-provider.sh"), root.providerUrl(), root.libraryDir];
+            providerProc.running = true;
+        }
     }
 
     function canRemove(path: string): bool {
