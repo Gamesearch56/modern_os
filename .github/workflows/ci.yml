@@ -27,6 +27,8 @@ jobs:
         run: scripts/test-settings-catalog.sh
       - name: Desktop-sync fixture
         run: scripts/test-desktop-sync.sh
+      - name: Nautilus bookmarks
+        run: scripts/test-nautilus-prefs.sh
       - name: ISO package list
         run: scripts/test-iso-package-list.sh
       - name: ISO live kiosk

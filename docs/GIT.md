@@ -49,6 +49,7 @@ GitHub Actions on every PR to `main` or `dev`, on pushes to `dev` /
 - `shellcheck` on `install/` and `scripts/`
 - `scripts/test-settings-catalog.sh`
 - `scripts/test-desktop-sync.sh` (local fake remote, no GitHub)
+- `scripts/test-nautilus-prefs.sh`
 - `scripts/test-iso-package-list.sh`
 - `scripts/test-iso-live-kiosk.sh`
 - `scripts/test-release-notes.sh`

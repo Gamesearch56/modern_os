@@ -136,7 +136,9 @@ Settings → Update later tracks the latest GitHub **release tag**, not
 `install.sh` phase 5 applies `~/.config/modern/wallpapers/default.jpg`
 (tokens, GTK/Qt/kitty). `wallpaper-sync.sh` writes lock assets to
 `~/.local/state/modern/session` until gated `/var/lib/modern/session`
-exists. First-hour UI is **English**. Power-menu lock is an overlay
+exists. Nautilus sidebar starts with Downloads, Pictures, and Videos
+(`nautilus-prefs.sh`, XDG dirs for the target user). First-hour UI is
+**English**. Power-menu lock is an overlay
 preview, not a real lock. Titlebars need a one-time `hyprpm` + pkexec
 in a graphical session (`docs/TROUBLESHOOTING.md`).
 

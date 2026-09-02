@@ -52,10 +52,10 @@ args=(
     -cdrom "$newest"
     -boot d
     -device virtio-vga-gl
-    -display gtk,gl=on
+    -display "gtk,gl=on"
     -serial "file:${serial}"
-    -netdev user,id=net0
-    -device virtio-net,netdev=net0
+    -netdev "user,id=net0"
+    -device "virtio-net,netdev=net0"
 )
 if [ -c /dev/kvm ]; then
     args+=(-enable-kvm -cpu host)
