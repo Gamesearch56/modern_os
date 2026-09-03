@@ -7,6 +7,7 @@ Item {
 
     property bool checked: false
     property bool enabled: true
+    property string nameKey: ""
 
     signal toggled(bool value)
 
@@ -15,6 +16,7 @@ Item {
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
     Accessible.role: Accessible.CheckBox
+    Accessible.name: root.nameKey.length > 0 ? I18n.t(root.nameKey) : ""
     Accessible.checkable: true
     Accessible.checked: root.checked
     Accessible.onToggleAction: root.toggled(!root.checked)

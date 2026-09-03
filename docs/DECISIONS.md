@@ -98,8 +98,10 @@ shutdown overlay share one `Session/SessionSurface.qml`.
 
 **Decision:** real login via `greetd` + a second Quickshell instance,
 gated behind an explicit, separately-applied phase (see
-`docs/ISOLATION.md`). Autologin stays available as a `config.json`
-toggle for anyone who wants it back.
+`docs/ISOLATION.md`). Autologin is a Settings toggle: `config.json`
+plus `scripts/autologin-apply.sh` (pkexec) writes greetd
+`[initial_session]` or a `getty@tty1` drop-in so the next reboot opens
+the session account. Settings still never writes `/etc` itself.
 
 **Rejected:** keeping autologin + hyprlock-as-a-workaround (current
 setup) — works, but isn't a login screen, and blocks a themed boot→login

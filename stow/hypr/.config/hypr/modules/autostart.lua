@@ -8,13 +8,11 @@ local config = require("modules.config")
 local paths = require("modules.paths")
 
 hl.on("hyprland.start", function()
-    -- Stop a leftover user-unit qs before exec so TimeoutStopSec cannot
-    -- kill the compositor child we are about to start.
-    hl.exec_cmd("sh -lc 'timeout 2 systemctl --user stop modern-shell.service || true'")
-
-    -- Lean exec so Hyprland tracks qs, not a wrapper shell. Env for the
-    -- shell process stays here; systemd/dbus/polkit use separate timeouts
-    -- so a stuck bus cannot block Quickshell startup.
+    -- Shell first. The user bus is often not ready yet after greetd
+    -- hands off, and any systemctl --user here waits on timeout 2
+    -- before the first frame. A leftover modern-shell unit is stopped
+    -- after qs starts; TimeoutStopSec then hits that unit's MainPID,
+    -- not this compositor child.
     hl.exec_cmd("sh -lc '"
         .. "mkdir -p \"${XDG_STATE_HOME:-$HOME/.local/state}/modern\"; "
         .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
@@ -23,6 +21,8 @@ hl.on("hyprland.start", function()
         .. "exec qs -c modern >>\"$log\" 2>&1'")
 
     hl.exec_cmd("sh -lc '"
+        .. "if systemctl --user is-active --quiet modern-shell.service; then "
+        .. "timeout 1 systemctl --user stop modern-shell.service || true; fi; "
         .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XDG_SESSION_ID XDG_SESSION_TYPE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true; "
         .. "timeout 2 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true; "
         .. "timeout 2 systemctl --user stop hyprpolkitagent.service || true; "

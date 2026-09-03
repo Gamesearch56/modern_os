@@ -30,6 +30,9 @@ Item {
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
+    Accessible.role: Accessible.EditableText
+    Accessible.name: root.placeholderKey.length > 0 ? I18n.t(root.placeholderKey) : ""
+    Accessible.editable: true
 
     HoverHandler {
         enabled: root.enabled

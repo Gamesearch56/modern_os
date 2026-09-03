@@ -76,7 +76,9 @@ if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
         --arg unlock "$(jq -r '.session.unlock // "Unlock"' "$trans")" \
         --arg password "$(jq -r '.session.password // "Password"' "$trans")" \
         --arg user "$(jq -r '.session.user // "User"' "$trans")" \
-        '$cfg + {strings:{unlock:$unlock, password:$password, user:$user}}' \
+        --arg signingIn "$(jq -r '.session.signingIn // "Signing in…"' "$trans")" \
+        --arg authFailed "$(jq -r '.session.authFailed // "Could not unlock"' "$trans")" \
+        '$cfg + {strings:{unlock:$unlock, password:$password, user:$user, signingIn:$signingIn, authFailed:$authFailed}}' \
         > "$SHARED/chrome.json" || warn "chrome.json skipped"
 fi
 

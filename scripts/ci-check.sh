@@ -49,5 +49,7 @@ log "calamares patches"
 "$ROOT/scripts/test-calamares-patches.sh"
 log "release notes"
 "$ROOT/scripts/test-release-notes.sh"
+log "autologin apply"
+"$ROOT/scripts/test-autologin-apply.sh"
 
 log "ok"

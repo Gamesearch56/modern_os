@@ -39,7 +39,8 @@ Item {
         }
 
         function onReadyToLaunch() {
-            root.busy = false;
+            // Stay busy so the form keeps "Signing in…" until this
+            // greeter compositor is replaced by the user session.
             Greetd.launch(["/usr/bin/start-hyprland"], ["XDG_SESSION_TYPE=wayland"], true);
         }
 

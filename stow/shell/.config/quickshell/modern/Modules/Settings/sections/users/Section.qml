@@ -60,9 +60,27 @@ Item {
                 Layout.fillWidth: true
             }
             MSwitch {
+                nameKey: "settings.fields.autologin"
                 checked: !!(Config.general.autologin)
-                onToggled: (v) => ConfigWrite.set("general.autologin", v)
+                enabled: !Autologin.running
+                onToggled: (v) => Autologin.setEnabled(v)
             }
+        }
+
+        MHint {
+            key: "settings.hints.autologin"
+            Layout.fillWidth: true
+        }
+
+        MText {
+            visible: Autologin.error.length > 0 && !Autologin.running
+            value: Autologin.error
+            styleName: "bodySmall"
+            color: Colors.color.error
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+            Accessible.role: Accessible.Alert
+            Accessible.name: Autologin.error
         }
 
         MSectionHeader {
@@ -114,6 +132,13 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    Connections {
+        target: Autologin
+        function onApplied(on) {
+            ConfigWrite.set("general.autologin", on);
         }
     }
 

@@ -134,6 +134,8 @@ Item {
                 key: "session.authFailed"
                 styleName: "bodySmall"
                 color: Colors.color.error
+                Accessible.role: Accessible.Alert
+                Accessible.name: I18n.t("session.authFailed")
             }
 
             MButton {
@@ -141,6 +143,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 kind: "filled"
                 key: "session.unlock"
+                enabled: password.text.length > 0
                 onClicked: Session.authenticate(password.text)
             }
 

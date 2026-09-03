@@ -39,8 +39,8 @@ Singleton {
     function _render(): string {
         const b = root.bright;
         return "general {\n"
-            + "    lock_cmd = loginctl lock-session\n"
-            + "    before_sleep_cmd = loginctl lock-session\n"
+            + "    lock_cmd = qs -c modern ipc call session lock\n"
+            + "    before_sleep_cmd = qs -c modern ipc call session lock\n"
             + "    after_sleep_cmd = hyprctl dispatch dpms on\n"
             + "    ignore_dbus_inhibit = false\n"
             + "}\n"

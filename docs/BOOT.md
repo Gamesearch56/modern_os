@@ -59,10 +59,12 @@ stop the shell immediately. TTY testing does **not** need this unit
 enabled.
 
 `modules/autostart.lua` **exec**s `qs -c modern` as a child of this
-compositor (logs: `~/.local/state/modern/quickshell.log`). Do not wrap
-it in a `while` loop: Hyprland then tracks `sh` instead of Quickshell,
-and the bar never appears. systemd calls (import-environment, stop a
-leftover unit, polkit) run separately with `timeout 2`.
+compositor (logs: `~/.local/state/modern/quickshell.log`) **before** any
+`systemctl --user` call. After greetd the user bus is often still coming
+up; waiting on it delayed the first shell frame. Do not wrap qs in a
+`while` loop: Hyprland then tracks `sh` instead of Quickshell, and the
+bar never appears. systemd calls (stop a leftover unit, import-environment,
+polkit) run after qs with `timeout 2`.
 
 Enable the unit only from **inside** a running session if you want a
 UWSM/greetd watchdog — not from a text TTY, and not as a requirement
@@ -101,7 +103,7 @@ Per-user state stays in `$XDG_STATE_HOME/modern/` and
 |---------|--------|------|
 | Plymouth splash | gated theme + mkinitcpio hook | `plymouth-sync.sh`; never rewrite initramfs from `install.sh` |
 | greetd greeter | `stow/greeter` + `install/system/greetd/` | Staged. Applied only by ISO `provision-iso.sh`. Getty/autologin stays until that runs. |
-| lock screen | `Modules/Session` overlay | Power menu preview. Any non-empty password unlocks. Idle/lid run `loginctl lock-session` and do **not** show the overlay. Not `WlSessionLock`. |
+| lock screen | `Modules/Session` overlay | Power menu, idle, and lid run `qs -c modern ipc call session lock` (which also calls `loginctl lock-session`). Any non-empty password unlocks. Not `WlSessionLock`. |
 
 `config.json` → `design.bootScreen` chooses whether the current wallpaper
 is shown on splash/lock/login.
