@@ -14,7 +14,8 @@ qt6-wayland                     # native Wayland for Qt6 apps (Quickshell, Dolph
 qt6-webengine                   # wallpaper provider: separate qml6 + WebEngine process (scripts/wallpaper-provider.sh)
 qt6ct                           # Qt6 theme configuration, written by theme-apply.sh
 networkmanager                  # network management daemon
-bluez-utils                      # bluetoothctl and friends
+bluez                            # bluetoothd + bluetooth.service; org.bluez for Services/Bluetooth
+bluez-utils                      # bluetoothctl and friends (does not depend on bluez)
 kdeconnect                       # Android integration — see Services/KdeConnect
 pipewire                         # audio/video server
 pipewire-alsa                    # ALSA compatibility shim

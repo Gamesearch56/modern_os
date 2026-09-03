@@ -132,10 +132,11 @@ else
 fi
 if grep -F 'iso_aur_cleanup' "$ROOT/scripts/lib/iso-aur-repo.sh" >/dev/null \
     && grep -F "userdel" "$ROOT/scripts/lib/iso-aur-repo.sh" >/dev/null \
-    && grep -F 'mount --bind' "$ROOT/scripts/lib/iso-aur-repo.sh" >/dev/null; then
+    && grep -F 'mount --bind' "$ROOT/scripts/lib/iso-aur-repo.sh" >/dev/null \
+    && grep -F 'iso_aur_ensure_rustup' "$ROOT/scripts/lib/iso-aur-repo.sh" >/dev/null; then
     ok "AUR ISO builder bind-mounts out of a 0700 home and removes its user"
 else
-    err "iso-aur-repo.sh must bind-mount AUR build and delete modernisoaur on EXIT"
+    err "iso-aur-repo.sh must bind-mount AUR build, rustup default, and delete modernisoaur on EXIT"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

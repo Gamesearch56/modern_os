@@ -84,7 +84,7 @@ Singleton {
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real overviewWidth: root.spacing.xxl * 22
-        readonly property real overviewHeight: root.spacing.xxl * 16
+        readonly property real overviewHeight: root.spacing.xxl * 18
         readonly property real overlayWidth: root.spacing.xxl * 24
         readonly property real overlayHeight: root.spacing.xxl * 20
         readonly property real chatWidth: root.spacing.xxl * 14

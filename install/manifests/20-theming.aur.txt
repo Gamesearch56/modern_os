@@ -1,5 +1,5 @@
 # matugen isn't in the official repos. Try the AUR binary first; pkg.sh
 # falls back to `cargo install matugen` if this AUR package ever goes
 # stale, since matugen is a single static Rust binary.
-matugen
-bibata-cursor-theme     # gtk-cursor-theme-name / config.json design.cursorTheme
+matugen-bin
+bibata-cursor-theme-bin     # gtk-cursor-theme-name / config.json design.cursorTheme

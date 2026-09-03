@@ -9,12 +9,21 @@ hyprland
 quickshell
 # AUR: built into a local repo by iso-build.sh (packages.aur.x86_64).
 calamares
+yay
+matugen-bin
+bibata-cursor-theme-bin
+phylax-git
 # AUR calamares PKGBUILD omits this; the binary links libKF6Crash.so.6.
 kcrash
 cage
 xorg-xwayland
 xorg-xhost
+xorg-setxkbmap
+openbox
+qt6-declarative
+qt6-translations
 networkmanager
+iwd
 mesa
 git
 sudo
@@ -28,5 +37,13 @@ greetd
 polkit
 qt6-wayland
 btrfs-progs
+efibootmgr
 xdg-utils
 firefox
+# PipeWire stack on the squashfs so unpackfs already provides virtual
+# `jack` / pulse. Otherwise install.sh's one pacman -S picks jack2.
+pipewire
+pipewire-alsa
+pipewire-jack
+pipewire-pulse
+wireplumber

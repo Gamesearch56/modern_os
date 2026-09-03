@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Live ISO: Calamares lists every xkb layout from rules XML.
 
-Keep English (US) and German — the same pair Settings → Keyboard offers.
-Drop variants so only Default remains. Overlay only; the squashfs copy
-is what unpackfs installs.
+Keep the layouts in installer-locales.json — the same pair Settings →
+Keyboard offers. Drop variants so only Default remains. Overlay only;
+the squashfs copy is what unpackfs installs.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-KEEP_LAYOUTS = {"us", "de"}
 RULES = (
     "/usr/share/X11/xkb/rules/base.xml",
     "/usr/share/X11/xkb/rules/evdev.xml",
@@ -24,6 +24,35 @@ LST = (
     "/usr/share/X11/xkb/rules/base.lst",
     "/usr/share/X11/xkb/rules/evdev.lst",
 )
+
+
+def _locales_paths() -> list[Path]:
+    paths: list[Path] = []
+    env = os.environ.get("MODERN_INSTALLER_LOCALES")
+    if env:
+        paths.append(Path(env))
+    here = Path(__file__).resolve()
+    paths.append(Path("/usr/lib/modern/installer-locales.json"))
+    paths.append(here.parent / "installer-locales.json")
+    try:
+        paths.append(here.parents[4] / "releng" / "installer-locales.json")
+    except IndexError:
+        pass
+    return paths
+
+
+def load_keep_layouts() -> set[str]:
+    for path in _locales_paths():
+        if not path.is_file():
+            continue
+        data = json.loads(path.read_text(encoding="utf-8"))
+        keep = {str(loc["xkb"]) for loc in data.get("locales") or [] if loc.get("xkb")}
+        if keep:
+            return keep
+    return {"us", "de"}
+
+
+KEEP_LAYOUTS = load_keep_layouts()
 
 
 def local_name(tag: str) -> str:

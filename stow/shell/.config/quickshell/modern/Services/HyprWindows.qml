@@ -33,6 +33,22 @@ QtObject {
         root.focusWindow(addr);
     }
 
+    function isWorkspaceToplevel(toplevel: var): bool {
+        if (!toplevel)
+            return false;
+        const ipc = toplevel.lastIpcObject || ({});
+        const cls = String(ipc.class || toplevel.class || "").toLowerCase();
+        if (cls.indexOf("quickshell") !== -1)
+            return false;
+        const raw = toplevel.workspace?.id ?? ipc.workspace?.id ?? ipc.workspace;
+        const wsId = Number(raw);
+        if (!(wsId > 0))
+            return false;
+        if (ipc.hidden === true || ipc.mapped === false)
+            return false;
+        return true;
+    }
+
     function moveToCurrentWorkspace(address: string) {
         const fw = root.host.focusedWorkspace;
         const id = (fw && Number(fw.id) > 0) ? Number(fw.id) : 1;

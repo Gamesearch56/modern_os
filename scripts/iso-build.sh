@@ -7,7 +7,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${MODERN_ISO_OUT:-$ROOT/iso/out}"
 DO_MKARCHISO=0
+ALLOW_STALE_BUNDLE="${MODERN_ISO_STALE_BUNDLE:-}"
 WALLPAPER="$ROOT/stow/modern/.config/modern/wallpapers/default.jpg"
+LOGO="$ROOT/iso/airootfs/etc/calamares/branding/modern/logo.png"
 PROFILE_JSON="$ROOT/stow/modern/.config/modern/themes/tonal-spot-dark.json"
 FIXED_JSON="$ROOT/stow/modern/.config/modern/themes/fixed-brand.json"
 
@@ -16,16 +18,22 @@ log() { printf 'iso-build: %s\n' "$*"; }
 
 usage() {
     cat <<'EOF'
-Usage: iso-build.sh [--mkarchiso] [--out DIR] [--tag vX.Y.Z]
+Usage: iso-build.sh [--mkarchiso] [--out DIR] [--tag vX.Y.Z] [--stale-bundle]
 
 Generates Calamares QSS/tokens from default.jpg under a throwaway HOME.
+Copies branding/modern/logo.png (fixed brand mark, not wallpaper-tinted).
 Writes gitignored artifacts under iso/out/. If MODERN_PROTECT_HOME is
 set, refuses output under that path except a clone's iso/out.
 
 --mkarchiso runs mkarchiso (needs root and ~8G free on --out). The live
 image is this clone; Calamares late still clones --tag (or the latest
-vX.Y.Z). Missing mkarchiso is not an error without the flag (branding
-still succeeds). Boot the result with scripts/iso-qemu.sh.
+vX.Y.Z in the clone). There is no hardcoded fallback pin. Missing
+mkarchiso is not an error without the flag (branding still succeeds).
+
+Only iso/ comes from your working tree. install/, stow/ and scripts/ reach
+the installed system through a clone of the pin, so the build stops if
+those differ from it. --stale-bundle builds the pin's copy anyway.
+Boot the result with scripts/iso-qemu.sh (--headless for CI).
 EOF
 }
 
@@ -40,6 +48,7 @@ while [ $# -gt 0 ]; do
             MODERN_ISO_TAG="${2:-}"
             shift
             ;;
+        --stale-bundle) ALLOW_STALE_BUNDLE=1 ;;
         -h|--help)
             usage
             exit 0
@@ -50,6 +59,7 @@ while [ $# -gt 0 ]; do
 done
 
 [ -f "$WALLPAPER" ] || die "missing wallpaper $WALLPAPER"
+[ -f "$LOGO" ] || die "missing branding logo $LOGO"
 
 if command -v realpath >/dev/null 2>&1; then
     abs_out="$(realpath -m "$OUT")"
@@ -83,11 +93,22 @@ fi
 if [ -z "$pin" ]; then
     pin="$(git -C "$ROOT" tag -l 'v*.*.*' --sort=-v:refname | head -1 || true)"
 fi
-if [ -z "$pin" ]; then
-    pin="v0.1.0"
-    log "no release tag in this clone — pinning $pin"
-fi
+[ -n "$pin" ] || die "no vX.Y.Z tag in this clone — pass --tag"
 [[ "$pin" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "ISO pin must be vX.Y.Z (got $pin)"
+
+# The live ISO is this working tree, but the bundle Calamares installs from
+# is a clone of $pin. Edit install/ or stow/ without tagging and the change
+# is on the ISO yet absent from the installed system, which looks like the
+# fix silently not working.
+stale="$(git -C "$ROOT" diff --name-only "$pin" -- install stow scripts 2>/dev/null || true)"
+untracked="$(git -C "$ROOT" ls-files --others --exclude-standard -- install stow scripts || true)"
+stale="$(printf '%s\n%s\n' "$stale" "$untracked" | sed '/^$/d' | sort -u)"
+if [ -n "$stale" ] && [ -z "$ALLOW_STALE_BUNDLE" ]; then
+    printf 'iso-build: ERROR: these differ from %s and would NOT reach the installed system:\n' \
+        "$pin" >&2
+    printf '%s\n' "$stale" | while IFS= read -r f; do printf '  %s\n' "$f" >&2; done
+    die "commit and tag, or pass --stale-bundle to install $pin's copy anyway"
+fi
 
 WORK="$abs_out/work"
 BRAND_HOME="$WORK/brand-home"
@@ -106,6 +127,8 @@ install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/calamares-late.sh"
 install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-setup.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/live-setup.sh"
+install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-i18n.sh" \
+    "$AIROOTFS_OUT/usr/lib/modern/live-i18n.sh"
 install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-session.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/live-session.sh"
 install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-calamares.sh" \
@@ -114,9 +137,17 @@ install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-xdg-open.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/live-xdg-open.sh"
 install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-xkb-filter.py" \
     "$AIROOTFS_OUT/usr/lib/modern/live-xkb-filter.py"
+[ -f "$ROOT/iso/releng/installer-locales.json" ] \
+    || die "missing $ROOT/iso/releng/installer-locales.json"
+install -m 0644 "$ROOT/iso/releng/installer-locales.json" \
+    "$AIROOTFS_OUT/usr/lib/modern/installer-locales.json"
 install -d -m 0755 "$AIROOTFS_OUT/usr/local/bin"
 ln -sfn /usr/lib/modern/live-xdg-open.sh "$AIROOTFS_OUT/usr/local/bin/xdg-open"
 printf '%s\n' "$pin" >"$AIROOTFS_OUT/usr/lib/modern/iso-pin"
+bundle="$AIROOTFS_OUT/usr/share/modern/dotfile"
+rm -rf "$bundle"
+git clone --depth 1 --single-branch --branch "$pin" "$ROOT" "$bundle" \
+    || die "could not bundle $pin into the live image"
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/usr/share/modern/wallpaper.jpg"
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/var/lib/modern/session/wallpaper.jpg"
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/etc/calamares/branding/modern/wallpaper.jpg"
@@ -152,15 +183,38 @@ on_surface = hx("onSurface", "#E6E0E9")
 on_variant = hx("onSurfaceVariant", "#CAC4D0")
 outline = hx("outline", "#938F99")
 highest = hx("surfaceContainerHighest", "#36343B")
+primary_container = hx("primaryContainer", "#4F378B")
+on_primary_container = hx("onPrimaryContainer", "#EADDFF")
 qss = f"""
 /* Generated by iso-build.sh from tokens.json — do not hand-edit hex. */
 QWidget {{
-    background-color: transparent;
+    color: {on_surface};
+    font-family: Inter;
+}}
+QMainWindow, #mainApp {{
+    background-color: {surface};
     color: {on_surface};
 }}
-QMainWindow, QDialog, QWizard {{
-    border-image: url("wallpaper.jpg") 0 0 0 0 stretch stretch;
+QStackedWidget, QAbstractScrollArea, QAbstractScrollArea::viewport, #scrollAreaWidgetContents, #summaryStep {{
+    background-color: {surface};
     color: {on_surface};
+    border: none;
+}}
+#summaryContent, #summaryItemWrap, #summaryPartition, #summaryTitle, #summaryItemTitle {{
+    background-color: {surface};
+    color: {on_surface};
+}}
+#summaryItemBody {{
+    background-color: {highest};
+    color: {on_surface};
+}}
+QQuickWidget {{
+    background-color: {surface};
+}}
+QDialog, QWizard, QMessageBox, QMessageBox QLabel, QMessageBox QPushButton {{
+    background-color: {highest};
+    color: {on_surface};
+    border-image: none;
 }}
 QLabel, QCheckBox, QRadioButton, QFrame, QGroupBox {{
     background-color: transparent;
@@ -175,7 +229,11 @@ QStackedWidget QLabel {{
     padding: 10px 0 4px 0;
     color: {on_surface};
 }}
-QLineEdit, QComboBox, QComboBox QAbstractItemView, QSpinBox, QAbstractSpinBox {{
+#partitionLabel {{
+    color: {on_surface};
+    background-color: {surface};
+}}
+QLineEdit, QSpinBox, QAbstractSpinBox {{
     background-color: {highest};
     color: {on_surface};
     border: 1px solid {outline};
@@ -186,26 +244,88 @@ QLineEdit, QComboBox, QComboBox QAbstractItemView, QSpinBox, QAbstractSpinBox {{
     selection-background-color: {primary};
     selection-color: {on_primary};
 }}
-QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QAbstractSpinBox:focus {{
+QComboBox {{
+    background-color: {highest};
+    color: {on_surface};
+    border: 1px solid {outline};
+    padding: 0 14px;
+    min-height: 40px;
+    margin: 0;
+    combobox-popup: 0;
+    selection-background-color: {primary};
+    selection-color: {on_primary};
+}}
+QLineEdit:focus, QSpinBox:focus, QAbstractSpinBox:focus {{
     border: 2px solid {primary};
     padding: 9px 13px;
 }}
+QComboBox:focus {{
+    border: 2px solid {primary};
+}}
 QComboBox::drop-down {{
     border: none;
+    background: transparent;
     width: 28px;
+}}
+QComboBoxPrivateContainer, QComboBox QFrame {{
+    background-color: {highest};
+    color: {on_surface};
+    border: 1px solid {outline};
+}}
+QComboBox QAbstractItemView {{
+    background-color: {highest};
+    color: {on_surface};
+    border: 1px solid {outline};
+    padding: 0;
+    outline: 0;
+    selection-background-color: {primary};
+    selection-color: {on_primary};
+}}
+QComboBox QAbstractItemView::viewport, QComboBox QAbstractItemView QWidget {{
+    background-color: {highest};
+    color: {on_surface};
+}}
+QComboBox QAbstractItemView::item {{
+    background-color: {highest};
+    color: {on_surface};
+    min-height: 28px;
+    padding: 6px 12px;
+}}
+QComboBox QAbstractItemView::item:selected, QComboBox QAbstractItemView::item:hover {{
+    background-color: {primary};
+    color: {on_primary};
+}}
+QMenu {{
+    background-color: {highest};
+    color: {on_surface};
+    border: 1px solid {outline};
+    padding: 4px;
+}}
+QMenu::item {{
+    background-color: transparent;
+    padding: 8px 14px;
+}}
+QMenu::item:selected {{
+    background-color: {primary};
+    color: {on_primary};
 }}
 QPushButton {{
     background-color: {highest};
     color: {on_surface};
     border: none;
-    border-radius: 8px;
+    border-radius: 20px;
     padding: 10px 18px;
+    min-height: 20px;
 }}
 QPushButton:hover {{
     background-color: {outline};
     color: {on_surface};
 }}
-QPushButton:default {{
+QPushButton:default, #view-button-next {{
+    background-color: {primary};
+    color: {on_primary};
+}}
+QPushButton:default:hover, #view-button-next:hover {{
     background-color: {primary};
     color: {on_primary};
 }}
@@ -213,16 +333,40 @@ QPushButton:disabled {{
     background-color: {highest};
     color: {on_variant};
 }}
-QListView, QTreeView {{
+QToolButton, QToolButton:hover, QToolButton:pressed, QToolButton:checked {{
+    background-color: {surface};
+    color: {on_surface};
+    border: none;
+    padding: 8px 12px;
+}}
+#view-button-back, #view-button-cancel {{
+    margin: 4px 6px;
+}}
+#view-button-next {{
+    margin: 4px 6px;
+}}
+QMessageBox QPushButton, QDialog QPushButton {{
+    background-color: {highest};
+    color: {on_surface};
+    border-radius: 20px;
+}}
+QMessageBox QPushButton:default, QDialog QPushButton:default {{
+    background-color: {primary};
+    color: {on_primary};
+}}
+QListView, QTreeView, QListWidget, QTreeWidget {{
     background-color: {highest};
     color: {on_surface};
     border: none;
     border-radius: 8px;
     padding: 4px;
+    outline: 0;
+    selection-background-color: {primary};
+    selection-color: {on_primary};
 }}
 QProgressBar {{
     background-color: {highest};
-    color: {on_surface};
+    color: {on_primary_container};
     border: none;
     border-radius: 8px;
     text-align: center;
@@ -230,7 +374,7 @@ QProgressBar {{
     max-height: 14px;
 }}
 QProgressBar::chunk {{
-    background-color: {primary};
+    background-color: {primary_container};
     border-radius: 8px;
 }}
 QTextBrowser, QPlainTextEdit {{
@@ -253,70 +397,78 @@ QScrollBar::handle:vertical {{
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
     height: 0;
 }}
+#networkPage QLabel {{
+    padding: 0;
+    color: {on_surface};
+}}
+#networkOkPage, #networkWifiPage {{
+    background-color: {surface};
+}}
+#networkOkBadge {{
+    background-color: {primary_container};
+    color: {on_primary_container};
+    border-radius: 56px;
+    font-size: 48px;
+}}
+#networkOkTitle {{
+    color: {on_surface};
+    font-size: 22px;
+    font-weight: 500;
+}}
+#networkOkHint, #networkHint, #networkNearbyTitle {{
+    color: {on_variant};
+}}
+#wifiList {{
+    background-color: {highest};
+    border: none;
+    border-radius: 12px;
+    padding: 8px;
+    outline: 0;
+}}
+#wifiList::item {{
+    background-color: transparent;
+    color: {on_surface};
+    min-height: 28px;
+    padding: 10px 14px;
+    border-radius: 8px;
+}}
+#wifiList::item:selected, #wifiList::item:hover {{
+    background-color: {primary_container};
+    color: {on_primary_container};
+}}
+#networkPasswordCard {{
+    background-color: {highest};
+    border-radius: 12px;
+}}
+#wifiPassword {{
+    margin: 0;
+}}
+#finishedBadge {{
+    background-color: {primary_container};
+    color: {on_primary_container};
+    border-radius: 56px;
+    font-size: 48px;
+}}
+#finishedMainText {{
+    color: {on_surface};
+    font-size: 20px;
+}}
+#finishedRestart {{
+    background-color: {primary};
+    color: {on_primary};
+    border: none;
+    border-radius: 24px;
+    padding: 14px 40px;
+    font-size: 17px;
+    font-weight: 500;
+    min-height: 24px;
+}}
+#finishedRestart:hover {{
+    background-color: {on_primary_container};
+    color: {primary_container};
+}}
 """
 open(dest, "w").write(qss)
-PY
-}
-
-# Dark squircle + primary M. A filled primary tile reads as a blue box
-# at sidebar size.
-write_logo() {
-    local tokens="$1" dest="$2"
-    python3 - "$tokens" "$dest" <<'PY'
-import json, math, struct, sys, zlib
-path, dest = sys.argv[1], sys.argv[2]
-data = json.load(open(path))
-c = data.get("color") or {}
-
-def rgb(key, fallback):
-    raw = str(c.get(key) or fallback).lstrip("#")
-    if len(raw) != 6:
-        raw = fallback.lstrip("#")
-    return tuple(int(raw[i:i+2], 16) for i in (0, 2, 4))
-
-fill = rgb("surfaceContainerHighest", "#36343B")
-mark = rgb("primary", "#D0BCFF")
-size, pad, rad = 128, 8, 28
-
-def in_round_rect(x, y):
-    x0, y0, x1, y1 = pad, pad, size - pad - 1, size - pad - 1
-    if x0 + rad <= x <= x1 - rad and y0 <= y <= y1:
-        return True
-    if y0 + rad <= y <= y1 - rad and x0 <= x <= x1:
-        return True
-    corners = ((x0 + rad, y0 + rad), (x1 - rad, y0 + rad),
-               (x0 + rad, y1 - rad), (x1 - rad, y1 - rad))
-    return any((x - cx) ** 2 + (y - cy) ** 2 <= rad ** 2 for cx, cy in corners)
-
-def dist_seg(px, py, x1, y1, x2, y2):
-    vx, vy = x2 - x1, y2 - y1
-    l2 = vx * vx + vy * vy or 1.0
-    t = max(0.0, min(1.0, ((px - x1) * vx + (py - y1) * vy) / l2))
-    return math.hypot(px - (x1 + t * vx), py - (y1 + t * vy))
-
-m = ((36, 96, 36, 36), (36, 36, 64, 88), (64, 88, 92, 36), (92, 36, 92, 96))
-thick = 11.0
-rows = []
-for y in range(size):
-    row = [0]
-    for x in range(size):
-        if not in_round_rect(x, y):
-            row.extend((0, 0, 0, 0))
-            continue
-        on_m = any(dist_seg(x, y, *seg) <= thick for seg in m)
-        r, g, b = mark if on_m else fill
-        row.extend((r, g, b, 255))
-    rows.append(bytes(row))
-
-def chunk(tag, body):
-    crc = zlib.crc32(tag + body) & 0xFFFFFFFF
-    return struct.pack(">I", len(body)) + tag + body + struct.pack(">I", crc)
-
-png = b"\x89PNG\r\n\x1a\n"
-png += chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0))
-png += chunk(b"IDAT", zlib.compress(b"".join(rows), 9))
-png += chunk(b"IEND", b"")
-open(dest, "wb").write(png)
 PY
 }
 
@@ -353,6 +505,8 @@ json.dump({
         "onSurfaceVariant": "#CAC4D0",
         "outline": "#938F99",
         "surfaceContainerHighest": "#36343B",
+        "primaryContainer": "#4F378B",
+        "onPrimaryContainer": "#EADDFF",
     },
 }, open(out, "w"), indent=2)
 open(out, "a").write("\n")
@@ -361,7 +515,35 @@ fi
 
 install -m 0644 "$tokens_out" "$AIROOTFS_OUT/var/lib/modern/session/tokens.json"
 write_qss "$tokens_out" "$AIROOTFS_OUT/etc/calamares/branding/modern/stylesheet.qss"
-write_logo "$tokens_out" "$AIROOTFS_OUT/etc/calamares/branding/modern/logo.png"
+install -m 0644 "$LOGO" "$AIROOTFS_OUT/etc/calamares/branding/modern/logo.png"
+brand_lang="$AIROOTFS_OUT/etc/calamares/branding/modern/lang"
+install -d -m 0755 "$brand_lang"
+if [ -f "$ROOT/iso/airootfs/etc/calamares/branding/modern/lang/calamares-modern_de.ts" ]; then
+    install -m 0644 "$ROOT/iso/airootfs/etc/calamares/branding/modern/lang/calamares-modern_de.ts" \
+        "$brand_lang/calamares-modern_de.ts"
+    lrelease_bin=""
+    # Arch qt6-tools ships lrelease6 (/usr/lib/qt6/bin/lrelease), not
+    # Debian's lrelease-qt6. sudo's PATH still includes /usr/bin.
+    for c in lrelease6 lrelease-qt6 lrelease /usr/lib/qt6/bin/lrelease; do
+        if command -v "$c" >/dev/null 2>&1; then
+            lrelease_bin="$(command -v "$c")"
+            break
+        fi
+        if [ -x "$c" ]; then
+            lrelease_bin="$c"
+            break
+        fi
+    done
+    if [ -n "$lrelease_bin" ]; then
+        "$lrelease_bin" "$brand_lang/calamares-modern_de.ts" \
+            -qm "$brand_lang/calamares-modern_de.qm" >/dev/null
+        log "compiled branding $brand_lang/calamares-modern_de.qm"
+    elif [ "$DO_MKARCHISO" -eq 1 ]; then
+        die "lrelease6 missing (pacman -S --needed qt6-tools) — needed for German slideshow"
+    else
+        log "lrelease6 missing — slideshow stays English until qt6-tools is installed"
+    fi
+fi
 printf '%s\n' "$pin" >"$abs_out/iso-pin"
 log "branding written under $abs_out (pin $pin)"
 
@@ -393,6 +575,19 @@ fi
 if [ -f "$ROOT/iso/releng/packages.x86_64" ]; then
     cat "$ROOT/iso/releng/packages.x86_64" >>"$PROFILE_WORK/packages.x86_64"
 fi
+# Guest serial for iso-qemu.sh --headless / CI smoke (live-session logs to ttyS0).
+for f in "$PROFILE_WORK"/efiboot/loader/entries/01-archiso-linux.conf \
+    "$PROFILE_WORK"/efiboot/loader/entries/02-archiso-speech-linux.conf; do
+    if [ -f "$f" ] && ! grep -q 'console=ttyS0' "$f"; then
+        sed -i 's/^options[[:space:]]\{1,\}/options  console=ttyS0,115200 console=tty0 /' "$f"
+    fi
+done
+for f in "$PROFILE_WORK"/syslinux/archiso_sys-linux.cfg \
+    "$PROFILE_WORK"/syslinux/archiso_pxe-linux.cfg; do
+    if [ -f "$f" ] && ! grep -q 'console=ttyS0' "$f"; then
+        sed -i 's/^APPEND /APPEND console=ttyS0,115200 console=tty0 /' "$f"
+    fi
+done
 # shellcheck source=lib/iso-aur-repo.sh
 source "$ROOT/scripts/lib/iso-aur-repo.sh"
 iso_build_finish() {

@@ -30,7 +30,8 @@ bootstrap_yay() {
     log_info "Bootstrapping yay (AUR helper)..."
     local build_dir
     build_dir="$(mktemp -d)"
-    run git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$build_dir/yay-bin"
+    run env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
+        git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$build_dir/yay-bin"
     # --dir is inside run(), so --dry-run only prints and never cds.
     run makepkg --dir "$build_dir/yay-bin" -si --noconfirm
     rm -rf "$build_dir"
@@ -38,15 +39,56 @@ bootstrap_yay() {
 }
 
 install_native() {
-    local pkgs=("$@")
+    local pkgs=("$@") providers=() rest=() p
     [ ${#pkgs[@]} -eq 0 ] && return 0
     log_info "Installing ${#pkgs[@]} native package(s): ${pkgs[*]}"
-    run sudo pacman -S --needed --noconfirm "${pkgs[@]}"
+    # ffmpeg/mpv depend on virtual `jack`; pipewire-pulse replaces
+    # pulseaudio. --noconfirm answers No to "Remove jack2?".
+    run sudo pacman -Rdd --noconfirm \
+        jack2 jack2-dbus lib32-jack2 \
+        pulseaudio pulseaudio-bluetooth pulseaudio-jack \
+        pipewire-media-session || true
+    for p in "${pkgs[@]}"; do
+        case "$p" in
+            pipewire|pipewire-alsa|pipewire-jack|pipewire-pulse|wireplumber)
+                providers+=("$p") ;;
+            *) rest+=("$p") ;;
+        esac
+    done
+    if [ -n "${MODERN_PACMAN_NOSANDBOX:-}" ]; then
+        if [ ${#providers[@]} -gt 0 ]; then
+            run sudo pacman --disable-sandbox -S --needed --noconfirm "${providers[@]}"
+        fi
+        [ ${#rest[@]} -eq 0 ] && return 0
+        run sudo pacman --disable-sandbox -S --needed --noconfirm "${rest[@]}"
+    else
+        if [ ${#providers[@]} -gt 0 ]; then
+            run sudo pacman -S --needed --noconfirm "${providers[@]}"
+        fi
+        [ ${#rest[@]} -eq 0 ] && return 0
+        run sudo pacman -S --needed --noconfirm "${rest[@]}"
+    fi
 }
 
 install_aur() {
-    local pkgs=("$@")
-    [ ${#pkgs[@]} -eq 0 ] && return 0
+    local requested=("$@") pkgs=() p
+    [ ${#requested[@]} -eq 0 ] && return 0
+    # yay -S --needed still hits aur.archlinux.org. Skip names already
+    # in the local db (ISO squashfs already has m0 AUR packages).
+    for p in "${requested[@]}"; do
+        if pacman -Qq "$p" >/dev/null 2>&1; then
+            continue
+        fi
+        pkgs+=("$p")
+    done
+    if [ ${#pkgs[@]} -eq 0 ]; then
+        log_ok "AUR packages already installed"
+        return 0
+    fi
+    if [ -n "${MODERN_SKIP_AUR:-}" ]; then
+        log_warn "skipping AUR (${#pkgs[@]} not installed): ${pkgs[*]}"
+        return 0
+    fi
     log_info "Installing ${#pkgs[@]} AUR package(s): ${pkgs[*]}"
     run yay -S --needed --noconfirm "${pkgs[@]}"
 }

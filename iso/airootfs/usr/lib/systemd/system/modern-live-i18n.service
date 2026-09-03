@@ -1,0 +1,12 @@
+[Unit]
+Description=Live ISO locales and keyboard filter
+After=modern-live-setup.service
+# Parallel with greetd — do not Before= it.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/modern/live-i18n.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=greetd.service
