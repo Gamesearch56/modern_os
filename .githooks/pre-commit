@@ -2,4 +2,9 @@
 # Installed as .git/hooks/pre-commit. Same gates as pre-push / CI checks.
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
-exec "$ROOT/scripts/ci-check.sh"
+# ci-check.sh runs suites that build throwaway git fixtures. Git exports
+# GIT_DIR/GIT_INDEX_FILE to its hooks, and `git -C <fixture>` does not clear
+# them, so a fixture's `add`/`commit` lands in the repository being verified
+# — observed staging a fixture file and moving the branch to a fixture commit.
+exec env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE -u GIT_PREFIX \
+    "$ROOT/scripts/ci-check.sh"

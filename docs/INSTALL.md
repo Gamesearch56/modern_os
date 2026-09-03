@@ -142,6 +142,19 @@ just installed, quit QEMU and start it again with no CD at all:
 ./scripts/iso-qemu.sh --no-iso
 ```
 
+QEMU has no 802.11 adapter, and the virtio NIC always looks like
+Ethernet, so the Network step never shows its Wi-Fi list in a normal
+VM. `--wifi-sim` drops that NIC and sets fw_cfg
+`opt/org.modernos/wifi-sim`; `live-setup.sh` then runs
+`live-wifi-sim.sh`, which loads `mac80211_hwsim` and brings up WPA2
+access points (`ModernOS-Test-1`, passphrase `modernwifi`) for the
+installer to scan. The guest has no uplink — use this to try the Wi-Fi
+page, not to run a full install.
+
+```bash
+./scripts/iso-qemu.sh --wifi-sim
+```
+
 `--no-iso` implies `--keep-nvram` so the `Linux Boot Manager` entry that
 the bootloader job wrote survives, and it does not need an ISO in
 `iso/out/` at all.
@@ -156,8 +169,9 @@ click through pages or run late clone of GitHub.
 `#summaryItemWrap` / `#summaryPartition`, `#summaryItemBody` cards, and
 `#partitionLabel` (legend names still need the AUR patch: Calamares
 paints Boot/root with `Qt::black`).
-Combo boxes have no QSS radius. Native combo lists stay `Qt::Popup`
-(an in-window overlay SIGSEGV'd Calamares on start). Cancel is hidden
+Combo boxes have no QSS radius. Combo lists are drawn in-window as
+`#modernComboOverlay` (see below), styled from the same tokens with
+`padding: 0` so the AUR patch can size them. Cancel is hidden
 during Install (`disable-cancel-during-exec` plus `quitVisible`). Late
 jobs set `verbose: false` so a failure dialog shows stdout (Calamares
 `verbose: true` streams output to the session log and leaves the dialog
@@ -209,7 +223,10 @@ Location Region/Zone combos stay on the page; the **Change…** locale
 dialogs are hidden. They open a modal X11 window that cage maps as an
 unclosable grey stripe. Keyboard layout changes call `setxkbmap` on
 Xwayland (`xorg-setxkbmap`; `useLocale1: false` so systemd-localed is
-not used instead).
+not used instead). Upstream starts that apply from the *variant* signal;
+`live-xkb-filter.py` drops every variant, so picking German never ran
+`setxkbmap` and the Users password was typed on `us`. The AUR patch
+calls `Config::somethingChanged()` on a layout change too.
 
 The Keyboard step always opens on English. `guessLayout: false` turns off
 Calamares' locale→layout guess, which otherwise flipped the page to German
@@ -234,6 +251,27 @@ comma-joined non-ASCII pair like `us,ru` still works — Hyprland accepts
 that form too. A missing snippet is a warning, not a failure. Changing the
 layout later in Settings → Keyboard updates the desktop but not the TTY,
 X11 snippet, or greetd.
+
+The Locale step has the same gap and the same fix. Its job writes `LANG=`
+to `/etc/locale.conf`, which covers the system locale every PAM session and
+`install/lib/i18n.sh` inherit, but `Commons/I18n.qml` picks its translation
+file from `language.ui` in `config.json` — so a German install used to give
+a German system and an English shell. `provision-iso.sh` reads `LANG` out of
+`/etc/locale.conf` and sets `language.ui` with `jq`, leaving the rest of the
+file (including `language.fallback`, always English) untouched. The mapping
+is `de_DE.UTF-8` → `de`: everything before the first `_` or `.`, lowercased.
+It is accepted only if `translations/<code>.json` exists in the user's home,
+so anything else the installer could produce — and `C.UTF-8` — lands on `en`
+rather than on a file `I18n` cannot open. A missing `/etc/locale.conf` or a
+missing `LANG` is a warning, not a failure, and leaves `config.json` alone.
+`language.ui` is the single source of truth: Settings → Language writes that
+same key.
+
+The greeter needs no counterpart to the keyboard's `hl.config` line. Its
+strings come from `/var/lib/modern/session/chrome.json`, which
+`wallpaper-sync.sh` bakes from `language.ui` — so it follows along, provided
+the language is set before that runs. It is, and
+`scripts/test-calamares-late.sh` pins the ordering.
 
 The **Network** / **Netzwerk** page sits after Keyboard. Next stays off
 until a default IPv4 or IPv6 route exists — Ethernet is enough;
@@ -337,9 +375,21 @@ once `isAtVeryEnd`. The checkbox stays hidden and the pill sets
 `aboutToQuit`. That needs `finished.conf`: with no config the mode is
 `never`, and `Config` then forces `restartNowWanted` false, so the control
 renders and does nothing. The button reuses the checkbox's own translated
-label, so German needs no new string. Hiding the footer cannot strand
-anyone — a failed install quits from the error dialog and never reaches
-this page.
+label, so the pill itself needs no new string. Hiding the footer cannot
+strand anyone — a failed install quits from the error dialog and never
+reaches this page.
+
+The message above the pill is patched too. Upstream ends with an offer to
+"continue using the %2 Live environment", and `%2` is branding
+`productName` — that is where **ModernOS Live** came from on a page about
+the installed system. `calamares-limit-languages.py` replaces that
+`tr()` with `<h1>All done.</h1><br/>%1 is installed and ready.<br/>Restart
+to start using your new desktop.` and rewrites the matching
+`FinishedPage` entry in Calamares' own `lang/calamares_de.ts`, so both
+languages change together. `productName` stays **ModernOS**: it is also
+the Welcome title, the summary and the bootloader entry, and none of those
+are wrong.
+
 If you land on a TTY, this image never started greetd:
 
 ```bash
@@ -354,9 +404,17 @@ installer. There is no Donate button. The VM needs virtio 3D.
 
 Calamares is still Qt Widgets for every *page* (Welcome, Partitions,
 Users, …). `stylesheet.qss` can restyle those: colors, field radii,
-buttons, the exec bar. Combo lists are `Qt::Popup` windows, so the AUR
-build also applies that QSS on `qApp`. Cage still maps those lists at
-`(0,0)`. It cannot round the default left-hand step list —
+buttons, the exec bar. The AUR build also applies that QSS on `qApp`,
+because Qt-owned child windows do not inherit the main window's sheet.
+Combo lists are **not** `Qt::Popup` windows here: cage ignores the X11
+`ConfigureWindow` Qt sends for one, so a native list always mapped at
+the screen origin over the sidebar. The AUR patch suppresses the combo's
+own popup and draws the list as a `QListView` child of the installer
+window (`#modernComboOverlay`), placed with
+`combo->mapTo( window, { 0, 0 } )` at the field's width — below the
+field, above it when there is no room below, clamped and scrolling when
+the list is taller than either side. Every `QComboBox` in the installer
+goes through that one filter. It cannot round the default left-hand step list —
 that is a C++ delegate. `sidebar: qml` + `calamares-sidebar.qml` is the
 escape hatch used here (nav pills and a padded About, like Settings).
 The logo is `iso/airootfs/etc/calamares/branding/modern/logo.png`.

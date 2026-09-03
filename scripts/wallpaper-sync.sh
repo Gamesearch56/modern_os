@@ -63,17 +63,20 @@ if [ -f "$TOKENS" ]; then
 fi
 
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
-EN="${XDG_CONFIG_HOME:-$HOME/.config}/modern/translations/en.json"
-DE="${XDG_CONFIG_HOME:-$HOME/.config}/modern/translations/de.json"
+TRANSLATIONS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/translations"
 if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    # Keyed on the shipped files, so adding a translation needs no edit here
+    # and an unknown language.ui renders English instead of the QML literals.
     lang="$(jq -r '.language.ui // "en"' "$CFG")"
-    trans="$EN"
-    [ "$lang" = "de" ] && [ -f "$DE" ] && trans="$DE"
+    lang="${lang//[!a-z]/}"
+    trans="$TRANSLATIONS/$lang.json"
+    [ -f "$trans" ] || trans="$TRANSLATIONS/en.json"
     jq -n \
         --argjson cfg "$(jq '{typography,design:{cornerRounding,transparency},language}' "$CFG")" \
         --arg unlock "$(jq -r '.session.unlock // "Unlock"' "$trans")" \
         --arg password "$(jq -r '.session.password // "Password"' "$trans")" \
-        '$cfg + {strings:{unlock:$unlock, password:$password}}' \
+        --arg user "$(jq -r '.session.user // "User"' "$trans")" \
+        '$cfg + {strings:{unlock:$unlock, password:$password, user:$user}}' \
         > "$SHARED/chrome.json" || warn "chrome.json skipped"
 fi
 

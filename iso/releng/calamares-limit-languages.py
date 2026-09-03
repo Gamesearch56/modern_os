@@ -3,11 +3,13 @@
 
 Welcome languages come from installer-locales.json (next to this file).
 Also: 180px sidebar, stacked zone, hide Location Change…, qApp QSS,
-combo popup remap (in-window overlay SIGSEGV'd), Summary/partition
+in-window combo list overlay, Summary/partition
 object names, hide Keyboard model, hide Cancel during exec,
 ViewManager/QML retranslate, Toggle log tr(), Users step titled User,
 Summary German title Übersicht (English stays Summary; title() calls tr()).
 Partition legend Boot/root names use palette text (not Qt::black).
+Finished success copy drops the live-session offer, English and German.
+Keyboard layout changes call apply() even when there are no variants.
 Unattended QEMU: /etc/calamares/unattended auto-next + user modern/modern.
 Copies calamares-modernnet/ into src/modules/modernnet (Network step).
 
@@ -56,87 +58,300 @@ COMBO_INC_OLD = """#include <QTreeView>
 COMBO_INC_NEW = """#include <QTreeView>
 #include <QComboBox>
 #include <QEvent>
+#include <QKeyEvent>
+#include <QListView>
+#include <QPointer>
 #include <QTimer>
 
 #include <algorithm>
 
 namespace
 {
-class ComboPopupFilter : public QObject
+// cage ignores the X11 ConfigureWindow that Qt sends for a Qt::Popup on
+// Xwayland, so a native combo list always maps at the screen origin however
+// often it is moved. The list is drawn as an ordinary child of the installer
+// window instead, positioned in the window's coordinate space, and the combo's
+// own popup is suppressed before Qt ever builds it. The combo's internal view
+// stays untouched: reparenting it out of QComboBoxPrivateContainer, and
+// building the overlay before a combo is ever used, is what made the first
+// in-window attempt SIGSEGV on start.
+class ComboOverlay : public QObject
 {
 public:
     using QObject::QObject;
+
     bool eventFilter( QObject* obj, QEvent* ev ) override
     {
-        if ( QLatin1String( obj->metaObject()->className() )
-             != QLatin1String( "QComboBoxPrivateContainer" ) )
+        const QEvent::Type type = ev->type();
+        if ( type == QEvent::Show
+             && QLatin1String( obj->metaObject()->className() )
+                 == QLatin1String( "QComboBoxPrivateContainer" ) )
+        {
+            adoptNativePopup( qobject_cast< QWidget* >( obj ) );
+            return false;
+        }
+        auto* widget = qobject_cast< QWidget* >( obj );
+        if ( !widget )
         {
             return false;
         }
-        auto* w = qobject_cast< QWidget* >( obj );
-        if ( !w )
+        if ( m_view && ( widget == m_view || m_view->isAncestorOf( widget ) ) )
         {
-            return false;
-        }
-        if ( ev->type() == QEvent::Hide )
-        {
-            if ( !w->property( "modernRemapping" ).toBool() )
+            if ( type == QEvent::KeyPress
+                 && static_cast< QKeyEvent* >( ev )->key() == Qt::Key_Escape )
             {
-                w->setProperty( "modernMoved", false );
+                dismiss();
+                return true;
             }
             return false;
         }
-        if ( ev->type() != QEvent::Show )
+        auto* combo = qobject_cast< QComboBox* >( widget );
+        if ( !combo )
         {
-            return false;
-        }
-        if ( w->property( "modernRemapping" ).toBool() )
-        {
-            w->setProperty( "modernRemapping", false );
-            return false;
-        }
-        QComboBox* cb = nullptr;
-        for ( QWidget* p = w->parentWidget(); p; p = p->parentWidget() )
-        {
-            cb = qobject_cast< QComboBox* >( p );
-            if ( cb )
+            if ( type == QEvent::MouseButtonPress )
             {
-                break;
+                dismiss();
             }
-        }
-        if ( !cb )
-        {
-            const auto widgets = QApplication::allWidgets();
-            for ( QWidget* cand : widgets )
-            {
-                auto* c = qobject_cast< QComboBox* >( cand );
-                if ( c && c->view()
-                     && ( c->view()->window() == w || c->view()->parentWidget() == w ) )
-                {
-                    cb = c;
-                    break;
-                }
-            }
-        }
-        if ( !cb )
-        {
             return false;
         }
-        const QPoint pos = cb->mapToGlobal( QPoint( 0, cb->height() ) );
-        w->setProperty( "modernRemapping", true );
-        QTimer::singleShot( 0, w, [ w, pos ]() {
-            w->hide();
-            w->move( pos );
-            w->show();
-        } );
-        return false;
+        switch ( type )
+        {
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseButtonDblClick:
+        {
+            const bool toggling = isOpenFor( combo );
+            dismiss();
+            if ( !toggling )
+            {
+                open( combo );
+            }
+            return true;
+        }
+        case QEvent::MouseButtonRelease:
+            return true;
+        case QEvent::KeyPress:
+            if ( !opensList( static_cast< QKeyEvent* >( ev ) ) )
+            {
+                return false;
+            }
+            dismiss();
+            open( combo );
+            return true;
+        case QEvent::Hide:
+            if ( isOpenFor( combo ) )
+            {
+                dismiss();
+            }
+            return false;
+        default:
+            return false;
+        }
     }
+
+private:
+    static bool opensList( QKeyEvent* key )
+    {
+        const bool alt = key->modifiers().testFlag( Qt::AltModifier );
+        switch ( key->key() )
+        {
+        case Qt::Key_F4:
+            return !alt;
+        case Qt::Key_Space:
+        case Qt::Key_Select:
+            return true;
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+            return alt;
+        default:
+            return false;
+        }
+    }
+
+    static QComboBox* comboOf( QWidget* container )
+    {
+        if ( !container )
+        {
+            return nullptr;
+        }
+        for ( QWidget* p = container->parentWidget(); p; p = p->parentWidget() )
+        {
+            if ( auto* cb = qobject_cast< QComboBox* >( p ) )
+            {
+                return cb;
+            }
+        }
+        const auto widgets = QApplication::allWidgets();
+        for ( QWidget* cand : widgets )
+        {
+            auto* cb = qobject_cast< QComboBox* >( cand );
+            if ( cb && cb->view()
+                 && ( cb->view()->window() == container
+                      || cb->view()->parentWidget() == container ) )
+            {
+                return cb;
+            }
+        }
+        return nullptr;
+    }
+
+    bool isOpenFor( const QComboBox* combo ) const
+    {
+        return m_view && m_view->isVisible() && m_combo == combo;
+    }
+
+    // Only reached when code calls QComboBox::showPopup() itself; the
+    // interactive paths above never let Qt build the container.
+    void adoptNativePopup( QWidget* container )
+    {
+        QPointer< QComboBox > combo = comboOf( container );
+        if ( !combo )
+        {
+            return;
+        }
+        QTimer::singleShot( 0, combo, [ this, combo ]() {
+            if ( combo )
+            {
+                combo->hidePopup();
+                open( combo );
+            }
+        } );
+    }
+
+    void open( QComboBox* combo )
+    {
+        QWidget* host = combo->window();
+        if ( !host || !combo->model() || combo->count() < 1 )
+        {
+            return;
+        }
+        if ( m_view && m_view->parentWidget() != host )
+        {
+            delete m_view.data();
+        }
+        if ( !m_view )
+        {
+            m_view = new QListView( host );
+            m_view->setObjectName( QStringLiteral( "modernComboOverlay" ) );
+            m_view->setUniformItemSizes( true );
+            m_view->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+            m_view->setEditTriggers( QAbstractItemView::NoEditTriggers );
+            m_view->setSelectionBehavior( QAbstractItemView::SelectRows );
+            QListView* view = m_view;
+            QObject::connect( view,
+                              &QAbstractItemView::clicked,
+                              view,
+                              [ this ]( const QModelIndex& i ) { choose( i ); } );
+            QObject::connect( view,
+                              &QAbstractItemView::activated,
+                              view,
+                              [ this ]( const QModelIndex& i ) { choose( i ); } );
+        }
+        m_combo = combo;
+        m_view->setModel( combo->model() );
+        m_view->setModelColumn( combo->modelColumn() );
+        m_view->setRootIndex( combo->rootModelIndex() );
+        const QModelIndex current = combo->model()->index(
+            combo->currentIndex(), combo->modelColumn(), combo->rootModelIndex() );
+        if ( current.isValid() )
+        {
+            m_view->setCurrentIndex( current );
+        }
+        m_view->ensurePolished();
+        place( 2 * m_view->frameWidth() );
+        m_view->show();
+        m_view->raise();
+        // Stylesheet padding lands on the viewport margins, which only exist
+        // once the view has a geometry, so the first pass measures them.
+        const int chrome = m_view->height() - m_view->viewport()->height();
+        if ( chrome != 2 * m_view->frameWidth() )
+        {
+            place( chrome );
+        }
+        if ( current.isValid() )
+        {
+            m_view->scrollTo( current, QAbstractItemView::PositionAtCenter );
+        }
+        m_view->setFocus( Qt::PopupFocusReason );
+    }
+
+    void place( int chrome )
+    {
+        QWidget* host = m_view->parentWidget();
+        const QPoint origin = m_combo->mapTo( host, QPoint( 0, 0 ) );
+        const int rowHeight = qMax( 1, m_view->sizeHintForRow( 0 ) );
+        const int below = qMax( 0, host->height() - ( origin.y() + m_combo->height() ) );
+        const int above = qMax( 0, origin.y() );
+        const int wanted = m_combo->count() * rowHeight + chrome;
+        const bool drop = wanted <= below || below >= above;
+        const int height = qMax( rowHeight + chrome, qMin( wanted, drop ? below : above ) );
+        const int width = m_combo->width();
+        m_view->setGeometry( qBound( 0, origin.x(), qMax( 0, host->width() - width ) ),
+                             drop ? origin.y() + m_combo->height() : qMax( 0, origin.y() - height ),
+                             width,
+                             height );
+    }
+
+    void dismiss()
+    {
+        if ( !m_view || !m_view->isVisible() )
+        {
+            m_combo.clear();
+            return;
+        }
+        const bool refocus = m_view->hasFocus();
+        QPointer< QComboBox > combo = m_combo;
+        QPointer< QListView > view = m_view;
+        m_view->hide();
+        m_combo.clear();
+        // Dropping the shared model has to outlive the event that closed the
+        // list, because the view is still unwinding its own mouse handling.
+        QTimer::singleShot( 0, view, [ view ]() {
+            if ( view && !view->isVisible() )
+            {
+                view->setModel( nullptr );
+            }
+        } );
+        if ( refocus && combo )
+        {
+            combo->setFocus( Qt::PopupFocusReason );
+        }
+    }
+
+    // Picking a region repopulates the zone combo's model, so the combo is
+    // told after the list has let go of it.
+    void choose( const QModelIndex& index )
+    {
+        if ( !index.isValid() || !m_view || !m_view->isVisible() )
+        {
+            return;
+        }
+        QPointer< QComboBox > combo = m_combo;
+        const int row = index.row();
+        dismiss();
+        if ( !combo )
+        {
+            return;
+        }
+        QTimer::singleShot( 0, combo, [ combo, row ]() {
+            if ( !combo )
+            {
+                return;
+            }
+            combo->setCurrentIndex( row );
+            QMetaObject::invokeMethod( combo, "activated", Q_ARG( int, row ) );
+            QMetaObject::invokeMethod(
+                combo, "textActivated", Q_ARG( QString, combo->itemText( row ) ) );
+        } );
+    }
+
+    QPointer< QListView > m_view;
+    QPointer< QComboBox > m_combo;
 };
 }"""
 
 COMBO_INSTALL_OLD = "    installEventFilter( Calamares::Retranslator::instance() );"
 COMBO_INSTALL_NEW = """    installEventFilter( Calamares::Retranslator::instance() );
-    qApp->installEventFilter( new ComboPopupFilter( qApp ) );"""
+    qApp->installEventFilter( new ComboOverlay( qApp ) );"""
 
 QML_SIDE_OLD = """    w->setSource(
         QUrl( Calamares::searchQmlFile( Calamares::QmlSearch::Both, QStringLiteral( "calamares-sidebar" ) ) ) );
@@ -208,6 +423,17 @@ KB_NEW = """    ui->setupUi( this );
 
     // Keyboard Preview
     ui->KBPreviewLayout->addWidget( m_keyboardPreview );"""
+
+# live-xkb-filter.py drops every variant, so updateVariants() never calls
+# setCurrentIndex and the variant signal that starts apply() never fires.
+# Without this, picking German leaves the installer on the Xwayland us map
+# and the password typed on Users is not the one the greeter will accept.
+KB_APPLY_OLD = """                 m_current.selectedLayout = m_keyboardLayoutsModel->item( index ).first;
+                 updateVariants( QPersistentModelIndex( m_keyboardLayoutsModel->index( index ) ) );
+                 emit prettyStatusChanged();"""
+KB_APPLY_NEW = """                 m_current.selectedLayout = m_keyboardLayoutsModel->item( index ).first;
+                 updateVariants( QPersistentModelIndex( m_keyboardLayoutsModel->index( index ) ) );
+                 somethingChanged();"""
 
 SUMMARY_CONTENT_OLD = """    delete m_contentWidget;  // It might have been created previously
     m_contentWidget = new QWidget;
@@ -394,6 +620,31 @@ FINISHED_RETR_NEW = """    ui->retranslateUi( this );
     m_restartButton->setText( ui->restartCheckBox->text().remove( QLatin1Char( '&' ) ) );
     m_badge->setVisible( !m_failure.has_value() );
     if ( !m_failure.has_value() )"""
+
+# Upstream offers to stay in the live session and names it from branding
+# productName, which is how "ModernOS Live" reached the congratulation. The
+# installed system is the only thing this page may talk about, so the offer
+# and its %2 both go.
+FINISHED_TEXT_OLD = """            ui->mainText->setText( tr( "<h1>All done.</h1><br/>"
+                                       "%1 has been installed on your computer.<br/>"
+                                       "You may now restart into your new system, or continue "
+                                       "using the %2 Live environment.",
+                                       "@info" )
+                                       .arg( branding->versionedName(), branding->productName() ) );"""
+FINISHED_TEXT_NEW = """            ui->mainText->setText( tr( "<h1>All done.</h1><br/>"
+                                       "%1 is installed and ready.<br/>"
+                                       "Restart to start using your new desktop.",
+                                       "@info" )
+                                       .arg( branding->versionedName() ) );"""
+
+FINISHED_TS_OLD = """      <location filename="../src/modules/finished/FinishedPage.cpp" line="89"/>
+      <source>&lt;h1&gt;All done.&lt;/h1&gt;&lt;br/&gt;%1 has been installed on your computer.&lt;br/&gt;You may now restart into your new system, or continue using the %2 Live environment.</source>
+      <comment>@info</comment>
+      <translation>&lt;h1&gt;Alles erledigt.&lt;/h1&gt;&lt;br/&gt;%1 wurde auf Ihrem Computer installiert.&lt;br/&gt;Sie können nun per Neustart das installierte System laden oder weiterhin die %2 Live-Umgebung benutzen.</translation>"""
+FINISHED_TS_NEW = """      <location filename="../src/modules/finished/FinishedPage.cpp" line="89"/>
+      <source>&lt;h1&gt;All done.&lt;/h1&gt;&lt;br/&gt;%1 is installed and ready.&lt;br/&gt;Restart to start using your new desktop.</source>
+      <comment>@info</comment>
+      <translation>&lt;h1&gt;Alles erledigt.&lt;/h1&gt;&lt;br/&gt;%1 ist installiert und einsatzbereit.&lt;br/&gt;Starte neu, um deinen neuen Desktop zu nutzen.</translation>"""
 
 # A failed install quits from the error dialog and never reaches this page,
 # so hiding the footer here cannot strand the user without a way out.
@@ -586,6 +837,7 @@ def main() -> int:
     viewman = src / "libcalamaresui" / "ViewManager.cpp"
     execstep = src / "libcalamaresui" / "viewpages" / "ExecutionViewStep.cpp"
     keyboard = src / "modules" / "keyboard" / "KeyboardPage.cpp"
+    keyboard_cfg = src / "modules" / "keyboard" / "Config.cpp"
     summary = src / "modules" / "summary" / "SummaryPage.cpp"
     summary_cfg = src / "modules" / "summary" / "Config.h"
     partition = src / "modules" / "partition" / "PartitionViewStep.cpp"
@@ -598,8 +850,8 @@ def main() -> int:
     patch(trans, TRANS_OLD, translations_new(load_calamares_codes()), "availableTranslations()")
     patch(window, SIDE_OLD, SIDE_NEW, "sidebar width qBound")
     patch(window, STYLE_OLD, STYLE_NEW, "qApp stylesheet for combo popups")
-    patch(window, COMBO_INC_OLD, COMBO_INC_NEW, "combo popup event filter")
-    patch(window, COMBO_INSTALL_OLD, COMBO_INSTALL_NEW, "install combo popup filter")
+    patch(window, COMBO_INC_OLD, COMBO_INC_NEW, "in-window combo list overlay")
+    patch(window, COMBO_INSTALL_OLD, COMBO_INSTALL_NEW, "install combo list overlay")
     patch(window, QML_SIDE_OLD, QML_SIDE_NEW, "QML sidebar retranslate")
     patch(locale, LOCALE_OLD, LOCALE_NEW, "locale zoneAndRegionLayout")
     patch(locale, CHANGE_OLD, CHANGE_NEW, "hide locale Change buttons")
@@ -613,8 +865,10 @@ def main() -> int:
     patch(finished, FINISHED_INC_OLD, FINISHED_INC_NEW, "FinishedPage includes")
     patch(finished, FINISHED_CTOR_OLD, FINISHED_CTOR_NEW, "finished badge and restart button")
     patch(finished, FINISHED_RETR_OLD, FINISHED_RETR_NEW, "finished restart button text")
+    patch(finished, FINISHED_TEXT_OLD, FINISHED_TEXT_NEW, "finished success copy")
     patch(execstep, TOGGLE_OLD, TOGGLE_NEW, "Toggle log tr()")
     patch(keyboard, KB_OLD, KB_NEW, "hide Keyboard model row")
+    patch(keyboard_cfg, KB_APPLY_OLD, KB_APPLY_NEW, "apply layout when variants are empty")
     patch(summary, SUMMARY_CONTENT_OLD, SUMMARY_CONTENT_NEW, "summary content object name")
     patch(summary, SUMMARY_WRAP_OLD, SUMMARY_WRAP_NEW, "summary item wrap object name")
     patch(summary_cfg, SUMMARY_TITLE_OLD, SUMMARY_TITLE_NEW, "Summary title live tr()")
@@ -624,6 +878,7 @@ def main() -> int:
     patch(users_cfg, USERS_CFG_OLD, USERS_CFG_NEW, "unattended user presets")
     patch(users_ts, USERS_TS_OLD, USERS_TS_NEW, "Users step German source")
     patch(users_ts, SUMMARY_TS_OLD, SUMMARY_TS_NEW, "Summary step German title")
+    patch(users_ts, FINISHED_TS_OLD, FINISHED_TS_NEW, "finished success copy German")
     patch_modernnet_ts(users_ts)
     return 0
 

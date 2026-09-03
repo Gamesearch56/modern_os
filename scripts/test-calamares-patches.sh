@@ -66,13 +66,17 @@ def wrap(old: str) -> str:
     wrap(mod.FINISHED_H_FWD_OLD) + wrap(mod.FINISHED_H_OLD), encoding="utf-8"
 )
 (src / "modules/finished/FinishedPage.cpp").write_text(
-    wrap(mod.FINISHED_INC_OLD) + wrap(mod.FINISHED_CTOR_OLD) + wrap(mod.FINISHED_RETR_OLD),
+    wrap(mod.FINISHED_INC_OLD)
+    + wrap(mod.FINISHED_CTOR_OLD)
+    + wrap(mod.FINISHED_RETR_OLD)
+    + wrap(mod.FINISHED_TEXT_OLD),
     encoding="utf-8",
 )
 (src / "libcalamaresui/viewpages/ExecutionViewStep.cpp").write_text(
     wrap(mod.TOGGLE_OLD), encoding="utf-8"
 )
 (src / "modules/keyboard/KeyboardPage.cpp").write_text(wrap(mod.KB_OLD), encoding="utf-8")
+(src / "modules/keyboard/Config.cpp").write_text(wrap(mod.KB_APPLY_OLD), encoding="utf-8")
 (src / "modules/summary/SummaryPage.cpp").write_text(
     wrap(mod.SUMMARY_CONTENT_OLD) + wrap(mod.SUMMARY_WRAP_OLD), encoding="utf-8"
 )
@@ -86,7 +90,8 @@ def wrap(old: str) -> str:
 (src / "modules/users/UsersViewStep.cpp").write_text(wrap(mod.USERS_NAME_OLD), encoding="utf-8")
 (src / "modules/users/Config.cpp").write_text(wrap(mod.USERS_CFG_OLD), encoding="utf-8")
 (pathlib.Path(sys.argv[2]).parent / "lang" / "calamares_de.ts").write_text(
-    wrap(mod.USERS_TS_OLD) + wrap(mod.SUMMARY_TS_OLD), encoding="utf-8"
+    wrap(mod.USERS_TS_OLD) + wrap(mod.SUMMARY_TS_OLD) + wrap(mod.FINISHED_TS_OLD),
+    encoding="utf-8",
 )
 PY
 
@@ -107,13 +112,37 @@ check() {
     fi
 }
 
+refute() {
+    local file="$1" needle="$2" label="$3"
+    if grep -F "$needle" "$file" >/dev/null; then
+        err "$label still in $file"
+    else
+        ok "$label"
+    fi
+}
+
+absent() {
+    local file="$1" needle="$2" label="$3"
+    if grep -F "$needle" "$file" >/dev/null; then
+        err "$label still in $file"
+    else
+        ok "$label"
+    fi
+}
+
 check "$src/libcalamares/locale/TranslationsModel.cpp" 'QStringLiteral( "en" )' "en in language list"
 check "$src/libcalamares/locale/TranslationsModel.cpp" 'QStringLiteral( "de" )' "de in language list"
 check "$src/calamares/CalamaresWindow.cpp" "qBound( 180, 180, 180 )" "180px sidebar"
 check "$src/calamares/CalamaresWindow.cpp" "qApp->setStyleSheet( ss )" "qApp stylesheet"
 check "$src/calamares/CalamaresWindow.cpp" "QComboBoxPrivateContainer" "combo event filter"
-check "$src/calamares/CalamaresWindow.cpp" "mapToGlobal" "combo mapToGlobal"
-check "$src/calamares/CalamaresWindow.cpp" "modernRemapping" "combo hide/show remap"
+check "$src/calamares/CalamaresWindow.cpp" "modernComboOverlay" "combo list overlay object name"
+check "$src/calamares/CalamaresWindow.cpp" "new QListView( host )" "combo list overlay is a child of the installer window"
+check "$src/calamares/CalamaresWindow.cpp" "m_combo->mapTo( host, QPoint( 0, 0 ) )" "combo list anchored to the field, not the window origin"
+check "$src/calamares/CalamaresWindow.cpp" "drop ? origin.y() + m_combo->height() : qMax( 0, origin.y() - height )" "combo list flips above a field with no room below"
+check "$src/calamares/CalamaresWindow.cpp" "qMin( wanted, drop ? below : above )" "combo list clamps to the space left in the window"
+check "$src/calamares/CalamaresWindow.cpp" "const int width = m_combo->width();" "combo list takes the field width"
+check "$src/calamares/CalamaresWindow.cpp" "qApp->installEventFilter( new ComboOverlay( qApp ) )" "combo list overlay installed application-wide"
+absent "$src/calamares/CalamaresWindow.cpp" "mapToGlobal" "combo list no longer placed in screen coordinates"
 check "$src/calamares/CalamaresWindow.cpp" "engine()->retranslate()" "QML sidebar retranslate"
 check "$src/modules/locale/LocalePage.cpp" "new QVBoxLayout" "stacked locale"
 check "$src/modules/locale/LocalePage.cpp" "m_localeChangeButton->hide()" "hide Change"
@@ -122,6 +151,7 @@ check "$src/libcalamaresui/ViewManager.cpp" "quitVisible" "hide Cancel during ex
 check "$src/libcalamaresui/ViewManager.cpp" "/etc/calamares/unattended" "unattended auto-next"
 check "$src/libcalamaresui/viewpages/ExecutionViewStep.cpp" 'tr( "Toggle log" )' "Toggle log tr"
 check "$src/modules/keyboard/KeyboardPage.cpp" "physicalModelSelector->hide()" "hide keyboard model"
+check "$src/modules/keyboard/Config.cpp" "somethingChanged();" "layout change applies with no variants"
 check "$src/modules/summary/SummaryPage.cpp" "summaryContent" "summary content object name"
 check "$src/modules/partition/PartitionViewStep.cpp" "summaryPartition" "partition summary object name"
 check "$src/modules/partition/gui/PartitionLabelsView.cpp" "QPalette::WindowText" "partition legend palette text"
@@ -140,11 +170,50 @@ check "$src/modules/finished/FinishedPage.cpp" "finishedRestart" "finished resta
 check "$src/modules/finished/FinishedPage.cpp" "QCoreApplication::quit()" "restart button quits to trigger doRestart"
 check "$src/modules/finished/FinishedPage.h" "m_restartButton" "FinishedPage restart member"
 check "$src/libcalamaresui/ViewManager.cpp" "updateBackAndNextVisibility( false )" "footer hidden on the finished page"
+check "$src/modules/finished/FinishedPage.cpp" "%1 is installed and ready." "finished English success copy"
+check "$WORKDIR/lang/calamares_de.ts" "ist installiert und einsatzbereit." "finished German success copy"
+refute "$src/modules/finished/FinishedPage.cpp" "Live environment" "English success copy names no live medium"
+refute "$WORKDIR/lang/calamares_de.ts" "Live-Umgebung" "German success copy names no live medium"
 
 if grep -F 'UPDATE_BUTTON_PROPERTY( quitVisible, true );' "$src/libcalamaresui/ViewManager.cpp" >/dev/null; then
     err "Done button still shown at the very end"
 else
     ok "Done button hidden at the very end"
+fi
+
+# "ModernOS-Live" was never spelled out in source: it was a branding name
+# pasted into a placeholder next to "Live". Grepping the literals cannot see
+# that, so render the copy with every name branding.desc can supply.
+if python3 - "$HOOK" "$ROOT/iso/airootfs/etc/calamares/branding/modern/branding.desc" <<'PY'
+import importlib.util
+import pathlib
+import re
+import sys
+
+spec = importlib.util.spec_from_file_location("limitlang", pathlib.Path(sys.argv[1]))
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+names = re.findall(
+    r"^\s+\w*Name:\s*(\S+)", pathlib.Path(sys.argv[2]).read_text(encoding="utf-8"), re.M
+)
+if not names:
+    sys.exit("no branding names in branding.desc")
+copy = mod.FINISHED_TEXT_NEW + mod.FINISHED_TS_NEW
+leaks = sorted(
+    {
+        name + sep + "Live"
+        for name in names
+        for sep in ("-", " ")
+        if name + sep + "Live" in re.sub(r"%[0-9]", name, copy)
+    }
+)
+sys.exit("; ".join(leaks) if leaks else 0)
+PY
+then
+    ok "finished success copy renders no live-medium name"
+else
+    err "finished success copy renders a live-medium name"
 fi
 
 [ "$FAIL" -eq 0 ]

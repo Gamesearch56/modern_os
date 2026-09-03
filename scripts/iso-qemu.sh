@@ -10,13 +10,14 @@ KEEP_NVRAM=0
 RESET_DISK=0
 UNATTENDED=0
 NO_ISO=0
+WIFI_SIM=0
 
 die() { printf 'iso-qemu: ERROR: %s\n' "$*" >&2; exit 1; }
 
 usage() {
     cat <<'EOF'
 Usage: iso-qemu.sh [--disk] [--headless] [--keep-nvram] [--reset-disk]
-                   [--unattended] [--no-iso]
+                   [--unattended] [--no-iso] [--wifi-sim]
 
 Boots the newest *.iso in iso/out/ (or $MODERN_ISO_OUT).
 Always attaches iso/out/vm-disk.qcow2 (created at 64G if missing)
@@ -36,6 +37,10 @@ after a successful install; a guest reboot otherwise re-runs the
 firmware and the CD's bootindex sends you back into Calamares.
 --unattended sets QEMU fw_cfg; the live session creates
 /etc/calamares/unattended (auto-next, user modern / password modern).
+--wifi-sim drops the virtio NIC (so the Network step does not take the
+Ethernet branch) and sets fw_cfg so live-setup.sh runs live-wifi-sim.sh:
+mac80211_hwsim radios plus WPA2 APs the installer can list. The guest
+has no uplink — use this to try the Wi-Fi page, not to install.
 EOF
 }
 
@@ -47,6 +52,7 @@ while [ $# -gt 0 ]; do
         --reset-disk) RESET_DISK=1 ;;
         --unattended) UNATTENDED=1 ;;
         --no-iso) NO_ISO=1; KEEP_NVRAM=1 ;;
+        --wifi-sim) WIFI_SIM=1 ;;
         -h|--help)
             usage
             exit 0
@@ -107,9 +113,13 @@ args=(
     -smp "${MODERN_ISO_QEMU_SMP:-4}"
     -m "${MODERN_ISO_QEMU_MEM:-8G}"
     -serial "file:${serial}"
-    -netdev "user,id=net0"
-    -device "virtio-net,netdev=net0"
 )
+if [ "$WIFI_SIM" -eq 0 ]; then
+    args+=(
+        -netdev "user,id=net0"
+        -device "virtio-net,netdev=net0"
+    )
+fi
 if [ "$NO_ISO" -eq 0 ]; then
     args+=(
         -drive "if=none,id=cd0,media=cdrom,readonly=on,file=${newest}"
@@ -128,6 +138,9 @@ else
 fi
 if [ "$UNATTENDED" -eq 1 ]; then
     args+=(-fw_cfg "name=opt/org.modernos/unattended,string=1")
+fi
+if [ "$WIFI_SIM" -eq 1 ]; then
+    args+=(-fw_cfg "name=opt/org.modernos/wifi-sim,string=1")
 fi
 if [ -c /dev/kvm ]; then
     args+=(-enable-kvm -cpu host)

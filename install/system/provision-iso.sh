@@ -154,6 +154,66 @@ apply_keyboard_layout() {
 
 apply_keyboard_layout
 
+# Calamares' locale job writes LANG= to /etc/locale.conf, which is what PAM
+# sessions and install/lib/i18n.sh read. Commons/I18n.qml does not: it picks
+# its translation file from language.ui in config.json, so a German install
+# used to come up with a German system locale and an English shell.
+LOCALE_CONF="${MODERN_LOCALE_CONF:-/etc/locale.conf}"
+
+locale_var() {
+    sed -nE "s/^[[:space:]]*$1=[\"']?([^\"'[:space:]]+).*/\1/p" "$LOCALE_CONF" 2>/dev/null | head -1
+}
+
+# Keyed on the translation files actually shipped rather than a second list
+# of supported languages: an unexpected LANG then lands on English instead of
+# pointing I18n at a file that does not exist.
+shell_language_for() {
+    local base="${1%%.*}" code
+    base="${base%%_*}"
+    code="${base,,}"
+    code="${code//[!a-z]/}"
+    if [ -n "$code" ] && [ -f "${USER_HOME}/.config/modern/translations/${code}.json" ]; then
+        printf '%s\n' "$code"
+    else
+        printf 'en\n'
+    fi
+}
+
+apply_system_language() {
+    if [ ! -f "$LOCALE_CONF" ]; then
+        log "no $LOCALE_CONF — keeping the config.json default language"
+        return 0
+    fi
+    local lang code cfg tmp
+    lang="$(locale_var LANG)"
+    if [ -z "$lang" ]; then
+        log "no LANG in $LOCALE_CONF — keeping the config.json default language"
+        return 0
+    fi
+    code="$(shell_language_for "$lang")"
+
+    cfg="${USER_HOME}/.config/modern/config.json"
+    if [ -f "$cfg" ] && command -v jq >/dev/null 2>&1; then
+        tmp="$(mktemp "${cfg}.XXXXXX")"
+        if jq --arg l "$code" '.language.ui = $l' "$cfg" >"$tmp"; then
+            chown "$USERNAME:$USERNAME" "$tmp" 2>/dev/null || true
+            chmod 0644 "$tmp"
+            mv -f "$tmp" "$cfg"
+            log "system locale '$lang' -> shell language '$code' in $cfg"
+        else
+            rm -f "$tmp"
+            log "WARN: jq could not set the shell language in $cfg"
+        fi
+    else
+        log "WARN: no $cfg or no jq — the desktop keeps the default language"
+    fi
+}
+
+apply_system_language
+
+# Ordering, not coincidence: wallpaper-sync.sh bakes the greeter's strings
+# into chrome.json from the language.ui just written, which is why the
+# greeter needs no counterpart to the keyboard's hl.config line.
 wp="${USER_HOME}/.config/modern/wallpapers/default.jpg"
 if [ -f "$PROVISION_ROOT/scripts/wallpaper-sync.sh" ] && [ -f "$wp" ]; then
     runuser -u "$USERNAME" -- env \
