@@ -233,7 +233,10 @@
     "caffeine": "Caffeine"
   },
   "overview": {
-    "title": "Overview"
+    "title": "Overview",
+    "workspace": "Workspace {id}",
+    "empty": "No open windows",
+    "emptyHint": "Apps you open show up here. Super+Tab cycles them."
   },
   "plugin": {
     "title": "Plugins"

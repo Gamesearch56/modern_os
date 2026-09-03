@@ -233,7 +233,10 @@
     "caffeine": "Caffeine"
   },
   "overview": {
-    "title": "Übersicht"
+    "title": "Übersicht",
+    "workspace": "Arbeitsbereich {id}",
+    "empty": "Keine offenen Fenster",
+    "emptyHint": "Geöffnete Apps erscheinen hier. Super+Tab wechselt zwischen ihnen."
   },
   "plugin": {
     "title": "Erweiterungen"

@@ -1,6 +1,5 @@
 import Quickshell
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
@@ -29,11 +28,8 @@ Scope {
                 titleKey: "overview.title"
                 onClosed: Overview.hide()
 
-                MPane {
-                    WindowGrid {
-                        id: grid
-                        anchors.fill: parent
-                    }
+                WindowGrid {
+                    id: grid
                 }
             }
 
