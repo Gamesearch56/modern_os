@@ -87,6 +87,10 @@ fi
 mkdir -p "$abs_out"
 
 pin="${MODERN_ISO_TAG:-}"
+# An explicit --tag is a deliberate choice of pin, including the ISO
+# workflow rebuilding an older release from main's scripts. Only an
+# inferred pin can be stale by accident, so only that one is guarded.
+pin_was_asked_for="${pin:+1}"
 if [ -z "$pin" ]; then
     pin="$(git -C "$ROOT" describe --tags --exact-match HEAD 2>/dev/null || true)"
 fi
@@ -96,14 +100,24 @@ fi
 [ -n "$pin" ] || die "no vX.Y.Z tag in this clone — pass --tag"
 [[ "$pin" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "ISO pin must be vX.Y.Z (got $pin)"
 
+# The bundle is cloned from this clone, not from the remote, so a tree
+# without .git cannot produce one. actions/checkout falls back to a REST
+# tarball whenever git is missing from the runner image, which leaves
+# exactly that — and git's own "repository does not exist" names the
+# destination, not the cause.
+git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 \
+    || die "$ROOT is not a git repository — the bundle is cloned from it"
+git -C "$ROOT" rev-parse -q --verify "refs/tags/$pin" >/dev/null \
+    || die "$pin is not a tag in this clone — fetch tags (CI needs fetch-depth: 0)"
+
 # The live ISO is this working tree, but the bundle Calamares installs from
 # is a clone of $pin. Edit install/ or stow/ without tagging and the change
 # is on the ISO yet absent from the installed system, which looks like the
 # fix silently not working.
-stale="$(git -C "$ROOT" diff --name-only "$pin" -- install stow scripts 2>/dev/null || true)"
-untracked="$(git -C "$ROOT" ls-files --others --exclude-standard -- install stow scripts || true)"
+stale="$(git -C "$ROOT" diff --name-only "$pin" -- install stow scripts)"
+untracked="$(git -C "$ROOT" ls-files --others --exclude-standard -- install stow scripts)"
 stale="$(printf '%s\n%s\n' "$stale" "$untracked" | sed '/^$/d' | sort -u)"
-if [ -n "$stale" ] && [ -z "$ALLOW_STALE_BUNDLE" ]; then
+if [ -n "$stale" ] && [ -z "$ALLOW_STALE_BUNDLE" ] && [ -z "$pin_was_asked_for" ]; then
     printf 'iso-build: ERROR: these differ from %s and would NOT reach the installed system:\n' \
         "$pin" >&2
     printf '%s\n' "$stale" | while IFS= read -r f; do printf '  %s\n' "$f" >&2; done

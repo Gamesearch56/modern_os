@@ -653,6 +653,24 @@ else
     err "iso.yml must run test-iso-qemu-smoke.sh after mkarchiso"
 fi
 
+# iso-build.sh bundles the pin with `git clone $ROOT`, so the checkout has
+# to be a real repo with tags. archlinux:latest has no git, and without one
+# actions/checkout silently downloads a REST tarball instead.
+if python3 - "$ISO_YML" <<'PY'; then
+import pathlib, sys
+text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+checkout = text.index("uses: actions/checkout")
+before = text[:checkout]
+assert "pacman -Sy" in before and "git" in before.split("pacman -Sy")[-1], \
+    "install git before actions/checkout or it falls back to a REST tarball"
+assert "fetch-depth: 0" in text[checkout:], \
+    "checkout needs fetch-depth: 0 so the bundle clone can resolve the tag"
+PY
+    ok "ISO workflow checks out a real repo with tags for the bundle clone"
+else
+    err "iso.yml must install git before checkout and fetch tags"
+fi
+
 MODULES="$ROOT/iso/airootfs/etc/calamares/modules"
 if python3 - "$SETTINGS" "$MODULES" "$BOOTLOADER" <<'PY'; then
 import pathlib, re, sys
