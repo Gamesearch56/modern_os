@@ -16,7 +16,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Dependencies
-        run: sudo apt-get update && sudo apt-get install -y jq python3 shellcheck git
+        run: sudo apt-get update && sudo apt-get install -y jq python3 git
+      # Not apt's shellcheck: Ubuntu's lags Arch's by two releases, and
+      # SC2317 fires there on trap handlers that newer versions recognise.
+      # ci-check.sh has to reach the same verdict here and on a clone.
+      - name: Pinned shellcheck
+        env:
+          SHELLCHECK_VERSION: v0.11.0
+        run: |
+          url="https://github.com/koalaman/shellcheck/releases/download"
+          curl -fsSL --retry 3 \
+            "$url/$SHELLCHECK_VERSION/shellcheck-$SHELLCHECK_VERSION.linux.x86_64.tar.xz" \
+            | sudo tar -xJ --strip-components=1 -C /usr/local/bin \
+              "shellcheck-$SHELLCHECK_VERSION/shellcheck"
+          shellcheck --version
       - name: Layer lint, shellcheck, and tests
         run: scripts/ci-check.sh
 
