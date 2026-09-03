@@ -156,6 +156,7 @@
   "session": {
     "unlock": "Entsperren",
     "password": "Passwort",
+    "user": "Benutzer",
     "authFailed": "Entsperren fehlgeschlagen"
   },
   "alarm": {

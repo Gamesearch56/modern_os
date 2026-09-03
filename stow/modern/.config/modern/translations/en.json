@@ -156,6 +156,7 @@
   "session": {
     "unlock": "Unlock",
     "password": "Password",
+    "user": "User",
     "authFailed": "Could not unlock"
   },
   "alarm": {

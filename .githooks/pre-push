@@ -3,4 +3,7 @@
 # cannot skip layer lint or shellcheck.
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
-exec "$ROOT/scripts/ci-check.sh"
+# Same reason as .githooks/pre-commit: the test fixtures must not inherit
+# this repository's GIT_DIR / GIT_INDEX_FILE.
+exec env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE -u GIT_PREFIX \
+    "$ROOT/scripts/ci-check.sh"

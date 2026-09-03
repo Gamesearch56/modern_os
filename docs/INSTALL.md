@@ -156,8 +156,9 @@ click through pages or run late clone of GitHub.
 `#summaryItemWrap` / `#summaryPartition`, `#summaryItemBody` cards, and
 `#partitionLabel` (legend names still need the AUR patch: Calamares
 paints Boot/root with `Qt::black`).
-Combo boxes have no QSS radius. Native combo lists stay `Qt::Popup`
-(an in-window overlay SIGSEGV'd Calamares on start). Cancel is hidden
+Combo boxes have no QSS radius. Combo lists are drawn in-window as
+`#modernComboOverlay` (see below), styled from the same tokens with
+`padding: 0` so the AUR patch can size them. Cancel is hidden
 during Install (`disable-cancel-during-exec` plus `quitVisible`). Late
 jobs set `verbose: false` so a failure dialog shows stdout (Calamares
 `verbose: true` streams output to the session log and leaves the dialog
@@ -234,6 +235,27 @@ comma-joined non-ASCII pair like `us,ru` still works — Hyprland accepts
 that form too. A missing snippet is a warning, not a failure. Changing the
 layout later in Settings → Keyboard updates the desktop but not the TTY,
 X11 snippet, or greetd.
+
+The Locale step has the same gap and the same fix. Its job writes `LANG=`
+to `/etc/locale.conf`, which covers the system locale every PAM session and
+`install/lib/i18n.sh` inherit, but `Commons/I18n.qml` picks its translation
+file from `language.ui` in `config.json` — so a German install used to give
+a German system and an English shell. `provision-iso.sh` reads `LANG` out of
+`/etc/locale.conf` and sets `language.ui` with `jq`, leaving the rest of the
+file (including `language.fallback`, always English) untouched. The mapping
+is `de_DE.UTF-8` → `de`: everything before the first `_` or `.`, lowercased.
+It is accepted only if `translations/<code>.json` exists in the user's home,
+so anything else the installer could produce — and `C.UTF-8` — lands on `en`
+rather than on a file `I18n` cannot open. A missing `/etc/locale.conf` or a
+missing `LANG` is a warning, not a failure, and leaves `config.json` alone.
+`language.ui` is the single source of truth: Settings → Language writes that
+same key.
+
+The greeter needs no counterpart to the keyboard's `hl.config` line. Its
+strings come from `/var/lib/modern/session/chrome.json`, which
+`wallpaper-sync.sh` bakes from `language.ui` — so it follows along, provided
+the language is set before that runs. It is, and
+`scripts/test-calamares-late.sh` pins the ordering.
 
 The **Network** / **Netzwerk** page sits after Keyboard. Next stays off
 until a default IPv4 or IPv6 route exists — Ethernet is enough;
@@ -337,9 +359,20 @@ once `isAtVeryEnd`. The checkbox stays hidden and the pill sets
 `aboutToQuit`. That needs `finished.conf`: with no config the mode is
 `never`, and `Config` then forces `restartNowWanted` false, so the control
 renders and does nothing. The button reuses the checkbox's own translated
-label, so German needs no new string. Hiding the footer cannot strand
-anyone — a failed install quits from the error dialog and never reaches
-this page.
+label, so the pill itself needs no new string. Hiding the footer cannot
+strand anyone — a failed install quits from the error dialog and never
+reaches this page.
+
+The message above the pill is patched too. Upstream ends with an offer to
+"continue using the %2 Live environment", and `%2` is branding
+`productName` — that is where **ModernOS Live** came from on a page about
+the installed system. `calamares-limit-languages.py` replaces that
+`tr()` with `<h1>All done.</h1><br/>%1 is installed and ready.<br/>Restart
+to start using your new desktop.` and rewrites the matching
+`FinishedPage` entry in Calamares' own `lang/calamares_de.ts`, so both
+languages change together. `productName` stays **ModernOS**: it is also
+the Welcome title, the summary and the bootloader entry, and none of those
+are wrong.
 If you land on a TTY, this image never started greetd:
 
 ```bash

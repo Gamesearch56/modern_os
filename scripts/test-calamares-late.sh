@@ -140,6 +140,105 @@ else
 fi
 rm -rf "$kbdir"
 
+# The Locale step must reach Commons/I18n.qml (language.ui in config.json),
+# not just /etc/locale.conf.
+langdir="$(mktemp -d)"
+langcfg="$langdir/.config/modern"
+mkdir -p "$langcfg/translations"
+printf '{"session":{"unlock":"Unlock"}}\n' >"$langcfg/translations/en.json"
+printf '{"session":{"unlock":"Entsperren"}}\n' >"$langcfg/translations/de.json"
+printf 'LANG=de_DE.UTF-8\n' >"$langdir/locale.conf"
+printf '{"language":{"ui":"en","fallback":"en","dateFormat":"DD.MM.YYYY"}}\n' \
+    >"$langcfg/config.json"
+{
+    printf 'set -euo pipefail\n'
+    printf 'log() { printf "provision-iso: %%s\\n" "$*"; }\n'
+    # shellcheck disable=SC2016  # written literally into the generated script
+    printf 'USERNAME="$(id -un)"\n'
+    printf 'USER_HOME=%s\n' "$langdir"
+    printf 'MODERN_LOCALE_CONF=%s/locale.conf\n' "$langdir"
+    sed -n '/^LOCALE_CONF=/,/^apply_system_language$/p' "$PROVISION"
+} >"$langdir/run.sh"
+if bash "$langdir/run.sh" >"$langdir/out" 2>&1; then
+    got_ui="$(jq -r '.language.ui' "$langcfg/config.json")"
+    got_fallback="$(jq -r '.language.fallback' "$langcfg/config.json")"
+    got_date="$(jq -r '.language.dateFormat' "$langcfg/config.json")"
+    if [ "$got_ui" = de ] && [ "$got_fallback" = en ] && [ "$got_date" = DD.MM.YYYY ]; then
+        ok "Locale step language reaches config.json"
+    else
+        err "language not propagated: ui=$got_ui fallback=$got_fallback date=$got_date $(cat "$langdir/out")"
+    fi
+else
+    err "apply_system_language failed: $(cat "$langdir/out")"
+fi
+
+# Anything the installer can produce that has no translations/<code>.json
+# must land on English, not on a file I18n cannot open.
+printf 'LANG=fr_FR.UTF-8\n' >"$langdir/locale.conf"
+if bash "$langdir/run.sh" >"$langdir/out2" 2>&1 \
+    && [ "$(jq -r '.language.ui' "$langcfg/config.json")" = en ]; then
+    ok "unsupported LANG falls back to English"
+else
+    err "an unshipped language must fall back to en: $(cat "$langdir/out2")"
+fi
+
+printf '{"language":{"ui":"de"}}\n' >"$langcfg/config.json"
+rm -f "$langdir/locale.conf"
+if bash "$langdir/run.sh" >"$langdir/out3" 2>&1 \
+    && grep -F 'keeping the config.json default language' "$langdir/out3" >/dev/null \
+    && [ "$(jq -r '.language.ui' "$langcfg/config.json")" = de ]; then
+    ok "missing locale.conf leaves config.json alone"
+else
+    err "a missing locale.conf must not abort provision: $(cat "$langdir/out3")"
+fi
+rm -rf "$langdir"
+
+# The greeter has no hl.config counterpart: it picks its strings up from the
+# chrome.json wallpaper-sync.sh bakes out of language.ui, so provision has to
+# set the language before it runs.
+lang_line="$(grep -n '^apply_system_language$' "$PROVISION" | head -1 | cut -d: -f1)"
+sync_line="$(grep -n 'wallpaper-sync.sh' "$PROVISION" | head -1 | cut -d: -f1)"
+if [ -n "$lang_line" ] && [ -n "$sync_line" ] && [ "$lang_line" -lt "$sync_line" ]; then
+    ok "the language is set before the greeter's chrome.json is baked"
+else
+    err "apply_system_language must run before wallpaper-sync.sh (greeter strings)"
+fi
+
+SYNC="$ROOT/scripts/wallpaper-sync.sh"
+syncdir="$(mktemp -d)"
+mkdir -p "$syncdir/modern/translations" "$syncdir/shared"
+printf '{"session":{"unlock":"Unlock","password":"Password","user":"User"}}\n' \
+    >"$syncdir/modern/translations/en.json"
+printf '{"session":{"unlock":"Entsperren","password":"Passwort","user":"Benutzer"}}\n' \
+    >"$syncdir/modern/translations/de.json"
+{
+    printf 'set -euo pipefail\n'
+    printf 'warn() { printf "[wallpaper-sync] WARN %%s\\n" "$*" >&2; }\n'
+    printf 'XDG_CONFIG_HOME=%s\n' "$syncdir"
+    printf 'SHARED=%s/shared\n' "$syncdir"
+    sed -n '/^CFG=/,/^fi$/p' "$SYNC"
+} >"$syncdir/run.sh"
+sync_cfg() {
+    printf '{"typography":{"ui":"Inter"},"design":{"cornerRounding":1,"transparency":0.85},"language":{"ui":"%s"}}\n' \
+        "$1" >"$syncdir/modern/config.json"
+}
+sync_cfg de
+if bash "$syncdir/run.sh" >"$syncdir/out" 2>&1 \
+    && [ "$(jq -r '.strings.unlock' "$syncdir/shared/chrome.json")" = Entsperren ] \
+    && [ "$(jq -r '.strings.user' "$syncdir/shared/chrome.json")" = Benutzer ]; then
+    ok "greeter chrome.json follows the installed language"
+else
+    err "chrome.json did not pick up the German session strings: $(cat "$syncdir/out")"
+fi
+sync_cfg fr
+if bash "$syncdir/run.sh" >"$syncdir/out2" 2>&1 \
+    && [ "$(jq -r '.strings.unlock' "$syncdir/shared/chrome.json")" = Unlock ]; then
+    ok "greeter falls back to English for an unshipped language"
+else
+    err "chrome.json must fall back to en.json: $(cat "$syncdir/out2")"
+fi
+rm -rf "$syncdir"
+
 # bluez-utils is bluetoothctl only; bluetooth.service and org.bluez are bluez.
 if grep -E '^[[:space:]]*bluez([[:space:]]|#|$)' "$ROOT/install/manifests/10-desktop.txt" >/dev/null \
     && grep -F 'ensure_provision_units' "$LATE" >/dev/null \
