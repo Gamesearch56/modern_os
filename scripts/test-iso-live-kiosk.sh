@@ -63,6 +63,7 @@ if grep -F 'vm-serial.log' "$QEMU" >/dev/null \
     && grep -F -- '--keep-nvram' "$QEMU" >/dev/null \
     && grep -F -- '--unattended' "$QEMU" >/dev/null \
     && grep -F 'opt/org.modernos/unattended' "$QEMU" >/dev/null \
+    && grep -F -- '--no-iso) NO_ISO=1; KEEP_NVRAM=1' "$QEMU" >/dev/null \
     && ! grep -F 'INSTALL_DISK' "$QEMU" >/dev/null; then
     ok "iso-qemu.sh captures serial, attaches vm-disk.qcow2, boots OVMF, ISO bootindex first"
 else
@@ -245,6 +246,9 @@ if grep -F 'QLabel, QCheckBox, QRadioButton, QFrame, QGroupBox' "$BUILD" >/dev/n
     && grep -F '#networkPage' "$BUILD" >/dev/null \
     && grep -F '#networkOkPage' "$BUILD" >/dev/null \
     && grep -F '#wifiList' "$BUILD" >/dev/null \
+    && grep -F '#finishedBadge' "$BUILD" >/dev/null \
+    && grep -F '#finishedRestart' "$BUILD" >/dev/null \
+    && grep -F '#finishedMainText' "$BUILD" >/dev/null \
     && grep -F 'QAbstractScrollArea::viewport' "$BUILD" >/dev/null \
     && grep -F 'QToolButton:hover' "$BUILD" >/dev/null \
     && ! grep -F 'QFrame, QListView, QTreeView' "$BUILD" >/dev/null; then
@@ -381,10 +385,24 @@ else
 fi
 
 if grep -F 'convertedKeymapPath: "/usr/share/kbd/keymaps/xkb"' "$KB_CONF" >/dev/null \
-    && grep -E '^useLocale1:[[:space:]]+false$' "$KB_CONF" >/dev/null; then
-    ok "keyboard.conf uses the Arch keymap path and setxkbmap"
+    && grep -E '^useLocale1:[[:space:]]+false$' "$KB_CONF" >/dev/null \
+    && grep -E '^guessLayout:[[:space:]]+false$' "$KB_CONF" >/dev/null; then
+    ok "keyboard.conf uses the Arch keymap path, setxkbmap, and no locale guessing"
 else
-    err "keyboard.conf must set convertedKeymapPath and disable locale1"
+    err "keyboard.conf must set convertedKeymapPath, disable locale1, and disable guessLayout"
+fi
+
+# Layouts are sorted by description, so the fallback entry must be English.
+if python3 - "$ROOT/iso/releng/installer-locales.json" <<'PY'
+import json, sys
+data = json.loads(open(sys.argv[1], encoding="utf-8").read())
+xkb = [str(l["xkb"]) for l in data.get("locales") or [] if l.get("xkb")]
+assert "us" in xkb, f"installer-locales.json must keep the us layout, got {xkb}"
+PY
+then
+    ok "installer-locales.json keeps the English layout Calamares defaults to"
+else
+    err "installer-locales.json must keep us or the Keyboard step cannot default to English"
 fi
 
 NM_WIFI="$ROOT/iso/airootfs/etc/NetworkManager/conf.d/wifi-backend.conf"
@@ -416,7 +434,7 @@ else
     err "settings.conf must run shellprocess@lateclone/desktop/provision"
 fi
 
-if grep -F 'usage: calamares-late.sh clone|desktop|provision' "$LATE" >/dev/null \
+if grep -F 'usage: calamares-late.sh strip|clone|desktop|provision' "$LATE" >/dev/null \
     && grep -F 'timeout 180' "$LATE" >/dev/null \
     && grep -F 'GIT_HTTP_LOW_SPEED_LIMIT' "$LATE" >/dev/null \
     && grep -F '/var/log/modern-calamares-late.log' "$LATE" >/dev/null \
@@ -652,10 +670,30 @@ for name in names:
     # Job-only modules (machineid, fstab, ...) ship Calamares defaults.
     if path.is_file() or base in {
         "machineid", "fstab", "localecfg", "networkcfg", "hwclock", "umount",
-        "summary", "finished",
+        "summary",
     }:
         continue
     raise SystemExit(f"missing {path} for {name}")
+# bootloader calls kernel-install, which builds the initramfs. Both of these
+# decide what goes into it: striplive removes archiso's mkinitcpio drop-in
+# (whose HOOKS would otherwise win and leave the disk in a rescue shell) and
+# initcpiocfg writes HOOKS for the partitioning the user chose. striplive
+# reads the account users creates, so it cannot move above users either.
+order = {name: i for i, name in enumerate(names)}
+for earlier, later in (
+    ("users", "shellprocess@striplive"),
+    ("shellprocess@striplive", "initcpiocfg"),
+    ("initcpiocfg", "bootloader"),
+    ("shellprocess@striplive", "shellprocess@lateclone"),
+):
+    assert earlier in order, f"{earlier} missing from the sequence"
+    assert later in order, f"{later} missing from the sequence"
+    assert order[earlier] < order[later], f"{earlier} must run before {later}"
+# The finished page's Restart button replaces the hidden footer Done, and
+# Config forces restartNowWanted false when the mode is "never".
+fin = (modules / "finished.conf").read_text(encoding="utf-8")
+assert re.search(r"^restartNowMode:\s*(?!never)\S+", fin, re.M), "finished.conf restartNowMode"
+assert re.search(r"^restartNowCommand:", fin, re.M), "finished.conf restartNowCommand"
 bl = bootloader.read_text(encoding="utf-8")
 assert "kernelSearchPath:" in bl and "kernelPattern:" in bl
 assert not re.search(r"^kernel:", bl, re.M)

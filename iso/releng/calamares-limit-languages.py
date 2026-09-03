@@ -306,6 +306,109 @@ USERS_TS_NEW = """  <context>
     </message>
   </context>"""
 
+FINISHED_H_OLD = """    Ui::FinishedPage* ui;
+    std::optional< QString > m_failure;"""
+FINISHED_H_NEW = """    Ui::FinishedPage* ui;
+    QLabel* m_badge = nullptr;
+    QPushButton* m_restartButton = nullptr;
+    std::optional< QString > m_failure;"""
+
+FINISHED_H_FWD_OLD = """class Config;
+namespace Ui"""
+FINISHED_H_FWD_NEW = """class Config;
+class QLabel;
+class QPushButton;
+namespace Ui"""
+
+FINISHED_INC_OLD = "#include <QFocusEvent>"
+FINISHED_INC_NEW = """#include <QBoxLayout>
+#include <QCoreApplication>
+#include <QFocusEvent>
+#include <QIcon>
+#include <QLabel>
+#include <QPixmap>
+#include <QPushButton>"""
+
+# The checkbox only records intent for the footer Done button, which this
+# page no longer has. A filled button that quits (aboutToQuit -> doRestart)
+# is both the congratulation and the only way out of the live session.
+FINISHED_CTOR_OLD = """    ui->mainText->setAlignment( Qt::AlignCenter );
+    ui->mainText->setWordWrap( true );
+    ui->mainText->setOpenExternalLinks( true );
+
+    connect( config,
+             &Config::restartModeChanged,
+             [ this ]( Config::RestartMode mode )
+             {
+                 using Mode = Config::RestartMode;
+
+                 ui->restartCheckBox->setVisible( mode != Mode::Never );
+                 ui->restartCheckBox->setEnabled( mode != Mode::Always );
+             } );"""
+FINISHED_CTOR_NEW = """    ui->mainText->setAlignment( Qt::AlignCenter );
+    ui->mainText->setWordWrap( true );
+    ui->mainText->setOpenExternalLinks( true );
+    ui->mainText->setObjectName( QStringLiteral( "finishedMainText" ) );
+
+    m_badge = new QLabel( this );
+    m_badge->setObjectName( QStringLiteral( "finishedBadge" ) );
+    m_badge->setAlignment( Qt::AlignCenter );
+    m_badge->setFixedSize( 112, 112 );
+    const QPixmap badgePx = QIcon::fromTheme( QStringLiteral( "checkmark" ) ).pixmap( 56, 56 );
+    if ( badgePx.isNull() )
+    {
+        m_badge->setText( QStringLiteral( "\\u2713" ) );
+    }
+    else
+    {
+        m_badge->setPixmap( badgePx );
+    }
+    ui->verticalLayout->insertWidget( 2, m_badge, 0, Qt::AlignHCenter );
+
+    ui->restartCheckBox->hide();
+    m_restartButton = new QPushButton( this );
+    m_restartButton->setObjectName( QStringLiteral( "finishedRestart" ) );
+    m_restartButton->setCursor( Qt::PointingHandCursor );
+    ui->horizontalLayout->insertWidget( 1, m_restartButton );
+    connect( m_restartButton,
+             &QPushButton::clicked,
+             [ config ]()
+             {
+                 config->setRestartNowWanted( true );
+                 QCoreApplication::quit();
+             } );
+
+    connect( config,
+             &Config::restartModeChanged,
+             [ this ]( Config::RestartMode mode )
+             {
+                 using Mode = Config::RestartMode;
+
+                 ui->restartCheckBox->setVisible( false );
+                 m_restartButton->setVisible( mode != Mode::Never );
+             } );"""
+
+FINISHED_RETR_OLD = """    ui->retranslateUi( this );
+    if ( !m_failure.has_value() )"""
+FINISHED_RETR_NEW = """    ui->retranslateUi( this );
+    m_restartButton->setText( ui->restartCheckBox->text().remove( QLatin1Char( '&' ) ) );
+    m_badge->setVisible( !m_failure.has_value() );
+    if ( !m_failure.has_value() )"""
+
+# A failed install quits from the error dialog and never reaches this page,
+# so hiding the footer here cannot strand the user without a way out.
+FOOTER_OLD = """        UPDATE_BUTTON_PROPERTY( quitLabel, tr( "&Done", "@button" ) );
+        UPDATE_BUTTON_PROPERTY( quitTooltip, quitOnCompleteTooltip );
+        UPDATE_BUTTON_PROPERTY( quitVisible, true );
+        UPDATE_BUTTON_PROPERTY( quitIcon, "dialog-ok-apply" );
+        updateCancelEnabled( true );"""
+FOOTER_NEW = """        UPDATE_BUTTON_PROPERTY( quitLabel, tr( "&Done", "@button" ) );
+        UPDATE_BUTTON_PROPERTY( quitTooltip, quitOnCompleteTooltip );
+        UPDATE_BUTTON_PROPERTY( quitVisible, false );
+        UPDATE_BUTTON_PROPERTY( quitIcon, "dialog-ok-apply" );
+        updateBackAndNextVisibility( false );
+        updateCancelEnabled( true );"""
+
 SUMMARY_TITLE_OLD = "    QString title() const { return m_title; }"
 SUMMARY_TITLE_NEW = (
     '    QString title() const { return tr( "Summary", "@label" ); }'
@@ -487,6 +590,8 @@ def main() -> int:
     summary_cfg = src / "modules" / "summary" / "Config.h"
     partition = src / "modules" / "partition" / "PartitionViewStep.cpp"
     labels = src / "modules" / "partition" / "gui" / "PartitionLabelsView.cpp"
+    finished = src / "modules" / "finished" / "FinishedPage.cpp"
+    finished_h = src / "modules" / "finished" / "FinishedPage.h"
     users = src / "modules" / "users" / "UsersViewStep.cpp"
     users_cfg = src / "modules" / "users" / "Config.cpp"
     users_ts = (src.parent if src.name == "src" else src) / "lang" / "calamares_de.ts"
@@ -502,6 +607,12 @@ def main() -> int:
     patch(viewman, CANCEL_OLD, CANCEL_NEW, "hide Cancel during exec")
     patch(viewman, VIEW_INC_OLD, VIEW_INC_NEW, "ViewManager QTimer include")
     patch(viewman, VIEW_CTOR_OLD, VIEW_CTOR_NEW, "unattended auto-next")
+    patch(viewman, FOOTER_OLD, FOOTER_NEW, "hide footer buttons on the finished page")
+    patch(finished_h, FINISHED_H_FWD_OLD, FINISHED_H_FWD_NEW, "FinishedPage forward decls")
+    patch(finished_h, FINISHED_H_OLD, FINISHED_H_NEW, "FinishedPage badge and restart members")
+    patch(finished, FINISHED_INC_OLD, FINISHED_INC_NEW, "FinishedPage includes")
+    patch(finished, FINISHED_CTOR_OLD, FINISHED_CTOR_NEW, "finished badge and restart button")
+    patch(finished, FINISHED_RETR_OLD, FINISHED_RETR_NEW, "finished restart button text")
     patch(execstep, TOGGLE_OLD, TOGGLE_NEW, "Toggle log tr()")
     patch(keyboard, KB_OLD, KB_NEW, "hide Keyboard model row")
     patch(summary, SUMMARY_CONTENT_OLD, SUMMARY_CONTENT_NEW, "summary content object name")

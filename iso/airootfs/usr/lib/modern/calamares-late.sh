@@ -26,8 +26,8 @@ log() { _emit "calamares-late: $*"; }
 
 phase="${1:-}"
 case "$phase" in
-    clone|desktop|provision) ;;
-    *) die "usage: calamares-late.sh clone|desktop|provision" ;;
+    strip|clone|desktop|provision) ;;
+    *) die "usage: calamares-late.sh strip|clone|desktop|provision" ;;
 esac
 
 if [ -n "${MODERN_PROTECT_HOME:-}" ] && [ -d "${MODERN_PROTECT_HOME%/}" ]; then
@@ -411,6 +411,76 @@ as_user() {
         "$@"
 }
 
+# unpackfs lays the live airootfs down as the installed root, so every
+# live-only file arrives with it. This runs before bootloader, because that
+# step's kernel-install builds the initramfs, and mkinitcpio reads
+# /etc/mkinitcpio.conf.d after /etc/mkinitcpio.conf — archiso.conf's
+# HOOKS win over anything initcpiocfg writes. The archiso hook swaps the
+# root mount handler for one that mounts $archisodevice, and a disk boot
+# passes no archisolabel, so the initramfs drops to a rescue shell with
+# "'' device did not show up after 30 seconds".
+#
+# The rest are not cosmetic either. etc-pacman.d-gnupg.mount tmpfs-mounts
+# over the keyring and pacman-init.service re-creates it on every boot.
+# getty@tty1 is masked to /dev/null for the kiosk, which would leave no
+# console when greetd fails. greetd.service.wants starts
+# modern-live-setup.service, which creates the passwordless liveuser that
+# 99-liveuser and the polkit rule hand root to. iwd.service enabled on its
+# own fights NetworkManager, which starts iwd as its own wifi backend.
+LIVE_ONLY_PATHS=(
+    etc/mkinitcpio.conf.d/archiso.conf
+    etc/mkinitcpio.d/linux.preset
+    etc/systemd/system/getty@tty1.service
+    etc/systemd/system/getty@tty1.service.d/autologin.conf
+    etc/systemd/system/choose-mirror.service
+    etc/systemd/system/livecd-alsa-unmuter.service
+    etc/systemd/system/livecd-talk.service
+    etc/systemd/system/pacman-init.service
+    etc/systemd/system/etc-pacman.d-gnupg.mount
+    etc/systemd/system/multi-user.target.wants/choose-mirror.service
+    etc/systemd/system/multi-user.target.wants/livecd-talk.service
+    etc/systemd/system/multi-user.target.wants/pacman-init.service
+    etc/systemd/system/multi-user.target.wants/iwd.service
+    etc/systemd/system/multi-user.target.wants/sshd.service
+    etc/systemd/system/greetd.service.wants/modern-live-i18n.service
+    etc/systemd/system/greetd.service.wants/modern-live-setup.service
+    usr/lib/systemd/system/modern-live-i18n.service
+    usr/lib/systemd/system/modern-live-setup.service
+    usr/lib/modern/live-calamares.sh
+    usr/lib/modern/live-i18n.sh
+    usr/lib/modern/live-session.sh
+    usr/lib/modern/live-setup.sh
+    usr/lib/modern/live-xdg-open.sh
+    usr/lib/modern/live-xkb-filter.py
+    usr/local/bin/xdg-open
+    etc/modern/live-hyprland.lua
+    etc/modern/openbox-rc.xml
+    etc/sudoers.d/99-liveuser
+    etc/polkit-1/rules.d/49-modern-liveuser.rules
+    root/.automated_script.sh
+    root/.zlogin
+)
+
+strip_live() {
+    local root="${MODERN_LATE_STRIP_ROOT:-}"
+    local p
+    for p in "${LIVE_ONLY_PATHS[@]}"; do
+        rm -f "$root/$p"
+    done
+    rm -rf "$root/etc/calamares"
+    if [ -z "${MODERN_LATE_TEST:-}" ] && id liveuser >/dev/null 2>&1; then
+        userdel -r liveuser >/dev/null 2>&1 || true
+    fi
+}
+
+phase_strip() {
+    log "removing the live-only files unpackfs copied into the target"
+    strip_live
+    local drop="${MODERN_LATE_STRIP_ROOT:-}/etc/mkinitcpio.conf.d/archiso.conf"
+    [ ! -e "$drop" ] || die "$drop survived; the target would boot to a rescue shell"
+    log "live-only files removed"
+}
+
 phase_clone() {
     ensure_dns
     ensure_nss
@@ -513,6 +583,7 @@ phase_provision() {
 }
 
 case "$phase" in
+    strip) phase_strip ;;
     clone) phase_clone ;;
     desktop) phase_desktop ;;
     provision) phase_provision ;;

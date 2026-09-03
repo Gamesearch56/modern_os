@@ -31,6 +31,26 @@ Hyprland ≥ 0.53’s wrapper sets up crash recovery and the user session;
 without it, systemd units (the bar) start with no `WAYLAND_DISPLAY`.
 Optional: `uwsm start hyprland-uwsm.desktop`.
 
+**Anything meant for Hyprland goes after `--`.** `start-hyprland` is a
+watchdog binary that understands only `--path`, `--no-nixgl` and
+`--force-nixgl`; everything else reaches Hyprland only past the separator.
+`start-hyprland --config X` silently drops the flag, so Hyprland falls back
+to `$HOME/.config/hypr/hyprland.lua`, finds nothing, and autogenerates a
+stock session — which is what a broken `greetd` `default_session` looks
+like from the outside: plain Hyprland, no greeter, no shell, and a
+`config file: //.config/hypr/hyprland.lua` warning. The double slash is the
+tell that `$HOME` was `/`. The greetd command is therefore
+`start-hyprland -- --config /etc/greetd/hyprland.lua`
+(`scripts/test-calamares-late.sh` asserts the separator).
+
+The `greeter` account is not ours to create. `greetd`'s own `sysusers.d`
+entry leaves the home field unset, so the user already exists with `/` as
+its home before `provision-iso.sh` runs and its `useradd` is skipped.
+Provisioning relocates it to `/var/lib/greeter` — never with
+`usermod --move-home`, which would move the whole root filesystem — and
+fails loudly if the home is still `/`, because `qs -c greeter` cannot
+create `/.cache` there.
+
 The shell unit is `stow/systemd/.config/systemd/user/modern-shell.service`:
 `Restart=always` / `RestartSec=1`, `After=graphical-session.target`,
 `ConditionEnvironment=WAYLAND_DISPLAY`. It is **not** `PartOf=` that

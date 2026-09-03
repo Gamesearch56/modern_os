@@ -4,5 +4,10 @@
 vt = 1
 
 [default_session]
-command = "start-hyprland --config /etc/greetd/hyprland.lua"
+# The `--` is load-bearing. start-hyprland is a watchdog wrapper that only
+# understands --path/--no-nixgl/--force-nixgl itself and forwards nothing
+# else unless it comes after --. Without it Hyprland starts with no config,
+# falls back to $HOME/.config/hypr/hyprland.lua, finds nothing, and
+# autogenerates a stock session — no greeter, no way to reach an account.
+command = "start-hyprland -- --config /etc/greetd/hyprland.lua"
 user = "greeter"

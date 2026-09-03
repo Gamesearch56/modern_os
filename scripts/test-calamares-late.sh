@@ -56,6 +56,90 @@ else
     err "provision-iso.sh must mark each enabled unit required or optional"
 fi
 
+if python3 - "$ROOT/install/system/greetd/config.toml" <<'PY'; then
+import re, shlex, sys
+text = open(sys.argv[1], encoding="utf-8").read()
+m = re.search(r'^command\s*=\s*"([^"]*)"', text, re.M)
+assert m, "no default_session command"
+argv = shlex.split(m.group(1))
+assert argv and argv[0].endswith("start-hyprland"), f"unexpected session command {argv}"
+# start-hyprland is a watchdog wrapper. It understands only these three
+# options itself and forwards an argument to Hyprland only after --, so a
+# Hyprland flag on the left is dropped: Hyprland then starts unconfigured,
+# autogenerates a stock session, and the greeter never runs.
+own = {"--path", "--no-nixgl", "--force-nixgl"}
+rest = argv[1:]
+sep = rest.index("--") if "--" in rest else len(rest)
+stray = [a for a in rest[:sep] if a.startswith("-") and a not in own]
+assert not stray, f"{stray} sit before -- and never reach Hyprland"
+assert "--config" in rest[sep:], "the kiosk config must be passed after --"
+PY
+    ok "greetd hands the kiosk config to Hyprland past start-hyprland's --"
+else
+    err "greetd command must put Hyprland flags after -- (start-hyprland drops them otherwise)"
+fi
+
+# greetd's sysusers.d leaves the home field unset, so greeter already exists
+# with / and the useradd in provision-iso.sh is skipped.
+if grep -E 'usermod.*(--move-home|[[:space:]]-m[[:space:]])' "$PROVISION" >/dev/null; then
+    err "provision-iso.sh must never move the greeter home — the old one is /"
+elif grep -E 'usermod --home .+ greeter' "$PROVISION" >/dev/null \
+    && grep -F 'cannot start' "$PROVISION" >/dev/null; then
+    ok "provision-iso.sh relocates a greeter that greetd's sysusers left at /"
+else
+    err "provision-iso.sh must move the greeter off / and fail loudly if it cannot"
+fi
+
+# The Keyboard step must reach Hyprland (config.json) and greetd's own
+# Hyprland, not just /etc/vconsole.conf and the X11 snippet.
+kbdir="$(mktemp -d)"
+kbcfg="$kbdir/.config/modern"
+mkdir -p "$kbcfg"
+cat >"$kbdir/00-keyboard.conf" <<'EOF'
+# Read and parsed by systemd-localed.
+Section "InputClass"
+        Identifier "system-keyboard"
+        MatchIsKeyboard "on"
+        Option "XkbLayout" "de"
+        Option "XkbVariant" "nodeadkeys"
+EndSection
+EOF
+printf '{"input":{"kbLayout":"us","kbVariant":"","repeatRate":25}}\n' \
+    >"$kbcfg/config.json"
+printf 'hl.monitor({ output = "" })\n' >"$kbdir/hyprland.lua"
+{
+    printf 'set -euo pipefail\n'
+    printf 'log() { printf "provision-iso: %%s\\n" "$*"; }\n'
+    # shellcheck disable=SC2016  # written literally into the generated script
+    printf 'USERNAME="$(id -un)"\n'
+    printf 'USER_HOME=%s\n' "$kbdir"
+    printf 'MODERN_XORG_KB=%s/00-keyboard.conf\n' "$kbdir"
+    printf 'MODERN_GREETD_LUA=%s/hyprland.lua\n' "$kbdir"
+    sed -n '/^XORG_KB=/,/^apply_keyboard_layout$/p' "$PROVISION"
+} >"$kbdir/run.sh"
+if bash "$kbdir/run.sh" >"$kbdir/out" 2>&1; then
+    got_layout="$(jq -r '.input.kbLayout' "$kbcfg/config.json")"
+    got_variant="$(jq -r '.input.kbVariant' "$kbcfg/config.json")"
+    got_rate="$(jq -r '.input.repeatRate' "$kbcfg/config.json")"
+    if [ "$got_layout" = de ] && [ "$got_variant" = nodeadkeys ] && [ "$got_rate" = 25 ] \
+        && grep -F 'kb_layout = "de"' "$kbdir/hyprland.lua" >/dev/null; then
+        ok "Keyboard step layout reaches config.json and greetd"
+    else
+        err "layout not propagated: config=$got_layout/$got_variant rate=$got_rate $(cat "$kbdir/out")"
+    fi
+else
+    err "apply_keyboard_layout failed: $(cat "$kbdir/out")"
+fi
+
+rm -f "$kbdir/00-keyboard.conf"
+if bash "$kbdir/run.sh" >"$kbdir/out2" 2>&1 \
+    && grep -F 'keeping the config.json default layout' "$kbdir/out2" >/dev/null; then
+    ok "missing X11 keyboard snippet leaves config.json alone"
+else
+    err "a missing X11 snippet must not abort provision: $(cat "$kbdir/out2")"
+fi
+rm -rf "$kbdir"
+
 # bluez-utils is bluetoothctl only; bluetooth.service and org.bluez are bluez.
 if grep -E '^[[:space:]]*bluez([[:space:]]|#|$)' "$ROOT/install/manifests/10-desktop.txt" >/dev/null \
     && grep -F 'ensure_provision_units' "$LATE" >/dev/null \
@@ -99,6 +183,9 @@ run_late() {
     fi
     if [ -n "${MODERN_LATE_NSSWITCH:-}" ]; then
         extra+=(MODERN_LATE_NSSWITCH="$MODERN_LATE_NSSWITCH")
+    fi
+    if [ -n "${MODERN_LATE_STRIP_ROOT:-}" ]; then
+        extra+=(MODERN_LATE_STRIP_ROOT="$MODERN_LATE_STRIP_ROOT")
     fi
     env -u MODERN_PROTECT_HOME \
         MODERN_LATE_TEST=1 \
@@ -272,6 +359,82 @@ if grep -qx 'matugen-bin' "$aur" \
     ok "pin AUR rewrite maps commented bibata-cursor-theme to -bin"
 else
     err "pin AUR rewrite missed comment-bearing bibata line: $(cat "$aur")"
+fi
+
+# The archiso hook in the target's initramfs mounts $archisodevice, which a
+# disk boot never sets, so the drop-in surviving means a rescue shell.
+if grep -F 'the target would boot to a rescue shell' "$LATE" >/dev/null; then
+    ok "strip phase hard-fails if the archiso mkinitcpio drop-in survives"
+else
+    err "strip phase must die when etc/mkinitcpio.conf.d/archiso.conf is still there"
+fi
+
+# unpackfs copies the whole live overlay, so a new live-only file is a new
+# live-only file on every installed disk until it is listed for removal.
+uncovered=()
+# etc/calamares goes wholesale, so its module configs need no entry of
+# their own — but only if the script really does remove the directory.
+grep -E 'rm -rf .+/etc/calamares' "$LATE" >/dev/null \
+    || err "strip phase must remove etc/calamares"
+while IFS= read -r tracked; do
+    rel="${tracked#iso/airootfs/}"
+    case "$rel" in etc/calamares/*) continue ;; esac
+    grep -qF "    $rel" "$LATE" || uncovered+=("$rel")
+done < <(git -C "$ROOT" ls-files iso/airootfs | grep -i 'live')
+if [ ${#uncovered[@]} -eq 0 ]; then
+    ok "every live-only file in the overlay is on the strip list"
+else
+    err "strip list misses live overlay files: ${uncovered[*]}"
+fi
+
+STRIPROOT="$WORKDIR/target"
+strip_gone=(
+    etc/mkinitcpio.conf.d/archiso.conf
+    etc/mkinitcpio.d/linux.preset
+    etc/systemd/system/getty@tty1.service
+    etc/systemd/system/getty@tty1.service.d/autologin.conf
+    etc/systemd/system/etc-pacman.d-gnupg.mount
+    etc/systemd/system/pacman-init.service
+    etc/systemd/system/multi-user.target.wants/pacman-init.service
+    etc/systemd/system/multi-user.target.wants/iwd.service
+    etc/systemd/system/greetd.service.wants/modern-live-setup.service
+    usr/lib/systemd/system/modern-live-setup.service
+    usr/lib/modern/live-setup.sh
+    usr/local/bin/xdg-open
+    etc/sudoers.d/99-liveuser
+    etc/polkit-1/rules.d/49-modern-liveuser.rules
+    etc/calamares/settings.conf
+    root/.zlogin
+)
+strip_kept=(
+    etc/mkinitcpio.conf
+    etc/systemd/system/default.target
+    etc/systemd/system/display-manager.service
+    etc/systemd/system/graphical.target.wants/greetd.service
+    etc/systemd/system/multi-user.target.wants/NetworkManager.service
+    usr/lib/modern/calamares-late.sh
+    usr/lib/modern/iso-pin
+)
+for p in "${strip_gone[@]}" "${strip_kept[@]}"; do
+    mkdir -p "$STRIPROOT/$(dirname "$p")"
+    : >"$STRIPROOT/$p"
+done
+if out="$(MODERN_LATE_STRIP_ROOT="$STRIPROOT" run_late strip 2>&1)"; then
+    left=()
+    gone=()
+    for p in "${strip_gone[@]}"; do
+        if [ -e "$STRIPROOT/$p" ]; then left+=("$p"); fi
+    done
+    for p in "${strip_kept[@]}"; do
+        if [ ! -e "$STRIPROOT/$p" ]; then gone+=("$p"); fi
+    done
+    if [ ${#left[@]} -eq 0 ] && [ ${#gone[@]} -eq 0 ]; then
+        ok "strip phase clears live-only files and keeps the installed ones"
+    else
+        err "strip left ${left[*]:-nothing} and wrongly removed ${gone[*]:-nothing}"
+    fi
+else
+    err "strip phase failed: $out"
 fi
 
 [ "$FAIL" -eq 0 ]

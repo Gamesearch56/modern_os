@@ -25,6 +25,7 @@ mkdir -p \
     "$src/modules/partition" \
     "$src/modules/partition/gui" \
     "$src/modules/users" \
+    "$src/modules/finished" \
     "$WORKDIR/lang"
 
 python3 - "$HOOK" "$src" <<'PY'
@@ -57,7 +58,15 @@ def wrap(old: str) -> str:
     wrap(mod.VIEW_INC_OLD)
     + wrap(mod.VIEW_OLD)
     + wrap(mod.CANCEL_OLD)
-    + wrap(mod.VIEW_CTOR_OLD),
+    + wrap(mod.VIEW_CTOR_OLD)
+    + wrap(mod.FOOTER_OLD),
+    encoding="utf-8",
+)
+(src / "modules/finished/FinishedPage.h").write_text(
+    wrap(mod.FINISHED_H_FWD_OLD) + wrap(mod.FINISHED_H_OLD), encoding="utf-8"
+)
+(src / "modules/finished/FinishedPage.cpp").write_text(
+    wrap(mod.FINISHED_INC_OLD) + wrap(mod.FINISHED_CTOR_OLD) + wrap(mod.FINISHED_RETR_OLD),
     encoding="utf-8",
 )
 (src / "libcalamaresui/viewpages/ExecutionViewStep.cpp").write_text(
@@ -125,5 +134,17 @@ check "$src/modules/summary/Config.h" 'tr( "Summary", "@label" )' "Summary title
 check "$src/modules/modernnet/CMakeLists.txt" "calamares_add_plugin(modernnet" "modernnet plugin cmake"
 check "$src/modules/modernnet/ModernNetViewStep.cpp" 'tr( "Network", "@title" )' "Network step prettyName"
 check "$WORKDIR/lang/calamares_de.ts" "<translation>Netzwerk</translation>" "Network step German title"
+check "$src/modules/finished/FinishedPage.cpp" "finishedBadge" "finished badge object name"
+check "$src/modules/finished/FinishedPage.cpp" "finishedMainText" "finished main text object name"
+check "$src/modules/finished/FinishedPage.cpp" "finishedRestart" "finished restart button object name"
+check "$src/modules/finished/FinishedPage.cpp" "QCoreApplication::quit()" "restart button quits to trigger doRestart"
+check "$src/modules/finished/FinishedPage.h" "m_restartButton" "FinishedPage restart member"
+check "$src/libcalamaresui/ViewManager.cpp" "updateBackAndNextVisibility( false )" "footer hidden on the finished page"
+
+if grep -F 'UPDATE_BUTTON_PROPERTY( quitVisible, true );' "$src/libcalamaresui/ViewManager.cpp" >/dev/null; then
+    err "Done button still shown at the very end"
+else
+    ok "Done button hidden at the very end"
+fi
 
 [ "$FAIL" -eq 0 ]

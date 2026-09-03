@@ -132,6 +132,20 @@ empty live TTY. Each `iso-qemu.sh` resets firmware NVRAM and gives the
 CD `bootindex=1`. Use `--reset-disk` to recreate the qcow2. Use
 `--keep-nvram` only when you want to reboot into a finished install.
 
+That `bootindex=1` is also why **Restart now** on the Finish page lands
+you back in Calamares: rebooting the guest re-runs the firmware, which
+still finds the CD first. `--keep-nvram` does not help, because the boot
+order comes from the CD's bootindex and not from NVRAM. To boot what you
+just installed, quit QEMU and start it again with no CD at all:
+
+```bash
+./scripts/iso-qemu.sh --no-iso
+```
+
+`--no-iso` implies `--keep-nvram` so the `Linux Boot Manager` entry that
+the bootloader job wrote survives, and it does not need an ISO in
+`iso/out/` at all.
+
 Installer checks are two gates. Every PR runs `scripts/ci-check.sh`
 (QSS/config/schema, AUR patch fixtures, `calamares-late.sh` clone against
 a local git tag). The ISO Action (release only) boots the built image
@@ -162,11 +176,44 @@ clone copies that tree (the GitHub remote is private, so a network
 clone would fail). The ISO pin must be a real `vX.Y.Z` tag (`--tag` or
 the latest tag in the clone).
 
+**Only `iso/` is built from your working tree.** The bundle is
+`git clone --branch <pin>`, so `install/`, `stow/` and `scripts/` reach
+the installed system as the *tag's* copy. Editing `provision-iso.sh` or a
+`stow/` dotfile and rebuilding puts the change on the live ISO and leaves
+it out of the machine you then boot, which reads as the fix silently not
+working. `iso-build.sh` now refuses to build when those three directories
+differ from the pin, listing the files; commit and tag, or pass
+`--stale-bundle` to deliberately ship the pin's copy.
+
 Location Region/Zone combos stay on the page; the **Change…** locale
 dialogs are hidden. They open a modal X11 window that cage maps as an
 unclosable grey stripe. Keyboard layout changes call `setxkbmap` on
 Xwayland (`xorg-setxkbmap`; `useLocale1: false` so systemd-localed is
 not used instead).
+
+The Keyboard step always opens on English. `guessLayout: false` turns off
+Calamares' locale→layout guess, which otherwise flipped the page to German
+the moment German was picked on Welcome or Location. The initial selection
+then comes from `setxkbmap -print` (a fresh Xwayland reports `pc+us`), and
+if that ever returned nothing Calamares falls back to the first row of the
+model — sorted by description, so "English (US)" before "German". Both
+paths land on `us`; picking German by hand still works and still reaches
+the installed system.
+
+The Keyboard step's own job only writes `/etc/vconsole.conf` (the TTY) and
+`/etc/X11/xorg.conf.d/00-keyboard.conf` (Xwayland clients). Hyprland reads
+`kb_layout` from `config.json` (`modules/input.lua`) and greetd runs a
+*second* Hyprland that reads neither, so picking German used to leave both
+the login prompt and the desktop on `us`. `provision-iso.sh` closes that:
+it parses `XkbLayout` / `XkbVariant` out of the X11 snippet Calamares just
+wrote, sets `input.kbLayout` / `input.kbVariant` in the user's
+`config.json` with `jq` (leaving the rest of the file untouched), and
+appends a matching `hl.config({ input = ... })` to
+`/etc/greetd/hyprland.lua`. The value is passed through verbatim, so a
+comma-joined non-ASCII pair like `us,ru` still works — Hyprland accepts
+that form too. A missing snippet is a warning, not a failure. Changing the
+layout later in Settings → Keyboard updates the desktop but not the TTY,
+X11 snippet, or greetd.
 
 The **Network** / **Netzwerk** page sits after Keyboard. Next stays off
 until a default IPv4 or IPv6 route exists — Ethernet is enough;
@@ -201,8 +248,37 @@ lands entirely 0644 — `profiledef.sh`'s `file_permissions` only covers
 `mime-defaults.sh` and `nautilus-prefs.sh` die on Permission denied
 behind a `log_warn`, so the install "succeeds" with no `tokens.json`.
 
-After **Install**, the exec page copies the squashfs (`unpackfs`). The
-Calamares packages job does not `pacman -S` anything (no sync db on the
+After **Install**, the exec page copies the squashfs (`unpackfs`). That
+lays the *live* root down as the installed root, so `calamares-late.sh
+strip` (`shellprocess@striplive`) runs next and deletes the live-only
+files it carried over. This is not tidying — the target does not boot
+without it. archiso ships `/etc/mkinitcpio.conf.d/archiso.conf`, and
+mkinitcpio reads `conf.d` *after* `mkinitcpio.conf`, so its
+`HOOKS=(… archiso …)` beats anything `initcpiocfg` writes. The `archiso`
+hook replaces the root mount handler with one that mounts
+`$archisodevice`, which only a `archisolabel=` cmdline sets, so a disk
+boot lands in the initramfs rescue shell with `ERROR: '' device did not
+show up after 30 seconds`. Same file list also drops
+`etc-pacman.d-gnupg.mount` (a tmpfs over the keyring) and
+`pacman-init.service` (re-creates it every boot), the `/dev/null` mask on
+`getty@tty1` (no console left when greetd fails), the
+`greetd.service.wants` links to `modern-live-setup.service` (which
+creates the passwordless `liveuser` that `99-liveuser` and the polkit
+rule hand root to), the live `xdg-open` shim, and the `iwd` / `sshd`
+enablement archiso wants but an installed desktop did not ask for.
+
+Order matters in both directions: `striplive` reads the account the
+`users` job creates, and both it and `initcpiocfg` must precede
+`bootloader`, because that job calls `kernel-install` — with
+`etc/kernel/install.conf` pinning `layout=bls` and
+`initrd_generator=mkinitcpio` — and that is what actually builds the
+initramfs. There is no `initcpio` job after `initcpiocfg` for the same
+reason: a preset-driven `mkinitcpio -P` would only add an unused second
+image to the ESP. `scripts/test-iso-live-kiosk.sh` asserts the ordering
+and `scripts/test-calamares-late.sh` asserts that every live-only file
+tracked under `iso/airootfs` is on the strip list.
+
+The Calamares packages job does not `pacman -S` anything (no sync db on the
 squashfs; a `-Sy` plus kernel download froze the bar in QEMU). Late
 desktop inits a target keyring (`pacman-key --init` / `--populate`,
 same as `pacstrap -K` — unpackfs does not copy the live overlay's
@@ -230,6 +306,20 @@ package does not.
 The bar only moves when a job reports; unpack in QEMU can sit still for
 many minutes. If the bundle is missing, late git has a 180s timeout
 instead of hanging for two hours.
+
+The **Finish** page is a congratulation, not a form: a 112px check badge
+above `#finishedMainText` (20px, so the `<h1>All done.</h1>` scales with
+it) and one filled **Restart now** pill. Calamares' own control there is a
+`QCheckBox` that only records intent for the footer **Done**, and this page
+has no footer — `calamares-limit-languages.py` hides Back, Next and Done
+once `isAtVeryEnd`. The checkbox stays hidden and the pill sets
+`restartNowWanted` then quits, which is what fires `restartNowCommand` from
+`aboutToQuit`. That needs `finished.conf`: with no config the mode is
+`never`, and `Config` then forces `restartNowWanted` false, so the control
+renders and does nothing. The button reuses the checkbox's own translated
+label, so German needs no new string. Hiding the footer cannot strand
+anyone — a failed install quits from the error dialog and never reaches
+this page.
 If you land on a TTY, this image never started greetd:
 
 ```bash

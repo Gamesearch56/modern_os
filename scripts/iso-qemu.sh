@@ -9,12 +9,14 @@ HEADLESS=0
 KEEP_NVRAM=0
 RESET_DISK=0
 UNATTENDED=0
+NO_ISO=0
 
 die() { printf 'iso-qemu: ERROR: %s\n' "$*" >&2; exit 1; }
 
 usage() {
     cat <<'EOF'
-Usage: iso-qemu.sh [--disk] [--headless] [--keep-nvram] [--reset-disk] [--unattended]
+Usage: iso-qemu.sh [--disk] [--headless] [--keep-nvram] [--reset-disk]
+                   [--unattended] [--no-iso]
 
 Boots the newest *.iso in iso/out/ (or $MODERN_ISO_OUT).
 Always attaches iso/out/vm-disk.qcow2 (created at 64G if missing)
@@ -28,6 +30,10 @@ UEFI ignores -boot order=d. The CD gets bootindex 1 so a leftover
 install on vm-disk.qcow2 cannot steal boot (empty root= initramfs).
 Firmware NVRAM is reset each run unless --keep-nvram (needed to
 reboot into a finished install). --reset-disk recreates the qcow2.
+--no-iso attaches no CD at all and keeps NVRAM, so the VM boots the
+installed system on vm-disk.qcow2 instead of the installer. Use it
+after a successful install; a guest reboot otherwise re-runs the
+firmware and the CD's bootindex sends you back into Calamares.
 --unattended sets QEMU fw_cfg; the live session creates
 /etc/calamares/unattended (auto-next, user modern / password modern).
 EOF
@@ -40,6 +46,7 @@ while [ $# -gt 0 ]; do
         --keep-nvram) KEEP_NVRAM=1 ;;
         --reset-disk) RESET_DISK=1 ;;
         --unattended) UNATTENDED=1 ;;
+        --no-iso) NO_ISO=1; KEEP_NVRAM=1 ;;
         -h|--help)
             usage
             exit 0
@@ -68,15 +75,18 @@ done
 [ -n "$ovmf_code" ] && [ -f "$ovmf_vars_src" ] \
     || die "install edk2-ovmf (systemd-boot needs UEFI firmware in QEMU)"
 
-shopt -s nullglob
-isos=("$OUT"/*.iso)
-shopt -u nullglob
-[ ${#isos[@]} -gt 0 ] || die "no ISO in $OUT — sudo ./scripts/iso-build.sh --mkarchiso"
+newest=""
+if [ "$NO_ISO" -eq 0 ]; then
+    shopt -s nullglob
+    isos=("$OUT"/*.iso)
+    shopt -u nullglob
+    [ ${#isos[@]} -gt 0 ] || die "no ISO in $OUT — sudo ./scripts/iso-build.sh --mkarchiso"
 
-newest="${isos[0]}"
-for f in "${isos[@]}"; do
-    [[ "$f" -nt "$newest" ]] && newest="$f"
-done
+    newest="${isos[0]}"
+    for f in "${isos[@]}"; do
+        [[ "$f" -nt "$newest" ]] && newest="$f"
+    done
+fi
 
 serial="$OUT/vm-serial.log"
 : >"$serial"
@@ -99,9 +109,15 @@ args=(
     -serial "file:${serial}"
     -netdev "user,id=net0"
     -device "virtio-net,netdev=net0"
-    -drive "if=none,id=cd0,media=cdrom,readonly=on,file=${newest}"
-    -device "virtio-scsi-pci,id=scsi0"
-    -device "scsi-cd,drive=cd0,bootindex=1"
+)
+if [ "$NO_ISO" -eq 0 ]; then
+    args+=(
+        -drive "if=none,id=cd0,media=cdrom,readonly=on,file=${newest}"
+        -device "virtio-scsi-pci,id=scsi0"
+        -device "scsi-cd,drive=cd0,bootindex=1"
+    )
+fi
+args+=(
     -drive "if=none,id=hd0,file=${disk}"
     -device "virtio-blk-pci,drive=hd0,bootindex=2"
 )
@@ -121,6 +137,10 @@ args+=(
     -drive "if=pflash,format=raw,unit=1,file=${ovmf_vars}"
 )
 
-printf 'iso-qemu: %s\n' "$newest"
+if [ "$NO_ISO" -eq 1 ]; then
+    printf 'iso-qemu: no CD attached — booting %s\n' "$disk"
+else
+    printf 'iso-qemu: %s\n' "$newest"
+fi
 printf 'iso-qemu: guest serial -> %s\n' "$serial"
 exec qemu-system-x86_64 "${args[@]}"

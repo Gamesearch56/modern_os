@@ -7,6 +7,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${MODERN_ISO_OUT:-$ROOT/iso/out}"
 DO_MKARCHISO=0
+ALLOW_STALE_BUNDLE="${MODERN_ISO_STALE_BUNDLE:-}"
 WALLPAPER="$ROOT/stow/modern/.config/modern/wallpapers/default.jpg"
 LOGO="$ROOT/iso/airootfs/etc/calamares/branding/modern/logo.png"
 PROFILE_JSON="$ROOT/stow/modern/.config/modern/themes/tonal-spot-dark.json"
@@ -17,7 +18,7 @@ log() { printf 'iso-build: %s\n' "$*"; }
 
 usage() {
     cat <<'EOF'
-Usage: iso-build.sh [--mkarchiso] [--out DIR] [--tag vX.Y.Z]
+Usage: iso-build.sh [--mkarchiso] [--out DIR] [--tag vX.Y.Z] [--stale-bundle]
 
 Generates Calamares QSS/tokens from default.jpg under a throwaway HOME.
 Copies branding/modern/logo.png (fixed brand mark, not wallpaper-tinted).
@@ -28,6 +29,10 @@ set, refuses output under that path except a clone's iso/out.
 image is this clone; Calamares late still clones --tag (or the latest
 vX.Y.Z in the clone). There is no hardcoded fallback pin. Missing
 mkarchiso is not an error without the flag (branding still succeeds).
+
+Only iso/ comes from your working tree. install/, stow/ and scripts/ reach
+the installed system through a clone of the pin, so the build stops if
+those differ from it. --stale-bundle builds the pin's copy anyway.
 Boot the result with scripts/iso-qemu.sh (--headless for CI).
 EOF
 }
@@ -43,6 +48,7 @@ while [ $# -gt 0 ]; do
             MODERN_ISO_TAG="${2:-}"
             shift
             ;;
+        --stale-bundle) ALLOW_STALE_BUNDLE=1 ;;
         -h|--help)
             usage
             exit 0
@@ -89,6 +95,20 @@ if [ -z "$pin" ]; then
 fi
 [ -n "$pin" ] || die "no vX.Y.Z tag in this clone — pass --tag"
 [[ "$pin" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "ISO pin must be vX.Y.Z (got $pin)"
+
+# The live ISO is this working tree, but the bundle Calamares installs from
+# is a clone of $pin. Edit install/ or stow/ without tagging and the change
+# is on the ISO yet absent from the installed system, which looks like the
+# fix silently not working.
+stale="$(git -C "$ROOT" diff --name-only "$pin" -- install stow scripts 2>/dev/null || true)"
+untracked="$(git -C "$ROOT" ls-files --others --exclude-standard -- install stow scripts || true)"
+stale="$(printf '%s\n%s\n' "$stale" "$untracked" | sed '/^$/d' | sort -u)"
+if [ -n "$stale" ] && [ -z "$ALLOW_STALE_BUNDLE" ]; then
+    printf 'iso-build: ERROR: these differ from %s and would NOT reach the installed system:\n' \
+        "$pin" >&2
+    printf '%s\n' "$stale" | while IFS= read -r f; do printf '  %s\n' "$f" >&2; done
+    die "commit and tag, or pass --stale-bundle to install $pin's copy anyway"
+fi
 
 WORK="$abs_out/work"
 BRAND_HOME="$WORK/brand-home"
@@ -422,6 +442,30 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
 }}
 #wifiPassword {{
     margin: 0;
+}}
+#finishedBadge {{
+    background-color: {primary_container};
+    color: {on_primary_container};
+    border-radius: 56px;
+    font-size: 48px;
+}}
+#finishedMainText {{
+    color: {on_surface};
+    font-size: 20px;
+}}
+#finishedRestart {{
+    background-color: {primary};
+    color: {on_primary};
+    border: none;
+    border-radius: 24px;
+    padding: 14px 40px;
+    font-size: 17px;
+    font-weight: 500;
+    min-height: 24px;
+}}
+#finishedRestart:hover {{
+    background-color: {on_primary_container};
+    color: {primary_container};
 }}
 """
 open(dest, "w").write(qss)
