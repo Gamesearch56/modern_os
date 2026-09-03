@@ -217,11 +217,14 @@ hl.bind("SUPER + mouse_up", hl.dsp.exec_cmd("hyprctl dispatch workspace m+1"), {
 -- Media/backlight keys are hardware-fixed X11 keysyms, not user-remapped
 -- via the shortcut editor, so they're bound directly rather than through
 -- config.json — matching the ArchWiki's documented pattern.
+-- Hardware volume keys go through the shell so the bar/Settings master
+-- updates. wpctl alone changes what you hear but Quickshell's PwNode
+-- often never sees that node, so the 70% label would stay put.
 local locked = { repeating = true, locked = true }
 local locked_once = { locked = true }
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), locked)
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), locked)
-hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), locked_once)
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(modern .. " volume up"), locked)
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(modern .. " volume down"), locked)
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd(modern .. " volume mute"), locked_once)
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), locked_once)
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), locked_once)
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), locked_once)

@@ -195,6 +195,7 @@
   "audio": {
     "autoSwitchBluetooth": "on",
     "perAppVolume": {},
+    "masterVolume": -1,
     "masterVolumeLimit": 100
   },
   "network": {

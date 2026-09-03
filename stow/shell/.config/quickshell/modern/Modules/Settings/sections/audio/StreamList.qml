@@ -27,7 +27,7 @@ ColumnLayout {
                 return pretty.length ? pretty : Audio.streamLabel(stream);
             }
             readonly property bool muted: !!(stream && stream.audio && stream.audio.muted)
-            readonly property real vol: stream && stream.audio ? Math.round(stream.audio.volume * 100) : 0
+            readonly property real vol: Audio.streamVolume(stream)
 
             Layout.fillWidth: true
             spacing: Tokens.spacing.md
