@@ -37,9 +37,9 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     auto* badge = new QLabel;
     badge->setObjectName( QStringLiteral( "networkOkBadge" ) );
     badge->setAlignment( Qt::AlignCenter );
-    badge->setFixedSize( 56, 56 );
+    badge->setFixedSize( 112, 112 );
     const QPixmap ethPx
-        = QIcon::fromTheme( QStringLiteral( "network-wired" ) ).pixmap( 28, 28 );
+        = QIcon::fromTheme( QStringLiteral( "network-wired" ) ).pixmap( 56, 56 );
     if ( ethPx.isNull() )
     {
         badge->setText( QStringLiteral( "✓" ) );
@@ -52,18 +52,13 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     title->setObjectName( QStringLiteral( "networkOkTitle" ) );
     title->setAlignment( Qt::AlignHCenter );
     title->setWordWrap( true );
-    m_okSub = new QLabel;
-    m_okSub->setObjectName( QStringLiteral( "networkOkSub" ) );
-    m_okSub->setAlignment( Qt::AlignHCenter );
     auto* okHint = new QLabel( tr( "You can continue to the next step." ) );
     okHint->setObjectName( QStringLiteral( "networkOkHint" ) );
     okHint->setAlignment( Qt::AlignHCenter );
     okHint->setWordWrap( true );
     ok->addWidget( badge, 0, Qt::AlignHCenter );
-    ok->addSpacing( 16 );
+    ok->addSpacing( 24 );
     ok->addWidget( title );
-    ok->addSpacing( 8 );
-    ok->addWidget( m_okSub );
     ok->addSpacing( 8 );
     ok->addWidget( okHint );
     ok->addStretch( 1 );
@@ -211,8 +206,6 @@ ModernNetPage::syncUi()
     setOnline( m_nm->online() );
     if ( m_nm->ethernetUp() )
     {
-        m_okSub->setText( m_nm->ethernetAddr() );
-        m_okSub->setVisible( !m_nm->ethernetAddr().isEmpty() );
         showPassword( false );
         m_stack->setCurrentWidget( m_okPage );
         return;

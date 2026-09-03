@@ -42,7 +42,6 @@ private:
     QStackedWidget* m_stack = nullptr;
     QWidget* m_okPage = nullptr;
     QWidget* m_wifiPage = nullptr;
-    QLabel* m_okSub = nullptr;
     QLabel* m_ethStatus = nullptr;
     QLabel* m_ethAddr = nullptr;
     QProgressBar* m_scanBar = nullptr;

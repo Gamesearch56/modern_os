@@ -387,14 +387,15 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
 #networkOkBadge {{
     background-color: {primary_container};
     color: {on_primary_container};
-    border-radius: 28px;
+    border-radius: 56px;
+    font-size: 48px;
 }}
 #networkOkTitle {{
     color: {on_surface};
     font-size: 22px;
     font-weight: 500;
 }}
-#networkOkSub, #networkOkHint, #networkHint, #networkNearbyTitle {{
+#networkOkHint, #networkHint, #networkNearbyTitle {{
     color: {on_variant};
 }}
 #wifiList {{
