@@ -28,7 +28,8 @@ public:
     bool wifiUp() const { return m_wifiUp; }
     bool wifiRadio() const { return m_wifiRadio; }
     bool scanning() const { return m_scanning; }
-    bool online() const { return m_hasRoute; }
+    bool connecting() const { return m_connecting; }
+    bool online() const { return m_hasRoute || m_ethernetUp || m_wifiUp; }
     QString ethernetAddr() const { return m_ethernetAddr; }
     QString wifiSsid() const { return m_wifiSsid; }
     QVector< Wifi > networks() const { return m_networks; }
@@ -36,10 +37,11 @@ public:
     void refresh();
     void scan();
     void setWifiRadio( bool on );
-    bool connectSsid( const QString& ssid, const QString& password );
+    void connectSsid( const QString& ssid, const QString& password );
 
 signals:
     void changed();
+    void connectFinished( bool ok );
 
 private:
     static QStringList splitNmcli( const QString& line );
@@ -52,10 +54,12 @@ private:
     bool m_wifiRadio = false;
     bool m_hasRoute = false;
     bool m_scanning = false;
+    bool m_connecting = false;
     QString m_ethernetAddr;
     QString m_wifiSsid;
     QVector< Wifi > m_networks;
     QProcess* m_scan = nullptr;
+    QProcess* m_join = nullptr;
 };
 
 #endif

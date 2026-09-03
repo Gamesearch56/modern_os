@@ -474,11 +474,33 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
 #wifiList::item {{
     background-color: transparent;
     color: {on_surface};
-    min-height: 28px;
-    padding: 10px 14px;
-    border-radius: 8px;
+    min-height: 56px;
+    padding: 4px 8px;
+    border-radius: 12px;
 }}
 #wifiList::item:selected, #wifiList::item:hover {{
+    background-color: {primary_container};
+    color: {on_primary_container};
+}}
+#networkWifiSsid {{
+    color: {on_surface};
+    font-weight: 500;
+}}
+#networkWifiLocked {{
+    color: {on_variant};
+}}
+#networkRowConnect, #networkConnect {{
+    background-color: {primary};
+    color: {on_primary};
+    border: none;
+    border-radius: 20px;
+    padding: 10px 18px;
+}}
+#networkRowConnect:hover, #networkConnect:hover {{
+    background-color: {on_primary_container};
+    color: {primary_container};
+}}
+#networkRefresh {{
     background-color: {primary_container};
     color: {on_primary_container};
 }}

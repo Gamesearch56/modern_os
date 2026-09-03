@@ -248,6 +248,7 @@ if grep -F 'QLabel, QCheckBox, QRadioButton, QFrame, QGroupBox' "$BUILD" >/dev/n
     && grep -F '#networkPage' "$BUILD" >/dev/null \
     && grep -F '#networkOkPage' "$BUILD" >/dev/null \
     && grep -F '#wifiList' "$BUILD" >/dev/null \
+    && grep -F '#networkRowConnect' "$BUILD" >/dev/null \
     && grep -F '#finishedBadge' "$BUILD" >/dev/null \
     && grep -F '#finishedRestart' "$BUILD" >/dev/null \
     && grep -F '#finishedMainText' "$BUILD" >/dev/null \
@@ -388,6 +389,7 @@ if [ -f "$LANGHOOK" ] \
     && grep -F '<translation>Netzwerk</translation>' "$LANGHOOK" >/dev/null \
     && grep -F 'calamares-modernnet' "$AUR" >/dev/null \
     && [ -f "$ROOT/iso/releng/calamares-modernnet/CMakeLists.txt" ] \
+    && [ -f "$ROOT/iso/releng/calamares-modernnet/ModernNetRow.cpp" ] \
     && ! grep -F '<source>Übersicht</source>' "$LANGHOOK" >/dev/null \
     && ! grep -F 'calamares_en.ts' "$LANGHOOK" >/dev/null; then
     ok "AUR Calamares build patches languages, sidebar, combos, i18n, cancel, keyboard"

@@ -33,9 +33,9 @@
 #                       Combined with the profile contrast as matugen --contrast.
 #   --chrome-only      Patch GTK/Qt/KDE/Vivaldi radii, fonts, and motion
 #                       from config.json without re-running matugen.
-#   --no-reload        Regenerate files only, skip live-reload side
-#                       effects (used by CI/lint and the M0 verify
-#                       script, where no Hyprland session is running).
+#   --no-reload        Write files (including Vivaldi Preferences) but
+#                       skip compositor reload. Used by install.sh and
+#                       CI, where no Hyprland session is running.
 #
 # See docs/THEMING.md for the full pipeline and docs/ARCHITECTURE.md's
 # "colors" data flow for why tokens.json/config.json are two separate,
@@ -139,41 +139,14 @@ apply_color_scheme() {
     done
 }
 
-# Merge an MD3 theme object into Vivaldi's Preferences. Skipped when
-# Vivaldi is running — it rewrites that file on quit and would clobber
-# us (the CSS overlay still applies either way).
+# Native theme + CSS-mods path. Creates Preferences on a fresh home
+# (install --no-reload). Skips an existing file while Vivaldi is open.
 merge_vivaldi_theme() {
-    local prefs="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi/Default/Preferences"
-    local tokens="$MODERN_DIR/tokens.json"
-    [ -f "$prefs" ] || return 0
-    [ -f "$tokens" ] || return 0
-    if pgrep -x vivaldi >/dev/null 2>&1 || pgrep -x vivaldi-bin >/dev/null 2>&1; then
-        warn "Vivaldi is running — not touching Preferences; CSS overlay is already updated"
-        return 0
-    fi
-    local primary surface on_surface primary_container
-    primary="$(jq -r '.color.primary' "$tokens")"
-    surface="$(jq -r '.color.surface' "$tokens")"
-    on_surface="$(jq -r '.color.onSurface' "$tokens")"
-    primary_container="$(jq -r '.color.primaryContainer' "$tokens")"
-    local radius
-    radius="$(merged_config | jq -r '.design.cornerRounding // 1')"
-    jq \
-        --arg bg "$surface" \
-        --arg fg "$on_surface" \
-        --arg accent "$primary" \
-        --arg highlight "$primary_container" \
-        --argjson radius "$radius" \
-        '.vivaldi.themes.current = "modern"
-         | .vivaldi.themes.user = ((.vivaldi.themes.user // []) | map(select(.id != "modern")))
-           + [{id:"modern", name:"modern",
-               colorBg:$bg, colorFg:$fg, colorAccentBg:$accent,
-               colorHighlightBg:$highlight,
-               accentOnWindow:false, accentFromPage:false,
-               windowBg:$bg}]
-         | .vivaldi.customUiMods = true' \
-        "$prefs" > "$prefs.tmp" && mv "$prefs.tmp" "$prefs"
-    log "merged Vivaldi native theme (id=modern)"
+    # shellcheck source=lib/vivaldi-prefs.sh
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/vivaldi-prefs.sh"
+    merge_vivaldi_prefs "$MODERN_DIR/tokens.json" \
+        && log "merged Vivaldi native theme (id=modern)"
+    return 0
 }
 
 # Apple-tab folders from matugen tokens. Own theme name so we Inherits=
@@ -528,6 +501,7 @@ merged_config() {
 
 if [ "$CHROME_ONLY" -eq 1 ]; then
     patch_toolkit_chrome || warn "toolkit chrome patch skipped"
+    merge_vivaldi_theme || true
     log "done (--chrome-only)"
     exit 0
 fi
@@ -703,7 +677,8 @@ finish_live() {
 
 if [ "$RELOAD" -eq 0 ]; then
     patch_toolkit_chrome || warn "toolkit chrome patch skipped"
-    log "done (--no-reload: skipped live-reload side effects)"
+    merge_vivaldi_theme || true
+    log "done (--no-reload: skipped compositor reload)"
     exit 0
 fi
 

@@ -135,8 +135,9 @@ bell stay on disk under `Modules/Bar/widgets/` if a leftover
   glass opacity, `pin`, and `dim_around`. See `docs/THEMING.md`.
 - **Vivaldi** — native theme object plus CSS overlay and a copied wallpaper
   at `~/.config/vivaldi/custom_css/wallpaper` when
-  `design.bootScreen.wallpaperOnVivaldi` is on. CSS mods need
-  `vivaldi://experiments` once. See `docs/THEMING.md`.
+  `design.bootScreen.wallpaperOnVivaldi` is on. Fresh installs seed
+  `Preferences` and the CSS-mods labs flag (no account data). See
+  `docs/THEMING.md`.
 - **Plymouth** — boot/shutdown splash themed from the same tokens, see
   `docs/BOOT.md`.
 

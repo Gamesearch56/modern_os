@@ -309,9 +309,11 @@ the focused one.
 
 ## Vivaldi still looks stock
 
-Enable CSS mods once at `vivaldi://experiments`. Chrome colors come from
-`theme-apply.sh` (`00-modern.css`). Native Preferences merge is skipped
-while Vivaldi is running.
+`theme-apply.sh` writes `custom_css` and, when Vivaldi is not running,
+seeds `Preferences` (`themes.current=modern`, CSS mods directory) plus
+`Local State` (`vivaldi-css-mods@1`). Re-run it after quitting the
+browser if the first launch created a stock profile. Chrome colors come
+from `00-modern.css`.
 
 ## German layout: Super+Shift+1 does nothing
 

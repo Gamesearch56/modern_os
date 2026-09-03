@@ -8,5 +8,6 @@ calamares_add_plugin(modernnet
         ModernNetViewStep.cpp
         ModernNetPage.cpp
         ModernNetNm.cpp
+        ModernNetRow.cpp
     SHARED_LIB
 )

@@ -29,10 +29,13 @@ matugen -c ~/.config/matugen/config.toml ...
         ├─▶ phylax/style.css                      (Phylax polkit dialog)
         └─▶ vivaldi/custom_css/00-modern.css
             + 01-chrome.css (fonts/radii)
+            + Default/Preferences (theme id=modern, CSS mods path)
 ```
 
 Do **not** mix `design.transparency` into Vivaldi `#browser` — glass is
-for the island bar. Enable CSS mods once at `vivaldi://experiments`.
+for the island bar. `theme-apply.sh` seeds `Preferences` and
+`Local State` (`vivaldi-css-mods@1`) so a fresh install is themed
+before the first launch. No accounts or bookmarks are written.
 
 
 Every *color* output in that list is written by **one** `matugen`
@@ -64,8 +67,9 @@ via `jq`, or the future Settings > Diagnostics color preview).
   (`hyprctl reload`, `kitty @ load-config`). Quickshell watches
 `tokens.json` and restyles the bar/overlays immediately. GTK apps pick
 up `gtk.css` on restart. Vivaldi's CSS overlay is already on disk
-(reload the tab); the native theme object is merged only while Vivaldi
-is not running. Nautilus and Dolphin must be fully quit after `theme-apply.sh`.
+(reload the tab). The native theme object is created on a fresh home
+and merged later only while Vivaldi is not running. Nautilus and
+Dolphin must be fully quit after `theme-apply.sh`.
 
 ## Profile resolution
 
@@ -163,22 +167,25 @@ file. `theme-apply.sh` starts `phylax.service` if it is down and stops
 write are always correct on disk, so a restarted app always picks up
 the current theme.
 
-**Vivaldi CSS modifications** must be enabled once in the browser:
-open `vivaldi://experiments` and turn on “Allow CSS modifications”, then
-point Custom UI Modifications at `~/.config/vivaldi/custom_css`. That
-toggle cannot be flipped from `config.json`. When
-`design.bootScreen.wallpaperOnVivaldi` is true, `theme-apply.sh` copies
-the current wallpaper to `custom_css/wallpaper` and `01-chrome.css` sets
-`--md-wallpaper` (plus `--md-font-*`, `--md-radius-*`, `--md-space-*`,
-`--md-blur`, `--md-transparency` from `config.json`).
+**Vivaldi** gets a native `modern` theme object, CSS mods pointed at
+`~/.config/vivaldi/custom_css`, and the labs flag `vivaldi-css-mods@1`
+from `theme-apply.sh` (including install `--no-reload`). An existing
+`Preferences` file is left alone while Vivaldi is running — it rewrites
+that file on quit. When `design.bootScreen.wallpaperOnVivaldi` is true,
+`theme-apply.sh` copies the current wallpaper to `custom_css/wallpaper`
+and `01-chrome.css` sets `--md-wallpaper` (plus `--md-font-*`,
+`--md-radius-*`, `--md-space-*`, `--md-blur`, `--md-transparency` from
+`config.json`).
 
-`--no-reload` skips all of the above — used by CI/lint checks and the M0
-verification script, where no Hyprland/kitty session exists to reload.
+`--no-reload` still writes GTK/Qt/Vivaldi files (including seeding
+`Preferences` on a fresh home). It skips `hyprctl` / kitty reload —
+install.sh and CI have no session yet.
 
 `--chrome-only` skips matugen and rewrites GTK/Qt/KDE/Vivaldi/Phylax radii,
-fonts, cursor, and motion from the current `config.json`. Settings uses
-this after Design knobs that are not a palette swap (rounding, type
-scale, animations, transparency, cursor).
+fonts, cursor, and motion from the current `config.json`, then merges
+the Vivaldi theme object. Settings uses this after Design knobs that
+are not a palette swap (rounding, type scale, animations, transparency,
+cursor).
 
 ## Adding a new consumer
 

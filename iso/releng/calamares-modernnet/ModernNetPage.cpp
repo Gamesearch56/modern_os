@@ -1,6 +1,7 @@
 #include "ModernNetPage.h"
 
 #include "ModernNetNm.h"
+#include "ModernNetRow.h"
 
 #include <QAbstractItemView>
 #include <QHBoxLayout>
@@ -11,7 +12,6 @@
 #include <QPixmap>
 #include <QProgressBar>
 #include <QPushButton>
-#include <QSize>
 #include <QStackedWidget>
 #include <QTimer>
 #include <QVBoxLayout>
@@ -34,31 +34,21 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     auto* ok = new QVBoxLayout( m_okPage );
     ok->setContentsMargins( 24, 24, 24, 24 );
     ok->addStretch( 1 );
-    auto* badge = new QLabel;
-    badge->setObjectName( QStringLiteral( "networkOkBadge" ) );
-    badge->setAlignment( Qt::AlignCenter );
-    badge->setFixedSize( 112, 112 );
-    const QPixmap ethPx
-        = QIcon::fromTheme( QStringLiteral( "network-wired" ) ).pixmap( 56, 56 );
-    if ( ethPx.isNull() )
-    {
-        badge->setText( QStringLiteral( "✓" ) );
-    }
-    else
-    {
-        badge->setPixmap( ethPx );
-    }
-    auto* title = new QLabel( tr( "You're connected with Ethernet" ) );
-    title->setObjectName( QStringLiteral( "networkOkTitle" ) );
-    title->setAlignment( Qt::AlignHCenter );
-    title->setWordWrap( true );
+    m_okBadge = new QLabel;
+    m_okBadge->setObjectName( QStringLiteral( "networkOkBadge" ) );
+    m_okBadge->setAlignment( Qt::AlignCenter );
+    m_okBadge->setFixedSize( 112, 112 );
+    m_okTitle = new QLabel;
+    m_okTitle->setObjectName( QStringLiteral( "networkOkTitle" ) );
+    m_okTitle->setAlignment( Qt::AlignHCenter );
+    m_okTitle->setWordWrap( true );
     auto* okHint = new QLabel( tr( "You can continue to the next step." ) );
     okHint->setObjectName( QStringLiteral( "networkOkHint" ) );
     okHint->setAlignment( Qt::AlignHCenter );
     okHint->setWordWrap( true );
-    ok->addWidget( badge, 0, Qt::AlignHCenter );
+    ok->addWidget( m_okBadge, 0, Qt::AlignHCenter );
     ok->addSpacing( 24 );
-    ok->addWidget( title );
+    ok->addWidget( m_okTitle );
     ok->addSpacing( 8 );
     ok->addWidget( okHint );
     ok->addStretch( 1 );
@@ -103,10 +93,10 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     auto* nearTitle = new QLabel( tr( "Nearby networks" ) );
     nearTitle->setObjectName( QStringLiteral( "networkNearbyTitle" ) );
     near->addWidget( nearTitle, 1 );
-    auto* refresh = new QPushButton( tr( "Refresh" ) );
-    refresh->setObjectName( QStringLiteral( "networkRefresh" ) );
-    connect( refresh, &QPushButton::clicked, this, &ModernNetPage::scanWifi );
-    near->addWidget( refresh );
+    m_refresh = new QPushButton( tr( "Refresh" ) );
+    m_refresh->setObjectName( QStringLiteral( "networkRefresh" ) );
+    connect( m_refresh, &QPushButton::clicked, this, &ModernNetPage::scanWifi );
+    near->addWidget( m_refresh );
     wifi->addLayout( near );
 
     m_scanBar = new QProgressBar;
@@ -119,7 +109,7 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     m_list = new QListWidget;
     m_list->setObjectName( QStringLiteral( "wifiList" ) );
     m_list->setSelectionMode( QAbstractItemView::SingleSelection );
-    m_list->setIconSize( QSize( 24, 24 ) );
+    m_list->setSpacing( 4 );
     connect( m_list, &QListWidget::itemClicked, this, &ModernNetPage::rowClicked );
     wifi->addWidget( m_list, 1 );
 
@@ -152,6 +142,7 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     showPassword( false );
 
     connect( m_nm, &ModernNetNm::changed, this, &ModernNetPage::syncUi );
+    connect( m_nm, &ModernNetNm::connectFinished, this, &ModernNetPage::onConnectFinished );
 
     auto* tick = new QTimer( this );
     tick->setInterval( 2000 );
@@ -189,7 +180,7 @@ ModernNetPage::ensureWifi()
 void
 ModernNetPage::scanWifi()
 {
-    if ( m_nm->ethernetUp() )
+    if ( m_nm->ethernetUp() || m_nm->connecting() )
     {
         return;
     }
@@ -201,13 +192,35 @@ ModernNetPage::scanWifi()
 }
 
 void
+ModernNetPage::showOkPage()
+{
+    const bool eth = m_nm->ethernetUp();
+    const QString iconName = eth ? QStringLiteral( "network-wired" )
+                                 : QStringLiteral( "network-wireless" );
+    const QPixmap px = QIcon::fromTheme( iconName ).pixmap( 56, 56 );
+    if ( px.isNull() )
+    {
+        m_okBadge->setPixmap( QPixmap() );
+        m_okBadge->setText( QStringLiteral( "✓" ) );
+    }
+    else
+    {
+        m_okBadge->setText( QString() );
+        m_okBadge->setPixmap( px );
+    }
+    m_okTitle->setText( eth ? tr( "You're connected with Ethernet" )
+                            : tr( "You're connected with Wi-Fi" ) );
+    showPassword( false );
+    m_stack->setCurrentWidget( m_okPage );
+}
+
+void
 ModernNetPage::syncUi()
 {
     setOnline( m_nm->online() );
-    if ( m_nm->ethernetUp() )
+    if ( m_nm->ethernetUp() || m_nm->wifiUp() )
     {
-        showPassword( false );
-        m_stack->setCurrentWidget( m_okPage );
+        showOkPage();
         return;
     }
 
@@ -215,11 +228,13 @@ ModernNetPage::syncUi()
     m_ethStatus->setText( tr( "Not connected" ) );
     m_ethAddr->setText( m_nm->ethernetAddr() );
     m_ethAddr->setVisible( !m_nm->ethernetAddr().isEmpty() );
-    m_scanBar->setVisible( m_nm->scanning() );
+    m_scanBar->setVisible( m_nm->scanning() || m_nm->connecting() );
+    m_refresh->setEnabled( !m_nm->scanning() && !m_nm->connecting() );
+    m_connect->setEnabled( !m_nm->connecting() );
     fillWifi();
-    if ( m_nm->online() )
+    if ( m_nm->connecting() )
     {
-        m_hint->setText( tr( "Wi-Fi is connected." ) );
+        m_hint->setText( tr( "Connecting…" ) );
     }
     else if ( m_nm->scanning() )
     {
@@ -232,12 +247,38 @@ ModernNetPage::syncUi()
     m_stack->setCurrentWidget( m_wifiPage );
 }
 
+QString
+ModernNetPage::currentSsid() const
+{
+    auto* item = m_list->currentItem();
+    return item ? item->data( Qt::UserRole ).toString() : QString();
+}
+
+void
+ModernNetPage::selectSsid( const QString& ssid )
+{
+    if ( ssid.isEmpty() )
+    {
+        return;
+    }
+    for ( int i = 0; i < m_list->count(); i++ )
+    {
+        auto* item = m_list->item( i );
+        if ( item && item->data( Qt::UserRole ).toString() == ssid )
+        {
+            m_list->setCurrentItem( item );
+            return;
+        }
+    }
+}
+
 void
 ModernNetPage::fillWifi()
 {
-    const QString selected = m_list->currentItem()
-        ? m_list->currentItem()->data( Qt::UserRole ).toString()
-        : QString();
+    const QString selected = currentSsid();
+    const bool keepPass = m_passCard->isVisible();
+    const QString passSsid = m_passTitle->text();
+    const QString passText = m_password->text();
     m_list->clear();
     const auto nets = m_nm->networks();
     if ( nets.isEmpty() )
@@ -246,32 +287,39 @@ ModernNetPage::fillWifi()
             m_nm->scanning() ? tr( "Searching for networks…" ) : tr( "No networks found." ) );
         empty->setFlags( Qt::NoItemFlags );
         m_list->addItem( empty );
-        showPassword( false );
+        if ( !keepPass )
+        {
+            showPassword( false );
+        }
         return;
     }
     for ( const auto& w : nets )
     {
-        QString title = w.ssid;
-        if ( w.inUse )
-        {
-            title = tr( "%1 — Connected" ).arg( w.ssid );
-        }
-        else if ( w.known )
-        {
-            title = tr( "%1 — Saved" ).arg( w.ssid );
-        }
-        auto* item = new QListWidgetItem( title );
-        item->setIcon( QIcon::fromTheme( w.locked ? QStringLiteral( "network-wireless-encrypted" )
-                                                  : QStringLiteral( "network-wireless" ) ) );
+        auto* item = new QListWidgetItem;
         item->setData( Qt::UserRole, w.ssid );
         item->setData( Qt::UserRole + 1, QVariant( w.locked && !w.inUse ) );
         item->setData( Qt::UserRole + 2, QVariant( w.inUse ) );
         item->setData( Qt::UserRole + 3, QVariant( w.known ) );
+        auto* row = new ModernNetRow( w );
+        connect( row, &ModernNetRow::connectClicked, this, [ this, ssid = w.ssid ]() {
+            selectSsid( ssid );
+            connectWifi();
+        } );
+        item->setSizeHint( row->sizeHint() );
         m_list->addItem( item );
-        if ( w.ssid == selected || w.inUse )
+        m_list->setItemWidget( item, row );
+        if ( w.ssid == selected || w.ssid == passSsid || w.inUse )
         {
             m_list->setCurrentItem( item );
         }
+    }
+    if ( keepPass && !passSsid.isEmpty() )
+    {
+        selectSsid( passSsid );
+        m_passTitle->setText( passSsid );
+        m_passCard->setVisible( true );
+        m_password->setText( passText );
+        return;
     }
     if ( !m_list->currentItem() || m_list->currentItem()->data( Qt::UserRole + 2 ).toBool() )
     {
@@ -293,28 +341,6 @@ ModernNetPage::showPassword( bool on )
 void
 ModernNetPage::rowClicked()
 {
-    auto* item = m_list->currentItem();
-    if ( !item || !item->flags().testFlag( Qt::ItemIsEnabled ) )
-    {
-        showPassword( false );
-        return;
-    }
-    const bool inUse = item->data( Qt::UserRole + 2 ).toBool();
-    const bool locked = item->data( Qt::UserRole + 1 ).toBool();
-    const bool known = item->data( Qt::UserRole + 3 ).toBool();
-    if ( inUse )
-    {
-        showPassword( false );
-        return;
-    }
-    if ( locked && !known )
-    {
-        m_passTitle->setText( item->data( Qt::UserRole ).toString() );
-        showPassword( true );
-        m_password->setFocus();
-        return;
-    }
-    showPassword( false );
     connectWifi();
 }
 
@@ -322,7 +348,7 @@ void
 ModernNetPage::connectWifi()
 {
     auto* item = m_list->currentItem();
-    if ( !item )
+    if ( !item || m_nm->connecting() )
     {
         return;
     }
@@ -331,22 +357,50 @@ ModernNetPage::connectWifi()
     {
         return;
     }
-    const QString password = m_passCard->isVisible() ? m_password->text() : QString();
-    m_connect->setEnabled( false );
-    const bool ok = m_nm->connectSsid( ssid, password );
-    m_connect->setEnabled( true );
-    m_password->clear();
-    if ( !ok )
+    const bool locked = item->data( Qt::UserRole + 1 ).toBool();
+    const bool known = item->data( Qt::UserRole + 3 ).toBool();
+    if ( item->data( Qt::UserRole + 2 ).toBool() )
     {
-        m_hint->setText( tr( "Could not connect. Check the password." ) );
-        if ( item->data( Qt::UserRole + 1 ).toBool() )
-        {
-            m_passTitle->setText( ssid );
-            showPassword( true );
-            m_password->setFocus();
-        }
+        showPassword( false );
         return;
     }
-    showPassword( false );
-    m_nm->scan();
+    if ( locked && !known && !m_passCard->isVisible() )
+    {
+        m_passTitle->setText( ssid );
+        showPassword( true );
+        m_password->setFocus();
+        return;
+    }
+    if ( locked && !known && m_passCard->isVisible() && m_password->text().isEmpty() )
+    {
+        m_hint->setText( tr( "Enter the password to connect." ) );
+        m_password->setFocus();
+        return;
+    }
+    const QString password = m_passCard->isVisible() ? m_password->text() : QString();
+    m_connect->setEnabled( false );
+    m_refresh->setEnabled( false );
+    m_hint->setText( tr( "Connecting…" ) );
+    m_nm->connectSsid( ssid, password );
+}
+
+void
+ModernNetPage::onConnectFinished( bool ok )
+{
+    m_connect->setEnabled( true );
+    m_refresh->setEnabled( true );
+    if ( ok )
+    {
+        showPassword( false );
+        return;
+    }
+    m_hint->setText( tr( "Could not connect. Check the password." ) );
+    auto* item = m_list->currentItem();
+    if ( item && item->data( Qt::UserRole + 1 ).toBool() )
+    {
+        m_passTitle->setText( currentSsid() );
+        showPassword( true );
+        m_password->clear();
+        m_password->setFocus();
+    }
 }

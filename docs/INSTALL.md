@@ -278,10 +278,10 @@ the language is set before that runs. It is, and
 `scripts/test-calamares-late.sh` pins the ordering.
 
 The **Network** / **Netzwerk** page sits after Keyboard. Next stays off
-until a default IPv4 or IPv6 route exists — Ethernet is enough;
-otherwise Wi-Fi turns on (no toggle) and the page matches Settings →
-Network (ethernet row, nearby list, password card). Ethernet already
-up shows a centered “You're connected with Ethernet” page instead.
+until Ethernet or Wi-Fi is up (or a default route exists). Wi-Fi turns
+on (no toggle): nearby list with lock/open labels, **Connect** on each
+row, **Refresh**, and a password card for secured networks. Ethernet or
+Wi-Fi already up shows a centered “You're connected with …” page.
 Live setup enables NetworkManager and stops `iwd` so they do not fight
 over the radio. Unattended QEMU already has virtio-net, so auto-next is
 not blocked. `stylesheet.qss` paints `#networkPage`, `#networkOkPage`,

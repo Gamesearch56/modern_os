@@ -718,8 +718,28 @@ MODERNNET_TS = """
       <translation>Du bist per Ethernet verbunden</translation>
     </message>
     <message>
+      <source>You're connected with Wi-Fi</source>
+      <translation>Du bist per WLAN verbunden</translation>
+    </message>
+    <message>
       <source>You can continue to the next step.</source>
       <translation>Du kannst mit dem nächsten Schritt fortfahren.</translation>
+    </message>
+    <message>
+      <source>Password required</source>
+      <translation>Passwort erforderlich</translation>
+    </message>
+    <message>
+      <source>Open network</source>
+      <translation>Offenes Netzwerk</translation>
+    </message>
+    <message>
+      <source>Connecting…</source>
+      <translation>Verbinden…</translation>
+    </message>
+    <message>
+      <source>Enter the password to connect.</source>
+      <translation>Gib das Passwort ein, um dich zu verbinden.</translation>
     </message>
     <message>
       <source>Wi-Fi is connected.</source>
