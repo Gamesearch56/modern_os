@@ -105,7 +105,10 @@ fi
 # tarball whenever git is missing from the runner image, which leaves
 # exactly that — and git's own "repository does not exist" names the
 # destination, not the cause.
-if ! why="$(git -C "$ROOT" rev-parse --git-dir 2>&1)"; then
+# ls-remote, not rev-parse: it resolves $ROOT the same way the clone
+# below does, so an ownership refusal on $ROOT/.git surfaces here rather
+# than passing a worktree check and failing mid-build.
+if ! why="$(git ls-remote "$ROOT" HEAD 2>&1)"; then
     printf 'iso-build: git: %s\n' "$why" >&2
     die "$ROOT is not a usable git repository — the bundle is cloned from it"
 fi

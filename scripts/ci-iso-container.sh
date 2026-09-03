@@ -20,7 +20,13 @@ pacman -Syu --noconfirm --needed archiso base-devel git python jq sudo \
 # and checkout's own safe.directory went into a temporary global config
 # that is long gone. Without this, git refuses the repository that
 # iso-build.sh clones the pinned bundle from.
+#
+# Both entries are needed. Commands run inside the worktree check the
+# worktree path, but `git clone <path>` resolves the source to
+# <path>/.git and checks that instead — whitelisting only the first lets
+# the preflight pass and the clone still fail on dubious ownership.
 git config --global --add safe.directory "$GITHUB_WORKSPACE"
+git config --global --add safe.directory "$GITHUB_WORKSPACE/.git"
 
 df -h "$ISO_OUT" /tmp || true
 
