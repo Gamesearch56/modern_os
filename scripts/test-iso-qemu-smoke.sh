@@ -15,6 +15,7 @@ log() { printf 'test-iso-qemu-smoke: %s\n' "$*"; }
 
 [ -x "$QEMU" ] || die "missing $QEMU"
 command -v qemu-system-x86_64 >/dev/null 2>&1 || die "qemu-system-x86_64 not on PATH"
+command -v qemu-img >/dev/null 2>&1 || die "qemu-img not on PATH"
 shopt -s nullglob
 isos=("$OUT"/*.iso)
 shopt -u nullglob

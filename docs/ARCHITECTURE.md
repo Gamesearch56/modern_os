@@ -34,7 +34,7 @@ produce invalid Lua.
 ## QML layer pattern
 
 ```
-Commons/   Tokens.qml Typography.qml Motion.qml Config.qml I18n.qml Logger.qml
+Commons/   Tokens.qml Typography.qml Motion.qml Config.qml I18n.qml KeyboardLayouts.qml Logger.qml
            — depends on nothing.
 
 Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media

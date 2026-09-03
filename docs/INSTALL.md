@@ -231,11 +231,15 @@ calls `Config::somethingChanged()` on a layout change too.
 The Keyboard step always opens on English. `guessLayout: false` turns off
 Calamares' locale→layout guess, which otherwise flipped the page to German
 the moment German was picked on Welcome or Location. The initial selection
-then comes from `setxkbmap -print` (a fresh Xwayland reports `pc+us`), and
-if that ever returned nothing Calamares falls back to the first row of the
-model — sorted by description, so "English (US)" before "German". Both
-paths land on `us`; picking German by hand still works and still reaches
-the installed system.
+then comes from `setxkbmap -print` (a fresh Xwayland reports `pc+us`).
+Do not treat the combo's first row as the default — Calamares sorts by
+description, so Arabic would lead the shared catalog. Picking another
+layout by hand still reaches the installed system.
+
+The Keyboard combo lists the common layouts in
+`iso/releng/installer-locales.json` `layouts` (same ids as Settings →
+Keyboard / `keyboard-layouts.json`). Welcome languages stay English and
+German only.
 
 The Keyboard step's own job only writes `/etc/vconsole.conf` (the TTY) and
 `/etc/X11/xorg.conf.d/00-keyboard.conf` (Xwayland clients). Hyprland reads

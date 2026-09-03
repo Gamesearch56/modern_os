@@ -13,8 +13,10 @@ set -euo pipefail
 : "${ISO_OUT:?must be passed through to the container}"
 : "${TAG:?must be passed through to the container}"
 
+# qemu-img is its own package — qemu-system-x86 no longer pulls it in,
+# and the smoke test creates vm-disk.qcow2 with it after mkarchiso.
 pacman -Syu --noconfirm --needed archiso base-devel git python jq sudo \
-    qemu-system-x86 edk2-ovmf qt6-tools
+    qemu-system-x86 qemu-img edk2-ovmf qt6-tools
 
 # The workspace belongs to the runner user while this container is root,
 # and checkout's own safe.directory went into a temporary global config
