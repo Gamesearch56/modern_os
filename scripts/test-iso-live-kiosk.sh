@@ -665,6 +665,11 @@ assert "pacman -Sy" in before and "git" in before.split("pacman -Sy")[-1], \
     "install git before actions/checkout or it falls back to a REST tarball"
 assert "fetch-depth: 0" in text[checkout:], \
     "checkout needs fetch-depth: 0 so the bundle clone can resolve the tag"
+# checkout's own safe.directory lives in a temporary global config that is
+# gone by the build step, and a container job is root over a workspace it
+# does not own.
+assert "safe.directory" in text[checkout:], \
+    "the build step must mark the workspace safe or git rejects the repo"
 PY
     ok "ISO workflow checks out a real repo with tags for the bundle clone"
 else
