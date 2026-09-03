@@ -105,8 +105,10 @@ fi
 # tarball whenever git is missing from the runner image, which leaves
 # exactly that — and git's own "repository does not exist" names the
 # destination, not the cause.
-git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 \
-    || die "$ROOT is not a git repository — the bundle is cloned from it"
+if ! why="$(git -C "$ROOT" rev-parse --git-dir 2>&1)"; then
+    printf 'iso-build: git: %s\n' "$why" >&2
+    die "$ROOT is not a usable git repository — the bundle is cloned from it"
+fi
 git -C "$ROOT" rev-parse -q --verify "refs/tags/$pin" >/dev/null \
     || die "$pin is not a tag in this clone — fetch tags (CI needs fetch-depth: 0)"
 

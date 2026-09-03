@@ -61,6 +61,11 @@ jobs:
         run: |
           pacman -Syu --noconfirm --needed archiso base-devel git python jq sudo \
             qemu-system-x86 edk2-ovmf qt6-tools
+          # actions/checkout marks the workspace safe in a *temporary*
+          # global config that is gone by this step, and a container job
+          # runs as root over a workspace root does not own — so git here
+          # rejects the repository the bundle clone reads from.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           mkdir -p "$ISO_OUT"
           df -h "$ISO_OUT" /tmp || true
           ./scripts/iso-build.sh --mkarchiso --out "$ISO_OUT" --tag "$TAG"
