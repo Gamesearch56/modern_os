@@ -14,7 +14,7 @@ directory plus an id in those arrays — no central switch.
 | `taskbar` | `bar.taskbar` | Hypr | Open windows (`Hypr.toplevelList`; refreshes when the popup opens) |
 | `clock` | `bar.clock` | Calendar | Date/time; click opens Calendar / Events tabs (month grid + today's ICS events) |
 | `media` | `bar.media` | Media | Capsule (art, title, transport); playing app wins, then Spotify if it is open |
-| `audio` | `bar.volume` | Audio | Sink volume / mute; click opens Settings → Audio |
+| `audio` | `bar.volume` | Audio | Master sink volume / mute (0% mutes every app stream); click opens Settings → Audio |
 | `weather` | `bar.weather` | Weather | Location-based conditions |
 | `network` | `bar.network` | Network | Wi-Fi / ethernet indicator |
 | `microphone` | `bar.microphone` | Audio | Source volume / mute |

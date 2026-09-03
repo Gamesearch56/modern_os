@@ -123,7 +123,15 @@ Item {
                     root._commitIfChanged();
                 }
                 onWheel: (w) => {
-                    w.accepted = false;
+                    if (!root.enabled)
+                        return;
+                    const step = (w.modifiers & Qt.ShiftModifier)
+                        ? Math.max(1, root._span / 100)
+                        : Math.max(1, root._span / 20);
+                    const next = Math.max(root.from, Math.min(root.to,
+                        root._shown + (w.angleDelta.y > 0 ? step : -step)));
+                    root._emit(next, true);
+                    w.accepted = true;
                 }
             }
         }

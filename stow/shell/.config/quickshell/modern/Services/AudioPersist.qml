@@ -116,5 +116,7 @@ QtObject {
         if (Math.round(n.audio.volume * 100) === want)
             return;
         n.audio.volume = want / 100;
+        if (want > 0)
+            n.audio.muted = false;
     }
 }

@@ -13,12 +13,9 @@ ColumnLayout {
 
     MField {
         labelKey: "settings.fields.kbLayout"
-        MSegmented {
+        MSelect {
             value: sectionModel.kbLayout
-            model: [
-                { value: "us", titleKey: "settings.kbUs" },
-                { value: "de", titleKey: "settings.kbDe" }
-            ]
+            model: sectionModel.options
             onSelected: (v) => {
                 ConfigWrite.set("input.kbLayout", v);
                 Hypr.syncInput("input.kbLayout", v);

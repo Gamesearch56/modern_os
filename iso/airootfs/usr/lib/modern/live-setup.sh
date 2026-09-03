@@ -17,7 +17,8 @@ passwd -d liveuser >/dev/null 2>&1 || true
 # Calamares loadLocales() prefers this file over locale.gen and would
 # otherwise offer every glibc locale. Overlay only — unpackfs still
 # ships the distro copy from the squashfs. Lines come from
-# installer-locales.json (same file as Welcome languages and xkb).
+# installer-locales.json `locales` (Welcome languages). Keyboard layouts
+# are a separate `layouts` key in that file.
 install -d -m 0755 /usr/share/i18n
 python3 - <<'PY'
 import json

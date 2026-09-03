@@ -1,4 +1,4 @@
-// Hover-only stream volume, same chrome as the bar sound slider.
+// Hover-only per-app volume (relative). Master gain is the sound slider.
 import QtQuick
 import "../../../../Commons"
 import "../../../../Widgets"
@@ -19,16 +19,6 @@ BarPopup {
     implicitWidth: Tokens.spacing.xxl * 7
     implicitHeight: Tokens.slider.thumb + Tokens.spacing.xs + Tokens.spacing.sm * 3
     padding: Tokens.spacing.sm
-
-    function nudge(steps: real, fine: bool) {
-        const n = root.stream;
-        if (!n || !n.audio)
-            return;
-        const step = fine
-            ? (Config.widgets.audio?.scrollStepFinePercent ?? 1)
-            : (Config.widgets.audio?.scrollStepPercent ?? 5);
-        Audio.adjustStreamVolume(n, steps > 0 ? step : -step);
-    }
 
     function setPillHovered(hovered: bool) {
         if (!root.appActive || !root.stream || !root.stream.audio) {
@@ -67,30 +57,16 @@ BarPopup {
         }
     }
 
-    MouseArea {
+    MSlider {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         height: Tokens.slider.thumb + Tokens.spacing.xs
-        acceptedButtons: Qt.NoButton
-        onWheel: (w) => {
-            root.nudge(w.angleDelta.y > 0 ? 1 : -1, !!(w.modifiers & Qt.ShiftModifier));
-            w.accepted = true;
-        }
-
-        MSlider {
-            anchors.fill: parent
-            activeFocusOnTab: false
-            from: 0
-            to: 100
-            value: {
-                const n = root.stream;
-                if (!n || !n.audio)
-                    return 0;
-                void n.audio.volume;
-                return Math.round(n.audio.volume * 100);
-            }
-            onMoved: (v) => Audio.setStreamVolume(root.stream, v)
-        }
+        activeFocusOnTab: false
+        from: 0
+        to: 100
+        value: Audio.streamVolume(root.stream)
+        onMoved: (v) => Audio.setStreamVolume(root.stream, v)
+        onCommitted: (v) => Audio.setStreamVolume(root.stream, v)
     }
 }

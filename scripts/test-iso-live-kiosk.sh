@@ -300,6 +300,9 @@ import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
 codes = [(x["calamares"], x["glibc"], x["xkb"]) for x in data["locales"]]
 assert codes == [("en", "en_US.UTF-8", "us"), ("de", "de_DE.UTF-8", "de")], codes
+layouts = [str(x) for x in data.get("layouts") or []]
+assert layouts and layouts[0] == "us", layouts
+assert "de" in layouts and "fr" in layouts, layouts
 PY
     ok "installer-locales.json drives live-setup, live-i18n, and iso-build"
 else
@@ -422,17 +425,32 @@ else
     err "keyboard.conf must set convertedKeymapPath, disable locale1, and disable guessLayout"
 fi
 
-# Layouts are sorted by description, so the fallback entry must be English.
-if python3 - "$ROOT/iso/releng/installer-locales.json" <<'PY'
+# Default is still English via setxkbmap -print, not list order (Arabic
+# would sort first). The two catalogs and both translation files must agree.
+if python3 - "$ROOT/iso/releng/installer-locales.json" \
+    "$ROOT/stow/modern/.config/modern/keyboard-layouts.json" \
+    "$ROOT/stow/modern/.config/modern/translations/en.json" \
+    "$ROOT/stow/modern/.config/modern/translations/de.json" <<'PY'
 import json, sys
-data = json.loads(open(sys.argv[1], encoding="utf-8").read())
-xkb = [str(l["xkb"]) for l in data.get("locales") or [] if l.get("xkb")]
-assert "us" in xkb, f"installer-locales.json must keep the us layout, got {xkb}"
+iso = json.loads(open(sys.argv[1], encoding="utf-8").read())
+desk = json.loads(open(sys.argv[2], encoding="utf-8").read())
+en = json.loads(open(sys.argv[3], encoding="utf-8").read())
+de = json.loads(open(sys.argv[4], encoding="utf-8").read())
+iso_ids = [str(x) for x in iso.get("layouts") or []]
+desk_ids = [str(x) for x in desk.get("layouts") or []]
+assert iso_ids == desk_ids, (iso_ids, desk_ids)
+assert iso_ids[0] == "us", iso_ids
+en_kb = (en.get("settings") or {}).get("kbLayouts") or {}
+de_kb = (de.get("settings") or {}).get("kbLayouts") or {}
+missing_en = [x for x in iso_ids if x not in en_kb]
+missing_de = [x for x in iso_ids if x not in de_kb]
+assert not missing_en, missing_en
+assert not missing_de, missing_de
 PY
 then
-    ok "installer-locales.json keeps the English layout Calamares defaults to"
+    ok "installer and Settings share one keyboard-layout catalog starting at us"
 else
-    err "installer-locales.json must keep us or the Keyboard step cannot default to English"
+    err "installer-locales.json layouts must match keyboard-layouts.json, start with us, and have en/de labels"
 fi
 
 NM_WIFI="$ROOT/iso/airootfs/etc/NetworkManager/conf.d/wifi-backend.conf"
@@ -610,7 +628,7 @@ cat >"$fixture" <<'XML'
 <xkbConfigRegistry version="1.1">
   <layoutList>
     <layout>
-      <configItem><name>fr</name></configItem>
+      <configItem><name>fo</name></configItem>
       <variantList><variant><configItem><name>oss</name></configItem></variant></variantList>
     </layout>
     <layout>
@@ -642,7 +660,7 @@ PY
 if [ "$got" = "us de 0" ]; then
     ok "xkb filter drops other layouts and all variants"
 else
-    err "xkb filter produced '$got' (want 'us de 0')"
+    err "xkb filter produced '$got' (want 'us de 0'; fo is not in the catalog)"
 fi
 
 lst="$XKB_TMP/base.lst"
@@ -650,7 +668,7 @@ cat >"$lst" <<'LST'
 ! model
   pc105           Generic 105-key PC
 ! layout
-  fr              French
+  fo              Faroese
   us              English (US)
   de              German
 ! variant
@@ -669,11 +687,11 @@ PY
 lst_got="$(python3 - "$lst" <<'PY'
 import sys
 text = open(sys.argv[1], encoding="utf-8").read()
-print("us" in text and "de" in text and "fr" not in text and "dvorak" not in text)
+print("us" in text and "de" in text and "fo" not in text and "dvorak" not in text)
 PY
 )"
 if [ "$lst_got" = "True" ]; then
-    ok "base.lst filter keeps us/de layouts and drops variants"
+    ok "base.lst filter keeps catalog layouts and drops variants"
 else
     err "base.lst filter failed"
 fi
@@ -696,6 +714,7 @@ INSTALL_QEMU="$ROOT/scripts/test-iso-qemu-install.sh"
 if [ -f "$ISO_YML" ] && [ -x "$SMOKE" ] && [ -x "$ISO_CONTAINER" ] \
     && grep -F 'test-iso-qemu-smoke.sh' "$ISO_CONTAINER" >/dev/null \
     && grep -F 'qemu-system-x86' "$ISO_CONTAINER" >/dev/null \
+    && grep -F 'qemu-img' "$ISO_CONTAINER" >/dev/null \
     && grep -F 'modern-ci: calamares' "$SMOKE" >/dev/null \
     && [ -x "$INSTALL_QEMU" ] \
     && grep -F -- '--unattended' "$INSTALL_QEMU" >/dev/null \

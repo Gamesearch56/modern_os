@@ -141,9 +141,18 @@ case "$TARGET" in
     volume)
         ACTION="${1:-up}"
         case "$ACTION" in
-            up) ipc audio volumeUp ;;
-            down) ipc audio volumeDown ;;
-            mute) ipc audio mute ;;
+            up)
+                qs -c modern ipc call audio volumeUp >/dev/null 2>&1 \
+                    || wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+
+                ;;
+            down)
+                qs -c modern ipc call audio volumeDown >/dev/null 2>&1 \
+                    || wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+                ;;
+            mute)
+                qs -c modern ipc call audio mute >/dev/null 2>&1 \
+                    || wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+                ;;
             *) t cli.volumeUnknown "$ACTION" >&2; exit 1 ;;
         esac
         ;;

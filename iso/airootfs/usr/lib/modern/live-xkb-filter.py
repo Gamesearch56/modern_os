@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Live ISO: Calamares lists every xkb layout from rules XML.
 
-Keep the layouts in installer-locales.json — the same pair Settings →
-Keyboard offers. Drop variants so only Default remains. Overlay only;
-the squashfs copy is what unpackfs installs.
+Keep the layouts in installer-locales.json `layouts` — the same catalog
+Settings → Keyboard reads from keyboard-layouts.json. Locales stay
+English/German only. Drop variants so only Default remains. Overlay
+only; the squashfs copy is what unpackfs installs.
 """
 from __future__ import annotations
 
@@ -46,10 +47,13 @@ def load_keep_layouts() -> set[str]:
         if not path.is_file():
             continue
         data = json.loads(path.read_text(encoding="utf-8"))
+        listed = [str(x) for x in (data.get("layouts") or []) if x]
+        if listed:
+            return set(listed)
         keep = {str(loc["xkb"]) for loc in data.get("locales") or [] if loc.get("xkb")}
         if keep:
             return keep
-    return {"us", "de"}
+    return {"us"}
 
 
 KEEP_LAYOUTS = load_keep_layouts()

@@ -96,7 +96,7 @@ fi
 
 serial="$OUT/vm-serial.log"
 : >"$serial"
-command -v qemu-img >/dev/null 2>&1 || die "qemu-img missing"
+command -v qemu-img >/dev/null 2>&1 || die "install qemu-img (Arch splits it from qemu-system-x86)"
 disk="$OUT/vm-disk.qcow2"
 if [ "$RESET_DISK" -eq 1 ] && [ -f "$disk" ]; then
     rm -f "$disk"
