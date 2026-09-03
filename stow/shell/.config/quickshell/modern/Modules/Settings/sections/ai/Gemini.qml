@@ -65,7 +65,10 @@ ColumnLayout {
         MButton {
             kind: "text"
             key: "settings.gemini.openStudio"
-            onClicked: Ai.openGeminiStudio()
+            onClicked: {
+                Ai.openGeminiStudio();
+                Settings.close();
+            }
         }
     }
 
