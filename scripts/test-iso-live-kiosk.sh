@@ -638,42 +638,51 @@ else
 fi
 
 ISO_YML="$ROOT/.github/workflows/iso.yml"
+ISO_CONTAINER="$ROOT/scripts/ci-iso-container.sh"
 SMOKE="$ROOT/scripts/test-iso-qemu-smoke.sh"
 INSTALL_QEMU="$ROOT/scripts/test-iso-qemu-install.sh"
-if [ -f "$ISO_YML" ] && [ -x "$SMOKE" ] \
-    && grep -F 'test-iso-qemu-smoke.sh' "$ISO_YML" >/dev/null \
-    && grep -F 'qemu-system-x86' "$ISO_YML" >/dev/null \
+# The build moved into ci-iso-container.sh when the job stopped being a
+# container job, so the smoke run and its qemu deps live there now.
+if [ -f "$ISO_YML" ] && [ -x "$SMOKE" ] && [ -x "$ISO_CONTAINER" ] \
+    && grep -F 'test-iso-qemu-smoke.sh' "$ISO_CONTAINER" >/dev/null \
+    && grep -F 'qemu-system-x86' "$ISO_CONTAINER" >/dev/null \
     && grep -F 'modern-ci: calamares' "$SMOKE" >/dev/null \
     && [ -x "$INSTALL_QEMU" ] \
     && grep -F -- '--unattended' "$INSTALL_QEMU" >/dev/null \
     && grep -F 'late install finished' "$INSTALL_QEMU" >/dev/null \
-    && ! grep -F 'test-iso-qemu-install.sh' "$ISO_YML" >/dev/null; then
+    && ! grep -F 'test-iso-qemu-install.sh' "$ISO_CONTAINER" >/dev/null; then
     ok "ISO workflow runs the QEMU Calamares smoke"
 else
     err "iso.yml must run test-iso-qemu-smoke.sh after mkarchiso"
 fi
 
 # iso-build.sh bundles the pin with `git clone $ROOT`, so the checkout has
-# to be a real repo with tags. archlinux:latest has no git, and without one
-# actions/checkout silently downloads a REST tarball instead.
-if python3 - "$ISO_YML" <<'PY'; then
+# to be a real repo with tags — and the job has to stay uncontainerised so
+# a host step can delete the toolchains mkarchiso needs the room of.
+if python3 - "$ISO_YML" "$ISO_CONTAINER" <<'PY'; then
 import pathlib, sys
-text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
-checkout = text.index("uses: actions/checkout")
-before = text[:checkout]
-assert "pacman -Sy" in before and "git" in before.split("pacman -Sy")[-1], \
-    "install git before actions/checkout or it falls back to a REST tarball"
-assert "fetch-depth: 0" in text[checkout:], \
+yml, script = (pathlib.Path(p).read_text(encoding="utf-8") for p in sys.argv[1:])
+iso_job = yml[yml.index("  iso:"):yml.index("  publish:")]
+# A key, not the word — the job carries a comment explaining its absence.
+keys = [ln.strip() for ln in iso_job.splitlines() if not ln.lstrip().startswith("#")]
+assert "container:" not in keys, \
+    "the iso job must not be containerised — Free disk space needs host paths"
+assert "docker run" in iso_job and "--privileged" in iso_job, \
+    "mkarchiso needs a privileged container started from the host step"
+assert "hostedtoolcache" in iso_job, \
+    "keep the disk cleanup — 14G is all GitHub guarantees and it is not enough"
+assert "fetch-depth: 0" in iso_job, \
     "checkout needs fetch-depth: 0 so the bundle clone can resolve the tag"
-# checkout's own safe.directory lives in a temporary global config that is
-# gone by the build step, and a container job is root over a workspace it
-# does not own.
-assert "safe.directory" in text[checkout:], \
-    "the build step must mark the workspace safe or git rejects the repo"
+# checkout's safe.directory goes to a temporary global config that is gone
+# by the time the container runs as root over a workspace it does not own.
+assert "safe.directory" in script, \
+    "the container script must mark the workspace safe or git rejects the repo"
+assert "chown -R" in script, \
+    "upload-artifact runs as the runner user and cannot read root-owned output"
 PY
-    ok "ISO workflow checks out a real repo with tags for the bundle clone"
+    ok "ISO workflow frees host disk and builds in a privileged container"
 else
-    err "iso.yml must install git before checkout and fetch tags"
+    err "iso.yml must stay uncontainerised, free disk, and fetch tags"
 fi
 
 MODULES="$ROOT/iso/airootfs/etc/calamares/modules"
