@@ -20,6 +20,7 @@ file_permissions=(
   ["/root"]="0:0:750"
   ["/usr/lib/modern/calamares-late.sh"]="0:0:755"
   ["/usr/lib/modern/live-setup.sh"]="0:0:755"
+  ["/usr/lib/modern/live-i18n.sh"]="0:0:755"
   ["/usr/lib/modern/live-session.sh"]="0:0:755"
   ["/usr/lib/modern/live-calamares.sh"]="0:0:755"
   ["/usr/lib/modern/live-xdg-open.sh"]="0:0:755"

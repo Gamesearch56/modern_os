@@ -5,7 +5,8 @@ welcomeExpandingLogo: false
 windowExpanding: normal
 windowSize: 1100px,720px
 windowPlacement: center
-sidebar: widget
+# Widget ProgressTreeView cannot round the current step. QML can.
+sidebar: qml
 navigation: widget
 strings:
     productName:         ModernOS

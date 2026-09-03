@@ -45,18 +45,41 @@ iso_aur_cleanup() {
     fi
 }
 
+iso_aur_ensure_rustup() {
+    # Host rustup provides cargo/rustc shims. modernisoaur has an empty
+    # ~/.rustup, so phylax-git (makedepend cargo) dies in the same way
+    # source matugen did. Skip when rustup is absent (makepkg -s can
+    # install extra/rust instead).
+    command -v rustup >/dev/null 2>&1 || return 0
+    if sudo -u "$ISO_AUR_BUILDER" rustc --version >/dev/null 2>&1; then
+        return 0
+    fi
+    log "rustup default stable for $ISO_AUR_BUILDER (host has rustup, no toolchain)"
+    sudo -u "$ISO_AUR_BUILDER" rustup default stable \
+        || die "rustup default stable failed for $ISO_AUR_BUILDER"
+}
+
 iso_calamares_limit_languages() {
     local src="$1"
     local hook="$ROOT/iso/releng/calamares-limit-languages.py"
+    local locales="$ROOT/iso/releng/installer-locales.json"
+    local net="$ROOT/iso/releng/calamares-modernnet"
     [ -f "$hook" ] || die "missing $hook"
+    [ -f "$locales" ] || die "missing $locales"
+    [ -d "$net" ] || die "missing $net"
     install -m 0644 "$hook" "$src/calamares-limit-languages.py"
-    chown "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" "$src/calamares-limit-languages.py"
+    install -m 0644 "$locales" "$src/installer-locales.json"
+    rm -rf "$src/calamares-modernnet"
+    cp -a "$ROOT/iso/releng/calamares-modernnet" "$src/calamares-modernnet"
+    chown "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" \
+        "$src/calamares-limit-languages.py" "$src/installer-locales.json"
+    chown -R "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" "$src/calamares-modernnet"
     if ! grep -F 'calamares-limit-languages.py' "$src/PKGBUILD" >/dev/null; then
         cat >>"$src/PKGBUILD" <<'EOF'
 
 prepare() {
   python3 "$startdir/calamares-limit-languages.py" \
-    "$srcdir/$_pkgname-$pkgver/src/libcalamares/locale/TranslationsModel.cpp"
+    "$srcdir/$_pkgname-$pkgver"
 }
 EOF
         chown "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" "$src/PKGBUILD"
@@ -100,6 +123,9 @@ iso_attach_aur_repo() {
         log "building AUR $pkg for the ISO local repo"
         if [ ! -d "$src/.git" ]; then
             sudo -u "$ISO_AUR_BUILDER" git clone --depth 1 "$dest" "$src"
+        fi
+        if grep -qE '\bcargo\b' "$src/PKGBUILD" 2>/dev/null; then
+            iso_aur_ensure_rustup
         fi
         if [ "$pkg" = calamares ]; then
             iso_calamares_limit_languages "$src"

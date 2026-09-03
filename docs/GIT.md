@@ -47,8 +47,15 @@ GitHub Actions on every PR to `main` or `dev`, on pushes to `dev` /
 
 - `scripts/ci-check.sh` (jq / python3 / git / shellcheck, then
   `lint-layers.sh`, `shellcheck` on `install/` `scripts/` `iso/airootfs/`,
-  and the catalog / sync / nautilus / ISO / release-notes tests)
+  and the catalog / sync / nautilus / ISO kiosk / Calamares late / Calamares
+  patch / release-notes tests)
 - `./install/install.sh --dry-run --profile m0 --target $RUNNER_TEMP/…`
+
+The **ISO** workflow (release / `workflow_dispatch`, not pull requests)
+builds the image then boots it headless in QEMU until guest serial shows
+`modern-ci: calamares`. A red ISO job means Calamares never started; the
+ISO is not attached. It does **not** click through the installer.
+Local unattended install (after an ISO rebuild): `scripts/test-iso-qemu-install.sh`.
 
 `scripts/check-isolation.sh` is **local only**. Do not add it to GitHub.
 

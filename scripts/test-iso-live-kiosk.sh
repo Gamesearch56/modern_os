@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Live kiosk: liveuser + cage + Calamares. No mkarchiso.
+# Grep needles include literal $vars from the scripts under test.
+# shellcheck disable=SC2016
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -51,10 +53,20 @@ QEMU="$ROOT/scripts/iso-qemu.sh"
 if grep -F 'vm-serial.log' "$QEMU" >/dev/null \
     && grep -F -- '-serial' "$QEMU" >/dev/null \
     && grep -F 'vm-disk.qcow2' "$QEMU" >/dev/null \
+    && grep -F 'OVMF_CODE' "$QEMU" >/dev/null \
+    && grep -F 'ovmf-vars.fd' "$QEMU" >/dev/null \
+    && grep -F -- '--headless' "$QEMU" >/dev/null \
+    && grep -F 'display none' "$QEMU" >/dev/null \
+    && grep -F 'bootindex=1' "$QEMU" >/dev/null \
+    && grep -F 'scsi-cd' "$QEMU" >/dev/null \
+    && grep -F -- '--reset-disk' "$QEMU" >/dev/null \
+    && grep -F -- '--keep-nvram' "$QEMU" >/dev/null \
+    && grep -F -- '--unattended' "$QEMU" >/dev/null \
+    && grep -F 'opt/org.modernos/unattended' "$QEMU" >/dev/null \
     && ! grep -F 'INSTALL_DISK' "$QEMU" >/dev/null; then
-    ok "iso-qemu.sh captures serial and always attaches the 64G disk"
+    ok "iso-qemu.sh captures serial, attaches vm-disk.qcow2, boots OVMF, ISO bootindex first"
 else
-    err "iso-qemu.sh must write serial and always attach vm-disk.qcow2"
+    err "iso-qemu.sh must write serial, attach vm-disk.qcow2, boot OVMF, and prefer the ISO"
 fi
 
 if grep -E '^user = "liveuser"$' "$GREETD" >/dev/null; then
@@ -67,17 +79,57 @@ if grep -F 'Xwayland -noreset' "$WRAP" >/dev/null \
     && grep -F 'xhost +SI:localuser:root' "$WRAP" >/dev/null \
     && grep -F 'sudo -n' "$WRAP" >/dev/null \
     && grep -F 'QT_QPA_PLATFORM=xcb' "$WRAP" >/dev/null \
-    && grep -F 'exec Xwayland' "$WRAP" >/dev/null; then
+    && grep -F 'exec Xwayland' "$WRAP" >/dev/null \
+    && grep -F 'modern-ci: calamares' "$WRAP" >/dev/null \
+    && grep -F 'modern-ci: unattended' "$WRAP" >/dev/null \
+    && grep -F '/etc/calamares/unattended' "$WRAP" >/dev/null \
+    && grep -F 'calamares exited' "$WRAP" >/dev/null \
+    && grep -F '/dev/ttyS0' "$WRAP" >/dev/null \
+    && grep -F 'openbox --config-file /etc/modern/openbox-rc.xml' "$WRAP" >/dev/null \
+    && [ -f "$ROOT/iso/airootfs/etc/modern/openbox-rc.xml" ]; then
     ok "wrapper runs Calamares as root on Xwayland (cage client)"
 else
-    err "live-calamares.sh must exec Xwayland and sudo Calamares on xcb"
+    err "live-calamares.sh must exec Xwayland, sudo Calamares on xcb, serial-mark CI, and start openbox"
+fi
+
+I18N="$ROOT/iso/airootfs/usr/lib/modern/live-i18n.sh"
+I18N_UNIT="$ROOT/iso/airootfs/usr/lib/systemd/system/modern-live-i18n.service"
+I18N_WANTS="$ROOT/iso/airootfs/etc/systemd/system/greetd.service.wants/modern-live-i18n.service"
+if [ -f "$ROOT/iso/airootfs/usr/lib/modern/live-splash.qml" ] \
+    || grep -F 'live-splash.qml' "$WRAP" >/dev/null \
+    || grep -F 'xsetroot' "$WRAP" >/dev/null; then
+    err "live-calamares.sh must not show a splash before Calamares"
+else
+    ok "live session has no splash spinner"
+fi
+
+if [ -f "$I18N" ] \
+    && [ -f "$I18N_UNIT" ] \
+    && [ -L "$I18N_WANTS" ] \
+    && grep -F 'locale-gen' "$I18N" >/dev/null \
+    && grep -F 'live-xkb-filter.py' "$I18N" >/dev/null \
+    && grep -F 'After=modern-live-setup.service' "$I18N_UNIT" >/dev/null \
+    && ! grep -E '^Before=greetd' "$I18N_UNIT" >/dev/null \
+    && ! grep -E '^[[:space:]]*locale-gen' "$ROOT/iso/airootfs/usr/lib/modern/live-setup.sh" >/dev/null; then
+    ok "locale-gen runs beside greetd, not before it"
+else
+    err "modern-live-i18n.service must run locale-gen without blocking greetd"
+fi
+
+if grep -F 'systemd-detect-virt' "$SESSION" >/dev/null \
+    && grep -F 'WLR_RENDERER=pixman' "$SESSION" >/dev/null; then
+    ok "pixman is only the VM fallback"
+else
+    err "live-session.sh must use pixman only when systemd-detect-virt"
 fi
 
 if grep -Fx xorg-xwayland "$PKGS" >/dev/null \
-    && grep -Fx xorg-xhost "$PKGS" >/dev/null; then
-    ok "live ISO ships Xwayland and xhost"
+    && grep -Fx xorg-xhost "$PKGS" >/dev/null \
+    && grep -Fx xorg-setxkbmap "$PKGS" >/dev/null \
+    && grep -Fx openbox "$PKGS" >/dev/null; then
+    ok "live ISO ships Xwayland, xhost, setxkbmap, and openbox"
 else
-    err "packages.x86_64 must list xorg-xwayland and xorg-xhost"
+    err "packages.x86_64 must list xorg-xwayland, xorg-xhost, xorg-setxkbmap, and openbox"
 fi
 
 if grep -F 'WAYLAND_DISPLAY' "$SUDOERS" >/dev/null \
@@ -135,14 +187,31 @@ else
     err "branding must use logo.png, not default.jpg"
 fi
 
-if grep -F 'write_logo' "$ROOT/scripts/iso-build.sh" >/dev/null \
+LOGO="$ROOT/iso/airootfs/etc/calamares/branding/modern/logo.png"
+SIDEBAR_QML="$ROOT/iso/airootfs/etc/calamares/branding/modern/calamares-sidebar.qml"
+if [ -f "$LOGO" ] \
+    && [ "$(head -c 4 "$LOGO")" = $'\x89PNG' ] \
+    && grep -F 'branding/modern/logo.png' "$ROOT/scripts/iso-build.sh" >/dev/null \
+    && ! grep -F 'write_logo' "$ROOT/scripts/iso-build.sh" >/dev/null \
     && grep -F 'branding/modern/wallpaper.jpg' "$ROOT/scripts/iso-build.sh" >/dev/null \
-    && grep -F 'url("wallpaper.jpg")' "$ROOT/scripts/iso-build.sh" >/dev/null \
     && grep -F 'wallpaper.jpg' "$SLIDE" >/dev/null \
     && ! grep -F 'branding/modern/default.jpg' "$ROOT/scripts/iso-build.sh" >/dev/null; then
-    ok "iso-build.sh writes an M logo and uses wallpaper only as background"
+    ok "iso-build.sh ships logo.png and uses wallpaper only as background"
 else
-    err "iso-build.sh must paint wallpaper.jpg as background, not as the logo"
+    err "iso-build.sh must copy logo.png and paint wallpaper.jpg as background"
+fi
+
+if grep -E '^sidebar:[[:space:]]+qml$' "$BRAND" >/dev/null \
+    && grep -E '^navigation:[[:space:]]+widget$' "$BRAND" >/dev/null \
+    && [ -f "$SIDEBAR_QML" ] \
+    && grep -F 'model: ViewManager' "$SIDEBAR_QML" >/dev/null \
+    && grep -F 'pillRadius' "$SIDEBAR_QML" >/dev/null \
+    && grep -F 'debug.about' "$SIDEBAR_QML" >/dev/null \
+    && grep -F 'anchors.margins: sideBar.pad' "$SIDEBAR_QML" >/dev/null \
+    && ! grep -F 'hover.containsMouse' "$SIDEBAR_QML" >/dev/null; then
+    ok "Calamares sidebar is QML pills with padded About"
+else
+    err "branding must use sidebar: qml with calamares-sidebar.qml pills"
 fi
 
 if grep -Fx firefox "$PKGS" >/dev/null && grep -Fx xdg-utils "$PKGS" >/dev/null; then
@@ -152,10 +221,11 @@ else
 fi
 
 if grep -F '/usr/bin/xdg-open' "$XDG" >/dev/null \
-    && ! grep -F 'runuser' "$XDG" >/dev/null; then
-    ok "xdg-open wrapper stays on the session compositor"
+    && grep -F 'runuser -u liveuser' "$XDG" >/dev/null \
+    && grep -F -- '-u WAYLAND_DISPLAY' "$XDG" >/dev/null; then
+    ok "xdg-open wrapper drops root to liveuser on X11"
 else
-    err "live-xdg-open.sh must exec /usr/bin/xdg-open without runuser"
+    err "live-xdg-open.sh must runuser liveuser without WAYLAND_DISPLAY"
 fi
 
 if grep -F '/usr/lib/modern/live-xdg-open.sh' "$PROFILE" >/dev/null \
@@ -170,22 +240,51 @@ if grep -F 'QLabel, QCheckBox, QRadioButton, QFrame, QGroupBox' "$BUILD" >/dev/n
     && grep -F 'background-color: transparent;' "$BUILD" >/dev/null \
     && grep -F 'QStackedWidget QLabel' "$BUILD" >/dev/null \
     && grep -F 'border-radius: 8px;' "$BUILD" >/dev/null \
+    && grep -F '#summaryItemBody' "$BUILD" >/dev/null \
+    && grep -F '#partitionLabel' "$BUILD" >/dev/null \
+    && grep -F '#networkPage' "$BUILD" >/dev/null \
+    && grep -F '#networkOkPage' "$BUILD" >/dev/null \
+    && grep -F '#wifiList' "$BUILD" >/dev/null \
+    && grep -F 'QAbstractScrollArea::viewport' "$BUILD" >/dev/null \
+    && grep -F 'QToolButton:hover' "$BUILD" >/dev/null \
     && ! grep -F 'QFrame, QListView, QTreeView' "$BUILD" >/dev/null; then
-    ok "Calamares QSS keeps labels unfilled and spaces form fields"
+    ok "Calamares QSS keeps labels unfilled, paints viewports, spaces form fields"
 else
-    err "iso-build.sh QSS must not paint QLabel/QFrame backgrounds"
+    err "iso-build.sh QSS must not paint QLabel/QFrame backgrounds and must paint viewports"
+fi
+
+if grep -F 'combobox-popup: 0;' "$BUILD" >/dev/null \
+    && grep -F 'QComboBoxPrivateContainer' "$BUILD" >/dev/null \
+    && grep -F 'QComboBox QAbstractItemView::item' "$BUILD" >/dev/null \
+    && grep -A1 'QWidget {{' "$BUILD" | grep -F 'color:' >/dev/null \
+    && ! grep -A1 'QWidget {{' "$BUILD" | grep -F 'background-color: transparent' >/dev/null \
+    && grep -F 'QDialog, QWizard, QMessageBox' "$BUILD" >/dev/null \
+    && ! grep -F 'QLineEdit, QComboBox, QSpinBox' "$BUILD" >/dev/null \
+    && ! grep -F 'border-image: url("wallpaper.jpg")' "$BUILD" >/dev/null \
+    && ! grep -A14 'QComboBox {{' "$BUILD" | grep -F 'border-radius' >/dev/null; then
+    ok "Calamares QSS keeps combo popups and dialogs opaque without combo radius"
+else
+    err "iso-build.sh QSS must style combo popups without wallpaper on #mainApp or combo radius"
 fi
 
 SETUP="$ROOT/iso/airootfs/usr/lib/modern/live-setup.sh"
 LOCALE_GEN="$ROOT/iso/airootfs/etc/locale.gen"
 LOCALE_CONF="$ROOT/iso/airootfs/etc/calamares/modules/locale.conf"
 
-if grep -F '/usr/share/i18n/SUPPORTED' "$SETUP" >/dev/null \
-    && grep -F 'en_US.UTF-8 UTF-8' "$SETUP" >/dev/null \
-    && grep -F 'de_DE.UTF-8 UTF-8' "$SETUP" >/dev/null; then
-    ok "live-setup restricts glibc SUPPORTED to en and de"
+MANIFEST="$ROOT/iso/releng/installer-locales.json"
+if [ -f "$MANIFEST" ] \
+    && grep -F 'installer-locales.json' "$SETUP" >/dev/null \
+    && grep -F 'installer-locales.json' "$I18N" >/dev/null \
+    && grep -F 'installer-locales.json' "$BUILD" >/dev/null \
+    && python3 - "$MANIFEST" <<'PY'; then
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+codes = [(x["calamares"], x["glibc"], x["xkb"]) for x in data["locales"]]
+assert codes == [("en", "en_US.UTF-8", "us"), ("de", "de_DE.UTF-8", "de")], codes
+PY
+    ok "installer-locales.json drives live-setup, live-i18n, and iso-build"
 else
-    err "live-setup.sh must rewrite SUPPORTED to en_US and de_DE"
+    err "installer-locales.json must list en/de and be consumed by live-setup/i18n/iso-build"
 fi
 
 uncommented="$(grep -E '^[a-z]' "$LOCALE_GEN" || true)"
@@ -214,37 +313,91 @@ fi
 XKB="$ROOT/iso/airootfs/usr/lib/modern/live-xkb-filter.py"
 KB_CONF="$ROOT/iso/airootfs/etc/calamares/modules/keyboard.conf"
 
-if grep -F 'KEEP_LAYOUTS = {"us", "de"}' "$XKB" >/dev/null \
+if grep -F 'load_keep_layouts' "$XKB" >/dev/null \
+    && grep -F 'installer-locales.json' "$XKB" >/dev/null \
     && grep -F 'variantList' "$XKB" >/dev/null \
     && grep -F 'def filter_lst' "$XKB" >/dev/null; then
-    ok "xkb filter keeps us/de defaults only (XML and base.lst)"
+    ok "xkb filter reads installer-locales.json (XML and base.lst)"
 else
-    err "live-xkb-filter.py must keep us and de in XML and base.lst"
+    err "live-xkb-filter.py must read installer-locales.json and filter XML and base.lst"
 fi
 
 LANGHOOK="$ROOT/iso/releng/calamares-limit-languages.py"
 AUR="$ROOT/scripts/lib/iso-aur-repo.sh"
 if [ -f "$LANGHOOK" ] \
     && grep -F 'iso_calamares_limit_languages' "$AUR" >/dev/null \
-    && grep -F 'QStringLiteral( "en" )' "$LANGHOOK" >/dev/null \
-    && grep -F 'QStringLiteral( "de" )' "$LANGHOOK" >/dev/null; then
-    ok "AUR Calamares build limits welcome languages to en and de"
+    && grep -F 'installer-locales.json' "$LANGHOOK" >/dev/null \
+    && grep -F 'installer-locales.json' "$AUR" >/dev/null \
+    && grep -F 'qBound( 180, 180, 180 )' "$LANGHOOK" >/dev/null \
+    && grep -F 'qApp->setStyleSheet( ss )' "$LANGHOOK" >/dev/null \
+    && grep -F 'zoneAndRegionLayout = new QVBoxLayout' "$LANGHOOK" >/dev/null \
+    && grep -F 'm_localeChangeButton->hide()' "$LANGHOOK" >/dev/null \
+    && grep -F 'mapToGlobal' "$LANGHOOK" >/dev/null \
+    && grep -F 'QComboBoxPrivateContainer' "$LANGHOOK" >/dev/null \
+    && grep -F 'modernRemapping' "$LANGHOOK" >/dev/null \
+    && grep -F 'dataChanged' "$LANGHOOK" >/dev/null \
+    && grep -F 'CALAMARES_RETRANSLATE_FOR( w' "$LANGHOOK" >/dev/null \
+    && grep -F 'engine()->retranslate()' "$LANGHOOK" >/dev/null \
+    && grep -F 'quitVisible' "$LANGHOOK" >/dev/null \
+    && grep -F 'tr( "Toggle log" )' "$LANGHOOK" >/dev/null \
+    && grep -F 'physicalModelSelector->hide()' "$LANGHOOK" >/dev/null \
+    && grep -F 'summaryContent' "$LANGHOOK" >/dev/null \
+    && grep -F 'summaryPartition' "$LANGHOOK" >/dev/null \
+    && grep -F 'CalamaresWindow.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F 'LocalePage.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F 'ViewManager.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F 'KeyboardPage.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F 'SummaryPage.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F 'Config.h' "$LANGHOOK" >/dev/null \
+    && grep -F 'PartitionViewStep.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F 'PartitionLabelsView.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F 'QPalette::WindowText' "$LANGHOOK" >/dev/null \
+    && grep -F 'UsersViewStep.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F 'Config.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F '/etc/calamares/unattended' "$LANGHOOK" >/dev/null \
+    && grep -F 'calamares_de.ts' "$LANGHOOK" >/dev/null \
+    && grep -F 'tr( "User" )' "$LANGHOOK" >/dev/null \
+    && grep -F 'tr( "Summary", "@label" )' "$LANGHOOK" >/dev/null \
+    && grep -F '<source>Summary</source>' "$LANGHOOK" >/dev/null \
+    && grep -F '<translation>Übersicht</translation>' "$LANGHOOK" >/dev/null \
+    && grep -F 'install_modernnet' "$LANGHOOK" >/dev/null \
+    && grep -F 'calamares-modernnet' "$LANGHOOK" >/dev/null \
+    && grep -F '<translation>Netzwerk</translation>' "$LANGHOOK" >/dev/null \
+    && grep -F 'calamares-modernnet' "$AUR" >/dev/null \
+    && [ -f "$ROOT/iso/releng/calamares-modernnet/CMakeLists.txt" ] \
+    && ! grep -F '<source>Übersicht</source>' "$LANGHOOK" >/dev/null \
+    && ! grep -F 'calamares_en.ts' "$LANGHOOK" >/dev/null; then
+    ok "AUR Calamares build patches languages, sidebar, combos, i18n, cancel, keyboard"
 else
-    err "iso-aur-repo.sh must patch Calamares welcome languages to en/de"
+    err "iso-aur-repo.sh must patch Calamares languages, sidebar, combos, i18n, cancel, keyboard"
 fi
 
-if grep -F 'live-xkb-filter.py' "$SETUP" >/dev/null \
+if grep -F 'live-xkb-filter.py' "$I18N" >/dev/null \
     && grep -F 'live-xkb-filter.py' "$PROFILE" >/dev/null \
     && grep -F 'live-xkb-filter.py' "$ROOT/scripts/iso-build.sh" >/dev/null; then
-    ok "live-setup, profiledef, and iso-build ship the xkb filter"
+    ok "live-i18n, profiledef, and iso-build ship the xkb filter"
 else
-    err "live-xkb-filter.py must be installed and run from live-setup"
+    err "live-xkb-filter.py must be installed and run from live-i18n"
 fi
 
-if grep -F 'convertedKeymapPath: "/usr/share/kbd/keymaps/xkb"' "$KB_CONF" >/dev/null; then
-    ok "keyboard.conf uses the Arch keymap path"
+if grep -F 'convertedKeymapPath: "/usr/share/kbd/keymaps/xkb"' "$KB_CONF" >/dev/null \
+    && grep -E '^useLocale1:[[:space:]]+false$' "$KB_CONF" >/dev/null; then
+    ok "keyboard.conf uses the Arch keymap path and setxkbmap"
 else
-    err "keyboard.conf must set convertedKeymapPath for Arch"
+    err "keyboard.conf must set convertedKeymapPath and disable locale1"
+fi
+
+NM_WIFI="$ROOT/iso/airootfs/etc/NetworkManager/conf.d/wifi-backend.conf"
+if grep -F 'NetworkManager.service' "$SETUP" >/dev/null \
+    && grep -F 'disable --now iwd.service' "$SETUP" >/dev/null \
+    && grep -F '  - modernnet' "$ROOT/iso/airootfs/etc/calamares/settings.conf" >/dev/null \
+    && [ -f "$ROOT/iso/airootfs/etc/calamares/modules/modernnet.conf" ] \
+    && grep -F 'wifi.backend=iwd' "$NM_WIFI" >/dev/null \
+    && grep -F 'unmanaged-devices=type:ethernet' "$NM_WIFI" >/dev/null \
+    && grep -qxF 'iwd' "$ROOT/iso/releng/packages.x86_64"; then
+    ok "live Network step uses NetworkManager and sits after keyboard"
+else
+    err "live-setup must enable NetworkManager; settings.conf must list modernnet after keyboard"
 fi
 
 SETTINGS="$ROOT/iso/airootfs/etc/calamares/settings.conf"
@@ -265,34 +418,119 @@ fi
 
 if grep -F 'usage: calamares-late.sh clone|desktop|provision' "$LATE" >/dev/null \
     && grep -F 'timeout 180' "$LATE" >/dev/null \
-    && grep -F 'GIT_HTTP_LOW_SPEED_LIMIT' "$LATE" >/dev/null; then
-    ok "calamares-late.sh is phased with a git timeout"
+    && grep -F 'GIT_HTTP_LOW_SPEED_LIMIT' "$LATE" >/dev/null \
+    && grep -F '/var/log/modern-calamares-late.log' "$LATE" >/dev/null \
+    && grep -F '_emit' "$LATE" >/dev/null \
+    && grep -F 'using ISO bundle' "$LATE" >/dev/null \
+    && grep -F '/usr/share/modern/dotfile' "$LATE" >/dev/null \
+    && grep -F 'usr/share/modern/dotfile' "$BUILD" >/dev/null \
+    && grep -F 'rm -f "$resolv"' "$LATE" >/dev/null \
+    && grep -F 'collect_upstream_ns' "$LATE" >/dev/null \
+    && grep -F '127.*' "$LATE" >/dev/null \
+    && grep -F 'hosts: files dns' "$LATE" >/dev/null \
+    && grep -F 'probe_dns' "$LATE" >/dev/null \
+    && grep -F 'DisableSandbox' "$LATE" >/dev/null \
+    && grep -F 'pacman --disable-sandbox -Sy --noconfirm archlinux-keyring' "$LATE" >/dev/null \
+    && grep -F 'pacman-key --init' "$LATE" >/dev/null \
+    && grep -F 'pacman-key --populate archlinux' "$LATE" >/dev/null \
+    && ! grep -F 'stub-resolv.conf' "$LATE" >/dev/null \
+    && grep -F 'Defaults !use_pty' "$LATE" >/dev/null \
+    && grep -F 'runuser -u' "$LATE" >/dev/null \
+    && grep -F 'chmod a+rx /etc' "$LATE" >/dev/null \
+    && grep -F 'install -d -m 0750 /etc/sudoers.d' "$LATE" >/dev/null \
+    && ! grep -F 'install -d -m 0750 /etc /etc/sudoers.d' "$LATE" >/dev/null; then
+    ok "calamares-late.sh is phased with a git timeout, tee, and ISO bundle"
 else
-    err "calamares-late.sh must take clone|desktop|provision and timeout git"
+    err "calamares-late.sh must take clone|desktop|provision, timeout git, tee logs, and copy the ISO bundle"
+fi
+
+CLONE_CONF="$ROOT/iso/airootfs/etc/calamares/modules/shellprocess-lateclone.conf"
+DESK_CONF="$ROOT/iso/airootfs/etc/calamares/modules/shellprocess-latedesktop.conf"
+PROV_CONF="$ROOT/iso/airootfs/etc/calamares/modules/shellprocess-lateprovision.conf"
+if grep -E '^verbose:[[:space:]]+false$' "$CLONE_CONF" >/dev/null \
+    && grep -E '^verbose:[[:space:]]+false$' "$DESK_CONF" >/dev/null \
+    && grep -E '^verbose:[[:space:]]+false$' "$PROV_CONF" >/dev/null; then
+    ok "late shellprocess jobs keep command output for the error dialog"
+else
+    err "late shellprocess confs must set verbose: false so Calamares shows stdout"
 fi
 
 if grep -E '^update_db:[[:space:]]+false$' "$PKGS_CONF" >/dev/null \
+    && grep -E '^operations:[[:space:]]*\[\]$' "$PKGS_CONF" >/dev/null \
+    && ! grep -E '^packages:' "$PKGS_CONF" >/dev/null \
     && grep -Fx linux-zen "$PKGS" >/dev/null \
-    && grep -Fx linux-zen-headers "$PKGS" >/dev/null; then
-    ok "live ISO ships linux-zen; packages.conf does not pacman -Sy"
+    && grep -Fx linux-zen-headers "$PKGS" >/dev/null \
+    && grep -Fx efibootmgr "$PKGS" >/dev/null \
+    && grep -Fx qt6-translations "$PKGS" >/dev/null \
+    && grep -Fx yay "$PKGS" >/dev/null \
+    && grep -Fx yay "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
+    && grep -Fx matugen-bin "$PKGS" >/dev/null \
+    && grep -Fx matugen-bin "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
+    && grep -Fx bibata-cursor-theme-bin "$PKGS" >/dev/null \
+    && grep -Fx bibata-cursor-theme-bin "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
+    && grep -Fx phylax-git "$PKGS" >/dev/null \
+    && grep -Fx phylax-git "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
+    && grep -Fx pipewire-jack "$PKGS" >/dev/null \
+    && grep -Fx pipewire-pulse "$PKGS" >/dev/null; then
+    ok "live ISO ships linux-zen, yay, m0 AUR, and PipeWire jack/pulse"
 else
-    err "packages.x86_64 must list linux-zen and packages.conf update_db: false"
+    err "packages.x86_64 must list linux-zen, yay, m0 AUR, pipewire-jack, pipewire-pulse"
+fi
+
+BOOTLOADER="$ROOT/iso/airootfs/etc/calamares/modules/bootloader.conf"
+INSTALL_CONF="$ROOT/iso/airootfs/etc/kernel/install.conf"
+if grep -F 'efiBootLoader: "systemd-boot"' "$BOOTLOADER" >/dev/null \
+    && grep -F 'kernelSearchPath: "/usr/lib/modules"' "$BOOTLOADER" >/dev/null \
+    && grep -F 'kernelPattern:' "$BOOTLOADER" >/dev/null \
+    && ! grep -E '^kernel:' "$BOOTLOADER" >/dev/null \
+    && grep -F 'layout=bls' "$INSTALL_CONF" >/dev/null; then
+    ok "bootloader job uses systemd-boot kernel-install search paths"
+else
+    err "bootloader.conf must use kernelSearchPath and ship /etc/kernel/install.conf"
+fi
+
+MOUNT="$ROOT/iso/airootfs/etc/calamares/modules/mount.conf"
+if grep -F 'btrfsSwapSubvol: /@swap' "$MOUNT" >/dev/null \
+    && grep -F 'device: proc' "$MOUNT" >/dev/null \
+    && grep -F 'mountPoint: /proc' "$MOUNT" >/dev/null \
+    && ! grep -E 'mountPoint:[[:space:]]*/swap' "$MOUNT" >/dev/null; then
+    ok "mount.conf lets Calamares own the swap subvolume"
+else
+    err "mount.conf must not list /swap in btrfsSubvolumes (duplicate create)"
 fi
 
 if grep -F 'import calamares.slideshow' "$SLIDE" >/dev/null \
     && grep -F 'function onActivate' "$SLIDE" >/dev/null \
-    && grep -F 'wallpaper.jpg' "$SLIDE" >/dev/null; then
-    ok "install slideshow is API 2 with wallpaper slides"
+    && grep -F 'wallpaper.jpg' "$SLIDE" >/dev/null \
+    && grep -F 'qsTr("Assistant")' "$SLIDE" >/dev/null \
+    && grep -F 'qsTr("App Store")' "$SLIDE" >/dev/null \
+    && grep -F 'interval: 8000' "$SLIDE" >/dev/null \
+    && grep -F 'Super+K' "$SLIDE" >/dev/null \
+    && grep -F 'Super+W' "$SLIDE" >/dev/null \
+    && [ -f "$ROOT/iso/airootfs/etc/calamares/branding/modern/lang/calamares-modern_de.ts" ] \
+    && grep -F 'calamares-modern_de.ts' "$BUILD" >/dev/null \
+    && ! grep -F 'Copying the live system' "$SLIDE" >/dev/null; then
+    ok "install slideshow is API 2 with qsTr wallpaper slides"
 else
-    err "show.qml must be a Presentation slideshow with wallpaper.jpg"
+    err "show.qml must be a Presentation slideshow with qsTr and a German .ts"
 fi
 
 if grep -F 'QProgressBar' "$BUILD" >/dev/null \
+    && grep -F 'QProgressBar::chunk' "$BUILD" >/dev/null \
+    && grep -F 'primary_container' "$BUILD" >/dev/null \
+    && grep -F 'on_primary_container' "$BUILD" >/dev/null \
     && grep -F 'QTextBrowser' "$BUILD" >/dev/null \
-    && grep -F 'QPushButton:default' "$BUILD" >/dev/null; then
+    && grep -F 'QPushButton:default' "$BUILD" >/dev/null \
+    && grep -F 'QMessageBox' "$BUILD" >/dev/null; then
     ok "Calamares QSS styles the exec bar and summary"
 else
-    err "iso-build.sh QSS must style QProgressBar and QTextBrowser"
+    err "iso-build.sh QSS must style QProgressBar chunk from primaryContainer"
+fi
+
+if grep -E '^prompt-install:[[:space:]]*false$' "$SETTINGS" >/dev/null; then
+    ok "summary Install starts exec without a confirmation dialog"
+else
+    err "settings.conf prompt-install must be false (cage cannot show the confirm dialog)"
 fi
 
 XKB_TMP="$(mktemp -d)"
@@ -370,6 +608,62 @@ if [ "$lst_got" = "True" ]; then
     ok "base.lst filter keeps us/de layouts and drops variants"
 else
     err "base.lst filter failed"
+fi
+
+if grep -F 'no vX.Y.Z tag in this clone' "$BUILD" >/dev/null \
+    && grep -F 'console=ttyS0,115200' "$BUILD" >/dev/null \
+    && grep -F 'lrelease6' "$BUILD" >/dev/null \
+    && grep -F '/usr/lib/qt6/bin/lrelease' "$BUILD" >/dev/null; then
+    ok "iso-build requires a release pin, serial console, and lrelease"
+else
+    err "iso-build.sh must refuse a missing pin, add ttyS0, and compile branding .qm"
+fi
+
+ISO_YML="$ROOT/.github/workflows/iso.yml"
+SMOKE="$ROOT/scripts/test-iso-qemu-smoke.sh"
+INSTALL_QEMU="$ROOT/scripts/test-iso-qemu-install.sh"
+if [ -f "$ISO_YML" ] && [ -x "$SMOKE" ] \
+    && grep -F 'test-iso-qemu-smoke.sh' "$ISO_YML" >/dev/null \
+    && grep -F 'qemu-system-x86' "$ISO_YML" >/dev/null \
+    && grep -F 'modern-ci: calamares' "$SMOKE" >/dev/null \
+    && [ -x "$INSTALL_QEMU" ] \
+    && grep -F -- '--unattended' "$INSTALL_QEMU" >/dev/null \
+    && grep -F 'late install finished' "$INSTALL_QEMU" >/dev/null \
+    && ! grep -F 'test-iso-qemu-install.sh' "$ISO_YML" >/dev/null; then
+    ok "ISO workflow runs the QEMU Calamares smoke"
+else
+    err "iso.yml must run test-iso-qemu-smoke.sh after mkarchiso"
+fi
+
+MODULES="$ROOT/iso/airootfs/etc/calamares/modules"
+if python3 - "$SETTINGS" "$MODULES" "$BOOTLOADER" <<'PY'; then
+import pathlib, re, sys
+settings, modules, bootloader = (pathlib.Path(p) for p in sys.argv[1:])
+text = settings.read_text(encoding="utf-8")
+names = re.findall(r"^\s+-\s+([a-z0-9@]+)\s*$", text, re.M)
+assert names, "no sequence modules"
+for name in names:
+    base = name.split("@", 1)[0]
+    if name.startswith("shellprocess@"):
+        inst = name.split("@", 1)[1]
+        path = modules / f"shellprocess-{inst}.conf"
+    else:
+        path = modules / f"{base}.conf"
+    # Job-only modules (machineid, fstab, ...) ship Calamares defaults.
+    if path.is_file() or base in {
+        "machineid", "fstab", "localecfg", "networkcfg", "hwclock", "umount",
+        "summary", "finished",
+    }:
+        continue
+    raise SystemExit(f"missing {path} for {name}")
+bl = bootloader.read_text(encoding="utf-8")
+assert "kernelSearchPath:" in bl and "kernelPattern:" in bl
+assert not re.search(r"^kernel:", bl, re.M)
+assert not re.search(r"^img:", bl, re.M)
+PY
+    ok "Calamares sequence modules and bootloader schema"
+else
+    err "settings.conf sequence must match module configs; bootloader must use kernelSearchPath"
 fi
 
 [ "$FAIL" -eq 0 ]

@@ -97,9 +97,12 @@ Build on this PC or CI. Output is gitignored `iso/out/` (throwaway
 user that is deleted when the script exits.
 
 ```bash
-sudo pacman -S --needed archiso qemu-desktop
+sudo pacman -S --needed archiso qemu-desktop edk2-ovmf qt6-tools
 sudo ./scripts/iso-build.sh --mkarchiso
-./scripts/iso-qemu.sh          # live image + 64G qcow2 (Calamares needs ≥ 16 GiB)
+./scripts/iso-qemu.sh          # UEFI live image + 64G qcow2 (Calamares needs ≥ 16 GiB)
+./scripts/iso-qemu.sh --headless   # no GTK; CI smoke uses this
+./scripts/iso-qemu.sh --reset-disk # wipe a previous VM install, still boot the ISO
+./scripts/test-iso-qemu-install.sh # unattended QEMU until late install finishes
 ```
 
 The **live** ISO is this clone (kiosk, branding, Calamares). After
@@ -110,15 +113,99 @@ the latest `vX.Y.Z`). First boot of the **installed** system is greetd
 The **live** image autologins `liveuser` into `cage`. Cage's client is
 Xwayland; Calamares runs as root on X11 (`sudo` + `xhost`) so partitioning
 works. Root cannot be a Wayland client of liveuser's compositor, and a
-root compositor never painted in QEMU. `iso-qemu.sh` writes guest serial
-to `iso/out/vm-serial.log`.
+root compositor never painted in QEMU. `locale-gen` runs beside greetd,
+not before it. `iso-qemu.sh` boots OVMF (install `edk2-ovmf`) and writes
+guest serial to `iso/out/vm-serial.log`. `--headless` drops GTK/GL so CI
+can wait for `modern-ci: calamares` on that serial. BIOS QEMU makes
+Calamares try GRUB, which this image does not ship.
+`--unattended` sets QEMU fw_cfg `opt/org.modernos/unattended`; the live
+wrapper writes `/etc/calamares/unattended` so Calamares auto-advances
+and fills user `modern` / password `modern`. `scripts/test-iso-qemu-install.sh`
+runs that until serial shows `late install finished` (about an hour;
+not part of `ci-check.sh` or the ISO Action).
 
-After **Install**, the exec page copies the squashfs (`unpackfs`), then
-checks packages already on the image (`linux-zen` is shipped so this is
-not a network download), then three named late jobs: clone the pin,
-`install.sh --profile m0 --yes`, `provision-iso.sh`. The bar only moves
-when a job reports; unpack in QEMU can sit still for many minutes. Late
-git has a 180s timeout instead of hanging for two hours.
+The VM always attaches `iso/out/vm-disk.qcow2`. After a previous
+Calamares run, OVMF NVRAM (`iso/out/ovmf-vars.fd`) can boot that disk
+instead of the ISO. UEFI ignores `-boot order=d`, so an unfinished
+install shows `ERROR: '' device did not show up` in initramfs — not an
+empty live TTY. Each `iso-qemu.sh` resets firmware NVRAM and gives the
+CD `bootindex=1`. Use `--reset-disk` to recreate the qcow2. Use
+`--keep-nvram` only when you want to reboot into a finished install.
+
+Installer checks are two gates. Every PR runs `scripts/ci-check.sh`
+(QSS/config/schema, AUR patch fixtures, `calamares-late.sh` clone against
+a local git tag). The ISO Action (release only) boots the built image
+until Calamares starts; a red job does not attach the ISO. It does not
+click through pages or run late clone of GitHub.
+
+`stylesheet.qss` paints scroll viewports, Summary `#summaryContent` /
+`#summaryItemWrap` / `#summaryPartition`, `#summaryItemBody` cards, and
+`#partitionLabel` (legend names still need the AUR patch: Calamares
+paints Boot/root with `Qt::black`).
+Combo boxes have no QSS radius. Native combo lists stay `Qt::Popup`
+(an in-window overlay SIGSEGV'd Calamares on start). Cancel is hidden
+during Install (`disable-cancel-during-exec` plus `quitVisible`). Late
+jobs set `verbose: false` so a failure dialog shows stdout (Calamares
+`verbose: true` streams output to the session log and leaves the dialog
+empty). Failures also tee to `/var/log/modern-calamares-late.log`.
+Late `ensure_dns` replaces a dangling systemd `/etc/resolv.conf`
+symlink, strips loopback nameservers, and rewrites `nsswitch.conf`
+`hosts:` to `files dns`. Arch's default `resolve [!UNAVAIL=return]`
+lets nss-resolve fail before glibc ever reads resolv.conf, so yay's
+`git clone` died with `Could not resolve host: aur.archlinux.org`
+even after writing `1.1.1.1`. Late desktop uses `runuser` (not
+`sudo -iu`) and `Defaults !use_pty` so install.sh can run in the
+Calamares chroot without `/dev/pts`. It does not chmod `/etc` to 0750
+(that blocked the target user from `/etc/gitconfig` during yay
+bootstrap). `iso-build.sh` bundles the pin at `/usr/share/modern/dotfile`; late
+clone copies that tree (the GitHub remote is private, so a network
+clone would fail). The ISO pin must be a real `vX.Y.Z` tag (`--tag` or
+the latest tag in the clone).
+
+Location Region/Zone combos stay on the page; the **Change…** locale
+dialogs are hidden. They open a modal X11 window that cage maps as an
+unclosable grey stripe. Keyboard layout changes call `setxkbmap` on
+Xwayland (`xorg-setxkbmap`; `useLocale1: false` so systemd-localed is
+not used instead).
+
+The **Network** / **Netzwerk** page sits after Keyboard. Next stays off
+until a default IPv4 or IPv6 route exists — Ethernet is enough;
+otherwise Wi-Fi turns on (no toggle) and the page matches Settings →
+Network (ethernet row, nearby list, password card). Ethernet already
+up shows a centered “You're connected with Ethernet” page instead.
+Live setup enables NetworkManager and stops `iwd` so they do not fight
+over the radio. Unattended QEMU already has virtio-net, so auto-next is
+not blocked. `stylesheet.qss` paints `#networkPage`, `#networkOkPage`,
+and `#wifiList` from the same tokens as the rest of Calamares. The C++
+module is copied into AUR Calamares at build (`iso/releng/calamares-modernnet`).
+Late `pacman` still needs that route.
+
+After **Install**, the exec page copies the squashfs (`unpackfs`). The
+Calamares packages job does not `pacman -S` anything (no sync db on the
+squashfs; a `-Sy` plus kernel download froze the bar in QEMU). Late
+desktop inits a target keyring (`pacman-key --init` / `--populate`,
+same as `pacstrap -K` — unpackfs does not copy the live overlay's
+`pacman-init` gnupg home), then `pacman --disable-sandbox -Sy
+archlinux-keyring` (pacman 7's landlock sandbox cannot download
+inside the Calamares chroot), enables
+`[multilib]` (needed for `lib32-gamemode`), sets `IgnorePkg` for
+`jack2` / `pulseaudio` (`--noconfirm` answers **No** to “Remove jack2?”),
+installs the PipeWire stack, overlays pin `install_native` so old tags
+cannot one-shot ffmpeg+pipewire-jack, rewrites pin `matugen` /
+`bibata-cursor-theme` (including a trailing comment) to the `-bin`
+packages already on the squashfs, `NoExtract`s `resolv.conf` so a
+`systemd` upgrade cannot point DNS at an empty `/run`, then
+`install.sh --profile m0 --yes` (`--needed` skips packages already unpacked), then `provision-iso.sh`.
+A failed `install.sh` reprints its last 40 lines (and `install/install.log`)
+into the Calamares dialog — `log_error` otherwise only hits stderr. The ISO
+also ships m0 AUR packages (`matugen-bin`, `bibata-cursor-theme-bin`, `phylax-git`)
+so late install does not have to build them. Source AUR `matugen` needs
+rustup and is stuck on 3.0.0; `matugen-bin` is 4.2.0 and provides `matugen`.
+Source `bibata-cursor-theme` needs AUR `python-clickgen`; the `-bin`
+package does not.
+The bar only moves when a job reports; unpack in QEMU can sit still for
+many minutes. If the bundle is missing, late git has a 180s timeout
+instead of hanging for two hours.
 If you land on a TTY, this image never started greetd:
 
 ```bash
@@ -126,7 +213,19 @@ If you land on a TTY, this image never started greetd:
 ```
 
 Welcome **Support** / **Known issues** open GitHub in Firefox on the
-same session. There is no Donate button. The VM needs virtio 3D.
+same Xwayland display. Cage does not decorate X11 windows, so the live
+session runs **openbox** (Calamares stays fullscreen without a titlebar).
+Close Firefox with its window-close button or Alt+F4 to return to the
+installer. There is no Donate button. The VM needs virtio 3D.
+
+Calamares is still Qt Widgets for every *page* (Welcome, Partitions,
+Users, …). `stylesheet.qss` can restyle those: colors, field radii,
+buttons, the exec bar. Combo lists are `Qt::Popup` windows, so the AUR
+build also applies that QSS on `qApp`. Cage still maps those lists at
+`(0,0)`. It cannot round the default left-hand step list —
+that is a C++ delegate. `sidebar: qml` + `calamares-sidebar.qml` is the
+escape hatch used here (nav pills and a padded About, like Settings).
+The logo is `iso/airootfs/etc/calamares/branding/modern/logo.png`.
 
 Settings → Update later tracks the latest GitHub **release tag**, not
 `dev` or the tip of `main`.
@@ -170,6 +269,9 @@ scripts/check-isolation.sh
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
 scripts/doctor.sh
 ```
+
+`test-iso-qemu-smoke.sh` is **not** part of `ci-check.sh`. It needs a
+built ISO and QEMU; the ISO workflow runs it after mkarchiso.
 
 If `MODERN_PROTECT_HOME` is your `$HOME`, do **not** run
 `./install/install.sh --dry-run --profile m0` without `--target` — the

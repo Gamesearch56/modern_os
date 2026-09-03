@@ -23,7 +23,7 @@ jobs:
       && (github.event_name == 'workflow_dispatch'
           || (github.event_name == 'release' && !github.event.release.prerelease))
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     permissions:
       contents: read
     container:
@@ -49,11 +49,14 @@ jobs:
         env:
           ISO_OUT: ${{ github.workspace }}/iso-out
         run: |
-          pacman -Syu --noconfirm --needed archiso base-devel git python jq sudo
+          pacman -Syu --noconfirm --needed archiso base-devel git python jq sudo \
+            qemu-system-x86 edk2-ovmf qt6-tools
           mkdir -p "$ISO_OUT"
           df -h "$ISO_OUT" /tmp || true
           ./scripts/iso-build.sh --mkarchiso --out "$ISO_OUT" --tag "$TAG"
           find "$ISO_OUT" -name '*.iso' -ls
+          MODERN_ISO_OUT="$ISO_OUT" MODERN_ISO_QEMU_MEM=4G MODERN_ISO_QEMU_SMP=2 \
+            ./scripts/test-iso-qemu-smoke.sh
 
       - uses: actions/upload-artifact@v7
         with:

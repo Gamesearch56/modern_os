@@ -62,7 +62,7 @@ fi
 USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 wp="${USER_HOME}/.config/modern/wallpapers/default.jpg"
 if [ -x "$PROVISION_ROOT/scripts/wallpaper-sync.sh" ] && [ -f "$wp" ]; then
-    sudo -u "$USERNAME" env \
+    runuser -u "$USERNAME" -- env \
         HOME="$USER_HOME" \
         XDG_STATE_HOME="${USER_HOME}/.local/state" \
         bash "$PROVISION_ROOT/scripts/wallpaper-sync.sh" "$wp" || true

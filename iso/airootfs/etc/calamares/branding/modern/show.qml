@@ -14,7 +14,7 @@ Presentation {
     }
 
     Timer {
-        interval: 9000
+        interval: 8000
         running: presentation.activatedInCalamares
         repeat: true
         onTriggered: presentation.goToNextSlide()
@@ -35,22 +35,52 @@ Presentation {
     }
 
     Slide {
-        title: "Copying the live system"
-        centeredText: "The installer is writing the image to disk. In a virtual machine this step can take a while, and the bar may sit still until the copy reports progress."
+        title: qsTr("Assistant")
+        centeredText: qsTr("Super+A opens AI chat. Ask in your language. Replies come from a local model or Gemini.")
     }
 
     Slide {
-        title: "Kernel and base packages"
-        centeredText: "linux-zen is already on the live image, so this step should be a quick check rather than a long download."
+        title: qsTr("Colors from your wallpaper")
+        centeredText: qsTr("Pick a wallpaper with Super+W. Bars, apps, and login restyle from that image.")
     }
 
     Slide {
-        title: "Setting up the desktop"
-        centeredText: "Next the installer clones the pinned release, runs the desktop install, and enables login and networking. Each of those jobs moves the bar."
+        title: qsTr("Keyboard helper")
+        centeredText: qsTr("Forget a shortcut? Super+K lists every bind. Search, then press the combo.")
     }
 
     Slide {
-        title: "After reboot"
-        centeredText: "First boot is the login screen. Sign in with the user and password you just created."
+        title: qsTr("App Store")
+        centeredText: qsTr("Install programs from the official repositories. Search, confirm, done.")
+    }
+
+    Slide {
+        title: qsTr("Launcher")
+        centeredText: qsTr("Super+Space finds apps, runs commands, and does quick sums.")
+    }
+
+    Slide {
+        title: qsTr("Settings")
+        centeredText: qsTr("Super+I opens System Settings. One file holds every preference.")
+    }
+
+    Slide {
+        title: qsTr("English and German")
+        centeredText: qsTr("The desktop ships both. Switch language in Settings when you want.")
+    }
+
+    Slide {
+        title: qsTr("Everyday shortcuts")
+        centeredText: qsTr("Super+T terminal. Super+B browser. Super+E files. Print takes a screenshot.")
+    }
+
+    Slide {
+        title: qsTr("Windows and workspaces")
+        centeredText: qsTr("Super+arrows move focus. Super+Shift+arrows move the window. Super+Tab shows an overview.")
+    }
+
+    Slide {
+        title: qsTr("After reboot")
+        centeredText: qsTr("Sign in with the user you just created. Super+N is the control panel. Super+L locks.")
     }
 }

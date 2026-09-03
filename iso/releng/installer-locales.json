@@ -1,0 +1,6 @@
+{
+  "locales": [
+    { "calamares": "en", "glibc": "en_US.UTF-8", "xkb": "us" },
+    { "calamares": "de", "glibc": "de_DE.UTF-8", "xkb": "de" }
+  ]
+}

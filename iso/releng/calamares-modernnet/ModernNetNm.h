@@ -1,0 +1,61 @@
+#ifndef MODERNNETNM_H
+#define MODERNNETNM_H
+
+#include <QObject>
+#include <QSet>
+#include <QString>
+#include <QVector>
+
+class QProcess;
+
+class ModernNetNm : public QObject
+{
+    Q_OBJECT
+public:
+    struct Wifi
+    {
+        QString ssid;
+        QString security;
+        int signal = 0;
+        bool inUse = false;
+        bool known = false;
+        bool locked = false;
+    };
+
+    explicit ModernNetNm( QObject* parent = nullptr );
+
+    bool ethernetUp() const { return m_ethernetUp; }
+    bool wifiUp() const { return m_wifiUp; }
+    bool wifiRadio() const { return m_wifiRadio; }
+    bool scanning() const { return m_scanning; }
+    bool online() const { return m_hasRoute; }
+    QString ethernetAddr() const { return m_ethernetAddr; }
+    QString wifiSsid() const { return m_wifiSsid; }
+    QVector< Wifi > networks() const { return m_networks; }
+
+    void refresh();
+    void scan();
+    void setWifiRadio( bool on );
+    bool connectSsid( const QString& ssid, const QString& password );
+
+signals:
+    void changed();
+
+private:
+    static QStringList splitNmcli( const QString& line );
+    static QString run( const QString& bin, const QStringList& args, int timeoutMs = 8000 );
+    QSet< QString > knownWifi() const;
+    void loadWifi( const QSet< QString >& known );
+
+    bool m_ethernetUp = false;
+    bool m_wifiUp = false;
+    bool m_wifiRadio = false;
+    bool m_hasRoute = false;
+    bool m_scanning = false;
+    QString m_ethernetAddr;
+    QString m_wifiSsid;
+    QVector< Wifi > m_networks;
+    QProcess* m_scan = nullptr;
+};
+
+#endif
