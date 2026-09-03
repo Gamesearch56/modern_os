@@ -124,12 +124,50 @@ rewrite. Do this **once**, then change visibility.
    `dev` replayed on the squashed `main`). This is the only allowed
    force-push to those branches.
 3. Delete leftover `feature/*` / `fix/*` remotes.
-4. Tag **`v0.2.0`** on the new `main` (history break). Settings Update
+4. Shrink the ISO on `dev` (below) and PR into `main` so the first
+   public download is not the fat releng image.
+5. Tag **`v0.2.0`** on the new `main` (history break). Settings Update
    follows tags; friends on `v0.1.x` will see this as the next update.
-5. GitHub → Settings → Danger Zone → Change visibility → Public.
-6. Optional: topics, Issues, Discussions.
+6. GitHub → Settings → Danger Zone → Change visibility → Public.
+7. Optional: topics, Issues, Discussions.
 
 Until then, do not force-push and do not change visibility.
+
+### Shrink the ISO before v0.2.0
+
+`iso-build.sh` copies stock archiso **releng** and **appends**
+`iso/releng/packages.x86_64`. That is a rescue disc plus a second
+desktop: ~1.7G squashfs / ~2.7G ISO (`xz` + x86 BCJ already). Releng
+tools (Clonezilla, TestDisk, `archinstall`, extra filesystems, guest
+agents, VPNs, …) survive `unpackfs` onto the installed disk —
+`striplive` only deletes live **files** (archiso hooks, `liveuser`,
+Calamares). The overlay kernel (`linux-zen` + headers), Hyprland,
+PipeWire, fonts, Firefox, and AUR `-bin` packages are on the squashfs
+on purpose so Calamares does not `pacman -S` mid-install (that froze
+the QEMU exec bar).
+
+Do, in this order, on `dev`. Update `scripts/test-iso-live-kiosk.sh`
+when a name leaves `packages.x86_64`.
+
+1. **Replace the appended releng list** with a short installer list:
+   `base`, firmware, btrfs/fat/ntfs, NetworkManager/iwd, squashfs-tools,
+   and Calamares/kiosk deps. Largest cut; also stops rescue packages
+   landing on friends' disks.
+2. **Live-boot `linux-zen` and drop stock `linux`** so the image is not
+   two kernels. Highest boot risk — re-run ISO CI / QEMU smoke.
+3. **Drop `linux-zen-headers` from the ISO** unless first-boot NVIDIA
+   DKMS must work offline. `install.sh` can pull headers later.
+4. **Drop or replace Firefox** if Welcome hides Support/Issues, or swap
+   a lighter browser. Installed `30-apps` can still ship Firefox.
+5. **Smaller leftovers:** sparse git bundle (`install/` + `stow/` +
+   `scripts/` only), UEFI-only (`bios.syslinux` off), optional larger
+   xz dict. Do not switch to zstd — it is usually bigger.
+
+Do **not** take Hyprland, Quickshell, PipeWire, `yay`, `matugen-bin`,
+or `bibata-cursor-theme-bin` off the squashfs. That is the copy-the-
+live-root installer. Do not drop `linux-firmware` if real-hardware
+Wi-Fi still matters. Build and try the image in QEMU or CI, never
+with `provision-iso.sh` / Calamares on a machine you live on.
 
 ## GitHub settings (branch + Actions)
 
