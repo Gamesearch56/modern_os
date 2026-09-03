@@ -188,11 +188,22 @@ also skips the check, since naming a pin is a deliberate choice — that is
 how the ISO workflow rebuilds an older release from `main`'s scripts.
 
 Because the bundle is cloned from the clone rather than the remote, the
-checkout needs a real `.git` **with tags**. `actions/checkout` quietly
-downloads a REST tarball whenever git is missing from the runner image, so
-`iso.yml` installs git *before* the checkout step and uses
-`fetch-depth: 0`. `iso-build.sh` checks both up front rather than letting
-git report "repository does not exist" against the destination path.
+checkout needs a real `.git` **with tags** — hence `fetch-depth: 0` in
+`iso.yml`, since a shallow checkout of `main` carries none.
+`iso-build.sh` checks for the repository and the tag up front rather than
+letting git report "repository does not exist" against the destination
+path, and prints git's own message, which distinguishes a missing `.git`
+from a refusal on ownership.
+
+The ISO job is **not** a `container:` job, and that is load-bearing.
+GitHub guarantees only 14 GB free on `ubuntu-latest` and mkarchiso needs
+considerably more, so a host step deletes the preinstalled toolchains
+(`/usr/share/dotnet`, `/opt/hostedtoolcache`, …) first — paths a
+containerised step cannot see. The build itself then runs through
+`docker run --privileged` via `scripts/ci-iso-container.sh`, which also
+re-marks the workspace safe for git (`actions/checkout` writes
+`safe.directory` to a temporary global config that is gone by then) and
+chowns the output back so `upload-artifact` can read it.
 
 Location Region/Zone combos stay on the page; the **Change…** locale
 dialogs are hidden. They open a modal X11 window that cage maps as an
