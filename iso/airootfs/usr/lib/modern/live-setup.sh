@@ -58,3 +58,9 @@ chown -R liveuser:liveuser /home/liveuser/.config
 systemctl enable --now NetworkManager.service
 systemctl disable --now iwd.service 2>/dev/null || true
 systemctl stop iwd.service 2>/dev/null || true
+
+# QEMU has no 802.11 device. iso-qemu.sh --wifi-sim sets this fw_cfg and
+# omits the virtio NIC so the Network step shows Wi-Fi instead of Ethernet.
+if [ -r /sys/firmware/qemu_fw_cfg/by_name/opt/org.modernos/wifi-sim/raw ]; then
+    /usr/lib/modern/live-wifi-sim.sh || true
+fi

@@ -142,6 +142,19 @@ just installed, quit QEMU and start it again with no CD at all:
 ./scripts/iso-qemu.sh --no-iso
 ```
 
+QEMU has no 802.11 adapter, and the virtio NIC always looks like
+Ethernet, so the Network step never shows its Wi-Fi list in a normal
+VM. `--wifi-sim` drops that NIC and sets fw_cfg
+`opt/org.modernos/wifi-sim`; `live-setup.sh` then runs
+`live-wifi-sim.sh`, which loads `mac80211_hwsim` and brings up WPA2
+access points (`ModernOS-Test-1`, passphrase `modernwifi`) for the
+installer to scan. The guest has no uplink — use this to try the Wi-Fi
+page, not to run a full install.
+
+```bash
+./scripts/iso-qemu.sh --wifi-sim
+```
+
 `--no-iso` implies `--keep-nvram` so the `Linux Boot Manager` entry that
 the bootloader job wrote survives, and it does not need an ISO in
 `iso/out/` at all.
@@ -210,7 +223,10 @@ Location Region/Zone combos stay on the page; the **Change…** locale
 dialogs are hidden. They open a modal X11 window that cage maps as an
 unclosable grey stripe. Keyboard layout changes call `setxkbmap` on
 Xwayland (`xorg-setxkbmap`; `useLocale1: false` so systemd-localed is
-not used instead).
+not used instead). Upstream starts that apply from the *variant* signal;
+`live-xkb-filter.py` drops every variant, so picking German never ran
+`setxkbmap` and the Users password was typed on `us`. The AUR patch
+calls `Config::somethingChanged()` on a layout change too.
 
 The Keyboard step always opens on English. `guessLayout: false` turns off
 Calamares' locale→layout guess, which otherwise flipped the page to German
@@ -373,6 +389,7 @@ to start using your new desktop.` and rewrites the matching
 languages change together. `productName` stays **ModernOS**: it is also
 the Welcome title, the summary and the bootloader entry, and none of those
 are wrong.
+
 If you land on a TTY, this image never started greetd:
 
 ```bash
@@ -387,9 +404,17 @@ installer. There is no Donate button. The VM needs virtio 3D.
 
 Calamares is still Qt Widgets for every *page* (Welcome, Partitions,
 Users, …). `stylesheet.qss` can restyle those: colors, field radii,
-buttons, the exec bar. Combo lists are `Qt::Popup` windows, so the AUR
-build also applies that QSS on `qApp`. Cage still maps those lists at
-`(0,0)`. It cannot round the default left-hand step list —
+buttons, the exec bar. The AUR build also applies that QSS on `qApp`,
+because Qt-owned child windows do not inherit the main window's sheet.
+Combo lists are **not** `Qt::Popup` windows here: cage ignores the X11
+`ConfigureWindow` Qt sends for one, so a native list always mapped at
+the screen origin over the sidebar. The AUR patch suppresses the combo's
+own popup and draws the list as a `QListView` child of the installer
+window (`#modernComboOverlay`), placed with
+`combo->mapTo( window, { 0, 0 } )` at the field's width — below the
+field, above it when there is no room below, clamped and scrolling when
+the list is taller than either side. Every `QComboBox` in the installer
+goes through that one filter. It cannot round the default left-hand step list —
 that is a C++ delegate. `sidebar: qml` + `calamares-sidebar.qml` is the
 escape hatch used here (nav pills and a padded About, like Settings).
 The logo is `iso/airootfs/etc/calamares/branding/modern/logo.png`.

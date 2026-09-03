@@ -24,6 +24,8 @@ qt6-declarative
 qt6-translations
 networkmanager
 iwd
+# NetworkManager ipv4.method shared (live-wifi-sim.sh APs) needs this.
+dnsmasq
 mesa
 git
 sudo

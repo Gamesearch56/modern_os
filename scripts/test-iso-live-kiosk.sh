@@ -64,6 +64,8 @@ if grep -F 'vm-serial.log' "$QEMU" >/dev/null \
     && grep -F -- '--unattended' "$QEMU" >/dev/null \
     && grep -F 'opt/org.modernos/unattended' "$QEMU" >/dev/null \
     && grep -F -- '--no-iso) NO_ISO=1; KEEP_NVRAM=1' "$QEMU" >/dev/null \
+    && grep -F -- '--wifi-sim) WIFI_SIM=1' "$QEMU" >/dev/null \
+    && grep -F 'opt/org.modernos/wifi-sim' "$QEMU" >/dev/null \
     && ! grep -F 'INSTALL_DISK' "$QEMU" >/dev/null; then
     ok "iso-qemu.sh captures serial, attaches vm-disk.qcow2, boots OVMF, ISO bootindex first"
 else
@@ -271,6 +273,19 @@ else
     err "iso-build.sh QSS must style combo popups without wallpaper on #mainApp or combo radius"
 fi
 
+# The overlay sizes itself from row height plus frame, so QSS padding on the
+# view itself would push the last row out of the window.
+if grep -F '#modernComboOverlay {{' "$BUILD" >/dev/null \
+    && grep -F '#modernComboOverlay::viewport {{' "$BUILD" >/dev/null \
+    && grep -F '#modernComboOverlay::item {{' "$BUILD" >/dev/null \
+    && grep -F '#modernComboOverlay::item:selected' "$BUILD" >/dev/null \
+    && grep -A8 '#modernComboOverlay {{' "$BUILD" | grep -F 'padding: 0;' >/dev/null \
+    && ! grep -A8 '#modernComboOverlay {{' "$BUILD" | grep -E '#[0-9A-Fa-f]{6}' >/dev/null; then
+    ok "Calamares QSS styles the in-window combo overlay from tokens without view padding"
+else
+    err "iso-build.sh QSS must style #modernComboOverlay from tokens with padding: 0"
+fi
+
 SETUP="$ROOT/iso/airootfs/usr/lib/modern/live-setup.sh"
 LOCALE_GEN="$ROOT/iso/airootfs/etc/locale.gen"
 LOCALE_CONF="$ROOT/iso/airootfs/etc/calamares/modules/locale.conf"
@@ -336,9 +351,8 @@ if [ -f "$LANGHOOK" ] \
     && grep -F 'qApp->setStyleSheet( ss )' "$LANGHOOK" >/dev/null \
     && grep -F 'zoneAndRegionLayout = new QVBoxLayout' "$LANGHOOK" >/dev/null \
     && grep -F 'm_localeChangeButton->hide()' "$LANGHOOK" >/dev/null \
-    && grep -F 'mapToGlobal' "$LANGHOOK" >/dev/null \
     && grep -F 'QComboBoxPrivateContainer' "$LANGHOOK" >/dev/null \
-    && grep -F 'modernRemapping' "$LANGHOOK" >/dev/null \
+    && grep -F 'modernComboOverlay' "$LANGHOOK" >/dev/null \
     && grep -F 'dataChanged' "$LANGHOOK" >/dev/null \
     && grep -F 'CALAMARES_RETRANSLATE_FOR( w' "$LANGHOOK" >/dev/null \
     && grep -F 'engine()->retranslate()' "$LANGHOOK" >/dev/null \
@@ -357,6 +371,8 @@ if [ -f "$LANGHOOK" ] \
     && grep -F 'PartitionLabelsView.cpp' "$LANGHOOK" >/dev/null \
     && grep -F 'QPalette::WindowText' "$LANGHOOK" >/dev/null \
     && grep -F 'UsersViewStep.cpp' "$LANGHOOK" >/dev/null \
+    && grep -F 'KB_APPLY_NEW' "$LANGHOOK" >/dev/null \
+    && grep -F 'somethingChanged();' "$LANGHOOK" >/dev/null \
     && grep -F 'Config.cpp' "$LANGHOOK" >/dev/null \
     && grep -F '/etc/calamares/unattended' "$LANGHOOK" >/dev/null \
     && grep -F 'calamares_de.ts' "$LANGHOOK" >/dev/null \
@@ -374,6 +390,20 @@ if [ -f "$LANGHOOK" ] \
     ok "AUR Calamares build patches languages, sidebar, combos, i18n, cancel, keyboard"
 else
     err "iso-aur-repo.sh must patch Calamares languages, sidebar, combos, i18n, cancel, keyboard"
+fi
+
+# The overlay is a child widget, so screen coordinates would land it at the
+# window origin — which is the bug cage's Qt::Popup handling already caused.
+if grep -F 'new QListView( host )' "$LANGHOOK" >/dev/null \
+    && grep -F 'mapTo( host, QPoint( 0, 0 ) )' "$LANGHOOK" >/dev/null \
+    && grep -F 'origin.y() - height' "$LANGHOOK" >/dev/null \
+    && grep -F 'm_combo->width()' "$LANGHOOK" >/dev/null \
+    && grep -F 'ComboOverlay( qApp )' "$LANGHOOK" >/dev/null \
+    && ! grep -F 'mapToGlobal' "$LANGHOOK" >/dev/null \
+    && ! grep -F 'w->move( pos )' "$LANGHOOK" >/dev/null; then
+    ok "Combo lists are placed against their field inside the installer window"
+else
+    err "calamares-limit-languages.py must place combo lists in window coordinates"
 fi
 
 if grep -F 'live-xkb-filter.py' "$I18N" >/dev/null \
@@ -416,6 +446,26 @@ if grep -F 'NetworkManager.service' "$SETUP" >/dev/null \
     ok "live Network step uses NetworkManager and sits after keyboard"
 else
     err "live-setup must enable NetworkManager; settings.conf must list modernnet after keyboard"
+fi
+
+WIFI_SIM="$ROOT/iso/airootfs/usr/lib/modern/live-wifi-sim.sh"
+if [ -x "$WIFI_SIM" ] \
+    && grep -F 'mac80211_hwsim' "$WIFI_SIM" >/dev/null \
+    && grep -F '802-11-wireless.mode ap' "$WIFI_SIM" >/dev/null \
+    && grep -F 'ipv4.method shared' "$WIFI_SIM" >/dev/null \
+    && grep -F 'opt/org.modernos/wifi-sim' "$SETUP" >/dev/null \
+    && grep -F 'live-wifi-sim.sh' "$SETUP" >/dev/null \
+    && grep -F -- '--wifi-sim) WIFI_SIM=1' "$QEMU" >/dev/null \
+    && grep -F 'opt/org.modernos/wifi-sim' "$QEMU" >/dev/null \
+    && grep -F 'WIFI_SIM' "$QEMU" >/dev/null \
+    && grep -qxF 'dnsmasq' "$ROOT/iso/releng/packages.x86_64" \
+    && grep -F 'live-wifi-sim.sh' "$PROFILE" >/dev/null \
+    && grep -F 'live-wifi-sim.sh' "$ROOT/scripts/iso-build.sh" >/dev/null \
+    && grep -F 'usr/lib/modern/live-wifi-sim.sh' \
+        "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" >/dev/null; then
+    ok "iso-qemu.sh --wifi-sim drives live-wifi-sim.sh and drops the virtio NIC"
+else
+    err "wifi-sim must be wired from iso-qemu.sh through live-setup and stripped after unpackfs"
 fi
 
 SETTINGS="$ROOT/iso/airootfs/etc/calamares/settings.conf"

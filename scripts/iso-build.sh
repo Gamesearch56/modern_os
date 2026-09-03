@@ -156,6 +156,8 @@ install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-xdg-open.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/live-xdg-open.sh"
 install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-xkb-filter.py" \
     "$AIROOTFS_OUT/usr/lib/modern/live-xkb-filter.py"
+install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-wifi-sim.sh" \
+    "$AIROOTFS_OUT/usr/lib/modern/live-wifi-sim.sh"
 [ -f "$ROOT/iso/releng/installer-locales.json" ] \
     || die "missing $ROOT/iso/releng/installer-locales.json"
 install -m 0644 "$ROOT/iso/releng/installer-locales.json" \
@@ -311,6 +313,31 @@ QComboBox QAbstractItemView::item {{
     padding: 6px 12px;
 }}
 QComboBox QAbstractItemView::item:selected, QComboBox QAbstractItemView::item:hover {{
+    background-color: {primary};
+    color: {on_primary};
+}}
+/* The combo list is an in-window child view; padding stays 0 so the AUR
+   overlay can size itself from the row height and the frame alone. */
+#modernComboOverlay {{
+    background-color: {highest};
+    color: {on_surface};
+    border: 1px solid {outline};
+    border-radius: 8px;
+    padding: 0;
+    outline: 0;
+    selection-background-color: {primary};
+    selection-color: {on_primary};
+}}
+#modernComboOverlay::viewport {{
+    background-color: {highest};
+}}
+#modernComboOverlay::item {{
+    background-color: {highest};
+    color: {on_surface};
+    min-height: 28px;
+    padding: 6px 12px;
+}}
+#modernComboOverlay::item:selected, #modernComboOverlay::item:hover {{
     background-color: {primary};
     color: {on_primary};
 }}
