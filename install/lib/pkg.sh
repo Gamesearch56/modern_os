@@ -71,8 +71,24 @@ install_native() {
 }
 
 install_aur() {
-    local pkgs=("$@")
-    [ ${#pkgs[@]} -eq 0 ] && return 0
+    local requested=("$@") pkgs=() p
+    [ ${#requested[@]} -eq 0 ] && return 0
+    # yay -S --needed still hits aur.archlinux.org. Skip names already
+    # in the local db (ISO squashfs already has m0 AUR packages).
+    for p in "${requested[@]}"; do
+        if pacman -Qq "$p" >/dev/null 2>&1; then
+            continue
+        fi
+        pkgs+=("$p")
+    done
+    if [ ${#pkgs[@]} -eq 0 ]; then
+        log_ok "AUR packages already installed"
+        return 0
+    fi
+    if [ -n "${MODERN_SKIP_AUR:-}" ]; then
+        log_warn "skipping AUR (${#pkgs[@]} not installed): ${pkgs[*]}"
+        return 0
+    fi
     log_info "Installing ${#pkgs[@]} AUR package(s): ${pkgs[*]}"
     run yay -S --needed --noconfirm "${pkgs[@]}"
 }

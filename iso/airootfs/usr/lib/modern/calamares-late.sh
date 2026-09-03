@@ -242,6 +242,24 @@ ensure_pipewire_jack() {
     rm -f "$out"
 }
 
+# provision-iso.sh enables these units, and a missing package is a missing
+# unit. Pins up to v0.1.6 list only bluez-utils (bluetoothctl); it does not
+# depend on bluez, so bluetoothd, bluetooth.service and the org.bluez that
+# Services/Bluetooth binds were all absent.
+ensure_provision_units() {
+    if [ -n "${MODERN_LATE_TEST:-}" ]; then
+        return 0
+    fi
+    log "packages behind the units provision-iso.sh enables"
+    local out
+    out="$(mktemp)" || die "mktemp provision units log failed"
+    if ! pacman --disable-sandbox -S --needed --noconfirm \
+        bluez bluez-utils networkmanager greetd >"$out" 2>&1; then
+        die "units for provision-iso.sh failed to install: $(tr '\n' ' ' <"$out")"
+    fi
+    rm -f "$out"
+}
+
 # Pin install.sh one-shots every native package. Last install_native in
 # pkg.sh wins, so this overlay splits PipeWire out even on old tags.
 # Pin lists `matugen` / `bibata-cursor-theme` (with a trailing comment).
@@ -253,6 +271,35 @@ overlay_pin_aur_names() {
         -e 's/^[[:space:]]*matugen([[:space:]]|#|$)/matugen-bin\1/' \
         -e 's/^[[:space:]]*bibata-cursor-theme([[:space:]]|#|$)/bibata-cursor-theme-bin\1/' \
         "$f" || true
+}
+
+# mkarchiso copies the profile airootfs with `cp -af --no-preserve=mode`,
+# so every file in the bundled clone lands 0644. profiledef's
+# file_permissions only restores /usr/lib/modern. Without this,
+# provision-iso.sh fails its own -x guard and install.sh's direct calls
+# to scripts/theme-apply.sh silently log_warn instead of theming.
+# The git index carries the real modes; a bundle without .git falls back
+# to *.sh plus the extensionless entry points.
+restore_exec_bits() {
+    local entry path
+    if [ -d "$REPO/.git" ] && command -v git >/dev/null 2>&1; then
+        while IFS= read -r -d '' entry; do
+            case "$entry" in
+                100755\ *)
+                    path="${entry#*$'\t'}"
+                    [ -f "$REPO/$path" ] && chmod +x "$REPO/$path"
+                    ;;
+            esac
+        done < <(GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
+            git -C "$REPO" -c "safe.directory=$REPO" ls-files -sz 2>/dev/null)
+        return 0
+    fi
+    find "$REPO" -type f \( -name '*.sh' -o -name '*.py' \) -exec chmod +x {} +
+    for path in scripts/modern scripts/modern-game scripts/modern-launch \
+        install/system/modern-usersd; do
+        [ -f "$REPO/$path" ] && chmod +x "$REPO/$path"
+    done
+    return 0
 }
 
 pin_resolver() {
@@ -305,6 +352,27 @@ install_native() {
     [ ${#rest[@]} -eq 0 ] && return 0
     run sudo pacman --disable-sandbox -S --needed --noconfirm "${rest[@]}"
 }
+
+install_aur() {
+    local requested=("$@") pkgs=() p
+    [ ${#requested[@]} -eq 0 ] && return 0
+    for p in "${requested[@]}"; do
+        if pacman -Qq "$p" >/dev/null 2>&1; then
+            continue
+        fi
+        pkgs+=("$p")
+    done
+    if [ ${#pkgs[@]} -eq 0 ]; then
+        log_ok "AUR packages already installed"
+        return 0
+    fi
+    if [ -n "${MODERN_SKIP_AUR:-}" ]; then
+        log_warn "skipping AUR (${#pkgs[@]} not installed): ${pkgs[*]}"
+        return 0
+    fi
+    log_info "Installing ${#pkgs[@]} AUR package(s): ${pkgs[*]}"
+    run yay -S --needed --noconfirm "${pkgs[@]}"
+}
 EOF
 }
 
@@ -328,6 +396,7 @@ as_user() {
             XDG_DATA_HOME="$USER_HOME/.local/share" \
             GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
             MODERN_PACMAN_NOSANDBOX=1 \
+            MODERN_SKIP_AUR=1 \
             "$@"
         return
     fi
@@ -338,6 +407,7 @@ as_user() {
         XDG_DATA_HOME="$USER_HOME/.local/share" \
         GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
         MODERN_PACMAN_NOSANDBOX=1 \
+        MODERN_SKIP_AUR=1 \
         "$@"
 }
 
@@ -372,6 +442,7 @@ phase_clone() {
         GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
             /usr/bin/git -C "$REPO" -c core.hooksPath=/dev/null config core.hooksPath /dev/null
     fi
+    restore_exec_bits
     if [ -z "${MODERN_LATE_TEST:-}" ]; then
         chown -R "$USERNAME:$USERNAME" "$REPO" "$USER_HOME" \
             || die "chown of $REPO for $USERNAME failed"
@@ -425,11 +496,13 @@ phase_desktop() {
     fi
     unpin_resolver
     rm -f "$out"
+    ensure_provision_units
     log "desktop install finished for $USERNAME"
 }
 
 phase_provision() {
-    [ -x "$REPO/install/system/provision-iso.sh" ] || die "clone phase did not leave provision-iso.sh"
+    # -f, not -x: the bundle arrives mode-stripped and this runs via bash.
+    [ -f "$REPO/install/system/provision-iso.sh" ] || die "clone phase did not leave provision-iso.sh"
     ensure_dns
     ensure_nss
     export MODERN_ISO_PROVISION=1

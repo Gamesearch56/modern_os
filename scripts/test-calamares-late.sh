@@ -28,10 +28,41 @@ if grep -F 'DisableSandbox' "$LATE" >/dev/null \
     && grep -F 'pipewire-jack' "$LATE" >/dev/null \
     && grep -F 'IgnorePkg' "$LATE" >/dev/null \
     && grep -F 'overlay_pin_install_native' "$LATE" >/dev/null \
-    && grep -F 'modern ISO pin overlay' "$LATE" >/dev/null; then
+    && grep -F 'modern ISO pin overlay' "$LATE" >/dev/null \
+    && grep -F 'MODERN_SKIP_AUR=1' "$LATE" >/dev/null \
+    && grep -F 'pacman -Qq' "$LATE" >/dev/null; then
     ok "desktop phase syncs pacman databases, enables multilib, patches pin pacman"
 else
     err "desktop phase must init the target keyring, IgnorePkg jack2, overlay pin install_native, and pacman -Sy before install.sh"
+fi
+
+PROVISION="$ROOT/install/system/provision-iso.sh"
+if grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$PROVISION" >/dev/null; then
+    err "provision-iso.sh enables units in one call — one missing unit aborts the rest"
+else
+    ok "provision-iso.sh enables one unit per call"
+fi
+
+units_ok=1
+for unit in NetworkManager.service greetd.service; do
+    grep -F "enable_unit $unit required" "$PROVISION" >/dev/null || units_ok=0
+done
+for unit in bluetooth.service systemd-timesyncd.service; do
+    grep -F "enable_unit $unit optional" "$PROVISION" >/dev/null || units_ok=0
+done
+if [ "$units_ok" -eq 1 ]; then
+    ok "provision-iso.sh hard-fails only on NetworkManager and greetd"
+else
+    err "provision-iso.sh must mark each enabled unit required or optional"
+fi
+
+# bluez-utils is bluetoothctl only; bluetooth.service and org.bluez are bluez.
+if grep -E '^[[:space:]]*bluez([[:space:]]|#|$)' "$ROOT/install/manifests/10-desktop.txt" >/dev/null \
+    && grep -F 'ensure_provision_units' "$LATE" >/dev/null \
+    && grep -F 'bluez bluez-utils networkmanager greetd' "$LATE" >/dev/null; then
+    ok "bluez is in the desktop manifest and installed before provision"
+else
+    err "bluetooth.service needs bluez in 10-desktop.txt and in ensure_provision_units"
 fi
 
 if grep -F 'install.sh --profile m0 --yes failed' "$LATE" >/dev/null \
@@ -138,6 +169,29 @@ if out="$(MODERN_LATE_BUNDLE="$bundle" MODERN_LATE_CLONE_URL="$missing" run_late
         || err "bundle copy succeeded but tree missing: $out"
 else
     err "ISO bundle copy failed: $out"
+fi
+
+# mkarchiso strips modes off the bundle, so the clone phase has to put the
+# exec bit back or provision-iso.sh and theme-apply.sh never run.
+stripped="$WORKDIR/stripped"
+rm -rf "$stripped"
+git clone -q "$src" "$stripped" 2>/dev/null
+mkdir -p "$stripped/install/system" "$stripped/scripts"
+printf '#!/usr/bin/env bash\n' >"$stripped/install/system/provision-iso.sh"
+printf '#!/usr/bin/env bash\n' >"$stripped/scripts/theme-apply.sh"
+git -C "$stripped" add install scripts
+git -C "$stripped" update-index --chmod=+x install/system/provision-iso.sh scripts/theme-apply.sh
+chmod -R a-x+X "$stripped/install" "$stripped/scripts"
+rm -rf "${WORKDIR:?}/home"
+if out="$(MODERN_LATE_BUNDLE="$stripped" MODERN_LATE_CLONE_URL="$missing" run_late clone 2>&1)"; then
+    if [ -x "$WORKDIR/home/modern_dotfile/install/system/provision-iso.sh" ] \
+        && [ -x "$WORKDIR/home/modern_dotfile/scripts/theme-apply.sh" ]; then
+        ok "clone phase restores exec bits mkarchiso stripped"
+    else
+        err "exec bits not restored on the mode-stripped bundle: $out"
+    fi
+else
+    err "mode-stripped bundle clone failed: $out"
 fi
 
 dangling="$WORKDIR/etc/resolv.conf"

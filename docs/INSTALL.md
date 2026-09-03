@@ -180,6 +180,27 @@ and `#wifiList` from the same tokens as the rest of Calamares. The C++
 module is copied into AUR Calamares at build (`iso/releng/calamares-modernnet`).
 Late `pacman` still needs that route.
 
+`provision-iso.sh` enables `NetworkManager`, `greetd`, `bluetooth` and
+`systemd-timesyncd` **one unit per call** — `systemctl enable a b c`
+aborts the whole list on the first unit that does not exist, so one
+missing package used to take the install down. NetworkManager and greetd
+are required; the other two log and continue. `bluez` is its own manifest
+entry: `bluez-utils` is only `bluetoothctl` and does not depend on it, so
+without `bluez` there is no `bluetoothd`, no `bluetooth.service`, and no
+`org.bluez` for `Services/Bluetooth` to bind. Late desktop also installs
+the packages behind those units directly, so pins predating that manifest
+line still provision. `ufw`, `openssh`, `samba` and `wsdd` are installed
+but deliberately not enabled — see `docs/SECURITY.md`.
+
+Late clone restores the exec bit across the bundled repo from its own git
+index. `mkarchiso` copies the profile airootfs with
+`cp -af --no-preserve=ownership,mode`, so `/usr/share/modern/dotfile`
+lands entirely 0644 — `profiledef.sh`'s `file_permissions` only covers
+`/usr/lib/modern`. Without the restore, `provision-iso.sh` fails its
+`-x` guard, and install.sh's *direct* calls to `scripts/theme-apply.sh`,
+`mime-defaults.sh` and `nautilus-prefs.sh` die on Permission denied
+behind a `log_warn`, so the install "succeeds" with no `tokens.json`.
+
 After **Install**, the exec page copies the squashfs (`unpackfs`). The
 Calamares packages job does not `pacman -S` anything (no sync db on the
 squashfs; a `-Sy` plus kernel download froze the bar in QEMU). Late
@@ -195,7 +216,10 @@ cannot one-shot ffmpeg+pipewire-jack, rewrites pin `matugen` /
 `bibata-cursor-theme` (including a trailing comment) to the `-bin`
 packages already on the squashfs, `NoExtract`s `resolv.conf` so a
 `systemd` upgrade cannot point DNS at an empty `/run`, then
-`install.sh --profile m0 --yes` (`--needed` skips packages already unpacked), then `provision-iso.sh`.
+`install.sh --profile m0 --yes` (`--needed` skips native packages already
+unpacked; `install_aur` skips names `pacman -Q` already has, and
+`MODERN_SKIP_AUR=1` never calls `yay` — `yay -S --needed` still
+queries `aur.archlinux.org` and dies when chroot DNS is gone), then `provision-iso.sh`.
 A failed `install.sh` reprints its last 40 lines (and `install/install.log`)
 into the Calamares dialog — `log_error` otherwise only hits stderr. The ISO
 also ships m0 AUR packages (`matugen-bin`, `bibata-cursor-theme-bin`, `phylax-git`)

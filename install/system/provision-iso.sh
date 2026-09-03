@@ -29,8 +29,23 @@ fi
 # shellcheck source=nvidia/apply.sh
 source "$PROVISION_ROOT/install/system/nvidia/apply.sh"
 
+# One unit per call: `systemctl enable a b c` aborts the whole list on the
+# first missing unit, so one absent package used to take the install down.
+enable_unit() {
+    local unit="$1" need="$2"
+    if systemctl enable "$unit" >/dev/null 2>&1; then
+        log "enabled $unit"
+        return 0
+    fi
+    [ "$need" = required ] && die "cannot enable $unit — is its package installed?"
+    log "skipping $unit (not installed)"
+}
+
 log "enabling NetworkManager bluetooth greetd systemd-timesyncd"
-systemctl enable NetworkManager bluetooth greetd systemd-timesyncd
+enable_unit NetworkManager.service required
+enable_unit greetd.service required
+enable_unit bluetooth.service optional
+enable_unit systemd-timesyncd.service optional
 systemctl set-default graphical.target
 
 install -d -m 0755 /etc/greetd
@@ -61,7 +76,7 @@ fi
 
 USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 wp="${USER_HOME}/.config/modern/wallpapers/default.jpg"
-if [ -x "$PROVISION_ROOT/scripts/wallpaper-sync.sh" ] && [ -f "$wp" ]; then
+if [ -f "$PROVISION_ROOT/scripts/wallpaper-sync.sh" ] && [ -f "$wp" ]; then
     runuser -u "$USERNAME" -- env \
         HOME="$USER_HOME" \
         XDG_STATE_HOME="${USER_HOME}/.local/state" \
