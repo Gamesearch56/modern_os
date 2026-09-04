@@ -71,7 +71,7 @@ apply({
     no_initial_focus = true,
 })
 
--- Phylax (GTK4 polkit agent) app_id. Glass like the wallpaper overlay:
+-- Phylax (GTK4 polkit agent) app_id. Glass like Settings chrome:
 -- float+center, dim_around as scrim, design.transparency.
 -- pin keeps the prompt above modern.store / modern.settings.
 -- focus_on_activate honours GTK present(); stay_focused holds the seat

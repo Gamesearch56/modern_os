@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Hyprland
-import Quickshell.Wayland
 import QtQuick
 import "../../Commons"
 import "../../Services"
@@ -90,32 +89,23 @@ Scope {
         }
     }
 
-    function _focusedScreen(): var {
-        const n = Hypr.focusedMonitorName();
-        const screens = Quickshell.screens;
-        for (let i = 0; i < screens.length; i++) {
-            if (screens[i].name === n)
-                return screens[i];
-        }
-        return screens.length ? screens[0] : null;
-    }
-
     LazyLoader {
         active: Wallpaper.pickerOpen
 
-        PanelWindow {
+        FloatingWindow {
             id: win
             visible: Wallpaper.pickerOpen
-            screen: root._focusedScreen()
+            title: "modern.wallpaper"
             color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
-            aboveWindows: true
-            WlrLayershell.layer: WlrLayer.Overlay
+            implicitWidth: Tokens.window.settingsWidth
+            implicitHeight: Tokens.window.settingsHeight
+
+            onVisibleChanged: {
+                if (visible)
+                    win.requestActivate();
+                else
+                    Wallpaper.hide();
+            }
 
             Overlay {
                 id: overlay
@@ -123,18 +113,8 @@ Scope {
                 onClosed: Wallpaper.hide()
             }
 
-            HyprlandFocusGrab {
-                id: keyGrab
-                windows: [win]
-                onCleared: {
-                    if (Wallpaper.pickerOpen)
-                        Wallpaper.hide();
-                }
-            }
-
             Shortcut {
                 sequence: "Escape"
-                context: Qt.ApplicationShortcut
                 onActivated: {
                     if (overlay.confirming)
                         overlay.cancelRemove();
@@ -171,14 +151,6 @@ Scope {
                 enabled: Wallpaper.images.length > 0 && !overlay.confirming
                 sequence: "Enter"
                 onActivated: overlay.activate()
-            }
-
-            Component.onCompleted: {
-                Qt.callLater(() => {
-                    if (!Wallpaper.pickerOpen)
-                        return;
-                    keyGrab.active = true;
-                });
             }
         }
     }

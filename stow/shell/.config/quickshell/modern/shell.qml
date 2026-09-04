@@ -192,16 +192,8 @@ ShellRoot {
                 Taskbar.hide();
                 closed = true;
             }
-            if (Wallpaper.pickerOpen) {
-                Wallpaper.hide();
-                closed = true;
-            }
             if (Wallpaper.providerOpen) {
                 Wallpaper.closeProvider();
-                closed = true;
-            }
-            if (Cheatsheet.open) {
-                Cheatsheet.hide();
                 closed = true;
             }
             if (FilePreview.open) {

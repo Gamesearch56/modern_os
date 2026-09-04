@@ -1,7 +1,5 @@
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
-import Quickshell.Wayland
 import QtQuick
 import "../../Commons"
 import "../../Services"
@@ -43,16 +41,6 @@ Scope {
         root.categoryId = cats.length > 0 ? cats[0].id : "applications";
     }
 
-    function _focusedScreen(): var {
-        const n = Hypr.focusedMonitorName();
-        const screens = Quickshell.screens;
-        for (let i = 0; i < screens.length; i++) {
-            if (screens[i].name === n)
-                return screens[i];
-        }
-        return screens.length ? screens[0] : null;
-    }
-
     Connections {
         target: Cheatsheet
         function onOpenChanged() {
@@ -66,19 +54,21 @@ Scope {
     LazyLoader {
         active: Cheatsheet.open
 
-        PanelWindow {
+        FloatingWindow {
             id: win
             visible: Cheatsheet.open
-            screen: root._focusedScreen()
+            title: "modern.cheatsheet"
             color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
-            aboveWindows: true
-            WlrLayershell.layer: WlrLayer.Overlay
+            implicitWidth: Tokens.window.settingsWidth
+            implicitHeight: Tokens.window.settingsHeight
+
+            onVisibleChanged: {
+                if (!visible) {
+                    Cheatsheet.hide();
+                    return;
+                }
+                Qt.callLater(() => overlay.focusSearch());
+            }
 
             Overlay {
                 id: overlay
@@ -93,18 +83,8 @@ Scope {
                 onClosed: Cheatsheet.hide()
             }
 
-            HyprlandFocusGrab {
-                id: keyGrab
-                windows: [win]
-                onCleared: {
-                    if (Cheatsheet.open)
-                        Cheatsheet.hide();
-                }
-            }
-
             Shortcut {
                 sequence: "Escape"
-                context: Qt.ApplicationShortcut
                 onActivated: Cheatsheet.hide()
             }
             Shortcut {
@@ -114,15 +94,6 @@ Scope {
             Shortcut {
                 sequence: "Down"
                 onActivated: root._moveCategory(1)
-            }
-
-            Component.onCompleted: {
-                Qt.callLater(() => {
-                    if (!Cheatsheet.open)
-                        return;
-                    keyGrab.active = true;
-                    overlay.focusSearch();
-                });
             }
         }
     }
