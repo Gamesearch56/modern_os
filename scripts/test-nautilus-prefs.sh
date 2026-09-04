@@ -50,6 +50,15 @@ else
     err "re-run replaced user bookmarks"
 fi
 
+mkdir -p "$HOME/.config"
+ln -s "$HOME/missing-stow-nautilus" "$HOME/.config/nautilus"
+"$ROOT/scripts/nautilus-prefs.sh" --bookmarks-only
+if [ -d "$HOME/.config/nautilus" ] && [ ! -L "$HOME/.config/nautilus" ]; then
+    ok "replaces a dangling ~/.config/nautilus symlink with a directory"
+else
+    err "dangling nautilus config dir still $(ls -ld "$HOME/.config/nautilus" 2>/dev/null || echo missing)"
+fi
+
 if grep -F 'xdg-user-dir' "$ROOT/scripts/nautilus-prefs.sh" >/dev/null \
     && grep -F 'DOWNLOAD PICTURES VIDEOS' "$ROOT/scripts/nautilus-prefs.sh" >/dev/null \
     && grep -F 'bookmarks' "$ROOT/stow/gtk/.stow-local-ignore" >/dev/null; then

@@ -120,21 +120,16 @@ if hl.on then
     hl.on("window.urgent", phylax_focus)
 end
 
--- Dolphin / Nautilus are tiled app windows, not HUDs. Punching wallpaper
+-- Nautilus is a tiled app window, not a HUD. Punching wallpaper
 -- through the icon view (design.transparency) washed out labels and
 -- toolbar icons. Opaque surface; wallpaper stays in the compositor gaps.
-apply({
-    name = "dolphin-opaque",
-    match = { class = "org.kde.dolphin|dolphin" },
-    opaque = true,
-})
 apply({
     name = "nautilus-opaque",
     match = { class = "org.gnome.Nautilus|org.gnome.nautilus|nautilus" },
     opaque = true,
 })
 
--- Spacebar Quick Look video (mpv, Dolphin). Image/text use a Quickshell overlay.
+-- Spacebar Quick Look video leftover class (mpv). Image/text use a Quickshell overlay.
 apply({
     name = "modern-quicklook",
     match = { class = "modern.quicklook" },

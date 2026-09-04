@@ -1,5 +1,4 @@
-# GATED — copied only by install/system/provision-iso.sh in a Calamares
-# chroot. Not applied by install.sh.
+# Copied by install/lib/greetd.sh (install.sh and provision-iso.sh).
 [terminal]
 vt = 1
 

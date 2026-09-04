@@ -25,6 +25,8 @@ Singleton {
     property real progress: -1
     property string error: ""
     property string _notified: ""
+    property bool _checkDone: false
+    property bool _desktopDone: false
     property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
     signal finished(bool ok)
     signal notify(string summary, string body)
@@ -39,13 +41,11 @@ Singleton {
         id: checkProc
         command: ["checkupdates"]
         running: false
-        stdout: StdioCollector {
-            onStreamFinished: root._parseCheck(this.text)
-        }
+        stdout: StdioCollector { id: checkOut }
         onExited: (code) => {
-            root.checking = false;
             if (code !== 0 && code !== 2)
                 root.error = I18n.t("settings.update.checkFailed");
+            root._parseCheck(checkOut.text);
         }
     }
 
@@ -53,13 +53,9 @@ Singleton {
         id: desktopProc
         command: [Paths.script("desktop-sync.sh"), "status"]
         running: false
-        stdout: StdioCollector {
-            id: desktopOut
-            onStreamFinished: root._parseDesktop(this.text)
-        }
+        stdout: StdioCollector { id: desktopOut }
         onExited: () => {
-            if (!String(desktopOut.text || "").trim().length)
-                root._parseDesktop("");
+            root._parseDesktop(desktopOut.text);
         }
     }
 
@@ -115,13 +111,13 @@ Singleton {
             root.refresh();
     }
 
-    Component.onCompleted: root._rebuildLists()
-
     function refresh() {
         if (root.checking || root.running)
             return;
         root.checking = true;
         root.error = "";
+        root._checkDone = false;
+        root._desktopDone = false;
         desktopProc.running = true;
         checkProc.running = true;
     }
@@ -182,11 +178,28 @@ Singleton {
         root._pacmanAll = parsed.all;
         root._pacmanSys = parsed.sys;
         root._pacmanOther = parsed.other;
-        root._rebuildLists();
+        root._markCheckDone();
     }
 
     function _parseDesktop(text: string) {
         root.desktop = classify.parseDesktop(text);
+        root._markDesktopDone();
+    }
+
+    function _markCheckDone() {
+        root._checkDone = true;
+        root._tryRebuild();
+    }
+
+    function _markDesktopDone() {
+        root._desktopDone = true;
+        root._tryRebuild();
+    }
+
+    function _tryRebuild() {
+        if (!root._checkDone || !root._desktopDone)
+            return;
+        root.checking = false;
         root._rebuildLists();
     }
 

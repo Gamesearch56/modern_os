@@ -37,23 +37,25 @@ else
 fi
 
 PROVISION="$ROOT/install/system/provision-iso.sh"
-if grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$PROVISION" >/dev/null; then
-    err "provision-iso.sh enables units in one call — one missing unit aborts the rest"
+GREETD_LIB="$ROOT/install/lib/greetd.sh"
+if grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$GREETD_LIB" >/dev/null \
+    || grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$PROVISION" >/dev/null; then
+    err "greetd enable_unit must enable one unit per call — one missing unit aborts the rest"
 else
-    ok "provision-iso.sh enables one unit per call"
+    ok "greetd enables one unit per call"
 fi
 
 units_ok=1
 for unit in NetworkManager.service greetd.service; do
-    grep -F "enable_unit $unit required" "$PROVISION" >/dev/null || units_ok=0
+    grep -F "enable_unit $unit required" "$GREETD_LIB" >/dev/null || units_ok=0
 done
 for unit in bluetooth.service systemd-timesyncd.service; do
-    grep -F "enable_unit $unit optional" "$PROVISION" >/dev/null || units_ok=0
+    grep -F "enable_unit $unit optional" "$GREETD_LIB" >/dev/null || units_ok=0
 done
 if [ "$units_ok" -eq 1 ]; then
-    ok "provision-iso.sh hard-fails only on NetworkManager and greetd"
+    ok "greetd hard-fails only on NetworkManager and greetd"
 else
-    err "provision-iso.sh must mark each enabled unit required or optional"
+    err "greetd_apply must mark each enabled unit required or optional"
 fi
 
 if python3 - "$ROOT/install/system/greetd/config.toml" <<'PY'; then
@@ -80,14 +82,16 @@ else
 fi
 
 # greetd's sysusers.d leaves the home field unset, so greeter already exists
-# with / and the useradd in provision-iso.sh is skipped.
-if grep -E 'usermod.*(--move-home|[[:space:]]-m[[:space:]])' "$PROVISION" >/dev/null; then
-    err "provision-iso.sh must never move the greeter home — the old one is /"
-elif grep -E 'usermod --home .+ greeter' "$PROVISION" >/dev/null \
-    && grep -F 'cannot start' "$PROVISION" >/dev/null; then
-    ok "provision-iso.sh relocates a greeter that greetd's sysusers left at /"
+# with / and the useradd in greetd_apply is skipped.
+if grep -E 'usermod.*(--move-home|[[:space:]]-m[[:space:]])' "$GREETD_LIB" >/dev/null \
+    || grep -E 'usermod.*(--move-home|[[:space:]]-m[[:space:]])' "$PROVISION" >/dev/null; then
+    err "greetd_apply must never move the greeter home — the old one is /"
+elif grep -E 'usermod --home .+ greeter' "$GREETD_LIB" >/dev/null \
+    && grep -F 'cannot start' "$GREETD_LIB" >/dev/null \
+    && grep -F 'greetd_apply' "$PROVISION" >/dev/null; then
+    ok "greetd_apply relocates a greeter that greetd's sysusers left at /"
 else
-    err "provision-iso.sh must move the greeter off / and fail loudly if it cannot"
+    err "greetd_apply must move the greeter off / and fail loudly if it cannot"
 fi
 
 # The Keyboard step must reach Hyprland (config.json) and greetd's own

@@ -10,6 +10,22 @@
 -- require() (not dofile()) so each module gets its own Lua scope and
 -- ConfigWatcher dependency tracking — see docs/DECISIONS.md and
 -- AGENTS.md's Hyprland Lua rule.
+-- Stow uses a symlink; ConfigWatcher stats that, not the target, so a
+-- repo edit of paths.lua can stay cached from session start (binds then
+-- still exec $HOME/modern_dotfile/scripts/…). Drop the cache so reload
+-- re-resolves the clone.
+
+do
+    local drop = {}
+    for k in pairs(package.loaded) do
+        if type(k) == "string" and (k:sub(1, 8) == "modules." or k:sub(1, 4) == "lib.") then
+            drop[#drop + 1] = k
+        end
+    end
+    for i = 1, #drop do
+        package.loaded[drop[i]] = nil
+    end
+end
 
 require("modules.permissions")
 require("modules.env")

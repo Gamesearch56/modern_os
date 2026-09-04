@@ -1,15 +1,16 @@
 # Boot and session
 
 How a graphical session starts, where the lock/login surfaces live, and
-what is shared with an unprivileged greeter. Plymouth and greetd are
-**gated** (`install/system/`, `docs/ISOLATION.md`).
+what is shared with an unprivileged greeter. Plymouth stays gated
+(`install/system/`, `docs/ISOLATION.md`). Greetd is applied by
+`install.sh` on a real user home.
 
 ## Session graph
 
 ```
-Friend install (after Calamares late):
+install.sh (or Calamares late install.sh + provision-iso.sh):
   greetd (greeter kiosk)  →  start-hyprland  →  Hyprland (stow/hypr)
-Getty / extra-user testing (untouched greetd):
+Getty fallback if greetd is down:
   TTY login → .bash_profile on tty1 execs start-hyprland
                               →  Hyprland (stow/hypr)
                               ├─ autostart.lua
@@ -18,9 +19,9 @@ Getty / extra-user testing (untouched greetd):
                               └─ portals (xdg-desktop-portal-hyprland + gtk/kde)
 ```
 
-Greetd files are staged under `install/system/greetd/` and applied only
-by `provision-iso.sh` in a Calamares chroot. Enabling greetd on a getty
-machine would replace the existing login path.
+Greetd files live under `install/system/greetd/` and are applied by
+`install/lib/greetd.sh` (called from `install.sh` and from
+`provision-iso.sh`). tty1 `.bash_profile` is the fallback if greetd fails.
 
 Autostart in Hyprland already starts Quickshell as a child of this
 compositor. Enable `modern-shell.service` on the **target** user if you
@@ -91,10 +92,10 @@ Do not enable the unit on an account that should keep a different session.
 ## Shared session state
 
 Runtime the greeter reads without touching `$HOME` lives under
-`/var/lib/modern/session/` (gated tmpfiles.d; applied by ISO
-`provision-iso.sh`, not by `install.sh`).
-`wallpaper-sync.sh` currently writes to
-`$XDG_STATE_HOME/modern/session/` when that directory is missing.
+`/var/lib/modern/session/` (`install/system/tmpfiles.d/modern-session.conf`,
+applied by `install/lib/greetd.sh`).
+`wallpaper-sync.sh` writes there when the directory exists, otherwise
+`$XDG_STATE_HOME/modern/session/`.
 Per-user state stays in `$XDG_STATE_HOME/modern/` and
 `$XDG_DATA_HOME/modern/`.
 
@@ -103,7 +104,7 @@ Per-user state stays in `$XDG_STATE_HOME/modern/` and
 | Surface | Owner | Notes |
 |---------|--------|------|
 | Plymouth splash | gated theme + mkinitcpio hook | `plymouth-sync.sh`; never rewrite initramfs from `install.sh` |
-| greetd greeter | `stow/greeter` + `install/system/greetd/` | Staged. Applied only by ISO `provision-iso.sh`. Getty/autologin stays until that runs. |
+| greetd greeter | `stow/greeter` + `install/system/greetd/` | Applied by `install.sh` on a real user home (`install/lib/greetd.sh`). tty1 `.bash_profile` is the fallback if greetd is down. |
 | lock screen | `Modules/Session` + `WlSessionLock` | Power menu, idle, and lid run `qs -c modern ipc call session lock`. One `WlSessionLockSurface` per output; `Session.password` is shared. Unlock sets `locked` false and calls `loginctl unlock-session`. Backdrop is the synced blur plus `design.transparency`. Any non-empty password unlocks. |
 
 `config.json` → `design.bootScreen` chooses whether the current wallpaper
@@ -116,7 +117,8 @@ Preferred backends are in both:
 - `stow/xdg/.config/xdg-desktop-portal/hyprland-portals.conf` (user)
 - `install/system/portals/hyprland-portals.conf` (staged system copy)
 
-FileChooser is KDE (Dolphin/Qt-first, `docs/DECISIONS.md` #5);
+FileChooser is the KDE portal (Qt apps); Nautilus is the shipped
+file manager (`docs/DECISIONS.md` #5).
 Screenshot and ScreenCast are Hyprland.
 
 ## Troubleshooting a black session / no bar

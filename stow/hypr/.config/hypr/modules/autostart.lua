@@ -1,8 +1,6 @@
 -- hl.on("hyprland.start", ...) fires exactly once per session, even
--- though hyprland.lua re-parses on every save — this is what the old
--- setup's autostart.lua got wrong by pointing at a nonexistent script
--- path (docs/DECISIONS.md's audit note). Never put an autostart command
--- directly at file scope; always inside this callback.
+-- though hyprland.lua re-parses on every save. A command at file scope
+-- would re-exec on each save. Always put autostart inside this callback.
 
 local config = require("modules.config")
 local paths = require("modules.paths")

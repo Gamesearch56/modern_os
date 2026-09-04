@@ -17,8 +17,19 @@ See `docs/ISOLATION.md`. Stow into `$HOME` or `--target`. If
 `--allow-live-home` is passed. Existing-account install: `docs/CUTOVER.md`.
 
 To return to another session without reboot: `Ctrl+Alt+F1` or `F2`.
-Do not enable greetd while testing. Shell `Logger.error` toasts appear
-only on the session that is running Quickshell.
+`install.sh --target` on a real home also enables greetd for this
+machine. Shell `Logger.error` toasts appear only on the session that
+is running Quickshell.
+
+## Nautilus “No Home Directory” / “Kein Persönlicher Ordner”
+
+The title is a mistranslation. Nautilus 50 checks that
+`~/.config/nautilus` is a directory (`nautilus_get_user_directory`, then
+`g_file_test (…, G_FILE_TEST_IS_DIR)`). A leftover GNU Stow symlink
+into an old clone (`~/.config/nautilus -> ../dotfiles/nautilus/…`) that
+no longer exists fails that check on every start. `$HOME` itself is
+fine. `scripts/nautilus-prefs.sh` replaces a dangling link with a real
+directory.
 
 ## Stow aborted on `.bashrc`
 
@@ -273,23 +284,12 @@ Phylax only handles **one** auth cookie at a time: a second `pkexec`
 hangs with no window. Check with `pkexec /usr/bin/ufw status numbered`
 in a terminal.
 
-## Dolphin is light / has a File menu / ignores the wallpaper palette
+## Qt apps are light / ignore the wallpaper palette
 
-`hl.env` only applies when Hyprland *starts*. After a reload, SUPER+E
-was launching Dolphin without `qt6ct`, so Fusion fell back to a light
-palette. SUPER+E now goes through `scripts/modern-launch`. Fully quit
-Dolphin (not only the window) and open it again. `theme-apply.sh` writes
-absolute paths into `qt6ct.conf` (qt6ct does not expand `~`). The menu
-bar is hidden from `[MainWindow] MenuBar=Disabled` in `dolphinrc`.
-
-The file view fills from **QPalette Base**. KF6's KColorSchemeManager
-does not use qt6ct's palette: off Plasma, `ColorScheme::Unknown` (qt6ct)
-maps to the built-in **light** scheme, so a focused Dolphin goes white
-while the unfocused window still shows our dark Inactive colors. Set
-`[UiSettings] ColorScheme=modern` in kdeglobals (and
-`style=qt6ct-style`), leave `stylesheets=` empty, keep `#AARRGGBB` in
-`modern.conf`. Fully quit Dolphin after `theme-apply.sh`. Super+E uses
-`scripts/modern-launch`.
+`hl.env` only applies when Hyprland *starts*. After a reload, launch
+through `scripts/modern-launch` so `qt6ct` is in the environment.
+`theme-apply.sh` writes absolute paths into `qt6ct.conf` (qt6ct does not
+expand `~`). Fully quit the Qt app after `theme-apply.sh`.
 
 ## Tiny crunchy UI on 1440p HDR
 

@@ -21,8 +21,8 @@ matugen -c ~/.config/matugen/config.toml ...
         ├─▶ hypr/modules/colors.lua               (Hyprland borders)
         ├─▶ kitty/colors.conf
         ├─▶ gtk-3.0/gtk.css, gtk-4.0/gtk.css
-        ├─▶ qt6ct/colors/modern.conf              (QPalette; Fusion / Dolphin)
-        ├─▶ kdeglobals                            (Dolphin, other KDE apps)
+        ├─▶ qt6ct/colors/modern.conf              (QPalette; Fusion)
+        ├─▶ kdeglobals                            (KDE apps)
         ├─▶ qt6ct/qss/modern.qss                  (Fusion stylesheet)
         ├─▶ hypr/application-style.conf           (hyprland-qt-support radii)
         ├─▶ hypr/hyprtoolkit.conf                 (other hyprtoolkit apps)
@@ -68,8 +68,8 @@ via `jq`, or the future Settings > Diagnostics color preview).
 `tokens.json` and restyles the bar/overlays immediately. GTK apps pick
 up `gtk.css` on restart. Vivaldi's CSS overlay is already on disk
 (reload the tab). The native theme object is created on a fresh home
-and merged later only while Vivaldi is not running. Nautilus and
-Dolphin must be fully quit after `theme-apply.sh`.
+and merged later only while Vivaldi is not running. Nautilus
+must be fully quit after `theme-apply.sh`.
 
 ## Profile resolution
 
@@ -126,23 +126,23 @@ abort kitty (`kitty.conf` has fallback colors). matugen writes the live
 already-running apps) and the Vivaldi `Preferences` merge are out of
 scope of a running-app live-reload: CSS overlay + `01-chrome.css` are
 always rewritten; the native theme object is merged only while Vivaldi is
-**not** running (so we do not fight its Preferences writer). Dolphin does
-not reload QSS live — fully quit it after `theme-apply.sh` and reopen with
-Super+E (`scripts/modern-launch` so `qt6ct` is in the environment even
-when Hyprland was only reloaded). qt6ct must **not** load `modern.qss`:
+**not** running (so we do not fight its Preferences writer). Qt apps do
+not reload QSS live — fully quit them after `theme-apply.sh` and reopen with
+`scripts/modern-launch` so `qt6ct` is in the environment even
+when Hyprland was only reloaded. qt6ct must **not** load `modern.qss`:
 an application stylesheet makes Fusion ignore the custom **Active**
 palette. Colors come from `qt6ct/colors/modern.conf` (`#AARRGGBB`) plus
-kdeglobals. KF6 apps (Dolphin) ignore that QPalette: KColorSchemeManager
+kdeglobals. KF6 apps ignore that QPalette: KColorSchemeManager
 treats qt6ct's `ColorScheme::Unknown` as light, so a focused window goes
 white. `kdeglobals` `[UiSettings] ColorScheme=modern` pins
 `~/.local/share/color-schemes/modern.colors`. Widget style is
-`qt6ct-style`. Dolphin is an opaque overlay card (`dolphin-opaque`);
-Nautilus is the same (`nautilus-opaque`). Nautilus Space preview is
+`qt6ct-style`. Nautilus is an opaque overlay card (`nautilus-opaque`).
+Nautilus Space preview is
 GNOME Sushi (`nautilus-previewer`: float, center, `dim_around`),
 colored from the same `gtk.css` GTK3 Adwaita aliases. GTK icon theme is
-Papirus-Dark so Nautilus keeps emblem folders; KDE/Dolphin use
-`modern-folders` (token-colored folder SVGs). Fully quit Nautilus or
-Dolphin after `theme-apply.sh`. Wallpaper stays in the
+Papirus-Dark so Nautilus keeps emblem folders; KDE apps can use
+`modern-folders` (token-colored folder SVGs). Fully quit Nautilus
+after `theme-apply.sh`. Wallpaper stays in the
 compositor gaps around the window. `hyprctl reload` picks up the rule.
 `theme-apply.sh` writes absolute paths into `qt6ct.conf` because qt6ct
 does not expand `~`.

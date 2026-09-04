@@ -7,7 +7,6 @@ GridLayout {
     id: root
 
     property var actions: []
-    property int focusIndex: 0
 
     signal chosen(int index)
 
@@ -24,7 +23,6 @@ GridLayout {
             stacked: true
             iconName: modelData.icon
             titleKey: "powerMenu." + modelData.id
-            checked: root.focusIndex === index
             onClicked: root.chosen(index)
         }
     }

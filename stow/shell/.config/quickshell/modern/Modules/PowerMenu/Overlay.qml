@@ -7,7 +7,6 @@ Item {
     id: root
 
     property var actions: []
-    property int focusIndex: 0
 
     signal chosen(int index)
     signal closed()
@@ -108,7 +107,6 @@ Item {
                 Actions {
                     Layout.fillWidth: true
                     actions: root.actions
-                    focusIndex: root.focusIndex
                     onChosen: (i) => root.chosen(i)
                 }
             }

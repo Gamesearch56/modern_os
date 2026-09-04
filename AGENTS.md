@@ -102,12 +102,13 @@ Monitor names (`DP-1`), device IDs (`alsa_output.pci-...`), colors, font
 names, durations, usernames, absolute paths outside `$HOME`/`XDG_*`. See
 `.cursorrules` for the enforced list.
 
-## System-wide changes are gated
+## System-wide changes that stay gated
 
-Anything touching `/etc`, systemd *system* units, polkit, mkinitcpio, or
-creating accounts lives under `install/system/` and is applied only by an
-explicit, separately-invoked command — never by `install.sh`'s default
-run. See `docs/ISOLATION.md` before touching anything there.
+Plymouth, NVIDIA initramfs, polkit `modern-usersd`, snapper, and extra
+sysctl/udev live under `install/system/` and are applied only by ISO
+`provision-iso.sh` — never by `install.sh` for those. `install.sh` **does**
+enable the greetd login screen on a real user home (`install/lib/greetd.sh`).
+See `docs/ISOLATION.md`.
 
 ## Verifying your work
 

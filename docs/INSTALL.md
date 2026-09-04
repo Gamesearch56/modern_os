@@ -45,16 +45,17 @@ Profiles: `m0` (bar/launcher/session), `dev` (+ Cursor/toolchain),
 `gaming` (+ Proton/MangoHud), `full`. Manifests:
 `install/manifests/README.md`.
 
-`install.sh` only installs packages and stows listed packages into
-`--target` (default `$HOME`): hypr, shell, theme, kitty, dolphin, gtk,
-qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, mpv, imv. It does **not** stow
-`greeter`. It never copies `install/system/` and never enables greetd.
-Stow conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
+`install.sh` installs packages, stows listed packages into
+`--target` (default `$HOME`): hypr, shell, theme, kitty, gtk,
+qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, mpv, imv.
+It copies the greeter via `install/lib/greetd.sh` and enables greetd on
+a real user home (`--dry-run` and `--target /tmp` skip that). Stow
+conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
 
 Calamares late on a new machine is `./install/install.sh --profile m0 --yes`
-as the new user, then `MODERN_ISO_PROVISION=1 install/system/provision-iso.sh`.
-That gated script is the only allowed applier of greetd / NetworkManager
-enable. Do not run it on a machine you live on.
+as the new user, then `MODERN_ISO_PROVISION=1 install/system/provision-iso.sh`
+(NVIDIA initramfs, keyboard/locale seed). Do not run `provision-iso.sh`
+on a machine you live on unless you want those extras.
 
 Clone + install is the **designed** desktop (`config.default.json`:
 English UI, `kbLayout` `us`).
@@ -290,16 +291,17 @@ and `#wifiList` from the same tokens as the rest of Calamares. The C++
 module is copied into AUR Calamares at build (`iso/releng/calamares-modernnet`).
 Late `pacman` still needs that route.
 
-`provision-iso.sh` enables `NetworkManager`, `greetd`, `bluetooth` and
-`systemd-timesyncd` **one unit per call** — `systemctl enable a b c`
-aborts the whole list on the first unit that does not exist, so one
-missing package used to take the install down. NetworkManager and greetd
-are required; the other two log and continue. `bluez` is its own manifest
+`install.sh` and `provision-iso.sh` call the same `greetd_apply`, which
+enables `NetworkManager`, `greetd`, `bluetooth` and `systemd-timesyncd`
+**one unit per call** — `systemctl enable a b c` aborts the whole list
+on the first unit that does not exist, so one missing package used to
+take the install down. NetworkManager and greetd are required; the
+other two log and continue. `bluez` is its own manifest
 entry: `bluez-utils` is only `bluetoothctl` and does not depend on it, so
 without `bluez` there is no `bluetoothd`, no `bluetooth.service`, and no
 `org.bluez` for `Services/Bluetooth` to bind. Late desktop also installs
 the packages behind those units directly, so pins predating that manifest
-line still provision. `ufw`, `openssh`, `samba` and `wsdd` are installed
+line still provision. `ufw` and `openssh` are installed
 but deliberately not enabled — see `docs/SECURITY.md`.
 
 Late clone restores the exec bit across the bundled repo from its own git
@@ -431,9 +433,9 @@ Settings → Update later tracks the latest GitHub **release tag**, not
 ## After stow (on the **target** user)
 
 `install.sh` phase 5 applies `~/.config/modern/wallpapers/default.jpg`
-(tokens, GTK/Qt/kitty). `wallpaper-sync.sh` writes lock assets to
-`~/.local/state/modern/session` until gated `/var/lib/modern/session`
-exists. Nautilus sidebar starts with Downloads, Pictures, and Videos
+(tokens, GTK/Qt/kitty). `wallpaper-sync.sh` writes lock/login assets to
+`/var/lib/modern/session` after greetd apply (else
+`$XDG_STATE_HOME/modern/session`). Nautilus sidebar starts with Downloads, Pictures, and Videos
 (`nautilus-prefs.sh`, XDG dirs for the target user). First-hour UI is
 **English**. Power-menu lock is an overlay
 preview, not a real lock. Titlebars need a one-time `hyprpm` + pkexec
@@ -449,9 +451,9 @@ To use a different image later:
 3. `scripts/doctor.sh`
 4. Optional gated files that **exist**: Plymouth README, sysctl, ufw
    KDE Connect, tmpfiles, ESP hook, snapper, `create-devuser.sh` —
-   each file's header comment has the copy command. Greetd drop-ins live
-   under `install/system/greetd/` but stay gated — only `provision-iso.sh`
-   in a Calamares chroot applies them.
+   each file's header comment has the copy command. Greetd is applied by
+   `install.sh` (`install/lib/greetd.sh`); `provision-iso.sh` calls the
+   same function.
 
 Hand-edit reference is `config.default.json` (no `config.schema.json`).
 

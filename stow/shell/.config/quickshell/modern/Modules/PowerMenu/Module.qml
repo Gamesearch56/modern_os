@@ -71,7 +71,6 @@ Scope {
             Overlay {
                 anchors.fill: parent
                 actions: root.actions
-                focusIndex: root.focusIndex
                 onChosen: (i) => {
                     root.focusIndex = i;
                     root._run(root.actions[i].id);

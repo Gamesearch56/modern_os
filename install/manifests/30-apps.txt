@@ -1,31 +1,20 @@
 # Daily-driver apps. This is the M0 bar: minimal, but enough to be
-# usable day to day without switching back to the old account.
+# usable day to day.
 kitty                   # terminal — SUPER+T
 nautilus                # default file manager — SUPER+E (docs/DECISIONS.md #5)
 sushi                   # Nautilus Space previewer (org.gnome.NautilusPreviewer)
-dolphin                 # optional file manager — Settings → Applications can switch back
 vivaldi                 # browser — SUPER+B, themed per docs/THEMING.md
-fastfetch                # terminal banner, themed via matugen (docs/DECISIONS.md, .bashrc migration)
-imv                      # image viewer — Settings + Nautilus/Dolphin default
-mpv                      # video player — Settings + Nautilus/Dolphin default; seekbar thumbs via ffmpeg
-vlc                      # video playback fallback / disc & format coverage mpv lacks
+fastfetch                # terminal banner, themed via matugen (docs/DECISIONS.md, .bashrc)
+imv                      # image viewer — Settings + Nautilus default
+mpv                      # video player — Settings + Nautilus default; seekbar thumbs via ffmpeg
 ffmpeg                    # mpv_thumbnail_script stills (prefer_mpv=no)
-ffmpegthumbnailer         # Nautilus/Dolphin video thumbnails
+ffmpegthumbnailer         # Nautilus video thumbnails
 gst-plugins-base          # GStreamer codecs for mpv/browser media
 gst-plugins-good
 gst-plugins-bad
 gst-plugins-ugly
 gst-libav
 libva-utils               # VA-API diagnostics for hardware video decode
-libmpeg2                  # legacy mpeg2 decode support
-neovim                    # $EDITOR, kept from the audited .bashrc
-tmux                      # terminal multiplexer, daily habit
-gnome-text-editor          # simple GUI text editor fallback
+neovim                    # $EDITOR
 btop                      # terminal system monitor, complements the bar's performance widget
-cmatrix                  # kept — harmless, in the audited list
-python-html2text          # dependency for a couple of personal scripts
-firefox                  # secondary browser for sites that fight Vivaldi
-qbittorrent               # torrent client
-yt-dlp                    # video downloader, used by a couple of personal scripts
 spotify-launcher          # Spotify client — MPRIS source for the media widget
-discord                  # kept from the audited list

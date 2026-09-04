@@ -19,6 +19,7 @@ stow/kitty/.config/kitty/colors.conf
 
 # Live config, not the shipped default
 stow/modern/.config/modern/config.json
+stow/modern/.config/modern/repo
 # mktemp leftovers from config-set.sh / config-restore.sh (same-dir atomic write)
 stow/modern/.config/modern/config.json.*
 # Written by Services/IdleDaemon from general.idleTimings

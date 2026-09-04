@@ -1,8 +1,10 @@
 # Install onto an existing Arch user
 
 How to put this desktop on an account that already has a home directory
-(not a Calamares ISO install). Stow only writes under `--target`.
-System-wide files under `install/system/` stay gated (`docs/ISOLATION.md`).
+(not a Calamares ISO install). Stow writes under `--target`. `install.sh`
+also enables the greetd login screen on a real user home. Plymouth,
+NVIDIA initramfs, snapper, and `modern-usersd` stay gated
+(`docs/ISOLATION.md`).
 
 ## Before you start
 
@@ -21,17 +23,14 @@ cd modern_dotfile
 ./install/install.sh --profile full
 ```
 
-`--profile m0` is enough for bar/launcher/session. `full` is what this
-project's extra-user testing used.
+`--profile m0` is enough for bar/launcher/session and the login screen.
+`full` adds the dev and gaming layers.
 
 Then disable leftover bar/notification user units (for example
 `waybar.service`), uninstall packages this desktop replaced (see below),
-log out of the current graphical session, and start this one with
-`start-hyprland` (not the `Hyprland` binary). Hyprland ≥ 0.53 needs the
-wrapper or the bar never appears. After a text login on VT1, the stowed
-`.bash_profile` execs `start-hyprland`. Disable getty autologin if you
-want a password prompt at boot (`scripts/autologin-apply.sh disable`
-does not remove a pre-existing `getty@tty1` `override.conf`).
+and reboot into greetd. Hyprland ≥ 0.53 needs `start-hyprland` (greetd
+already launches it). tty1 `.bash_profile` is only the fallback if
+greetd is down.
 
 ## Packages this desktop replaces
 
@@ -45,7 +44,8 @@ sudo pacman -Rns \
   wallust \
   hyprlock hyprpaper hyprpolkitagent \
   woff2-font-awesome \
-  qt5-graphicaleffects qt5-quickcontrols2
+  qt5-graphicaleffects qt5-quickcontrols2 \
+  dolphin
 ```
 
 Panel applets Settings already covers (optional):
@@ -66,8 +66,8 @@ names as already satisfying the manifest and skips the `-bin` packages.
 
 ## What this does not do
 
-- It does not enable greetd, rewrite mkinitcpio, or copy polkit helpers.
-  Those are `install/system/` and ISO late only.
+- It does not rewrite mkinitcpio, copy polkit helpers, or apply Plymouth.
+  Those stay `install/system/` / ISO late.
 - It does not uninstall other compositors. Remove leftover session units
   yourself if they still start on login (`systemctl --user disable --now
   waybar.service`).
@@ -81,7 +81,7 @@ GNU Stow can also restore from that tree. To leave the desktop:
 
 ```bash
 cd /path/to/modern_dotfile/stow
-stow -D -t "$HOME" hypr shell theme kitty dolphin gtk qt bash git modern systemd xdg fontconfig fastfetch mpv imv
+stow -D -t "$HOME" hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch mpv imv
 ```
 
 Then start another session of your choice.

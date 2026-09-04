@@ -17,6 +17,7 @@ Item {
     property color color: Colors.color.onSurface
     property bool tint: true
     property bool preferSymbolic: true
+    property bool forceLift: false
 
     readonly property bool _file: {
         if (root.source.toString().length > 0)
@@ -54,6 +55,8 @@ Item {
     }
 
     readonly property bool _symbolicFile: {
+        if (root.forceLift)
+            return true;
         const n = root.name.toLowerCase();
         const s = root._source.toLowerCase();
         return n.indexOf("-symbolic") !== -1 || s.indexOf("-symbolic") !== -1 || s.indexOf("/symbolic/") !== -1;

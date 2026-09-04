@@ -3,6 +3,7 @@
 pragma Singleton
 
 import Quickshell
+import Quickshell.Io
 import QtQuick
 
 Singleton {
@@ -21,11 +22,33 @@ Singleton {
         const e = Quickshell.env("XDG_RUNTIME_DIR");
         return (e && e.length > 0) ? e : root.stateHome;
     }
-    readonly property string repo: root.home + "/modern_dotfile"
+    property string _fileRepo: ""
+    readonly property string _envRepo: {
+        const e = Quickshell.env("MODERN_REPO");
+        return (e && e.length > 0) ? e : "";
+    }
+    readonly property string repo: {
+        if (root._envRepo.length > 0)
+            return root._envRepo;
+        if (root._fileRepo.length > 0)
+            return root._fileRepo;
+        return root.home + "/modern_dotfile";
+    }
     readonly property string scripts: root.repo + "/scripts"
     readonly property string modern: root.scripts + "/modern"
     readonly property string modernLaunch: root.scripts + "/modern-launch"
     readonly property string brandLogo: root.configHome + "/modern/brand/logo.png"
+
+    FileView {
+        path: root.configHome + "/modern/repo"
+        watchChanges: true
+        printErrors: false
+        onLoaded: {
+            const t = String(text() || "").trim().split("\n")[0].trim();
+            root._fileRepo = t;
+        }
+        onLoadFailed: root._fileRepo = ""
+    }
 
     function script(name: string): string {
         return root.scripts + "/" + name;

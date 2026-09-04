@@ -1,5 +1,5 @@
 // Greetd lives only in this package. Importing it in the desktop
-// tree would fail hosts that never enabled the gated greetd unit.
+// tree would fail hosts that never installed greetd.
 import Quickshell
 import Quickshell.Services.Greetd
 import QtQuick

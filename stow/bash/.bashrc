@@ -22,6 +22,19 @@ case $- in
     *) return ;;
 esac
 
+_modern_repo="${MODERN_REPO:-}"
+if [ -z "$_modern_repo" ] && [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/modern/repo" ]; then
+    IFS= read -r _modern_repo < "${XDG_CONFIG_HOME:-$HOME/.config}/modern/repo" || true
+fi
+_modern_repo="${_modern_repo:-$HOME/modern_dotfile}"
+if [ -d "$_modern_repo/scripts" ]; then
+    case ":$PATH:" in
+        *":$_modern_repo/scripts:"*) ;;
+        *) PATH="$_modern_repo/scripts:$PATH" ;;
+    esac
+fi
+unset _modern_repo
+
 alias vim=nvim
 alias ls='ls -alh --color=auto'
 alias ll='ls -alh --color=auto'
@@ -35,9 +48,14 @@ grep() {
         return
     fi
 
-    local _snip _pat="" _i=0 _F=0 _pass=0 _e=0 _skip=0 _color=0 _a
+    local _snip _pat="" _i=0 _F=0 _pass=0 _e=0 _skip=0 _color=0 _a _repo=""
     local -a _excl
-    _snip="${HOME}/modern_dotfile/scripts/lib/grep-snip.awk"
+    if [ -n "${MODERN_REPO:-}" ]; then
+        _repo="$MODERN_REPO"
+    elif [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/modern/repo" ]; then
+        IFS= read -r _repo < "${XDG_CONFIG_HOME:-$HOME/.config}/modern/repo" || true
+    fi
+    _snip="${_repo:-$HOME/modern_dotfile}/scripts/lib/grep-snip.awk"
     _excl=(
         --exclude-dir=.git
         --exclude-dir='*cache*'

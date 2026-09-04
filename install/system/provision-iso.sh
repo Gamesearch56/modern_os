@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# GATED — Calamares late / ISO chroot only. Enables greetd, NetworkManager,
-# bluetooth. Refuses when MODERN_PROTECT_HOME is set and exists.
-# See docs/ISOLATION.md.
+# GATED leftovers (Plymouth, NVIDIA initramfs, snapper, modern-usersd)
+# stay out of install.sh. Greetd/greeter are applied by install/lib/greetd.sh.
 #
 # Usage: MODERN_ISO_PROVISION=1 provision-iso.sh <username>
 set -euo pipefail
@@ -28,76 +27,10 @@ fi
 
 # shellcheck source=nvidia/apply.sh
 source "$PROVISION_ROOT/install/system/nvidia/apply.sh"
+# shellcheck source=../lib/greetd.sh
+source "$PROVISION_ROOT/install/lib/greetd.sh"
 
-# One unit per call: `systemctl enable a b c` aborts the whole list on the
-# first missing unit, so one absent package used to take the install down.
-enable_unit() {
-    local unit="$1" need="$2"
-    if systemctl enable "$unit" >/dev/null 2>&1; then
-        log "enabled $unit"
-        return 0
-    fi
-    [ "$need" = required ] && die "cannot enable $unit — is its package installed?"
-    log "skipping $unit (not installed)"
-}
-
-log "enabling NetworkManager bluetooth greetd systemd-timesyncd"
-enable_unit NetworkManager.service required
-enable_unit greetd.service required
-enable_unit bluetooth.service optional
-enable_unit systemd-timesyncd.service optional
-systemctl set-default graphical.target
-
-install -d -m 0755 /etc/greetd
-install -m 0644 "$PROVISION_ROOT/install/system/greetd/config.toml" /etc/greetd/config.toml
-install -m 0644 "$PROVISION_ROOT/install/system/greetd/hyprland.lua" /etc/greetd/hyprland.lua
-
-if ! getent group modern >/dev/null 2>&1; then
-    groupadd --system modern
-fi
-# greetd's own sysusers.d entry (`u greeter - "greetd greeter user" -`)
-# leaves the home field unset, so systemd-sysusers already created greeter
-# with / as its home when the package landed and this useradd never runs.
-# A greeter whose $HOME is / cannot create /.cache or /.local/state, and
-# anything of ours that resolves $HOME writes to //.config.
-GREETER_HOME=/var/lib/greeter
-if ! id greeter >/dev/null 2>&1; then
-    useradd --system --create-home --home-dir "$GREETER_HOME" \
-        --shell /usr/bin/nologin --gid modern -G video,seat greeter || true
-else
-    case "$(getent passwd greeter | cut -d: -f6)" in
-        "$GREETER_HOME") ;;
-        # No --move-home: the old home is / and usermod would move the
-        # whole root filesystem into /var/lib/greeter.
-        *) usermod --home "$GREETER_HOME" greeter || true ;;
-    esac
-    for g in modern video seat; do
-        if getent group "$g" >/dev/null 2>&1; then
-            gpasswd -a greeter "$g" >/dev/null 2>&1 || true
-        fi
-    done
-fi
-install -d -m 0755 "$GREETER_HOME"
-chown greeter:modern "$GREETER_HOME" || true
-if [ -f "$PROVISION_ROOT/install/system/tmpfiles.d/modern-session.conf" ]; then
-    install -m 0644 "$PROVISION_ROOT/install/system/tmpfiles.d/modern-session.conf" \
-        /etc/tmpfiles.d/modern-session.conf
-    systemd-tmpfiles --create /etc/tmpfiles.d/modern-session.conf || true
-fi
-
-# passwd, not the variable above: this is where the greeter will actually
-# look, and a copy into /var/lib/greeter is useless if usermod did not take.
-GREETER_HOME="$(getent passwd greeter | cut -d: -f6)"
-case "$GREETER_HOME" in
-    ""|/) die "greeter still has '$GREETER_HOME' as its home — qs -c greeter cannot start" ;;
-esac
-if [ -d "$PROVISION_ROOT/stow/greeter" ]; then
-    install -d -m 0755 "$GREETER_HOME/.config/quickshell"
-    rm -rf "$GREETER_HOME/.config/quickshell/greeter"
-    cp -a "$PROVISION_ROOT/stow/greeter/.config/quickshell/greeter" \
-        "$GREETER_HOME/.config/quickshell/greeter"
-    chown -R greeter:modern "$GREETER_HOME/.config" || true
-fi
+greetd_apply "$USERNAME"
 
 USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 

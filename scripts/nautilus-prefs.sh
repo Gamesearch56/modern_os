@@ -46,6 +46,19 @@ seed_bookmarks() {
     done
 }
 
+# Nautilus's "No Home Directory" dialog is not $HOME. Startup checks
+# that ~/.config/nautilus is a real directory (g_file_test IS_DIR). A
+# leftover stow symlink into a removed clone fails that check every launch.
+ensure_config_dir() {
+    local dir="${XDG_CONFIG_HOME:-$HOME/.config}/nautilus"
+    if [ -L "$dir" ] && [ ! -e "$dir" ]; then
+        rm -f "$dir"
+    elif [ -e "$dir" ] && [ ! -d "$dir" ]; then
+        rm -f "$dir"
+    fi
+    mkdir -p "$dir"
+}
+
 if [ "$bookmarks_only" -eq 0 ]; then
     previewer="${SCRIPT_DIR}/sushi-previewer.sh"
     previewer_dir="${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services"
@@ -66,5 +79,6 @@ if [ "$bookmarks_only" -eq 0 ]; then
     fi
 fi
 
+ensure_config_dir
 seed_bookmarks
 

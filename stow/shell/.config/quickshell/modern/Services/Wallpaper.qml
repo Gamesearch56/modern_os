@@ -109,10 +109,10 @@ Singleton {
             }
         }
         onExited: (code) => {
-            const reopen = root._reopenPicker && code !== 127;
+            const reopen = root._reopenPicker && code === 0;
             root._reopenPicker = false;
             root.providerOpen = false;
-            if (code === 127)
+            if (code !== 0)
                 root.openInBrowser();
             root.chooserFinished(reopen);
         }

@@ -1,15 +1,18 @@
-# Isolation: installer never applies `/etc`
+# Isolation: initramfs stays out of `install.sh`
 
-`install.sh` only installs packages and stows this repo into `--target`
-(default `$HOME`). Anything that touches `/etc`, systemd *system* units,
-polkit, mkinitcpio, or creates accounts lives under `install/system/`
-and is applied only by an explicit, separately-invoked command.
+`install.sh` installs packages, stows this repo into `--target`
+(default `$HOME`), and enables the greetd login screen on a **real user
+home**. `--dry-run` and `--target /tmp/...` skip greetd.
+
+Plymouth, NVIDIA mkinitcpio, polkit `modern-usersd`, snapper, gaming
+sysctls, and the ESP backup hook stay under `install/system/` and are
+applied only by an explicit ISO provision command.
 
 Optional extra-user testing: `sudo install/system/create-devuser.sh
 [username]` (default name `devuser`), then clone and install as that
-user. Session switch: log in on another TTY and run `start-hyprland`.
-Install flags: `docs/INSTALL.md`. Putting this desktop on an existing
-account: `docs/CUTOVER.md`.
+user. `install.sh` on that home still enables greetd for the machine.
+Session switch: log in from the greeter. Install flags: `docs/INSTALL.md`.
+Putting this desktop on an existing account: `docs/CUTOVER.md`.
 
 ## Safe by construction
 
@@ -18,11 +21,10 @@ account: `docs/CUTOVER.md`.
 - Set `MODERN_PROTECT_HOME` to a directory `install.sh` must never stow
   into (optional; unset means the guard is idle). Override with
   `--allow-live-home` only when that home *is* the intended target.
-- Runtime state lives under the target user's home or, after gated
-  tmpfiles, `/var/lib/modern/`.
-- An extra test account is optional. Creating one does not change
-  autologin, greetd, or `/etc`. Isolation check treats that account as
-  OK, not as a leak.
+- Runtime state lives under the target user's home or, after tmpfiles,
+  `/var/lib/modern/`.
+- An extra test account is optional. Isolation check treats that account as
+  OK, not as a leak. greetd enabled by `install.sh` is expected.
 
 ## Extra-user testing (optional)
 
@@ -35,31 +37,23 @@ account: `docs/CUTOVER.md`.
    If a terminal is available: `hyprctl dispatch "hl.dsp.exit()"`, then
    `exit` on the TTY.
 
-A reboot still uses whatever login path was already configured as long
-as greetd was never enabled from this repo. Removing the test account
-(`sudo userdel -r <username>`) deletes that home only.
+Removing the test account (`sudo userdel -r <username>`) deletes that
+home only. Greetd stays the machine login.
 
-## Gated: system-wide changes
+## Gated: initramfs and extra `/etc`
 
-These affect the whole machine, not one account, so they are **staged as
-files under `install/system/` and never applied automatically**. Applying
-them is a separate, explicit, human-invoked step — see each file's header
-comment for the exact command.
+These affect the whole machine and can brick a boot, so they stay
+**staged under `install/system/`** and are applied only by ISO late
+(`provision-iso.sh`).
 
 | Change | Why it's gated | Rollback |
 |---|---|---|
-| `greetd` (staged, **gated**) | `install/system/greetd/` exists for the ISO. Only `install/system/provision-iso.sh` (Calamares late, `MODERN_ISO_PROVISION=1`) copies it and runs `systemctl enable greetd`. That script aborts if `MODERN_PROTECT_HOME` is set and exists. Do not enable greetd on a machine you did not intend to convert to greetd. | `sudo systemctl disable greetd`, restore the previous login path, reboot. |
-| ISO late (`provision-iso.sh`, `calamares-late.sh`) | Enables NM/bluetooth/greetd and clones a release tag. Refused when `MODERN_PROTECT_HOME` is set. | Not applied; files stay under `install/system/` and `iso/`. |
 | Plymouth theme + `mkinitcpio` hooks | Rewrites the initramfs. A bad rebuild can leave the machine unable to boot. | `sudo mkinitcpio -P` after reverting `/etc/mkinitcpio.conf`; the previous initramfs stays as a fallback boot entry — never delete it. |
-| `sysctl.d`, `polkit` actions, `tmpfiles.d`, udev rules, gaming perf sysctls | System-wide kernel/session policy. | Remove the dropped-in file under `/etc/{sysctl.d,polkit-1,tmpfiles.d,udev/rules.d}/modern-*` and reload (`sysctl --system`, `systemctl restart polkit`, `systemd-tmpfiles --create`). |
+| ISO late extras (`nvidia_apply`, keyboard/locale seed) | NVIDIA modeset/initramfs; Calamares keyboard/locale into `config.json`. Greetd itself is already applied by `install.sh`. | Revert the drop-ins; `provision-iso.sh` still refuses when `MODERN_PROTECT_HOME` is set. |
+| `sysctl.d`, `polkit` actions, udev rules, gaming perf sysctls | System-wide kernel/session policy. | Remove the dropped-in file under `/etc/{sysctl.d,polkit-1,udev/rules.d}/modern-*` and reload. |
 | `modern-usersd` + its polkit action | Privileged account/group mutation. | Remove `/usr/local/bin/modern-usersd` and the `.policy` file; nothing else depends on it. |
-| Extra-user creation (`install/system/create-devuser.sh`) | Creates a system account. | `sudo userdel -r <username>` if you want to remove it entirely. Autologin is unchanged. |
+| Extra-user creation (`install/system/create-devuser.sh`) | Creates a system account. | `sudo userdel -r <username>` if you want to remove it entirely. |
 | Backup: snapper configs, the ESP-copy pacman hook | Touches `/etc/snapper`, `/etc/pacman.d/hooks`. | Delete the config/hook files; existing snapshots are untouched. |
-
-**None of the files above are referenced by `install.sh`'s default run.**
-`install.sh` only ever touches packages and the target user's stowed
-dotfiles. A second, explicitly named script or flag is required for
-anything in the table — see each script's own `--help`.
 
 ## The one side effect that isn't gated: packages
 
@@ -81,24 +75,6 @@ scripts/check-isolation.sh
 ```
 
 `iso-build.sh --mkarchiso` may write `iso/out/` on this PC (needs root).
-Do not run `provision-iso.sh`, Calamares, or a live `install.sh` (use
-`--dry-run --target /tmp/…`) on a machine you live on unless that
-account is the intended stow target (`docs/CUTOVER.md`).
-
-It asserts:
-
-1. If `MODERN_PROTECT_HOME` is set, no symlink inside that home's
-   `.config` points into this clone.
-2. Gated files are absent (`greetd` enabled, `modern-usersd`,
-   `tmpfiles.d/modern-session.conf`, `sysctl.d/99-modern-gaming.conf`,
-   `esp-backup.hook`), unless `--allow-gated` is passed. Creating an
-   extra test account is **not** a failure. Pre-existing Plymouth in
-   mkinitcpio is not treated as a leak from this repo.
-3. Home mtime under the protected path is **advisory** (WARN): a live
-   account keeps writing caches. Real isolation is checks 1–2.
-
-The script exits non-zero and prints exactly what changed if any check
-fails, rather than a generic warning.
-
-First-time baseline (once): `scripts/check-isolation.sh --init`.
-Do not add this script to GitHub Actions.
+Do not run `provision-iso.sh` or Calamares on a machine you live on
+unless you intend the ISO late extras (NVIDIA initramfs). Existing-account
+stow + greetd: `docs/CUTOVER.md`.

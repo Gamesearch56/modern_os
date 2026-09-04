@@ -1,6 +1,6 @@
 -- Toolkit / icon-theme env must be set before the display server
 -- finishes init (wiki.hypr.land Environment-variables). Child processes
--- (qs, Dolphin, portals) inherit these; without them Qt falls back to
+-- (qs, Nautilus, portals) inherit these; without them Qt falls back to
 -- a light Fusion palette and Quickshell cannot resolve Papirus icons.
 
 local config = require("modules.config")
@@ -18,6 +18,7 @@ hl.env("HYPRCURSOR_SIZE", tostring(config.value("design.cursorSize", 24)))
 -- (modern, theme-apply.sh, screenshot.sh) resolvable without a login shell.
 local paths = require("modules.paths")
 local path = os.getenv("PATH") or "/usr/bin"
+hl.env("MODERN_REPO", paths.repo)
 hl.env("PATH", paths.scripts .. ":" .. paths.home .. "/.local/bin:" .. path)
 
 -- NVIDIA wiki env only when install.sh wrote gpu=nvidia. AMD/Intel stay unset.

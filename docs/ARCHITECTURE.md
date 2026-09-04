@@ -78,18 +78,18 @@ modern_dotfile/
 │   CUTOVER.md SETTINGS.md GIT.md
 ├── install/
 │   ├── install.sh              phased, idempotent, set -euo pipefail
-│   ├── lib/                    log.sh ui.sh pkg.sh stow.sh i18n.sh preflight.sh
+│   ├── lib/                    log.sh ui.sh pkg.sh stow.sh i18n.sh preflight.sh greetd.sh
 │   ├── manifests/               00-base 10-desktop 20-theming 30-apps
 │   │                            40-dev 50-gaming 60-flatpak (+ .aur variants)
 │   ├── baseline/                snapshot of the OLD user's packages, for diffing
-│   └── system/                  gated: sysctl.d, greetd, tmpfiles.d, polkit,
-│                                modern-usersd, plymouth theme, mkinitcpio drop-in
+│   └── system/                  Plymouth, nvidia, polkit usersd, snapper;
+│                                greetd configs consumed by install/lib/greetd.sh
 ├── stow/
 │   ├── hypr/.config/hypr/                   hyprland.lua + modules/
 │   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules
 │   ├── greeter/.config/quickshell/greeter/  shares Session/ with the shell
 │   ├── theme/.config/matugen/               config.toml + templates/
-│   ├── kitty/ dolphin/ gtk/ qt/ bash/ git/ mpv/ imv/
+│   ├── kitty/ gtk/ qt/ bash/ git/ mpv/ imv/
 │   └── modern/.config/modern/               config.default.json, themes/, translations/
 ├── scripts/    theme-apply.sh wallpaper.sh optiscaler.sh game-profile.sh
 │               lint-layers.sh snapshot-packages.sh check-isolation.sh

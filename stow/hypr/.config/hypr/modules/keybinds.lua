@@ -17,8 +17,19 @@ local function combo(action)
     return config.value("keybinds." .. action, nil)
 end
 
+local function readable(path)
+    local f = io.open(path, "r")
+    if not f then
+        return false
+    end
+    f:close()
+    return true
+end
+
 local modern = paths.modern
 local modern_launch = paths.modern_launch
+local have_modern = readable(modern)
+local have_launch = readable(modern_launch)
 
 local function app_cmd(role, fallback)
     local id = config.value("apps.defaults." .. role, fallback) or fallback
@@ -80,14 +91,14 @@ local bindings = {
     taskbar = hl.dsp.exec_cmd("qs -c modern ipc call taskbar toggle"),
     overview = hl.dsp.exec_cmd("qs -c modern ipc call overview toggle"),
     exitSession = hl.dsp.exit(),
-    terminal = app_cmd("terminal", "kitty.desktop"),
+    terminal = have_launch and app_cmd("terminal", "kitty.desktop") or emergency_kitty,
     browser = app_cmd("browser", "vivaldi-stable.desktop"),
     browserIncognito = browser_incognito(),
     fileManager = app_cmd("fileManager", "org.gnome.Nautilus.desktop"),
     spotify = hl.dsp.exec_cmd("spotify-launcher"),
-    -- killactive would close the window behind layer-shell HUD/popups.
-    -- modern window close dismisses those first, then killactive.
-    closeWindow = hl.dsp.exec_cmd(modern .. " window close"),
+    -- Overlay HUD first, then graceful close. If the clone path is
+    -- missing, close the window directly — a dead exec is worse.
+    closeWindow = have_modern and hl.dsp.exec_cmd(modern .. " window close") or hl.dsp.window.close(),
     fullscreen = hl.dsp.window.fullscreen(),
     toggleFloating = hl.dsp.window.float({ action = "toggle" }),
     pseudoTile = hl.dsp.window.pseudo(),
@@ -130,8 +141,7 @@ local bindings = {
 }
 
 -- SPACE is a typing key. Non-consuming so fields still receive it.
--- filepreview.sh no-ops in Nautilus (Sushi owns Space there) and only
--- opens Quick Look in Dolphin.
+-- filepreview.sh no-ops in Nautilus (Sushi owns Space there).
 -- Overlay HUDs (launcher, AI, taskbar, control panel, …) bypass both
 -- shortcut-inhibit (games, Electron) and input capture (Quickshell
 -- HyprlandFocusGrab, some clients). They still consume the key so the

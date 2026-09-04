@@ -35,10 +35,11 @@ the full architecture and `docs/DECISIONS.md` for why things are this way.
 8. **The Settings app writes `config.json` only.** It never rewrites Lua,
    QML or shell scripts. `hyprland.lua` and the shell read `config.json` at
    load/reload; they never write it.
-9. **System-wide changes are staged, not applied.** Anything touching
-   `/etc`, `systemd` system units, `polkit`, `mkinitcpio`, or creating
-   system users lives under `install/system/` as a file the user applies
-   explicitly. Never run these automatically. See `docs/ISOLATION.md`.
+9. **Initramfs and extra `/etc` stay staged.** Plymouth, NVIDIA
+   mkinitcpio, polkit `modern-usersd`, snapper, and similar live under
+   `install/system/` and are applied only by an explicit ISO provision
+   command. `install.sh` does apply the greetd login screen on a real
+   user home. See `docs/ISOLATION.md`.
 10. **No secrets committed.** API keys and tokens go in the gitignored
     `secrets.json`, never in `config.default.json`, a template, or a
     comment.
