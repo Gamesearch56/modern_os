@@ -30,7 +30,11 @@ Item {
     readonly property real spaceXxl: 32
     readonly property real radiusSmall: 8 * root.cornerScale
     readonly property real radiusFull: 9999
-    readonly property real overlayLock: 0.48
+    readonly property real overlayLock: 0.32
+    readonly property real transparency: {
+        const t = Number(root._chrome.design?.transparency);
+        return (t > 0 && t <= 1) ? t : 0.85;
+    }
     readonly property real strokeHairline: 1
     readonly property real strokeFocus: 2
     readonly property real fieldHeight: root.spaceXxl + root.spaceXs

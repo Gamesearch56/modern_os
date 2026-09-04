@@ -51,6 +51,8 @@ Item {
         width: card.width
         height: card.height
         anchors.centerIn: parent
+        anchors.horizontalCenterOffset: titleDrag.offsetX
+        anchors.verticalCenterOffset: titleDrag.offsetY
         scale: Motion.overlayScale(root._shown)
         opacity: Motion.overlayOpacity(root._shown)
         transformOrigin: Item.Center
@@ -89,6 +91,18 @@ Item {
             border.width: Tokens.stroke.hairline
             clip: true
             opacity: Config.design.transparency ?? 0.85
+
+            MTitleDrag {
+                id: titleDrag
+                z: 2
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.rightMargin: Tokens.spacing.xxl * 4 + Tokens.spacing.sm
+                height: Tokens.spacing.xxl + Tokens.spacing.lg
+                systemMove: false
+                space: root
+            }
 
             RowLayout {
                 z: 1

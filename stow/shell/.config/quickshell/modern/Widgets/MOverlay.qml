@@ -12,7 +12,7 @@ FocusScope {
     property string titleKey: ""
     property string titleValue: ""
     property string subtitleKey: ""
-    property alias headerExtra: extraRow.data
+    property alias headerExtra: titleBar.headerExtra
     property int elevation: 3
     property real cardWidth: Tokens.spacing.xxl * 16
     property real cardHeight: Tokens.spacing.xxl * 14
@@ -98,6 +98,8 @@ FocusScope {
         width: Math.min(root.cardWidth, root.width - Tokens.spacing.xxl)
         height: Math.min(root.cardHeight, root.height - Tokens.spacing.xxl * 2)
         anchors.centerIn: parent
+        anchors.horizontalCenterOffset: titleBar.offsetX
+        anchors.verticalCenterOffset: titleBar.offsetY
         padding: Tokens.spacing.md
         scale: Motion.overlayScale(root._shown)
         opacity: Motion.overlayOpacity(root._shown) * root.chromeOpacity
@@ -136,51 +138,18 @@ FocusScope {
             anchors.fill: parent
             spacing: Tokens.spacing.md
 
-            RowLayout {
+            MOverlayBar {
+                id: titleBar
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.sm
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: Tokens.spacing.xs
-
-                    MText {
-                        key: root.titleKey
-                        value: root.titleValue
-                        styleName: "headlineSmall"
-                        Layout.fillWidth: true
-                    }
-                    MText {
-                        visible: root.subtitleKey.length > 0
-                        key: root.subtitleKey
-                        styleName: "bodyMedium"
-                        color: Colors.color.onSurfaceVariant
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
-                    }
-                }
-
-                RowLayout {
-                    id: extraRow
-                    spacing: Tokens.spacing.xs
-                    visible: children.length > 0
-                }
-
-                MButton {
-                    visible: root.actionKey.length > 0
-                    kind: "text"
-                    key: root.actionKey
-                    iconName: root.actionIcon
-                    onClicked: root.actionClicked()
-                }
-
-                MIconButton {
-                    visible: root.closeVisible
-                    close: true
-                    iconName: "window-close"
-                    key: "bar.close"
-                    onClicked: root.closed()
-                }
+                titleKey: root.titleKey
+                titleValue: root.titleValue
+                subtitleKey: root.subtitleKey
+                actionKey: root.actionKey
+                actionIcon: root.actionIcon
+                closeVisible: root.closeVisible
+                space: root
+                onClosed: root.closed()
+                onActionClicked: root.actionClicked()
             }
 
             MDivider {

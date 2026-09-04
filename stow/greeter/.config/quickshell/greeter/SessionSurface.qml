@@ -10,7 +10,6 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    property string wallpaperSource: "file:///var/lib/modern/session/wallpaper.jpg"
     property string _defaultUser: ""
 
     readonly property bool _busy: auth.busy
@@ -40,28 +39,9 @@ Item {
         }
     }
 
-    Rectangle {
+    SessionFrost {
         anchors.fill: parent
-        color: chrome.color.surface
-    }
-
-    Image {
-        anchors.fill: parent
-        source: root.wallpaperSource
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-        Accessible.ignored: true
-        onStatusChanged: {
-            if (status === Image.Error && root.wallpaperSource.indexOf("default.jpg") < 0)
-                root.wallpaperSource = "file://" + Quickshell.env("HOME") + "/.config/modern/wallpapers/default.jpg";
-        }
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        color: chrome.color.scrim
-        opacity: chrome.overlayLock
-        Accessible.ignored: true
+        chrome: chrome
     }
 
     ColumnLayout {
