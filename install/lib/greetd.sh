@@ -141,11 +141,18 @@ greetd_apply() {
     greetd_as_root install -d -m 2775 /var/lib/modern/session
     greetd_as_root chown root:modern /var/lib/modern/session || true
 
-    greeter_home="$(getent passwd greeter | cut -d: -f6)"
+    # getent exits 2 when the account is missing; pipefail would abort
+    # dry-run on CI (no greeter user) before the next log line.
+    greeter_home="$(getent passwd greeter 2>/dev/null | cut -d: -f6 || true)"
     case "$greeter_home" in
         ""|/)
-            printf 'greetd: ERROR: greeter still has %s as its home — qs -c greeter cannot start\n' "$greeter_home" >&2
-            exit 1
+            if [ "${DRY_RUN:-0}" = "1" ]; then
+                greetd_log "would create greeter home at /var/lib/greeter"
+                greeter_home=/var/lib/greeter
+            else
+                printf 'greetd: ERROR: greeter still has %s as its home — qs -c greeter cannot start\n' "$greeter_home" >&2
+                exit 1
+            fi
             ;;
     esac
     if [ -d "$repo/stow/greeter" ]; then

@@ -161,11 +161,42 @@ else
     err "this \$HOME should be a login home"
 fi
 
-dry_out="$(greetd_apply "$(id -un)" 2>&1 || true)"
-if printf '%s\n' "$dry_out" | grep -F 'would enable greetd.service' >/dev/null; then
+# Isolated bash: greetd_apply's `exit 1` must not kill this script, and
+# the child must not see a pre-existing greeter account (CI has none;
+# this PC does).
+dry_out="$(
+    bash --noprofile --norc -c '
+        set -euo pipefail
+        export REPO_ROOT="$1" LOG_FILE="/dev/null" DRY_RUN=1
+        PATH="$2"
+        # Hide a live greeter so this matches GitHub Actions.
+        getent() {
+            if [ "${1:-}" = passwd ] && [ "${2:-}" = greeter ]; then
+                return 2
+            fi
+            command getent "$@"
+        }
+        id() {
+            if [ "${1:-}" = greeter ]; then
+                return 1
+            fi
+            command id "$@"
+        }
+        # shellcheck source=../install/lib/log.sh
+        source "$REPO_ROOT/install/lib/log.sh"
+        # shellcheck source=../install/lib/ui.sh
+        source "$REPO_ROOT/install/lib/ui.sh"
+        # shellcheck source=../install/lib/greetd.sh
+        source "$REPO_ROOT/install/lib/greetd.sh"
+        greetd_apply "$3"
+    ' _ "$ROOT" "$PATH" "$(id -un)" 2>&1
+)" && dry_rc=0 || dry_rc=$?
+if [ "$dry_rc" -eq 0 ] \
+    && printf '%s\n' "$dry_out" | grep -F 'would enable greetd.service' >/dev/null; then
     ok "dry-run lists greetd enable"
 else
-    err "greetd_apply DRY_RUN must list greetd enable"
+    err "greetd_apply DRY_RUN must list greetd enable (rc=$dry_rc)"
+    printf '%s\n' "$dry_out" | tail -n 20 >&2
 fi
 
 if (
