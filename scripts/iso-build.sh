@@ -33,7 +33,7 @@ mkarchiso is not an error without the flag (branding still succeeds).
 Only iso/ comes from your working tree. install/, stow/ and scripts/ reach
 the installed system through a clone of the pin, so the build stops if
 those differ from it. --stale-bundle builds the pin's copy anyway.
-Boot the result with scripts/iso-qemu.sh (--headless for CI).
+Boot the result with scripts/iso-qemu.sh (--headless for no display).
 EOF
 }
 
@@ -643,7 +643,7 @@ fi
 if [ -f "$ROOT/iso/releng/packages.x86_64" ]; then
     cat "$ROOT/iso/releng/packages.x86_64" >>"$PROFILE_WORK/packages.x86_64"
 fi
-# Guest serial for iso-qemu.sh --headless / CI smoke (live-session logs to ttyS0).
+# Guest serial for iso-qemu.sh --headless (live-session logs to ttyS0).
 for f in "$PROFILE_WORK"/efiboot/loader/entries/01-archiso-linux.conf \
     "$PROFILE_WORK"/efiboot/loader/entries/02-archiso-speech-linux.conf; do
     if [ -f "$f" ] && ! grep -q 'console=ttyS0' "$f"; then

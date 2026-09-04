@@ -154,7 +154,7 @@ when a name leaves `packages.x86_64`.
    and Calamares/kiosk deps. Largest cut; also stops rescue packages
    landing on friends' disks.
 2. **Live-boot `linux-zen` and drop stock `linux`** so the image is not
-   two kernels. Highest boot risk — re-run ISO CI / QEMU smoke.
+   two kernels. Highest boot risk — rebuild the ISO and boot it in QEMU.
 3. **Drop `linux-zen-headers` from the ISO** unless first-boot NVIDIA
    DKMS must work offline. `install.sh` can pull headers later.
 4. **Drop or replace Firefox** if Welcome hides Support/Issues, or swap

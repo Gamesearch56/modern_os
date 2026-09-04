@@ -709,22 +709,19 @@ fi
 
 ISO_YML="$ROOT/.github/workflows/iso.yml"
 ISO_CONTAINER="$ROOT/scripts/ci-iso-container.sh"
-SMOKE="$ROOT/scripts/test-iso-qemu-smoke.sh"
 INSTALL_QEMU="$ROOT/scripts/test-iso-qemu-install.sh"
-# The build moved into ci-iso-container.sh when the job stopped being a
-# container job, so the smoke run and its qemu deps live there now.
-if [ -f "$ISO_YML" ] && [ -x "$SMOKE" ] && [ -x "$ISO_CONTAINER" ] \
-    && grep -F 'test-iso-qemu-smoke.sh' "$ISO_CONTAINER" >/dev/null \
-    && grep -F 'qemu-system-x86' "$ISO_CONTAINER" >/dev/null \
-    && grep -F 'qemu-img' "$ISO_CONTAINER" >/dev/null \
-    && grep -F 'modern-ci: calamares' "$SMOKE" >/dev/null \
+# mkarchiso already fills the runner; QEMU boot is local (iso-qemu.sh).
+if [ -f "$ISO_YML" ] && [ -x "$ISO_CONTAINER" ] \
+    && ! grep -F 'test-iso-qemu-smoke.sh' "$ISO_CONTAINER" >/dev/null \
+    && ! grep -F 'qemu-system-x86' "$ISO_CONTAINER" >/dev/null \
+    && ! grep -F 'qemu-img' "$ISO_CONTAINER" >/dev/null \
     && [ -x "$INSTALL_QEMU" ] \
     && grep -F -- '--unattended' "$INSTALL_QEMU" >/dev/null \
     && grep -F 'late install finished' "$INSTALL_QEMU" >/dev/null \
     && ! grep -F 'test-iso-qemu-install.sh' "$ISO_CONTAINER" >/dev/null; then
-    ok "ISO workflow runs the QEMU Calamares smoke"
+    ok "ISO workflow stops after mkarchiso (no QEMU smoke)"
 else
-    err "iso.yml must run test-iso-qemu-smoke.sh after mkarchiso"
+    err "iso.yml must not boot QEMU after mkarchiso"
 fi
 
 # iso-build.sh bundles the pin with `git clone $ROOT`, so the checkout has

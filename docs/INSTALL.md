@@ -100,7 +100,7 @@ user that is deleted when the script exits.
 sudo pacman -S --needed archiso qemu-desktop edk2-ovmf qt6-tools
 sudo ./scripts/iso-build.sh --mkarchiso
 ./scripts/iso-qemu.sh          # UEFI live image + 64G qcow2 (Calamares needs ≥ 16 GiB)
-./scripts/iso-qemu.sh --headless   # no GTK; CI smoke uses this
+./scripts/iso-qemu.sh --headless   # no GTK; serial still goes to iso/out/vm-serial.log
 ./scripts/iso-qemu.sh --reset-disk # wipe a previous VM install, still boot the ISO
 ./scripts/test-iso-qemu-install.sh # unattended QEMU until late install finishes
 ```
@@ -115,8 +115,8 @@ Xwayland; Calamares runs as root on X11 (`sudo` + `xhost`) so partitioning
 works. Root cannot be a Wayland client of liveuser's compositor, and a
 root compositor never painted in QEMU. `locale-gen` runs beside greetd,
 not before it. `iso-qemu.sh` boots OVMF (install `edk2-ovmf`) and writes
-guest serial to `iso/out/vm-serial.log`. `--headless` drops GTK/GL so CI
-can wait for `modern-ci: calamares` on that serial. BIOS QEMU makes
+guest serial to `iso/out/vm-serial.log`. `--headless` drops GTK/GL so
+you can wait on that serial without a display. BIOS QEMU makes
 Calamares try GRUB, which this image does not ship.
 `--unattended` sets QEMU fw_cfg `opt/org.modernos/unattended`; the live
 wrapper writes `/etc/calamares/unattended` so Calamares auto-advances
@@ -465,9 +465,6 @@ scripts/check-isolation.sh
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
 scripts/doctor.sh
 ```
-
-`test-iso-qemu-smoke.sh` is **not** part of `ci-check.sh`. It needs a
-built ISO and QEMU; the ISO workflow runs it after mkarchiso.
 
 If `MODERN_PROTECT_HOME` is your `$HOME`, do **not** run
 `./install/install.sh --dry-run --profile m0` without `--target` — the
