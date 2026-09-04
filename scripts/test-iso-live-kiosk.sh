@@ -239,36 +239,39 @@ else
 fi
 
 BUILD="$ROOT/scripts/iso-build.sh"
-if grep -F 'QLabel, QCheckBox, QRadioButton, QFrame, QGroupBox' "$BUILD" >/dev/null \
-    && grep -F 'background-color: transparent;' "$BUILD" >/dev/null \
-    && grep -F 'QStackedWidget QLabel' "$BUILD" >/dev/null \
-    && grep -F 'border-radius: 8px;' "$BUILD" >/dev/null \
-    && grep -F '#summaryItemBody' "$BUILD" >/dev/null \
-    && grep -F '#partitionLabel' "$BUILD" >/dev/null \
-    && grep -F '#networkPage' "$BUILD" >/dev/null \
-    && grep -F '#networkOkPage' "$BUILD" >/dev/null \
-    && grep -F '#wifiList' "$BUILD" >/dev/null \
-    && grep -F '#networkRowConnect' "$BUILD" >/dev/null \
-    && grep -F '#finishedBadge' "$BUILD" >/dev/null \
-    && grep -F '#finishedRestart' "$BUILD" >/dev/null \
-    && grep -F '#finishedMainText' "$BUILD" >/dev/null \
-    && grep -F 'QAbstractScrollArea::viewport' "$BUILD" >/dev/null \
-    && grep -F 'QToolButton:hover' "$BUILD" >/dev/null \
-    && ! grep -F 'QFrame, QListView, QTreeView' "$BUILD" >/dev/null; then
+QSS="$ROOT/scripts/lib/iso-calamares-qss.py"
+AUR_REPO="$ROOT/scripts/lib/iso-aur-repo.sh"
+if grep -F 'iso-calamares-qss.py' "$BUILD" >/dev/null \
+    && grep -F 'QLabel, QCheckBox, QRadioButton, QFrame, QGroupBox' "$QSS" >/dev/null \
+    && grep -F 'background-color: transparent;' "$QSS" >/dev/null \
+    && grep -F 'QStackedWidget QLabel' "$QSS" >/dev/null \
+    && grep -F 'border-radius: 8px;' "$QSS" >/dev/null \
+    && grep -F '#summaryItemBody' "$QSS" >/dev/null \
+    && grep -F '#partitionLabel' "$QSS" >/dev/null \
+    && grep -F '#networkPage' "$QSS" >/dev/null \
+    && grep -F '#networkOkPage' "$QSS" >/dev/null \
+    && grep -F '#wifiList' "$QSS" >/dev/null \
+    && grep -F '#networkRowConnect' "$QSS" >/dev/null \
+    && grep -F '#finishedBadge' "$QSS" >/dev/null \
+    && grep -F '#finishedRestart' "$QSS" >/dev/null \
+    && grep -F '#finishedMainText' "$QSS" >/dev/null \
+    && grep -F 'QAbstractScrollArea::viewport' "$QSS" >/dev/null \
+    && grep -F 'QToolButton:hover' "$QSS" >/dev/null \
+    && ! grep -F 'QFrame, QListView, QTreeView' "$QSS" >/dev/null; then
     ok "Calamares QSS keeps labels unfilled, paints viewports, spaces form fields"
 else
     err "iso-build.sh QSS must not paint QLabel/QFrame backgrounds and must paint viewports"
 fi
 
-if grep -F 'combobox-popup: 0;' "$BUILD" >/dev/null \
-    && grep -F 'QComboBoxPrivateContainer' "$BUILD" >/dev/null \
-    && grep -F 'QComboBox QAbstractItemView::item' "$BUILD" >/dev/null \
-    && grep -A1 'QWidget {{' "$BUILD" | grep -F 'color:' >/dev/null \
-    && ! grep -A1 'QWidget {{' "$BUILD" | grep -F 'background-color: transparent' >/dev/null \
-    && grep -F 'QDialog, QWizard, QMessageBox' "$BUILD" >/dev/null \
-    && ! grep -F 'QLineEdit, QComboBox, QSpinBox' "$BUILD" >/dev/null \
-    && ! grep -F 'border-image: url("wallpaper.jpg")' "$BUILD" >/dev/null \
-    && ! grep -A14 'QComboBox {{' "$BUILD" | grep -F 'border-radius' >/dev/null; then
+if grep -F 'combobox-popup: 0;' "$QSS" >/dev/null \
+    && grep -F 'QComboBoxPrivateContainer' "$QSS" >/dev/null \
+    && grep -F 'QComboBox QAbstractItemView::item' "$QSS" >/dev/null \
+    && grep -A1 'QWidget {{' "$QSS" | grep -F 'color:' >/dev/null \
+    && ! grep -A1 'QWidget {{' "$QSS" | grep -F 'background-color: transparent' >/dev/null \
+    && grep -F 'QDialog, QWizard, QMessageBox' "$QSS" >/dev/null \
+    && ! grep -F 'QLineEdit, QComboBox, QSpinBox' "$QSS" >/dev/null \
+    && ! grep -F 'border-image: url("wallpaper.jpg")' "$QSS" >/dev/null \
+    && ! grep -A14 'QComboBox {{' "$QSS" | grep -F 'border-radius' >/dev/null; then
     ok "Calamares QSS keeps combo popups and dialogs opaque without combo radius"
 else
     err "iso-build.sh QSS must style combo popups without wallpaper on #mainApp or combo radius"
@@ -276,12 +279,12 @@ fi
 
 # The overlay sizes itself from row height plus frame, so QSS padding on the
 # view itself would push the last row out of the window.
-if grep -F '#modernComboOverlay {{' "$BUILD" >/dev/null \
-    && grep -F '#modernComboOverlay::viewport {{' "$BUILD" >/dev/null \
-    && grep -F '#modernComboOverlay::item {{' "$BUILD" >/dev/null \
-    && grep -F '#modernComboOverlay::item:selected' "$BUILD" >/dev/null \
-    && grep -A8 '#modernComboOverlay {{' "$BUILD" | grep -F 'padding: 0;' >/dev/null \
-    && ! grep -A8 '#modernComboOverlay {{' "$BUILD" | grep -E '#[0-9A-Fa-f]{6}' >/dev/null; then
+if grep -F '#modernComboOverlay {{' "$QSS" >/dev/null \
+    && grep -F '#modernComboOverlay::viewport {{' "$QSS" >/dev/null \
+    && grep -F '#modernComboOverlay::item {{' "$QSS" >/dev/null \
+    && grep -F '#modernComboOverlay::item:selected' "$QSS" >/dev/null \
+    && grep -A8 '#modernComboOverlay {{' "$QSS" | grep -F 'padding: 0;' >/dev/null \
+    && ! grep -A8 '#modernComboOverlay {{' "$QSS" | grep -E '#[0-9A-Fa-f]{6}' >/dev/null; then
     ok "Calamares QSS styles the in-window combo overlay from tokens without view padding"
 else
     err "iso-build.sh QSS must style #modernComboOverlay from tokens with padding: 0"
@@ -547,11 +550,13 @@ if grep -E '^update_db:[[:space:]]+false$' "$PKGS_CONF" >/dev/null \
     && grep -E '^operations:[[:space:]]*\[\]$' "$PKGS_CONF" >/dev/null \
     && ! grep -E '^packages:' "$PKGS_CONF" >/dev/null \
     && grep -Fx linux-zen "$PKGS" >/dev/null \
-    && grep -Fx linux-zen-headers "$PKGS" >/dev/null \
+    && ! grep -Fx linux-zen-headers "$PKGS" >/dev/null \
     && grep -Fx efibootmgr "$PKGS" >/dev/null \
     && grep -Fx qt6-translations "$PKGS" >/dev/null \
-    && grep -Fx yay "$PKGS" >/dev/null \
-    && grep -Fx yay "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
+    && grep -Fx yay-bin "$PKGS" >/dev/null \
+    && grep -Fx yay-bin "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
+    && ! grep -Fx yay "$PKGS" >/dev/null \
+    && ! grep -Fx yay "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
     && grep -Fx matugen-bin "$PKGS" >/dev/null \
     && grep -Fx matugen-bin "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
     && grep -Fx bibata-cursor-theme-bin "$PKGS" >/dev/null \
@@ -560,9 +565,23 @@ if grep -E '^update_db:[[:space:]]+false$' "$PKGS_CONF" >/dev/null \
     && grep -Fx phylax-git "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
     && grep -Fx pipewire-jack "$PKGS" >/dev/null \
     && grep -Fx pipewire-pulse "$PKGS" >/dev/null; then
-    ok "live ISO ships linux-zen, yay, m0 AUR, and PipeWire jack/pulse"
+    ok "live ISO ships linux-zen, yay-bin, m0 AUR, and PipeWire jack/pulse"
 else
-    err "packages.x86_64 must list linux-zen, yay, m0 AUR, pipewire-jack, pipewire-pulse"
+    err "packages.x86_64 must list linux-zen, yay-bin, m0 AUR, pipewire-jack, pipewire-pulse (no linux-zen-headers)"
+fi
+
+if grep -F 'install -m 0644 "$ROOT/iso/releng/packages.x86_64"' "$BUILD" >/dev/null \
+    && ! grep -F 'cat "$ROOT/iso/releng/packages.x86_64" >>' "$BUILD" >/dev/null; then
+    ok "iso-build.sh replaces the releng package list"
+else
+    err "iso-build.sh must replace PROFILE_WORK/packages.x86_64, not append releng"
+fi
+
+if grep -F 'MAKEFLAGS=' "$AUR_REPO" >/dev/null \
+    && grep -F 'CMAKE_BUILD_PARALLEL_LEVEL' "$AUR_REPO" >/dev/null; then
+    ok "iso-aur-repo.sh sets MAKEFLAGS for the builder"
+else
+    err "iso-aur-repo.sh must set MAKEFLAGS (and CMake job count) for modernisoaur"
 fi
 
 BOOTLOADER="$ROOT/iso/airootfs/etc/calamares/modules/bootloader.conf"
@@ -603,13 +622,13 @@ else
     err "show.qml must be a Presentation slideshow with qsTr and a German .ts"
 fi
 
-if grep -F 'QProgressBar' "$BUILD" >/dev/null \
-    && grep -F 'QProgressBar::chunk' "$BUILD" >/dev/null \
-    && grep -F 'primary_container' "$BUILD" >/dev/null \
-    && grep -F 'on_primary_container' "$BUILD" >/dev/null \
-    && grep -F 'QTextBrowser' "$BUILD" >/dev/null \
-    && grep -F 'QPushButton:default' "$BUILD" >/dev/null \
-    && grep -F 'QMessageBox' "$BUILD" >/dev/null; then
+if grep -F 'QProgressBar' "$QSS" >/dev/null \
+    && grep -F 'QProgressBar::chunk' "$QSS" >/dev/null \
+    && grep -F 'primary_container' "$QSS" >/dev/null \
+    && grep -F 'on_primary_container' "$QSS" >/dev/null \
+    && grep -F 'QTextBrowser' "$QSS" >/dev/null \
+    && grep -F 'QPushButton:default' "$QSS" >/dev/null \
+    && grep -F 'QMessageBox' "$QSS" >/dev/null; then
     ok "Calamares QSS styles the exec bar and summary"
 else
     err "iso-build.sh QSS must style QProgressBar chunk from primaryContainer"

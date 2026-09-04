@@ -9,4 +9,4 @@
 - [ ] `scripts/test-desktop-sync.sh` (if update/sync changed)
 - [ ] `./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun` (if installer/stow changed)
 
-Target branch is **`dev`**. Maintainers merge `dev` → `main` for a release.
+Target branch is **`dev`**. Release is a PR `dev` → `main`.

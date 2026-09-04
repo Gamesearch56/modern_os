@@ -1,16 +1,45 @@
-# Overlay on top of archiso releng. Live boot stays stock linux; linux-zen
-# is on the image so unpackfs already has /vmlinuz-linux-zen (bootloader.conf)
-# and packages.conf does not have to download it. Package names must be the
-# whole line. mkarchiso keeps trailing spaces as part of the pacman target
-# (v0.1.2 failed as "calamares                       ").
+# Full live+Calamares set. iso-build.sh replaces stock releng
+# packages.x86_64 with this file (releng is bootloaders/layout only).
+# Package names must be the whole line. mkarchiso keeps trailing spaces
+# as part of the pacman target.
+base
+linux
+linux-firmware
+amd-ucode
+intel-ucode
+sof-firmware
+mkinitcpio
+mkinitcpio-archiso
+syslinux
+squashfs-tools
+btrfs-progs
+dosfstools
+e2fsprogs
+ntfs-3g
+gptfdisk
+parted
+efibootmgr
+cryptsetup
+lvm2
+networkmanager
+iwd
+iw
+wpa_supplicant
+wireless-regdb
+dnsmasq
+sudo
+git
+base-devel
+openssh
+less
+nano
 linux-zen
-linux-zen-headers
 hyprland
 hyprland-guiutils
 quickshell
 # AUR: built into a local repo by iso-build.sh (packages.aur.x86_64).
 calamares
-yay
+yay-bin
 matugen-bin
 bibata-cursor-theme-bin
 phylax-git
@@ -23,14 +52,8 @@ xorg-setxkbmap
 openbox
 qt6-declarative
 qt6-translations
-networkmanager
-iwd
-# NetworkManager ipv4.method shared (live-wifi-sim.sh APs) needs this.
-dnsmasq
+qt6-wayland
 mesa
-git
-sudo
-base-devel
 awww
 inter-font
 ttf-jetbrains-mono-nerd
@@ -38,9 +61,6 @@ noto-fonts
 noto-fonts-emoji
 greetd
 polkit
-qt6-wayland
-btrfs-progs
-efibootmgr
 xdg-utils
 firefox
 # PipeWire stack on the squashfs so unpackfs already provides virtual

@@ -86,19 +86,65 @@ EOF
     fi
 }
 
+iso_aur_pkg_stamp() {
+    local src="$1" pkg="$2"
+    if [ "$pkg" = calamares ]; then
+        cat "$src/PKGBUILD" \
+            "$ROOT/iso/releng/calamares-limit-languages.py" \
+            "$ROOT/iso/releng/installer-locales.json" \
+            | sha256sum | awk '{print $1}'
+    else
+        sha256sum "$src/PKGBUILD" | awk '{print $1}'
+    fi
+}
+
+iso_aur_cache_hit() {
+    local cached="$1" repo="$2"
+    local f found=0
+    [ -d "$cached" ] || return 1
+    shopt -s nullglob
+    local pkgs=("$cached"/*.pkg.tar.*)
+    shopt -u nullglob
+    [ ${#pkgs[@]} -gt 0 ] || return 1
+    for f in "${pkgs[@]}"; do
+        case "$f" in
+            *.sig) continue ;;
+        esac
+        cp -a "$f" "$repo/"
+        found=1
+    done
+    [ "$found" -eq 1 ]
+}
+
+iso_aur_makepkg() {
+    local src="$1" force="$2"
+    local jobs
+    jobs="$(nproc 2>/dev/null || echo 1)"
+    if [ "$force" = force ]; then
+        sudo -u "$ISO_AUR_BUILDER" \
+            env MAKEFLAGS="-j${jobs}" CMAKE_BUILD_PARALLEL_LEVEL="$jobs" \
+            makepkg --dir "$src" -sf --noconfirm
+    else
+        sudo -u "$ISO_AUR_BUILDER" \
+            env MAKEFLAGS="-j${jobs}" CMAKE_BUILD_PARALLEL_LEVEL="$jobs" \
+            makepkg --dir "$src" -s --noconfirm
+    fi
+}
+
 # mkarchiso does s/#.*// and keeps leftover spaces as the package name.
 iso_attach_aur_repo() {
     local profile="$1"
     local list="$ROOT/iso/releng/packages.aur.x86_64"
-    local store repo build home
-    local pkg line src dest
+    local store repo build home cache
+    local pkg line src dest stamp cached
     [ -f "$list" ] || return 0
     [ "$(id -u)" -eq 0 ] || die "AUR repo build needs root (same as mkarchiso)"
 
     iso_aur_cleanup
 
     store="$WORK/aur"
-    mkdir -p "$store/repo" "$store/build" "$store/home"
+    cache="${MODERN_ISO_AUR_CACHE:-$WORK/../aur-cache}"
+    mkdir -p "$store/repo" "$store/build" "$store/home" "$cache"
     ISO_AUR_MNT="$(mktemp -d /tmp/modern-iso-aur.XXXXXX)"
     mount --bind "$store" "$ISO_AUR_MNT"
     repo="$ISO_AUR_MNT/repo"
@@ -124,17 +170,28 @@ iso_attach_aur_repo() {
         if [ ! -d "$src/.git" ]; then
             sudo -u "$ISO_AUR_BUILDER" git clone --depth 1 "$dest" "$src"
         fi
-        if grep -qE '\bcargo\b' "$src/PKGBUILD" 2>/dev/null; then
-            iso_aur_ensure_rustup
-        fi
         if [ "$pkg" = calamares ]; then
             iso_calamares_limit_languages "$src"
-            sudo -u "$ISO_AUR_BUILDER" makepkg --dir "$src" -sf --noconfirm
-        else
-            sudo -u "$ISO_AUR_BUILDER" makepkg --dir "$src" -s --noconfirm
         fi
-        find "$src" -maxdepth 1 -name '*.pkg.tar.*' ! -name '*.sig' \
-            -exec cp -a {} "$repo/" \;
+        stamp="$(iso_aur_pkg_stamp "$src" "$pkg")"
+        cached="$cache/$pkg/$stamp"
+        if iso_aur_cache_hit "$cached" "$repo"; then
+            log "AUR $pkg cache hit"
+        else
+            if grep -qE '\bcargo\b' "$src/PKGBUILD" 2>/dev/null; then
+                iso_aur_ensure_rustup
+            fi
+            if [ "$pkg" = calamares ]; then
+                iso_aur_makepkg "$src" force
+            else
+                iso_aur_makepkg "$src" ""
+            fi
+            find "$src" -maxdepth 1 -name '*.pkg.tar.*' ! -name '*.sig' \
+                -exec cp -a {} "$repo/" \;
+            mkdir -p "$cached"
+            find "$src" -maxdepth 1 -name '*.pkg.tar.*' ! -name '*.sig' \
+                -exec cp -a {} "$cached/" \;
+        fi
         if [ -f "$profile/packages.x86_64" ] && ! grep -qxF "$pkg" "$profile/packages.x86_64"; then
             printf '%s\n' "$pkg" >>"$profile/packages.x86_64"
         fi

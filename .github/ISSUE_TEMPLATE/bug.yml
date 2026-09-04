@@ -13,8 +13,8 @@ body:
     id: version
     attributes:
       label: Version
-      description: Release tag (vX.Y.Z), ISO name, or git commit.
-      placeholder: v0.1.4
+      description: Latest release tag (vX.Y.Z on the Releases page), ISO name, or git commit.
+      placeholder: vX.Y.Z
     validations:
       required: true
   - type: textarea

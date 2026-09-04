@@ -188,9 +188,9 @@ even after writing `1.1.1.1`. Late desktop uses `runuser` (not
 Calamares chroot without `/dev/pts`. It does not chmod `/etc` to 0750
 (that blocked the target user from `/etc/gitconfig` during yay
 bootstrap). `iso-build.sh` bundles the pin at `/usr/share/modern/dotfile`; late
-clone copies that tree (the GitHub remote is private, so a network
-clone would fail). The ISO pin must be a real `vX.Y.Z` tag (`--tag` or
-the latest tag in the clone).
+clone copies that tree so Calamares does not depend on a GitHub fetch.
+The ISO pin must be a real `vX.Y.Z` tag (`--tag` or the latest tag in
+the clone).
 
 **Only `iso/` is built from your working tree.** The bundle is
 `git clone --branch <pin>`, so `install/`, `stow/` and `scripts/` reach

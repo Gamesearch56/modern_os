@@ -8,8 +8,8 @@ NVIDIA initramfs, snapper, and `modern-usersd` stay gated
 
 ## Before you start
 
-1. Clone a **release tag**, not `dev` (`docs/GIT.md`), or use a local
-   clone of this repo.
+1. Clone the latest **release tag** (`vX.Y.Z` on the Releases page),
+   not `dev` (`docs/GIT.md`), or use a local clone of this repo.
 2. Archive `~/.config` and `~/.local` so you can unwind stow.
 3. Dry-run first.
 
@@ -17,7 +17,7 @@ If `MODERN_PROTECT_HOME` is set to this home, pass `--allow-live-home`.
 Unset, the guard is idle and `--target` defaults to `$HOME`.
 
 ```bash
-git clone --branch v0.1.4 https://github.com/Gamesearch56/modern_dotfile.git
+git clone --branch vX.Y.Z https://github.com/Gamesearch56/modern_dotfile.git
 cd modern_dotfile
 ./install/install.sh --profile full --dry-run
 ./install/install.sh --profile full
