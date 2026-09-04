@@ -48,7 +48,7 @@ tell that `$HOME` was `/`. The greetd command is therefore `/etc/greetd/kiosk.sh
 `source_profile = false` so `~/.bashrc` (fastfetch) does not run on the
 seat before Hyprland. The kiosk sets `ulimit -c 0` so a crash dump cannot
 block reaping. Greeter wallpaper is the Quickshell Image — no `awww`
-client — and `Greetd.launch` then `hyprctl dispatch exit` so greetd is
+client — and `Greetd.launch` then `hyprctl dispatch "hl.dsp.exit()"` so greetd is
 not left waiting on a compositor that will not die.
 
 The `greeter` account is not ours to create. `greetd`'s own `sysusers.d`

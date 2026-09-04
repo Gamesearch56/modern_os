@@ -124,7 +124,7 @@ Item {
 
         function onLaunched() {
             root._trace({ event: "launched" });
-            Quickshell.execDetached(["hyprctl", "dispatch", "exit"]);
+            Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exit()"]);
         }
 
         function onError(err) {

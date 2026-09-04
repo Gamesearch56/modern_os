@@ -13,7 +13,8 @@ Singleton {
     }
 
     function logout() {
-        Quickshell.execDetached(["hyprctl", "dispatch", "exit"]);
+        // Lua configs reject `dispatch exit` (Hyprland 0.55+).
+        Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exit()"]);
     }
 
     function suspend() {

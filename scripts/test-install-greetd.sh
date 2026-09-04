@@ -134,6 +134,9 @@ if grep -F 'kiosk.sh' "$LIB" >/dev/null \
     && grep -Fq -- '--no-nixgl' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" \
     && grep -F 'onLaunched' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
     && grep -F '/usr/bin/systemctl' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionPower.qml" >/dev/null \
+    && grep -F 'hl.dsp.exit()' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
+    && grep -F 'hl.dsp.exit()' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
+    && ! grep -F '"exit"' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
     && ! grep -F 'awww-daemon' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
     && grep -Fq 'transition-type none' "$ROOT/stow/hypr/.config/hypr/modules/autostart.lua" \
     && ! grep -F 'wallpaper-show.sh' "$ROOT/stow/hypr/.config/hypr/modules/autostart.lua" >/dev/null; then
