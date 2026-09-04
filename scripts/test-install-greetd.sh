@@ -101,6 +101,8 @@ if grep -F 'Greetd.respond(secret)' "$ROOT/stow/greeter/.config/quickshell/greet
     && grep -F 'autoFocus: root.isLeftmost' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'onPasswordChanged' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null \
     && grep -F 'onUsernameChanged' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null \
+    && grep -F 'onLaunchingChanged' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null \
+    && grep -F 'tabFocus: root.autoFocus && !String' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionIdentity.qml" >/dev/null \
     && ! grep -F 'session.unavailable' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null; then
     ok "greeter submits the field password and shows the form on every output"
 else

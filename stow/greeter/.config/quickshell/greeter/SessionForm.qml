@@ -58,6 +58,10 @@ Item {
         if (root._busy || root._launching || !root.autoFocus)
             return;
         password.forceActiveFocus();
+        Qt.callLater(() => {
+            if (!root._busy && !root._launching && root.autoFocus && !identity.selectOpen())
+                password.forceActiveFocus();
+        });
     }
 
     ColumnLayout {
@@ -155,6 +159,10 @@ Item {
                 root.focusPassword();
             }
         }
+        function onLaunchingChanged() {
+            if (!root._launching && !root._busy)
+                root._focusForm();
+        }
         function onPasswordChanged() {
             const p = String(root.auth.password || "");
             if (password.text !== p)
@@ -162,6 +170,7 @@ Item {
         }
         function onUsernameChanged() {
             root._clearPassword();
+            root._focusForm();
         }
         function onDefaultReadyChanged() {
             root._focusForm();
