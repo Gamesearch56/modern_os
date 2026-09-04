@@ -113,7 +113,7 @@ printf 'hl.monitor({ output = "" })\n' >"$kbdir/hyprland.lua"
 {
     printf 'set -euo pipefail\n'
     printf 'log() { printf "provision-iso: %%s\\n" "$*"; }\n'
-    # shellcheck source written literally into the generated script
+    # shellcheck disable=SC2016  # written literally into the generated script
     printf 'USERNAME="$(id -un)"\n'
     printf 'USER_HOME=%s\n' "$kbdir"
     printf 'MODERN_XORG_KB=%s/00-keyboard.conf\n' "$kbdir"
