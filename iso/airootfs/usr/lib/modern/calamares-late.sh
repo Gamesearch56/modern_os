@@ -168,7 +168,7 @@ ensure_pacman_db() {
     elif ! grep -qE '^[[:space:]]*IgnorePkg[[:space:]]*=.*jack2' "$conf"; then
         sed -i -E 's/^(IgnorePkg[[:space:]]*=[[:space:]]*)/\1jack2 jack2-dbus lib32-jack2 /' "$conf"
     fi
-    # m0's 10-desktop.txt has lib32-gamemode; stock pacman.conf comments
+    # 50-gaming has lib32-gamemode; stock pacman.conf comments
     # [multilib] out, so pacman -S dies with target not found.
     if ! grep -qE '^[[:space:]]*\[multilib\]' "$conf"; then
         printf '\n[multilib]\nInclude = /etc/pacman.d/mirrorlist\n' >>"$conf"
@@ -357,7 +357,7 @@ install_aur() {
     local requested=("$@") pkgs=() p
     [ ${#requested[@]} -eq 0 ] && return 0
     for p in "${requested[@]}"; do
-        if pacman -Qq "$p" >/dev/null 2>&1; then
+        if aur_pkg_present "$p"; then
             continue
         fi
         pkgs+=("$p")

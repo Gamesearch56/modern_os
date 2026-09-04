@@ -3,7 +3,7 @@
 calamares
 # unpackfs copies this onto the target so late install.sh skips git clone
 # of yay-bin (that clone was failing on systemd-resolved in the chroot).
-yay
+yay-bin
 # m0 AUR (10-desktop.aur.txt / 20-theming.aur.txt). On the squashfs so
 # late `yay -S --needed` is a no-op instead of building in the chroot.
 # matugen-bin: source AUR matugen is 3.0.0 and calls rustup in prepare();

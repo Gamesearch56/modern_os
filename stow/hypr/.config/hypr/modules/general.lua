@@ -35,10 +35,20 @@ hl.config({
     },
     dwindle = {
         preserve_split = true,
+        -- Drop / Super+mouse insert follows the cursor instead of
+        -- always opening on the left of the destination monitor.
+        smart_split = true,
+        precise_mouse_move = true,
+    },
+    binds = {
+        window_direction_monitor_fallback = true,
     },
     misc = {
         disable_hyprland_logo = true,
         disable_splash_rendering = true,
+        -- Greeter PATH is often too thin to see hyprland-dialog; this
+        -- overlay stays for 15s and reads as a stuck login.
+        disable_hyprland_guiutils_check = true,
     },
     render = {
         cm_auto_hdr = 0,

@@ -55,21 +55,21 @@ the same JSON-singleton pattern, which is a useful sanity check.
 
 ## 5. Qt-first toolkit; Nautilus as default file manager
 
-**Decision:** Nautilus is the shipped default file manager so GTK/libadwaita
+**Decision:** Nautilus is the shipped file manager so GTK/libadwaita
 can follow matugen tokens (`gtk.css` named colors; Papirus-Dark icons).
 Space preview in Nautilus is GNOME Sushi (`org.gnome.NautilusPreviewer`),
 themed from the same `gtk.css` and floated over Nautilus with
 `dim_around` — not the Quickshell Quick Look overlay. Media starts muted
 (`scripts/sushi-previewer.sh` overlays gst/audio viewers). Selecting
 another file replaces the preview (Nautilus `notify::selection`; the
-window is not `stay_focused`). Dolphin stays
-packaged and selectable in Settings → Applications and keeps Quick Look.
-Qt/KDE apps are still first-class: matugen writes `kdeglobals` + a Qt
-color scheme, and `QT_QPA_PLATFORM=xcb` stays out of `.bashrc`.
+window is not `stay_focused`). Qt/KDE apps are still first-class:
+matugen writes `kdeglobals` + a Qt color scheme, and
+`QT_QPA_PLATFORM=xcb` stays out of `.bashrc`.
 
-**Rejected:** Dropping Dolphin, or going GTK-first for Qt apps. The old
-setup needed `QT_QPA_PLATFORM=xcb` to make Qt tolerable, which forces
-every Qt app onto XWayland — incompatible with a Wayland-first design.
+**Rejected:** Shipping Dolphin as a second default, or going GTK-first
+for Qt apps. The old setup needed `QT_QPA_PLATFORM=xcb` to make Qt
+tolerable, which forces every Qt app onto XWayland — incompatible with
+a Wayland-first design.
 
 ## 6. From-scratch build over forking end-4/dots-hyprland
 
@@ -98,8 +98,10 @@ shutdown overlay share one `Session/SessionSurface.qml`.
 
 **Decision:** real login via `greetd` + a second Quickshell instance,
 gated behind an explicit, separately-applied phase (see
-`docs/ISOLATION.md`). Autologin stays available as a `config.json`
-toggle for anyone who wants it back.
+`docs/ISOLATION.md`). Autologin is a Settings toggle: `config.json`
+plus `scripts/autologin-apply.sh` (pkexec) writes greetd
+`[initial_session]` or a `getty@tty1` drop-in so the next reboot opens
+the session account. Settings still never writes `/etc` itself.
 
 **Rejected:** keeping autologin + hyprlock-as-a-workaround (current
 setup) — works, but isn't a login screen, and blocks a themed boot→login
@@ -169,7 +171,7 @@ blurred, boot-downscaled, plus a `tokens.json` copy) into a
 `tmpfiles.d`-managed, world-readable directory.
 
 **Rejected:** loosening `~/.config`/home permissions, or an ACL grant for
-the `greeter` user into `/home/devuser` — both weaken the home directory's
+the `greeter` user into a session `$HOME` — both weaken the home directory's
 security boundary for every file in it, not just the wallpaper. Copying
 one small set of derived, non-sensitive images is strictly less exposure.
 
@@ -179,9 +181,8 @@ one small set of derived, non-sensitive images is strictly less exposure.
 why it's there. `40-dev`/`50-gaming` are the personal layer, deferred to
 M6.
 
-**Rejected:** one flat list (current setup) — conflates "needed for any
-Hyprland desktop" with "personal preference", which is exactly the
-distinction the user asked for when isolating old-vs-new.
+**Rejected:** one flat list — conflates "needed for any
+Hyprland desktop" with optional layers (`40-dev` / `50-gaming`).
 
 ## 16. `property var` object literals for MD3 color roles, not nested QML properties
 

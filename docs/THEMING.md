@@ -21,18 +21,21 @@ matugen -c ~/.config/matugen/config.toml ...
         ├─▶ hypr/modules/colors.lua               (Hyprland borders)
         ├─▶ kitty/colors.conf
         ├─▶ gtk-3.0/gtk.css, gtk-4.0/gtk.css
-        ├─▶ qt6ct/colors/modern.conf              (QPalette; Fusion / Dolphin)
-        ├─▶ kdeglobals                            (Dolphin, other KDE apps)
+        ├─▶ qt6ct/colors/modern.conf              (QPalette; Fusion)
+        ├─▶ kdeglobals                            (KDE apps)
         ├─▶ qt6ct/qss/modern.qss                  (Fusion stylesheet)
         ├─▶ hypr/application-style.conf           (hyprland-qt-support radii)
         ├─▶ hypr/hyprtoolkit.conf                 (other hyprtoolkit apps)
         ├─▶ phylax/style.css                      (Phylax polkit dialog)
         └─▶ vivaldi/custom_css/00-modern.css
             + 01-chrome.css (fonts/radii)
+            + Default/Preferences (theme id=modern, CSS mods path)
 ```
 
 Do **not** mix `design.transparency` into Vivaldi `#browser` — glass is
-for the island bar. Enable CSS mods once at `vivaldi://experiments`.
+for the island bar. `theme-apply.sh` seeds `Preferences` and
+`Local State` (`vivaldi-css-mods@1`) so a fresh install is themed
+before the first launch. No accounts or bookmarks are written.
 
 
 Every *color* output in that list is written by **one** `matugen`
@@ -64,8 +67,9 @@ via `jq`, or the future Settings > Diagnostics color preview).
   (`hyprctl reload`, `kitty @ load-config`). Quickshell watches
 `tokens.json` and restyles the bar/overlays immediately. GTK apps pick
 up `gtk.css` on restart. Vivaldi's CSS overlay is already on disk
-(reload the tab); the native theme object is merged only while Vivaldi
-is not running. Nautilus and Dolphin must be fully quit after `theme-apply.sh`.
+(reload the tab). The native theme object is created on a fresh home
+and merged later only while Vivaldi is not running. Nautilus
+must be fully quit after `theme-apply.sh`.
 
 ## Profile resolution
 
@@ -122,23 +126,27 @@ abort kitty (`kitty.conf` has fallback colors). matugen writes the live
 already-running apps) and the Vivaldi `Preferences` merge are out of
 scope of a running-app live-reload: CSS overlay + `01-chrome.css` are
 always rewritten; the native theme object is merged only while Vivaldi is
-**not** running (so we do not fight its Preferences writer). Dolphin does
-not reload QSS live — fully quit it after `theme-apply.sh` and reopen with
-Super+E (`scripts/modern-launch` so `qt6ct` is in the environment even
-when Hyprland was only reloaded). qt6ct must **not** load `modern.qss`:
+**not** running (so we do not fight its Preferences writer). If Vivaldi is
+open, merge is deferred until it exits, and `modern-launch` merges again
+on a cold start. Leftover `00-wallust.css` in `custom_css/` is deleted so
+it cannot override the active tab and URL-bar after `00-modern.css`.
+Qt apps do
+not reload QSS live — fully quit them after `theme-apply.sh` and reopen with
+`scripts/modern-launch` so `qt6ct` is in the environment even
+when Hyprland was only reloaded. qt6ct must **not** load `modern.qss`:
 an application stylesheet makes Fusion ignore the custom **Active**
 palette. Colors come from `qt6ct/colors/modern.conf` (`#AARRGGBB`) plus
-kdeglobals. KF6 apps (Dolphin) ignore that QPalette: KColorSchemeManager
+kdeglobals. KF6 apps ignore that QPalette: KColorSchemeManager
 treats qt6ct's `ColorScheme::Unknown` as light, so a focused window goes
 white. `kdeglobals` `[UiSettings] ColorScheme=modern` pins
 `~/.local/share/color-schemes/modern.colors`. Widget style is
-`qt6ct-style`. Dolphin is an opaque overlay card (`dolphin-opaque`);
-Nautilus is the same (`nautilus-opaque`). Nautilus Space preview is
+`qt6ct-style`. Nautilus is an opaque overlay card (`nautilus-opaque`).
+Nautilus Space preview is
 GNOME Sushi (`nautilus-previewer`: float, center, `dim_around`),
 colored from the same `gtk.css` GTK3 Adwaita aliases. GTK icon theme is
-Papirus-Dark so Nautilus keeps emblem folders; KDE/Dolphin use
-`modern-folders` (token-colored folder SVGs). Fully quit Nautilus or
-Dolphin after `theme-apply.sh`. Wallpaper stays in the
+Papirus-Dark so Nautilus keeps emblem folders; KDE apps can use
+`modern-folders` (token-colored folder SVGs). Fully quit Nautilus
+after `theme-apply.sh`. Wallpaper stays in the
 compositor gaps around the window. `hyprctl reload` picks up the rule.
 `theme-apply.sh` writes absolute paths into `qt6ct.conf` because qt6ct
 does not expand `~`.
@@ -157,28 +165,32 @@ account). Upstream Phylax rebuilds that DropDown on every Relm4 watch,
 so the selected admin resets to the first wheel uid and cannot be
 changed; `scripts/build-phylax.sh` installs a patched binary to
 `~/.local/bin/phylax` and `phylax.service` prefers it over the AUR
-file. `theme-apply.sh` starts `phylax.service` if it is down and stops
+file. `install.sh` runs that build when `cargo` is present so destuser
+does not silently keep the AUR UI. `theme-apply.sh` starts `phylax.service` if it is down and stops
 `hyprpolkitagent` so only one agent is registered. Preview with
 `PHYLAX_DEMO=1 phylax` or `pkexec true`. The files these templates
 write are always correct on disk, so a restarted app always picks up
 the current theme.
 
-**Vivaldi CSS modifications** must be enabled once in the browser:
-open `vivaldi://experiments` and turn on “Allow CSS modifications”, then
-point Custom UI Modifications at `~/.config/vivaldi/custom_css`. That
-toggle cannot be flipped from `config.json`. When
-`design.bootScreen.wallpaperOnVivaldi` is true, `theme-apply.sh` copies
-the current wallpaper to `custom_css/wallpaper` and `01-chrome.css` sets
-`--md-wallpaper` (plus `--md-font-*`, `--md-radius-*`, `--md-space-*`,
-`--md-blur`, `--md-transparency` from `config.json`).
+**Vivaldi** gets a native `modern` theme object, CSS mods pointed at
+`~/.config/vivaldi/custom_css`, and the labs flag `vivaldi-css-mods@1`
+from `theme-apply.sh` (including install `--no-reload`). An existing
+`Preferences` file is left alone while Vivaldi is running — it rewrites
+that file on quit. When `design.bootScreen.wallpaperOnVivaldi` is true,
+`theme-apply.sh` copies the current wallpaper to `custom_css/wallpaper`
+and `01-chrome.css` sets `--md-wallpaper` (plus `--md-font-*`,
+`--md-radius-*`, `--md-space-*`, `--md-blur`, `--md-transparency` from
+`config.json`).
 
-`--no-reload` skips all of the above — used by CI/lint checks and the M0
-verification script, where no Hyprland/kitty session exists to reload.
+`--no-reload` still writes GTK/Qt/Vivaldi files (including seeding
+`Preferences` on a fresh home). It skips `hyprctl` / kitty reload —
+install.sh and CI have no session yet.
 
 `--chrome-only` skips matugen and rewrites GTK/Qt/KDE/Vivaldi/Phylax radii,
-fonts, cursor, and motion from the current `config.json`. Settings uses
-this after Design knobs that are not a palette swap (rounding, type
-scale, animations, transparency, cursor).
+fonts, cursor, and motion from the current `config.json`, then merges
+the Vivaldi theme object. Settings uses this after Design knobs that
+are not a palette swap (rounding, type scale, animations, transparency,
+cursor).
 
 ## Adding a new consumer
 
@@ -188,7 +200,7 @@ scale, animations, transparency, cursor).
    (it lists every MD3 role this pipeline exposes).
 2. Add a `[templates.<name>]` block to `config.toml` with `input_path`/
    `output_path` (paths are `~`-relative, resolved against the user
-   running `theme-apply.sh`, i.e. `devuser`).
+   running `theme-apply.sh`).
 3. Add a comment at the top of the template explaining what reads the
    output and why it needs its own file, matching the existing templates'
    style, plus a `GENERATED — do not hand-edit` header line.

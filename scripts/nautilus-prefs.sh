@@ -11,9 +11,9 @@ if [ "${1:-}" = "--bookmarks-only" ]; then
     bookmarks_only=1
 fi
 
-# gtk-3.0/bookmarks is gitignored — a clone never ships /home/devuser.
-# Expand XDG dirs for the target $HOME so Calamares users get the same
-# sidebar as this machine.
+# gtk-3.0/bookmarks is gitignored — a clone never ships a username.
+# Expand XDG dirs for the target $HOME so any install gets the same
+# sidebar.
 seed_bookmarks() {
     local dest="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/bookmarks"
     local key path label
@@ -46,6 +46,19 @@ seed_bookmarks() {
     done
 }
 
+# Nautilus's "No Home Directory" dialog is not $HOME. Startup checks
+# that ~/.config/nautilus is a real directory (g_file_test IS_DIR). A
+# leftover stow symlink into a removed clone fails that check every launch.
+ensure_config_dir() {
+    local dir="${XDG_CONFIG_HOME:-$HOME/.config}/nautilus"
+    if [ -L "$dir" ] && [ ! -e "$dir" ]; then
+        rm -f "$dir"
+    elif [ -e "$dir" ] && [ ! -d "$dir" ]; then
+        rm -f "$dir"
+    fi
+    mkdir -p "$dir"
+}
+
 if [ "$bookmarks_only" -eq 0 ]; then
     previewer="${SCRIPT_DIR}/sushi-previewer.sh"
     previewer_dir="${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services"
@@ -66,5 +79,6 @@ if [ "$bookmarks_only" -eq 0 ]; then
     fi
 fi
 
+ensure_config_dir
 seed_bookmarks
 

@@ -67,14 +67,18 @@
 
 #browser .tab:not(.active):hover,
 #browser .tab-wrapper:hover .tab:not(.active),
-#browser .unified-ui .tab:not(.active):hover {
+#browser .unified-ui .tab:not(.active):hover,
+#browser .tab-position .tab:not(.active):hover .tab-header,
+.tab-position .tab:not(.active):hover .tab-header {
     background-color: color-mix(in srgb, var(--md-primary) 12%, transparent) !important;
     border-radius: var(--md-radius-full, 9999px) !important;
 }
 
 #browser .tab.active,
 #browser .tab.active.active,
-.tab-position.active .tab.active {
+.tab-position.active .tab.active,
+#browser .tab-position .tab.active .tab-header,
+.tab-position .tab.active .tab-header {
     background-color: var(--md-primary) !important;
     color: var(--md-on-primary) !important;
     border-radius: var(--md-radius-full, 9999px) !important;
@@ -83,6 +87,8 @@
 #browser .mainbar {
     width: 100% !important;
     max-width: 100% !important;
+    border-color: transparent !important;
+    border-bottom-color: transparent !important;
 }
 
 #browser .toolbar-addressbar,
@@ -114,6 +120,7 @@
     width: unset !important;
     margin-inline: 0 !important;
     background-color: var(--md-surface-container-highest) !important;
+    border: 1px solid var(--md-outline-variant) !important;
     border-radius: var(--md-radius-full, 9999px) !important;
     padding: var(--md-space-sm, 8px) var(--md-space-md, 12px) !important;
 }
@@ -121,6 +128,7 @@
 .UrlBar-AddressField:focus-within,
 .UrlBar-SearchField:focus-within {
     outline: 2px solid var(--md-primary) !important;
+    border-color: var(--md-primary) !important;
 }
 
 .UrlBar-AddressField .pageload .pageload-indicator {
@@ -151,6 +159,20 @@
     color: var(--md-on-surface) !important;
     fill: currentColor !important;
     border-radius: var(--md-radius-full, 9999px) !important;
+}
+
+/* Panels / back / forward / reload are multi-tone SVGs. Hover fill flattens them. */
+#browser .toolbar-mainbar button:hover,
+#browser .toolbar-mainbar button:active,
+#browser .toolbar-mainbar .button-toolbar:hover,
+#browser .toolbar-mainbar .button-toolbar:active,
+#browser .toolbar-mainbar button:hover svg,
+#browser .toolbar-mainbar button:active svg,
+#browser .toolbar-mainbar .button-toolbar:hover svg {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    filter: none !important;
 }
 
 .toolbar-mainbar,

@@ -6,6 +6,9 @@ Material Design 3 desktop for [Arch Linux](https://archlinux.org/) +
 wallpaper-derived color, and one JSON config for both the shell and
 Hyprland. English and German are first-class.
 
+This is a hobby project with one maintainer. The established desktop is
+complete; further work is fixes and new features.
+
 SPDX-License-Identifier: Apache-2.0
 
 ## Requirements
@@ -13,9 +16,10 @@ SPDX-License-Identifier: Apache-2.0
 - Arch Linux, 64-bit (`x86_64`)
 - A user you can log in as (ISO creates one; git install uses yours)
 
-## Try it
+## Install from the ISO
 
-1. Download the ISO from [Releases](https://github.com/Gamesearch56/modern_dotfile/releases).
+1. Download the live image from
+   [Releases](https://github.com/Gamesearch56/modern_dotfile/releases).
 2. Boot it in a VM first (QEMU/VirtualBox). Calamares installs to disk.
 3. First boot is greetd + password. Settings → Update tracks newer
    `vX.Y.Z` tags.
@@ -32,10 +36,11 @@ Never run `provision-iso.sh` or Calamares on the session you live in
 
 ## Install from git
 
-Clone a **release tag**, not `dev`:
+Clone the latest **release tag** (`vX.Y.Z` on the Releases page), not
+`dev`:
 
 ```bash
-git clone --branch v0.1.4 https://github.com/Gamesearch56/modern_dotfile.git
+git clone --branch vX.Y.Z https://github.com/Gamesearch56/modern_dotfile.git
 cd modern_dotfile
 ./install/install.sh --profile m0 --dry-run
 ./install/install.sh --profile m0
@@ -43,6 +48,9 @@ cd modern_dotfile
 
 Then start the session with `start-hyprland` (not the `Hyprland` binary).
 Hyprland ≥ 0.53 needs the wrapper or the bar never appears.
+
+`install.sh` enables greetd on a real user home. Plymouth, NVIDIA
+initramfs, and the other extras under `install/system/` stay gated.
 
 Profiles: `m0` (desktop), `dev` (+ toolchain), `gaming`, `full`.
 `--target DIR` stows into another home. Optional
@@ -57,9 +65,10 @@ shipped UI is **English**; default keyboard layout is `us`.
 
 ## After install
 
-System-wide boot/login/`/etc` files stay under `install/system/` and are
-**never** applied by `install.sh` or Settings. Settings writes
-`config.json` only.
+Settings writes `config.json` only. It never rewrites Lua, QML, or
+gated `/etc`. Plymouth, NVIDIA mkinitcpio, polkit `modern-usersd`, and
+snapper stay under `install/system/` and are applied only by an explicit
+ISO provision command.
 
 ```bash
 scripts/ci-check.sh
@@ -99,8 +108,9 @@ modern_dotfile/
 |---|---|
 | `SUPER` + `Space` | Application launcher |
 | `SUPER` + `A` | AI chat |
-| `SUPER` + `M` | Power menu (Lock is a preview overlay, not a real lock) |
-| `SUPER` + `L` | Control panel (not lock) |
+| `SUPER` + `M` | Power menu |
+| `SUPER` + `N` | Control center |
+| `SUPER` + `L` | Lock (`WlSessionLock`) |
 | `SUPER` + `SHIFT` + `M` | Exit compositor |
 | `SUPER` + `K` | Keybind cheatsheet |
 | `SUPER` + `I` | Settings |
@@ -110,14 +120,11 @@ modern_dotfile/
 | `SUPER` + `T` | Terminal (kitty; always bound) |
 | `SUPER` + `Return` | Terminal (always bound) |
 | `SUPER` + `B` | Browser (Vivaldi) |
-| `SUPER` + `E` | File manager (Nautilus; Dolphin selectable in Settings) |
+| `SUPER` + `E` | File manager (Nautilus) |
 | `SUPER` + `Q` | Close window |
 
 Full list: `SUPER`+`K`, `docs/KEYBINDS.md`, or
 `stow/modern/.config/modern/config.default.json` → `keybinds`.
-
-The lock screen is a **visual overlay** (any non-empty password), not a
-real session lock.
 
 ## License
 

@@ -33,9 +33,9 @@
 #                       Combined with the profile contrast as matugen --contrast.
 #   --chrome-only      Patch GTK/Qt/KDE/Vivaldi radii, fonts, and motion
 #                       from config.json without re-running matugen.
-#   --no-reload        Regenerate files only, skip live-reload side
-#                       effects (used by CI/lint and the M0 verify
-#                       script, where no Hyprland session is running).
+#   --no-reload        Write files (including Vivaldi Preferences) but
+#                       skip compositor reload. Used by install.sh and
+#                       CI, where no Hyprland session is running.
 #
 # See docs/THEMING.md for the full pipeline and docs/ARCHITECTURE.md's
 # "colors" data flow for why tokens.json/config.json are two separate,
@@ -139,41 +139,20 @@ apply_color_scheme() {
     done
 }
 
-# Merge an MD3 theme object into Vivaldi's Preferences. Skipped when
-# Vivaldi is running — it rewrites that file on quit and would clobber
-# us (the CSS overlay still applies either way).
+# Native theme + CSS-mods path. Creates Preferences on a fresh home
+# (install --no-reload). Skips an existing file while Vivaldi is open
+# and reapplies on quit so a restart picks up the new palette.
 merge_vivaldi_theme() {
-    local prefs="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi/Default/Preferences"
-    local tokens="$MODERN_DIR/tokens.json"
-    [ -f "$prefs" ] || return 0
-    [ -f "$tokens" ] || return 0
-    if pgrep -x vivaldi >/dev/null 2>&1 || pgrep -x vivaldi-bin >/dev/null 2>&1; then
-        warn "Vivaldi is running — not touching Preferences; CSS overlay is already updated"
-        return 0
-    fi
-    local primary surface on_surface primary_container
-    primary="$(jq -r '.color.primary' "$tokens")"
-    surface="$(jq -r '.color.surface' "$tokens")"
-    on_surface="$(jq -r '.color.onSurface' "$tokens")"
-    primary_container="$(jq -r '.color.primaryContainer' "$tokens")"
-    local radius
-    radius="$(merged_config | jq -r '.design.cornerRounding // 1')"
-    jq \
-        --arg bg "$surface" \
-        --arg fg "$on_surface" \
-        --arg accent "$primary" \
-        --arg highlight "$primary_container" \
-        --argjson radius "$radius" \
-        '.vivaldi.themes.current = "modern"
-         | .vivaldi.themes.user = ((.vivaldi.themes.user // []) | map(select(.id != "modern")))
-           + [{id:"modern", name:"modern",
-               colorBg:$bg, colorFg:$fg, colorAccentBg:$accent,
-               colorHighlightBg:$highlight,
-               accentOnWindow:false, accentFromPage:false,
-               windowBg:$bg}]
-         | .vivaldi.customUiMods = true' \
-        "$prefs" > "$prefs.tmp" && mv "$prefs.tmp" "$prefs"
-    log "merged Vivaldi native theme (id=modern)"
+    # shellcheck source=lib/vivaldi-prefs.sh
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/vivaldi-prefs.sh"
+    local st=0
+    merge_vivaldi_prefs "$MODERN_DIR/tokens.json" || st=$?
+    case "$st" in
+        0) log "merged Vivaldi native theme (id=modern)" ;;
+        2) log "Vivaldi is running — native theme applies on quit" ;;
+        *) warn "Vivaldi native theme merge skipped" ;;
+    esac
+    return 0
 }
 
 # Apple-tab folders from matugen tokens. Own theme name so we Inherits=
@@ -255,6 +234,7 @@ patch_toolkit_chrome() {
     lg="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 28*r }')"
     local css_dir="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi/custom_css"
     mkdir -p "$css_dir"
+    rm -f "$css_dir/00-wallust.css" "$css_dir/wallust.css"
     local wp_on
     wp_on="$(jq -r '.design.bootScreen.wallpaperOnVivaldi // false' <<<"$cfg")"
     local wp_url="none"
@@ -323,10 +303,11 @@ EOF
         local scheme_abs
         scheme_abs="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/colors/modern.conf"
         awk -v icon="$icon" -v scheme="$scheme_abs" -v font="$font" -v mono="$mono" -v pt="$pt" -v mpt="$mpt" '
+            /^\[Appearance\]/ { print; print "color_scheme_path=" scheme; next }
+            /^color_scheme_path=/ { next }
             /^icon_theme=/ { print "icon_theme=" icon; next }
             /^style=/ { print "style=qt6ct-style"; next }
             /^stylesheets=/ { print "stylesheets="; next }
-            /^color_scheme_path=/ { print "color_scheme_path=" scheme; next }
             /^general=/ { print "general=@ByteArray(" font "," pt ",-1,5,50,0,0,0,0,0)"; next }
             /^fixed=/ { print "fixed=@ByteArray(" mono "," mpt ",-1,5,50,0,0,0,0,0)"; next }
             { print }
@@ -528,6 +509,7 @@ merged_config() {
 
 if [ "$CHROME_ONLY" -eq 1 ]; then
     patch_toolkit_chrome || warn "toolkit chrome patch skipped"
+    merge_vivaldi_theme || true
     log "done (--chrome-only)"
     exit 0
 fi
@@ -703,7 +685,8 @@ finish_live() {
 
 if [ "$RELOAD" -eq 0 ]; then
     patch_toolkit_chrome || warn "toolkit chrome patch skipped"
-    log "done (--no-reload: skipped live-reload side effects)"
+    merge_vivaldi_theme || true
+    log "done (--no-reload: skipped compositor reload)"
     exit 0
 fi
 

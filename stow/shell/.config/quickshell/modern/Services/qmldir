@@ -20,6 +20,8 @@ singleton Cheatsheet 1.0 Cheatsheet.qml
 singleton CheatsheetModel 1.0 CheatsheetModel.qml
 singleton SystemStats 1.0 SystemStats.qml
 singleton ConfigWrite 1.0 ConfigWrite.qml
+ConfigWriteFollow 1.0 ConfigWriteFollow.qml
+ConfigWritePaths 1.0 ConfigWritePaths.qml
 singleton Diagnostics 1.0 Diagnostics.qml
 singleton KdeConnect 1.0 KdeConnect.qml
 singleton FirstRun 1.0 FirstRun.qml
@@ -44,6 +46,7 @@ singleton Apps 1.0 Apps.qml
 AppsIcons 1.0 AppsIcons.qml
 singleton IdleInhibit 1.0 IdleInhibit.qml
 singleton IdleDaemon 1.0 IdleDaemon.qml
+singleton Autologin 1.0 Autologin.qml
 singleton Screenshot 1.0 Screenshot.qml
 singleton Recording 1.0 Recording.qml
 singleton Popups 1.0 Popups.qml

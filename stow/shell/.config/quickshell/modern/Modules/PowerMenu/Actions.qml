@@ -7,7 +7,7 @@ GridLayout {
     id: root
 
     property var actions: []
-    property int focusIndex: 0
+    property int focusIndex: -1
 
     signal chosen(int index)
 

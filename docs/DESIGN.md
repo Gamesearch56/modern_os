@@ -117,26 +117,26 @@ bell stay on disk under `Modules/Bar/widgets/` if a leftover
   `stow/theme/.config/matugen/templates/gtk.css.template`), libadwaita
   named colors plus `.nautilus-window` rules from MD3 roles. GTK3 Adwaita
   aliases theme Sushi. Folder icons use Papirus-Dark (emblem folders).
-  KDE/Dolphin keep `modern-folders`. SUPER+E launches
+  KDE apps keep `modern-folders`. SUPER+E launches
   `apps.defaults.fileManager` (Nautilus by default). Restart Nautilus
   after `theme-apply.sh`. The window is opaque. Sushi floats over it
   (`nautilus-previewer` window rule, `dim_around` scrim). Video/audio
   start muted; changing the Nautilus selection replaces the preview.
-- **Qt / Dolphin** — `kdeglobals` `[UiSettings] ColorScheme=modern` plus
+- **Qt** — `kdeglobals` `[UiSettings] ColorScheme=modern` plus
   `modern.colors` (KF6 KColorSchemeManager; qt6ct reports
   `ColorScheme::Unknown` and otherwise applies a light Active palette),
   qt6ct-style, and generated `qt6ct` palette (`#AARRGGBB`). Launch
   through `scripts/modern-launch` so `QT_QPA_PLATFORMTHEME=qt6ct` reaches
   the process (Hyprland `hl.env` does not stick after reload). Restart
-  Dolphin after `theme-apply.sh`. The window is opaque (wallpaper in the
-  gaps, not through the view). No `QT_QPA_PLATFORM=xcb`.
+  Qt apps after `theme-apply.sh`. No `QT_QPA_PLATFORM=xcb`.
 - **Phylax** — GTK4 polkit dialog, CSS from `~/.config/phylax/style.css`
   (matugen tokens + chrome radii/type), plus a Hyprland window rule for
   glass opacity, `pin`, and `dim_around`. See `docs/THEMING.md`.
 - **Vivaldi** — native theme object plus CSS overlay and a copied wallpaper
   at `~/.config/vivaldi/custom_css/wallpaper` when
-  `design.bootScreen.wallpaperOnVivaldi` is on. CSS mods need
-  `vivaldi://experiments` once. See `docs/THEMING.md`.
+  `design.bootScreen.wallpaperOnVivaldi` is on. Fresh installs seed
+  `Preferences` and the CSS-mods labs flag (no account data). See
+  `docs/THEMING.md`.
 - **Plymouth** — boot/shutdown splash themed from the same tokens, see
   `docs/BOOT.md`.
 

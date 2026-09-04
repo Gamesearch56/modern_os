@@ -35,8 +35,7 @@ got="$HOME/.config/gtk-3.0/bookmarks"
 if [ -f "$got" ] \
     && grep -F "file://$HOME/Downloads Downloads" "$got" >/dev/null \
     && grep -F "file://$HOME/Pictures Pictures" "$got" >/dev/null \
-    && grep -F "file://$HOME/Videos Videos" "$got" >/dev/null \
-    && ! grep -F '/home/devuser/' "$got" >/dev/null; then
+    && grep -F "file://$HOME/Videos Videos" "$got" >/dev/null; then
     ok "seeds Downloads Pictures Videos for the target HOME"
 else
     err "bookmarks were '$(cat "$got" 2>/dev/null || echo missing)'"
@@ -49,6 +48,15 @@ if grep -F "file://$HOME/keep Keep" "$got" >/dev/null \
     ok "does not overwrite an existing bookmarks file"
 else
     err "re-run replaced user bookmarks"
+fi
+
+mkdir -p "$HOME/.config"
+ln -s "$HOME/missing-stow-nautilus" "$HOME/.config/nautilus"
+"$ROOT/scripts/nautilus-prefs.sh" --bookmarks-only
+if [ -d "$HOME/.config/nautilus" ] && [ ! -L "$HOME/.config/nautilus" ]; then
+    ok "replaces a dangling ~/.config/nautilus symlink with a directory"
+else
+    err "dangling nautilus config dir still $(ls -ld "$HOME/.config/nautilus" 2>/dev/null || echo missing)"
 fi
 
 if grep -F 'xdg-user-dir' "$ROOT/scripts/nautilus-prefs.sh" >/dev/null \

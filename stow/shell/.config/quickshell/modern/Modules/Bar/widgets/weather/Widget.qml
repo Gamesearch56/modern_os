@@ -7,6 +7,7 @@ import "../../"
 
 Item {
     id: root
+    property var barScreen: null
     implicitWidth: BarLayout.vertical ? Config.bar.height : (row.implicitWidth + Tokens.spacing.md * 2)
     implicitHeight: Config.bar.height
     Component.onCompleted: Weather.watching = true
@@ -40,17 +41,14 @@ Item {
         }
     }
 
-    BarPopup {
+    BarLayerPopup {
         id: popup
         open: false
         anchorItem: root
-        implicitWidth: Tokens.spacing.xxl * 14
-        implicitHeight: (panelLoader.item ? panelLoader.item.implicitHeight : Tokens.spacing.xxl * 10) + Tokens.spacing.md * 2
+        barScreen: root.barScreen
+        panelWidth: Tokens.spacing.xxl * 14
+        panelHeight: (panelLoader.item ? panelLoader.item.implicitHeight : Tokens.spacing.xxl * 10) + Tokens.spacing.md * 2
         hAlign: Qt.AlignRight
-        onImplicitHeightChanged: {
-            if (popup.open)
-                popup.anchor.updateAnchor();
-        }
 
         Loader {
             id: panelLoader

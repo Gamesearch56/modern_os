@@ -70,13 +70,31 @@ install_native() {
     fi
 }
 
+# True when the local db already has this AUR name, or the source
+# package that conflicts with a requested *-bin (matugen vs
+# matugen-bin, bibata-cursor-theme vs bibata-cursor-theme-bin).
+aur_pkg_present() {
+    local p="$1"
+    pacman -Qq "$p" >/dev/null 2>&1 && return 0
+    case "$p" in
+        *-bin)
+            pacman -Qq "${p%-bin}" >/dev/null 2>&1 && return 0
+            ;;
+    esac
+    return 1
+}
+
 install_aur() {
     local requested=("$@") pkgs=() p
     [ ${#requested[@]} -eq 0 ] && return 0
     # yay -S --needed still hits aur.archlinux.org. Skip names already
-    # in the local db (ISO squashfs already has m0 AUR packages).
+    # in the local db (ISO squashfs already has m0 AUR packages), and
+    # skip *-bin when the source name is installed — they conflict.
     for p in "${requested[@]}"; do
-        if pacman -Qq "$p" >/dev/null 2>&1; then
+        if aur_pkg_present "$p"; then
+            if ! pacman -Qq "$p" >/dev/null 2>&1; then
+                log_ok "AUR $p satisfied by ${p%-bin}"
+            fi
             continue
         fi
         pkgs+=("$p")

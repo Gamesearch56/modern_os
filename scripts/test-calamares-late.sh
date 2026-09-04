@@ -30,68 +30,71 @@ if grep -F 'DisableSandbox' "$LATE" >/dev/null \
     && grep -F 'overlay_pin_install_native' "$LATE" >/dev/null \
     && grep -F 'modern ISO pin overlay' "$LATE" >/dev/null \
     && grep -F 'MODERN_SKIP_AUR=1' "$LATE" >/dev/null \
-    && grep -F 'pacman -Qq' "$LATE" >/dev/null; then
+    && grep -F 'aur_pkg_present' "$LATE" >/dev/null; then
     ok "desktop phase syncs pacman databases, enables multilib, patches pin pacman"
 else
     err "desktop phase must init the target keyring, IgnorePkg jack2, overlay pin install_native, and pacman -Sy before install.sh"
 fi
 
 PROVISION="$ROOT/install/system/provision-iso.sh"
-if grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$PROVISION" >/dev/null; then
-    err "provision-iso.sh enables units in one call — one missing unit aborts the rest"
+GREETD_LIB="$ROOT/install/lib/greetd.sh"
+if grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$GREETD_LIB" >/dev/null \
+    || grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$PROVISION" >/dev/null; then
+    err "greetd enable_unit must enable one unit per call — one missing unit aborts the rest"
 else
-    ok "provision-iso.sh enables one unit per call"
+    ok "greetd enables one unit per call"
 fi
 
 units_ok=1
 for unit in NetworkManager.service greetd.service; do
-    grep -F "enable_unit $unit required" "$PROVISION" >/dev/null || units_ok=0
+    grep -F "enable_unit $unit required" "$GREETD_LIB" >/dev/null || units_ok=0
 done
 for unit in bluetooth.service systemd-timesyncd.service; do
-    grep -F "enable_unit $unit optional" "$PROVISION" >/dev/null || units_ok=0
+    grep -F "enable_unit $unit optional" "$GREETD_LIB" >/dev/null || units_ok=0
 done
 if [ "$units_ok" -eq 1 ]; then
-    ok "provision-iso.sh hard-fails only on NetworkManager and greetd"
+    ok "greetd hard-fails only on NetworkManager and greetd"
 else
-    err "provision-iso.sh must mark each enabled unit required or optional"
+    err "greetd_apply must mark each enabled unit required or optional"
 fi
 
-if python3 - "$ROOT/install/system/greetd/config.toml" <<'PY'; then
+if python3 - "$ROOT/install/system/greetd/config.toml" "$ROOT/install/system/greetd/kiosk.sh" "$ROOT/install/system/greetd/hyprland.lua" <<'PY'; then
 import re, shlex, sys
+from pathlib import Path
 text = open(sys.argv[1], encoding="utf-8").read()
 m = re.search(r'^command\s*=\s*"([^"]*)"', text, re.M)
 assert m, "no default_session command"
 argv = shlex.split(m.group(1))
-assert argv and argv[0].endswith("start-hyprland"), f"unexpected session command {argv}"
-# start-hyprland is a watchdog wrapper. It understands only these three
-# options itself and forwards an argument to Hyprland only after --, so a
-# Hyprland flag on the left is dropped: Hyprland then starts unconfigured,
-# autogenerates a stock session, and the greeter never runs.
-own = {"--path", "--no-nixgl", "--force-nixgl"}
-rest = argv[1:]
-sep = rest.index("--") if "--" in rest else len(rest)
-stray = [a for a in rest[:sep] if a.startswith("-") and a not in own]
-assert not stray, f"{stray} sit before -- and never reach Hyprland"
-assert "--config" in rest[sep:], "the kiosk config must be passed after --"
+assert argv and argv[0].endswith("kiosk.sh"), f"unexpected session command {argv}"
+kiosk = Path(sys.argv[2]).read_text(encoding="utf-8")
+assert "GREETD_SOCK" in kiosk, "kiosk.sh must keep GREETD_SOCK"
+assert "start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua" in kiosk, (
+    "kiosk.sh must exec start-hyprland with Hyprland flags after --"
+)
+lua = Path(sys.argv[3]).read_text(encoding="utf-8")
+assert "GREETD_SOCK" in lua, "hyprland.lua must forward GREETD_SOCK to qs"
+assert "awww-daemon" not in lua, "greeter Hyprland must not start awww"
 PY
-    ok "greetd hands the kiosk config to Hyprland past start-hyprland's --"
+    ok "greetd kiosk keeps GREETD_SOCK and hands Hyprland flags past --"
 else
-    err "greetd command must put Hyprland flags after -- (start-hyprland drops them otherwise)"
+    err "greetd kiosk.sh must re-export GREETD_SOCK and exec start-hyprland --no-nixgl -- --config"
 fi
 
 # greetd's sysusers.d leaves the home field unset, so greeter already exists
-# with / and the useradd in provision-iso.sh is skipped.
-if grep -E 'usermod.*(--move-home|[[:space:]]-m[[:space:]])' "$PROVISION" >/dev/null; then
-    err "provision-iso.sh must never move the greeter home — the old one is /"
-elif grep -E 'usermod --home .+ greeter' "$PROVISION" >/dev/null \
-    && grep -F 'cannot start' "$PROVISION" >/dev/null; then
-    ok "provision-iso.sh relocates a greeter that greetd's sysusers left at /"
+# with / and the useradd in greetd_apply is skipped.
+if grep -E 'usermod.*(--move-home|[[:space:]]-m[[:space:]])' "$GREETD_LIB" >/dev/null \
+    || grep -E 'usermod.*(--move-home|[[:space:]]-m[[:space:]])' "$PROVISION" >/dev/null; then
+    err "greetd_apply must never move the greeter home — the old one is /"
+elif grep -E 'usermod --home .+ greeter' "$GREETD_LIB" >/dev/null \
+    && grep -F 'cannot start' "$GREETD_LIB" >/dev/null \
+    && grep -F 'greetd_apply' "$PROVISION" >/dev/null; then
+    ok "greetd_apply relocates a greeter that greetd's sysusers left at /"
 else
-    err "provision-iso.sh must move the greeter off / and fail loudly if it cannot"
+    err "greetd_apply must move the greeter off / and fail loudly if it cannot"
 fi
 
-# The Keyboard step must reach Hyprland (config.json) and greetd's own
-# Hyprland, not just /etc/vconsole.conf and the X11 snippet.
+# The Keyboard step must reach Hyprland (config.json) and greetd's
+# keyboard.json snapshot, not just /etc/vconsole.conf and the X11 snippet.
 kbdir="$(mktemp -d)"
 kbcfg="$kbdir/.config/modern"
 mkdir -p "$kbcfg"
@@ -115,17 +118,20 @@ printf 'hl.monitor({ output = "" })\n' >"$kbdir/hyprland.lua"
     printf 'USER_HOME=%s\n' "$kbdir"
     printf 'MODERN_XORG_KB=%s/00-keyboard.conf\n' "$kbdir"
     printf 'MODERN_GREETD_LUA=%s/hyprland.lua\n' "$kbdir"
+    printf 'MODERN_SESSION_DIR=%s\n' "$kbdir"
+    printf 'SESSION_DIR=%s\n' "$kbdir"
     sed -n '/^XORG_KB=/,/^apply_keyboard_layout$/p' "$PROVISION"
 } >"$kbdir/run.sh"
 if bash "$kbdir/run.sh" >"$kbdir/out" 2>&1; then
     got_layout="$(jq -r '.input.kbLayout' "$kbcfg/config.json")"
     got_variant="$(jq -r '.input.kbVariant' "$kbcfg/config.json")"
     got_rate="$(jq -r '.input.repeatRate' "$kbcfg/config.json")"
+    got_snap="$(jq -r '.layout + "/" + .variant' "$kbdir/keyboard.json" 2>/dev/null || true)"
     if [ "$got_layout" = de ] && [ "$got_variant" = nodeadkeys ] && [ "$got_rate" = 25 ] \
-        && grep -F 'kb_layout = "de"' "$kbdir/hyprland.lua" >/dev/null; then
+        && [ "$got_snap" = "de/nodeadkeys" ]; then
         ok "Keyboard step layout reaches config.json and greetd"
     else
-        err "layout not propagated: config=$got_layout/$got_variant rate=$got_rate $(cat "$kbdir/out")"
+        err "layout not propagated: config=$got_layout/$got_variant rate=$got_rate snap=$got_snap $(cat "$kbdir/out")"
     fi
 else
     err "apply_keyboard_layout failed: $(cat "$kbdir/out")"
@@ -193,9 +199,8 @@ else
 fi
 rm -rf "$langdir"
 
-# The greeter has no hl.config counterpart: it picks its strings up from the
-# chrome.json wallpaper-sync.sh bakes out of language.ui, so provision has to
-# set the language before it runs.
+# The greeter picks its strings up from chrome.json (session-chrome-sync.sh
+# from language.ui), so provision has to set the language before wallpaper-sync.
 lang_line="$(grep -n '^apply_system_language$' "$PROVISION" | head -1 | cut -d: -f1)"
 sync_line="$(grep -n 'wallpaper-sync.sh' "$PROVISION" | head -1 | cut -d: -f1)"
 if [ -n "$lang_line" ] && [ -n "$sync_line" ] && [ "$lang_line" -lt "$sync_line" ]; then
@@ -204,26 +209,19 @@ else
     err "apply_system_language must run before wallpaper-sync.sh (greeter strings)"
 fi
 
-SYNC="$ROOT/scripts/wallpaper-sync.sh"
+CHROME="$ROOT/scripts/session-chrome-sync.sh"
 syncdir="$(mktemp -d)"
 mkdir -p "$syncdir/modern/translations" "$syncdir/shared"
 printf '{"session":{"unlock":"Unlock","password":"Password","user":"User"}}\n' \
     >"$syncdir/modern/translations/en.json"
 printf '{"session":{"unlock":"Entsperren","password":"Passwort","user":"Benutzer"}}\n' \
     >"$syncdir/modern/translations/de.json"
-{
-    printf 'set -euo pipefail\n'
-    printf 'warn() { printf "[wallpaper-sync] WARN %%s\\n" "$*" >&2; }\n'
-    printf 'XDG_CONFIG_HOME=%s\n' "$syncdir"
-    printf 'SHARED=%s/shared\n' "$syncdir"
-    sed -n '/^CFG=/,/^fi$/p' "$SYNC"
-} >"$syncdir/run.sh"
 sync_cfg() {
     printf '{"typography":{"ui":"Inter"},"design":{"cornerRounding":1,"transparency":0.85},"language":{"ui":"%s"}}\n' \
         "$1" >"$syncdir/modern/config.json"
 }
 sync_cfg de
-if bash "$syncdir/run.sh" >"$syncdir/out" 2>&1 \
+if env XDG_CONFIG_HOME="$syncdir" MODERN_SESSION_DIR="$syncdir/shared" bash "$CHROME" >"$syncdir/out" 2>&1 \
     && [ "$(jq -r '.strings.unlock' "$syncdir/shared/chrome.json")" = Entsperren ] \
     && [ "$(jq -r '.strings.user' "$syncdir/shared/chrome.json")" = Benutzer ]; then
     ok "greeter chrome.json follows the installed language"
@@ -231,7 +229,7 @@ else
     err "chrome.json did not pick up the German session strings: $(cat "$syncdir/out")"
 fi
 sync_cfg fr
-if bash "$syncdir/run.sh" >"$syncdir/out2" 2>&1 \
+if env XDG_CONFIG_HOME="$syncdir" MODERN_SESSION_DIR="$syncdir/shared" bash "$CHROME" >"$syncdir/out2" 2>&1 \
     && [ "$(jq -r '.strings.unlock' "$syncdir/shared/chrome.json")" = Unlock ]; then
     ok "greeter falls back to English for an unshipped language"
 else

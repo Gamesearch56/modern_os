@@ -1,15 +1,14 @@
 # Contributing
 
-Work happens on `dev`. Friends and forks open pull requests **into `dev`**.
-Maintainers commit on `dev` and open a PR **`dev` → `main`** when a
-release (or hotfix) should ship. Do not open `feature/*` or `fix/*`
-branches. Details: [`docs/GIT.md`](docs/GIT.md).
+Work happens on `dev`. Open pull requests **into `dev`**. A release is a
+PR **`dev` → `main`**. Do not open `feature/*` or `fix/*` branches.
+Details: [`docs/GIT.md`](docs/GIT.md).
 
 ## Setup
 
 1. Fork and clone, or clone this repo if you have push access.
 2. `git checkout -b` is not the workflow here — check out `dev` and
-   commit there (maintainers) or branch from `dev` for a fork PR.
+   commit there, or branch from `dev` for a fork PR.
 3. Arch Linux is the only supported host for a live install. CI runs
    layer lint, shellcheck, catalog/sync tests, and
    `install.sh --dry-run`.

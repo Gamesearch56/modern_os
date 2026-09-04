@@ -55,13 +55,13 @@ ColumnLayout {
     }
 
     PkgGroup {
-        visible: Update.systemPkgs.length > 0
+        visible: Update.systemPkgs.length > 0 && !Update.checking
         titleKey: "settings.update.packages"
         packages: Update.systemPkgs
         expanded: Update.pending.length === 0
     }
     PkgGroup {
-        visible: Update.otherPkgs.length > 0
+        visible: Update.otherPkgs.length > 0 && !Update.checking
         titleKey: "settings.update.otherPackages"
         packages: Update.otherPkgs
         expanded: false

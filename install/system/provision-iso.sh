@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# GATED — Calamares late / ISO chroot only. Enables greetd, NetworkManager,
-# bluetooth. Refuses when MODERN_PROTECT_HOME is set and exists.
-# See docs/ISOLATION.md.
+# GATED leftovers (Plymouth, NVIDIA initramfs, snapper, modern-usersd)
+# stay out of install.sh. Greetd/greeter are applied by install/lib/greetd.sh.
 #
 # Usage: MODERN_ISO_PROVISION=1 provision-iso.sh <username>
 set -euo pipefail
@@ -28,76 +27,10 @@ fi
 
 # shellcheck source=nvidia/apply.sh
 source "$PROVISION_ROOT/install/system/nvidia/apply.sh"
+# shellcheck source=../lib/greetd.sh
+source "$PROVISION_ROOT/install/lib/greetd.sh"
 
-# One unit per call: `systemctl enable a b c` aborts the whole list on the
-# first missing unit, so one absent package used to take the install down.
-enable_unit() {
-    local unit="$1" need="$2"
-    if systemctl enable "$unit" >/dev/null 2>&1; then
-        log "enabled $unit"
-        return 0
-    fi
-    [ "$need" = required ] && die "cannot enable $unit — is its package installed?"
-    log "skipping $unit (not installed)"
-}
-
-log "enabling NetworkManager bluetooth greetd systemd-timesyncd"
-enable_unit NetworkManager.service required
-enable_unit greetd.service required
-enable_unit bluetooth.service optional
-enable_unit systemd-timesyncd.service optional
-systemctl set-default graphical.target
-
-install -d -m 0755 /etc/greetd
-install -m 0644 "$PROVISION_ROOT/install/system/greetd/config.toml" /etc/greetd/config.toml
-install -m 0644 "$PROVISION_ROOT/install/system/greetd/hyprland.lua" /etc/greetd/hyprland.lua
-
-if ! getent group modern >/dev/null 2>&1; then
-    groupadd --system modern
-fi
-# greetd's own sysusers.d entry (`u greeter - "greetd greeter user" -`)
-# leaves the home field unset, so systemd-sysusers already created greeter
-# with / as its home when the package landed and this useradd never runs.
-# A greeter whose $HOME is / cannot create /.cache or /.local/state, and
-# anything of ours that resolves $HOME writes to //.config.
-GREETER_HOME=/var/lib/greeter
-if ! id greeter >/dev/null 2>&1; then
-    useradd --system --create-home --home-dir "$GREETER_HOME" \
-        --shell /usr/bin/nologin --gid modern -G video,seat greeter || true
-else
-    case "$(getent passwd greeter | cut -d: -f6)" in
-        "$GREETER_HOME") ;;
-        # No --move-home: the old home is / and usermod would move the
-        # whole root filesystem into /var/lib/greeter.
-        *) usermod --home "$GREETER_HOME" greeter || true ;;
-    esac
-    for g in modern video seat; do
-        if getent group "$g" >/dev/null 2>&1; then
-            gpasswd -a greeter "$g" >/dev/null 2>&1 || true
-        fi
-    done
-fi
-install -d -m 0755 "$GREETER_HOME"
-chown greeter:modern "$GREETER_HOME" || true
-if [ -f "$PROVISION_ROOT/install/system/tmpfiles.d/modern-session.conf" ]; then
-    install -m 0644 "$PROVISION_ROOT/install/system/tmpfiles.d/modern-session.conf" \
-        /etc/tmpfiles.d/modern-session.conf
-    systemd-tmpfiles --create /etc/tmpfiles.d/modern-session.conf || true
-fi
-
-# passwd, not the variable above: this is where the greeter will actually
-# look, and a copy into /var/lib/greeter is useless if usermod did not take.
-GREETER_HOME="$(getent passwd greeter | cut -d: -f6)"
-case "$GREETER_HOME" in
-    ""|/) die "greeter still has '$GREETER_HOME' as its home — qs -c greeter cannot start" ;;
-esac
-if [ -d "$PROVISION_ROOT/stow/greeter" ]; then
-    install -d -m 0755 "$GREETER_HOME/.config/quickshell"
-    rm -rf "$GREETER_HOME/.config/quickshell/greeter"
-    cp -a "$PROVISION_ROOT/stow/greeter/.config/quickshell/greeter" \
-        "$GREETER_HOME/.config/quickshell/greeter"
-    chown -R greeter:modern "$GREETER_HOME/.config" || true
-fi
+greetd_apply "$USERNAME"
 
 USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 
@@ -108,6 +41,7 @@ USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 # login prompt and a us desktop.
 XORG_KB="${MODERN_XORG_KB:-/etc/X11/xorg.conf.d/00-keyboard.conf}"
 GREETD_LUA="${MODERN_GREETD_LUA:-/etc/greetd/hyprland.lua}"
+SESSION_DIR="${MODERN_SESSION_DIR:-/var/lib/modern/session}"
 
 xkb_option() {
     sed -nE "s/.*\"$1\"[[:space:]]+\"([^\"]*)\".*/\1/p" "$XORG_KB" 2>/dev/null | head -1
@@ -144,8 +78,20 @@ apply_keyboard_layout() {
         log "WARN: no $cfg or no jq — the desktop keeps the default layout"
     fi
 
-    # provision installs this file fresh on every run, so appending is idempotent.
-    if [ -f "$GREETD_LUA" ]; then
+    # Snapshot for the kiosk Hyprland (hyprland.lua reads keyboard.json).
+    # Do not append to hyprland.lua — greetd_apply recopies that file and
+    # Settings must be able to replace the layout without a leftover us/de.
+    if mkdir -p "$SESSION_DIR" 2>/dev/null && command -v jq >/dev/null 2>&1; then
+        tmp="$(mktemp "${SESSION_DIR}/keyboard.XXXXXX")"
+        if jq -n --arg l "$layout" --arg v "$variant" '{layout:$l, variant:$v}' >"$tmp"; then
+            chmod a+r "$tmp" || true
+            mv -f "$tmp" "$SESSION_DIR/keyboard.json"
+            log "keyboard layout '$layout' -> $SESSION_DIR/keyboard.json"
+        else
+            rm -f "$tmp"
+            log "WARN: jq could not write $SESSION_DIR/keyboard.json"
+        fi
+    elif [ -f "$GREETD_LUA" ]; then
         printf 'hl.config({ input = { kb_layout = "%s", kb_variant = "%s" } })\n' \
             "$layout" "$variant" >>"$GREETD_LUA"
         log "keyboard layout '$layout' -> $GREETD_LUA"
@@ -211,9 +157,8 @@ apply_system_language() {
 
 apply_system_language
 
-# Ordering, not coincidence: wallpaper-sync.sh bakes the greeter's strings
-# into chrome.json from the language.ui just written, which is why the
-# greeter needs no counterpart to the keyboard's hl.config line.
+# Ordering, not coincidence: wallpaper-sync.sh rebakes chrome.json and
+# keyboard.json from the config.json just written.
 wp="${USER_HOME}/.config/modern/wallpapers/default.jpg"
 if [ -f "$PROVISION_ROOT/scripts/wallpaper-sync.sh" ] && [ -f "$wp" ]; then
     runuser -u "$USERNAME" -- env \

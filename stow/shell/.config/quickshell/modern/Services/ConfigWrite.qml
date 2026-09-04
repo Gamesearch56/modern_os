@@ -16,58 +16,33 @@ Singleton {
     property bool _reloadHypr: false
     property bool _restoreReloadHypr: false
     property bool _patchChrome: false
+    property bool _patchMonitors: false
+    property bool _patchKeyboard: false
+    property bool _patchSessionChrome: false
     property bool _restoreChrome: false
+    property bool _restoreMonitors: false
+    property bool _restoreKeyboard: false
+    property bool _restoreSessionChrome: false
     property bool _restoreCursor: false
     property bool _applyMime: false
     property bool _restoreMime: false
     property string _lastPath: ""
     property var _lastValue
     property var _queue: []
-    property var _follow: []
     property bool _drain: false
-    readonly property bool pending: writeSoon.running || proc.running || restoreProc.running
-        || chromeDebounce.running || followProc.running
-        || ((root._queue || []).length > 0) || ((root._follow || []).length > 0)
+    readonly property bool writing: proc.running || writeSoon.running
+        || ((root._queue || []).length > 0)
+    readonly property bool pending: writing || restoreProc.running || follow.busy
 
     signal finished(bool ok)
 
-    function _hyprPath(path: string): bool {
-        const roots = ["input", "keybinds", "windows", "windowRules", "design", "monitors", "gaming"];
-        for (let i = 0; i < roots.length; i++) {
-            const r = roots[i];
-            if (path === r || path.indexOf(r + ".") === 0)
-                return true;
-        }
-        return false;
+    ConfigWritePaths {
+        id: paths
     }
 
-    function _chromePath(path: string): bool {
-        if (path === "typography" || path.indexOf("typography.") === 0)
-            return true;
-        if (path === "motion" || path.indexOf("motion.") === 0)
-            return true;
-        const keys = [
-            "design.cornerRounding", "design.transparency",
-            "design.cursorTheme", "design.cursorSize", "design.iconTheme"
-        ];
-        for (let i = 0; i < keys.length; i++) {
-            if (path === keys[i])
-                return true;
-        }
-        return false;
-    }
-
-    function _cursorPath(path: string): bool {
-        return path === "design" || path === "design.cursorTheme"
-            || path === "design.cursorSize";
-    }
-
-    function _mimePath(path: string): bool {
-        return path === "apps.defaults"
-            || path.indexOf("apps.defaults.videoPlayer") === 0
-            || path.indexOf("apps.defaults.imageViewer") === 0
-            || path.indexOf("apps.defaults.fileManager") === 0
-            || path.indexOf("apps.defaults.mail") === 0;
+    ConfigWriteFollow {
+        id: follow
+        writer: root
     }
 
     function set(path, value) {
@@ -113,12 +88,16 @@ Singleton {
         root._queue = q.slice(1);
         root._lastPath = job.path;
         root._lastValue = job.value;
-        root._patchChrome = root._chromePath(job.path);
-        root._applyMime = root._mimePath(job.path);
+        root._patchChrome = paths.chromePath(job.path);
+        root._applyMime = paths.mimePath(job.path);
         root._reloadHypr = job.path === "monitors" || job.path.indexOf("monitors.") === 0
             || job.path === "windowRules"
             || job.path === "motion.scale" || job.path === "motion"
             || job.path === "gaming" || job.path.indexOf("gaming.") === 0;
+        root._patchMonitors = job.path === "monitors" || job.path.indexOf("monitors.") === 0;
+        root._patchKeyboard = job.path === "input" || job.path === "input.kbLayout"
+            || job.path === "input.kbVariant";
+        root._patchSessionChrome = job.path === "language" || job.path.indexOf("language.") === 0;
         proc.command = [Paths.modern, "config", "set", job.path, job.encoded];
         proc.running = true;
     }
@@ -136,31 +115,52 @@ Singleton {
         root.set("monitors", m);
     }
 
-    function restore(paths) {
-        const list = paths || [];
-        if (list.length === 0)
+    function restore(list) {
+        const items = list || [];
+        if (items.length === 0)
             return;
         root.lastError = "";
         root._restoreReloadHypr = false;
         root._restoreChrome = false;
+        root._restoreMonitors = false;
+        root._restoreKeyboard = false;
+        root._restoreSessionChrome = false;
         root._restoreCursor = false;
         root._restoreMime = false;
         const cmd = [Paths.modern, "config", "restore"];
-        for (let i = 0; i < list.length; i++) {
-            const p = String(list[i]);
+        for (let i = 0; i < items.length; i++) {
+            const p = String(items[i]);
             cmd.push(p);
-            if (root._hyprPath(p))
+            if (paths.hyprPath(p))
                 root._restoreReloadHypr = true;
-            if (root._chromePath(p) || p === "design")
+            if (p === "monitors" || p.indexOf("monitors.") === 0)
+                root._restoreMonitors = true;
+            if (p === "input" || p === "input.kbLayout" || p === "input.kbVariant")
+                root._restoreKeyboard = true;
+            if (p === "language" || p.indexOf("language.") === 0)
+                root._restoreSessionChrome = true;
+            if (paths.chromePath(p) || p === "design")
                 root._restoreChrome = true;
-            if (root._cursorPath(p))
+            if (paths.cursorPath(p))
                 root._restoreCursor = true;
-            if (root._mimePath(p))
+            if (paths.mimePath(p))
                 root._restoreMime = true;
         }
         restoreProc.command = cmd;
         restoreProc.running = true;
-        Logger.debug("ConfigWrite", "restore " + list.join(" "));
+        Logger.debug("ConfigWrite", "restore " + items.join(" "));
+    }
+
+    function _afterWrite() {
+        if ((root._queue || []).length === 0) {
+            root._drain = false;
+            follow.kick();
+            return;
+        }
+        if (root._drain)
+            root._kick();
+        else
+            writeSoon.restart();
     }
 
     Process {
@@ -187,49 +187,20 @@ Singleton {
             if (exitCode === 0) {
                 Hypr.syncAppearance(root._lastPath, root._lastValue);
                 if (root._reloadHypr)
-                    root._enqueueFollow(["hyprctl", "reload"]);
+                    follow.enqueue(["hyprctl", "reload"]);
                 if (root._patchChrome)
-                    chromeDebounce.restart();
+                    follow.requestChrome();
+                if (root._patchMonitors)
+                    follow.enqueue([Paths.script("session-monitors-sync.sh")]);
+                if (root._patchKeyboard)
+                    follow.enqueue([Paths.script("session-keyboard-sync.sh")]);
+                if (root._patchSessionChrome)
+                    follow.enqueue([Paths.script("session-chrome-sync.sh")]);
                 if (root._applyMime)
-                    root._enqueueFollow([Paths.script("mime-defaults.sh")]);
+                    follow.enqueue([Paths.script("mime-defaults.sh")]);
             }
             root._afterWrite();
         }
-    }
-
-    function _enqueueFollow(cmd) {
-        const key = (cmd || []).join("\t");
-        const q = root._follow || [];
-        for (let i = 0; i < q.length; i++) {
-            if ((q[i] || []).join("\t") === key)
-                return;
-        }
-        root._follow = q.concat([cmd]);
-        root._kickFollow();
-    }
-
-    function _kickFollow() {
-        if (followProc.running || proc.running || writeSoon.running
-                || ((root._queue || []).length > 0))
-            return;
-        const q = root._follow || [];
-        if (q.length === 0)
-            return;
-        followProc.command = q[0];
-        root._follow = q.slice(1);
-        followProc.running = true;
-    }
-
-    function _afterWrite() {
-        if ((root._queue || []).length === 0) {
-            root._drain = false;
-            root._kickFollow();
-            return;
-        }
-        if (root._drain)
-            root._kick();
-        else
-            writeSoon.restart();
     }
 
     Process {
@@ -254,15 +225,21 @@ Singleton {
             if (exitCode !== 0 && root.lastError.length === 0)
                 Logger.error("ConfigWrite", "modern config restore exited " + exitCode);
             if (exitCode === 0 && root._restoreReloadHypr)
-                root._enqueueFollow(["hyprctl", "reload"]);
+                follow.enqueue(["hyprctl", "reload"]);
+            if (exitCode === 0 && root._restoreMonitors)
+                follow.enqueue([Paths.script("session-monitors-sync.sh")]);
+            if (exitCode === 0 && root._restoreKeyboard)
+                follow.enqueue([Paths.script("session-keyboard-sync.sh")]);
+            if (exitCode === 0 && root._restoreSessionChrome)
+                follow.enqueue([Paths.script("session-chrome-sync.sh")]);
             if (exitCode === 0 && root._restoreChrome)
-                chromeDebounce.restart();
+                follow.requestChrome();
             if (exitCode === 0 && root._restoreCursor)
                 Hypr.setCursor(Config.design.cursorTheme ?? "", Config.design.cursorSize ?? 24);
             if (exitCode === 0 && root._restoreMime)
-                root._enqueueFollow([Paths.script("mime-defaults.sh")]);
+                follow.enqueue([Paths.script("mime-defaults.sh")]);
             root.finished(exitCode === 0);
-            root._kickFollow();
+            follow.kick();
         }
     }
 
@@ -271,20 +248,5 @@ Singleton {
         interval: Motion.configWriteMs
         repeat: false
         onTriggered: root._kick()
-    }
-
-    Timer {
-        id: chromeDebounce
-        interval: Math.max(Motion.mediumMs, 1)
-        repeat: false
-        onTriggered: root._enqueueFollow([
-            Paths.script("theme-apply.sh"),
-            "--chrome-only"
-        ])
-    }
-
-    Process {
-        id: followProc
-        onExited: root._kickFollow()
     }
 }

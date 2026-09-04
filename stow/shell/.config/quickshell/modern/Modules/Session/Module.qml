@@ -1,20 +1,17 @@
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 import "../../Services"
 
 Scope {
-    LazyLoader {
-        active: Session.locked
+    // ext_session_lock_v1: one WlSessionLockSurface per output. Shared
+    // password lives on Session — never HyprlandFocusGrab / Exclusive
+    // layer grabs (those fought across monitors and rebuilt the form).
+    WlSessionLock {
+        locked: Session.locked
 
-        PanelWindow {
-            visible: Session.locked
+        WlSessionLockSurface {
             color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
-            exclusionMode: ExclusionMode.Ignore
-            focusable: true
 
             SessionSurface {
                 anchors.fill: parent

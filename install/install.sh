@@ -19,10 +19,10 @@
 #   gaming   m0 + 50-gaming
 #   full     everything, including 60-flatpak and optional AUR extras
 #
-# This script only ever touches packages and stows this repo's dotfiles
-# into $TARGET (default $HOME). It NEVER touches anything under
-# install/system/ — those are gated, separately-invoked changes. See
-# docs/ISOLATION.md.
+# This script installs packages, stows this repo's dotfiles into $TARGET
+# (default $HOME), and enables the greetd login screen on a real user
+# home. Plymouth, NVIDIA initramfs, snapper, and modern-usersd stay
+# under install/system/ for ISO provision — see docs/ISOLATION.md.
 #
 # Live-home guard: if MODERN_PROTECT_HOME is set, refuses to stow there
 # unless --allow-live-home is passed. See docs/ISOLATION.md.
@@ -89,6 +89,8 @@ source "$REPO_ROOT/install/lib/pkg.sh"
 source "$REPO_ROOT/install/lib/stow.sh"
 # shellcheck source=lib/preflight.sh
 source "$REPO_ROOT/install/lib/preflight.sh"
+# shellcheck source=lib/greetd.sh
+source "$REPO_ROOT/install/lib/greetd.sh"
 
 : > "$LOG_FILE"
 _err_trap() {
@@ -193,17 +195,27 @@ fi
 # ---------------------------------------------------------------------------
 log_phase "Phase 4/5: stow dotfiles -> $TARGET"
 
-stow_packages=(hypr shell theme kitty dolphin gtk qt bash git modern systemd xdg fontconfig fastfetch mpv imv pipewire)
+stow_packages=(hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch mpv imv pipewire)
 for pkg in "${stow_packages[@]}"; do
     stow_package "$pkg" "$TARGET"
 done
 
-# devuser's live config.json starts as a copy of the tracked default,
+# The target user's live config.json starts as a copy of the tracked default,
 # never overwritten on re-run.
 CONFIG_DIR="$TARGET/.config/modern"
 if [ ! -f "$CONFIG_DIR/config.json" ] && [ -f "$CONFIG_DIR/config.default.json" ]; then
     run cp "$CONFIG_DIR/config.default.json" "$CONFIG_DIR/config.json"
     log_ok "seeded config.json from config.default.json"
+fi
+
+# Hyprland/Quickshell/scripts exec this clone. ISO Calamares still clones
+# to $HOME/modern_dotfile; a Cursor tree elsewhere needs this pointer.
+if [ "${DRY_RUN:-0}" -eq 1 ]; then
+    log_info "would write $CONFIG_DIR/repo -> $REPO_ROOT"
+else
+    run mkdir -p "$CONFIG_DIR"
+    printf '%s\n' "$REPO_ROOT" >"$CONFIG_DIR/repo"
+    log_ok "wrote $CONFIG_DIR/repo"
 fi
 
 # ---------------------------------------------------------------------------
@@ -283,7 +295,7 @@ else
     log_warn "matugen not found — run scripts/theme-apply.sh once it is installed"
 fi
 
-# Nautilus / Dolphin / xdg-open follow Settings → Applications video/image/folder defaults.
+# Nautilus / xdg-open follow Settings → Applications video/image/folder defaults.
 run "$REPO_ROOT/scripts/mime-defaults.sh" \
     --config "$TARGET/.config/modern/config.json" \
     --mimeapps "$TARGET/.config/mimeapps.list" \
@@ -291,9 +303,24 @@ run "$REPO_ROOT/scripts/mime-defaults.sh" \
 run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
     || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
 
+# Patched Phylax Confirms as $USER. Without it, phylax.service falls
+# back to the AUR binary and the identity dropdown returns.
+if command -v cargo >/dev/null 2>&1; then
+    run "${theme_env[@]}" "$REPO_ROOT/scripts/build-phylax.sh" \
+        || log_warn "build-phylax.sh failed — AUR phylax will show the identity dropdown until it succeeds"
+else
+    log_warn "cargo missing — skip patched Phylax (scripts/build-phylax.sh)"
+fi
+
 # kitty.conf globincludes colors.conf; fallbacks in kitty.conf keep
 # SUPER+T working until theme-apply writes the live file.
 
+if greetd_target_is_live_user "$TARGET"; then
+    greetd_apply "$(greetd_user_for_home "$TARGET")"
+else
+    log_info "skipping greetd (target '$TARGET' is not a login home)"
+fi
+
 log_ok "Install complete for profile '$PROFILE'."
-log_info "Start the session with start-hyprland (not the Hyprland binary) — see README.md."
+log_info "Reboot to the login screen, then start-hyprland is launched by greetd — see README.md."
 log_info "Log: $LOG_FILE"

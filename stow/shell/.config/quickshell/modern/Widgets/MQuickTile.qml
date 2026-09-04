@@ -72,6 +72,7 @@ Item {
             color: root._icon
             tint: root.tintIcon
             preferSymbolic: true
+            forceLift: true
         }
 
         MText {
@@ -118,6 +119,7 @@ Item {
             color: root._icon
             tint: root.tintIcon
             preferSymbolic: true
+            forceLift: true
             Layout.alignment: Qt.AlignVCenter
         }
 

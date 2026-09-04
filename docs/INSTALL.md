@@ -16,13 +16,13 @@ only and refuses when `MODERN_PROTECT_HOME` is set. Git / release tags:
 - Optional: set `MODERN_PROTECT_HOME` so `install.sh` refuses that path
   unless you pass `--allow-live-home`
 
-## Extra-user testing (`devuser`)
+## Extra-user testing (optional)
 
 ```bash
 scripts/check-isolation.sh
-sudo install/system/create-devuser.sh
+sudo install/system/create-devuser.sh   # default username: devuser
 
-# as devuser (sudo -iu devuser)
+# as that user
 git clone <repo-url> ~/modern_dotfile
 cd ~/modern_dotfile
 ./install/install.sh --profile m0 --dry-run
@@ -32,47 +32,49 @@ cd ~/modern_dotfile
 Start the session on **another TTY** (`Ctrl+Alt+F3`) with
 `start-hyprland`. Do not run the `Hyprland` binary — Hyprland ≥ 0.53
 needs the wrapper or the bar never appears. Return with `Ctrl+Alt+F1`
-or `F2`.
+or `F2`. Existing-account install: `docs/CUTOVER.md`.
 
 ## `install.sh` (existing user)
 
 ```bash
 ./install/install.sh --profile m0 --dry-run
-./install/install.sh --profile m0 --target /home/devuser
+./install/install.sh --profile m0 --target /home/otheruser
 ```
 
 Profiles: `m0` (bar/launcher/session), `dev` (+ Cursor/toolchain),
 `gaming` (+ Proton/MangoHud), `full`. Manifests:
 `install/manifests/README.md`.
 
-`install.sh` only installs packages and stows listed packages into
-`--target` (default `$HOME`): hypr, shell, theme, kitty, dolphin, gtk,
-qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, mpv, imv. It does **not** stow
-`greeter`. It never copies `install/system/` and never enables greetd.
-Stow conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
+`install.sh` installs packages, stows listed packages into
+`--target` (default `$HOME`): hypr, shell, theme, kitty, gtk,
+qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, mpv, imv.
+It copies the greeter via `install/lib/greetd.sh` and enables greetd on
+a real user home (`--dry-run` and `--target /tmp` skip that). Stow
+conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
 
 Calamares late on a new machine is `./install/install.sh --profile m0 --yes`
-as the new user, then `MODERN_ISO_PROVISION=1 install/system/provision-iso.sh`.
-That gated script is the only allowed applier of greetd / NetworkManager
-enable. Do not run it on a machine you live on.
+as the new user, then `MODERN_ISO_PROVISION=1 install/system/provision-iso.sh`
+(NVIDIA initramfs, keyboard/locale seed). Do not run `provision-iso.sh`
+on a machine you live on unless you want those extras.
 
 Clone + install is the **designed** desktop (`config.default.json`:
 English UI, `kbLayout` `us`).
 
 `--allow-live-home` disables the `MODERN_PROTECT_HOME` guard. Use it
 only when that account *is* the one you want to own, following
-`docs/CUTOVER.md`. Not for `devuser` testing.
+`docs/CUTOVER.md`. Not for extra-user testing.
 
 Installer log: `install/install.log` (gitignored) and
 `journalctl -t modern-install`.
 
-## Create `devuser` (gated)
+## Create an extra test user (gated)
 
 ```bash
-sudo install/system/create-devuser.sh
+sudo install/system/create-devuser.sh          # default: devuser
+sudo install/system/create-devuser.sh tester   # any unused name
 ```
 
-This does **not** change autologin. Rollback: `sudo userdel -r devuser`.
+This does **not** change autologin. Rollback: `sudo userdel -r <username>`.
 
 ## Bare metal (`bootstrap.sh`)
 
@@ -100,7 +102,7 @@ user that is deleted when the script exits.
 sudo pacman -S --needed archiso qemu-desktop edk2-ovmf qt6-tools
 sudo ./scripts/iso-build.sh --mkarchiso
 ./scripts/iso-qemu.sh          # UEFI live image + 64G qcow2 (Calamares needs ≥ 16 GiB)
-./scripts/iso-qemu.sh --headless   # no GTK; CI smoke uses this
+./scripts/iso-qemu.sh --headless   # no GTK; serial still goes to iso/out/vm-serial.log
 ./scripts/iso-qemu.sh --reset-disk # wipe a previous VM install, still boot the ISO
 ./scripts/test-iso-qemu-install.sh # unattended QEMU until late install finishes
 ```
@@ -115,8 +117,8 @@ Xwayland; Calamares runs as root on X11 (`sudo` + `xhost`) so partitioning
 works. Root cannot be a Wayland client of liveuser's compositor, and a
 root compositor never painted in QEMU. `locale-gen` runs beside greetd,
 not before it. `iso-qemu.sh` boots OVMF (install `edk2-ovmf`) and writes
-guest serial to `iso/out/vm-serial.log`. `--headless` drops GTK/GL so CI
-can wait for `modern-ci: calamares` on that serial. BIOS QEMU makes
+guest serial to `iso/out/vm-serial.log`. `--headless` drops GTK/GL so
+you can wait on that serial without a display. BIOS QEMU makes
 Calamares try GRUB, which this image does not ship.
 `--unattended` sets QEMU fw_cfg `opt/org.modernos/unattended`; the live
 wrapper writes `/etc/calamares/unattended` so Calamares auto-advances
@@ -186,9 +188,9 @@ even after writing `1.1.1.1`. Late desktop uses `runuser` (not
 Calamares chroot without `/dev/pts`. It does not chmod `/etc` to 0750
 (that blocked the target user from `/etc/gitconfig` during yay
 bootstrap). `iso-build.sh` bundles the pin at `/usr/share/modern/dotfile`; late
-clone copies that tree (the GitHub remote is private, so a network
-clone would fail). The ISO pin must be a real `vX.Y.Z` tag (`--tag` or
-the latest tag in the clone).
+clone copies that tree so Calamares does not depend on a GitHub fetch.
+The ISO pin must be a real `vX.Y.Z` tag (`--tag` or the latest tag in
+the clone).
 
 **Only `iso/` is built from your working tree.** The bundle is
 `git clone --branch <pin>`, so `install/`, `stow/` and `scripts/` reach
@@ -243,18 +245,19 @@ German only.
 
 The Keyboard step's own job only writes `/etc/vconsole.conf` (the TTY) and
 `/etc/X11/xorg.conf.d/00-keyboard.conf` (Xwayland clients). Hyprland reads
-`kb_layout` from `config.json` (`modules/input.lua`) and greetd runs a
-*second* Hyprland that reads neither, so picking German used to leave both
-the login prompt and the desktop on `us`. `provision-iso.sh` closes that:
-it parses `XkbLayout` / `XkbVariant` out of the X11 snippet Calamares just
-wrote, sets `input.kbLayout` / `input.kbVariant` in the user's
-`config.json` with `jq` (leaving the rest of the file untouched), and
-appends a matching `hl.config({ input = ... })` to
-`/etc/greetd/hyprland.lua`. The value is passed through verbatim, so a
+`kb_layout` from `config.json` (`modules/input.lua`). The greetd kiosk is a
+second Hyprland and used to ignore that file, so picking German left the
+login prompt on `us`. `provision-iso.sh` parses `XkbLayout` / `XkbVariant`
+out of the X11 snippet Calamares just wrote, sets `input.kbLayout` /
+`input.kbVariant` in the user's `config.json` with `jq` (leaving the rest
+of the file untouched), and writes the same pair to
+`/var/lib/modern/session/keyboard.json`. The kiosk `hyprland.lua` applies
+that snapshot at start. The value is passed through verbatim, so a
 comma-joined non-ASCII pair like `us,ru` still works — Hyprland accepts
 that form too. A missing snippet is a warning, not a failure. Changing the
-layout later in Settings → Keyboard updates the desktop but not the TTY,
-X11 snippet, or greetd.
+layout later in Settings → Keyboard updates the desktop live and rewrites
+`keyboard.json` so the next login matches. TTY and the X11 snippet stay
+as Calamares left them.
 
 The Locale step has the same gap and the same fix. Its job writes `LANG=`
 to `/etc/locale.conf`, which covers the system locale every PAM session and
@@ -269,19 +272,19 @@ so anything else the installer could produce — and `C.UTF-8` — lands on `en`
 rather than on a file `I18n` cannot open. A missing `/etc/locale.conf` or a
 missing `LANG` is a warning, not a failure, and leaves `config.json` alone.
 `language.ui` is the single source of truth: Settings → Language writes that
-same key.
+same key and `session-chrome-sync.sh` rebakes the greeter `chrome.json`.
 
-The greeter needs no counterpart to the keyboard's `hl.config` line. Its
-strings come from `/var/lib/modern/session/chrome.json`, which
-`wallpaper-sync.sh` bakes from `language.ui` — so it follows along, provided
-the language is set before that runs. It is, and
-`scripts/test-calamares-late.sh` pins the ordering.
+The greeter strings come from `/var/lib/modern/session/chrome.json`, which
+`session-chrome-sync.sh` (via wallpaper-sync or Settings → Language) bakes
+from `language.ui`. Keyboard layout is the sibling snapshot
+`keyboard.json`. Both must be written after `config.json` is updated;
+`scripts/test-calamares-late.sh` pins that ordering.
 
 The **Network** / **Netzwerk** page sits after Keyboard. Next stays off
-until a default IPv4 or IPv6 route exists — Ethernet is enough;
-otherwise Wi-Fi turns on (no toggle) and the page matches Settings →
-Network (ethernet row, nearby list, password card). Ethernet already
-up shows a centered “You're connected with Ethernet” page instead.
+until Ethernet or Wi-Fi is up (or a default route exists). Wi-Fi turns
+on (no toggle): nearby list with lock/open labels, **Connect** on each
+row, **Refresh**, and a password card for secured networks. Ethernet or
+Wi-Fi already up shows a centered “You're connected with …” page.
 Live setup enables NetworkManager and stops `iwd` so they do not fight
 over the radio. Unattended QEMU already has virtio-net, so auto-next is
 not blocked. `stylesheet.qss` paints `#networkPage`, `#networkOkPage`,
@@ -289,16 +292,17 @@ and `#wifiList` from the same tokens as the rest of Calamares. The C++
 module is copied into AUR Calamares at build (`iso/releng/calamares-modernnet`).
 Late `pacman` still needs that route.
 
-`provision-iso.sh` enables `NetworkManager`, `greetd`, `bluetooth` and
-`systemd-timesyncd` **one unit per call** — `systemctl enable a b c`
-aborts the whole list on the first unit that does not exist, so one
-missing package used to take the install down. NetworkManager and greetd
-are required; the other two log and continue. `bluez` is its own manifest
+`install.sh` and `provision-iso.sh` call the same `greetd_apply`, which
+enables `NetworkManager`, `greetd`, `bluetooth` and `systemd-timesyncd`
+**one unit per call** — `systemctl enable a b c` aborts the whole list
+on the first unit that does not exist, so one missing package used to
+take the install down. NetworkManager and greetd are required; the
+other two log and continue. `bluez` is its own manifest
 entry: `bluez-utils` is only `bluetoothctl` and does not depend on it, so
 without `bluez` there is no `bluetoothd`, no `bluetooth.service`, and no
 `org.bluez` for `Services/Bluetooth` to bind. Late desktop also installs
 the packages behind those units directly, so pins predating that manifest
-line still provision. `ufw`, `openssh`, `samba` and `wsdd` are installed
+line still provision. `ufw` and `openssh` are installed
 but deliberately not enabled — see `docs/SECURITY.md`.
 
 Late clone restores the exec bit across the bundled repo from its own git
@@ -355,7 +359,8 @@ cannot one-shot ffmpeg+pipewire-jack, rewrites pin `matugen` /
 packages already on the squashfs, `NoExtract`s `resolv.conf` so a
 `systemd` upgrade cannot point DNS at an empty `/run`, then
 `install.sh --profile m0 --yes` (`--needed` skips native packages already
-unpacked; `install_aur` skips names `pacman -Q` already has, and
+unpacked; `install_aur` skips names `pacman -Q` already has (and
+skips `foo-bin` when source `foo` is installed — they conflict), and
 `MODERN_SKIP_AUR=1` never calls `yay` — `yay -S --needed` still
 queries `aur.archlinux.org` and dies when chroot DNS is gone), then `provision-iso.sh`.
 A failed `install.sh` reprints its last 40 lines (and `install/install.log`)
@@ -429,9 +434,9 @@ Settings → Update later tracks the latest GitHub **release tag**, not
 ## After stow (on the **target** user)
 
 `install.sh` phase 5 applies `~/.config/modern/wallpapers/default.jpg`
-(tokens, GTK/Qt/kitty). `wallpaper-sync.sh` writes lock assets to
-`~/.local/state/modern/session` until gated `/var/lib/modern/session`
-exists. Nautilus sidebar starts with Downloads, Pictures, and Videos
+(tokens, GTK/Qt/kitty). `wallpaper-sync.sh` writes lock/login assets to
+`/var/lib/modern/session` after greetd apply (else
+`$XDG_STATE_HOME/modern/session`). Nautilus sidebar starts with Downloads, Pictures, and Videos
 (`nautilus-prefs.sh`, XDG dirs for the target user). First-hour UI is
 **English**. Power-menu lock is an overlay
 preview, not a real lock. Titlebars need a one-time `hyprpm` + pkexec
@@ -447,9 +452,9 @@ To use a different image later:
 3. `scripts/doctor.sh`
 4. Optional gated files that **exist**: Plymouth README, sysctl, ufw
    KDE Connect, tmpfiles, ESP hook, snapper, `create-devuser.sh` —
-   each file's header comment has the copy command. Greetd drop-ins live
-   under `install/system/greetd/` but stay gated — only `provision-iso.sh`
-   in a Calamares chroot applies them.
+   each file's header comment has the copy command. Greetd is applied by
+   `install.sh` (`install/lib/greetd.sh`); `provision-iso.sh` calls the
+   same function.
 
 Hand-edit reference is `config.default.json` (no `config.schema.json`).
 
@@ -466,9 +471,5 @@ scripts/check-isolation.sh
 scripts/doctor.sh
 ```
 
-`test-iso-qemu-smoke.sh` is **not** part of `ci-check.sh`. It needs a
-built ISO and QEMU; the ISO workflow runs it after mkarchiso.
-
-If `MODERN_PROTECT_HOME` is your `$HOME`, do **not** run
-`./install/install.sh --dry-run --profile m0` without `--target` — the
-live-home guard will fail, which is the point.
+If `MODERN_PROTECT_HOME` is your `$HOME`, pass `--allow-live-home` (or
+`--target` elsewhere). See `docs/CUTOVER.md`.

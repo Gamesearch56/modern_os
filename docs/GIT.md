@@ -1,26 +1,25 @@
 # Git workflow
 
-Friends install a **version** (`v1.2.3`), not every commit. Daily work
+Installers use a **version** (`v1.2.3`), not every commit. Daily work
 is on `dev`. A PR into `main` plus a tag is what they get.
 
 Do **not** test a release on the machine you live on. Build the ISO and
 try Calamares on a spare box, QEMU, or CI. Isolation: `docs/ISOLATION.md`.
 
 ```
-dev  --PR, CI green-->  main  -->  tag vX.Y.Z  -->  friends
+dev  --PR, CI green-->  main  -->  tag vX.Y.Z  -->  Releases
 ```
 
 ## The two branches
 
-| Branch | Who lands here | What friends see |
-|--------|----------------|------------------|
+| Branch | Who lands here | What a release tag sees |
+|--------|----------------|-------------------------|
 | `dev` | Direct commits | Nothing until you release |
 | `main` | PRs from `dev` only | The commit you tag |
 
 Do **not** create `feature/*` or `fix/*` branches. Commit on `dev` and
 push it. Never commit on `main`. Never `git push --force` to `main` or
-`dev` **except the documented flip-day rewrite below**. GitHub branch
-protection on `main` requires the CI checks below.
+`dev` **except the optional flip-day rewrite below**.
 
 ## Daily work
 
@@ -33,12 +32,12 @@ git push origin dev
 
 ## Open a PR
 
-When `dev` should become a release (or a hotfix friends need now), open
-a PR **`dev` → `main`**. Title says why. Description says how to try it.
+When `dev` should become a release (or a hotfix), open a PR
+**`dev` → `main`**. Title says why. Description says how to try it.
 Wait until CI is green, then merge.
 
-Forks also open PRs into `dev`. Maintainers commit on `dev` and PR
-`dev` → `main`. See `CONTRIBUTING.md`.
+Forks also open PRs into `dev`. Commit on `dev` and PR `dev` → `main`.
+See `CONTRIBUTING.md`.
 
 ## What “CI green” means
 
@@ -52,10 +51,9 @@ GitHub Actions on every PR to `main` or `dev`, on pushes to `dev` /
 - `./install/install.sh --dry-run --profile m0 --target $RUNNER_TEMP/…`
 
 The **ISO** workflow (release / `workflow_dispatch`, not pull requests)
-builds the image then boots it headless in QEMU until guest serial shows
-`modern-ci: calamares`. A red ISO job means Calamares never started; the
-ISO is not attached. It does **not** click through the installer.
-Local unattended install (after an ISO rebuild): `scripts/test-iso-qemu-install.sh`.
+builds the image. A red ISO job means the image was not attached. It
+does **not** click through the installer. Local unattended install
+(after an ISO rebuild): `scripts/test-iso-qemu-install.sh`.
 
 `scripts/check-isolation.sh` is **local only**. Do not add it to GitHub.
 
@@ -81,8 +79,8 @@ Local test images: `sudo ./scripts/iso-build.sh --mkarchiso` then
 `./scripts/iso-qemu.sh`. Never run `provision-iso.sh` or Calamares on
 the session you live in.
 
-That tag is what Settings → Update and the ISO pin look at. Friends
-download the image from the Release page.
+That tag is what Settings → Update and the ISO pin look at. Download
+the image from the Release page.
 
 **Semver:** `MAJOR.MINOR.PATCH`. Breaking desktop/install behavior bumps
 MAJOR; features MINOR; fixes PATCH. Start at `v0.1.0` until you want
@@ -94,7 +92,7 @@ behind.
 
 No `release/*` branches unless tagging from `main` becomes painful.
 
-## What friends install
+## What a release installs
 
 The ISO clones `https://github.com/Gamesearch56/modern_dotfile.git` at
 the baked-in tag. Settings → Update lists **ModernOS** first. It is
@@ -105,55 +103,115 @@ pending only when a **newer** `vX.Y.Z` exists on GitHub. It never tracks
 
 - Commit on `main`.
 - Open PRs from `feature/*` / `fix/*` branches.
-- `git push --force` to `main` or `dev` except flip day (below).
-- Point a friend’s PC at `dev` (`git pull` / Settings against `dev`).
+- `git push --force` to `main` or `dev` except the optional flip-day
+  rewrite (below).
+- Point an installed machine at `dev` (`git pull` / Settings against
+  `dev`).
 - Run `desktop-sync.sh apply` on a development clone while `HEAD` is
   dirty or not `dev`.
 - Run Calamares or `provision-iso.sh` on a machine you live on.
   `iso-build.sh --mkarchiso` is allowed; it writes `iso/out/` only.
 
-## Flip day (history rewrite, then public)
+## Flip day (you change visibility)
 
-The repo can stay **private** indefinitely. When you choose to make it
-public, history still contains names and older README copy until this
-rewrite. Do this **once**, then change visibility.
+You flip GitHub visibility. This tree does not. Optional history squash
+is also yours, and it must happen **before** branch protection —
+force-push is blocked after that.
 
-1. Secret scan: [TruffleHog](https://github.com/trufflesecurity/trufflehog)
-   plus a path scan for `secrets.json`, `.env`, and API-shaped strings.
-2. Orphan-squash `main` and `dev` onto a new root (one commit each, or
-   `dev` replayed on the squashed `main`). This is the only allowed
-   force-push to those branches.
-3. Delete leftover `feature/*` / `fix/*` remotes.
-4. Tag **`v0.2.0`** on the new `main` (history break). Settings Update
-   follows tags; friends on `v0.1.x` will see this as the next update.
-5. GitHub → Settings → Danger Zone → Change visibility → Public.
-6. Optional: topics, Issues, Discussions.
+1. Secret scan on **history**: run
+   [TruffleHog](https://github.com/trufflesecurity/trufflehog) (or
+   equivalent) against the full git history. The working tree can be
+   clean and history still not. Also path-scan for `secrets.json`,
+   `.env`, and API-shaped strings.
+2. Optional: orphan-squash `main` and `dev` onto a new root (one commit
+   each, or `dev` replayed on the squashed `main`). This is the only
+   allowed force-push to those branches.
+3. Delete leftover `feature/*` / `fix/*` remotes if any remain.
+4. GitHub → Settings → Danger Zone → Change visibility → Public.
+5. Then apply the rulesets below. **Do not enable “block force-push”
+   until the optional squash is done.**
+6. After the repo is public: enable secret scanning and push protection
+   (free on public repos). Keep private vulnerability reporting
+   (`SECURITY.md`).
 
-Until then, do not force-push and do not change visibility.
+Until you are ready, do not force-push and do not change visibility.
 
-## GitHub settings (branch + Actions)
+Residual risk if you skip the history squash: past commits stay
+cloneable. That choice stays yours.
 
-The repo stays **private**. Do not use Settings → Change visibility
-until flip day.
+### ISO size
 
-**Already applied (works on a private user repo):**
+`iso-build.sh` copies stock archiso **releng** for bootloaders and
+airootfs layout, then **replaces** `packages.x86_64` with
+`iso/releng/packages.x86_64` (the full live+Calamares set). Rescue
+tools (Clonezilla, TestDisk, `archinstall`, extra filesystems) stay off
+the squashfs. `linux-zen-headers` stay off the ISO; `install.sh` /
+`00-base.txt` still have them for DKMS. Firefox stays (live kiosk). AUR
+builds use `MAKEFLAGS=-j$(nproc)` and cache `.pkg.tar.*` beside
+`iso/out/` (gitignored). The AUR list ships `yay-bin`.
 
-- Actions → Workflow permissions: **Read** repository contents
-  (`default_workflow_permissions=read`). `GITHUB_TOKEN` cannot approve
-  PRs.
-- Fork pull-request workflows in this private repo are **off** (no write
-  tokens, no secrets). First-time-contributor approval is a GitHub
-  setting that only exists once the repo is public.
-- No `pull_request_target` workflows.
+Optional later, after a QEMU boot: live-boot `linux-zen` and drop stock
+`linux`. Do not switch squashfs to zstd — it is usually bigger.
 
-**Branch protection / rulesets:** GitHub returns 403 on this private
-user-owned repo (`Upgrade to GitHub Pro or make this repository public`).
-Apply the following **on flip day after the repo is public** (public
-repos get branch protection on the free plan), or sooner if the account
-has Pro.
+Do **not** take Hyprland, Quickshell, PipeWire, `yay-bin`,
+`matugen-bin`, or `bibata-cursor-theme-bin` off the squashfs. That is
+the copy-the-live-root installer. Do not drop `linux-firmware` if
+real-hardware Wi-Fi still matters. Build and try the image in QEMU,
+never with `provision-iso.sh` / Calamares on a machine you live on.
 
-`main` — require a PR, require status checks `checks` and `install-dry`,
-no force-push, include administrators:
+## After the repo is public (you apply)
+
+Use **Settings → Rules → Rulesets** (preferred) or classic
+**Settings → Branches**. Do this **after** any history rewrite, and
+**after** the repo is public. Private user repos on the free plan
+cannot use branch protection.
+
+**`main` (release branch)**
+
+- Target: branch named `main`
+- Block force pushes (only after the optional squash)
+- Restrict deletions
+- Require a pull request before merging, **0** approving reviews (a
+  required review of 1 would block your own `dev` → `main` PRs unless
+  you add a bypass)
+- Require status checks to pass: `checks` and `install-dry` (job names
+  in `.github/workflows/ci.yml`)
+- Optionally “Require branches to be up to date”
+- Bypass list: **empty** if even your account should go through a PR;
+  or add yourself only if you still want a `main` hotfix hatch (that
+  fights “never commit on `main`”)
+
+**`dev` (daily push branch)**
+
+- Target: branch named `dev`
+- Block force pushes (only after the optional squash)
+- Restrict deletions
+- **Do not** require a pull request (you push `dev` directly)
+- Do not require status checks on push (CI still runs after push;
+  requiring checks would block `git push origin dev` until Actions
+  finishes)
+
+**Repository / Actions**
+
+- **Collaborators:** leave empty (solo). User-owned repos cannot use
+  the org-only `restrictions` “who can push” object.
+- **Actions → General:** workflow permissions **Read** repository
+  contents (already the intent in `ci.yml`). Do not grant GITHUB_TOKEN
+  write/approve.
+- **Actions → Fork pull request workflows:** require approval for
+  first-time contributors (`first_time_contributors_new_to_github`).
+- **Code security:** enable secret scanning and push protection. Keep
+  private vulnerability reporting (`SECURITY.md`).
+- **Dependabot:** keep `.github/dependabot.yml`; its PRs should target
+  `dev`.
+- Optional: turn off Wiki / Projects if unused; leave Issues on for
+  public bug reports.
+
+Do **not** add `pull_request_target` workflows.
+
+Classic API calls, if you prefer them over the Rulesets UI. Run these
+yourself after the repo is public — not before the optional squash
+enables force-push block:
 
 ```bash
 gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/main/protection \
@@ -179,8 +237,6 @@ gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/main/protection \
 EOF
 ```
 
-`dev` — do **not** require a PR; block force-push; include administrators:
-
 ```bash
 gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/dev/protection \
   --input - <<'EOF'
@@ -195,14 +251,7 @@ gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/dev/protection \
 EOF
 ```
 
-After the repo is public, also set fork PRs to require approval for
-first-time contributors:
-
 ```bash
 gh api --method PUT repos/Gamesearch56/modern_dotfile/actions/permissions/fork-pr-contributor-approval \
   -f approval_policy=first_time_contributors_new_to_github
 ```
-
-User-owned repos cannot restrict “who can push” via the `restrictions`
-object (organization-only). Collaborators are still granted in Settings
-→ Collaborators.

@@ -6,7 +6,9 @@ set -euo pipefail
 
 ALLOWED_URL="https://github.com/Gamesearch56/modern_dotfile.git"
 TAG_RE='^v[0-9]+\.[0-9]+\.[0-9]+$'
-REPO="${MODERN_DESKTOP_REPO:-$HOME/modern_dotfile}"
+# shellcheck source=lib/repo-path.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/repo-path.sh"
+REPO="${MODERN_DESKTOP_REPO:-$(modern_repo_path)}"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/modern-desktop-sync.lock"
 
 die() { printf 'desktop-sync: ERROR: %s\n' "$*" >&2; exit 1; }
@@ -47,11 +49,13 @@ emit() {
 }
 
 repo_ok() {
-    local resolved owner
+    local resolved owner fallback pointer
     [ -d "$REPO/.git" ] || return 1
     resolved="$(readlink -f "$REPO")"
+    fallback="$(readlink -f "$HOME/modern_dotfile" 2>/dev/null || true)"
+    pointer="$(readlink -f "$(modern_repo_path)" 2>/dev/null || true)"
     case "$resolved" in
-        "$HOME/modern_dotfile"|"$HOME/modern_dotfile"/*) ;;
+        "$fallback"|"$fallback"/*|"$pointer"|"$pointer"/*) ;;
         *)
             if [ "${MODERN_TEST_FIXTURE:-}" = "1" ]; then
                 :

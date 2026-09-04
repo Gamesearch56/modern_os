@@ -234,9 +234,13 @@ ModernNetNm::setWifiRadio( bool on )
     refresh();
 }
 
-bool
+void
 ModernNetNm::connectSsid( const QString& ssid, const QString& password )
 {
+    if ( m_join || ssid.isEmpty() )
+    {
+        return;
+    }
     QStringList args { QStringLiteral( "-w" ),
                        QStringLiteral( "25" ),
                        QStringLiteral( "device" ),
@@ -247,15 +251,20 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password )
     {
         args << QStringLiteral( "password" ) << password;
     }
-    QProcess p;
-    p.start( QStringLiteral( "nmcli" ), args );
-    if ( !p.waitForFinished( 28000 ) )
-    {
-        p.kill();
-        p.waitForFinished( 1000 );
-        refresh();
-        return false;
-    }
-    refresh();
-    return p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0 && m_wifiUp;
+    m_connecting = true;
+    emit changed();
+    m_join = new QProcess( this );
+    connect( m_join,
+             QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ),
+             this,
+             [ this ]( int code, QProcess::ExitStatus status ) {
+                 const bool ok
+                     = status == QProcess::NormalExit && code == 0;
+                 m_join->deleteLater();
+                 m_join = nullptr;
+                 m_connecting = false;
+                 refresh();
+                 emit connectFinished( ok && m_wifiUp );
+             } );
+    m_join->start( QStringLiteral( "nmcli" ), args );
 }

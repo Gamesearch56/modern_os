@@ -42,6 +42,7 @@ ColumnLayout {
                         required property int index
                         readonly property var bind: root.items[index] || ({})
                         Layout.fillWidth: true
+                        hoverHighlight: false
                         titleKey: "cheatsheet.action." + bind.action
 
                         Row {

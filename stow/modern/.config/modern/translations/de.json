@@ -157,7 +157,14 @@
     "unlock": "Entsperren",
     "password": "Passwort",
     "user": "Benutzer",
-    "authFailed": "Entsperren fehlgeschlagen"
+    "signingIn": "Anmeldung…",
+    "starting": "Wird gestartet…",
+    "authFailed": "Entsperren fehlgeschlagen",
+    "signIn": "Anmelden",
+    "welcome": "Willkommen",
+    "loginFailed": "Anmeldung fehlgeschlagen",
+    "unavailable": "Anmeldung nicht verfügbar",
+    "capsLock": "Feststelltaste aktiv"
   },
   "alarm": {
     "title": "Wecker",
@@ -226,6 +233,10 @@
     "dnd": "Nicht stören",
     "shellError": "Shell-Fehler",
     "shellWarning": "Shell-Warnung"
+  },
+  "notes": {
+    "title": "Notizen",
+    "empty": "Keine Notizen"
   },
   "quickSettings": {
     "title": "Schnelleinstellungen",
@@ -735,7 +746,7 @@
       "bluetoothBlocked": "Kein Bluetooth-Adapter, oder der Funk ist hardwareseitig gesperrt.",
       "wifi": "Schaltet das Funkmodul ein. Netzwerke erscheinen darunter.",
       "wifiHardware": "Kein WLAN-Adapter, oder der Funk ist hardwareseitig gesperrt.",
-      "autologin": "Die Einstellung wird in config.json gespeichert. Die Anmeldung am Boot (getty/greetd) ist abgeschottet (docs/ISOLATION.md) und wird von diesem Schalter nicht gesetzt.",
+      "autologin": "Nach dem nächsten Neustart öffnet sich der Desktop für dieses Konto ohne Anmeldebildschirm. Ausschalten fragt beim Start wieder nach dem Passwort.",
       "firewallActive": "Eingehende Verbindungen sind außer den Allow-Regeln unten gesperrt. Ausgehender Verkehr ist erlaubt.",
       "firewallInactive": "UFW ist installiert, filtert aber nicht. Einschalten setzt deny incoming, allow outgoing, deny routed.",
       "firewallMissing": "UFW ist nicht installiert. Das Firewall-Paket steht im Basis-Manifest und wird nicht aus den Einstellungen gesetzt."
@@ -762,7 +773,8 @@
       "terminalConfirmBody": "Öffnet das Standardterminal und führt su zu {user} aus. Du wirst nach dem Passwort dieses Kontos gefragt.",
       "changePassword": "Passwort ändern",
       "members": "Mitglieder",
-      "memberCount": "{n} Mitglieder"
+      "memberCount": "{n} Mitglieder",
+      "autologinFailed": "Automatische Anmeldung konnte nicht gesetzt werden."
     },
     "screenshots": {
       "stills": "Bildschirmfoto",

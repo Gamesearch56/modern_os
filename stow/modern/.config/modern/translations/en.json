@@ -157,7 +157,14 @@
     "unlock": "Unlock",
     "password": "Password",
     "user": "User",
-    "authFailed": "Could not unlock"
+    "signingIn": "Signing in…",
+    "starting": "Starting…",
+    "authFailed": "Could not unlock",
+    "signIn": "Sign in",
+    "welcome": "Welcome",
+    "loginFailed": "Could not sign in",
+    "unavailable": "Sign-in is not available",
+    "capsLock": "Caps Lock is on"
   },
   "alarm": {
     "title": "Alarm",
@@ -226,6 +233,10 @@
     "dnd": "Do not disturb",
     "shellError": "Shell error",
     "shellWarning": "Shell warning"
+  },
+  "notes": {
+    "title": "Notes",
+    "empty": "No notes"
   },
   "quickSettings": {
     "title": "Quick settings",
@@ -735,7 +746,7 @@
       "bluetoothBlocked": "No Bluetooth adapter, or the radio is hardware-blocked.",
       "wifi": "Turns the wireless radio on. Nearby networks appear below.",
       "wifiHardware": "No Wi-Fi adapter, or the radio is hardware-blocked.",
-      "autologin": "This saves the preference in config.json. Graphical boot autologin is gated (docs/ISOLATION.md) and is not applied from this switch.",
+      "autologin": "After the next restart this account opens the desktop without a login prompt. Turning it off asks for a password again at boot.",
       "firewallActive": "Incoming connections are denied except the allow rules below. Outgoing traffic is allowed.",
       "firewallInactive": "UFW is installed but not filtering. Turning it on sets deny incoming, allow outgoing, deny routed.",
       "firewallMissing": "UFW is not installed. The firewall package is in the base manifest and is not applied from Settings."
@@ -762,7 +773,8 @@
       "terminalConfirmBody": "This opens the default terminal and runs su to {user}. You will be asked for that account's password.",
       "changePassword": "Change password",
       "members": "Members",
-      "memberCount": "{n} members"
+      "memberCount": "{n} members",
+      "autologinFailed": "Could not update automatic login."
     },
     "screenshots": {
       "stills": "Screenshot",

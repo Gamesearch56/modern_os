@@ -1,10 +1,11 @@
 // Window header: title (+ optional subtitle) on the left, close on the
 // right. `titleColumnWidth` pins the title over a Settings-style sidebar.
+// Empty chrome starts the compositor move (Super+mouse).
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"
 
-RowLayout {
+Item {
     id: root
 
     property string titleKey: ""
@@ -22,8 +23,19 @@ RowLayout {
     signal closed()
     signal actionClicked()
 
+    implicitHeight: row.implicitHeight
+    implicitWidth: row.implicitWidth
     Layout.fillWidth: true
-    spacing: Tokens.spacing.md
+
+    MTitleDrag {
+        anchors.fill: parent
+        z: -1
+    }
+
+    RowLayout {
+        id: row
+        anchors.fill: parent
+        spacing: Tokens.spacing.md
 
     ColumnLayout {
         Layout.preferredWidth: root.titleColumnWidth > 0 ? root.titleColumnWidth : -1
@@ -102,5 +114,6 @@ RowLayout {
         iconName: "window-close"
         key: "bar.close"
         onClicked: root.closed()
+    }
     }
 }

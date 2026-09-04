@@ -1,262 +1,131 @@
-// Duplicate of Modules/Session/SessionSurface.qml for the greetd
-// package. Relative imports into the desktop shell do not survive
-// stow (different target user / prefix), so the layout is copied
-// rather than imported. GreetdAuth owns Quickshell.Services.Greetd.
+// Login layout for greetd. Hero clock, compact credentials on frost,
+// power in the corner. Wallpaper stays until greetd replaces this seat.
 import Quickshell
-import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
 Item {
     id: root
 
-    property string mode: "greeter"
-    property var color: root._fallback
-    property string wallpaperSource: "file:///var/lib/modern/session/wallpaper.jpg"
+    property var chrome: null
+    property var auth: null
+    property var users: null
+    property bool interactive: false
+    property bool autoFocus: false
+    property bool _entered: true
+    property bool _animate: false
 
-    readonly property var _fallback: ({
-        surface: "#141218",
-        onSurface: "#E6E0E9",
-        onSurfaceVariant: "#CAC4D0",
-        primary: "#D0BCFF",
-        onPrimary: "#381E72",
-        surfaceContainerHighest: "#36343B",
-        outline: "#938F99",
-        scrim: "#000000",
-        error: "#ffb4ab"
-    })
-
-    property var chrome: ({ strings: { unlock: "Unlock", password: "Password" }, typography: { ui: "Inter", scale: 1 } })
-
-    readonly property string _font: String(root.chrome?.typography?.ui || "Inter")
-    readonly property real _typeScale: {
-        const s = Number(root.chrome?.typography?.scale);
-        return (s > 0) ? s : 1;
-    }
-
-    FileView {
-        path: "/var/lib/modern/session/chrome.json"
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-        onLoaded: {
-            try {
-                const data = JSON.parse(text());
-                if (data)
-                    root.chrome = data;
-            } catch (e) {
-                /* keep fallback */
-            }
-        }
-    }
-
-    FileView {
-        path: "/var/lib/modern/session/tokens.json"
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-        onLoaded: {
-            try {
-                const data = JSON.parse(text());
-                if (data.color)
-                    root.color = data.color;
-            } catch (e) {
-                root.color = root._fallback;
-            }
-        }
-        onLoadFailed: root.color = root._fallback
-    }
+    readonly property bool _shown: root._entered
+    readonly property var _c: root.chrome
 
     SystemClock {
         id: clock
-        precision: SystemClock.Minutes
+        precision: SystemClock.Seconds
     }
 
-    Rectangle {
+    Component.onCompleted: {
+        root._entered = true;
+        Qt.callLater(() => {
+            root._animate = true;
+        });
+    }
+
+    SessionFrost {
         anchors.fill: parent
-        color: root.color.surface
+        chrome: root.chrome
     }
 
-    Image {
+    MouseArea {
         anchors.fill: parent
-        source: root.wallpaperSource
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-        onStatusChanged: {
-            if (status === Image.Error && root.wallpaperSource.indexOf("default.jpg") < 0)
-                root.wallpaperSource = "file://" + Quickshell.env("HOME") + "/.config/modern/wallpapers/default.jpg";
+        enabled: !power.menuOpen && root.interactive
+        onPressed: {
+            if (!form.item)
+                return;
+            if (form.item.selectOpen())
+                form.item.closeMenus();
+            else
+                form.item.focusPassword();
         }
     }
 
-    Rectangle {
+    // Not id chrome: that name is the SessionChrome property on this
+    // root, and a child id would steal t()/formatTime from every label.
+    Item {
+        id: overlay
         anchors.fill: parent
-        color: root.color.scrim
-        opacity: 0.48
-    }
-
-    ColumnLayout {
-        anchors.centerIn: parent
-        width: Math.min(parent.width - 64, 384)
-        spacing: 32
-
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: root._time()
-            color: root.color.onSurface
-            font.family: root._font
-            font.pixelSize: Math.round(57 * root._typeScale)
+        opacity: {
+            const c = root._c;
+            if (!c || !c.overlayOpacity)
+                return root._shown ? 1 : 0;
+            return c.overlayOpacity(root._shown);
         }
-
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: root._date()
-            color: root.color.onSurfaceVariant
-            font.family: root._font
-            font.pixelSize: Math.round(16 * root._typeScale)
+        scale: {
+            const c = root._c;
+            if (!c || !c.overlayScale)
+                return 1;
+            return c.overlayScale(root._shown);
         }
+        transformOrigin: Item.Center
 
-        TextInput {
-            id: username
-            Layout.fillWidth: true
-            Layout.preferredHeight: 36
-            color: root.color.onSurface
-            font.family: root._font
-            font.pixelSize: Math.round(16 * root._typeScale)
-            padding: 12
-            text: root._defaultUser
-            onAccepted: password.forceActiveFocus()
-
-            Rectangle {
-                anchors.fill: parent
-                z: -1
-                radius: 8
-                color: root.color.surfaceContainerHighest
-                border.color: username.activeFocus ? root.color.primary : root.color.outline
+        Behavior on opacity {
+            enabled: root._animate && !!(root._c && root._c.overlaysFade)
+            NumberAnimation {
+                duration: root._c ? root._c.extraLongMs : 600
+                easing.bezierCurve: root._shown
+                    ? (root._c ? root._c.easingDecel : [0.05, 0.7, 0.1, 1.0, 1.0, 1.0])
+                    : (root._c ? root._c.easingAccel : [0.3, 0.0, 0.8, 0.15, 1.0, 1.0])
             }
-
-            Text {
-                visible: username.text.length === 0
-                anchors.fill: parent
-                anchors.leftMargin: 12
-                verticalAlignment: Text.AlignVCenter
-                text: root._t("session.user")
-                color: root.color.onSurfaceVariant
-                font.family: root._font
-                font.pixelSize: Math.round(16 * root._typeScale)
+        }
+        Behavior on scale {
+            enabled: root._animate && !!(root._c && root._c.overlaysZoom)
+            NumberAnimation {
+                duration: root._c ? root._c.extraLongMs : 600
+                easing.bezierCurve: root._shown
+                    ? (root._c ? root._c.easingDecel : [0.05, 0.7, 0.1, 1.0, 1.0, 1.0])
+                    : (root._c ? root._c.easingAccel : [0.3, 0.0, 0.8, 0.15, 1.0, 1.0])
             }
         }
 
-        TextInput {
-            id: password
-            Layout.fillWidth: true
-            Layout.preferredHeight: 36
-            echoMode: TextInput.Password
-            color: root.color.onSurface
-            font.family: root._font
-            font.pixelSize: Math.round(16 * root._typeScale)
-            padding: 12
-            onAccepted: root.authenticate(username.text, text)
+        SessionClock {
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: root._c ? root._c.spaceXxl * 2 : 64
+            chrome: root._c
+            date: clock.date
+        }
 
-            Rectangle {
-                anchors.fill: parent
-                z: -1
-                radius: 8
-                color: root.color.surfaceContainerHighest
-                border.color: password.activeFocus ? root.color.primary : root.color.outline
-            }
-
-            Text {
-                visible: password.text.length === 0
-                anchors.fill: parent
-                anchors.leftMargin: 12
-                verticalAlignment: Text.AlignVCenter
-                text: root._t("session.password")
-                color: root.color.onSurfaceVariant
-                font.family: root._font
-                font.pixelSize: Math.round(16 * root._typeScale)
+        Loader {
+            id: form
+            active: true
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: root._c ? root._c.spaceXl : 24
+            sourceComponent: SessionForm {
+                chrome: root._c
+                auth: root.auth
+                users: root.users
+                defaultUser: root.auth ? root.auth.rememberedUser : ""
+                autoFocus: root.autoFocus
             }
         }
 
-        Text {
-            visible: auth.failText.length > 0
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            color: root.color.error
-            font.family: root._font
-            font.pixelSize: Math.round(12 * root._typeScale)
-            text: auth.failText
+        MouseArea {
+            anchors.fill: parent
+            visible: power.menuOpen
+            onClicked: power.close()
         }
 
-        Rectangle {
-            Layout.alignment: Qt.AlignHCenter
-            implicitWidth: unlockLabel.implicitWidth + 32
-            implicitHeight: 36
-            radius: 9999
-            color: root.color.primary
-
-            Text {
-                id: unlockLabel
-                anchors.centerIn: parent
-                text: root._t("session.unlock")
-                color: root.color.onPrimary
-                font.family: root._font
-                font.pixelSize: Math.round(14 * root._typeScale)
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.authenticate(username.text, password.text)
-            }
+        SessionPower {
+            id: power
+            chrome: root._c
+            tabFocus: root.autoFocus
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            anchors.margins: root._c ? root._c.spaceLg : 16
         }
     }
 
-    GreetdAuth {
-        id: auth
-    }
-
-    FileView {
-        path: "/var/lib/modern/session/default-user"
-        watchChanges: true
-        printErrors: false
-        onLoaded: {
-            const t = String(text() || "").trim();
-            if (t.length)
-                root._defaultUser = t;
-        }
-    }
-
-    property string _defaultUser: ""
-
-    function authenticate(userText: string, passwordText: string) {
-        auth.login(userText, passwordText);
-    }
-
-    function _t(key: string): string {
-        const s = root.chrome?.strings || ({});
-        if (key === "session.unlock")
-            return s.unlock || "Unlock";
-        if (key === "session.password")
-            return s.password || "Password";
-        if (key === "session.user")
-            return s.user || "User";
-        return key;
-    }
-
-    function _pad(n: int): string {
-        return n < 10 ? "0" + n : "" + n;
-    }
-
-    function _time(): string {
-        const d = clock.date;
-        if (!d)
-            return "";
-        return root._pad(d.getHours()) + ":" + root._pad(d.getMinutes());
-    }
-
-    function _date(): string {
-        const d = clock.date;
-        if (!d)
-            return "";
-        return root._pad(d.getDate()) + "." + root._pad(d.getMonth() + 1) + "." + d.getFullYear();
+    function userSelectOpen() {
+        return !!(form.item && form.item.selectOpen());
     }
 }

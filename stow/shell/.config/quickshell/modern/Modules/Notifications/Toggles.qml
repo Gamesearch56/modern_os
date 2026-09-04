@@ -44,7 +44,7 @@ ColumnLayout {
         }
         MQuickTile {
             Layout.fillWidth: true
-            iconName: "notifications-symbolic"
+            iconName: "notifications-disabled-symbolic"
             titleKey: "notifications.dnd"
             checked: Notifications.dnd
             onClicked: Notifications.toggleDnd()

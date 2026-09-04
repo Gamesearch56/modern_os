@@ -27,17 +27,11 @@ Item {
         onClicked: Notifications.hide()
     }
 
-    Rectangle {
+    MPanelSurface {
         id: card
         width: Tokens.spacing.xxl * 16
         implicitHeight: inner.implicitHeight + Tokens.spacing.md * 2
         height: Math.min(implicitHeight, parent.height - Tokens.spacing.xl)
-        color: Colors.color.surface
-        radius: Tokens.radius.medium
-        border.color: Colors.color.outlineVariant
-        border.width: Tokens.stroke.hairline
-        clip: true
-        opacity: Config.design.transparency ?? 0.85
         anchors.right: !root._barLeft ? parent.right : undefined
         anchors.left: root._barLeft ? parent.left : undefined
         anchors.rightMargin: Config.bar.endGap ?? Tokens.spacing.md

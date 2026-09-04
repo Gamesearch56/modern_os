@@ -3,8 +3,6 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
-import "../../Commons"
-import "../../Widgets"
 import "../../Services"
 
 Scope {
@@ -17,8 +15,7 @@ Scope {
         function hide() { PowerMenu.hide(); }
     }
 
-    property string pending: ""
-    property int focusIndex: 0
+    property int focusIndex: -1
 
     readonly property var actions: [
         { id: "lock", icon: "system-lock-screen-symbolic" },
@@ -28,20 +25,25 @@ Scope {
     ]
 
     function _run(id: string) {
-        if (id === "lock") {
+        if (id === "lock")
             Session.lock();
-            PowerMenu.hide();
-            return;
-        }
-        root._ask(id === "restart" ? "reboot" : id);
-    }
-
-    function _ask(action: string) {
-        root.pending = action;
+        else if (id === "logout")
+            Power.logout();
+        else if (id === "restart")
+            Power.reboot();
+        else if (id === "poweroff")
+            Power.poweroff();
+        PowerMenu.hide();
     }
 
     function _move(delta: int) {
         const n = root.actions.length;
+        if (n <= 0)
+            return;
+        if (root.focusIndex < 0) {
+            root.focusIndex = delta > 0 ? 0 : n - 1;
+            return;
+        }
         root.focusIndex = Math.max(0, Math.min(n - 1, root.focusIndex + delta));
     }
 
@@ -73,7 +75,6 @@ Scope {
             WlrLayershell.layer: WlrLayer.Overlay
 
             Overlay {
-                id: overlay
                 anchors.fill: parent
                 actions: root.actions
                 focusIndex: root.focusIndex
@@ -81,33 +82,7 @@ Scope {
                     root.focusIndex = i;
                     root._run(root.actions[i].id);
                 }
-                onClosed: {
-                    if (root.pending.length > 0)
-                        root.pending = "";
-                    else
-                        PowerMenu.hide();
-                }
-            }
-
-            MDialog {
-                anchors.fill: parent
-                open: root.pending.length > 0
-                titleKey: "powerMenu.confirmTitle"
-                bodyKey: "powerMenu.confirmBody"
-                bodyParams: ({ action: I18n.t("powerMenu." + (root.pending === "reboot" ? "restart" : root.pending)) })
-                confirmKey: "powerMenu." + (root.pending === "reboot" ? "restart" : (root.pending || "poweroff"))
-                destructive: root.pending === "poweroff" || root.pending === "logout"
-                onConfirmed: {
-                    if (root.pending === "logout")
-                        Power.logout();
-                    else if (root.pending === "reboot")
-                        Power.reboot();
-                    else if (root.pending === "poweroff")
-                        Power.poweroff();
-                    root.pending = "";
-                    PowerMenu.hide();
-                }
-                onCancelled: root.pending = ""
+                onClosed: PowerMenu.hide()
             }
 
             HyprlandFocusGrab {
@@ -122,43 +97,35 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 context: Qt.ApplicationShortcut
-                onActivated: {
-                    if (root.pending.length > 0) {
-                        root.pending = "";
-                        return;
-                    }
-                    PowerMenu.hide();
-                }
+                onActivated: PowerMenu.hide()
             }
             Shortcut {
                 sequence: "Left"
-                enabled: root.pending.length === 0
                 onActivated: root._move(-1)
             }
             Shortcut {
                 sequence: "Right"
-                enabled: root.pending.length === 0
                 onActivated: root._move(1)
             }
             Shortcut {
                 sequence: "Up"
-                enabled: root.pending.length === 0
                 onActivated: root._move(-2)
             }
             Shortcut {
                 sequence: "Down"
-                enabled: root.pending.length === 0
                 onActivated: root._move(2)
             }
             Shortcut {
                 sequence: "Return"
-                enabled: root.pending.length === 0
-                onActivated: root._run(root.actions[root.focusIndex].id)
+                onActivated: {
+                    if (root.focusIndex < 0)
+                        return;
+                    root._run(root.actions[root.focusIndex].id);
+                }
             }
 
             Component.onCompleted: {
-                root.focusIndex = 0;
-                root.pending = "";
+                root.focusIndex = -1;
                 Qt.callLater(() => {
                     if (!PowerMenu.open)
                         return;

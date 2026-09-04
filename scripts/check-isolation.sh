@@ -72,15 +72,15 @@ fi
 
 # 2. gated system state untouched, unless explicitly allowed.
 # Creating a test account is the supported extra-user path and is NOT
-# a leak — greetd/polkit/sysctl/tmpfiles/ESP-hook are the dangerous ones.
-# Plymouth in mkinitcpio is not checked: the host may already use it.
+# a leak. greetd + /etc/tmpfiles.d/modern-session.conf are applied by
+# install.sh. Plymouth in mkinitcpio is not checked: the host may
+# already use it.
 if [ "$ALLOW_GATED" -eq 0 ]; then
     gated_hits=""
-    systemctl is-enabled greetd.service >/dev/null 2>&1 && gated_hits="${gated_hits}greetd.service enabled"$'\n'
     [ -e /etc/polkit-1/actions/link.modern.usermanager.policy ] && gated_hits="${gated_hits}modern-usersd polkit action installed"$'\n'
     [ -e /usr/local/bin/modern-usersd ] && gated_hits="${gated_hits}modern-usersd binary installed"$'\n'
-    [ -e /etc/tmpfiles.d/modern-session.conf ] && gated_hits="${gated_hits}/etc/tmpfiles.d/modern-session.conf present"$'\n'
     [ -e /etc/sysctl.d/99-modern-gaming.conf ] && gated_hits="${gated_hits}/etc/sysctl.d/99-modern-gaming.conf present"$'\n'
+    [ -e /etc/pacman.d/hooks/esp-backup.hook ] && gated_hits="${gated_hits}/etc/pacman.d/hooks/esp-backup.hook present"$'\n'
     [ -e /etc/pacman.d/hooks/esp-backup.hook ] && gated_hits="${gated_hits}/etc/pacman.d/hooks/esp-backup.hook present"$'\n'
     [ -e /etc/sudoers.d/modernisoaur ] && gated_hits="${gated_hits}/etc/sudoers.d/modernisoaur present (ISO AUR builder should have been removed)"$'\n'
     [ -e /etc/sudoers.d/isoaur ] && gated_hits="${gated_hits}/etc/sudoers.d/isoaur present (stale ISO AUR builder)"$'\n'
@@ -100,9 +100,9 @@ else
 fi
 
 if id devuser >/dev/null 2>&1; then
-    ok "devuser account exists (optional test user; not a leak)"
+    ok "optional extra-user devuser exists (not a leak)"
 else
-    ok "devuser account not created yet (optional: sudo install/system/create-devuser.sh)"
+    ok "optional extra-user devuser not present"
 fi
 
 # 3. home mtime is advisory when a protected path is set — a live

@@ -1,9 +1,6 @@
-// Lock / greeter / shutdown overlay state. The only place PAM and
-// loginctl lock are invoked — Modules/Session paints SessionSurface
-// from `locked`/`mode` and never talks to the compositor lock protocol
-// or PAM itself. WlSessionLock is the intended backend (docs/DECISIONS.md
-// #7); M1 gates the overlay on `locked` so the UI is testable without
-// a verified ext_session_lock_v1 round-trip.
+// Lock / greeter / shutdown overlay state. `locked` drives
+// WlSessionLock (ext_session_lock_v1) in Modules/Session. `password`
+// is shared across every lock surface so typing stays in sync.
 pragma Singleton
 
 import Quickshell
@@ -18,6 +15,7 @@ Singleton {
     property string mode: "lock"
     property string pendingAction: ""
     property string lastError: ""
+    property string password: ""
 
     IpcHandler {
         target: "session"
@@ -27,10 +25,16 @@ Singleton {
 
     function lock() {
         try {
+            // Do not call loginctl lock-session here. hypridle lock_cmd
+            // is this IPC; lock-session would enqueue another lock and
+            // put the overlay back after unlock.
+            if (root.locked && root.mode === "lock")
+                return;
             root.mode = "lock";
             root.pendingAction = "";
+            root.lastError = "";
+            root.password = "";
             root.locked = true;
-            Quickshell.execDetached(["loginctl", "lock-session"]);
             Logger.info("Session", "lock requested");
         } catch (e) {
             Logger.error("Session", String(e));
@@ -41,6 +45,9 @@ Singleton {
         root.locked = false;
         root.mode = "lock";
         root.pendingAction = "";
+        root.lastError = "";
+        root.password = "";
+        Quickshell.execDetached(["loginctl", "unlock-session"]);
     }
 
     function authenticate(password: string) {

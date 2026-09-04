@@ -19,6 +19,8 @@ Singleton {
 
     readonly property string home: Quickshell.env("HOME")
     readonly property string libraryDir: root.home + "/Pictures/Wallpapers"
+    readonly property string sessionBlur: "/var/lib/modern/session/wallpaper-blur.jpg"
+    readonly property string stateBlur: root.stateHome + "/modern/session/wallpaper-blur.jpg"
     readonly property string stateHome: Paths.stateHome
 
     signal fetched(string path)
@@ -107,10 +109,10 @@ Singleton {
             }
         }
         onExited: (code) => {
-            const reopen = root._reopenPicker && code !== 127;
+            const reopen = root._reopenPicker && code === 0;
             root._reopenPicker = false;
             root.providerOpen = false;
-            if (code === 127)
+            if (code !== 0)
                 root.openInBrowser();
             root.chooserFinished(reopen);
         }

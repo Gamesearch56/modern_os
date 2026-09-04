@@ -15,9 +15,11 @@ Item {
     property int maximumLength: 32767
     property bool escapeCloses: false
     property bool captureArrows: false
+    property bool holdFocus: false
     property bool _pointer: false
+    property bool capsOn: false
 
-    readonly property bool _a11yFocus: input.activeFocus && !root._pointer
+    readonly property bool _a11yFocus: input.activeFocus && (root.holdFocus || !root._pointer)
 
     signal accepted()
     signal textEdited()
@@ -30,6 +32,11 @@ Item {
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
+    Accessible.role: root.echoMode === TextInput.Password
+        ? Accessible.PasswordEdit
+        : Accessible.EditableText
+    Accessible.name: root.placeholderKey.length > 0 ? I18n.t(root.placeholderKey) : ""
+    Accessible.editable: true
 
     HoverHandler {
         enabled: root.enabled
@@ -109,6 +116,7 @@ Item {
         onEditingFinished: root.editingFinished()
         Keys.priority: Keys.BeforeItem
         Keys.onPressed: (event) => {
+            root._noteCaps(event);
             if (event.key === Qt.Key_Escape) {
                 root.escaped();
                 event.accepted = true;
@@ -140,6 +148,22 @@ Item {
             p = p.parent;
         }
         return false;
+    }
+
+    function _noteCaps(event: var) {
+        if (event.key === Qt.Key_CapsLock) {
+            root.capsOn = !root.capsOn;
+            return;
+        }
+        const t = event.text || "";
+        if (t.length !== 1)
+            return;
+        const lower = t.toLowerCase();
+        const upper = t.toUpperCase();
+        if (lower === upper)
+            return;
+        const shift = !!(event.modifiers & Qt.ShiftModifier);
+        root.capsOn = (t === upper) !== shift;
     }
 
     function focusInput() {

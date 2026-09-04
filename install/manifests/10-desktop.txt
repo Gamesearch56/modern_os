@@ -1,7 +1,8 @@
 # Hyprland desktop core — every profile past 00-base installs this.
 hyprland                       # the compositor
+hyprland-guiutils               # hyprland-dialog; without it Hyprland shows a 15s login overlay
 mesa                           # OpenGL/EGL (Hyprland also pulls this; listed so m0 is explicit)
-greetd                         # login (enabled only by provision-iso.sh, never install.sh)
+greetd                         # login (enabled by install.sh on a real user home)
 xdg-user-dirs                  # Desktop/Pictures before wallpaper copy
 gvfs                           # Nautilus trash/network mounts
 gvfs-mtp                       # phone MTP in Nautilus
@@ -10,8 +11,9 @@ hyprland-qt-support             # org.hyprland.style QML chrome (application-sty
 xdg-desktop-portal-hyprland     # screen share / screenshot portal backend
 xdg-desktop-portal-gtk          # fallback portal backend (file chooser when KDE one is absent)
 quickshell                      # the shell itself — bar, panels, launcher, lock, greeter
-qt6-wayland                     # native Wayland for Qt6 apps (Quickshell, Dolphin)
-qt6-webengine                   # wallpaper provider: separate qml6 + WebEngine process (scripts/wallpaper-provider.sh)
+qt6-wayland                     # native Wayland for Qt6 apps (Quickshell, Settings)
+qt6-declarative                 # qml6 for wallpaper-provider.sh
+qt6-webengine                   # wallpaper provider: WebEngine process (scripts/wallpaper-provider.sh)
 qt6ct                           # Qt6 theme configuration, written by theme-apply.sh
 networkmanager                  # network management daemon
 bluez                            # bluetoothd + bluetooth.service; org.bluez for Services/Bluetooth
@@ -32,5 +34,3 @@ brightnessctl                    # XF86 brightness keys in modules/keybinds.lua
 kdialog                          # Qt file picker (wallpaper Add; pick-directory.sh)
 hyprpicker                       # color picker widget backend
 inotify-tools                    # wallpaper-provider.sh watches the download folder
-gamemode                         # CPU governor while a game runs — started from autostart.lua
-lib32-gamemode                   # 32-bit GameMode hook for older titles

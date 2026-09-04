@@ -21,8 +21,6 @@ openssh                 # remote access / git over ssh
 wget                    # fetched by install.sh and scripts/optiscaler.sh
 unzip                   # unpacking release archives (OptiScaler, fonts)
 zip                     # export/import of config.json and backups
-samba                   # LAN file sharing (kept from the audited setup)
-wsdd                    # Windows discovery for the samba share above
 zram-generator          # swap-on-zram, standard low-RAM-pressure tuning
 ufw                     # firewall — see docs/SECURITY.md and the KDE Connect port rule
 sof-firmware            # laptop audio (Intel/AMD SOF)

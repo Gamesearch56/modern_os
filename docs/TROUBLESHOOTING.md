@@ -3,6 +3,37 @@
 Start with `scripts/doctor.sh` — it never mutates the machine. Critical
 missing repo files exit 1; everything else is a warning and exit 0.
 
+## Login screen: “Unable to send Message: Connection refused”
+
+Quickshell’s greetd client only connects when `GREETD_SOCK` is set on
+`qs -c greeter`. Hyprland’s `exec` of qs does not inherit that socket
+unless `/etc/greetd/kiosk.sh` and `/etc/greetd/hyprland.lua` forward it
+(`install/lib/greetd.sh`). Re-run `./install/install.sh` on this home,
+then sign out — do not start `qs` by hand from a TTY; that process has
+no socket.
+
+If tty1 is a wallpaper-only greeter with no form, or the form has empty
+fields (no clock, no user list, no Sign in label), Stow did not update
+`/var/lib/greeter`. Copy the package and restart greetd from a session
+or another VT (`Ctrl+Alt+F3`):
+
+```bash
+sudo rm -rf /var/lib/greeter/.config/quickshell/greeter
+sudo cp -a stow/greeter/.config/quickshell/greeter \
+    /var/lib/greeter/.config/quickshell/greeter
+sudo chown -R greeter:modern /var/lib/greeter/.config
+sudo install -D -m 0644 install/system/greetd/50-modern-greeter.rules \
+    /etc/polkit-1/rules.d/50-modern-greeter.rules
+sudo install -m 0644 install/system/greetd/hyprland.lua /etc/greetd/hyprland.lua
+sudo install -m 0755 install/system/greetd/kiosk.sh /etc/greetd/kiosk.sh
+sudo chmod 0664 /var/lib/modern/session/default-user
+sudo systemctl restart greetd
+```
+
+Then `Ctrl+Alt+F1`. Stopping greetd lets `getty@tty1` come back
+(`Conflicts=`). `./install/install.sh` does this copy as part of
+`greetd_apply`.
+
 ## Isolation / wrong account
 
 Symptoms: `~/.config` on an account you did not pass as `--target`
@@ -12,21 +43,31 @@ changed; unexpected symlinks.
 scripts/check-isolation.sh
 ```
 
-See `docs/ISOLATION.md` and `README.md` (second TTY). Stow as `devuser`,
-or with `--target /home/devuser`. If `MODERN_PROTECT_HOME` is set,
-`install.sh` refuses that path unless `--allow-live-home` is passed.
-Existing-account install: `docs/CUTOVER.md`.
+See `docs/ISOLATION.md`. Stow into `$HOME` or `--target`. If
+`MODERN_PROTECT_HOME` is set, `install.sh` refuses that path unless
+`--allow-live-home` is passed. Existing-account install: `docs/CUTOVER.md`.
 
 To return to another session without reboot: `Ctrl+Alt+F1` or `F2`.
-Do not enable greetd while testing. Shell `Logger.error` toasts appear
-only on the session that is running Quickshell.
+`install.sh --target` on a real home also enables greetd for this
+machine. Shell `Logger.error` toasts appear only on the session that
+is running Quickshell.
+
+## Nautilus “No Home Directory” / “Kein Persönlicher Ordner”
+
+The title is a mistranslation. Nautilus 50 checks that
+`~/.config/nautilus` is a directory (`nautilus_get_user_directory`, then
+`g_file_test (…, G_FILE_TEST_IS_DIR)`). A leftover GNU Stow symlink
+into an old clone (`~/.config/nautilus -> ../dotfiles/nautilus/…`) that
+no longer exists fails that check on every start. `$HOME` itself is
+fine. `scripts/nautilus-prefs.sh` replaces a dangling link with a real
+directory.
 
 ## Stow aborted on `.bashrc`
 
 `useradd -m` copies `/etc/skel/.bashrc` into the new home. GNU Stow
 refuses to replace that regular file. `install/lib/stow.sh` moves those
 files to `$TARGET/.local/state/modern/stow-backups/` before stowing.
-Re-run `./install/install.sh --profile full` as `devuser` (idempotent).
+Re-run `./install/install.sh --profile full` as the target user (idempotent).
 
 If a re-run logged hundreds of "backing up" lines under `.config/hypr`
 or `quickshell`, an older walker treated Stow folded directories as
@@ -64,10 +105,10 @@ another TTY (`docs/BOOT.md`):
 ```bash
 loginctl list-sessions
 # optional, from another account:
-# loginctl terminate-session <devuser-tty3-id>
+# loginctl terminate-session <id>
 ```
 
-On a text login as `devuser` (`Ctrl+Alt+F4`):
+On a text login as the same user (`Ctrl+Alt+F4`):
 
 ```bash
 pgrep -a qs; pgrep -a quickshell; pgrep -a Hyprland
@@ -90,14 +131,20 @@ from kitty after the bar is up.
 
 - **One Hyprland per user.** A second TTY's `start-hyprland` does not get
   the shell if an older instance still owns `modern-shell.service`.
-  Exit every leftover compositor before starting a new one.
+  Exit every leftover compositor before starting a new one. Login from
+  greetd while another graphical session is still on F2 also steals DRM
+  and can look like a 20s hang plus an immediate lock screen.
+- **Login to session feels slow.** The greeter compositor must die
+  before yours starts. If `awww-daemon` dumps a core, that wait is
+  seconds of black. Current `kiosk.sh` disables coredumps for that
+  session. Restow `hypr` so session restore skips Lanczos3.
 - End a session: `SUPER+SHIFT+M`, or `loginctl terminate-session <id>`
   from another TTY. If the bar is up: `hyprctl dispatch "hl.dsp.exit()"`.
   You return to the TTY prompt; `exit` or Ctrl+D logs out. Switch back
   with `Ctrl+Alt+F1` or `F2`.
-- Extra `devuser` sessions: `loginctl list-sessions`, then
-  `loginctl terminate-session <id>` from another account, or as
-  `devuser` on a TTY: `pkill -x Hyprland`.
+- Extra sessions for the same user: `loginctl list-sessions`, then
+  `loginctl terminate-session <id>` from another account, or on a TTY:
+  `pkill -x Hyprland`.
 - After restow, autostart runs `qs -c modern` as a child of *this*
   compositor and **stops** `modern-shell.service` so a leftover TTY
   cannot steal `WAYLAND_DISPLAY`. Leave that user unit disabled on
@@ -127,9 +174,13 @@ reload / restart the session.
 Catch-all monitors use `cm = "srgb"` and `render.cm_auto_hdr = 0` so
 SDR wallpapers are not mapped as HDR. Restow `stow/hypr` and restart.
 Turn HDR on later from Settings → Displays (`monitors.profiles` `hdr`).
-The shipped default image is still a high-chroma still; pick another
-wallpaper with `scripts/theme-apply.sh --wallpaper PATH` if you want
-something calmer.
+The greetd kiosk applies the same `monitors.profiles` snapshot
+(`wallpaper-sync.sh` → `/var/lib/modern/session/monitors.json`) so login
+matches the session on wide-gamut panels. Copy
+`install/system/greetd/hyprland.lua` to `/etc/greetd/hyprland.lua` after
+changing that file. The shipped default image is still a high-chroma
+still; pick another wallpaper with `scripts/theme-apply.sh --wallpaper PATH`
+if you want something calmer.
 
 ## Emergency overlay: `module 'modules.colors' not found`
 
@@ -274,23 +325,12 @@ Phylax only handles **one** auth cookie at a time: a second `pkexec`
 hangs with no window. Check with `pkexec /usr/bin/ufw status numbered`
 in a terminal.
 
-## Dolphin is light / has a File menu / ignores the wallpaper palette
+## Qt apps are light / ignore the wallpaper palette
 
-`hl.env` only applies when Hyprland *starts*. After a reload, SUPER+E
-was launching Dolphin without `qt6ct`, so Fusion fell back to a light
-palette. SUPER+E now goes through `scripts/modern-launch`. Fully quit
-Dolphin (not only the window) and open it again. `theme-apply.sh` writes
-absolute paths into `qt6ct.conf` (qt6ct does not expand `~`). The menu
-bar is hidden from `[MainWindow] MenuBar=Disabled` in `dolphinrc`.
-
-The file view fills from **QPalette Base**. KF6's KColorSchemeManager
-does not use qt6ct's palette: off Plasma, `ColorScheme::Unknown` (qt6ct)
-maps to the built-in **light** scheme, so a focused Dolphin goes white
-while the unfocused window still shows our dark Inactive colors. Set
-`[UiSettings] ColorScheme=modern` in kdeglobals (and
-`style=qt6ct-style`), leave `stylesheets=` empty, keep `#AARRGGBB` in
-`modern.conf`. Fully quit Dolphin after `theme-apply.sh`. Super+E uses
-`scripts/modern-launch`.
+`hl.env` only applies when Hyprland *starts*. After a reload, launch
+through `scripts/modern-launch` so `qt6ct` is in the environment.
+`theme-apply.sh` writes absolute paths into `qt6ct.conf` (qt6ct does not
+expand `~`). Fully quit the Qt app after `theme-apply.sh`.
 
 ## Tiny crunchy UI on 1440p HDR
 
@@ -309,9 +349,14 @@ the focused one.
 
 ## Vivaldi still looks stock
 
-Enable CSS mods once at `vivaldi://experiments`. Chrome colors come from
-`theme-apply.sh` (`00-modern.css`). Native Preferences merge is skipped
-while Vivaldi is running.
+`theme-apply.sh` writes `custom_css` and, when Vivaldi is not running,
+seeds `Preferences` (`themes.current=modern`, CSS mods directory) plus
+`Local State` (`vivaldi-css-mods@1`). Re-run it after quitting the
+browser if the first launch created a stock profile. Chrome colors come
+from `00-modern.css`. A leftover `custom_css/00-wallust.css` pins old
+tab and URL-bar colors — `theme-apply.sh` deletes it. Fully quit Vivaldi
+once after a wallpaper change so the native `modern` theme object can
+be rewritten.
 
 ## German layout: Super+Shift+1 does nothing
 

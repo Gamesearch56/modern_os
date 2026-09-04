@@ -102,18 +102,19 @@ Monitor names (`DP-1`), device IDs (`alsa_output.pci-...`), colors, font
 names, durations, usernames, absolute paths outside `$HOME`/`XDG_*`. See
 `.cursorrules` for the enforced list.
 
-## System-wide changes are gated
+## System-wide changes that stay gated
 
-Anything touching `/etc`, systemd *system* units, polkit, mkinitcpio, or
-creating accounts lives under `install/system/` and is applied only by an
-explicit, separately-invoked command — never by `install.sh`'s default
-run. See `docs/ISOLATION.md` before touching anything there.
+Plymouth, NVIDIA initramfs, polkit `modern-usersd`, snapper, and extra
+sysctl/udev live under `install/system/` and are applied only by ISO
+`provision-iso.sh` — never by `install.sh` for those. `install.sh` **does**
+enable the greetd login screen on a real user home (`install/lib/greetd.sh`).
+See `docs/ISOLATION.md`.
 
 ## Verifying your work
 
 ```bash
 scripts/ci-check.sh           # deps + lint-layers + shellcheck + CI unit tests
-scripts/check-isolation.sh    # confirm the current account is untouched
+scripts/check-isolation.sh    # confirm gated /etc is untouched
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-iso-dryrun
 ```
 
@@ -121,12 +122,12 @@ Run `scripts/ci-check.sh` before every commit and push. Git hooks in
 `.githooks/` call it (copy to `.git/hooks/` if this clone does not).
 
 `iso-build.sh --mkarchiso` may write `iso/out/` on this PC. Do not run
-`provision-iso.sh`, Calamares, or a live `install.sh` on a machine you
-live on.
+`provision-iso.sh` or Calamares on a machine you live on. Existing-account
+stow: `docs/CUTOVER.md`.
 
 ## Directory map
 
 See the tree in `docs/ARCHITECTURE.md`. Short version: `stow/` is
-everything that becomes a dotfile on `devuser`; `install/` is the
+everything that becomes a dotfile on the target user; `install/` is the
 installer, manifests and gated system files; `scripts/` is standalone
 tooling; `docs/` is reference material.

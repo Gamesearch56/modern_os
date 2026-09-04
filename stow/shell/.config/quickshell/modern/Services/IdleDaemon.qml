@@ -39,22 +39,31 @@ Singleton {
     function _render(): string {
         const b = root.bright;
         return "general {\n"
-            + "    lock_cmd = loginctl lock-session\n"
-            + "    before_sleep_cmd = loginctl lock-session\n"
+            + "    lock_cmd = qs -c modern ipc call session lock\n"
+            + "    before_sleep_cmd = qs -c modern ipc call session lock\n"
             + "    after_sleep_cmd = hyprctl dispatch dpms on\n"
             + "    ignore_dbus_inhibit = false\n"
             + "}\n"
             + root._listener(root.dimSec, b + " dim", b + " undim")
             + root._listener(root.offSec, "hyprctl dispatch dpms off", "hyprctl dispatch dpms on")
-            + root._listener(root.lockSec, "loginctl lock-session", "")
+            + root._listener(root.lockSec, "qs -c modern ipc call session lock", "")
             + root._listener(root.suspendSec, "systemctl suspend", "");
     }
 
     function _flush() {
         const body = root._render();
+        // Restart only when the file actually changes. A login-time
+        // pkill of every hypridle races the compositor and can lock
+        // the new session as soon as the bar appears.
         Quickshell.execDetached(["sh", "-c",
-            "mkdir -p \"$HOME/.config/hypr\" && cat > \"$HOME/.config/hypr/hypridle.conf\" <<'MODERN_HYPRIDLE'\n"
+            "mkdir -p \"$HOME/.config/hypr\"; "
+            + "conf=\"$HOME/.config/hypr/hypridle.conf\"; "
+            + "tmp=$(mktemp); cat > \"$tmp\" <<'MODERN_HYPRIDLE'\n"
             + body
-            + "\nMODERN_HYPRIDLE\npkill -u \"$USER\" -x hypridle 2>/dev/null; hypridle &"]);
+            + "\nMODERN_HYPRIDLE\n"
+            + "if [ -f \"$conf\" ] && cmp -s \"$tmp\" \"$conf\"; then "
+            + "rm -f \"$tmp\"; pgrep -x hypridle >/dev/null || hypridle &; exit 0; fi; "
+            + "mv -f \"$tmp\" \"$conf\"; "
+            + "pkill -x hypridle 2>/dev/null || true; hypridle &"]);
     }
 }
