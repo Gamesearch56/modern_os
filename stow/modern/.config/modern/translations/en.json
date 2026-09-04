@@ -158,7 +158,11 @@
     "password": "Password",
     "user": "User",
     "signingIn": "Signing in…",
-    "authFailed": "Could not unlock"
+    "authFailed": "Could not unlock",
+    "signIn": "Sign in",
+    "welcome": "Welcome",
+    "loginFailed": "Could not sign in",
+    "unavailable": "Sign-in is not available"
   },
   "alarm": {
     "title": "Alarm",

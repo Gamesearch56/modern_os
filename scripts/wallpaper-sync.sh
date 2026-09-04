@@ -32,34 +32,71 @@ fi
 
 mkdir -p "$SHARED"
 
+# greetd_apply leaves 0644 root:modern files. magick opens the destination
+# in place, so that fails even though the 2775 directory lets group `modern`
+# replace them with mv.
+stage_tmp() {
+    local dest="$1"
+    local ext="${dest##*.}"
+    mktemp --suffix=".${ext}" -p "$(dirname "$dest")" tmp.XXXXXX
+}
+
+commit_tmp() {
+    local tmp="$1" dest="$2"
+    chmod a+r "$tmp" || true
+    mv -f "$tmp" "$dest"
+}
+
 copy_as_jpeg() {
     local src="$1" dest="$2"
+    local tmp
+    tmp="$(stage_tmp "$dest")"
     if command -v magick >/dev/null 2>&1; then
-        magick "$src" "$dest"
+        magick "$src" "$tmp" || { rm -f "$tmp"; return 1; }
     elif command -v convert >/dev/null 2>&1; then
-        convert "$src" "$dest"
+        convert "$src" "$tmp" || { rm -f "$tmp"; return 1; }
     else
-        cp "$src" "$dest"
+        cp "$src" "$tmp" || { rm -f "$tmp"; return 1; }
+    fi
+    commit_tmp "$tmp" "$dest"
+}
+
+magick_to() {
+    local dest="$1"
+    shift
+    local tmp
+    tmp="$(stage_tmp "$dest")"
+    if magick "$@" "$tmp"; then
+        commit_tmp "$tmp" "$dest"
+    else
+        rm -f "$tmp"
+        return 1
     fi
 }
 
 copy_as_jpeg "$IMAGE" "$SHARED/wallpaper.jpg"
 
 if command -v magick >/dev/null 2>&1; then
-    magick "$IMAGE" -resize '1920x1080>' "$SHARED/wallpaper-boot.jpg"
-    magick "$SHARED/wallpaper-boot.jpg" -blur 0x16 "$SHARED/wallpaper-blur.jpg"
+    magick_to "$SHARED/wallpaper-boot.jpg" "$IMAGE" -resize '1920x1080>'
+    magick_to "$SHARED/wallpaper-blur.jpg" "$SHARED/wallpaper-boot.jpg" -blur 0x16
 elif command -v convert >/dev/null 2>&1; then
-    convert "$IMAGE" -resize '1920x1080>' "$SHARED/wallpaper-boot.jpg"
-    convert "$SHARED/wallpaper-boot.jpg" -blur 0x16 "$SHARED/wallpaper-blur.jpg"
+    tmp="$(stage_tmp "$SHARED/wallpaper-boot.jpg")"
+    convert "$IMAGE" -resize '1920x1080>' "$tmp"
+    commit_tmp "$tmp" "$SHARED/wallpaper-boot.jpg"
+    tmp="$(stage_tmp "$SHARED/wallpaper-blur.jpg")"
+    convert "$SHARED/wallpaper-boot.jpg" -blur 0x16 "$tmp"
+    commit_tmp "$tmp" "$SHARED/wallpaper-blur.jpg"
 else
     warn "ImageMagick not on PATH — blur/boot variants are copies"
-    cp "$SHARED/wallpaper.jpg" "$SHARED/wallpaper-blur.jpg"
-    cp "$SHARED/wallpaper.jpg" "$SHARED/wallpaper-boot.jpg"
+    copy_as_jpeg "$SHARED/wallpaper.jpg" "$SHARED/wallpaper-blur.jpg"
+    copy_as_jpeg "$SHARED/wallpaper.jpg" "$SHARED/wallpaper-boot.jpg"
 fi
 
 TOKENS="$HOME/.config/modern/tokens.json"
 if [ -f "$TOKENS" ]; then
-    cp "$TOKENS" "$SHARED/tokens.json"
+    tmp="$(stage_tmp "$SHARED/tokens.json")"
+    cp "$TOKENS" "$tmp"
+    commit_tmp "$tmp" "$SHARED/tokens.json"
 fi
 
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
@@ -71,15 +108,32 @@ if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
     lang="${lang//[!a-z]/}"
     trans="$TRANSLATIONS/$lang.json"
     [ -f "$trans" ] || trans="$TRANSLATIONS/en.json"
-    jq -n \
+    chrome_tmp="$(mktemp --suffix=.json -p "$SHARED" tmp.XXXXXX)"
+    if jq -n \
         --argjson cfg "$(jq '{typography,design:{cornerRounding,transparency},language}' "$CFG")" \
-        --arg unlock "$(jq -r '.session.unlock // "Unlock"' "$trans")" \
-        --arg password "$(jq -r '.session.password // "Password"' "$trans")" \
-        --arg user "$(jq -r '.session.user // "User"' "$trans")" \
-        --arg signingIn "$(jq -r '.session.signingIn // "Signing in…"' "$trans")" \
-        --arg authFailed "$(jq -r '.session.authFailed // "Could not unlock"' "$trans")" \
-        '$cfg + {strings:{unlock:$unlock, password:$password, user:$user, signingIn:$signingIn, authFailed:$authFailed}}' \
-        > "$SHARED/chrome.json" || warn "chrome.json skipped"
+        --argjson strings "$(jq '{
+            unlock: (.session.unlock // "Unlock"),
+            password: (.session.password // "Password"),
+            user: (.session.user // "User"),
+            signingIn: (.session.signingIn // "Signing in…"),
+            authFailed: (.session.authFailed // "Could not unlock"),
+            signIn: (.session.signIn // "Sign in"),
+            welcome: (.session.welcome // "Welcome"),
+            loginFailed: (.session.loginFailed // "Could not sign in"),
+            unavailable: (.session.unavailable // "Sign-in is not available"),
+            restart: (.powerMenu.restart // "Restart"),
+            poweroff: (.powerMenu.poweroff // "Shut down"),
+            power: (.powerMenu.title // "Power")
+        }' "$trans")" \
+        '$cfg + {strings: $strings}' \
+        > "$chrome_tmp"
+    then
+        chmod a+r "$chrome_tmp" || true
+        mv -f "$chrome_tmp" "$SHARED/chrome.json"
+    else
+        rm -f "$chrome_tmp"
+        warn "chrome.json skipped"
+    fi
 fi
 
 log "synced to $SHARED"

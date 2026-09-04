@@ -29,6 +29,7 @@ Item {
     readonly property real spaceXl: 24
     readonly property real spaceXxl: 32
     readonly property real radiusSmall: 8 * root.cornerScale
+    readonly property real radiusMedium: 16 * root.cornerScale
     readonly property real radiusFull: 9999
     readonly property real overlayLock: 0.32
     readonly property real transparency: {
@@ -38,7 +39,8 @@ Item {
     readonly property real strokeHairline: 1
     readonly property real strokeFocus: 2
     readonly property real fieldHeight: root.spaceXxl + root.spaceXs
-    readonly property real formWidth: root.spaceXxl * 12
+    readonly property real formWidth: root.spaceXxl * 11
+    readonly property real iconMd: 24
 
     readonly property var _fallbackColor: ({
         surface: "#141218",
@@ -48,8 +50,11 @@ Item {
         onPrimary: "#381E72",
         primaryContainer: "#4F378B",
         onPrimaryContainer: "#EADDFF",
+        surfaceContainer: "#211F26",
+        surfaceContainerHigh: "#2B2930",
         surfaceContainerHighest: "#36343B",
         outline: "#938F99",
+        outlineVariant: "#49454F",
         scrim: "#000000",
         error: "#ffb4ab"
     })
@@ -97,17 +102,21 @@ Item {
 
     function t(key: string): string {
         const s = root._chrome.strings || ({});
-        if (key === "session.unlock")
-            return s.unlock || "Unlock";
-        if (key === "session.password")
-            return s.password || "Password";
-        if (key === "session.user")
-            return s.user || "User";
-        if (key === "session.signingIn")
-            return s.signingIn || "Signing in…";
-        if (key === "session.authFailed")
-            return s.authFailed || "Could not unlock";
-        return key;
+        const table = ({
+            "session.unlock": s.unlock || "Unlock",
+            "session.password": s.password || "Password",
+            "session.user": s.user || "User",
+            "session.signingIn": s.signingIn || "Signing in…",
+            "session.authFailed": s.authFailed || "Could not unlock",
+            "session.signIn": s.signIn || "Sign in",
+            "session.welcome": s.welcome || "Welcome",
+            "session.loginFailed": s.loginFailed || "Could not sign in",
+            "session.unavailable": s.unavailable || "Sign-in is not available",
+            "powerMenu.restart": s.restart || "Restart",
+            "powerMenu.poweroff": s.poweroff || "Shut down",
+            "powerMenu.title": s.power || "Power"
+        });
+        return table[key] || key;
     }
 
     function typePx(name: string): int {
@@ -123,7 +132,7 @@ Item {
     }
 
     function typeWeight(name: string): int {
-        if (name === "titleMedium" || name === "labelLarge")
+        if (name === "titleMedium" || name === "labelLarge" || name === "headlineSmall")
             return 500;
         return 400;
     }

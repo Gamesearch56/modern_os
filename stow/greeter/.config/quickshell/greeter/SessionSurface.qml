@@ -1,7 +1,5 @@
-// Duplicate of Modules/Session/SessionSurface.qml for the greetd
-// package. Relative imports into the desktop shell do not survive
-// stow (different target user / prefix), so the layout is copied
-// rather than imported. GreetdAuth owns Quickshell.Services.Greetd.
+// Login layout for greetd. Not the lock screen: clock lives in the
+// header, credentials sit on a card, power is a corner menu.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -10,22 +8,14 @@ import QtQuick.Layouts
 Item {
     id: root
 
+    property var chrome: null
+    property var auth: null
+    property bool interactive: false
     property string _defaultUser: ""
-
-    readonly property bool _busy: auth.busy
-    readonly property string _user: username.text.trim()
-
-    SessionChrome {
-        id: chrome
-    }
 
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
-    }
-
-    GreetdAuth {
-        id: auth
     }
 
     FileView {
@@ -41,136 +31,89 @@ Item {
 
     SessionFrost {
         anchors.fill: parent
-        chrome: chrome
+        chrome: root.chrome
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.interactive && !(power.item && power.item.menuOpen)
+        onPressed: {
+            if (form.item)
+                form.item.focusPassword();
+        }
     }
 
     ColumnLayout {
-        anchors.centerIn: parent
-        width: Math.min(parent.width - chrome.spaceXxl * 2, chrome.formWidth)
-        spacing: chrome.spaceXl
-
-        Rectangle {
-            Layout.alignment: Qt.AlignHCenter
-            implicitWidth: chrome.spaceXxl * 3
-            implicitHeight: chrome.spaceXxl * 3
-            radius: chrome.radiusFull
-            color: chrome.color.surfaceContainerHighest
-            Accessible.ignored: true
-
-            Text {
-                anchors.centerIn: parent
-                text: root._user.length ? root._user.charAt(0).toUpperCase() : ""
-                color: chrome.color.onSurface
-                font.family: chrome.fontFamily
-                font.pixelSize: chrome.typePx("headlineSmall")
-                font.weight: 500
-            }
-        }
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: root.chrome ? root.chrome.spaceXxl : 32
+        spacing: root.chrome ? root.chrome.spaceXs : 4
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: chrome.formatTime(clock.date)
-            color: chrome.color.onSurface
-            font.family: chrome.fontFamily
-            font.pixelSize: chrome.typePx("displayLarge")
-            font.weight: chrome.typeWeight("displayLarge")
+            text: root.chrome ? root.chrome.formatTime(clock.date) : ""
+            color: root.chrome ? root.chrome.color.onSurface : "#E6E0E9"
+            font.family: root.chrome ? root.chrome.fontFamily : "Inter"
+            font.pixelSize: root.chrome ? root.chrome.typePx("headlineSmall") : 24
+            font.weight: 500
             Accessible.role: Accessible.StaticText
-            Accessible.name: chrome.formatTime(clock.date)
-        }
-
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: chrome.formatDate(clock.date)
-            color: chrome.color.onSurfaceVariant
-            font.family: chrome.fontFamily
-            font.pixelSize: chrome.typePx("titleMedium")
-            font.weight: chrome.typeWeight("titleMedium")
-            Accessible.role: Accessible.StaticText
-            Accessible.name: chrome.formatDate(clock.date)
-        }
-
-        SessionField {
-            id: username
-            chrome: chrome
-            Layout.fillWidth: true
-            placeholder: chrome.t("session.user")
-            enabled: !root._busy
-            onAccepted: password.forceActiveFocus()
-        }
-
-        SessionField {
-            id: password
-            chrome: chrome
-            Layout.fillWidth: true
-            placeholder: chrome.t("session.password")
-            echoMode: TextInput.Password
-            enabled: !root._busy
-            onAccepted: root.authenticate()
-        }
-
-        Text {
-            visible: auth.failText.length > 0 && !root._busy
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            horizontalAlignment: Text.AlignHCenter
-            color: chrome.color.error
-            font.family: chrome.fontFamily
-            font.pixelSize: chrome.typePx("bodySmall")
-            text: auth.failText.length ? auth.failText : chrome.t("session.authFailed")
-            Accessible.role: Accessible.Alert
             Accessible.name: text
         }
 
         Text {
-            visible: root._busy
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            color: chrome.color.onSurfaceVariant
-            font.family: chrome.fontFamily
-            font.pixelSize: chrome.typePx("bodySmall")
-            text: chrome.t("session.signingIn")
-            Accessible.role: Accessible.Alert
-            Accessible.name: chrome.t("session.signingIn")
-        }
-
-        SessionButton {
             Layout.alignment: Qt.AlignHCenter
-            chrome: chrome
-            label: root._busy ? chrome.t("session.signingIn") : chrome.t("session.unlock")
-            enabled: !root._busy && root._user.length > 0 && password.text.length > 0
-            busy: root._busy
-            onClicked: root.authenticate()
+            text: root.chrome ? root.chrome.formatDate(clock.date) : ""
+            color: root.chrome ? root.chrome.color.onSurfaceVariant : "#CAC4D0"
+            font.family: root.chrome ? root.chrome.fontFamily : "Inter"
+            font.pixelSize: root.chrome ? root.chrome.typePx("titleMedium") : 16
+            Accessible.role: Accessible.StaticText
+            Accessible.name: text
         }
     }
 
-    Connections {
-        target: auth
-        function onBusyChanged() {
-            if (!auth.busy && auth.failText.length) {
-                password.forceActiveFocus();
-                password.selectAll();
-            }
+    Component {
+        id: formComp
+        SessionForm {
+            chrome: root.chrome
+            auth: root.auth
+            defaultUser: root._defaultUser
         }
     }
 
-    Component.onCompleted: root._focusForm()
-
-    on_DefaultUserChanged: {
-        if (username.text.length === 0)
-            username.text = root._defaultUser;
-        root._focusForm();
+    Loader {
+        id: form
+        active: root.interactive
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: root.chrome ? root.chrome.spaceXl : 24
+        width: item ? item.implicitWidth : 0
+        height: item ? item.implicitHeight : 0
+        sourceComponent: formComp
     }
 
-    function authenticate() {
-        auth.login(username.text, password.text);
+    MouseArea {
+        anchors.fill: parent
+        visible: power.item ? power.item.menuOpen : false
+        onClicked: {
+            if (power.item)
+                power.item.close();
+        }
     }
 
-    function _focusForm() {
-        if (root._busy)
-            return;
-        if (root._defaultUser.length)
-            password.forceActiveFocus();
-        else
-            username.forceActiveFocus();
+    Component {
+        id: powerComp
+        SessionPower {
+            chrome: root.chrome
+        }
+    }
+
+    Loader {
+        id: power
+        active: root.interactive
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: root.chrome ? root.chrome.spaceLg : 16
+        width: item ? item.implicitWidth : 0
+        height: item ? item.implicitHeight : 0
+        sourceComponent: powerComp
     }
 }

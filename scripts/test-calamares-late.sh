@@ -58,27 +58,25 @@ else
     err "greetd_apply must mark each enabled unit required or optional"
 fi
 
-if python3 - "$ROOT/install/system/greetd/config.toml" <<'PY'; then
+if python3 - "$ROOT/install/system/greetd/config.toml" "$ROOT/install/system/greetd/kiosk.sh" "$ROOT/install/system/greetd/hyprland.lua" <<'PY'; then
 import re, shlex, sys
+from pathlib import Path
 text = open(sys.argv[1], encoding="utf-8").read()
 m = re.search(r'^command\s*=\s*"([^"]*)"', text, re.M)
 assert m, "no default_session command"
 argv = shlex.split(m.group(1))
-assert argv and argv[0].endswith("start-hyprland"), f"unexpected session command {argv}"
-# start-hyprland is a watchdog wrapper. It understands only these three
-# options itself and forwards an argument to Hyprland only after --, so a
-# Hyprland flag on the left is dropped: Hyprland then starts unconfigured,
-# autogenerates a stock session, and the greeter never runs.
-own = {"--path", "--no-nixgl", "--force-nixgl"}
-rest = argv[1:]
-sep = rest.index("--") if "--" in rest else len(rest)
-stray = [a for a in rest[:sep] if a.startswith("-") and a not in own]
-assert not stray, f"{stray} sit before -- and never reach Hyprland"
-assert "--config" in rest[sep:], "the kiosk config must be passed after --"
+assert argv and argv[0].endswith("kiosk.sh"), f"unexpected session command {argv}"
+kiosk = Path(sys.argv[2]).read_text(encoding="utf-8")
+assert "GREETD_SOCK" in kiosk, "kiosk.sh must keep GREETD_SOCK"
+assert "start-hyprland -- --config /etc/greetd/hyprland.lua" in kiosk, (
+    "kiosk.sh must exec start-hyprland with Hyprland flags after --"
+)
+lua = Path(sys.argv[3]).read_text(encoding="utf-8")
+assert "GREETD_SOCK" in lua, "hyprland.lua must forward GREETD_SOCK to qs"
 PY
-    ok "greetd hands the kiosk config to Hyprland past start-hyprland's --"
+    ok "greetd kiosk keeps GREETD_SOCK and hands Hyprland flags past --"
 else
-    err "greetd command must put Hyprland flags after -- (start-hyprland drops them otherwise)"
+    err "greetd kiosk.sh must re-export GREETD_SOCK and exec start-hyprland -- --config"
 fi
 
 # greetd's sysusers.d leaves the home field unset, so greeter already exists

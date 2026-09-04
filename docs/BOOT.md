@@ -41,9 +41,10 @@ to `$HOME/.config/hypr/hyprland.lua`, finds nothing, and autogenerates a
 stock session — which is what a broken `greetd` `default_session` looks
 like from the outside: plain Hyprland, no greeter, no shell, and a
 `config file: //.config/hypr/hyprland.lua` warning. The double slash is the
-tell that `$HOME` was `/`. The greetd command is therefore
-`start-hyprland -- --config /etc/greetd/hyprland.lua`
-(`scripts/test-calamares-late.sh` asserts the separator).
+tell that `$HOME` was `/`. The greetd command is therefore `/etc/greetd/kiosk.sh`, which re-exports
+`GREETD_SOCK` (Quickshell will not connect without it) and execs
+`start-hyprland -- --config /etc/greetd/hyprland.lua`.
+`scripts/test-calamares-late.sh` asserts both.
 
 The `greeter` account is not ours to create. `greetd`'s own `sysusers.d`
 entry leaves the home field unset, so the user already exists with `/` as

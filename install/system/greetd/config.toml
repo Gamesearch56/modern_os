@@ -3,10 +3,10 @@
 vt = 1
 
 [default_session]
-# The `--` is load-bearing. start-hyprland is a watchdog wrapper that only
-# understands --path/--no-nixgl/--force-nixgl itself and forwards nothing
-# else unless it comes after --. Without it Hyprland starts with no config,
-# falls back to $HOME/.config/hypr/hyprland.lua, finds nothing, and
-# autogenerates a stock session — no greeter, no way to reach an account.
-command = "start-hyprland -- --config /etc/greetd/hyprland.lua"
+# kiosk.sh re-exports GREETD_SOCK, then execs start-hyprland. The `--` is
+# load-bearing: start-hyprland only understands --path/--no-nixgl/--force-nixgl
+# itself and forwards nothing else unless it comes after --. Without it
+# Hyprland starts with no config, falls back to $HOME/.config/hypr/hyprland.lua,
+# finds nothing, and autogenerates a stock session — no greeter.
+command = "/etc/greetd/kiosk.sh"
 user = "greeter"

@@ -6,6 +6,33 @@ import Quickshell
 import QtQuick
 
 ShellRoot {
+    id: root
+
+    // Leftmost output (then topmost). Names like DP-1 are machine-specific.
+    readonly property var loginScreen: {
+        void Quickshell.screens;
+        const raw = Quickshell.screens?.values ?? Quickshell.screens ?? [];
+        let best = null;
+        for (let i = 0; i < raw.length; i++) {
+            const s = raw[i];
+            if (!s)
+                continue;
+            if (!best
+                || (s.x ?? 0) < (best.x ?? 0)
+                || ((s.x ?? 0) === (best.x ?? 0) && (s.y ?? 0) < (best.y ?? 0)))
+                best = s;
+        }
+        return best;
+    }
+
+    SessionChrome {
+        id: chrome
+    }
+
+    GreetdAuth {
+        id: auth
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -18,10 +45,19 @@ ShellRoot {
             anchors.right: true
             anchors.bottom: true
             exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            focusable: {
+                const p = root.loginScreen;
+                return !!(p && modelData && p.name === modelData.name);
+            }
 
             SessionSurface {
                 anchors.fill: parent
+                chrome: chrome
+                auth: auth
+                interactive: {
+                    const p = root.loginScreen;
+                    return !!(p && modelData && p.name === modelData.name);
+                }
             }
         }
     }

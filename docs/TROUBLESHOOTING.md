@@ -3,6 +3,15 @@
 Start with `scripts/doctor.sh` — it never mutates the machine. Critical
 missing repo files exit 1; everything else is a warning and exit 0.
 
+## Login screen: “Unable to send Message: Connection refused”
+
+Quickshell’s greetd client only connects when `GREETD_SOCK` is set on
+`qs -c greeter`. Hyprland’s `exec` of qs does not inherit that socket
+unless `/etc/greetd/kiosk.sh` and `/etc/greetd/hyprland.lua` forward it
+(`install/lib/greetd.sh`). Re-run `./install/install.sh` on this home,
+then sign out — do not start `qs` by hand from a TTY; that process has
+no socket.
+
 ## Isolation / wrong account
 
 Symptoms: `~/.config` on an account you did not pass as `--target`

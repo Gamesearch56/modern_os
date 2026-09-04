@@ -7,9 +7,10 @@ import QtQuick
 Item {
     id: root
 
-    property string username: ""
+    readonly property bool socketReady: Greetd.available
     property string failText: ""
     property bool busy: false
+    property string _pendingPassword: ""
 
     function login(user: string, password: string) {
         const u = String(user || "").trim();
@@ -17,12 +18,15 @@ Item {
         if (!u.length || !p.length)
             return;
         root.failText = "";
+        if (!Greetd.available) {
+            root.busy = false;
+            root.failText = "unavailable";
+            return;
+        }
         root.busy = true;
         root._pendingPassword = p;
         Greetd.createSession(u);
     }
-
-    property string _pendingPassword: ""
 
     Connections {
         target: Greetd
@@ -31,16 +35,16 @@ Item {
             if (responseRequired)
                 Greetd.respond(root._pendingPassword);
             root._pendingPassword = "";
+            if (error && message)
+                root.failText = String(message);
         }
 
         function onAuthFailure(message) {
             root.busy = false;
-            root.failText = message || "Authentication failed";
+            root.failText = String(message || "failed");
         }
 
         function onReadyToLaunch() {
-            // Stay busy so the form keeps "Signing in…" until this
-            // greeter compositor is replaced by the user session.
             Greetd.launch(["/usr/bin/start-hyprland"], ["XDG_SESSION_TYPE=wayland"], true);
         }
 

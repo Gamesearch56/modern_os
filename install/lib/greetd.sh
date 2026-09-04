@@ -98,6 +98,12 @@ greetd_apply() {
     greetd_as_root install -d -m 0755 /etc/greetd
     greetd_as_root install -m 0644 "$repo/install/system/greetd/config.toml" /etc/greetd/config.toml
     greetd_as_root install -m 0644 "$repo/install/system/greetd/hyprland.lua" /etc/greetd/hyprland.lua
+    greetd_as_root install -m 0755 "$repo/install/system/greetd/kiosk.sh" /etc/greetd/kiosk.sh
+    if [ -f "$repo/install/system/greetd/50-modern-greeter.rules" ]; then
+        greetd_as_root install -D -m 0644 \
+            "$repo/install/system/greetd/50-modern-greeter.rules" \
+            /etc/polkit-1/rules.d/50-modern-greeter.rules
+    fi
 
     if ! getent group modern >/dev/null 2>&1; then
         greetd_as_root groupadd --system modern

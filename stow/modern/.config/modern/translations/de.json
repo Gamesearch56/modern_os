@@ -158,7 +158,11 @@
     "password": "Passwort",
     "user": "Benutzer",
     "signingIn": "Anmeldung…",
-    "authFailed": "Entsperren fehlgeschlagen"
+    "authFailed": "Entsperren fehlgeschlagen",
+    "signIn": "Anmelden",
+    "welcome": "Willkommen",
+    "loginFailed": "Anmeldung fehlgeschlagen",
+    "unavailable": "Anmeldung nicht verfügbar"
   },
   "alarm": {
     "title": "Wecker",

@@ -71,7 +71,7 @@ write_greetd() {
         printf '%s\n' 'vt = 1'
         printf '\n'
         printf '%s\n' '[default_session]'
-        printf '%s\n' 'command = "start-hyprland -- --config /etc/greetd/hyprland.lua"'
+        printf '%s\n' 'command = "/etc/greetd/kiosk.sh"'
         printf '%s\n' 'user = "greeter"'
         if [ "$with_initial" = 1 ]; then
             printf '\n'

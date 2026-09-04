@@ -32,6 +32,15 @@ else
     err "install.sh must write \$TARGET/.config/modern/repo"
 fi
 
+if grep -F 'kiosk.sh' "$LIB" >/dev/null \
+    && grep -F '50-modern-greeter.rules' "$LIB" >/dev/null \
+    && grep -F 'GREETD_SOCK' "$ROOT/install/system/greetd/kiosk.sh" >/dev/null \
+    && grep -F 'GREETD_SOCK' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null; then
+    ok "greetd_apply installs the GREETD_SOCK kiosk"
+else
+    err "greetd_apply must install kiosk.sh, hyprland.lua GREETD_SOCK, and greeter polkit"
+fi
+
 export REPO_ROOT="$ROOT" LOG_FILE="/dev/null" DRY_RUN=1
 # shellcheck source=../install/lib/log.sh
 source "$ROOT/install/lib/log.sh"
