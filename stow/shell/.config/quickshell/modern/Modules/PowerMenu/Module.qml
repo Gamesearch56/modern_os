@@ -15,7 +15,7 @@ Scope {
         function hide() { PowerMenu.hide(); }
     }
 
-    property int focusIndex: 0
+    property int focusIndex: -1
 
     readonly property var actions: [
         { id: "lock", icon: "system-lock-screen-symbolic" },
@@ -38,6 +38,12 @@ Scope {
 
     function _move(delta: int) {
         const n = root.actions.length;
+        if (n <= 0)
+            return;
+        if (root.focusIndex < 0) {
+            root.focusIndex = delta > 0 ? 0 : n - 1;
+            return;
+        }
         root.focusIndex = Math.max(0, Math.min(n - 1, root.focusIndex + delta));
     }
 
@@ -71,6 +77,7 @@ Scope {
             Overlay {
                 anchors.fill: parent
                 actions: root.actions
+                focusIndex: root.focusIndex
                 onChosen: (i) => {
                     root.focusIndex = i;
                     root._run(root.actions[i].id);
@@ -110,11 +117,15 @@ Scope {
             }
             Shortcut {
                 sequence: "Return"
-                onActivated: root._run(root.actions[root.focusIndex].id)
+                onActivated: {
+                    if (root.focusIndex < 0)
+                        return;
+                    root._run(root.actions[root.focusIndex].id);
+                }
             }
 
             Component.onCompleted: {
-                root.focusIndex = 0;
+                root.focusIndex = -1;
                 Qt.callLater(() => {
                     if (!PowerMenu.open)
                         return;
