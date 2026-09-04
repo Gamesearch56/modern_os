@@ -25,6 +25,7 @@ pipewire-jack                    # JACK compatibility shim (audio production too
 pipewire-pulse                   # PulseAudio compatibility shim (most apps still expect this)
 wireplumber                      # PipeWire session manager, spoken to by Services/Audio
 wl-clipboard                     # wl-copy/wl-paste for screenshots, file preview, copy
+cliphist                         # clipboard history store (wl-clipboard companion)
 grim                             # screenshot capture backend
 slurp                            # region selection for screenshots
 swappy                           # screenshot annotation (GTK, follows token gtk.css)

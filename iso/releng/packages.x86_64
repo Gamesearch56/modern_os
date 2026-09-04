@@ -12,6 +12,10 @@ mkinitcpio
 mkinitcpio-archiso
 syslinux
 squashfs-tools
+# unpackfs rsyncs airootfs.sfs onto the target. Exit 127 is missing rsync.
+# AUR calamares does not depend on either binary; the module is Python.
+rsync
+python
 btrfs-progs
 dosfstools
 e2fsprogs

@@ -10,6 +10,7 @@ Summary German title Übersicht (English stays Summary; title() calls tr()).
 Partition legend Boot/root names use palette text (not Qt::black).
 Finished success copy drops the live-session offer, English and German.
 Keyboard layout changes call apply() even when there are no variants.
+setxkbmap always passes -option so cage/Xwayland rebuilds the map.
 Unattended QEMU: /etc/calamares/unattended auto-next + user modern/modern.
 Copies calamares-modernnet/ into src/modules/modernnet (Network step).
 
@@ -434,6 +435,19 @@ KB_APPLY_OLD = """                 m_current.selectedLayout = m_keyboardLayoutsM
 KB_APPLY_NEW = """                 m_current.selectedLayout = m_keyboardLayoutsModel->item( index ).first;
                  updateVariants( QPersistentModelIndex( m_keyboardLayoutsModel->index( index ) ) );
                  somethingChanged();"""
+
+# cage/Xwayland ignores the first `setxkbmap -layout de`. India works because
+# non-ascii-layouts adds `-option grp:…` and that rebuilds the map. ASCII
+# layouts (German) never sent -option, so the test field stayed on us until
+# a later non-ASCII pick.
+KB_XKB_OLD = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
+        QProcess::execute( "setxkbmap", basicArguments );
+        cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
+KB_XKB_NEW = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
+        basicArguments << QStringLiteral( "-option" );
+        QProcess::execute( "setxkbmap", basicArguments );
+        QProcess::execute( "setxkbmap", basicArguments );
+        cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
 
 SUMMARY_CONTENT_OLD = """    delete m_contentWidget;  // It might have been created previously
     m_contentWidget = new QWidget;
@@ -889,6 +903,7 @@ def main() -> int:
     patch(execstep, TOGGLE_OLD, TOGGLE_NEW, "Toggle log tr()")
     patch(keyboard, KB_OLD, KB_NEW, "hide Keyboard model row")
     patch(keyboard_cfg, KB_APPLY_OLD, KB_APPLY_NEW, "apply layout when variants are empty")
+    patch(keyboard_cfg, KB_XKB_OLD, KB_XKB_NEW, "setxkbmap -option so Xwayland rebuilds")
     patch(summary, SUMMARY_CONTENT_OLD, SUMMARY_CONTENT_NEW, "summary content object name")
     patch(summary, SUMMARY_WRAP_OLD, SUMMARY_WRAP_NEW, "summary item wrap object name")
     patch(summary_cfg, SUMMARY_TITLE_OLD, SUMMARY_TITLE_NEW, "Summary title live tr()")

@@ -76,7 +76,9 @@ def wrap(old: str) -> str:
     wrap(mod.TOGGLE_OLD), encoding="utf-8"
 )
 (src / "modules/keyboard/KeyboardPage.cpp").write_text(wrap(mod.KB_OLD), encoding="utf-8")
-(src / "modules/keyboard/Config.cpp").write_text(wrap(mod.KB_APPLY_OLD), encoding="utf-8")
+(src / "modules/keyboard/Config.cpp").write_text(
+    wrap(mod.KB_APPLY_OLD) + wrap(mod.KB_XKB_OLD), encoding="utf-8"
+)
 (src / "modules/summary/SummaryPage.cpp").write_text(
     wrap(mod.SUMMARY_CONTENT_OLD) + wrap(mod.SUMMARY_WRAP_OLD), encoding="utf-8"
 )
@@ -152,6 +154,7 @@ check "$src/libcalamaresui/ViewManager.cpp" "/etc/calamares/unattended" "unatten
 check "$src/libcalamaresui/viewpages/ExecutionViewStep.cpp" 'tr( "Toggle log" )' "Toggle log tr"
 check "$src/modules/keyboard/KeyboardPage.cpp" "physicalModelSelector->hide()" "hide keyboard model"
 check "$src/modules/keyboard/Config.cpp" "somethingChanged();" "layout change applies with no variants"
+check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-option" )' "setxkbmap -option forces Xwayland remap"
 check "$src/modules/summary/SummaryPage.cpp" "summaryContent" "summary content object name"
 check "$src/modules/partition/PartitionViewStep.cpp" "summaryPartition" "partition summary object name"
 check "$src/modules/partition/gui/PartitionLabelsView.cpp" "QPalette::WindowText" "partition legend palette text"
@@ -165,6 +168,8 @@ check "$src/modules/modernnet/CMakeLists.txt" "calamares_add_plugin(modernnet" "
 check "$src/modules/modernnet/CMakeLists.txt" "ModernNetRow.cpp" "modernnet wifi row source"
 check "$src/modules/modernnet/ModernNetViewStep.cpp" 'tr( "Network", "@title" )' "Network step prettyName"
 check "$src/modules/modernnet/ModernNetPage.cpp" "You're connected with Wi-Fi" "Network step Wi-Fi success copy"
+check "$src/modules/modernnet/ModernNetPage.cpp" "m_okHint->setText" "Network step hint retranslates on show"
+check "$WORKDIR/lang/calamares_de.ts" "Du kannst mit dem nächsten Schritt fortfahren." "Network step German continue hint"
 check "$src/modules/modernnet/ModernNetRow.cpp" "Password required" "Network step lock label"
 check "$WORKDIR/lang/calamares_de.ts" "<translation>Netzwerk</translation>" "Network step German title"
 check "$WORKDIR/lang/calamares_de.ts" "<translation>Du bist per WLAN verbunden</translation>" "Network step German Wi-Fi success"

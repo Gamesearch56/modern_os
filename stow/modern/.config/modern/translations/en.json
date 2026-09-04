@@ -1050,6 +1050,8 @@
     "installing": "Installing {name}",
     "removing": "Removing {name}",
     "installLog": "Waiting for confirmation…",
+    "copyLog": "Copy log",
+    "logCopied": "Log copied",
     "cancel": "Cancel",
     "failed": "Could not change the package",
     "cancelled": "Authentication was cancelled",

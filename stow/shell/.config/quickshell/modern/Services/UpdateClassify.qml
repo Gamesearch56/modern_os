@@ -15,6 +15,12 @@ QtObject {
             return "system-file-manager";
         if (n === "kitty")
             return "utilities-terminal";
+        if (n === "mpv")
+            return "applications-multimedia";
+        if (n === "imv")
+            return "image-x-generic";
+        if (n === "neovim")
+            return "accessories-text-editor";
         return n === "vivaldi" ? "web-browser" : "package-x-generic-symbolic";
     }
 
@@ -22,20 +28,28 @@ QtObject {
         return String(id || "").replace(/\.desktop$/i, "").replace(/^org\.kde\./, "").replace(/^org\.gnome\./, "").replace(/-stable$/, "").toLowerCase();
     }
 
-    function isSystem(name: string): bool {
+    function isSystem(name: string, shipped): bool {
         const n = String(name || "");
+        if (shipped && shipped[n])
+            return true;
         if (/^(linux|mesa|nvidia|wayland|wlroots)/.test(n) || n.indexOf("hypr") !== -1 || n.indexOf("quickshell") === 0)
             return true;
         const defs = Config.apps.defaults || {};
-        const stems = [root.stem(defs.browser), root.stem(defs.fileManager), root.stem(defs.terminal)];
+        const stems = [
+            root.stem(defs.browser),
+            root.stem(defs.fileManager),
+            root.stem(defs.terminal),
+            root.stem(defs.videoPlayer),
+            root.stem(defs.imageViewer)
+        ];
         for (let i = 0; i < stems.length; i++) {
             if (stems[i].length && (n === stems[i] || n.indexOf(stems[i] + "-") === 0))
                 return true;
         }
-        return "pipewire wireplumber systemd greetd grim slurp matugen pacman reflector bluez networkmanager polkit stow qt6-base qt6-declarative kitty nautilus vivaldi".split(" ").indexOf(n) !== -1;
+        return "pipewire wireplumber systemd greetd grim slurp matugen matugen-bin cliphist pacman reflector bluez networkmanager polkit stow qt6-base qt6-declarative kitty nautilus vivaldi mpv imv neovim".split(" ").indexOf(n) !== -1;
     }
 
-    function parseCheck(text: string) {
+    function parseCheck(text: string, shipped) {
         const all = [];
         const sys = [];
         const other = [];
@@ -46,7 +60,7 @@ QtObject {
                 continue;
             const row = { name: m[1], from: m[2], to: m[3], iconName: root.icon(m[1]) };
             all.push(row);
-            if (root.isSystem(m[1]))
+            if (root.isSystem(m[1], shipped))
                 sys.push(row);
             else
                 other.push(row);

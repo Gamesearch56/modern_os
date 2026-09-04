@@ -143,9 +143,11 @@ cloneable. That choice stays yours.
 
 `iso-build.sh` copies stock archiso **releng** for bootloaders and
 airootfs layout, then **replaces** `packages.x86_64` with
-`iso/releng/packages.x86_64` (the full live+Calamares set). Rescue
-tools (Clonezilla, TestDisk, `archinstall`, extra filesystems) stay off
-the squashfs. `linux-zen-headers` stay off the ISO; `install.sh` /
+`iso/releng/packages.x86_64` (the full live+Calamares set). Keep
+`rsync` and `python` — Calamares `unpackfs` is a Python module that
+copies `airootfs.sfs` with `rsync`, and the AUR package declares
+neither. Exit 127 is a missing binary. Rescue tools (Clonezilla, TestDisk,
+`archinstall`, extra filesystems) stay off the squashfs. `linux-zen-headers` stay off the ISO; `install.sh` /
 `00-base.txt` still have them for DKMS. Firefox stays (live kiosk). AUR
 builds use `MAKEFLAGS=-j$(nproc)` and cache `.pkg.tar.*` beside
 `iso/out/` (gitignored). The AUR list ships `yay-bin`.
