@@ -2,121 +2,106 @@
 -- display from left to right (1-5, 6-10, 11-15, …), keyed on
 -- description never connector name. Live outputs win over profiles so
 -- a third panel is not stuck on Hyprland's default workspace 11.
+-- A window dragged onto another output joins that output's workspace;
+-- apply_fixed must not yank the workspace (and the window) back.
 
 local config = require("modules.config")
+local layout = require("modules.workspaces_layout")
 
 local M = {}
 
-local function selector(mon)
-    if not mon then
+local adopting = false
+
+local function dest_workspace(mon)
+    local i = layout.index_of(mon)
+    if not i then
         return nil
     end
-    if type(mon.description) == "string" and mon.description ~= "" then
-        return "desc:" .. mon.description
-    end
-    if type(mon.name) == "string" and mon.name ~= "" then
-        return mon.name
-    end
-    return nil
-end
-
-local function sort_by_x(mons)
-    table.sort(mons, function(a, b)
-        local ax = (type(a.x) == "number" and a.x) or 0
-        local bx = (type(b.x) == "number" and b.x) or 0
-        if ax == bx then
-            return (a.id or 0) < (b.id or 0)
-        end
-        return ax < bx
-    end)
-    return mons
-end
-
-local function list_monitors()
-    local mons = {}
-    local raw = hl.get_monitors and hl.get_monitors()
-    if type(raw) ~= "table" then
-        return mons
-    end
-    for _, m in pairs(raw) do
-        if m ~= nil then
-            mons[#mons + 1] = m
+    local from, to = layout.range_for_index(i)
+    local sel = layout.selector(mon)
+    if hl.get_last_workspace then
+        local last = hl.get_last_workspace(sel or mon)
+        local id = layout.workspace_id(last)
+        if id and id >= from and id <= to then
+            return id
         end
     end
-    return sort_by_x(mons)
+    local cur = layout.active_id(layout.live_match(mon) or mon)
+    if cur >= from and cur <= to then
+        return cur
+    end
+    return from
 end
 
-local function list_from_profiles()
-    local profiles = config.value("monitors.profiles", {})
-    local mons = {}
-    if type(profiles) ~= "table" then
-        return mons
+local function send_to_workspace(win, n)
+    if adopting or not win or not n or not hl.dsp.window or not hl.dsp.window.move then
+        return
     end
-    for desc, p in pairs(profiles) do
-        if type(desc) == "string" and desc ~= "" and type(p) == "table" then
-            local x = 0
-            if type(p.position) == "string" then
-                x = tonumber(p.position:match("^(%-?%d+)x")) or 0
-            end
-            mons[#mons + 1] = { description = desc, x = x, id = #mons }
-        end
+    adopting = true
+    local spec = { workspace = n, follow = false, window = win }
+    local ok = pcall(hl.dispatch, hl.dsp.window.move(spec))
+    if not ok and win.address then
+        spec.window = "address:" .. tostring(win.address):gsub("^address:", "")
+        pcall(hl.dispatch, hl.dsp.window.move(spec))
     end
-    return sort_by_x(mons)
-end
-
-local function assignment_monitors()
-    local live = list_monitors()
-    if #live > 0 then
-        return live
-    end
-    return list_from_profiles()
-end
-
-local function range_for_index(i)
-    local from = (i - 1) * 5 + 1
-    return from, from + 4
-end
-
-local function assigned_monitor(n)
-    if type(n) ~= "number" or n < 1 then
-        return nil
-    end
-    local monitors = assignment_monitors()
-    return monitors[math.floor((n - 1) / 5) + 1]
+    adopting = false
 end
 
 local function pin(n, mon)
-    local sel = selector(mon or assigned_monitor(n))
+    local dest = mon or layout.assigned_monitor(n)
+    local sel = layout.selector(dest)
     if not sel or not hl.dsp.workspace or not hl.dsp.workspace.move then
+        return
+    end
+    local home = layout.live_match(dest) or dest
+    local ws = hl.get_workspace and hl.get_workspace(n)
+    local cur = ws and ws.monitor
+    if cur and layout.same_output(cur, home) then
+        return
+    end
+    -- Drag still showing this workspace on the other output: adopt first.
+    local win = hl.get_active_window and hl.get_active_window()
+    if win and layout.workspace_id(win.workspace) == n and win.monitor
+        and home and not layout.same_output(win.monitor, home) then
         return
     end
     pcall(hl.dispatch, hl.dsp.workspace.move({ workspace = tostring(n), monitor = sel }))
 end
 
-local function live_match(mon)
-    if not mon then
-        return nil
+local function adopt_if_stray(win)
+    if adopting or not layout.fixed() or not win then
+        return
     end
-    for _, m in ipairs(list_monitors()) do
-        if mon.description and m.description == mon.description then
-            return m
-        end
-        if mon.name and m.name == mon.name then
-            return m
-        end
+    local n = layout.workspace_id(win.workspace)
+    local home = layout.assigned_monitor(n)
+    local on = win.monitor
+    if not n or not home or not on then
+        return
     end
-    return mon
+    if layout.same_output(on, layout.live_match(home) or home) then
+        return
+    end
+    local target = dest_workspace(on)
+    if target and target ~= n then
+        send_to_workspace(win, target)
+    end
 end
 
-local function active_id(mon)
-    local aw = mon and (mon.activeWorkspace or mon.active_workspace)
-    if type(aw) == "number" then
-        return aw
+local function on_workspace_moved(ws, mon)
+    if adopting or not layout.fixed() then
+        return
     end
-    if type(aw) == "table" then
-        return tonumber(aw.id) or 0
+    local n = layout.workspace_id(ws)
+    local home = layout.assigned_monitor(n)
+    if not n or not home or not mon or layout.same_output(mon, layout.live_match(home) or home) then
+        return
     end
-    return tonumber(mon and mon.activeWorkspaceID) or 0
+    local win = hl.get_active_window and hl.get_active_window()
+    local target = dest_workspace(mon)
+    if win and target and target ~= n then
+        send_to_workspace(win, target)
+    end
+    pin(n, home)
 end
 
 local function show(mon, id)
@@ -129,11 +114,11 @@ end
 -- Empty workspace 11 stays until the bound default is focused. Skip
 -- when the active id is unknown so layout events do not steal focus.
 local function ensure_in_range(mon, from, to)
-    local live = live_match(mon)
+    local live = layout.live_match(mon)
     if not live then
         return
     end
-    local cur = active_id(live)
+    local cur = layout.active_id(live)
     if cur <= 0 or (cur >= from and cur <= to) then
         return
     end
@@ -141,7 +126,7 @@ local function ensure_in_range(mon, from, to)
 end
 
 local function bind_range(mon, from, to)
-    local sel = selector(mon)
+    local sel = layout.selector(mon)
     if not sel or not hl.workspace_rule then
         return
     end
@@ -158,20 +143,20 @@ local function bind_range(mon, from, to)
 end
 
 local function apply_fixed(boot)
-    if config.value("monitors.workspaceMode", "dynamic") ~= "fixed" then
+    if not layout.fixed() then
         return
     end
-    local monitors = assignment_monitors()
+    local monitors = layout.assignment_monitors()
     for i, mon in ipairs(monitors) do
-        local from, to = range_for_index(i)
+        local from, to = layout.range_for_index(i)
         bind_range(mon, from, to)
     end
     if not boot then
         return
     end
     for i = #monitors, 1, -1 do
-        local from = range_for_index(i)
-        show(live_match(monitors[i]) or monitors[i], from)
+        local from = layout.range_for_index(i)
+        show(layout.live_match(monitors[i]) or monitors[i], from)
     end
 end
 
@@ -180,7 +165,7 @@ function M.focus(n)
         config.invalidate()
     end
     apply_fixed()
-    if config.value("monitors.workspaceMode", "dynamic") == "fixed" then
+    if layout.fixed() then
         pin(n)
         hl.dispatch(hl.dsp.focus({ workspace = n }))
         return
@@ -193,7 +178,7 @@ function M.move_window(n)
         config.invalidate()
     end
     apply_fixed()
-    if config.value("monitors.workspaceMode", "dynamic") == "fixed" then
+    if layout.fixed() then
         pin(n)
     end
     if hl.dsp.window and hl.dsp.window.move then
@@ -221,7 +206,17 @@ if hl.on then
     end)
     hl.on("monitor.added", apply_fixed)
     hl.on("monitor.removed", apply_fixed)
-    hl.on("monitor.layout_changed", apply_fixed)
+    hl.on("workspace.move_to_monitor", on_workspace_moved)
+    hl.on("window.move_to_workspace", function(win)
+        adopt_if_stray(win or (hl.get_active_window and hl.get_active_window()))
+    end)
+    hl.on("monitor.layout_changed", function()
+        if not layout.fixed() then
+            return
+        end
+        adopt_if_stray(hl.get_active_window and hl.get_active_window())
+        apply_fixed()
+    end)
 end
 
 return M

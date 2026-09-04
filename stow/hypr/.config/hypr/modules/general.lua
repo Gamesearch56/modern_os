@@ -35,6 +35,13 @@ hl.config({
     },
     dwindle = {
         preserve_split = true,
+        -- Drop / Super+mouse insert follows the cursor instead of
+        -- always opening on the left of the destination monitor.
+        smart_split = true,
+        precise_mouse_move = true,
+    },
+    binds = {
+        window_direction_monitor_fallback = true,
     },
     misc = {
         disable_hyprland_logo = true,
