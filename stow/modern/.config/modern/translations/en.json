@@ -158,6 +158,7 @@
     "password": "Password",
     "user": "User",
     "signingIn": "Signing in…",
+    "starting": "Starting…",
     "authFailed": "Could not unlock",
     "signIn": "Sign in",
     "welcome": "Welcome",

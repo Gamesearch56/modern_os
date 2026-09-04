@@ -10,7 +10,8 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: root.chrome ? root.chrome.color.surface : "#141218"
+        color: (root.chrome && root.chrome.color && root.chrome.color.surface)
+            ? root.chrome.color.surface : "#141218"
     }
 
     Image {
@@ -31,14 +32,16 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: root.chrome ? root.chrome.color.surface : "#141218"
+        color: (root.chrome && root.chrome.color && root.chrome.color.surface)
+            ? root.chrome.color.surface : "#141218"
         opacity: root.chrome ? root.chrome.transparency : 0.85
         Accessible.ignored: true
     }
 
     Rectangle {
         anchors.fill: parent
-        color: root.chrome ? root.chrome.color.scrim : "#000000"
+        color: (root.chrome && root.chrome.color && root.chrome.color.scrim)
+            ? root.chrome.color.scrim : "#000000"
         opacity: root.chrome ? root.chrome.overlayLock : 0.32
         Accessible.ignored: true
     }

@@ -9,8 +9,7 @@ Item {
     id: root
 
     readonly property var color: root._color
-    readonly property var chrome: root._chrome
-    readonly property string fontFamily: String(root._chrome.typography?.ui || "Inter")
+    readonly property string fontFamily: String(root._chrome.typography?.ui || "sans-serif")
     readonly property real typeScale: {
         const s = Number(root._chrome.typography?.scale);
         return (s > 0) ? s : 1;
@@ -57,6 +56,9 @@ Item {
     readonly property real fieldHeight: root.spaceXxl + root.spaceXs
     readonly property real formWidth: root.spaceXxl * 11
     readonly property real iconMd: 24
+    readonly property real iconLg: 28
+    readonly property real avatarSize: root.spaceXxl * 2
+    readonly property real hoverLayer: 0.08
 
     readonly property var _fallbackColor: ({
         surface: "#141218",
@@ -78,7 +80,7 @@ Item {
     property var _color: root._fallbackColor
     property var _chrome: ({
         strings: {},
-        typography: { ui: "Inter", scale: 1 },
+        typography: { ui: "sans-serif", scale: 1 },
         design: { cornerRounding: 1 },
         language: { timeFormat: "HH:mm", dateFormat: "DD.MM.YYYY" }
     })

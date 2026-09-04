@@ -245,18 +245,19 @@ German only.
 
 The Keyboard step's own job only writes `/etc/vconsole.conf` (the TTY) and
 `/etc/X11/xorg.conf.d/00-keyboard.conf` (Xwayland clients). Hyprland reads
-`kb_layout` from `config.json` (`modules/input.lua`) and greetd runs a
-*second* Hyprland that reads neither, so picking German used to leave both
-the login prompt and the desktop on `us`. `provision-iso.sh` closes that:
-it parses `XkbLayout` / `XkbVariant` out of the X11 snippet Calamares just
-wrote, sets `input.kbLayout` / `input.kbVariant` in the user's
-`config.json` with `jq` (leaving the rest of the file untouched), and
-appends a matching `hl.config({ input = ... })` to
-`/etc/greetd/hyprland.lua`. The value is passed through verbatim, so a
+`kb_layout` from `config.json` (`modules/input.lua`). The greetd kiosk is a
+second Hyprland and used to ignore that file, so picking German left the
+login prompt on `us`. `provision-iso.sh` parses `XkbLayout` / `XkbVariant`
+out of the X11 snippet Calamares just wrote, sets `input.kbLayout` /
+`input.kbVariant` in the user's `config.json` with `jq` (leaving the rest
+of the file untouched), and writes the same pair to
+`/var/lib/modern/session/keyboard.json`. The kiosk `hyprland.lua` applies
+that snapshot at start. The value is passed through verbatim, so a
 comma-joined non-ASCII pair like `us,ru` still works — Hyprland accepts
 that form too. A missing snippet is a warning, not a failure. Changing the
-layout later in Settings → Keyboard updates the desktop but not the TTY,
-X11 snippet, or greetd.
+layout later in Settings → Keyboard updates the desktop live and rewrites
+`keyboard.json` so the next login matches. TTY and the X11 snippet stay
+as Calamares left them.
 
 The Locale step has the same gap and the same fix. Its job writes `LANG=`
 to `/etc/locale.conf`, which covers the system locale every PAM session and
@@ -271,13 +272,13 @@ so anything else the installer could produce — and `C.UTF-8` — lands on `en`
 rather than on a file `I18n` cannot open. A missing `/etc/locale.conf` or a
 missing `LANG` is a warning, not a failure, and leaves `config.json` alone.
 `language.ui` is the single source of truth: Settings → Language writes that
-same key.
+same key and `session-chrome-sync.sh` rebakes the greeter `chrome.json`.
 
-The greeter needs no counterpart to the keyboard's `hl.config` line. Its
-strings come from `/var/lib/modern/session/chrome.json`, which
-`wallpaper-sync.sh` bakes from `language.ui` — so it follows along, provided
-the language is set before that runs. It is, and
-`scripts/test-calamares-late.sh` pins the ordering.
+The greeter strings come from `/var/lib/modern/session/chrome.json`, which
+`session-chrome-sync.sh` (via wallpaper-sync or Settings → Language) bakes
+from `language.ui`. Keyboard layout is the sibling snapshot
+`keyboard.json`. Both must be written after `config.json` is updated;
+`scripts/test-calamares-late.sh` pins that ordering.
 
 The **Network** / **Netzwerk** page sits after Keyboard. Next stays off
 until Ethernet or Wi-Fi is up (or a default route exists). Wi-Fi turns

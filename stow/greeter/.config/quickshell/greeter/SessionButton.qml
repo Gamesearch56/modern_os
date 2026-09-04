@@ -54,7 +54,7 @@ Item {
         color: root._hot
             ? (root._c ? root._c.color.onPrimaryContainer : "#EADDFF")
             : (root._c ? root._c.color.onPrimary : "#381E72")
-        font.family: root._c ? root._c.fontFamily : "Inter"
+        font.family: root._c ? root._c.fontFamily : "sans-serif"
         font.pixelSize: root._c ? root._c.typePx("labelLarge") : 14
         font.weight: root._c ? root._c.typeWeight("labelLarge") : 500
         Accessible.ignored: true

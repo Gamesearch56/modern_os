@@ -43,8 +43,13 @@ like from the outside: plain Hyprland, no greeter, no shell, and a
 `config file: //.config/hypr/hyprland.lua` warning. The double slash is the
 tell that `$HOME` was `/`. The greetd command is therefore `/etc/greetd/kiosk.sh`, which re-exports
 `GREETD_SOCK` (Quickshell will not connect without it) and execs
-`start-hyprland -- --config /etc/greetd/hyprland.lua`.
-`scripts/test-calamares-late.sh` asserts both.
+`start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua`.
+`scripts/test-calamares-late.sh` asserts both. Greetd sets
+`source_profile = false` so `~/.bashrc` (fastfetch) does not run on the
+seat before Hyprland. The kiosk sets `ulimit -c 0` so a crash dump cannot
+block reaping. Greeter wallpaper is the Quickshell Image — no `awww`
+client — and `Greetd.launch` then `hyprctl dispatch exit` so greetd is
+not left waiting on a compositor that will not die.
 
 The `greeter` account is not ours to create. `greetd`'s own `sysusers.d`
 entry leaves the home field unset, so the user already exists with `/` as
@@ -62,12 +67,16 @@ stop the shell immediately. TTY testing does **not** need this unit
 enabled.
 
 `modules/autostart.lua` **exec**s `qs -c modern` as a child of this
-compositor (logs: `~/.local/state/modern/quickshell.log`) **before** any
-`systemctl --user` call. After greetd the user bus is often still coming
-up; waiting on it delayed the first shell frame. Do not wrap qs in a
-`while` loop: Hyprland then tracks `sh` instead of Quickshell, and the
-bar never appears. systemd calls (stop a leftover unit, import-environment,
-polkit) run after qs with `timeout 2`.
+compositor (logs: `~/.local/state/modern/quickshell.log`) **before**
+wallpaper and any `systemctl --user` call. After greetd the user bus is
+often still coming up; waiting on it delayed the first shell frame. Do not
+wrap qs in a `while` loop: Hyprland then tracks `sh` instead of Quickshell,
+and the bar never appears. systemd calls (stop a leftover unit,
+import-environment, polkit) run in the background with `timeout 2`. Session
+wallpaper is `awww img … --transition-type none` from the already-cropped
+`/var/lib/modern/session/wallpaper.jpg` — not Lanczos3. The kiosk and
+desktop set `misc.disable_hyprland_guiutils_check`: the greeter PATH is
+too thin to find `hyprland-dialog`, and that overlay stays up for 15s.
 
 Enable the unit only from **inside** a running session if you want a
 UWSM/greetd watchdog — not from a text TTY, and not as a requirement

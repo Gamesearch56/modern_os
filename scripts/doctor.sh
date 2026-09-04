@@ -114,6 +114,11 @@ if [ -f "$PHYLAX_CSS" ]; then
 else
     warn "phylax/style.css missing — run scripts/theme-apply.sh so the password prompt matches overlay chrome"
 fi
+if [ -f /etc/polkit-1/rules.d/50-modern-greeter.rules ]; then
+    ok "greeter polkit rules present (login restart/shutdown)"
+else
+    warn "missing /etc/polkit-1/rules.d/50-modern-greeter.rules — login power actions need greetd_apply / install.sh"
+fi
 STYLE_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/application-style.conf"
 if [ -f "$STYLE_CONF" ]; then
     ok "application-style.conf present (hyprland-qt-support radii)"
@@ -122,9 +127,11 @@ else
 fi
 
 section "PATH tools"
-for bin in jq matugen quickshell; do
+for bin in jq matugen quickshell hyprland-dialog; do
     if command -v "$bin" >/dev/null 2>&1; then
         ok "$bin on PATH"
+    elif [ "$bin" = hyprland-dialog ]; then
+        warn "hyprland-dialog not on PATH — pacman -S hyprland-guiutils (15s login overlay otherwise)"
     else
         warn "$bin not on PATH"
     fi

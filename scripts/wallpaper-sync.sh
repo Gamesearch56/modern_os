@@ -99,52 +99,18 @@ if [ -f "$TOKENS" ]; then
     commit_tmp "$tmp" "$SHARED/tokens.json"
 fi
 
-CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
-TRANSLATIONS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/translations"
-if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
-    # Keyed on the shipped files, so adding a translation needs no edit here
-    # and an unknown language.ui renders English instead of the QML literals.
-    lang="$(jq -r '.language.ui // "en"' "$CFG")"
-    lang="${lang//[!a-z]/}"
-    trans="$TRANSLATIONS/$lang.json"
-    [ -f "$trans" ] || trans="$TRANSLATIONS/en.json"
-    chrome_tmp="$(mktemp --suffix=.json -p "$SHARED" tmp.XXXXXX)"
-    if jq -n \
-        --argjson cfg "$(jq '{
-            typography,
-            design: {cornerRounding, transparency},
-            language,
-            motion: {
-                scale: (.motion.scale // 1),
-                overlay: (.motion.overlay // "fadeZoom"),
-                extraLong: 600
-            }
-        }' "$CFG")" \
-        --argjson strings "$(jq '{
-            unlock: (.session.unlock // "Unlock"),
-            password: (.session.password // "Password"),
-            user: (.session.user // "User"),
-            signingIn: (.session.signingIn // "Signing in…"),
-            authFailed: (.session.authFailed // "Could not unlock"),
-            signIn: (.session.signIn // "Sign in"),
-            welcome: (.session.welcome // "Welcome"),
-            loginFailed: (.session.loginFailed // "Could not sign in"),
-            unavailable: (.session.unavailable // "Sign-in is not available"),
-            capsLock: (.session.capsLock // "Caps Lock is on"),
-            restart: (.powerMenu.restart // "Restart"),
-            poweroff: (.powerMenu.poweroff // "Shut down"),
-            power: (.powerMenu.title // "Power"),
-            weekday: (.time.weekday // {})
-        }' "$trans")" \
-        '$cfg + {strings: $strings}' \
-        > "$chrome_tmp"
-    then
-        chmod a+r "$chrome_tmp" || true
-        mv -f "$chrome_tmp" "$SHARED/chrome.json"
-    else
-        rm -f "$chrome_tmp"
-        warn "chrome.json skipped"
-    fi
-fi
-
 log "synced to $SHARED"
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$HERE/session-chrome-sync.sh" ]; then
+    bash "$HERE/session-chrome-sync.sh" || warn "chrome.json snapshot skipped"
+fi
+if [ -f "$HERE/session-keyboard-sync.sh" ]; then
+    bash "$HERE/session-keyboard-sync.sh" || warn "keyboard.json snapshot skipped"
+fi
+if [ -f "$HERE/session-monitors-sync.sh" ]; then
+    bash "$HERE/session-monitors-sync.sh" || warn "monitors.json snapshot skipped"
+fi
+if [ -f "$HERE/session-users-sync.sh" ]; then
+    bash "$HERE/session-users-sync.sh" || warn "users.json snapshot skipped"
+fi

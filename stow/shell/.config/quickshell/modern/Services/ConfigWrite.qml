@@ -16,7 +16,13 @@ Singleton {
     property bool _reloadHypr: false
     property bool _restoreReloadHypr: false
     property bool _patchChrome: false
+    property bool _patchMonitors: false
+    property bool _patchKeyboard: false
+    property bool _patchSessionChrome: false
     property bool _restoreChrome: false
+    property bool _restoreMonitors: false
+    property bool _restoreKeyboard: false
+    property bool _restoreSessionChrome: false
     property bool _restoreCursor: false
     property bool _applyMime: false
     property bool _restoreMime: false
@@ -119,6 +125,10 @@ Singleton {
             || job.path === "windowRules"
             || job.path === "motion.scale" || job.path === "motion"
             || job.path === "gaming" || job.path.indexOf("gaming.") === 0;
+        root._patchMonitors = job.path === "monitors" || job.path.indexOf("monitors.") === 0;
+        root._patchKeyboard = job.path === "input" || job.path === "input.kbLayout"
+            || job.path === "input.kbVariant";
+        root._patchSessionChrome = job.path === "language" || job.path.indexOf("language.") === 0;
         proc.command = [Paths.modern, "config", "set", job.path, job.encoded];
         proc.running = true;
     }
@@ -143,6 +153,9 @@ Singleton {
         root.lastError = "";
         root._restoreReloadHypr = false;
         root._restoreChrome = false;
+        root._restoreMonitors = false;
+        root._restoreKeyboard = false;
+        root._restoreSessionChrome = false;
         root._restoreCursor = false;
         root._restoreMime = false;
         const cmd = [Paths.modern, "config", "restore"];
@@ -151,6 +164,12 @@ Singleton {
             cmd.push(p);
             if (root._hyprPath(p))
                 root._restoreReloadHypr = true;
+            if (p === "monitors" || p.indexOf("monitors.") === 0)
+                root._restoreMonitors = true;
+            if (p === "input" || p === "input.kbLayout" || p === "input.kbVariant")
+                root._restoreKeyboard = true;
+            if (p === "language" || p.indexOf("language.") === 0)
+                root._restoreSessionChrome = true;
             if (root._chromePath(p) || p === "design")
                 root._restoreChrome = true;
             if (root._cursorPath(p))
@@ -190,6 +209,12 @@ Singleton {
                     root._enqueueFollow(["hyprctl", "reload"]);
                 if (root._patchChrome)
                     chromeDebounce.restart();
+                if (root._patchMonitors)
+                    root._enqueueFollow([Paths.script("session-monitors-sync.sh")]);
+                if (root._patchKeyboard)
+                    root._enqueueFollow([Paths.script("session-keyboard-sync.sh")]);
+                if (root._patchSessionChrome)
+                    root._enqueueFollow([Paths.script("session-chrome-sync.sh")]);
                 if (root._applyMime)
                     root._enqueueFollow([Paths.script("mime-defaults.sh")]);
             }
@@ -255,6 +280,12 @@ Singleton {
                 Logger.error("ConfigWrite", "modern config restore exited " + exitCode);
             if (exitCode === 0 && root._restoreReloadHypr)
                 root._enqueueFollow(["hyprctl", "reload"]);
+            if (exitCode === 0 && root._restoreMonitors)
+                root._enqueueFollow([Paths.script("session-monitors-sync.sh")]);
+            if (exitCode === 0 && root._restoreKeyboard)
+                root._enqueueFollow([Paths.script("session-keyboard-sync.sh")]);
+            if (exitCode === 0 && root._restoreSessionChrome)
+                root._enqueueFollow([Paths.script("session-chrome-sync.sh")]);
             if (exitCode === 0 && root._restoreChrome)
                 chromeDebounce.restart();
             if (exitCode === 0 && root._restoreCursor)

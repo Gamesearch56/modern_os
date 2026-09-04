@@ -1,5 +1,5 @@
 // Login layout for greetd. Hero clock, compact credentials on frost,
-// power in the corner. Wallpaper stays while chrome fades into launch.
+// power in the corner. Wallpaper stays until greetd replaces this seat.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -11,9 +11,11 @@ Item {
     property var auth: null
     property var users: null
     property bool interactive: false
-    property bool _entered: false
+    property bool autoFocus: false
+    property bool _entered: true
+    property bool _animate: false
 
-    readonly property bool _shown: root._entered && !(root.auth && root.auth.launching)
+    readonly property bool _shown: root._entered
     readonly property var _c: root.chrome
 
     SystemClock {
@@ -21,7 +23,12 @@ Item {
         precision: SystemClock.Seconds
     }
 
-    Component.onCompleted: root._entered = true
+    Component.onCompleted: {
+        root._entered = true;
+        Qt.callLater(() => {
+            root._animate = true;
+        });
+    }
 
     SessionFrost {
         anchors.fill: parent
@@ -32,30 +39,36 @@ Item {
         anchors.fill: parent
         enabled: !power.menuOpen && root.interactive
         onPressed: {
-            if (userSelectOpen())
-                form.closeMenus();
+            if (!form.item)
+                return;
+            if (form.item.selectOpen())
+                form.item.closeMenus();
             else
-                form.focusPassword();
+                form.item.focusPassword();
         }
     }
 
+    // Not id chrome: that name is the SessionChrome property on this
+    // root, and a child id would steal t()/formatTime from every label.
     Item {
-        id: chrome
+        id: overlay
         anchors.fill: parent
         opacity: {
-            if (!root._c)
+            const c = root._c;
+            if (!c || !c.overlayOpacity)
                 return root._shown ? 1 : 0;
-            return root._c.overlayOpacity(root._shown);
+            return c.overlayOpacity(root._shown);
         }
         scale: {
-            if (!root._c)
+            const c = root._c;
+            if (!c || !c.overlayScale)
                 return 1;
-            return root._c.overlayScale(root._shown);
+            return c.overlayScale(root._shown);
         }
         transformOrigin: Item.Center
 
         Behavior on opacity {
-            enabled: root._c ? root._c.overlaysFade : true
+            enabled: root._animate && !!(root._c && root._c.overlaysFade)
             NumberAnimation {
                 duration: root._c ? root._c.extraLongMs : 600
                 easing.bezierCurve: root._shown
@@ -64,7 +77,7 @@ Item {
             }
         }
         Behavior on scale {
-            enabled: root._c ? root._c.overlaysZoom : true
+            enabled: root._animate && !!(root._c && root._c.overlaysZoom)
             NumberAnimation {
                 duration: root._c ? root._c.extraLongMs : 600
                 easing.bezierCurve: root._shown
@@ -81,16 +94,19 @@ Item {
             date: clock.date
         }
 
-        SessionForm {
+        Loader {
             id: form
+            active: true
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: root._c ? root._c.spaceXl : 24
-            chrome: root._c
-            auth: root.auth
-            users: root.users
-            defaultUser: root.auth ? root.auth.rememberedUser : ""
-            autoFocus: root.interactive
+            sourceComponent: SessionForm {
+                chrome: root._c
+                auth: root.auth
+                users: root.users
+                defaultUser: root.auth ? root.auth.rememberedUser : ""
+                autoFocus: root.autoFocus
+            }
         }
 
         MouseArea {
@@ -102,7 +118,7 @@ Item {
         SessionPower {
             id: power
             chrome: root._c
-            tabFocus: root.interactive
+            tabFocus: root.autoFocus
             anchors.bottom: parent.bottom
             anchors.right: parent.right
             anchors.margins: root._c ? root._c.spaceLg : 16
@@ -110,6 +126,6 @@ Item {
     }
 
     function userSelectOpen() {
-        return form.selectOpen();
+        return !!(form.item && form.item.selectOpen());
     }
 }

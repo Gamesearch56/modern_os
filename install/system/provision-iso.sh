@@ -41,6 +41,7 @@ USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 # login prompt and a us desktop.
 XORG_KB="${MODERN_XORG_KB:-/etc/X11/xorg.conf.d/00-keyboard.conf}"
 GREETD_LUA="${MODERN_GREETD_LUA:-/etc/greetd/hyprland.lua}"
+SESSION_DIR="${MODERN_SESSION_DIR:-/var/lib/modern/session}"
 
 xkb_option() {
     sed -nE "s/.*\"$1\"[[:space:]]+\"([^\"]*)\".*/\1/p" "$XORG_KB" 2>/dev/null | head -1
@@ -77,8 +78,20 @@ apply_keyboard_layout() {
         log "WARN: no $cfg or no jq — the desktop keeps the default layout"
     fi
 
-    # provision installs this file fresh on every run, so appending is idempotent.
-    if [ -f "$GREETD_LUA" ]; then
+    # Snapshot for the kiosk Hyprland (hyprland.lua reads keyboard.json).
+    # Do not append to hyprland.lua — greetd_apply recopies that file and
+    # Settings must be able to replace the layout without a leftover us/de.
+    if mkdir -p "$SESSION_DIR" 2>/dev/null && command -v jq >/dev/null 2>&1; then
+        tmp="$(mktemp "${SESSION_DIR}/keyboard.XXXXXX")"
+        if jq -n --arg l "$layout" --arg v "$variant" '{layout:$l, variant:$v}' >"$tmp"; then
+            chmod a+r "$tmp" || true
+            mv -f "$tmp" "$SESSION_DIR/keyboard.json"
+            log "keyboard layout '$layout' -> $SESSION_DIR/keyboard.json"
+        else
+            rm -f "$tmp"
+            log "WARN: jq could not write $SESSION_DIR/keyboard.json"
+        fi
+    elif [ -f "$GREETD_LUA" ]; then
         printf 'hl.config({ input = { kb_layout = "%s", kb_variant = "%s" } })\n' \
             "$layout" "$variant" >>"$GREETD_LUA"
         log "keyboard layout '$layout' -> $GREETD_LUA"
@@ -144,9 +157,8 @@ apply_system_language() {
 
 apply_system_language
 
-# Ordering, not coincidence: wallpaper-sync.sh bakes the greeter's strings
-# into chrome.json from the language.ui just written, which is why the
-# greeter needs no counterpart to the keyboard's hl.config line.
+# Ordering, not coincidence: wallpaper-sync.sh rebakes chrome.json and
+# keyboard.json from the config.json just written.
 wp="${USER_HOME}/.config/modern/wallpapers/default.jpg"
 if [ -f "$PROVISION_ROOT/scripts/wallpaper-sync.sh" ] && [ -f "$wp" ]; then
     runuser -u "$USERNAME" -- env \

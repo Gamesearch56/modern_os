@@ -9,16 +9,15 @@ ShellRoot {
     id: root
 
     SessionChrome {
-        id: chrome
+        id: sessionChrome
     }
 
     SessionUsers {
-        id: users
+        id: sessionUsers
     }
 
     GreetdAuth {
-        id: auth
-        extraLongMs: chrome.extraLongMs
+        id: sessionAuth
     }
 
     // Leftmost (then topmost). Connector names are machine-specific.
@@ -50,7 +49,7 @@ ShellRoot {
             id: win
             required property var modelData
             screen: modelData
-            color: "transparent"
+            color: sessionChrome.color.surface || "#141218"
             anchors.top: true
             anchors.left: true
             anchors.right: true
@@ -60,10 +59,11 @@ ShellRoot {
 
             SessionSurface {
                 anchors.fill: parent
-                chrome: chrome
-                auth: auth
-                users: users
-                interactive: root.isLeftmost(win.modelData)
+                chrome: sessionChrome
+                auth: sessionAuth
+                users: sessionUsers
+                interactive: true
+                autoFocus: root.isLeftmost(win.modelData)
             }
         }
     }

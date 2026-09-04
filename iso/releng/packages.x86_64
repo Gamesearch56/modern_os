@@ -6,6 +6,7 @@
 linux-zen
 linux-zen-headers
 hyprland
+hyprland-guiutils
 quickshell
 # AUR: built into a local repo by iso-build.sh (packages.aur.x86_64).
 calamares

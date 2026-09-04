@@ -10,10 +10,12 @@ Item {
     property bool tabFocus: true
 
     readonly property var _c: root.chrome
-    readonly property real _btn: root._c ? root._c.spaceXxl + root._c.spaceXs : 36
+    readonly property real _btn: root._c ? root._c.spaceXxl + root._c.spaceSm : 40
+    readonly property real _gap: root._c ? root._c.spaceSm : 8
+    readonly property real _menuW: Math.max(root._c ? root._c.spaceXxl * 7 : 224, menuCol.implicitWidth)
 
-    implicitWidth: root._btn
-    implicitHeight: root._btn
+    implicitWidth: Math.max(root._btn, root.menuOpen ? root._menuW : 0)
+    implicitHeight: root._btn + (root.menuOpen ? menuBox.implicitHeight + root._gap : 0)
     z: 20
 
     function close() {
@@ -22,10 +24,8 @@ Item {
 
     function _run(kind: string) {
         root.menuOpen = false;
-        if (kind === "reboot")
-            Quickshell.execDetached(["loginctl", "reboot"]);
-        else
-            Quickshell.execDetached(["loginctl", "poweroff"]);
+        const verb = kind === "reboot" ? "reboot" : "poweroff";
+        Quickshell.execDetached(["/usr/bin/systemctl", verb]);
     }
 
     activeFocusOnTab: root.tabFocus
@@ -46,39 +46,11 @@ Item {
     }
 
     Rectangle {
-        anchors.fill: parent
-        radius: root._c ? root._c.radiusFull : 9999
-        color: ma.containsMouse || root.menuOpen
-            ? (root._c ? root._c.color.surfaceContainerHighest : "#36343B")
-            : (root._c ? root._c.color.surfaceContainerHigh : "#2B2930")
-        border.color: root.activeFocus
-            ? (root._c ? root._c.color.primary : "#D0BCFF")
-            : "transparent"
-        border.width: root.activeFocus ? (root._c ? root._c.strokeFocus : 2) : 0
-    }
-
-    Text {
-        anchors.centerIn: parent
-        text: "⏻"
-        color: root._c ? root._c.color.onSurface : "#E6E0E9"
-        font.pixelSize: root._c ? root._c.iconMd : 24
-        Accessible.ignored: true
-    }
-
-    MouseArea {
-        id: ma
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.menuOpen = !root.menuOpen
-    }
-
-    Rectangle {
+        id: menuBox
         visible: root.menuOpen
-        anchors.bottom: parent.top
+        anchors.top: parent.top
         anchors.right: parent.right
-        anchors.bottomMargin: root._c ? root._c.spaceSm : 8
-        implicitWidth: Math.max(root._c ? root._c.spaceXxl * 7 : 224, menuCol.implicitWidth)
+        implicitWidth: root._menuW
         implicitHeight: menuCol.implicitHeight
         radius: root._c ? root._c.radiusSmall : 8
         color: root._c ? root._c.color.surfaceContainerHighest : "#36343B"
@@ -115,7 +87,7 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                         text: root._c ? root._c.t(modelData.key) : ""
                         color: root._c ? root._c.color.onSurface : "#E6E0E9"
-                        font.family: root._c ? root._c.fontFamily : "Inter"
+                        font.family: root._c ? root._c.fontFamily : "sans-serif"
                         font.pixelSize: root._c ? root._c.typePx("labelLarge") : 14
                         font.weight: 500
                         Accessible.ignored: true
@@ -130,6 +102,44 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    Item {
+        width: root._btn
+        height: root._btn
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+
+        Rectangle {
+            anchors.fill: parent
+            radius: root._c ? root._c.radiusFull : 9999
+            color: ma.containsMouse || root.menuOpen
+                ? (root._c ? root._c.color.surfaceContainerHighest : "#36343B")
+                : (root._c ? root._c.color.surfaceContainerHigh : "#2B2930")
+            border.color: root.activeFocus
+                ? (root._c ? root._c.color.primary : "#D0BCFF")
+                : "transparent"
+            border.width: root.activeFocus ? (root._c ? root._c.strokeFocus : 2) : 0
+        }
+
+        Text {
+            anchors.fill: parent
+            text: "⏻"
+            color: root._c ? root._c.color.onSurface : "#E6E0E9"
+            font.family: root._c ? root._c.fontFamily : "sans-serif"
+            font.pixelSize: root._c ? root._c.iconLg : 28
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            Accessible.ignored: true
+        }
+
+        MouseArea {
+            id: ma
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.menuOpen = !root.menuOpen
         }
     }
 }

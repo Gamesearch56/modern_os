@@ -19,7 +19,24 @@ hl.env("HYPRCURSOR_SIZE", tostring(config.value("design.cursorSize", 24)))
 local paths = require("modules.paths")
 local path = os.getenv("PATH") or "/usr/bin"
 hl.env("MODERN_REPO", paths.repo)
-hl.env("PATH", paths.scripts .. ":" .. paths.home .. "/.local/bin:" .. path)
+hl.env("PATH", paths.scripts .. ":" .. paths.home .. "/.local/bin:/usr/bin:/bin:" .. path)
+
+-- greetd no longer sources ~/.profile. Apps and `modern` (SUPER+Q)
+-- need LANG from the system locale, not a login shell.
+do
+    local f = io.open("/etc/locale.conf", "r")
+    if f then
+        local raw = f:read("*a") or ""
+        f:close()
+        local lang = raw:match("\n?LANG=([^\n#]+)")
+        if type(lang) == "string" then
+            lang = lang:gsub("^[\"']", ""):gsub("[\"']%s*$", ""):gsub("%s+$", "")
+            if lang ~= "" then
+                hl.env("LANG", lang)
+            end
+        end
+    end
+end
 
 -- NVIDIA wiki env only when install.sh wrote gpu=nvidia. AMD/Intel stay unset.
 do

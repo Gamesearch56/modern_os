@@ -12,11 +12,27 @@ unless `/etc/greetd/kiosk.sh` and `/etc/greetd/hyprland.lua` forward it
 then sign out — do not start `qs` by hand from a TTY; that process has
 no socket.
 
-If tty1 is a wallpaper-only greeter with no form, switch VT:
-`Ctrl+Alt+F3`, text-login, then either `start-hyprland` (session on that
-TTY) or copy `stow/greeter` into `/var/lib/greeter` and
-`sudo systemctl restart greetd`, then `Ctrl+Alt+F1`. Stopping greetd
-lets `getty@tty1` come back (`Conflicts=`).
+If tty1 is a wallpaper-only greeter with no form, or the form has empty
+fields (no clock, no user list, no Sign in label), Stow did not update
+`/var/lib/greeter`. Copy the package and restart greetd from a session
+or another VT (`Ctrl+Alt+F3`):
+
+```bash
+sudo rm -rf /var/lib/greeter/.config/quickshell/greeter
+sudo cp -a stow/greeter/.config/quickshell/greeter \
+    /var/lib/greeter/.config/quickshell/greeter
+sudo chown -R greeter:modern /var/lib/greeter/.config
+sudo install -D -m 0644 install/system/greetd/50-modern-greeter.rules \
+    /etc/polkit-1/rules.d/50-modern-greeter.rules
+sudo install -m 0644 install/system/greetd/hyprland.lua /etc/greetd/hyprland.lua
+sudo install -m 0755 install/system/greetd/kiosk.sh /etc/greetd/kiosk.sh
+sudo chmod 0664 /var/lib/modern/session/default-user
+sudo systemctl restart greetd
+```
+
+Then `Ctrl+Alt+F1`. Stopping greetd lets `getty@tty1` come back
+(`Conflicts=`). `./install/install.sh` does this copy as part of
+`greetd_apply`.
 
 ## Isolation / wrong account
 
@@ -115,7 +131,13 @@ from kitty after the bar is up.
 
 - **One Hyprland per user.** A second TTY's `start-hyprland` does not get
   the shell if an older instance still owns `modern-shell.service`.
-  Exit every leftover compositor before starting a new one.
+  Exit every leftover compositor before starting a new one. Login from
+  greetd while another graphical session is still on F2 also steals DRM
+  and can look like a 20s hang plus an immediate lock screen.
+- **Login to session feels slow.** The greeter compositor must die
+  before yours starts. If `awww-daemon` dumps a core, that wait is
+  seconds of black. Current `kiosk.sh` disables coredumps for that
+  session. Restow `hypr` so session restore skips Lanczos3.
 - End a session: `SUPER+SHIFT+M`, or `loginctl terminate-session <id>`
   from another TTY. If the bar is up: `hyprctl dispatch "hl.dsp.exit()"`.
   You return to the TTY prompt; `exit` or Ctrl+D logs out. Switch back
@@ -152,9 +174,13 @@ reload / restart the session.
 Catch-all monitors use `cm = "srgb"` and `render.cm_auto_hdr = 0` so
 SDR wallpapers are not mapped as HDR. Restow `stow/hypr` and restart.
 Turn HDR on later from Settings → Displays (`monitors.profiles` `hdr`).
-The shipped default image is still a high-chroma still; pick another
-wallpaper with `scripts/theme-apply.sh --wallpaper PATH` if you want
-something calmer.
+The greetd kiosk applies the same `monitors.profiles` snapshot
+(`wallpaper-sync.sh` → `/var/lib/modern/session/monitors.json`) so login
+matches the session on wide-gamut panels. Copy
+`install/system/greetd/hyprland.lua` to `/etc/greetd/hyprland.lua` after
+changing that file. The shipped default image is still a high-chroma
+still; pick another wallpaper with `scripts/theme-apply.sh --wallpaper PATH`
+if you want something calmer.
 
 ## Emergency overlay: `module 'modules.colors' not found`
 

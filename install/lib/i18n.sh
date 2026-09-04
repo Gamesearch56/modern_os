@@ -5,7 +5,11 @@
 # Source, never execute directly. Requires jq.
 
 TRANSLATIONS_DIR="${TRANSLATIONS_DIR:-$REPO_ROOT/stow/modern/.config/modern/translations}"
-I18N_LANG="${I18N_LANG:-${LANG%%_*}}"
+# Hyprland exec and greetd (source_profile=false) often have no LANG.
+# set -u would abort here and eat SUPER+Q (`modern window close`).
+I18N_LANG="${I18N_LANG:-${LANG-}}"
+I18N_LANG="${I18N_LANG%%_*}"
+I18N_LANG="${I18N_LANG%%.*}"
 [ "$I18N_LANG" = "de" ] || I18N_LANG="en"
 
 # t "cli.usage" -> looks up translations/<lang>.json's nested "cli.usage"

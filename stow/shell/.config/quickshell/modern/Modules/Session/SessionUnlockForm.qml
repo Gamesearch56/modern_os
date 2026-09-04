@@ -22,7 +22,7 @@ Item {
         id: col
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: Tokens.spacing.md
+        spacing: Tokens.spacing.lg
 
         MTextField {
             id: password
@@ -72,6 +72,7 @@ Item {
         MButton {
             visible: !root._shutdown
             Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: Tokens.spacing.xl
             kind: "filled"
             key: "session.unlock"
             enabled: Session.password.length > 0

@@ -68,15 +68,16 @@ argv = shlex.split(m.group(1))
 assert argv and argv[0].endswith("kiosk.sh"), f"unexpected session command {argv}"
 kiosk = Path(sys.argv[2]).read_text(encoding="utf-8")
 assert "GREETD_SOCK" in kiosk, "kiosk.sh must keep GREETD_SOCK"
-assert "start-hyprland -- --config /etc/greetd/hyprland.lua" in kiosk, (
+assert "start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua" in kiosk, (
     "kiosk.sh must exec start-hyprland with Hyprland flags after --"
 )
 lua = Path(sys.argv[3]).read_text(encoding="utf-8")
 assert "GREETD_SOCK" in lua, "hyprland.lua must forward GREETD_SOCK to qs"
+assert "awww-daemon" not in lua, "greeter Hyprland must not start awww"
 PY
     ok "greetd kiosk keeps GREETD_SOCK and hands Hyprland flags past --"
 else
-    err "greetd kiosk.sh must re-export GREETD_SOCK and exec start-hyprland -- --config"
+    err "greetd kiosk.sh must re-export GREETD_SOCK and exec start-hyprland --no-nixgl -- --config"
 fi
 
 # greetd's sysusers.d leaves the home field unset, so greeter already exists
@@ -92,8 +93,8 @@ else
     err "greetd_apply must move the greeter off / and fail loudly if it cannot"
 fi
 
-# The Keyboard step must reach Hyprland (config.json) and greetd's own
-# Hyprland, not just /etc/vconsole.conf and the X11 snippet.
+# The Keyboard step must reach Hyprland (config.json) and greetd's
+# keyboard.json snapshot, not just /etc/vconsole.conf and the X11 snippet.
 kbdir="$(mktemp -d)"
 kbcfg="$kbdir/.config/modern"
 mkdir -p "$kbcfg"
@@ -112,22 +113,25 @@ printf 'hl.monitor({ output = "" })\n' >"$kbdir/hyprland.lua"
 {
     printf 'set -euo pipefail\n'
     printf 'log() { printf "provision-iso: %%s\\n" "$*"; }\n'
-    # shellcheck disable=SC2016  # written literally into the generated script
+    # shellcheck source written literally into the generated script
     printf 'USERNAME="$(id -un)"\n'
     printf 'USER_HOME=%s\n' "$kbdir"
     printf 'MODERN_XORG_KB=%s/00-keyboard.conf\n' "$kbdir"
     printf 'MODERN_GREETD_LUA=%s/hyprland.lua\n' "$kbdir"
+    printf 'MODERN_SESSION_DIR=%s\n' "$kbdir"
+    printf 'SESSION_DIR=%s\n' "$kbdir"
     sed -n '/^XORG_KB=/,/^apply_keyboard_layout$/p' "$PROVISION"
 } >"$kbdir/run.sh"
 if bash "$kbdir/run.sh" >"$kbdir/out" 2>&1; then
     got_layout="$(jq -r '.input.kbLayout' "$kbcfg/config.json")"
     got_variant="$(jq -r '.input.kbVariant' "$kbcfg/config.json")"
     got_rate="$(jq -r '.input.repeatRate' "$kbcfg/config.json")"
+    got_snap="$(jq -r '.layout + "/" + .variant' "$kbdir/keyboard.json" 2>/dev/null || true)"
     if [ "$got_layout" = de ] && [ "$got_variant" = nodeadkeys ] && [ "$got_rate" = 25 ] \
-        && grep -F 'kb_layout = "de"' "$kbdir/hyprland.lua" >/dev/null; then
+        && [ "$got_snap" = "de/nodeadkeys" ]; then
         ok "Keyboard step layout reaches config.json and greetd"
     else
-        err "layout not propagated: config=$got_layout/$got_variant rate=$got_rate $(cat "$kbdir/out")"
+        err "layout not propagated: config=$got_layout/$got_variant rate=$got_rate snap=$got_snap $(cat "$kbdir/out")"
     fi
 else
     err "apply_keyboard_layout failed: $(cat "$kbdir/out")"
@@ -195,9 +199,8 @@ else
 fi
 rm -rf "$langdir"
 
-# The greeter has no hl.config counterpart: it picks its strings up from the
-# chrome.json wallpaper-sync.sh bakes out of language.ui, so provision has to
-# set the language before it runs.
+# The greeter picks its strings up from chrome.json (session-chrome-sync.sh
+# from language.ui), so provision has to set the language before wallpaper-sync.
 lang_line="$(grep -n '^apply_system_language$' "$PROVISION" | head -1 | cut -d: -f1)"
 sync_line="$(grep -n 'wallpaper-sync.sh' "$PROVISION" | head -1 | cut -d: -f1)"
 if [ -n "$lang_line" ] && [ -n "$sync_line" ] && [ "$lang_line" -lt "$sync_line" ]; then
@@ -206,26 +209,19 @@ else
     err "apply_system_language must run before wallpaper-sync.sh (greeter strings)"
 fi
 
-SYNC="$ROOT/scripts/wallpaper-sync.sh"
+CHROME="$ROOT/scripts/session-chrome-sync.sh"
 syncdir="$(mktemp -d)"
 mkdir -p "$syncdir/modern/translations" "$syncdir/shared"
 printf '{"session":{"unlock":"Unlock","password":"Password","user":"User"}}\n' \
     >"$syncdir/modern/translations/en.json"
 printf '{"session":{"unlock":"Entsperren","password":"Passwort","user":"Benutzer"}}\n' \
     >"$syncdir/modern/translations/de.json"
-{
-    printf 'set -euo pipefail\n'
-    printf 'warn() { printf "[wallpaper-sync] WARN %%s\\n" "$*" >&2; }\n'
-    printf 'XDG_CONFIG_HOME=%s\n' "$syncdir"
-    printf 'SHARED=%s/shared\n' "$syncdir"
-    sed -n '/^CFG=/,/^fi$/p' "$SYNC"
-} >"$syncdir/run.sh"
 sync_cfg() {
     printf '{"typography":{"ui":"Inter"},"design":{"cornerRounding":1,"transparency":0.85},"language":{"ui":"%s"}}\n' \
         "$1" >"$syncdir/modern/config.json"
 }
 sync_cfg de
-if bash "$syncdir/run.sh" >"$syncdir/out" 2>&1 \
+if env XDG_CONFIG_HOME="$syncdir" MODERN_SESSION_DIR="$syncdir/shared" bash "$CHROME" >"$syncdir/out" 2>&1 \
     && [ "$(jq -r '.strings.unlock' "$syncdir/shared/chrome.json")" = Entsperren ] \
     && [ "$(jq -r '.strings.user' "$syncdir/shared/chrome.json")" = Benutzer ]; then
     ok "greeter chrome.json follows the installed language"
@@ -233,7 +229,7 @@ else
     err "chrome.json did not pick up the German session strings: $(cat "$syncdir/out")"
 fi
 sync_cfg fr
-if bash "$syncdir/run.sh" >"$syncdir/out2" 2>&1 \
+if env XDG_CONFIG_HOME="$syncdir" MODERN_SESSION_DIR="$syncdir/shared" bash "$CHROME" >"$syncdir/out2" 2>&1 \
     && [ "$(jq -r '.strings.unlock' "$syncdir/shared/chrome.json")" = Unlock ]; then
     ok "greeter falls back to English for an unshipped language"
 else

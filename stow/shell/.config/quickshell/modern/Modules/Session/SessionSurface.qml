@@ -108,6 +108,7 @@ Item {
             MAvatar {
                 visible: root.mode !== "shutdown"
                 Layout.alignment: Qt.AlignHCenter
+                Layout.bottomMargin: Tokens.spacing.sm
                 size: Tokens.spacing.xxl * 2
                 source: User.faceUrl
                 Accessible.ignored: true
@@ -116,6 +117,8 @@ Item {
             MText {
                 visible: root.mode !== "shutdown"
                 Layout.alignment: Qt.AlignHCenter
+                Layout.bottomMargin: Tokens.spacing.xl
+                horizontalAlignment: Text.AlignHCenter
                 value: User.displayName
                 styleName: "titleMedium"
                 Accessible.role: Accessible.StaticText

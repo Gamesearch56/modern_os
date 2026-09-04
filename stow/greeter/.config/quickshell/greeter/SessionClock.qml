@@ -33,7 +33,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root._time
             color: root._c ? root._c.color.onSurface : "#E6E0E9"
-            font.family: root._c ? root._c.fontFamily : "Inter"
+            font.family: root._c ? root._c.fontFamily : "sans-serif"
             font.pixelSize: root._c ? root._c.typePx("displayLarge") : 57
             font.weight: root._c ? root._c.typeWeight("displayLarge") : 400
             Accessible.ignored: true
@@ -43,7 +43,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root._date
             color: root._c ? root._c.color.onSurfaceVariant : "#CAC4D0"
-            font.family: root._c ? root._c.fontFamily : "Inter"
+            font.family: root._c ? root._c.fontFamily : "sans-serif"
             font.pixelSize: root._c ? root._c.typePx("titleMedium") : 16
             font.weight: root._c ? root._c.typeWeight("titleMedium") : 500
             Accessible.ignored: true

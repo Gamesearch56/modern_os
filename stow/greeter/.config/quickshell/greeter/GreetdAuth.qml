@@ -12,7 +12,6 @@ Item {
     property string failText: ""
     property bool busy: false
     property bool launching: false
-    property int extraLongMs: 600
     property string username: ""
     property string password: ""
     property string rememberedUser: ""
@@ -27,7 +26,7 @@ Item {
         root.failText = "";
         if (!Greetd.available) {
             root.busy = false;
-            root.failText = "unavailable";
+            root.failText = "failed";
             return;
         }
         root.busy = true;
@@ -47,7 +46,23 @@ Item {
     }
 
     function _launchSession() {
-        Greetd.launch(["/usr/bin/start-hyprland"], ["XDG_SESSION_TYPE=wayland"], true);
+        Greetd.launch(["/usr/bin/start-hyprland", "--no-nixgl"], ["XDG_SESSION_TYPE=wayland"], true);
+    }
+
+    function _fail() {
+        root.busy = false;
+        root.launching = false;
+        root.failText = "failed";
+        root.password = "";
+        root._pendingPassword = "";
+    }
+
+    function _trace(info: var) {
+        try {
+            trace.setText(JSON.stringify(info) + "\n");
+        } catch (e) {
+            /* session dir may be read-only on a partial apply */
+        }
     }
 
     FileView {
@@ -65,44 +80,58 @@ Item {
         onLoadFailed: root.defaultReady = true
     }
 
-    Timer {
-        id: launchWait
-        interval: root.extraLongMs > 0 ? root.extraLongMs : 1
-        repeat: false
-        onTriggered: root._launchSession()
+    FileView {
+        id: trace
+        path: "/var/lib/modern/session/auth-trace.json"
+        printErrors: false
     }
 
     Connections {
         target: Greetd
 
         function onAuthMessage(message, error, responseRequired, echoResponse) {
-            if (responseRequired)
-                Greetd.respond(root._pendingPassword);
-            root._pendingPassword = "";
-            if (error && message)
-                root.failText = String(message);
+            root._trace({
+                event: "authMessage",
+                message: String(message || ""),
+                error: !!error,
+                responseRequired: !!responseRequired,
+                echoResponse: !!echoResponse,
+                pendingLen: String(root._pendingPassword || "").length,
+                available: Greetd.available
+            });
+            if (!responseRequired)
+                return;
+            const secret = root._pendingPassword;
+            Qt.callLater(() => Greetd.respond(secret));
         }
 
         function onAuthFailure(message) {
-            root.busy = false;
-            root.launching = false;
-            root.failText = String(message || "failed");
-            root.password = "";
+            root._trace({
+                event: "authFailure",
+                message: String(message || ""),
+                pendingLen: String(root._pendingPassword || "").length
+            });
+            root._fail();
         }
 
         function onReadyToLaunch() {
+            root._trace({ event: "readyToLaunch" });
+            root._pendingPassword = "";
             root.rememberUser();
             root.launching = true;
-            if (root.extraLongMs <= 0)
-                root._launchSession();
-            else
-                launchWait.restart();
+            root._launchSession();
+        }
+
+        function onLaunched() {
+            root._trace({ event: "launched" });
+            Quickshell.execDetached(["hyprctl", "dispatch", "exit"]);
         }
 
         function onError(err) {
-            root.busy = false;
-            root.launching = false;
-            root.failText = String(err || "");
+            root._trace({ event: "error", message: String(err || "") });
+            if (root.launching)
+                return;
+            root._fail();
         }
     }
 }

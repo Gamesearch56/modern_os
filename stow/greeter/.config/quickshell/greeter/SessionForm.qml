@@ -11,22 +11,14 @@ Item {
     property bool autoFocus: false
 
     readonly property var _c: root.chrome
-    readonly property var _rows: root.users ? (root.users.model || []) : []
     readonly property bool _busy: root.auth ? root.auth.busy : false
     readonly property bool _launching: root.auth ? root.auth.launching : false
     readonly property string _fail: root.auth ? String(root.auth.failText || "") : ""
     readonly property bool _capsOn: password.capsOn
     readonly property string _error: {
-        if (!root.auth || root._busy || root._launching)
+        if (!root.auth || root._busy || root._launching || !root._fail.length)
             return "";
-        if (!root.auth.socketReady || root._fail === "unavailable"
-            || root._fail.indexOf("Connection refused") >= 0)
-            return root._c ? root._c.t("session.unavailable") : "";
-        if (!root._fail.length)
-            return "";
-        if (root._fail === "failed")
-            return root._c ? root._c.t("session.loginFailed") : "";
-        return root._fail;
+        return root._c ? root._c.t("session.loginFailed") : "";
     }
 
     implicitWidth: root._c ? root._c.formWidth : 352
@@ -38,16 +30,28 @@ Item {
     }
 
     function closeMenus() {
-        userSelect.closeMenu();
+        identity.closeMenu();
     }
 
     function selectOpen(): bool {
-        return userSelect.menuOpen;
+        return identity.selectOpen();
     }
 
     function authenticate() {
+        if (!root.auth)
+            return;
+        const local = password.text;
+        const shared = String(root.auth.password || "");
+        const p = local.length ? local : shared;
+        root.auth.password = p;
+        root.auth.login();
+        password.text = "";
+    }
+
+    function _clearPassword() {
+        password.text = "";
         if (root.auth)
-            root.auth.login();
+            root.auth.password = "";
     }
 
     function _focusForm() {
@@ -56,50 +60,24 @@ Item {
         password.forceActiveFocus();
     }
 
-    function _pickUser() {
-        if (!root.auth)
-            return;
-        const rows = root._rows;
-        if (!rows.length)
-            return;
-        const current = String(root.auth.username || "").trim();
-        for (let i = 0; i < rows.length; i++) {
-            if (String(rows[i].value) === current)
-                return;
-        }
-        const fallback = String(root.defaultUser || "").trim();
-        for (let i = 0; i < rows.length; i++) {
-            if (String(rows[i].value) === fallback) {
-                root.auth.username = fallback;
-                return;
-            }
-        }
-        if (root.auth && root.auth.defaultReady === false)
-            return;
-        root.auth.username = String(rows[0].value || "");
-    }
-
     ColumnLayout {
         id: col
         anchors.left: parent.left
         anchors.right: parent.right
         spacing: root._c ? root._c.spaceLg : 16
+        clip: false
 
-        SessionSelect {
-            id: userSelect
+        SessionIdentity {
+            id: identity
             chrome: root._c
             Layout.fillWidth: true
-            model: root._rows
-            value: root.auth ? root.auth.username : ""
-            placeholder: root._c ? root._c.t("session.user") : ""
+            z: identity.menuOpen ? 40 : 0
+            auth: root.auth
+            users: root.users
+            defaultUser: root.defaultUser
+            autoFocus: root.autoFocus
             enabled: !root._busy && !root._launching
-            tabFocus: root.autoFocus
-            onSelected: (val) => {
-                if (root.auth)
-                    root.auth.username = String(val || "");
-                if (root.autoFocus)
-                    password.forceActiveFocus();
-            }
+            onFocusPassword: root._focusForm()
         }
 
         SessionField {
@@ -110,7 +88,6 @@ Item {
             echoMode: TextInput.Password
             enabled: !root._busy && !root._launching
             tabFocus: root.autoFocus
-            text: root.auth ? root.auth.password : ""
             onTextEdited: {
                 if (root.auth)
                     root.auth.password = text;
@@ -123,7 +100,7 @@ Item {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             color: root._c ? root._c.color.onSurfaceVariant : "#CAC4D0"
-            font.family: root._c ? root._c.fontFamily : "Inter"
+            font.family: root._c ? root._c.fontFamily : "sans-serif"
             font.pixelSize: root._c ? root._c.typePx("bodySmall") : 12
             text: root._c ? root._c.t("session.capsLock") : ""
             Accessible.role: Accessible.Alert
@@ -136,7 +113,7 @@ Item {
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
             color: root._c ? root._c.color.error : "#ffb4ab"
-            font.family: root._c ? root._c.fontFamily : "Inter"
+            font.family: root._c ? root._c.fontFamily : "sans-serif"
             font.pixelSize: root._c ? root._c.typePx("bodySmall") : 12
             text: root._error
             Accessible.role: Accessible.Alert
@@ -148,7 +125,7 @@ Item {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             color: root._c ? root._c.color.onSurfaceVariant : "#CAC4D0"
-            font.family: root._c ? root._c.fontFamily : "Inter"
+            font.family: root._c ? root._c.fontFamily : "sans-serif"
             font.pixelSize: root._c ? root._c.typePx("bodySmall") : 12
             text: root._c ? root._c.t("session.signingIn") : ""
             Accessible.role: Accessible.Alert
@@ -157,11 +134,13 @@ Item {
 
         SessionButton {
             Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: root._c ? root._c.spaceXl : 24
             chrome: root._c
             label: root._c ? root._c.t("session.signIn") : ""
             enabled: !root._busy && !root._launching
                 && root.auth && String(root.auth.username || "").length > 0
-                && String(root.auth.password || "").length > 0
+                && (password.text.length > 0
+                    || String(root.auth.password || "").length > 0)
             busy: root._busy || root._launching
             tabFocus: root.autoFocus
             onClicked: root.authenticate()
@@ -171,22 +150,27 @@ Item {
     Connections {
         target: root.auth
         function onBusyChanged() {
-            if (!root._busy && root.auth && root.auth.failText.length)
+            if (!root._busy && root.auth && root.auth.failText.length) {
+                root._clearPassword();
                 root.focusPassword();
+            }
+        }
+        function onPasswordChanged() {
+            const p = String(root.auth.password || "");
+            if (password.text !== p)
+                password.text = p;
         }
         function onUsernameChanged() {
-            root._pickUser();
+            root._clearPassword();
         }
         function onDefaultReadyChanged() {
-            root._pickUser();
             root._focusForm();
         }
     }
 
     Connections {
         target: root.users
-        function onModelChanged() {
-            root._pickUser();
+        function onAccountsChanged() {
             root._focusForm();
         }
     }
@@ -198,13 +182,6 @@ Item {
         onTriggered: root._focusForm()
     }
 
-    onDefaultUserChanged: {
-        root._pickUser();
-        root._focusForm();
-    }
-
-    Component.onCompleted: {
-        root._pickUser();
-        root._focusForm();
-    }
+    onDefaultUserChanged: root._focusForm()
+    Component.onCompleted: root._focusForm()
 }

@@ -1,5 +1,6 @@
 # Hyprland desktop core — every profile past 00-base installs this.
 hyprland                       # the compositor
+hyprland-guiutils               # hyprland-dialog; without it Hyprland shows a 15s login overlay
 mesa                           # OpenGL/EGL (Hyprland also pulls this; listed so m0 is explicit)
 greetd                         # login (enabled by install.sh on a real user home)
 xdg-user-dirs                  # Desktop/Pictures before wallpaper copy

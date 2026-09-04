@@ -52,9 +52,18 @@ Singleton {
 
     function _flush() {
         const body = root._render();
+        // Restart only when the file actually changes. A login-time
+        // pkill of every hypridle races the compositor and can lock
+        // the new session as soon as the bar appears.
         Quickshell.execDetached(["sh", "-c",
-            "mkdir -p \"$HOME/.config/hypr\" && cat > \"$HOME/.config/hypr/hypridle.conf\" <<'MODERN_HYPRIDLE'\n"
+            "mkdir -p \"$HOME/.config/hypr\"; "
+            + "conf=\"$HOME/.config/hypr/hypridle.conf\"; "
+            + "tmp=$(mktemp); cat > \"$tmp\" <<'MODERN_HYPRIDLE'\n"
             + body
-            + "\nMODERN_HYPRIDLE\npkill -u \"$USER\" -x hypridle 2>/dev/null; hypridle &"]);
+            + "\nMODERN_HYPRIDLE\n"
+            + "if [ -f \"$conf\" ] && cmp -s \"$tmp\" \"$conf\"; then "
+            + "rm -f \"$tmp\"; pgrep -x hypridle >/dev/null || hypridle &; exit 0; fi; "
+            + "mv -f \"$tmp\" \"$conf\"; "
+            + "pkill -x hypridle 2>/dev/null || true; hypridle &"]);
     }
 }

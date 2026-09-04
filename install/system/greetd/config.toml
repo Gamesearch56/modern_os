@@ -2,6 +2,11 @@
 [terminal]
 vt = 1
 
+[general]
+# Toolkit env comes from hyprland.lua. A login profile runs ~/.bashrc
+# (fastfetch) on the seat before Hyprland and adds seconds to the handoff.
+source_profile = false
+
 [default_session]
 # kiosk.sh re-exports GREETD_SOCK, then execs start-hyprland. The `--` is
 # load-bearing: start-hyprland only understands --path/--no-nixgl/--force-nixgl

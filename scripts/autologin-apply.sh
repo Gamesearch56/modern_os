@@ -70,13 +70,16 @@ write_greetd() {
         printf '%s\n' '[terminal]'
         printf '%s\n' 'vt = 1'
         printf '\n'
+        printf '%s\n' '[general]'
+        printf '%s\n' 'source_profile = false'
+        printf '\n'
         printf '%s\n' '[default_session]'
         printf '%s\n' 'command = "/etc/greetd/kiosk.sh"'
         printf '%s\n' 'user = "greeter"'
         if [ "$with_initial" = 1 ]; then
             printf '\n'
             printf '%s\n' '[initial_session]'
-            printf '%s\n' 'command = "start-hyprland"'
+            printf '%s\n' 'command = "start-hyprland --no-nixgl"'
             printf 'user = "%s"\n' "$user"
         fi
     } >"$tmp"

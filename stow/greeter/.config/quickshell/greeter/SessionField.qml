@@ -57,6 +57,11 @@ Item {
         root.capsOn = (t === upper) !== shift;
     }
 
+    HoverHandler {
+        enabled: root.enabled
+        cursorShape: Qt.IBeamCursor
+    }
+
     onActiveFocusChanged: {
         if (root.activeFocus && !input.activeFocus)
             input.forceActiveFocus();
@@ -83,13 +88,13 @@ Item {
         color: root._c ? root._c.color.onSurface : "#E6E0E9"
         selectionColor: root._c ? root._c.color.primary : "#D0BCFF"
         selectedTextColor: root._c ? root._c.color.onPrimary : "#381E72"
-        font.family: root._c ? root._c.fontFamily : "Inter"
+        font.family: root._c ? root._c.fontFamily : "sans-serif"
         font.pixelSize: root._c ? root._c.typePx("bodyLarge") : 16
         echoMode: root.echoMode
         enabled: root.enabled
         activeFocusOnTab: false
         selectByMouse: true
-        activeFocusOnPress: root.tabFocus
+        activeFocusOnPress: root.enabled
         clip: true
         onAccepted: root.accepted()
         onTextChanged: root.textEdited()
@@ -102,7 +107,7 @@ Item {
         verticalAlignment: Text.AlignVCenter
         text: root.placeholder
         color: root._c ? root._c.color.onSurfaceVariant : "#CAC4D0"
-        font.family: root._c ? root._c.fontFamily : "Inter"
+        font.family: root._c ? root._c.fontFamily : "sans-serif"
         font.pixelSize: root._c ? root._c.typePx("bodyLarge") : 16
         Accessible.ignored: true
     }
