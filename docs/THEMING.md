@@ -126,7 +126,11 @@ abort kitty (`kitty.conf` has fallback colors). matugen writes the live
 already-running apps) and the Vivaldi `Preferences` merge are out of
 scope of a running-app live-reload: CSS overlay + `01-chrome.css` are
 always rewritten; the native theme object is merged only while Vivaldi is
-**not** running (so we do not fight its Preferences writer). Qt apps do
+**not** running (so we do not fight its Preferences writer). If Vivaldi is
+open, merge is deferred until it exits, and `modern-launch` merges again
+on a cold start. Leftover `00-wallust.css` in `custom_css/` is deleted so
+it cannot override the active tab and URL-bar after `00-modern.css`.
+Qt apps do
 not reload QSS live — fully quit them after `theme-apply.sh` and reopen with
 `scripts/modern-launch` so `qt6ct` is in the environment even
 when Hyprland was only reloaded. qt6ct must **not** load `modern.qss`:
@@ -161,7 +165,8 @@ account). Upstream Phylax rebuilds that DropDown on every Relm4 watch,
 so the selected admin resets to the first wheel uid and cannot be
 changed; `scripts/build-phylax.sh` installs a patched binary to
 `~/.local/bin/phylax` and `phylax.service` prefers it over the AUR
-file. `theme-apply.sh` starts `phylax.service` if it is down and stops
+file. `install.sh` runs that build when `cargo` is present so destuser
+does not silently keep the AUR UI. `theme-apply.sh` starts `phylax.service` if it is down and stops
 `hyprpolkitagent` so only one agent is registered. Preview with
 `PHYLAX_DEMO=1 phylax` or `pkexec true`. The files these templates
 write are always correct on disk, so a restarted app always picks up

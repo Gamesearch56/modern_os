@@ -75,6 +75,16 @@ fi
 shift
 desktop="${desktop%.desktop}"
 
+case "$desktop" in
+    vivaldi-stable|vivaldi)
+        # Native theme lives in Preferences; Vivaldi rewrites that file on
+        # quit, so merge immediately before a cold start.
+        # shellcheck source=lib/vivaldi-prefs.sh
+        source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/vivaldi-prefs.sh"
+        merge_vivaldi_prefs "${XDG_CONFIG_HOME:-$HOME/.config}/modern/tokens.json" || true
+        ;;
+esac
+
 # Breeze reads ColorScheme=modern and rounds widgets; qt6ct QSS must stay
 # unloaded (Fusion would drop the Active palette). Other apps keep qt6ct-style.
 case "$desktop" in

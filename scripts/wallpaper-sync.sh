@@ -110,7 +110,16 @@ if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
     [ -f "$trans" ] || trans="$TRANSLATIONS/en.json"
     chrome_tmp="$(mktemp --suffix=.json -p "$SHARED" tmp.XXXXXX)"
     if jq -n \
-        --argjson cfg "$(jq '{typography,design:{cornerRounding,transparency},language}' "$CFG")" \
+        --argjson cfg "$(jq '{
+            typography,
+            design: {cornerRounding, transparency},
+            language,
+            motion: {
+                scale: (.motion.scale // 1),
+                overlay: (.motion.overlay // "fadeZoom"),
+                extraLong: 600
+            }
+        }' "$CFG")" \
         --argjson strings "$(jq '{
             unlock: (.session.unlock // "Unlock"),
             password: (.session.password // "Password"),
@@ -121,9 +130,11 @@ if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
             welcome: (.session.welcome // "Welcome"),
             loginFailed: (.session.loginFailed // "Could not sign in"),
             unavailable: (.session.unavailable // "Sign-in is not available"),
+            capsLock: (.session.capsLock // "Caps Lock is on"),
             restart: (.powerMenu.restart // "Restart"),
             poweroff: (.powerMenu.poweroff // "Shut down"),
-            power: (.powerMenu.title // "Power")
+            power: (.powerMenu.title // "Power"),
+            weekday: (.time.weekday // {})
         }' "$trans")" \
         '$cfg + {strings: $strings}' \
         > "$chrome_tmp"

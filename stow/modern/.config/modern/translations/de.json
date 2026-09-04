@@ -162,7 +162,8 @@
     "signIn": "Anmelden",
     "welcome": "Willkommen",
     "loginFailed": "Anmeldung fehlgeschlagen",
-    "unavailable": "Anmeldung nicht verfügbar"
+    "unavailable": "Anmeldung nicht verfügbar",
+    "capsLock": "Feststelltaste aktiv"
   },
   "alarm": {
     "title": "Wecker",

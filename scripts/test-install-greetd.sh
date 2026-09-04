@@ -32,6 +32,27 @@ else
     err "install.sh must write \$TARGET/.config/modern/repo"
 fi
 
+if grep -F 'scripts/build-phylax.sh' "$INSTALL" >/dev/null; then
+    ok "install.sh builds patched Phylax when cargo is present"
+else
+    err "install.sh must run scripts/build-phylax.sh so Confirm stays the session user"
+fi
+
+if grep -F 'capsLock' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
+    && grep -F 'weekday' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
+    && grep -F 'SessionUsers' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
+    && grep -F 'getent' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionUsers.qml" >/dev/null; then
+    ok "greeter snapshots i18n and lists users via getent"
+else
+    err "greeter must snapshot capsLock/weekday and list users via getent"
+fi
+
+if grep -F 'chmod 0664 /var/lib/modern/session/default-user' "$LIB" >/dev/null; then
+    ok "default-user is group-writable so the greeter can remember the last account"
+else
+    err "default-user must be 0664 so greeter can update the last user"
+fi
+
 if grep -F 'kiosk.sh' "$LIB" >/dev/null \
     && grep -F '50-modern-greeter.rules' "$LIB" >/dev/null \
     && grep -F 'GREETD_SOCK' "$ROOT/install/system/greetd/kiosk.sh" >/dev/null \

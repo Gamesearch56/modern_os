@@ -32,6 +32,22 @@ Item {
     readonly property real radiusMedium: 16 * root.cornerScale
     readonly property real radiusFull: 9999
     readonly property real overlayLock: 0.32
+    readonly property real closedScale: 0.92
+    readonly property real motionScale: {
+        const s = Number(root._chrome.motion?.scale);
+        if (s !== s || s < 0)
+            return 1;
+        return s;
+    }
+    readonly property int extraLongMs: {
+        const base = Number(root._chrome.motion?.extraLong);
+        const ms = (base > 0) ? base : 600;
+        return Math.round(ms * root.motionScale);
+    }
+    readonly property bool overlaysFade: root.motionScale !== 0 && String(root._chrome.motion?.overlay || "fadeZoom") !== "zoom"
+    readonly property bool overlaysZoom: root.motionScale !== 0 && String(root._chrome.motion?.overlay || "fadeZoom") !== "fade"
+    readonly property var easingDecel: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+    readonly property var easingAccel: [0.3, 0.0, 0.8, 0.15, 1.0, 1.0]
     readonly property real transparency: {
         const t = Number(root._chrome.design?.transparency);
         return (t > 0 && t <= 1) ? t : 0.85;
@@ -112,11 +128,18 @@ Item {
             "session.welcome": s.welcome || "Welcome",
             "session.loginFailed": s.loginFailed || "Could not sign in",
             "session.unavailable": s.unavailable || "Sign-in is not available",
+            "session.capsLock": s.capsLock || "Caps Lock is on",
             "powerMenu.restart": s.restart || "Restart",
             "powerMenu.poweroff": s.poweroff || "Shut down",
             "powerMenu.title": s.power || "Power"
         });
-        return table[key] || key;
+        if (table[key])
+            return table[key];
+        if (key.indexOf("time.weekday.") === 0) {
+            const day = key.slice("time.weekday.".length);
+            return String((s.weekday || ({}))[day] || "");
+        }
+        return key;
     }
 
     function typePx(name: string): int {
@@ -137,13 +160,31 @@ Item {
         return 400;
     }
 
+    function overlayOpacity(open: bool): real {
+        return open ? 1 : 0;
+    }
+
+    function overlayScale(open: bool): real {
+        if (!root.overlaysZoom)
+            return 1;
+        return open ? 1 : root.closedScale;
+    }
+
     function pad(n: int): string {
         return n < 10 ? "0" + n : "" + n;
+    }
+
+    function weekday(d: var): string {
+        if (!d)
+            return "";
+        const keys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+        return root.t("time.weekday." + keys[d.getDay()]);
     }
 
     function formatTime(d: var): string {
         if (!d)
             return "";
+        const sec = ":" + root.pad(d.getSeconds());
         const p = root.timeFormat;
         if (p === "hh:mm a") {
             let h = d.getHours();
@@ -151,9 +192,9 @@ Item {
             h = h % 12;
             if (h === 0)
                 h = 12;
-            return root.pad(h) + ":" + root.pad(d.getMinutes()) + (am ? " AM" : " PM");
+            return root.pad(h) + ":" + root.pad(d.getMinutes()) + sec + (am ? " AM" : " PM");
         }
-        return root.pad(d.getHours()) + ":" + root.pad(d.getMinutes());
+        return root.pad(d.getHours()) + ":" + root.pad(d.getMinutes()) + sec;
     }
 
     function formatDate(d: var): string {
@@ -168,5 +209,13 @@ Item {
         if (p === "MM/DD/YYYY")
             return mm + "/" + dd + "/" + yyyy;
         return dd + "." + mm + "." + yyyy;
+    }
+
+    function formatDateLine(d: var): string {
+        const w = root.weekday(d);
+        const date = root.formatDate(d);
+        if (w.length)
+            return w + "  " + date;
+        return date;
     }
 }

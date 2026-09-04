@@ -10,8 +10,11 @@ Item {
     property string placeholder: ""
     property int echoMode: TextInput.Normal
     property bool enabled: true
+    property bool tabFocus: true
+    property bool capsOn: false
 
     signal accepted()
+    signal textEdited()
 
     readonly property bool _focused: input.activeFocus
     readonly property var _c: root.chrome
@@ -19,8 +22,10 @@ Item {
     implicitHeight: root._c ? root._c.fieldHeight : 36
     implicitWidth: root._c ? root._c.formWidth : 384
     opacity: root.enabled ? 1 : 0.38
-    activeFocusOnTab: root.enabled
-    Accessible.role: Accessible.EditableText
+    activeFocusOnTab: root.enabled && root.tabFocus
+    Accessible.role: root.echoMode === TextInput.Password
+        ? Accessible.PasswordEdit
+        : Accessible.EditableText
     Accessible.name: root.placeholder
     Accessible.editable: true
     Accessible.onPressAction: {
@@ -34,6 +39,22 @@ Item {
 
     function selectAll() {
         input.selectAll();
+    }
+
+    function _noteCaps(event: var) {
+        if (event.key === Qt.Key_CapsLock) {
+            root.capsOn = !root.capsOn;
+            return;
+        }
+        const t = event.text || "";
+        if (t.length !== 1)
+            return;
+        const lower = t.toLowerCase();
+        const upper = t.toUpperCase();
+        if (lower === upper)
+            return;
+        const shift = !!(event.modifiers & Qt.ShiftModifier);
+        root.capsOn = (t === upper) !== shift;
     }
 
     onActiveFocusChanged: {
@@ -68,8 +89,11 @@ Item {
         enabled: root.enabled
         activeFocusOnTab: false
         selectByMouse: true
+        activeFocusOnPress: root.tabFocus
         clip: true
         onAccepted: root.accepted()
+        onTextChanged: root.textEdited()
+        Keys.onPressed: (event) => root._noteCaps(event)
     }
 
     Text {

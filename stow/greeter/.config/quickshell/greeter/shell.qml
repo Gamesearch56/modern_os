@@ -8,35 +8,46 @@ import QtQuick
 ShellRoot {
     id: root
 
-    // Leftmost output (then topmost). Names like DP-1 are machine-specific.
-    readonly property var loginScreen: {
-        void Quickshell.screens;
-        const raw = Quickshell.screens?.values ?? Quickshell.screens ?? [];
-        let best = null;
-        for (let i = 0; i < raw.length; i++) {
-            const s = raw[i];
-            if (!s)
-                continue;
-            if (!best
-                || (s.x ?? 0) < (best.x ?? 0)
-                || ((s.x ?? 0) === (best.x ?? 0) && (s.y ?? 0) < (best.y ?? 0)))
-                best = s;
-        }
-        return best;
-    }
-
     SessionChrome {
         id: chrome
     }
 
+    SessionUsers {
+        id: users
+    }
+
     GreetdAuth {
         id: auth
+        extraLongMs: chrome.extraLongMs
+    }
+
+    // Leftmost (then topmost). Connector names are machine-specific.
+    function isLeftmost(screen: var): bool {
+        const screens = Quickshell.screens;
+        if (!screen)
+            return false;
+        if (!screens || screens.length <= 1)
+            return true;
+        let best = null;
+        for (let i = 0; i < screens.length; i++) {
+            const s = screens[i];
+            if (!s)
+                continue;
+            if (!best || s.x < best.x || (s.x === best.x && s.y < best.y))
+                best = s;
+        }
+        if (!best)
+            return true;
+        if (best === screen)
+            return true;
+        return !!(best.name && screen.name && best.name === screen.name);
     }
 
     Variants {
         model: Quickshell.screens
 
         PanelWindow {
+            id: win
             required property var modelData
             screen: modelData
             color: "transparent"
@@ -45,19 +56,14 @@ ShellRoot {
             anchors.right: true
             anchors.bottom: true
             exclusionMode: ExclusionMode.Ignore
-            focusable: {
-                const p = root.loginScreen;
-                return !!(p && modelData && p.name === modelData.name);
-            }
+            focusable: true
 
             SessionSurface {
                 anchors.fill: parent
                 chrome: chrome
                 auth: auth
-                interactive: {
-                    const p = root.loginScreen;
-                    return !!(p && modelData && p.name === modelData.name);
-                }
+                users: users
+                interactive: root.isLeftmost(win.modelData)
             }
         }
     }

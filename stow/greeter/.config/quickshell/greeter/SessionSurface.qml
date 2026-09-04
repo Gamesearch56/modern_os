@@ -1,7 +1,6 @@
-// Login layout for greetd. Not the lock screen: clock lives in the
-// header, credentials sit on a card, power is a corner menu.
+// Login layout for greetd. Hero clock, compact credentials on frost,
+// power in the corner. Wallpaper stays while chrome fades into launch.
 import Quickshell
-import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
@@ -10,24 +9,19 @@ Item {
 
     property var chrome: null
     property var auth: null
+    property var users: null
     property bool interactive: false
-    property string _defaultUser: ""
+    property bool _entered: false
+
+    readonly property bool _shown: root._entered && !(root.auth && root.auth.launching)
+    readonly property var _c: root.chrome
 
     SystemClock {
         id: clock
-        precision: SystemClock.Minutes
+        precision: SystemClock.Seconds
     }
 
-    FileView {
-        path: "/var/lib/modern/session/default-user"
-        watchChanges: true
-        printErrors: false
-        onLoaded: {
-            const t = String(text() || "").trim();
-            if (t.length)
-                root._defaultUser = t;
-        }
-    }
+    Component.onCompleted: root._entered = true
 
     SessionFrost {
         anchors.fill: parent
@@ -36,84 +30,86 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        enabled: root.interactive && !(power.item && power.item.menuOpen)
+        enabled: !power.menuOpen && root.interactive
         onPressed: {
-            if (form.item)
-                form.item.focusPassword();
+            if (userSelectOpen())
+                form.closeMenus();
+            else
+                form.focusPassword();
         }
     }
 
-    ColumnLayout {
-        anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: root.chrome ? root.chrome.spaceXxl : 32
-        spacing: root.chrome ? root.chrome.spaceXs : 4
-
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: root.chrome ? root.chrome.formatTime(clock.date) : ""
-            color: root.chrome ? root.chrome.color.onSurface : "#E6E0E9"
-            font.family: root.chrome ? root.chrome.fontFamily : "Inter"
-            font.pixelSize: root.chrome ? root.chrome.typePx("headlineSmall") : 24
-            font.weight: 500
-            Accessible.role: Accessible.StaticText
-            Accessible.name: text
-        }
-
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: root.chrome ? root.chrome.formatDate(clock.date) : ""
-            color: root.chrome ? root.chrome.color.onSurfaceVariant : "#CAC4D0"
-            font.family: root.chrome ? root.chrome.fontFamily : "Inter"
-            font.pixelSize: root.chrome ? root.chrome.typePx("titleMedium") : 16
-            Accessible.role: Accessible.StaticText
-            Accessible.name: text
-        }
-    }
-
-    Component {
-        id: formComp
-        SessionForm {
-            chrome: root.chrome
-            auth: root.auth
-            defaultUser: root._defaultUser
-        }
-    }
-
-    Loader {
-        id: form
-        active: root.interactive
-        anchors.centerIn: parent
-        anchors.verticalCenterOffset: root.chrome ? root.chrome.spaceXl : 24
-        width: item ? item.implicitWidth : 0
-        height: item ? item.implicitHeight : 0
-        sourceComponent: formComp
-    }
-
-    MouseArea {
+    Item {
+        id: chrome
         anchors.fill: parent
-        visible: power.item ? power.item.menuOpen : false
-        onClicked: {
-            if (power.item)
-                power.item.close();
+        opacity: {
+            if (!root._c)
+                return root._shown ? 1 : 0;
+            return root._c.overlayOpacity(root._shown);
         }
-    }
+        scale: {
+            if (!root._c)
+                return 1;
+            return root._c.overlayScale(root._shown);
+        }
+        transformOrigin: Item.Center
 
-    Component {
-        id: powerComp
+        Behavior on opacity {
+            enabled: root._c ? root._c.overlaysFade : true
+            NumberAnimation {
+                duration: root._c ? root._c.extraLongMs : 600
+                easing.bezierCurve: root._shown
+                    ? (root._c ? root._c.easingDecel : [0.05, 0.7, 0.1, 1.0, 1.0, 1.0])
+                    : (root._c ? root._c.easingAccel : [0.3, 0.0, 0.8, 0.15, 1.0, 1.0])
+            }
+        }
+        Behavior on scale {
+            enabled: root._c ? root._c.overlaysZoom : true
+            NumberAnimation {
+                duration: root._c ? root._c.extraLongMs : 600
+                easing.bezierCurve: root._shown
+                    ? (root._c ? root._c.easingDecel : [0.05, 0.7, 0.1, 1.0, 1.0, 1.0])
+                    : (root._c ? root._c.easingAccel : [0.3, 0.0, 0.8, 0.15, 1.0, 1.0])
+            }
+        }
+
+        SessionClock {
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: root._c ? root._c.spaceXxl * 2 : 64
+            chrome: root._c
+            date: clock.date
+        }
+
+        SessionForm {
+            id: form
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: root._c ? root._c.spaceXl : 24
+            chrome: root._c
+            auth: root.auth
+            users: root.users
+            defaultUser: root.auth ? root.auth.rememberedUser : ""
+            autoFocus: root.interactive
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            visible: power.menuOpen
+            onClicked: power.close()
+        }
+
         SessionPower {
-            chrome: root.chrome
+            id: power
+            chrome: root._c
+            tabFocus: root.interactive
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            anchors.margins: root._c ? root._c.spaceLg : 16
         }
     }
 
-    Loader {
-        id: power
-        active: root.interactive
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.margins: root.chrome ? root.chrome.spaceLg : 16
-        width: item ? item.implicitWidth : 0
-        height: item ? item.implicitHeight : 0
-        sourceComponent: powerComp
+    function userSelectOpen() {
+        return form.selectOpen();
     }
 }

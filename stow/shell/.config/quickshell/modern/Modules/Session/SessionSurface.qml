@@ -26,7 +26,7 @@ Item {
 
     SystemClock {
         id: clock
-        precision: SystemClock.Minutes
+        precision: SystemClock.Seconds
     }
 
     property bool _entered: false
@@ -36,10 +36,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        onPressed: {
-            if (password.visible && !password.editor.activeFocus)
-                password.focusInput();
-        }
+        onPressed: form.focusPassword()
     }
 
     Rectangle {
@@ -95,104 +92,39 @@ Item {
             }
         }
 
+        SessionClock {
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: Tokens.spacing.xxl * 2
+            date: clock.date
+        }
+
         ColumnLayout {
-            anchors.centerIn: parent
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
             width: Math.min(parent.width - Tokens.spacing.xxl * 2, Tokens.spacing.xxl * 12)
-            spacing: Tokens.spacing.xl
+            spacing: Tokens.spacing.lg
 
             MAvatar {
+                visible: root.mode !== "shutdown"
                 Layout.alignment: Qt.AlignHCenter
-                size: Tokens.spacing.xxl * 3
+                size: Tokens.spacing.xxl * 2
                 source: User.faceUrl
+                Accessible.ignored: true
             }
 
             MText {
+                visible: root.mode !== "shutdown"
                 Layout.alignment: Qt.AlignHCenter
                 value: User.displayName
                 styleName: "titleMedium"
+                Accessible.role: Accessible.StaticText
+                Accessible.name: User.displayName
             }
 
-            MText {
-                Layout.alignment: Qt.AlignHCenter
-                value: DateTime.formatTime(clock.date, Config.language.timeFormat || "HH:mm", false)
-                styleName: "displayLarge"
-            }
-
-            MText {
-                Layout.alignment: Qt.AlignHCenter
-                value: DateTime.formatDate(clock.date, Config.language.dateFormat || "DD.MM.YYYY")
-                styleName: "titleMedium"
-                color: Colors.color.onSurfaceVariant
-            }
-
-            MTextField {
-                id: password
-                visible: root.mode !== "shutdown"
+            SessionUnlockForm {
+                id: form
                 Layout.fillWidth: true
-                focus: true
-                holdFocus: true
-                placeholderKey: "session.password"
-                echoMode: TextInput.Password
-                onTextEdited: Session.password = text
-                onAccepted: Session.authenticate(Session.password)
-                Component.onCompleted: {
-                    if (Session.password.length)
-                        text = Session.password;
-                    focusInput();
-                }
-
-                Connections {
-                    target: Session
-                    function onPasswordChanged() {
-                        if (password.text !== Session.password)
-                            password.text = Session.password;
-                    }
-                }
-            }
-
-            MText {
-                visible: Session.lastError.length > 0
-                Layout.alignment: Qt.AlignHCenter
-                key: "session.authFailed"
-                styleName: "bodySmall"
-                color: Colors.color.error
-                Accessible.role: Accessible.Alert
-                Accessible.name: I18n.t("session.authFailed")
-            }
-
-            MButton {
-                visible: root.mode !== "shutdown"
-                Layout.alignment: Qt.AlignHCenter
-                kind: "filled"
-                key: "session.unlock"
-                tabFocus: false
-                enabled: Session.password.length > 0
-                onClicked: Session.authenticate(Session.password)
-            }
-
-            RowLayout {
-                visible: root.mode === "shutdown"
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Tokens.spacing.md
-
-                MButton {
-                    kind: "text"
-                    key: "powerMenu.cancel"
-                    onClicked: Session.unlock()
-                }
-
-                MButton {
-                    kind: "filled"
-                    key: "powerMenu." + (Session.pendingAction === "reboot" ? "restart" : (Session.pendingAction || "poweroff"))
-                    onClicked: {
-                        if (Session.pendingAction === "reboot")
-                            Power.reboot();
-                        else if (Session.pendingAction === "logout")
-                            Power.logout();
-                        else
-                            Power.poweroff();
-                    }
-                }
             }
         }
     }

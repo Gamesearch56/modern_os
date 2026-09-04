@@ -7,6 +7,7 @@ Item {
 
     property var chrome: null
     property bool menuOpen: false
+    property bool tabFocus: true
 
     readonly property var _c: root.chrome
     readonly property real _btn: root._c ? root._c.spaceXxl + root._c.spaceXs : 36
@@ -27,9 +28,22 @@ Item {
             Quickshell.execDetached(["loginctl", "poweroff"]);
     }
 
+    activeFocusOnTab: root.tabFocus
     Accessible.role: Accessible.Button
     Accessible.name: root._c ? root._c.t("powerMenu.title") : ""
     Accessible.onPressAction: root.menuOpen = !root.menuOpen
+
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Escape && root.menuOpen) {
+            root.menuOpen = false;
+            event.accepted = true;
+            return;
+        }
+        if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            root.menuOpen = !root.menuOpen;
+            event.accepted = true;
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -61,9 +75,9 @@ Item {
 
     Rectangle {
         visible: root.menuOpen
-        anchors.top: parent.bottom
+        anchors.bottom: parent.top
         anchors.right: parent.right
-        anchors.topMargin: root._c ? root._c.spaceSm : 8
+        anchors.bottomMargin: root._c ? root._c.spaceSm : 8
         implicitWidth: Math.max(root._c ? root._c.spaceXxl * 7 : 224, menuCol.implicitWidth)
         implicitHeight: menuCol.implicitHeight
         radius: root._c ? root._c.radiusSmall : 8

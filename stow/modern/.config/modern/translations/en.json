@@ -162,7 +162,8 @@
     "signIn": "Sign in",
     "welcome": "Welcome",
     "loginFailed": "Could not sign in",
-    "unavailable": "Sign-in is not available"
+    "unavailable": "Sign-in is not available",
+    "capsLock": "Caps Lock is on"
   },
   "alarm": {
     "title": "Alarm",

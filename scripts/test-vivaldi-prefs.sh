@@ -25,7 +25,7 @@ export LANG=C LC_ALL=C
 unset XDG_CONFIG_HOME
 mkdir -p "$HOME/.config/modern"
 cat >"$HOME/.config/modern/tokens.json" <<'EOF'
-{"color":{"primary":"#d0bcff","surface":"#141218","onSurface":"#e6e0e9","primaryContainer":"#4f378b"}}
+{"color":{"primary":"#d0bcff","surface":"#141218","onSurface":"#e6e0e9","onPrimary":"#381e72","primaryContainer":"#4f378b"}}
 EOF
 
 # shellcheck source=lib/vivaldi-prefs.sh
@@ -43,11 +43,12 @@ css="$HOME/.config/vivaldi/custom_css"
 
 if [ -f "$prefs" ] \
     && [ "$(jq -r '.vivaldi.themes.current' "$prefs")" = modern ] \
+    && [ "$(jq -r '.vivaldi.themes.user[] | select(.id=="modern") | .colorAccentBg' "$prefs")" = "#d0bcff" ] \
     && [ "$(jq -r '.vivaldi.customUiMods' "$prefs")" = true ] \
     && [ "$(jq -r '.vivaldi.appearance.css_ui_mods_directory' "$prefs")" = "$css" ] \
     && [ "$(jq -r '.vivaldi.appearance.disable_title_bar' "$prefs")" = true ] \
     && [ "$(jq -r '.vivaldi.theme.schedule.o_s.dark' "$prefs")" = modern ]; then
-    ok "theme id, CSS path, and title-bar flag are set"
+    ok "theme id, accent, CSS path, and title-bar flag are set"
 else
     err "Preferences missing modern theme or CSS mods path"
 fi
@@ -72,6 +73,15 @@ if jq -e '.vivaldi.vivaldi_account or .vivaldi.bookmarks or .account_id' "$prefs
     err "seeded Preferences contains account or bookmark keys"
 else
     ok "seed has no account or bookmark keys"
+fi
+
+mkdir -p "$css"
+printf '/* leftover */\n' >"$css/00-wallust.css"
+merge_vivaldi_prefs "$HOME/.config/modern/tokens.json" || true
+if [ ! -f "$css/00-wallust.css" ]; then
+    ok "removes leftover 00-wallust.css"
+else
+    err "00-wallust.css must not stay in custom_css"
 fi
 
 [ "$FAIL" -eq 0 ]

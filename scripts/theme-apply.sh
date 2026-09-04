@@ -140,12 +140,18 @@ apply_color_scheme() {
 }
 
 # Native theme + CSS-mods path. Creates Preferences on a fresh home
-# (install --no-reload). Skips an existing file while Vivaldi is open.
+# (install --no-reload). Skips an existing file while Vivaldi is open
+# and reapplies on quit so a restart picks up the new palette.
 merge_vivaldi_theme() {
     # shellcheck source=lib/vivaldi-prefs.sh
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/vivaldi-prefs.sh"
-    merge_vivaldi_prefs "$MODERN_DIR/tokens.json" \
-        && log "merged Vivaldi native theme (id=modern)"
+    local st=0
+    merge_vivaldi_prefs "$MODERN_DIR/tokens.json" || st=$?
+    case "$st" in
+        0) log "merged Vivaldi native theme (id=modern)" ;;
+        2) log "Vivaldi is running — native theme applies on quit" ;;
+        *) warn "Vivaldi native theme merge skipped" ;;
+    esac
     return 0
 }
 
@@ -228,6 +234,7 @@ patch_toolkit_chrome() {
     lg="$(awk -v r="$radius" 'BEGIN { printf "%.0f", 28*r }')"
     local css_dir="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi/custom_css"
     mkdir -p "$css_dir"
+    rm -f "$css_dir/00-wallust.css" "$css_dir/wallust.css"
     local wp_on
     wp_on="$(jq -r '.design.bootScreen.wallpaperOnVivaldi // false' <<<"$cfg")"
     local wp_url="none"

@@ -12,6 +12,12 @@ unless `/etc/greetd/kiosk.sh` and `/etc/greetd/hyprland.lua` forward it
 then sign out — do not start `qs` by hand from a TTY; that process has
 no socket.
 
+If tty1 is a wallpaper-only greeter with no form, switch VT:
+`Ctrl+Alt+F3`, text-login, then either `start-hyprland` (session on that
+TTY) or copy `stow/greeter` into `/var/lib/greeter` and
+`sudo systemctl restart greetd`, then `Ctrl+Alt+F1`. Stopping greetd
+lets `getty@tty1` come back (`Conflicts=`).
+
 ## Isolation / wrong account
 
 Symptoms: `~/.config` on an account you did not pass as `--target`
@@ -321,7 +327,10 @@ the focused one.
 seeds `Preferences` (`themes.current=modern`, CSS mods directory) plus
 `Local State` (`vivaldi-css-mods@1`). Re-run it after quitting the
 browser if the first launch created a stock profile. Chrome colors come
-from `00-modern.css`.
+from `00-modern.css`. A leftover `custom_css/00-wallust.css` pins old
+tab and URL-bar colors — `theme-apply.sh` deletes it. Fully quit Vivaldi
+once after a wallpaper change so the native `modern` theme object can
+be rewritten.
 
 ## German layout: Super+Shift+1 does nothing
 

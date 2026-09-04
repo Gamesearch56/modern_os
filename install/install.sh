@@ -303,6 +303,15 @@ run "$REPO_ROOT/scripts/mime-defaults.sh" \
 run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
     || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
 
+# Patched Phylax Confirms as $USER. Without it, phylax.service falls
+# back to the AUR binary and the identity dropdown returns.
+if command -v cargo >/dev/null 2>&1; then
+    run "${theme_env[@]}" "$REPO_ROOT/scripts/build-phylax.sh" \
+        || log_warn "build-phylax.sh failed — AUR phylax will show the identity dropdown until it succeeds"
+else
+    log_warn "cargo missing — skip patched Phylax (scripts/build-phylax.sh)"
+fi
+
 # kitty.conf globincludes colors.conf; fallbacks in kitty.conf keep
 # SUPER+T working until theme-apply writes the live file.
 

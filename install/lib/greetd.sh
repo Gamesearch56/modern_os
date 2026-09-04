@@ -168,7 +168,7 @@ greetd_apply() {
     else
         printf '%s\n' "$username" | greetd_as_root tee /var/lib/modern/session/default-user >/dev/null
         greetd_as_root chown root:modern /var/lib/modern/session/default-user || true
-        greetd_as_root chmod 0644 /var/lib/modern/session/default-user
+        greetd_as_root chmod 0664 /var/lib/modern/session/default-user
     fi
 
     for dropin in \

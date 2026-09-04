@@ -9,6 +9,7 @@ Item {
     property string label: ""
     property bool enabled: true
     property bool busy: false
+    property bool tabFocus: true
 
     signal clicked()
 
@@ -19,7 +20,7 @@ Item {
     implicitWidth: Math.max(root._c ? root._c.spaceXxl * 2 : 64, lab.implicitWidth + (root._c ? root._c.spaceLg * 2 : 32))
     implicitHeight: root._c ? root._c.fieldHeight : 36
     opacity: root._canPress ? 1 : 0.38
-    activeFocusOnTab: root._canPress
+    activeFocusOnTab: root._canPress && root.tabFocus
     Accessible.role: Accessible.Button
     Accessible.name: root.label
     Accessible.onPressAction: {
