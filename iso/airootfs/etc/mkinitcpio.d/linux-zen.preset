@@ -1,0 +1,9 @@
+# Live ISO only — PRESETS=('archiso') so mkarchiso does not also build
+# default+fallback images. calamares-late strip restores the package
+# preset before the installed bootloader job runs mkinitcpio.
+PRESETS=('archiso')
+
+ALL_kver='/boot/vmlinuz-linux-zen'
+archiso_config='/etc/mkinitcpio.conf.d/archiso.conf'
+
+archiso_image="/boot/initramfs-linux-zen.img"

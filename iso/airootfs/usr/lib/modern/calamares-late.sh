@@ -430,6 +430,7 @@ as_user() {
 LIVE_ONLY_PATHS=(
     etc/mkinitcpio.conf.d/archiso.conf
     etc/mkinitcpio.d/linux.preset
+    etc/mkinitcpio.d/linux-zen.preset
     etc/systemd/system/getty@tty1.service
     etc/systemd/system/getty@tty1.service.d/autologin.conf
     etc/systemd/system/choose-mirror.service
@@ -464,10 +465,20 @@ LIVE_ONLY_PATHS=(
 
 strip_live() {
     local root="${MODERN_LATE_STRIP_ROOT:-}"
-    local p
+    local p dest
     for p in "${LIVE_ONLY_PATHS[@]}"; do
         rm -f "$root/$p"
     done
+    dest="$root/etc/mkinitcpio.d/linux-zen.preset"
+    install -d -m 0755 "$(dirname "$dest")"
+    cat >"$dest" <<'EOF'
+# Restored after the live archiso preset is stripped.
+ALL_config="/etc/mkinitcpio.conf"
+PRESETS=('default' 'fallback')
+default_image="/boot/initramfs-linux-zen.img"
+fallback_image="/boot/initramfs-linux-zen-fallback.img"
+fallback_options="-S autodetect"
+EOF
     rm -rf "$root/etc/calamares"
     if [ -z "${MODERN_LATE_TEST:-}" ] && id liveuser >/dev/null 2>&1; then
         userdel -r liveuser >/dev/null 2>&1 || true

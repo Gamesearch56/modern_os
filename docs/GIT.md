@@ -147,13 +147,15 @@ airootfs layout, then **replaces** `packages.x86_64` with
 `rsync` and `python` — Calamares `unpackfs` is a Python module that
 copies `airootfs.sfs` with `rsync`, and the AUR package declares
 neither. Exit 127 is a missing binary. Rescue tools (Clonezilla, TestDisk,
-`archinstall`, extra filesystems) stay off the squashfs. `linux-zen-headers` stay off the ISO; `install.sh` /
+`archinstall`, extra filesystems) stay off the squashfs. Stock `linux`
+stays off so the image fits GitHub's 2 GiB release-asset cap; live boot
+is `linux-zen` (`iso-build.sh` rewrites releng `vmlinuz-linux` paths).
+`linux-zen-headers` stay off the ISO; `install.sh` /
 `00-base.txt` still have them for DKMS. Firefox stays (live kiosk). AUR
 builds use `MAKEFLAGS=-j$(nproc)` and cache `.pkg.tar.*` beside
 `iso/out/` (gitignored). The AUR list ships `yay-bin`.
 
-Optional later, after a QEMU boot: live-boot `linux-zen` and drop stock
-`linux`. Do not switch squashfs to zstd — it is usually bigger.
+Do not switch squashfs to zstd — it is usually bigger.
 
 Do **not** take Hyprland, Quickshell, PipeWire, `yay-bin`,
 `matugen-bin`, or `bibata-cursor-theme-bin` off the squashfs. That is
