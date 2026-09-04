@@ -228,6 +228,10 @@
     "shellError": "Shell error",
     "shellWarning": "Shell warning"
   },
+  "notes": {
+    "title": "Notes",
+    "empty": "No notes"
+  },
   "quickSettings": {
     "title": "Quick settings",
     "brightness": "Brightness",

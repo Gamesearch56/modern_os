@@ -137,7 +137,7 @@ fi
 section "theme packages (system-wide; missing icons look like a broken texture)"
 if command -v pacman >/dev/null 2>&1; then
     for pkg in papirus-icon-theme bibata-cursor-theme qt6-svg inter-font ttf-jetbrains-mono-nerd; do
-        if pacman -Q "$pkg" >/dev/null 2>&1; then
+        if pacman -Qq "$pkg" >/dev/null 2>&1 || pacman -Qq "${pkg}-bin" >/dev/null 2>&1; then
             ok "$pkg installed"
         else
             warn "$pkg not installed (install.sh --profile m0, or pacman -S $pkg)"

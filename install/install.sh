@@ -198,7 +198,7 @@ for pkg in "${stow_packages[@]}"; do
     stow_package "$pkg" "$TARGET"
 done
 
-# devuser's live config.json starts as a copy of the tracked default,
+# The target user's live config.json starts as a copy of the tracked default,
 # never overwritten on re-run.
 CONFIG_DIR="$TARGET/.config/modern"
 if [ ! -f "$CONFIG_DIR/config.json" ] && [ -f "$CONFIG_DIR/config.default.json" ]; then

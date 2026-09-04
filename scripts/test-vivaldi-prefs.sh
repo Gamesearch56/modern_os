@@ -59,11 +59,13 @@ else
     err "Local State missing vivaldi-css-mods@1"
 fi
 
-if grep -F '/home/devuser/' "$prefs" >/dev/null 2>&1 \
-    || grep -F '/home/devuser/' "$state" >/dev/null 2>&1; then
-    err "prefs hardcoded a live username"
+foreign=$( { grep -oE '/home/[^/"]+' "$prefs" "$state" 2>/dev/null || true; } | grep -vF "$HOME" || true )
+if [ -n "$foreign" ]; then
+    err "prefs hardcoded a path outside throwaway HOME: $foreign"
+elif grep -F "$HOME" "$prefs" >/dev/null; then
+    ok "paths follow throwaway HOME"
 else
-    ok "paths follow HOME, not a live username"
+    err "prefs do not contain throwaway HOME"
 fi
 
 if jq -e '.vivaldi.vivaldi_account or .vivaldi.bookmarks or .account_id' "$prefs" >/dev/null 2>&1; then

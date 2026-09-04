@@ -12,10 +12,9 @@ changed; unexpected symlinks.
 scripts/check-isolation.sh
 ```
 
-See `docs/ISOLATION.md` and `README.md` (second TTY). Stow as `devuser`,
-or with `--target /home/devuser`. If `MODERN_PROTECT_HOME` is set,
-`install.sh` refuses that path unless `--allow-live-home` is passed.
-Existing-account install: `docs/CUTOVER.md`.
+See `docs/ISOLATION.md`. Stow into `$HOME` or `--target`. If
+`MODERN_PROTECT_HOME` is set, `install.sh` refuses that path unless
+`--allow-live-home` is passed. Existing-account install: `docs/CUTOVER.md`.
 
 To return to another session without reboot: `Ctrl+Alt+F1` or `F2`.
 Do not enable greetd while testing. Shell `Logger.error` toasts appear
@@ -26,7 +25,7 @@ only on the session that is running Quickshell.
 `useradd -m` copies `/etc/skel/.bashrc` into the new home. GNU Stow
 refuses to replace that regular file. `install/lib/stow.sh` moves those
 files to `$TARGET/.local/state/modern/stow-backups/` before stowing.
-Re-run `./install/install.sh --profile full` as `devuser` (idempotent).
+Re-run `./install/install.sh --profile full` as the target user (idempotent).
 
 If a re-run logged hundreds of "backing up" lines under `.config/hypr`
 or `quickshell`, an older walker treated Stow folded directories as
@@ -64,10 +63,10 @@ another TTY (`docs/BOOT.md`):
 ```bash
 loginctl list-sessions
 # optional, from another account:
-# loginctl terminate-session <devuser-tty3-id>
+# loginctl terminate-session <id>
 ```
 
-On a text login as `devuser` (`Ctrl+Alt+F4`):
+On a text login as the same user (`Ctrl+Alt+F4`):
 
 ```bash
 pgrep -a qs; pgrep -a quickshell; pgrep -a Hyprland
@@ -95,9 +94,9 @@ from kitty after the bar is up.
   from another TTY. If the bar is up: `hyprctl dispatch "hl.dsp.exit()"`.
   You return to the TTY prompt; `exit` or Ctrl+D logs out. Switch back
   with `Ctrl+Alt+F1` or `F2`.
-- Extra `devuser` sessions: `loginctl list-sessions`, then
-  `loginctl terminate-session <id>` from another account, or as
-  `devuser` on a TTY: `pkill -x Hyprland`.
+- Extra sessions for the same user: `loginctl list-sessions`, then
+  `loginctl terminate-session <id>` from another account, or on a TTY:
+  `pkill -x Hyprland`.
 - After restow, autostart runs `qs -c modern` as a child of *this*
   compositor and **stops** `modern-shell.service` so a leftover TTY
   cannot steal `WAYLAND_DISPLAY`. Leave that user unit disabled on

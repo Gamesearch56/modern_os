@@ -10,7 +10,8 @@ what is shared with an unprivileged greeter. Plymouth and greetd are
 Friend install (after Calamares late):
   greetd (greeter kiosk)  →  start-hyprland  →  Hyprland (stow/hypr)
 Getty / extra-user testing (untouched greetd):
-  TTY: start-hyprland     →  Hyprland (stow/hypr)
+  TTY login → .bash_profile on tty1 execs start-hyprland
+                              →  Hyprland (stow/hypr)
                               ├─ autostart.lua
                               │     exec qs -c modern  (compositor child)
                               ├─ modern-shell.service  (optional UWSM watchdog)
@@ -22,9 +23,9 @@ by `provision-iso.sh` in a Calamares chroot. Enabling greetd on a getty
 machine would replace the existing login path.
 
 Autostart in Hyprland already starts Quickshell as a child of this
-compositor. Enable `modern-shell.service` on the **target** user
-(`devuser` while testing; the live account after `docs/CUTOVER.md`).
-Do not enable it on an account that should keep a different session.
+compositor. Enable `modern-shell.service` on the **target** user if you
+want a systemd watchdog. Do not enable it on an account that should keep
+a different session.
 
 From a TTY, always run **`start-hyprland`**, not the `Hyprland` binary.
 Hyprland ≥ 0.53’s wrapper sets up crash recovery and the user session;
@@ -125,9 +126,9 @@ terminal, try `SUPER+RETURN` (emergency `/usr/bin/kitty`). Do **not**
 wait only on `SUPER+T` if `modern-launch` is broken. From the
 another TTY:
 
-1. `loginctl list-sessions` — note the `devuser` / `tty3` id
+1. `loginctl list-sessions` — note the session id for this user
 2. Optional: `loginctl terminate-session <id>`
-3. `Ctrl+Alt+F4`, text login as `devuser` (not Hyprland)
+3. `Ctrl+Alt+F4`, text login as the same user (not Hyprland)
 
 Then:
 

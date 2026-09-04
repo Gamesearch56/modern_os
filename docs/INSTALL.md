@@ -16,13 +16,13 @@ only and refuses when `MODERN_PROTECT_HOME` is set. Git / release tags:
 - Optional: set `MODERN_PROTECT_HOME` so `install.sh` refuses that path
   unless you pass `--allow-live-home`
 
-## Extra-user testing (`devuser`)
+## Extra-user testing (optional)
 
 ```bash
 scripts/check-isolation.sh
-sudo install/system/create-devuser.sh
+sudo install/system/create-devuser.sh   # default username: devuser
 
-# as devuser (sudo -iu devuser)
+# as that user
 git clone <repo-url> ~/modern_dotfile
 cd ~/modern_dotfile
 ./install/install.sh --profile m0 --dry-run
@@ -32,13 +32,13 @@ cd ~/modern_dotfile
 Start the session on **another TTY** (`Ctrl+Alt+F3`) with
 `start-hyprland`. Do not run the `Hyprland` binary — Hyprland ≥ 0.53
 needs the wrapper or the bar never appears. Return with `Ctrl+Alt+F1`
-or `F2`.
+or `F2`. Existing-account install: `docs/CUTOVER.md`.
 
 ## `install.sh` (existing user)
 
 ```bash
 ./install/install.sh --profile m0 --dry-run
-./install/install.sh --profile m0 --target /home/devuser
+./install/install.sh --profile m0 --target /home/otheruser
 ```
 
 Profiles: `m0` (bar/launcher/session), `dev` (+ Cursor/toolchain),
@@ -61,18 +61,19 @@ English UI, `kbLayout` `us`).
 
 `--allow-live-home` disables the `MODERN_PROTECT_HOME` guard. Use it
 only when that account *is* the one you want to own, following
-`docs/CUTOVER.md`. Not for `devuser` testing.
+`docs/CUTOVER.md`. Not for extra-user testing.
 
 Installer log: `install/install.log` (gitignored) and
 `journalctl -t modern-install`.
 
-## Create `devuser` (gated)
+## Create an extra test user (gated)
 
 ```bash
-sudo install/system/create-devuser.sh
+sudo install/system/create-devuser.sh          # default: devuser
+sudo install/system/create-devuser.sh tester   # any unused name
 ```
 
-This does **not** change autologin. Rollback: `sudo userdel -r devuser`.
+This does **not** change autologin. Rollback: `sudo userdel -r <username>`.
 
 ## Bare metal (`bootstrap.sh`)
 
@@ -355,7 +356,8 @@ cannot one-shot ffmpeg+pipewire-jack, rewrites pin `matugen` /
 packages already on the squashfs, `NoExtract`s `resolv.conf` so a
 `systemd` upgrade cannot point DNS at an empty `/run`, then
 `install.sh --profile m0 --yes` (`--needed` skips native packages already
-unpacked; `install_aur` skips names `pacman -Q` already has, and
+unpacked; `install_aur` skips names `pacman -Q` already has (and
+skips `foo-bin` when source `foo` is installed — they conflict), and
 `MODERN_SKIP_AUR=1` never calls `yay` — `yay -S --needed` still
 queries `aur.archlinux.org` and dies when chroot DNS is gone), then `provision-iso.sh`.
 A failed `install.sh` reprints its last 40 lines (and `install/install.log`)
@@ -466,6 +468,5 @@ scripts/check-isolation.sh
 scripts/doctor.sh
 ```
 
-If `MODERN_PROTECT_HOME` is your `$HOME`, do **not** run
-`./install/install.sh --dry-run --profile m0` without `--target` — the
-live-home guard will fail, which is the point.
+If `MODERN_PROTECT_HOME` is your `$HOME`, pass `--allow-live-home` (or
+`--target` elsewhere). See `docs/CUTOVER.md`.

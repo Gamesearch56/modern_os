@@ -100,9 +100,9 @@ else
 fi
 
 if id devuser >/dev/null 2>&1; then
-    ok "devuser account exists (optional test user; not a leak)"
+    ok "optional extra-user devuser exists (not a leak)"
 else
-    ok "devuser account not created yet (optional: sudo install/system/create-devuser.sh)"
+    ok "optional extra-user devuser not present"
 fi
 
 # 3. home mtime is advisory when a protected path is set — a live

@@ -5,10 +5,11 @@
 polkit, mkinitcpio, or creates accounts lives under `install/system/`
 and is applied only by an explicit, separately-invoked command.
 
-Optional extra-user testing: `sudo install/system/create-devuser.sh`,
-then clone and install as that user. Session switch: log in on another
-TTY and run `start-hyprland`. Install flags: `docs/INSTALL.md`. Putting
-this desktop on an existing account: `docs/CUTOVER.md`.
+Optional extra-user testing: `sudo install/system/create-devuser.sh
+[username]` (default name `devuser`), then clone and install as that
+user. Session switch: log in on another TTY and run `start-hyprland`.
+Install flags: `docs/INSTALL.md`. Putting this desktop on an existing
+account: `docs/CUTOVER.md`.
 
 ## Safe by construction
 
@@ -19,11 +20,11 @@ this desktop on an existing account: `docs/CUTOVER.md`.
   `--allow-live-home` only when that home *is* the intended target.
 - Runtime state lives under the target user's home or, after gated
   tmpfiles, `/var/lib/modern/`.
-- Creating a `devuser` account is the intended extra-user test path. It
-  does not change autologin, greetd, or `/etc`. Isolation check treats
-  that account as OK, not as a leak.
+- An extra test account is optional. Creating one does not change
+  autologin, greetd, or `/etc`. Isolation check treats that account as
+  OK, not as a leak.
 
-## Switching sessions without replacing another user
+## Extra-user testing (optional)
 
 1. Leave the other graphical session running.
 2. `Ctrl+Alt+F3`, log in as the test user, run `start-hyprland`
@@ -36,7 +37,7 @@ this desktop on an existing account: `docs/CUTOVER.md`.
 
 A reboot still uses whatever login path was already configured as long
 as greetd was never enabled from this repo. Removing the test account
-(`sudo userdel -r devuser`) deletes `/home/devuser` only.
+(`sudo userdel -r <username>`) deletes that home only.
 
 ## Gated: system-wide changes
 
@@ -52,7 +53,7 @@ comment for the exact command.
 | Plymouth theme + `mkinitcpio` hooks | Rewrites the initramfs. A bad rebuild can leave the machine unable to boot. | `sudo mkinitcpio -P` after reverting `/etc/mkinitcpio.conf`; the previous initramfs stays as a fallback boot entry — never delete it. |
 | `sysctl.d`, `polkit` actions, `tmpfiles.d`, udev rules, gaming perf sysctls | System-wide kernel/session policy. | Remove the dropped-in file under `/etc/{sysctl.d,polkit-1,tmpfiles.d,udev/rules.d}/modern-*` and reload (`sysctl --system`, `systemctl restart polkit`, `systemd-tmpfiles --create`). |
 | `modern-usersd` + its polkit action | Privileged account/group mutation. | Remove `/usr/local/bin/modern-usersd` and the `.policy` file; nothing else depends on it. |
-| Devuser creation (`install/system/create-devuser.sh`) | Creates a system account. | `sudo userdel -r devuser` if you want to remove it entirely. Autologin is unchanged. |
+| Extra-user creation (`install/system/create-devuser.sh`) | Creates a system account. | `sudo userdel -r <username>` if you want to remove it entirely. Autologin is unchanged. |
 | Backup: snapper configs, the ESP-copy pacman hook | Touches `/etc/snapper`, `/etc/pacman.d/hooks`. | Delete the config/hook files; existing snapshots are untouched. |
 
 **None of the files above are referenced by `install.sh`'s default run.**
@@ -81,7 +82,8 @@ scripts/check-isolation.sh
 
 `iso-build.sh --mkarchiso` may write `iso/out/` on this PC (needs root).
 Do not run `provision-iso.sh`, Calamares, or a live `install.sh` (use
-`--dry-run --target /tmp/…`) on a machine you live on.
+`--dry-run --target /tmp/…`) on a machine you live on unless that
+account is the intended stow target (`docs/CUTOVER.md`).
 
 It asserts:
 
@@ -89,9 +91,9 @@ It asserts:
    `.config` points into this clone.
 2. Gated files are absent (`greetd` enabled, `modern-usersd`,
    `tmpfiles.d/modern-session.conf`, `sysctl.d/99-modern-gaming.conf`,
-   `esp-backup.hook`), unless `--allow-gated` is passed. Creating
-   `devuser` is **not** a failure. Pre-existing Plymouth in mkinitcpio is
-   not treated as a leak from this repo.
+   `esp-backup.hook`), unless `--allow-gated` is passed. Creating an
+   extra test account is **not** a failure. Pre-existing Plymouth in
+   mkinitcpio is not treated as a leak from this repo.
 3. Home mtime under the protected path is **advisory** (WARN): a live
    account keeps writing caches. Real isolation is checks 1–2.
 

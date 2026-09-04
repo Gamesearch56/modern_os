@@ -171,7 +171,7 @@ blurred, boot-downscaled, plus a `tokens.json` copy) into a
 `tmpfiles.d`-managed, world-readable directory.
 
 **Rejected:** loosening `~/.config`/home permissions, or an ACL grant for
-the `greeter` user into `/home/devuser` — both weaken the home directory's
+the `greeter` user into a session `$HOME` — both weaken the home directory's
 security boundary for every file in it, not just the wallpaper. Copying
 one small set of derived, non-sensitive images is strictly less exposure.
 
@@ -181,9 +181,8 @@ one small set of derived, non-sensitive images is strictly less exposure.
 why it's there. `40-dev`/`50-gaming` are the personal layer, deferred to
 M6.
 
-**Rejected:** one flat list (current setup) — conflates "needed for any
-Hyprland desktop" with "personal preference", which is exactly the
-distinction the user asked for when isolating old-vs-new.
+**Rejected:** one flat list — conflates "needed for any
+Hyprland desktop" with optional layers (`40-dev` / `50-gaming`).
 
 ## 16. `property var` object literals for MD3 color roles, not nested QML properties
 

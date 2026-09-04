@@ -195,7 +195,7 @@ cursor).
    (it lists every MD3 role this pipeline exposes).
 2. Add a `[templates.<name>]` block to `config.toml` with `input_path`/
    `output_path` (paths are `~`-relative, resolved against the user
-   running `theme-apply.sh`, i.e. `devuser`).
+   running `theme-apply.sh`).
 3. Add a comment at the top of the template explaining what reads the
    output and why it needs its own file, matching the existing templates'
    style, plus a `GENERATED — do not hand-edit` header line.

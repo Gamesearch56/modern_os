@@ -296,10 +296,11 @@ EOF
         local scheme_abs
         scheme_abs="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/colors/modern.conf"
         awk -v icon="$icon" -v scheme="$scheme_abs" -v font="$font" -v mono="$mono" -v pt="$pt" -v mpt="$mpt" '
+            /^\[Appearance\]/ { print; print "color_scheme_path=" scheme; next }
+            /^color_scheme_path=/ { next }
             /^icon_theme=/ { print "icon_theme=" icon; next }
             /^style=/ { print "style=qt6ct-style"; next }
             /^stylesheets=/ { print "stylesheets="; next }
-            /^color_scheme_path=/ { print "color_scheme_path=" scheme; next }
             /^general=/ { print "general=@ByteArray(" font "," pt ",-1,5,50,0,0,0,0,0)"; next }
             /^fixed=/ { print "fixed=@ByteArray(" mono "," mpt ",-1,5,50,0,0,0,0,0)"; next }
             { print }

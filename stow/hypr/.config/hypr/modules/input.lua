@@ -1,6 +1,6 @@
 -- Keyboard/mouse/touchpad input, sourced from config.json's future
 -- Settings > Keyboard section (layout/variant/repeat rate — see
--- docs/ARCHITECTURE.md). Ships sane defaults so a fresh devuser doesn't
+-- docs/ARCHITECTURE.md). Ships sane defaults so a fresh install doesn't
 -- need to touch this file before Settings > Keyboard exists.
 
 local config = require("modules.config")

@@ -1,4 +1,4 @@
-# Installing Cursor on `devuser`
+# Installing Cursor
 
 Cursor is installed as `cursor-bin` from the AUR — this is what
 `install/manifests/40-dev.aur.txt` lists.
@@ -31,7 +31,7 @@ yay -S --needed cursor-bin
 cursor
 ```
 
-On a fresh `devuser` with no display session yet, run this over SSH or a
+On a fresh account with no display session yet, run this over SSH or a
 TTY with `cursor --no-sandbox` if the Wayland/X11 session isn't up yet —
 but normally you'll do this after Hyprland is running so the GUI launches
 on the real desktop.
@@ -56,10 +56,10 @@ on the real desktop.
 ## 6. Live-verification checklist
 
 This guide is marked "live-verified" in `docs/DECISIONS.md`'s milestone
-tracking once each of these has actually been done on `devuser`, not just
-read:
+tracking once each of these has actually been done on the target user, not
+just read:
 
-- [ ] `yay -S cursor-bin` completes without error on a real `devuser` session
+- [ ] `yay -S cursor-bin` completes without error on a real session
 - [ ] `cursor` launches a window under Hyprland
 - [ ] Cursor opens `~/modern_dotfile` and its file tree matches this repo
 - [ ] `.cursorrules` is detected (ask Cursor to summarize it)

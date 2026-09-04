@@ -30,7 +30,7 @@ if grep -F 'DisableSandbox' "$LATE" >/dev/null \
     && grep -F 'overlay_pin_install_native' "$LATE" >/dev/null \
     && grep -F 'modern ISO pin overlay' "$LATE" >/dev/null \
     && grep -F 'MODERN_SKIP_AUR=1' "$LATE" >/dev/null \
-    && grep -F 'pacman -Qq' "$LATE" >/dev/null; then
+    && grep -F 'aur_pkg_present' "$LATE" >/dev/null; then
     ok "desktop phase syncs pacman databases, enables multilib, patches pin pacman"
 else
     err "desktop phase must init the target keyring, IgnorePkg jack2, overlay pin install_native, and pacman -Sy before install.sh"

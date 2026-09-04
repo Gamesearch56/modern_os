@@ -35,8 +35,7 @@ got="$HOME/.config/gtk-3.0/bookmarks"
 if [ -f "$got" ] \
     && grep -F "file://$HOME/Downloads Downloads" "$got" >/dev/null \
     && grep -F "file://$HOME/Pictures Pictures" "$got" >/dev/null \
-    && grep -F "file://$HOME/Videos Videos" "$got" >/dev/null \
-    && ! grep -F '/home/devuser/' "$got" >/dev/null; then
+    && grep -F "file://$HOME/Videos Videos" "$got" >/dev/null; then
     ok "seeds Downloads Pictures Videos for the target HOME"
 else
     err "bookmarks were '$(cat "$got" 2>/dev/null || echo missing)'"

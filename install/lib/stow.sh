@@ -6,14 +6,37 @@
 # directory and log exactly what moved.
 #
 # Conflict detection walks the package tree. A path is a real conflict
-# only when it exists as a regular file (e.g. /etc/skel/.bashrc) that
-# does *not* already resolve inside this package. GNU Stow directory
-# folding makes `.config/hypr/hyprland.lua` look like a regular file
-# even when `.config/hypr` is a symlink into stow/ — moving those would
-# pull files out of the git clone. `--no-folding` keeps every stowed
-# path a direct symlink so re-runs stay idempotent.
+# when it exists as a regular file or as a symlink that does *not*
+# already resolve inside this package (another GNU Stow tree, e.g. a
+# previous dotfiles repo). Ours we leave. `--no-folding` keeps every
+# stowed path a direct symlink so re-runs stay idempotent.
 
 STOW_DIR="${STOW_DIR:-$REPO_ROOT/stow}"
+
+_stow_ours() {
+    local path="$1"
+    local pkg_resolved="$2"
+    local resolved
+    resolved="$(readlink -f "$path" 2>/dev/null || true)"
+    [ -n "$resolved" ] && [ -n "$pkg_resolved" ] || return 1
+    case "$resolved" in
+        "$pkg_resolved"|"$pkg_resolved"/*) return 0 ;;
+    esac
+    return 1
+}
+
+# Bash walk instead of find(1): some environments hide .config trees from find.
+_stow_walk() {
+    local d="$1" f
+    for f in "$d"/* "$d"/.[!.]*; do
+        [ -e "$f" ] || [ -L "$f" ] || continue
+        if [ -d "$f" ] && [ ! -L "$f" ]; then
+            _stow_walk "$f"
+        else
+            printf '%s\0' "$f"
+        fi
+    done
+}
 
 _stow_backup_existing() {
     local pkg="$1"
@@ -21,31 +44,48 @@ _stow_backup_existing() {
     local target="$3"
     local backup_root="$4"
     local backup_dir=""
-    local src rel dest resolved pkg_resolved
+    local src rel dest cur ancestor pkg_resolved target_slash
 
     pkg_resolved="$(readlink -f "$pkg_dir")"
+    target="$(readlink -f "$target")"
+    target_slash="${target}/"
 
-    while IFS= read -r -d '' src; do
-        rel="${src#"$pkg_dir"/}"
-        dest="$target/$rel"
-        [ -e "$dest" ] || [ -L "$dest" ] || continue
-        # Direct symlink: already stowed (or a user link we leave alone).
-        [ -L "$dest" ] && continue
-        resolved="$(readlink -f "$dest" 2>/dev/null || true)"
-        if [ -n "$resolved" ] && [ -n "$pkg_resolved" ]; then
-            case "$resolved" in
-                "$pkg_resolved"|"$pkg_resolved"/*) continue ;;
-            esac
-        fi
+    _backup() {
+        local from="$1"
+        local rel_path="${from#"$target_slash"}"
+        [ "$from" != "$target" ] || return 0
+        [ -e "$from" ] || [ -L "$from" ] || return 0
         if [ -z "$backup_dir" ]; then
             backup_dir="$backup_root/$(date +%Y%m%d-%H%M%S)/$pkg"
             run mkdir -p "$backup_dir"
             log_warn "Conflicts for '$pkg', backing up to $backup_dir:"
         fi
-        run mkdir -p "$(dirname "$backup_dir/$rel")"
-        log_warn "  backing up $dest"
-        run mv "$dest" "$backup_dir/$rel"
-    done < <(find "$pkg_dir" -mindepth 1 \( -type f -o -type l \) -print0)
+        run mkdir -p "$(dirname "$backup_dir/$rel_path")"
+        log_warn "  backing up $from"
+        run mv "$from" "$backup_dir/$rel_path"
+    }
+
+    while IFS= read -r -d '' src; do
+        rel="${src#"$pkg_dir"/}"
+        dest="$target/$rel"
+        cur="$dest"
+        while [ -n "$cur" ] && [ "$cur" != "$target" ] && [ "$cur" != "/" ]; do
+            if [ -L "$cur" ]; then
+                if _stow_ours "$cur" "$pkg_resolved"; then
+                    break
+                fi
+                _backup "$cur"
+                break
+            fi
+            ancestor="$(dirname "$cur")"
+            [ "$ancestor" = "$cur" ] && break
+            cur="$ancestor"
+        done
+        [ -e "$dest" ] || [ -L "$dest" ] || continue
+        _stow_ours "$dest" "$pkg_resolved" && continue
+        [ -L "$dest" ] && continue
+        _backup "$dest"
+    done < <(_stow_walk "$pkg_dir")
 }
 
 stow_package() {

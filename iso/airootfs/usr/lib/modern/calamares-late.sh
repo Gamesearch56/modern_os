@@ -357,7 +357,7 @@ install_aur() {
     local requested=("$@") pkgs=() p
     [ ${#requested[@]} -eq 0 ] && return 0
     for p in "${requested[@]}"; do
-        if pacman -Qq "$p" >/dev/null 2>&1; then
+        if aur_pkg_present "$p"; then
             continue
         fi
         pkgs+=("$p")

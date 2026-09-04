@@ -2,7 +2,8 @@
 # GATED — system-wide account creation. Never run automatically by
 # install.sh. Read docs/ISOLATION.md before running this.
 #
-# Creates the devuser account this whole project is developed against:
+# Optional extra-user account for testing this desktop beside another
+# session. Default username is devuser. Creates:
 # an ordinary account with an empty (but present) $HOME. "Empty" is the
 # goal, not "no $HOME" — Hyprland, Quickshell and Cursor all require a
 # writable $HOME, so -m is passed and everything inside it is expected to

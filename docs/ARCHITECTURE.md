@@ -150,8 +150,9 @@ a same-named custom function (docs/DECISIONS.md).
 
 ## Where things run
 
-Everything under `stow/` becomes a symlink into `devuser`'s `$HOME` via
-GNU Stow, run only from `install.sh` against `devuser`. Runtime state the
+Everything under `stow/` becomes a symlink into the **target** user's
+`$HOME` via GNU Stow, run from `install.sh` (`--target`, default
+`$HOME`). Runtime state the
 system generates (not tracked in git) lives in `$HOME/.local/state/modern/`,
 `$HOME/.local/share/modern/`, or — for state that must be readable by the
 unprivileged `greeter` user without touching `$HOME` — the shared,

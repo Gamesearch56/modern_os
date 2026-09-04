@@ -11,9 +11,9 @@ if [ "${1:-}" = "--bookmarks-only" ]; then
     bookmarks_only=1
 fi
 
-# gtk-3.0/bookmarks is gitignored — a clone never ships /home/devuser.
-# Expand XDG dirs for the target $HOME so Calamares users get the same
-# sidebar as this machine.
+# gtk-3.0/bookmarks is gitignored — a clone never ships a username.
+# Expand XDG dirs for the target $HOME so any install gets the same
+# sidebar.
 seed_bookmarks() {
     local dest="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/bookmarks"
     local key path label
