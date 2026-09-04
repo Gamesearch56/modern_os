@@ -119,7 +119,7 @@ Item {
             value: root.auth ? root.auth.username : ""
             placeholder: root._c ? root._c.t("session.user") : ""
             enabled: root.enabled
-            tabFocus: root.autoFocus
+            tabFocus: root.autoFocus && !String(root.auth ? root.auth.username : "").length
             onSelected: (val) => {
                 if (root.auth)
                     root.auth.username = String(val || "");

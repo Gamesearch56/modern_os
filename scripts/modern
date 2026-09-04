@@ -127,7 +127,9 @@ case "$TARGET" in
     mirrors)
         country="$(cfg network.mirrorCountry Germany)"
         t cli.mirrors "$country"
-        priv /usr/bin/reflector --country "$country" --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+        # pacman downloads with libcurl, which has no rsync://. Unfiltered
+        # reflector ranks German rsync mirrors into the list and Store fails.
+        priv /usr/bin/reflector --country "$country" --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
         ;;
     repair)
         t cli.repairReset

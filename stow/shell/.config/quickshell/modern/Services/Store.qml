@@ -168,7 +168,7 @@ Singleton {
     }
 
     function isSystem(name: string): bool {
-        return classify.isSystem(name, catalog.categories);
+        return classify.isSystem(name);
     }
 
     function _valid(name: string): bool {
@@ -219,7 +219,7 @@ Singleton {
 
     function _applyRows(rows) {
         if (root.categoryId === "installed" && root.query.trim().length === 0) {
-            const split = classify.splitInstalled(rows, catalog.categories);
+            const split = classify.splitInstalled(rows);
             root.results = split.apps;
             root.systemPkgs = split.system;
             return;

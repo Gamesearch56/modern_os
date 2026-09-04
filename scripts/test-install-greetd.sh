@@ -101,6 +101,8 @@ if grep -F 'Greetd.respond(secret)' "$ROOT/stow/greeter/.config/quickshell/greet
     && grep -F 'autoFocus: root.isLeftmost' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'onPasswordChanged' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null \
     && grep -F 'onUsernameChanged' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null \
+    && grep -F 'onLaunchingChanged' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null \
+    && grep -F 'tabFocus: root.autoFocus && !String' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionIdentity.qml" >/dev/null \
     && ! grep -F 'session.unavailable' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null; then
     ok "greeter submits the field password and shows the form on every output"
 else
@@ -134,6 +136,9 @@ if grep -F 'kiosk.sh' "$LIB" >/dev/null \
     && grep -Fq -- '--no-nixgl' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" \
     && grep -F 'onLaunched' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
     && grep -F '/usr/bin/systemctl' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionPower.qml" >/dev/null \
+    && grep -F 'hl.dsp.exit()' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
+    && grep -F 'hl.dsp.exit()' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
+    && ! grep -F '"exit"' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
     && ! grep -F 'awww-daemon' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
     && grep -Fq 'transition-type none' "$ROOT/stow/hypr/.config/hypr/modules/autostart.lua" \
     && ! grep -F 'wallpaper-show.sh' "$ROOT/stow/hypr/.config/hypr/modules/autostart.lua" >/dev/null; then

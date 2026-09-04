@@ -379,6 +379,7 @@ if [ -f "$LANGHOOK" ] \
     && grep -F 'QPalette::WindowText' "$LANGHOOK" >/dev/null \
     && grep -F 'UsersViewStep.cpp' "$LANGHOOK" >/dev/null \
     && grep -F 'KB_APPLY_NEW' "$LANGHOOK" >/dev/null \
+    && grep -F 'KB_XKB_NEW' "$LANGHOOK" >/dev/null \
     && grep -F 'somethingChanged();' "$LANGHOOK" >/dev/null \
     && grep -F 'Config.cpp' "$LANGHOOK" >/dev/null \
     && grep -F '/etc/calamares/unattended' "$LANGHOOK" >/dev/null \
@@ -550,7 +551,12 @@ if grep -E '^update_db:[[:space:]]+false$' "$PKGS_CONF" >/dev/null \
     && grep -E '^operations:[[:space:]]*\[\]$' "$PKGS_CONF" >/dev/null \
     && ! grep -E '^packages:' "$PKGS_CONF" >/dev/null \
     && grep -Fx linux-zen "$PKGS" >/dev/null \
+    && ! grep -Fx linux "$PKGS" >/dev/null \
     && ! grep -Fx linux-zen-headers "$PKGS" >/dev/null \
+    && grep -F "PRESETS=('archiso')" "$ROOT/iso/airootfs/etc/mkinitcpio.d/linux-zen.preset" >/dev/null \
+    && grep -Fx rsync "$PKGS" >/dev/null \
+    && grep -Fx python "$PKGS" >/dev/null \
+    && grep -Fx squashfs-tools "$PKGS" >/dev/null \
     && grep -Fx efibootmgr "$PKGS" >/dev/null \
     && grep -Fx qt6-translations "$PKGS" >/dev/null \
     && grep -Fx yay-bin "$PKGS" >/dev/null \
@@ -565,9 +571,9 @@ if grep -E '^update_db:[[:space:]]+false$' "$PKGS_CONF" >/dev/null \
     && grep -Fx phylax-git "$ROOT/iso/releng/packages.aur.x86_64" >/dev/null \
     && grep -Fx pipewire-jack "$PKGS" >/dev/null \
     && grep -Fx pipewire-pulse "$PKGS" >/dev/null; then
-    ok "live ISO ships linux-zen, yay-bin, m0 AUR, and PipeWire jack/pulse"
+    ok "live ISO ships linux-zen, rsync, python, yay-bin, m0 AUR, and PipeWire jack/pulse"
 else
-    err "packages.x86_64 must list linux-zen, yay-bin, m0 AUR, pipewire-jack, pipewire-pulse (no linux-zen-headers)"
+    err "packages.x86_64 must list linux-zen (not stock linux), rsync, python, yay-bin, m0 AUR, pipewire-jack, pipewire-pulse (no linux-zen-headers)"
 fi
 
 if grep -F 'install -m 0644 "$ROOT/iso/releng/packages.x86_64"' "$BUILD" >/dev/null \
@@ -719,6 +725,7 @@ fi
 
 if grep -F 'no vX.Y.Z tag in this clone' "$BUILD" >/dev/null \
     && grep -F 'console=ttyS0,115200' "$BUILD" >/dev/null \
+    && grep -F 'vmlinuz-linux-zen' "$BUILD" >/dev/null \
     && grep -F 'lrelease6' "$BUILD" >/dev/null \
     && grep -F '/usr/lib/qt6/bin/lrelease' "$BUILD" >/dev/null; then
     ok "iso-build requires a release pin, serial console, and lrelease"

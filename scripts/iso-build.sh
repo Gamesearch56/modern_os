@@ -308,6 +308,12 @@ for f in "$PROFILE_WORK"/syslinux/archiso_sys-linux.cfg \
         sed -i 's/^APPEND /APPEND console=ttyS0,115200 console=tty0 /' "$f"
     fi
 done
+# Releng names vmlinuz-linux. This image only ships linux-zen.
+find "$PROFILE_WORK" -type f \( -name '*.conf' -o -name '*.cfg' -o -name '*.preset' \) -print0 \
+    | xargs -0 -r sed -i \
+        -e 's/vmlinuz-linux\([^a-z-]\|$\)/vmlinuz-linux-zen\1/g' \
+        -e 's/initramfs-linux\.img/initramfs-linux-zen.img/g'
+rm -f "$PROFILE_WORK/airootfs/etc/mkinitcpio.d/linux.preset"
 # Persist AUR .pkg.tar.* beside --out so rm -rf $WORK does not wipe them.
 MODERN_ISO_AUR_CACHE="${MODERN_ISO_AUR_CACHE:-$abs_out/aur-cache}"
 # shellcheck source=lib/iso-aur-repo.sh

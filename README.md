@@ -6,10 +6,7 @@ Material Design 3 desktop for [Arch Linux](https://archlinux.org/) +
 wallpaper-derived color, and one JSON config for both the shell and
 Hyprland. English and German are first-class.
 
-This is a hobby project with one maintainer. The established desktop is
-complete; further work is fixes and new features.
-
-SPDX-License-Identifier: Apache-2.0
+This is a hobby project with one maintainer.
 
 ## Requirements
 

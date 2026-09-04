@@ -42,15 +42,15 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     m_okTitle->setObjectName( QStringLiteral( "networkOkTitle" ) );
     m_okTitle->setAlignment( Qt::AlignHCenter );
     m_okTitle->setWordWrap( true );
-    auto* okHint = new QLabel( tr( "You can continue to the next step." ) );
-    okHint->setObjectName( QStringLiteral( "networkOkHint" ) );
-    okHint->setAlignment( Qt::AlignHCenter );
-    okHint->setWordWrap( true );
+    m_okHint = new QLabel;
+    m_okHint->setObjectName( QStringLiteral( "networkOkHint" ) );
+    m_okHint->setAlignment( Qt::AlignHCenter );
+    m_okHint->setWordWrap( true );
     ok->addWidget( m_okBadge, 0, Qt::AlignHCenter );
     ok->addSpacing( 24 );
     ok->addWidget( m_okTitle );
     ok->addSpacing( 8 );
-    ok->addWidget( okHint );
+    ok->addWidget( m_okHint );
     ok->addStretch( 1 );
     m_stack->addWidget( m_okPage );
 
@@ -210,6 +210,7 @@ ModernNetPage::showOkPage()
     }
     m_okTitle->setText( eth ? tr( "You're connected with Ethernet" )
                             : tr( "You're connected with Wi-Fi" ) );
+    m_okHint->setText( tr( "You can continue to the next step." ) );
     showPassword( false );
     m_stack->setCurrentWidget( m_okPage );
 }

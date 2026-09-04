@@ -48,6 +48,7 @@ private:
     QWidget* m_wifiPage = nullptr;
     QLabel* m_okBadge = nullptr;
     QLabel* m_okTitle = nullptr;
+    QLabel* m_okHint = nullptr;
     QLabel* m_ethStatus = nullptr;
     QLabel* m_ethAddr = nullptr;
     QProgressBar* m_scanBar = nullptr;

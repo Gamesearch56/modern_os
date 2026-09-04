@@ -3,7 +3,9 @@
 # Package names must be the whole line. mkarchiso keeps trailing spaces
 # as part of the pacman target.
 base
-linux
+# Live and installed kernel are linux-zen only. Stock linux stayed off
+# so the ISO fits GitHub's 2GiB release-asset cap. iso-build.sh rewrites
+# releng boot files to vmlinuz-linux-zen.
 linux-firmware
 amd-ucode
 intel-ucode
@@ -12,6 +14,10 @@ mkinitcpio
 mkinitcpio-archiso
 syslinux
 squashfs-tools
+# unpackfs rsyncs airootfs.sfs onto the target. Exit 127 is missing rsync.
+# AUR calamares does not depend on either binary; the module is Python.
+rsync
+python
 btrfs-progs
 dosfstools
 e2fsprogs

@@ -25,6 +25,7 @@ Singleton {
     property real progress: -1
     property string error: ""
     property string _notified: ""
+    property string _checkText: ""
     property bool _checkDone: false
     property bool _desktopDone: false
     property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
@@ -32,6 +33,14 @@ Singleton {
     signal notify(string summary, string body)
 
     readonly property bool indeterminate: root.running && root.progress < 0
+
+    StoreClassify {
+        id: shipped
+        onShippedReadyChanged: {
+            if (root._checkDone)
+                root._parseCheck(root._checkText);
+        }
+    }
 
     UpdateClassify {
         id: classify
@@ -174,7 +183,8 @@ Singleton {
     }
 
     function _parseCheck(text: string) {
-        const parsed = classify.parseCheck(text);
+        root._checkText = text;
+        const parsed = classify.parseCheck(text, shipped.shipped);
         root._pacmanAll = parsed.all;
         root._pacmanSys = parsed.sys;
         root._pacmanOther = parsed.other;

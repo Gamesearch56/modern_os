@@ -1050,6 +1050,8 @@
     "installing": "{name} wird installiert",
     "removing": "{name} wird entfernt",
     "installLog": "Warte auf Bestätigung…",
+    "copyLog": "Protokoll kopieren",
+    "logCopied": "Protokoll kopiert",
     "cancel": "Abbrechen",
     "failed": "Paket konnte nicht geändert werden",
     "cancelled": "Authentifizierung abgebrochen",

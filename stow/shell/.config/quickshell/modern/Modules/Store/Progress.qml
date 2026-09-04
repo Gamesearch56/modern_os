@@ -1,5 +1,6 @@
 // Blocking install/remove log. Stays up on failure so pacman output
 // is readable; success clears Store.mutating and the overlay closes.
+import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons"
@@ -95,21 +96,31 @@ Item {
                         contentY = contentHeight - height;
                 }
 
-                MText {
+                TextEdit {
                     id: logText
                     width: parent.width
-                    value: Store.log.trim()
-                    key: Store.log.trim().length > 0 ? "" : "store.installLog"
-                    styleName: "bodySmall"
-                    familyRole: "monospace"
+                    readOnly: true
+                    selectByMouse: true
+                    selectByKeyboard: true
+                    persistentSelection: true
+                    wrapMode: TextEdit.WrapAnywhere
+                    textFormat: TextEdit.PlainText
+                    text: Store.log.trim().length > 0 ? Store.log.trim() : I18n.t("store.installLog")
                     color: root.failed ? Colors.color.error : Colors.color.onSurfaceVariant
-                    wrapMode: Text.WrapAnywhere
-                    elide: Text.ElideNone
+                    selectionColor: Colors.color.primary
+                    selectedTextColor: Colors.color.onPrimary
+                    font.family: Typography.family.monospace
+                    font.pixelSize: Typography.style("bodySmall").pixelSize
+                    font.weight: Typography.style("bodySmall").weight
+                    font.letterSpacing: Typography.style("bodySmall").letterSpacing
+                    font.hintingPreference: Font.PreferNoHinting
+                    renderType: TextEdit.QtRendering
+                    cursorVisible: false
                 }
             }
 
             RowLayout {
-                visible: root.failed || Store.authWait
+                visible: root.failed || Store.authWait || Store.log.trim().length > 0
                 Layout.alignment: Qt.AlignRight
                 spacing: Tokens.spacing.sm
 
@@ -118,6 +129,16 @@ Item {
                     kind: "outlined"
                     key: "store.cancel"
                     onClicked: Store.cancel()
+                }
+
+                MButton {
+                    visible: Store.log.trim().length > 0
+                    kind: "outlined"
+                    key: "store.copyLog"
+                    onClicked: {
+                        Quickshell.clipboardText = Store.log.trim();
+                        Store.notify(I18n.t("store.logCopied"), "");
+                    }
                 }
 
                 MButton {

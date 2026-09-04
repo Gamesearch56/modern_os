@@ -228,7 +228,11 @@ Xwayland (`xorg-setxkbmap`; `useLocale1: false` so systemd-localed is
 not used instead). Upstream starts that apply from the *variant* signal;
 `live-xkb-filter.py` drops every variant, so picking German never ran
 `setxkbmap` and the Users password was typed on `us`. The AUR patch
-calls `Config::somethingChanged()` on a layout change too.
+calls `Config::somethingChanged()` on a layout change too. A first pick
+of German still left the test field on `us`: cage's Xwayland ignores
+`setxkbmap -layout de` until a call also passes `-option` (India does,
+because it is in `non-ascii-layouts`). The same patch now always sends
+`-option` and runs `setxkbmap` twice.
 
 The Keyboard step always opens on English. `guessLayout: false` turns off
 Calamares' locale→layout guess, which otherwise flipped the page to German

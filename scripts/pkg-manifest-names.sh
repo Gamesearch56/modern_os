@@ -15,4 +15,12 @@ names="$(
         | grep -E '^[a-z0-9][a-z0-9.+_-]*$' \
         | sort -u
 )"
-printf '%s\n' "$names" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()], ensure_ascii=False))'
+printf '%s\n' "$names" | python3 -c '
+import json, sys
+names = [l.strip() for l in sys.stdin if l.strip()]
+out = set(names)
+for n in names:
+    if n.endswith("-bin"):
+        out.add(n[: -len("-bin")])
+print(json.dumps(sorted(out), ensure_ascii=False))
+'

@@ -504,6 +504,7 @@ strip_gone=(
     root/.zlogin
 )
 strip_kept=(
+    etc/mkinitcpio.d/linux-zen.preset
     etc/mkinitcpio.conf
     etc/systemd/system/default.target
     etc/systemd/system/display-manager.service
@@ -525,7 +526,9 @@ if out="$(MODERN_LATE_STRIP_ROOT="$STRIPROOT" run_late strip 2>&1)"; then
     for p in "${strip_kept[@]}"; do
         if [ ! -e "$STRIPROOT/$p" ]; then gone+=("$p"); fi
     done
-    if [ ${#left[@]} -eq 0 ] && [ ${#gone[@]} -eq 0 ]; then
+    if [ ${#left[@]} -eq 0 ] && [ ${#gone[@]} -eq 0 ] \
+        && grep -F "PRESETS=('default' 'fallback')" \
+            "$STRIPROOT/etc/mkinitcpio.d/linux-zen.preset" >/dev/null; then
         ok "strip phase clears live-only files and keeps the installed ones"
     else
         err "strip left ${left[*]:-nothing} and wrongly removed ${gone[*]:-nothing}"
