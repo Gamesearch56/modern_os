@@ -16,6 +16,7 @@ Item {
     property bool highlighted: false
     property bool busy: false
     property bool iconAfter: false
+    property bool tabFocus: true
 
     signal clicked()
 
@@ -67,7 +68,7 @@ Item {
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     Layout.fillWidth: root.fillWidth
     opacity: (root.enabled && !root.busy) ? 1 : 0.38
-    activeFocusOnTab: root.enabled && !root.busy
+    activeFocusOnTab: root.tabFocus && root.enabled && !root.busy
     Accessible.role: Accessible.Button
     Accessible.name: root.key.length > 0 ? I18n.t(root.key, root.params) : ""
     Accessible.onPressAction: {

@@ -27,13 +27,14 @@ Item {
         onClicked: Taskbar.toggle(root.barScreen)
     }
 
-    BarPopup {
+    BarLayerPopup {
         id: popup
         open: false
         anchorItem: root
+        barScreen: root.barScreen
         elevation: 0
-        implicitWidth: Tokens.spacing.xxl * 14
-        implicitHeight: Tokens.spacing.xxl * 14
+        panelWidth: Tokens.spacing.xxl * 14
+        panelHeight: Tokens.spacing.xxl * 14
         hAlign: Qt.AlignRight
         onOpenChanged: {
             if (!popup.open) {

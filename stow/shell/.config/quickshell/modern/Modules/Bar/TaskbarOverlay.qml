@@ -6,6 +6,7 @@ import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
 import "../../Commons"
+import "../../Widgets"
 import "../../Services"
 
 Scope {
@@ -45,7 +46,7 @@ Scope {
                 onClicked: Taskbar.hide()
             }
 
-            Item {
+            MPanelSurface {
                 id: card
                 width: Tokens.spacing.xxl * 14
                 height: Math.min(Tokens.spacing.xxl * 14, parent.height - Tokens.spacing.xl)
@@ -71,6 +72,7 @@ Scope {
 
                 Loader {
                     anchors.fill: parent
+                    anchors.margins: Tokens.spacing.md
                     source: Qt.resolvedUrl("widgets/taskbar/Panel.qml")
                     onLoaded: {
                         if (!item)

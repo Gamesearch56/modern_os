@@ -19,6 +19,8 @@ Singleton {
 
     readonly property string home: Quickshell.env("HOME")
     readonly property string libraryDir: root.home + "/Pictures/Wallpapers"
+    readonly property string sessionBlur: "/var/lib/modern/session/wallpaper-blur.jpg"
+    readonly property string stateBlur: root.stateHome + "/modern/session/wallpaper-blur.jpg"
     readonly property string stateHome: Paths.stateHome
 
     signal fetched(string path)

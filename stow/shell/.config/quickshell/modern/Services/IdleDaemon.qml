@@ -46,7 +46,7 @@ Singleton {
             + "}\n"
             + root._listener(root.dimSec, b + " dim", b + " undim")
             + root._listener(root.offSec, "hyprctl dispatch dpms off", "hyprctl dispatch dpms on")
-            + root._listener(root.lockSec, "loginctl lock-session", "")
+            + root._listener(root.lockSec, "qs -c modern ipc call session lock", "")
             + root._listener(root.suspendSec, "systemctl suspend", "");
     }
 

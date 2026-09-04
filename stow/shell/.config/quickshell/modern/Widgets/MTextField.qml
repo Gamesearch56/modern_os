@@ -15,9 +15,10 @@ Item {
     property int maximumLength: 32767
     property bool escapeCloses: false
     property bool captureArrows: false
+    property bool holdFocus: false
     property bool _pointer: false
 
-    readonly property bool _a11yFocus: input.activeFocus && !root._pointer
+    readonly property bool _a11yFocus: input.activeFocus && (root.holdFocus || !root._pointer)
 
     signal accepted()
     signal textEdited()

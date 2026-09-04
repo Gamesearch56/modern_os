@@ -8,7 +8,10 @@ MCard {
 
     property var pkg: ({})
 
+    readonly property string _logo: String(pkg.iconSource || "")
     readonly property string _icon: {
+        if (root._logo.length > 0)
+            return "";
         const n = String(pkg.iconName || "");
         if (!n.length || n === "package-x-generic")
             return "package-x-generic-symbolic";
@@ -26,9 +29,10 @@ MCard {
 
         MIcon {
             name: root._icon
+            source: root._logo
             size: Tokens.spacing.xxl * 2
             color: Colors.color.primary
-            tint: true
+            tint: root._logo.length === 0
             preferSymbolic: false
             Layout.alignment: Qt.AlignVCenter
         }

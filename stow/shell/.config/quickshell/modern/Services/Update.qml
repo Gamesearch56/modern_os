@@ -25,7 +25,7 @@ Singleton {
     property real progress: -1
     property string error: ""
     property string _notified: ""
-    property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, iconName: "preferences-desktop-display", subtitle: "" })
+    property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
     signal finished(bool ok)
     signal notify(string summary, string body)
 

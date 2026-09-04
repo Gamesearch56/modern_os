@@ -6,6 +6,7 @@ import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
 import "../../Commons"
+import "../../Widgets"
 import "../../Services"
 
 Scope {
@@ -45,7 +46,7 @@ Scope {
                 onClicked: Ai.hide()
             }
 
-            Item {
+            MPanelSurface {
                 id: card
                 width: Tokens.window.chatWidth
                 height: Math.min(Tokens.window.chatHeight, parent.height - Tokens.spacing.xl)
@@ -72,6 +73,7 @@ Scope {
                 Loader {
                     id: panelLoader
                     anchors.fill: parent
+                    anchors.margins: Tokens.spacing.md
                     source: Qt.resolvedUrl("widgets/ai/Panel.qml")
                     onLoaded: {
                         if (panelLoader.item && panelLoader.item.focusInput)

@@ -34,24 +34,31 @@ Item {
 
     Component.onCompleted: root._entered = true
 
+    MouseArea {
+        anchors.fill: parent
+        onPressed: {
+            if (password.visible && !password.editor.activeFocus)
+                password.focusInput();
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Colors.color.surface
+        visible: !root.showWallpaper
     }
 
-    Image {
+    MFrost {
         anchors.fill: parent
         visible: root.showWallpaper
-        source: root.wallpaperFile.length > 0 ? "file://" + root.wallpaperFile : ""
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        visible: root.showWallpaper
-        color: Colors.color.scrim
-        opacity: root._shown ? Tokens.overlay.lock : 0
+        opacity: root._shown ? 1 : 0
+        sources: [
+            "file://" + Wallpaper.sessionBlur,
+            "file://" + Wallpaper.stateBlur,
+            root.wallpaperFile.length > 0 ? "file://" + root.wallpaperFile : ""
+        ]
+        washOpacity: Config.design.transparency ?? 0.85
+        scrimOpacity: Tokens.overlay.scrim
 
         Behavior on opacity {
             enabled: Motion.overlaysFade
@@ -122,10 +129,25 @@ Item {
                 id: password
                 visible: root.mode !== "shutdown"
                 Layout.fillWidth: true
+                focus: true
+                holdFocus: true
                 placeholderKey: "session.password"
                 echoMode: TextInput.Password
-                onAccepted: Session.authenticate(text)
-                Component.onCompleted: forceActiveFocus()
+                onTextEdited: Session.password = text
+                onAccepted: Session.authenticate(Session.password)
+                Component.onCompleted: {
+                    if (Session.password.length)
+                        text = Session.password;
+                    focusInput();
+                }
+
+                Connections {
+                    target: Session
+                    function onPasswordChanged() {
+                        if (password.text !== Session.password)
+                            password.text = Session.password;
+                    }
+                }
             }
 
             MText {
@@ -143,8 +165,9 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 kind: "filled"
                 key: "session.unlock"
-                enabled: password.text.length > 0
-                onClicked: Session.authenticate(password.text)
+                tabFocus: false
+                enabled: Session.password.length > 0
+                onClicked: Session.authenticate(Session.password)
             }
 
             RowLayout {
@@ -173,5 +196,4 @@ Item {
             }
         }
     }
-
 }

@@ -25,6 +25,7 @@ Singleton {
     readonly property string scripts: root.repo + "/scripts"
     readonly property string modern: root.scripts + "/modern"
     readonly property string modernLaunch: root.scripts + "/modern-launch"
+    readonly property string brandLogo: root.configHome + "/modern/brand/logo.png"
 
     function script(name: string): string {
         return root.scripts + "/" + name;

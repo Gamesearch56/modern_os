@@ -33,13 +33,14 @@ Item {
         color: root._fg
     }
 
-    BarPopup {
+    BarLayerPopup {
         id: popup
         open: false
         anchorItem: root
+        barScreen: root.barScreen
         elevation: 0
-        implicitWidth: Tokens.window.chatWidth
-        implicitHeight: Tokens.window.chatHeight
+        panelWidth: Tokens.window.chatWidth
+        panelHeight: Tokens.window.chatHeight
         hAlign: Config.bar.position === "right" ? Qt.AlignRight : Qt.AlignLeft
         onOpenChanged: {
             if (!popup.open && root._barPopup)
