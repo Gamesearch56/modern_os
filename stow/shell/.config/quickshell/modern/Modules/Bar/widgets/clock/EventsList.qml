@@ -5,7 +5,23 @@ import "../../../../Widgets"
 import "../../../../Services"
 
 ColumnLayout {
+    id: root
     spacing: Tokens.spacing.sm
+
+    function eventWhen(ev) {
+        void Config.language.dateFormat;
+        void Config.language.timeFormat;
+        if (!ev)
+            return "";
+        const dateFmt = Config.language.dateFormat || "DD.MM.YYYY";
+        const timeFmt = Config.language.timeFormat || "HH:mm";
+        const d = ev.start;
+        if (!d)
+            return "";
+        if (ev.allDay)
+            return DateTime.formatDate(d, dateFmt);
+        return DateTime.clockLabel(d, dateFmt, timeFmt, false, false);
+    }
 
     MPane {
         Layout.fillWidth: true
@@ -23,7 +39,7 @@ ColumnLayout {
                     readonly property var ev: (Calendar.todayEvents || [])[index] || ({})
                     width: ListView.view.width
                     titleValue: ev.summary || ""
-                    subtitleValue: ev.when || ev.ymd || ""
+                    subtitleValue: root.eventWhen(ev)
                     hoverHighlight: false
                 }
             }

@@ -11,6 +11,7 @@ Item {
     property real value: 0
     property bool enabled: true
     property bool showValue: false
+    property bool wheel: false
     property string suffix: ""
     property bool _dragging: false
     property bool _hold: false
@@ -122,9 +123,11 @@ Item {
                     root._lockFlick(false);
                     root._commitIfChanged();
                 }
+            }
+
+            WheelHandler {
+                enabled: root.enabled && root.wheel
                 onWheel: (w) => {
-                    if (!root.enabled)
-                        return;
                     const step = (w.modifiers & Qt.ShiftModifier)
                         ? Math.max(1, root._span / 100)
                         : Math.max(1, root._span / 20);

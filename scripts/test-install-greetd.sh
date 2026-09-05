@@ -99,6 +99,7 @@ if grep -F 'Greetd.respond(secret)' "$ROOT/stow/greeter/.config/quickshell/greet
     && grep -F 'active: true' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionSurface.qml" >/dev/null \
     && grep -F 'interactive: true' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'autoFocus: root.isLeftmost' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
+    && grep -F 'WlrKeyboardFocus.Exclusive' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'onPasswordChanged' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null \
     && grep -F 'onUsernameChanged' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null \
     && grep -F 'onLaunchingChanged' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionForm.qml" >/dev/null \

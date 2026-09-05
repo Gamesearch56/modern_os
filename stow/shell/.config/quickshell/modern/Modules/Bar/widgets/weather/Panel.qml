@@ -122,6 +122,8 @@ Item {
             Layout.fillWidth: true
             color: "transparent"
             implicitHeight: {
+                if (!Weather.available)
+                    return Tokens.spacing.xxl * 10 + padding * 2;
                 const inner = col.implicitHeight;
                 if (root.hourly)
                     return Math.min(inner, Tokens.spacing.xxl * 12) + padding * 2;
@@ -130,6 +132,7 @@ Item {
 
             Flickable {
                 id: flick
+                visible: Weather.available
                 anchors.fill: parent
                 clip: true
                 contentWidth: width
@@ -270,14 +273,17 @@ Item {
                     }
                 }
 
-                MEmptyState {
-                    visible: !Weather.available && !Weather.busy
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Tokens.spacing.xxl * 4
-                    iconName: "weather-none"
-                    titleKey: "weather.unavailable"
                 }
-                }
+            }
+
+            MEmptyState {
+                visible: !Weather.available
+                anchors.fill: parent
+                iconName: "weather-none"
+                titleKey: "weather.unavailableTitle"
+                hintKey: "weather.unavailableHint"
+                actionKey: "weather.refresh"
+                onActionClicked: Weather.refresh(true)
             }
         }
     }

@@ -71,7 +71,7 @@ case "$TARGET" in
             if command -v snapper >/dev/null 2>&1 && snapper list-configs >/dev/null 2>&1 \
                 && snapper list-configs 2>/dev/null | grep -q root; then
                 t cli.snapshotting
-                priv /usr/bin/snapper -c root create --description "modern update" || {
+                priv /usr/bin/snapper -c root create --description "ModernOS Update" || {
                     t cli.snapshotFailed >&2
                     exit 1
                 }

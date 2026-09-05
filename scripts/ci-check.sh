@@ -59,5 +59,7 @@ log "release notes"
 "$ROOT/scripts/test-release-notes.sh"
 log "autologin apply"
 "$ROOT/scripts/test-autologin-apply.sh"
+log "snapper setup"
+"$ROOT/scripts/test-snapper-setup.sh"
 
 log "ok"

@@ -159,11 +159,6 @@ Singleton {
         const now = new Date();
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const todayEnd = new Date(todayStart.getTime() + 86400000);
-        const today = Ics.instancesInRange(root.events, todayStart, todayEnd);
-        for (let i = 0; i < today.length; i++) {
-            if (!today[i].allDay && today[i].start)
-                today[i].when = DateTime.formatTime(today[i].start, Config.language.timeFormat || "HH:mm", false);
-        }
-        root.todayEvents = today;
+        root.todayEvents = Ics.instancesInRange(root.events, todayStart, todayEnd);
     }
 }

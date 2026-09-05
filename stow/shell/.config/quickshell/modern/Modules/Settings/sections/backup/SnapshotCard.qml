@@ -9,7 +9,13 @@ MCard {
 
     property var snap: ({})
 
+    readonly property bool _update: {
+        const d = String(snap.description || "").trim();
+        return d === "ModernOS Update" || d === "modern update";
+    }
     readonly property string _title: {
+        if (root._update)
+            return I18n.t("settings.backup.update");
         const d = String(snap.description || "").trim();
         if (d.length)
             return d;
@@ -32,12 +38,13 @@ MCard {
             spacing: Tokens.spacing.lg
 
             MIcon {
-                name: "document-save"
+                name: root._update ? "" : "document-save"
+                source: root._update ? Paths.brandLogo : ""
                 size: Tokens.spacing.xxl * 2
                 color: Colors.color.primary
-                tint: true
+                tint: !root._update
                 preferSymbolic: false
-                Layout.alignment: Qt.AlignTop
+                Layout.alignment: Qt.AlignVCenter
             }
             ColumnLayout {
                 Layout.fillWidth: true
@@ -59,7 +66,11 @@ MCard {
                 }
                 MText {
                     visible: String(snap.date || "").length > 0
-                    value: snap.date || ""
+                    value: {
+                        void Config.language.dateFormat;
+                        void Config.language.timeFormat;
+                        return Snapshots.formatWhen(snap.date || "");
+                    }
                     styleName: "bodyMedium"
                     color: Colors.color.onSurfaceVariant
                     Layout.fillWidth: true

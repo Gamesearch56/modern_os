@@ -3,6 +3,7 @@
 // and the greeter user has no $HOME view of them. Colors come from the
 // shared session dir (docs/DECISIONS.md #14).
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 
 ShellRoot {
@@ -55,7 +56,9 @@ ShellRoot {
             anchors.right: true
             anchors.bottom: true
             exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            WlrLayershell.keyboardFocus: root.isLeftmost(win.modelData)
+                ? WlrKeyboardFocus.Exclusive
+                : WlrKeyboardFocus.OnDemand
 
             SessionSurface {
                 anchors.fill: parent

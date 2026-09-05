@@ -16,7 +16,7 @@ Item {
     signal accepted()
     signal textEdited()
 
-    readonly property bool _focused: input.activeFocus
+    readonly property bool focused: input.activeFocus
     readonly property var _c: root.chrome
 
     implicitHeight: root._c ? root._c.fieldHeight : 36
@@ -71,10 +71,10 @@ Item {
         anchors.fill: parent
         radius: root._c ? root._c.radiusFull : 9999
         color: root._c ? root._c.color.surfaceContainerHighest : "#36343B"
-        border.color: root._focused
+        border.color: root.focused
             ? (root._c ? root._c.color.primary : "#D0BCFF")
             : (root._c ? root._c.color.outline : "#938F99")
-        border.width: root._focused
+        border.width: root.focused
             ? (root._c ? root._c.strokeFocus : 2)
             : (root._c ? root._c.strokeHairline : 1)
     }
@@ -92,6 +92,7 @@ Item {
         font.pixelSize: root._c ? root._c.typePx("bodyLarge") : 16
         echoMode: root.echoMode
         enabled: root.enabled
+        focus: root.tabFocus
         activeFocusOnTab: false
         selectByMouse: true
         activeFocusOnPress: root.enabled

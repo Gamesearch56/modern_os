@@ -186,8 +186,9 @@ Item {
 
     Timer {
         interval: 80
-        running: root.visible && root.autoFocus
-        repeat: false
+        running: root.visible && root.autoFocus && !password.focused
+            && !root._busy && !root._launching
+        repeat: true
         onTriggered: root._focusForm()
     }
 

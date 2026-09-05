@@ -24,7 +24,7 @@ Singleton {
 
     Process {
         id: probeProc
-        command: ["sh", "-c", "command -v snapper >/dev/null || { echo missing; exit 0; }; snapper list-configs 2>/dev/null | awk -F'|' 'NR>2 {gsub(/^[ \\t]+|[ \\t]+$/,\"\",$1); print $1}' | grep -qx root && echo ready || echo unconfigured"]
+        command: ["sh", "-c", "command -v snapper >/dev/null || { echo missing; exit 0; }; snapper --no-dbus --csvout list-configs 2>/dev/null | awk -F, 'NR>1 {gsub(/\\r/,\"\"); print $1}' | grep -qx root && echo ready || echo unconfigured"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
@@ -43,15 +43,26 @@ Singleton {
         command: ["sh", "-c", "snapper -c root --jsonout list 2>/dev/null || snapper -c root list --iso 2>/dev/null"]
         running: false
         stdout: StdioCollector {
-            onStreamFinished: root._parseList(this.text)
+            onStreamFinished: root.items = parse.parseList(this.text)
         }
     }
 
     Process {
         id: mutProc
         running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const t = String(this.text || "").trim();
+                if (t.length)
+                    root._stderr = t;
+            }
+        }
         stderr: StdioCollector {
-            onStreamFinished: root._stderr = String(this.text || "").trim()
+            onStreamFinished: {
+                const t = String(this.text || "").trim();
+                if (t.length)
+                    root._stderr = t;
+            }
         }
         onExited: (code) => {
             if (code !== 0) {
@@ -84,10 +95,9 @@ Singleton {
     function setupRoot() {
         if (root.status !== "unconfigured" || root.running)
             return;
-        root._start("setup", [
-            ["pkexec", "/usr/bin/snapper", "-c", "root", "create-config", "/"],
-            ["pkexec", "/usr/bin/snapper", "-c", "root", "set-config", "TIMELINE_CREATE=no"]
-        ], I18n.t("settings.backup.settingUp"));
+        root._start("setup", [[
+            "pkexec", Paths.script("snapper-setup.sh")
+        ]], I18n.t("settings.backup.settingUp"));
     }
 
     function create() {
@@ -133,69 +143,11 @@ Singleton {
         mutProc.running = true;
     }
 
-    function _parseList(text: string) {
-        const t = String(text || "").trim();
-        if (t.charAt(0) === "[" || t.charAt(0) === "{") {
-            try {
-                root.items = root._fromJson(JSON.parse(t));
-                return;
-            } catch (e) {
-                Logger.warn("Snapshots", String(e));
-            }
-        }
-        root.items = root._fromTable(t);
+    function formatWhen(raw: string): string {
+        return parse.formatWhen(raw);
     }
 
-    function _fromJson(j: var): var {
-        let arr = [];
-        if (Array.isArray(j))
-            arr = j;
-        else if (j && Array.isArray(j.root))
-            arr = j.root;
-        const out = [];
-        for (let i = 0; i < arr.length; i++) {
-            const it = root._norm(arr[i]);
-            if (it)
-                out.push(it);
-        }
-        return out;
-    }
-
-    function _fromTable(text: string): var {
-        const out = [];
-        const lines = text.split("\n");
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            if (!line || line.indexOf("---") !== -1 || line.indexOf("Type") !== -1)
-                continue;
-            const p = line.split("|");
-            if (p.length < 7)
-                continue;
-            const it = root._norm({
-                number: p[0],
-                type: p[1],
-                date: p[3],
-                user: p[4],
-                cleanup: p[5],
-                description: p[6]
-            });
-            if (it)
-                out.push(it);
-        }
-        return out;
-    }
-
-    function _norm(row: var): var {
-        const n = String(row.number ?? row["#"] ?? "").trim();
-        if (!n || n === "0")
-            return null;
-        return {
-            number: n,
-            date: String(row.date || "").trim(),
-            description: String(row.description || "").trim(),
-            type: String(row.type || "").trim(),
-            cleanup: String(row.cleanup || "").trim(),
-            user: String(row.user || "").trim()
-        };
+    SnapshotsParse {
+        id: parse
     }
 }

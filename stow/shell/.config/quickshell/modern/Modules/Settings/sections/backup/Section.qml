@@ -70,73 +70,74 @@ Item {
             }
         }
 
-        RowLayout {
+        ColumnLayout {
             Layout.fillWidth: true
-            spacing: Tokens.spacing.md
+            Layout.topMargin: Tokens.spacing.xxl
+            spacing: Tokens.spacing.xl
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.md
+                MText {
+                    key: "settings.backup.snapshots"
+                    styleName: "titleSmall"
+                    color: Colors.color.onSurfaceVariant
+                    Layout.fillWidth: true
+                }
+                MIconButton {
+                    iconName: "view-refresh"
+                    key: "settings.refresh"
+                    iconSize: Tokens.icon.sm
+                    enabled: !Snapshots.running
+                    onClicked: Snapshots.refresh()
+                }
+                MButton {
+                    kind: "filled"
+                    key: "settings.backup.create"
+                    enabled: Snapshots.ready && !Snapshots.running
+                    onClicked: Snapshots.create()
+                }
+            }
+
+            MLinearProgress {
+                visible: Snapshots.running
+                Layout.fillWidth: true
+                indeterminate: true
+            }
             MText {
-                key: "settings.backup.snapshots"
-                styleName: "titleSmall"
+                visible: Snapshots.step.length > 0
+                value: Snapshots.step
+                styleName: "bodySmall"
                 color: Colors.color.onSurfaceVariant
                 Layout.fillWidth: true
+                wrapMode: Text.WordWrap
             }
-            MIconButton {
-                iconName: "view-refresh"
-                key: "settings.refresh"
-                iconSize: Tokens.icon.sm
-                enabled: !Snapshots.running
-                onClicked: Snapshots.refresh()
+            MText {
+                visible: Snapshots.error.length > 0 && !Snapshots.running
+                value: Snapshots.error
+                styleName: "bodySmall"
+                color: Colors.color.error
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                elide: Text.ElideNone
             }
-            MButton {
-                kind: "filled"
-                key: "settings.backup.create"
-                enabled: Snapshots.ready && !Snapshots.running
-                onClicked: Snapshots.create()
-            }
-        }
 
-        MLinearProgress {
-            visible: Snapshots.running
-            Layout.fillWidth: true
-            indeterminate: true
-        }
-        MText {
-            visible: Snapshots.step.length > 0
-            value: Snapshots.step
-            styleName: "bodySmall"
-            color: Colors.color.onSurfaceVariant
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-        }
-        MText {
-            visible: Snapshots.error.length > 0 && !Snapshots.running
-            value: Snapshots.error
-            styleName: "bodySmall"
-            color: Colors.color.error
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            elide: Text.ElideNone
-        }
-
-        Repeater {
-            model: Snapshots.items.length
-            SnapshotCard {
-                required property int index
-                snap: Snapshots.items[index]
-                onRequestDelete: (s) => root.pending = s
+            Repeater {
+                model: Snapshots.items.length
+                SnapshotCard {
+                    required property int index
+                    snap: Snapshots.items[index]
+                    onRequestDelete: (s) => root.pending = s
+                }
             }
-        }
-        MEmptyState {
-            visible: Snapshots.items.length === 0 && !Snapshots.running
-                && Snapshots.status !== "unknown"
-            Layout.fillWidth: true
-            Layout.preferredHeight: Tokens.spacing.xxl * 4
-            iconName: "document-save"
-            titleKey: Snapshots.ready ? "settings.snapshotEmpty" : root._emptyKey
-        }
-
-        MHint {
-            key: "settings.hints.restoreGated"
-            Layout.fillWidth: true
+            MEmptyState {
+                visible: Snapshots.items.length === 0 && !Snapshots.running
+                    && Snapshots.status !== "unknown"
+                Layout.fillWidth: true
+                Layout.preferredHeight: Tokens.spacing.xxl * 4
+                iconName: "document-save"
+                titleKey: Snapshots.ready ? "settings.snapshotEmpty" : root._emptyKey
+            }
         }
     }
 
@@ -148,7 +149,7 @@ Item {
         bodyKey: "settings.backup.deleteBody"
         bodyParams: ({
             n: root.pending ? String(root.pending.number || "") : "",
-            date: root.pending ? String(root.pending.date || "") : ""
+            date: root.pending ? Snapshots.formatWhen(root.pending.date || "") : ""
         })
         confirmKey: "settings.snapshotDelete"
         cancelKey: "powerMenu.cancel"

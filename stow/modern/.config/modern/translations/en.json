@@ -71,6 +71,8 @@
   },
   "weather": {
     "unavailable": "Weather unavailable",
+    "unavailableTitle": "Weather is currently not available",
+    "unavailableHint": "Try again in a moment, or set a location in Settings.",
     "detailTitle": "Weather",
     "condition": "Current conditions",
     "refresh": "Refresh",
@@ -762,6 +764,8 @@
       "all": "Users on this computer",
       "settings": "Settings",
       "others": "Other users on this system",
+      "empty": "No other users yet",
+      "emptyHint": "Open a terminal and create an account with sudo useradd -m username, then set a password with sudo passwd username. They can sign in from the login screen.",
       "groups": "Your groups",
       "groupsAll": "Groups",
       "colAdmin": "Admin",
@@ -849,6 +853,7 @@
       "setupBody": "An admin password is required. This writes Snapper's root config for /. Hourly Snapper snapshots stay off. Rollback from Settings stays unavailable.",
       "settingUp": "Creating Snapper root config…",
       "manual": "Manual",
+      "update": "ModernOS Update",
       "untitled": "Snapshot {n}",
       "deleteTitle": "Delete snapshot?",
       "deleteBody": "Delete snapshot {n} from {date}?"

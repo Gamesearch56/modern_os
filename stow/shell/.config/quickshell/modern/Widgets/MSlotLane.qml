@@ -157,7 +157,7 @@ Rectangle {
                             MFocusRing {
                                 id: ring
                                 radius: Tokens.radius.small
-                                active: row.activeFocus && !ring._pointer
+                                active: row.activeFocus && ring._shown && !ring._pointer
                             }
                         }
                         MouseArea {

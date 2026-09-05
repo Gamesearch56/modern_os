@@ -42,15 +42,10 @@ MStatusCard {
     }
 
     MHint {
-        visible: Snapshots.status === "ready" || Snapshots.status === "unconfigured"
-            || Snapshots.status === "missing"
-        key: {
-            if (Snapshots.status === "ready")
-                return "settings.hints.snapperReady";
-            if (Snapshots.status === "unconfigured")
-                return "settings.hints.snapperUnconfigured";
-            return "settings.hints.snapperMissing";
-        }
+        visible: Snapshots.status === "unconfigured" || Snapshots.status === "missing"
+        key: Snapshots.status === "unconfigured"
+            ? "settings.hints.snapperUnconfigured"
+            : "settings.hints.snapperMissing"
         Layout.fillWidth: true
     }
 }
