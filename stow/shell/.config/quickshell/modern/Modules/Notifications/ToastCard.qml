@@ -61,8 +61,8 @@ MouseArea {
         const id = root._id();
         const path = Notifications.attachmentPath(root.notification);
         Qt.callLater(() => {
-            if (path.length)
-                Apps.openInFileManager(path);
+            if (!Notifications.invokeDefault(id) && path.length)
+                Apps.openPath(path);
             Notifications.dismiss(id);
         });
     }

@@ -107,8 +107,8 @@ Item {
                         subtitleValue: modelData.body || ""
                         onClicked: {
                             const path = Notifications.attachmentPath(modelData);
-                            if (path.length)
-                                Apps.openInFileManager(path);
+                            if (!Notifications.invokeDefault(modelData) && path.length)
+                                Apps.openPath(path);
                             Notifications.dismiss(modelData);
                         }
                         MIconButton {
