@@ -188,7 +188,8 @@
     "repairFsck": "FAT/ESP-Check: ESP aushängen, dann fsck.vfat -a /dev/disk/by-label/ESP (docs/TROUBLESHOOTING.md).",
     "unknown": "unbekanntes Unterkommando",
     "languageViaSettings": "Sprache umstellen unter Einstellungen → Sprache, oder language.ui in config.json setzen",
-    "volumeUnknown": "unbekannte Lautstärke-Aktion: %s"
+    "volumeUnknown": "unbekannte Lautstärke-Aktion: %s",
+    "mediaUnknown": "unbekannte Medien-Aktion: %s"
   },
   "wallpaper": {
     "title": "Hintergründe",

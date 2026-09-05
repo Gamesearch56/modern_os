@@ -158,6 +158,24 @@ case "$TARGET" in
             *) t cli.volumeUnknown "$ACTION" >&2; exit 1 ;;
         esac
         ;;
+    media)
+        ACTION="${1:-play-pause}"
+        case "$ACTION" in
+            play-pause | toggle)
+                qs -c modern ipc call media playPause >/dev/null 2>&1 \
+                    || playerctl play-pause
+                ;;
+            next)
+                qs -c modern ipc call media next >/dev/null 2>&1 \
+                    || playerctl next
+                ;;
+            previous | prev)
+                qs -c modern ipc call media previous >/dev/null 2>&1 \
+                    || playerctl previous
+                ;;
+            *) t cli.mediaUnknown "$ACTION" >&2; exit 1 ;;
+        esac
+        ;;
     brightness)
         ACTION="${1:-get}"
         case "$ACTION" in

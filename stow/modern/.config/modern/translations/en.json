@@ -188,7 +188,8 @@
     "repairFsck": "FAT/ESP check: umount the ESP, then fsck.vfat -a /dev/disk/by-label/ESP (see docs/TROUBLESHOOTING.md).",
     "unknown": "unknown subcommand",
     "languageViaSettings": "Switch language in Settings → Language, or set language.ui in config.json",
-    "volumeUnknown": "unknown volume action: %s"
+    "volumeUnknown": "unknown volume action: %s",
+    "mediaUnknown": "unknown media action: %s"
   },
   "wallpaper": {
     "title": "Wallpapers",
