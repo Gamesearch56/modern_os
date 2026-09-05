@@ -98,7 +98,7 @@ if grep -F 'Greetd.respond(secret)' "$ROOT/stow/greeter/.config/quickshell/greet
     && grep -F 'IBeamCursor' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionField.qml" >/dev/null \
     && grep -F 'active: true' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionSurface.qml" >/dev/null \
     && grep -F 'interactive: true' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
-    && grep -F 'autoFocus: root.isLeftmost' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
+    && grep -F 'autoFocus: win.grabKeys' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'WlrKeyboardFocus.Exclusive' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'HyprlandFocusGrab' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'keyGrab.active = true' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
