@@ -32,6 +32,7 @@ swappy                           # screenshot annotation (GTK, follows token gtk
 wf-recorder                      # screen recording backend (Services/Recording)
 ddcutil                         # DDC/CI brightness for external displays — see Services/Brightness
 brightnessctl                    # XF86 brightness keys in modules/keybinds.lua
+playerctl                        # XF86 / KDE Connect play-pause via MPRIS (scripts/modern media)
 kdialog                          # Qt file picker (wallpaper Add; pick-directory.sh)
 hyprpicker                       # color picker widget backend
 inotify-tools                    # wallpaper-provider.sh watches the download folder

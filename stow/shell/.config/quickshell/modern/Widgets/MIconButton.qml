@@ -162,6 +162,6 @@ Item {
         id: ring
         radius: Tokens.radius.full
         ringColor: root.close ? Colors.color.error : Colors.color.primary
-        active: root.highlighted || (root.activeFocus && !ring._pointer)
+        active: root.highlighted || (root.activeFocus && ring._shown && !ring._pointer)
     }
 }

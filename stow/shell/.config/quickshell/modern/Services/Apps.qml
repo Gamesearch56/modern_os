@@ -258,4 +258,17 @@ Singleton {
             return false;
         }
     }
+
+    function openPath(path: string): bool {
+        try {
+            const p = FileManager.localPath(path);
+            if (!p.length)
+                return false;
+            Quickshell.execDetached(["xdg-open", p]);
+            return true;
+        } catch (err) {
+            Logger.error("Apps", String(err));
+            return false;
+        }
+    }
 }

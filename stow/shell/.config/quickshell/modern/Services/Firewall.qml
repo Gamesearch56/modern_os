@@ -98,7 +98,7 @@ Singleton {
 
     function remove(num) {
         const n = String(num || "").replace(/[^0-9]/g, "");
-        if (!n || root.running || root.status === "missing")
+        if (!n || root.running || !root.active)
             return;
         if (!root._hasNumber(n)) {
             root.error = I18n.t("settings.firewall.stale");
@@ -141,7 +141,7 @@ Singleton {
     }
 
     function _addArgv(policy, fields) {
-        if (root.running || root.status === "missing")
+        if (root.running || !root.active)
             return null;
         const p = String(policy || "");
         const f = fields || ({});

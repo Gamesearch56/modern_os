@@ -22,9 +22,13 @@ Btrfs subvolumes created by `scripts/bootstrap.sh` (print-only until
 `modern update` honors. `backup.snapperEnabled` and `backup.resticEnabled`
 stay in config for compatibility; Settings no longer shows those
 toggles (they did not install snapper or configure a restic repo).
-Enabling snapper still does not create `/etc/snapper/configs/`; that
-remains a gated copy. Settings probes whether the `root` config exists
-and lists/creates/deletes snapshots when it does.
+Settings → Backup **Create config** writes the Snapper `root` config
+through one `pkexec` of `scripts/snapper-setup.sh`. When `/.snapshots`
+is already the `@snapshots` mount, that script writes the config files
+and leaves the mount alone — `snapper create-config /` would fail
+because it cannot create a nested `.snapshots`. Hourly Snapper
+snapshots stay off. Restore/rollback stays gated. Settings then lists,
+creates, and deletes snapshots when the `root` config exists.
 
 ## Swapfile lives on `@swap`
 

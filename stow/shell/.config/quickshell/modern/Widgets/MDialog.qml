@@ -1,6 +1,5 @@
-// Modal dialog: scrim + centered MCard. `titleKey` / `bodyKey` are
-// I18n paths. Confirm/cancel buttons emit signals; the caller decides
-// what they do (power-off confirm, user-delete confirm).
+// Modal dialog: scrim + centered glass card (Settings wash, hairline
+// only — not a window chrome). `titleKey` / `bodyKey` are I18n paths.
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"
@@ -62,14 +61,10 @@ FocusScope {
         }
     }
 
-    MCard {
+    MPanelSurface {
         id: card
-        level: 0
-        color: Colors.color.surface
-        borderWidth: Tokens.stroke.hairline
-        borderColor: Colors.color.outlineVariant
         width: Math.min(parent.width - Tokens.spacing.xxl, Tokens.spacing.xxl * 12)
-        implicitHeight: dialogCol.implicitHeight + padding * 2
+        implicitHeight: dialogCol.implicitHeight + Tokens.spacing.lg * 2
         anchors.centerIn: parent
         scale: Motion.overlayScale(root.open)
         opacity: Motion.overlayOpacity(root.open)
@@ -91,7 +86,9 @@ FocusScope {
 
         ColumnLayout {
             id: dialogCol
-            width: parent.width
+            x: Tokens.spacing.lg
+            y: Tokens.spacing.lg
+            width: parent.width - Tokens.spacing.lg * 2
             spacing: Tokens.spacing.md
 
             RowLayout {
@@ -129,6 +126,7 @@ FocusScope {
 
             ColumnLayout {
                 id: extraCol
+                visible: extraCol.children.length > 0
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.sm
             }
@@ -172,9 +170,9 @@ FocusScope {
         else if (event.key === Qt.Key_Left)
             root.arrowMove(-1, 0);
         else if (event.key === Qt.Key_Home)
-            dialogWalk.focusFirst();
+            dialogWalk.focusFirst(true);
         else if (event.key === Qt.Key_End)
-            dialogWalk.focusLast();
+            dialogWalk.focusLast(true);
         else
             return;
         event.accepted = true;

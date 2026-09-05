@@ -92,6 +92,7 @@ Item {
             from: 0
             to: Audio.volumeCap
             value: Audio.volume
+            wheel: true
             onMoved: (v) => Audio.setVolume(v)
         }
     }

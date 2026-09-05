@@ -119,9 +119,9 @@ Scope {
                             else if (event.key === Qt.Key_Left)
                                 contentScope.arrowMove(-1, 0);
                             else if (event.key === Qt.Key_Home)
-                                contentWalk.focusFirst();
+                                contentWalk.focusFirst(true);
                             else if (event.key === Qt.Key_End)
-                                contentWalk.focusLast();
+                                contentWalk.focusLast(true);
                             else
                                 return;
                             event.accepted = true;

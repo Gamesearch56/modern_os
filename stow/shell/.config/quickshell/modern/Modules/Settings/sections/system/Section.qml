@@ -48,7 +48,7 @@ ColumnLayout {
     }
 
     MSectionHeader {
-        visible: Update.pending.length > 0
+        visible: Update.pending.length > 0 && !Update.checking
         key: "settings.update.headline"
         styleName: "titleLarge"
         topMargin: Tokens.spacing.xxl

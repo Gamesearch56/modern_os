@@ -53,9 +53,9 @@ FocusScope {
         else if (event.key === Qt.Key_Left)
             root.arrowMove(-1, 0);
         else if (event.key === Qt.Key_Home)
-            walk.focusFirst();
+            walk.focusFirst(true);
         else if (event.key === Qt.Key_End)
-            walk.focusLast();
+            walk.focusLast(true);
         else
             return;
         event.accepted = true;

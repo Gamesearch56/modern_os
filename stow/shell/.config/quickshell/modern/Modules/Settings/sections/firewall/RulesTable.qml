@@ -14,7 +14,7 @@ ColumnLayout {
     signal addClicked()
     signal removeClicked(var rule)
 
-    readonly property bool _busy: Firewall.running || !Firewall.present
+    readonly property bool _busy: Firewall.running || !Firewall.active
     readonly property real fromWidth: Tokens.spacing.xxl * 7
     readonly property real actionWidth: Tokens.spacing.xxl * 2
 

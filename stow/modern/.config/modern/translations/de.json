@@ -71,6 +71,8 @@
   },
   "weather": {
     "unavailable": "Wetter nicht verfügbar",
+    "unavailableTitle": "Wetter ist derzeit nicht verfügbar",
+    "unavailableHint": "Versuche es gleich noch einmal, oder lege in den Einstellungen einen Ort fest.",
     "detailTitle": "Wetter",
     "condition": "Aktuelle Lage",
     "refresh": "Aktualisieren",
@@ -186,7 +188,8 @@
     "repairFsck": "FAT/ESP-Check: ESP aushängen, dann fsck.vfat -a /dev/disk/by-label/ESP (docs/TROUBLESHOOTING.md).",
     "unknown": "unbekanntes Unterkommando",
     "languageViaSettings": "Sprache umstellen unter Einstellungen → Sprache, oder language.ui in config.json setzen",
-    "volumeUnknown": "unbekannte Lautstärke-Aktion: %s"
+    "volumeUnknown": "unbekannte Lautstärke-Aktion: %s",
+    "mediaUnknown": "unbekannte Medien-Aktion: %s"
   },
   "wallpaper": {
     "title": "Hintergründe",
@@ -762,6 +765,8 @@
       "all": "Benutzer auf diesem Rechner",
       "settings": "Einstellungen",
       "others": "Andere Benutzer auf diesem System",
+      "empty": "Noch keine anderen Benutzer",
+      "emptyHint": "Öffne ein Terminal und lege ein Konto mit sudo useradd -m benutzername an, danach setze ein Passwort mit sudo passwd benutzername. Die Person kann sich dann am Anmeldebildschirm anmelden.",
       "groups": "Deine Gruppen",
       "groupsAll": "Gruppen",
       "colAdmin": "Admin",
@@ -849,6 +854,7 @@
       "setupBody": "Dafür ist das Admin-Passwort nötig. Es wird die Snapper-Config für / geschrieben. Stündliche Snapper-Snapshots bleiben aus. Rollback aus den Einstellungen bleibt abgeschottet.",
       "settingUp": "Snapper-Root-Config wird angelegt…",
       "manual": "Manuell",
+      "update": "ModernOS Update",
       "untitled": "Snapshot {n}",
       "deleteTitle": "Snapshot löschen?",
       "deleteBody": "Snapshot {n} von {date} löschen?"

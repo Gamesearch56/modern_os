@@ -18,29 +18,29 @@ QtObject {
         if (idx < 0) {
             if (dx < 0 || dy < 0)
                 return false;
-            root._focus(list[0]);
+            root._focus(list[0], true);
             return true;
         }
         const next = root._pick(list, idx, dx, dy);
         if (!next)
             return false;
-        root._focus(next);
+        root._focus(next, true);
         return true;
     }
 
-    function focusFirst(): bool {
+    function focusFirst(reveal: bool): bool {
         const list = root._items();
         if (list.length === 0)
             return false;
-        root._focus(list[0]);
+        root._focus(list[0], !!reveal);
         return true;
     }
 
-    function focusLast(): bool {
+    function focusLast(reveal: bool): bool {
         const list = root._items();
         if (list.length === 0)
             return false;
-        root._focus(list[list.length - 1]);
+        root._focus(list[list.length - 1], !!reveal);
         return true;
     }
 
@@ -76,10 +76,28 @@ QtObject {
         return false;
     }
 
-    function _focus(item: var) {
+    function _ringOf(item: var): var {
+        const kids = item ? item.children : null;
+        if (!kids)
+            return null;
+        for (let i = 0; i < kids.length; i++) {
+            if (kids[i] && typeof kids[i].markKeyboard === "function")
+                return kids[i];
+        }
+        return null;
+    }
+
+    function _focus(item: var, reveal: bool) {
         if (!item || typeof item.forceActiveFocus !== "function")
             return;
         item.forceActiveFocus();
+        const ring = root._ringOf(item);
+        if (ring) {
+            if (reveal)
+                ring.markKeyboard();
+            else
+                ring.markPointer();
+        }
         root._reveal(item);
     }
 

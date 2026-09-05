@@ -246,7 +246,7 @@ Item {
     MFocusRing {
         id: ring
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
-        active: ring.parent && ring.parent.activeFocus && !ring._pointer
+        active: ring.parent && ring.parent.activeFocus && ring._shown && !ring._pointer
             && (root._nav || (!root.compact && root.hoverHighlight))
         ringColor: Colors.color.primary
     }

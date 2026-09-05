@@ -17,6 +17,7 @@ ColumnLayout {
             to: Config.audio.masterVolumeLimit ?? 100
             value: Audio.volume
             showValue: true
+            wheel: true
             onMoved: (v) => Audio.setVolume(v)
         }
     }
@@ -29,6 +30,7 @@ ColumnLayout {
             to: 100
             value: Brightness.percent
             showValue: true
+            wheel: true
             onMoved: (v) => Brightness.setPercent(v)
         }
     }

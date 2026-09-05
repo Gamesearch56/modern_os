@@ -66,6 +66,9 @@ Singleton {
             }
             return s;
         }
+        function playPause() { root.togglePlaying(); }
+        function next() { root.next(); }
+        function previous() { root.previous(); }
     }
 
     function _bump() {

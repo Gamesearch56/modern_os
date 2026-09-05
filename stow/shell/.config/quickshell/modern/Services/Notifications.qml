@@ -342,26 +342,61 @@ Singleton {
         return root._str(v).split(/[\s,]+/);
     }
 
+    function _openablePath(s: string): string {
+        if (!root._isLocalPath(s))
+            return "";
+        const t = String(s);
+        const low = t.toLowerCase();
+        if (low.indexOf("scoped_dir") !== -1
+            || low.indexOf("/tmp/.com.vivaldi") !== -1
+            || low.indexOf("/tmp/.org.chromium") !== -1
+            || low.indexOf("/tmp/.com.google.chrome") !== -1)
+            return "";
+        return t;
+    }
+
     function attachmentPath(item): string {
         const live = root._live(item) || item;
         if (!live)
             return "";
-        const img = root._str(live.image);
-        if (root._isLocalPath(img))
-            return img;
         const h = live.hints || ({});
-        const ip = root._str(h["image-path"] || h["image_path"]);
-        if (root._isLocalPath(ip))
-            return ip;
         const urls = root._hintUrls(h["x-kde-urls"]);
         for (let i = 0; i < urls.length; i++) {
-            if (root._isLocalPath(urls[i]))
-                return urls[i];
+            const p = root._openablePath(urls[i]);
+            if (p.length)
+                return p;
         }
-        const m = root._str(live.body).match(/file:\/\/[^\s<>"']+/);
-        if (m && root._isLocalPath(m[0]))
-            return m[0];
-        return "";
+        const file = root._str(live.body).match(/file:\/\/[^\s<>"']+/);
+        if (file) {
+            const p = root._openablePath(file[0]);
+            if (p.length)
+                return p;
+        }
+        const img = root._openablePath(root._str(live.image));
+        if (img.length)
+            return img;
+        return root._openablePath(root._str(h["image-path"] || h["image_path"]));
+    }
+
+    function invokeDefault(item): bool {
+        const live = root._live(item) || item;
+        const raw = live ? live.raw : null;
+        const acts = raw ? raw.actions : null;
+        if (!acts || !acts.length)
+            return false;
+        try {
+            let pick = acts[0];
+            for (let i = 0; i < acts.length; i++) {
+                const id = String(acts[i].identifier || "").toLowerCase();
+                if (id === "default" || id === "")
+                    pick = acts[i];
+            }
+            pick.invoke();
+            return true;
+        } catch (e) {
+            Logger.error("Notifications", String(e));
+            return false;
+        }
     }
 
     function _byUid(uid) {

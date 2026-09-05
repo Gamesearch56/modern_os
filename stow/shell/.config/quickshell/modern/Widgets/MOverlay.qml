@@ -52,9 +52,9 @@ FocusScope {
         else if (event.key === Qt.Key_Left)
             root.arrowMove(-1, 0);
         else if (event.key === Qt.Key_Home)
-            overlayWalk.focusFirst();
+            overlayWalk.focusFirst(true);
         else if (event.key === Qt.Key_End)
-            overlayWalk.focusLast();
+            overlayWalk.focusLast(true);
         else
             return;
         event.accepted = true;

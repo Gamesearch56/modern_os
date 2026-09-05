@@ -88,8 +88,17 @@ Item {
             topMargin: Tokens.spacing.xxl
         }
         UserTable {
+            visible: Passwd.others.length > 0
             Layout.fillWidth: true
             onTerminalRequested: (login) => root.pendingLogin = login
+        }
+        MEmptyState {
+            visible: Passwd.others.length === 0
+            Layout.fillWidth: true
+            Layout.preferredHeight: Tokens.spacing.xxl * 6
+            iconName: "user-identity"
+            titleKey: "settings.users.empty"
+            hintKey: "settings.users.emptyHint"
         }
 
         MSectionHeader {

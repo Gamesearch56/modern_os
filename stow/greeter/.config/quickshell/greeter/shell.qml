@@ -3,6 +3,8 @@
 // and the greeter user has no $HOME view of them. Colors come from the
 // shared session dir (docs/DECISIONS.md #14).
 import Quickshell
+import Quickshell.Hyprland
+import Quickshell.Wayland
 import QtQuick
 
 ShellRoot {
@@ -49,13 +51,19 @@ ShellRoot {
             id: win
             required property var modelData
             screen: modelData
+            readonly property bool grabKeys: root.isLeftmost(win.modelData)
             color: sessionChrome.color.surface || "#141218"
             anchors.top: true
             anchors.left: true
             anchors.right: true
             anchors.bottom: true
             exclusionMode: ExclusionMode.Ignore
-            focusable: true
+            focusable: win.grabKeys
+            aboveWindows: true
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.keyboardFocus: win.grabKeys
+                ? WlrKeyboardFocus.Exclusive
+                : WlrKeyboardFocus.None
 
             SessionSurface {
                 anchors.fill: parent
@@ -63,7 +71,20 @@ ShellRoot {
                 auth: sessionAuth
                 users: sessionUsers
                 interactive: true
-                autoFocus: root.isLeftmost(win.modelData)
+                autoFocus: win.grabKeys
+            }
+
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: win.grabKeys ? [win] : []
+            }
+
+            Component.onCompleted: {
+                if (!win.grabKeys)
+                    return;
+                Qt.callLater(() => {
+                    keyGrab.active = true;
+                });
             }
         }
     }

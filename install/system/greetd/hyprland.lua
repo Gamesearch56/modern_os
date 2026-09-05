@@ -152,6 +152,7 @@ hl.on("hyprland.start", function()
     else
         hl.exec_cmd("qs -c greeter")
     end
-    -- Seat focus follows the pointer; (0,0) is the leftmost output.
-    hl.exec_cmd("hyprctl dispatch movecursor 64 64")
+    -- A warp before the layer maps does not send pointer-enter. The
+    -- greeter holds HyprlandFocusGrab; this retry is only a fallback.
+    hl.exec_cmd("sh -c 'sleep 0.4; hyprctl dispatch movecursor 96 96'")
 end)

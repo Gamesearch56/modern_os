@@ -66,6 +66,7 @@ BarPopup {
         from: 0
         to: 100
         value: Audio.streamVolume(root.stream)
+        wheel: true
         onMoved: (v) => Audio.setStreamVolume(root.stream, v)
         onCommitted: (v) => Audio.setStreamVolume(root.stream, v)
     }
