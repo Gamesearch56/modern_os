@@ -43,6 +43,7 @@ Scope {
 
             MouseArea {
                 anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
                 onClicked: Ai.hide()
             }
 
@@ -86,7 +87,7 @@ Scope {
 
             HyprlandFocusGrab {
                 id: keyGrab
-                windows: [win]
+                windows: Popups.grabWindows(win, win.screen)
                 onCleared: {
                     if (Ai.panelOpen)
                         Ai.hide();

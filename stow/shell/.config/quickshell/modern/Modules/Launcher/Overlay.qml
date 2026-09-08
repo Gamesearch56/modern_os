@@ -49,6 +49,10 @@ Item {
 
         MouseArea {
             anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
             onClicked: root.closed()
         }
     }

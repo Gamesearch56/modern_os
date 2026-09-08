@@ -37,4 +37,9 @@ Item {
         cursorShape: Qt.PointingHandCursor
         onClicked: Settings.openAt("power", "")
     }
+
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+    }
 }

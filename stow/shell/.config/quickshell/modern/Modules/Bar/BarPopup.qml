@@ -90,7 +90,7 @@ PopupWindow {
 
     HyprlandFocusGrab {
         id: keyGrab
-        windows: [root]
+        windows: Popups.grabWindows(root, root.screen)
         onCleared: {
             if (root.open)
                 root.open = false;

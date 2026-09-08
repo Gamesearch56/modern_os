@@ -41,23 +41,19 @@ PanelWindow {
     focusable: true
     aboveWindows: true
     WlrLayershell.layer: WlrLayer.Overlay
-    margins.top: Config.bar.position === "top" ? BarLayout.windowInset : 0
-    margins.bottom: Config.bar.position === "bottom" ? BarLayout.windowInset : 0
-    margins.left: Config.bar.position === "left" ? BarLayout.windowInset : 0
-    margins.right: Config.bar.position === "right" ? BarLayout.windowInset : 0
 
     function _anchorLocal() {
         const p = root.anchorItem;
         if (!p)
             return Qt.point(root._gap, root._gap);
         const g = p.mapToGlobal(0, 0);
-        const o = overlay.mapToGlobal(0, 0);
+        const o = chrome.mapToGlobal(0, 0);
         return Qt.point(g.x - o.x, g.y - o.y);
     }
 
     function _cardX(): real {
         const w = root.panelWidth;
-        const maxX = Math.max(root._gap, overlay.width - w - root._gap);
+        const maxX = Math.max(root._gap, chrome.width - w - root._gap);
         if (root._barLeft)
             return root._gap;
         if (root._barRight)
@@ -77,14 +73,14 @@ PanelWindow {
     function _cardY(): real {
         const h = root.panelHeight;
         if (root._barBottom)
-            return overlay.height - h;
+            return chrome.height - h;
         if (!root._side)
             return 0;
         const p = root.anchorItem;
         if (!p)
             return root._gap;
         const y = root._anchorLocal().y;
-        return Math.max(root._gap, Math.min(y, overlay.height - h - root._gap));
+        return Math.max(root._gap, Math.min(y, chrome.height - h - root._gap));
     }
 
     onOpenChanged: {
@@ -108,21 +104,33 @@ PanelWindow {
 
         MouseArea {
             anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
             onClicked: root.open = false
         }
 
-        MPanelSurface {
-            id: host
+        Item {
+            id: chrome
+            anchors.fill: parent
+            anchors.topMargin: Config.bar.position === "top" ? BarLayout.windowInset : 0
+            anchors.bottomMargin: Config.bar.position === "bottom" ? BarLayout.windowInset : 0
+            anchors.leftMargin: Config.bar.position === "left" ? BarLayout.windowInset : 0
+            anchors.rightMargin: Config.bar.position === "right" ? BarLayout.windowInset : 0
+
+            MPanelSurface {
+                id: host
             x: {
                 void root.open;
-                void overlay.width;
+                void chrome.width;
                 void root.panelWidth;
                 void root.hAlign;
                 return root._cardX();
             }
             y: {
                 void root.open;
-                void overlay.height;
+                void chrome.height;
                 void root.panelHeight;
                 return root._cardY();
             }
@@ -154,11 +162,12 @@ PanelWindow {
                 }
             }
         }
+        }
     }
 
     HyprlandFocusGrab {
         id: keyGrab
-        windows: [root]
+        windows: Popups.grabWindows(root, root.screen)
         onCleared: {
             if (root.open)
                 root.open = false;

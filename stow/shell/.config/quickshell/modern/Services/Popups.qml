@@ -10,8 +10,51 @@ Singleton {
 
     property int openCount: 0
     property var active: null
+    property var barHosts: []
     signal closeRequested()
     signal exclusive(var keeper)
+
+    function registerBar(win: var) {
+        if (!win)
+            return;
+        const next = root.barHosts.slice();
+        if (next.indexOf(win) !== -1)
+            return;
+        next.push(win);
+        root.barHosts = next;
+    }
+
+    function unregisterBar(win: var) {
+        root.barHosts = root.barHosts.filter(w => w !== win);
+    }
+
+    function barForScreen(screen: var): var {
+        void root.barHosts;
+        const hosts = root.barHosts;
+        const name = screen ? String(screen.name || "") : "";
+        for (let i = 0; i < hosts.length; i++) {
+            const w = hosts[i];
+            if (!w)
+                continue;
+            if (screen && w.screen === screen)
+                return w;
+            if (name.length > 0 && w.screen && String(w.screen.name) === name)
+                return w;
+        }
+        return null;
+    }
+
+    // Seat grab otherwise owns the pointer; the bar is a second surface
+    // so widget buttons keep hover/cursor while a menu is open.
+    function grabWindows(popup: var, screen: var): var {
+        void root.barHosts;
+        const bar = root.barForScreen(screen);
+        if (popup && bar && bar !== popup)
+            return [popup, bar];
+        if (popup)
+            return [popup];
+        return [];
+    }
 
     function claim(popup: var) {
         if (!popup || root.active === popup)

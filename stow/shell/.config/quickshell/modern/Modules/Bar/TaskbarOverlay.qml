@@ -43,6 +43,7 @@ Scope {
 
             MouseArea {
                 anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
                 onClicked: Taskbar.hide()
             }
 
@@ -87,7 +88,7 @@ Scope {
 
             HyprlandFocusGrab {
                 id: keyGrab
-                windows: [win]
+                windows: Popups.grabWindows(win, win.screen)
                 onCleared: {
                     if (Taskbar.open)
                         Taskbar.hide();
