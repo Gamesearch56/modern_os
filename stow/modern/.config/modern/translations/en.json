@@ -810,7 +810,8 @@
       "watts": "{n} W",
       "minSuffix": " min",
       "idleMin": "{n} min",
-      "idleHour": "{n} hr"
+      "idleHour": "{n} hr",
+      "idleNever": "Never"
     },
     "bluetooth": {
       "connected": "Connected",

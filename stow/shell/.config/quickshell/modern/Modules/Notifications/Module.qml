@@ -14,7 +14,7 @@ Scope {
     onIdleHoldChanged: IdleInhibit.setActive(idleHold)
     Component.onCompleted: {
         IdleInhibit.setActive(idleHold);
-        void IdleDaemon.dimSec;
+        void IdleDaemon.configGen;
     }
 
     Connections {

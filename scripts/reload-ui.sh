@@ -24,11 +24,7 @@ if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
     if [ -d "/var/cache/hyprpm/${USER_NAME}" ] && command -v hyprpm >/dev/null 2>&1; then
         hyprpm reload -n >/dev/null 2>&1 || true
     fi
-    if pgrep -u "$USER_NAME" -x hypridle >/dev/null 2>&1; then
-        pkill -u "$USER_NAME" -x hypridle || true
-        nohup hypridle >/dev/null 2>&1 &
-        disown $! 2>/dev/null || true
-    fi
+    timeout 5 "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hypridle-apply.sh" || true
     # shellcheck source=lib/polkit-agent.sh
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/polkit-agent.sh"
     ensure_polkit_agent || true

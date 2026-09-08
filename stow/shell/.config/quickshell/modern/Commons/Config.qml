@@ -23,6 +23,9 @@ Singleton {
 
     readonly property string home: Quickshell.env("HOME")
     property int _configMisses: 0
+    // Bumped on every successful load so Services can react when nested
+    // JsonObject ints (idleTimings) do not emit their own changed signals.
+    property int generation: 0
 
     FileView {
         id: file
@@ -30,7 +33,10 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         printErrors: false
-        onLoaded: root._configMisses = 0
+        onLoaded: {
+            root._configMisses = 0
+            root.generation++
+        }
         onLoadFailed: (error) => {
             // FileNotFound (2): atomic replace can fire the watcher between
             // unlink and rename. Retry; do not toast.

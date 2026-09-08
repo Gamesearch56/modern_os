@@ -11,7 +11,7 @@ ColumnLayout {
     Layout.fillWidth: true
 
     readonly property var durations: [
-        { value: 60, titleKey: "settings.energy.idleMin", params: ({ n: 1 }) },
+        { value: 0, titleKey: "settings.energy.idleNever" },
         { value: 120, titleKey: "settings.energy.idleMin", params: ({ n: 2 }) },
         { value: 300, titleKey: "settings.energy.idleMin", params: ({ n: 5 }) },
         { value: 600, titleKey: "settings.energy.idleMin", params: ({ n: 10 }) },
@@ -24,7 +24,9 @@ ColumnLayout {
     ]
 
     function _snap(sec: int): int {
-        const opts = [60, 120, 300, 600, 1800, 3600, 7200, 14400, 28800, 43200];
+        if (sec <= 0 || sec === 60)
+            return 0;
+        const opts = [0, 120, 300, 600, 1800, 3600, 7200, 14400, 28800, 43200];
         let best = opts[0];
         let d = Math.abs(sec - opts[0]);
         for (let i = 1; i < opts.length; i++) {
