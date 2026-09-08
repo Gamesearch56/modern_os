@@ -98,6 +98,8 @@ local bindings = {
     spotify = hl.dsp.exec_cmd("spotify-launcher"),
     -- Overlay HUD first, then graceful close. If the clone path is
     -- missing, close the window directly — a dead exec is worse.
+    -- Same grab bypass as HUDs: Super+Q must still run while a
+    -- HyprlandFocusGrab (bar panel, launcher) owns the keyboard.
     closeWindow = have_modern and hl.dsp.exec_cmd(modern .. " window close") or hl.dsp.window.close(),
     fullscreen = hl.dsp.window.fullscreen(),
     toggleFloating = hl.dsp.window.float({ action = "toggle" }),
@@ -158,6 +160,7 @@ local overlay_actions = {
     wallpaperPicker = true,
     settings = true,
     fullscreen = true,
+    closeWindow = true,
 }
 
 local function bind_opts(action)

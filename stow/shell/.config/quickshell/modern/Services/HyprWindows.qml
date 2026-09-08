@@ -181,11 +181,16 @@ QtObject {
         return autostart.hide(address);
     }
 
-    function closeFocused() {
+    function closeFocused(): string {
         const t = Hyprland.focusedToplevel;
         if (!t)
-            return;
-        root.closeWindow(String(t.address || ""));
+            return "false";
+        const addr = String(t.address || "");
+        if (!addr.length)
+            return "false";
+        if (root.hideAutostart(addr))
+            return "hidden";
+        return "false";
     }
 
     function closeWindow(address: string) {

@@ -210,8 +210,8 @@ ShellRoot {
             }
             return closed ? "true" : "false";
         }
-        function closeFocused() {
-            Hypr.closeFocused();
+        function closeFocused(): string {
+            return Hypr.closeFocused();
         }
     }
 

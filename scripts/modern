@@ -225,7 +225,9 @@ case "$TARGET" in
                 if [ "$dismissed" = "true" ]; then
                     exit 0
                 fi
-                if qs -c modern ipc call shell closeFocused >/dev/null 2>&1; then
+                parked="$(qs -c modern ipc call shell closeFocused 2>/dev/null || true)"
+                parked="$(printf '%s' "$parked" | tr -d '[:space:]\"')"
+                if [ "$parked" = "hidden" ]; then
                     exit 0
                 fi
                 exec hyprctl dispatch "hl.dsp.window.close()"
