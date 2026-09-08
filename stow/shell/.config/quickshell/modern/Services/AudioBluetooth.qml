@@ -30,14 +30,39 @@ QtObject {
     property bool primed: false
     property string btSinkId: ""
     property string btSourceId: ""
+    property bool _applying: false
+    property int _settle: 0
+
+    // USB mics (FOX) often expose a playback node on the same card.
+    // WirePlumber follows the source onto that sink after BT drops;
+    // keep asserting the chosen speaker for one recording-chrome beat.
+    property Timer settle: Timer {
+        interval: Motion.extraLongMs
+        repeat: true
+        onTriggered: bt._tickSettle()
+    }
 
     onEndpointSigChanged: bt.sync()
 
     function nodeKey(n: var): string {
         if (!n)
             return "";
+        const ids = bt.nodeIds(n);
+        return ids.length ? ids[0] : "";
+    }
+
+    function nodeIds(n: var): var {
+        if (!n)
+            return [];
         const _ = n.ready;
-        return String(n.name || n.description || n.nickname || n.id || "");
+        const raw = [n.name, n.description, n.nickname, n.id];
+        const out = [];
+        for (let i = 0; i < raw.length; i++) {
+            const s = String(raw[i] || "");
+            if (s.length && out.indexOf(s) === -1)
+                out.push(s);
+        }
+        return out;
     }
 
     function isBluetoothNode(n: var): bool {
@@ -69,6 +94,8 @@ QtObject {
             bt.btSinkId = "";
         else
             bt.btSourceId = "";
+        if (!bt._applying)
+            bt._stopSettle();
         const key = bt.nodeKey(n);
         if (!key.length)
             return;
@@ -81,44 +108,88 @@ QtObject {
         ConfigWrite.set(path, key);
     }
 
+    function _matches(n: var, key: string): bool {
+        if (!n || !key)
+            return false;
+        return bt.nodeIds(n).indexOf(key) !== -1;
+    }
+
     function findByKey(list: var, key: string): var {
         if (!key || !list)
             return null;
         for (let i = 0; i < list.length; i++) {
-            if (bt.nodeKey(list[i]) === key)
+            if (bt._matches(list[i], key))
                 return list[i];
         }
         return null;
+    }
+
+    function _want(isSink: bool): string {
+        void Config.generation;
+        const explicit = String(isSink
+            ? (Config.audio.fallbackSink || "")
+            : (Config.audio.fallbackSource || ""));
+        if (explicit.length)
+            return explicit;
+        return String(isSink
+            ? (Config.audio.lastSink || "")
+            : (Config.audio.lastSource || ""));
     }
 
     function applyFallback(isSink: bool) {
         const a = bt.audio;
         if (!a)
             return;
-        void Config.generation;
-        if (isSink)
-            bt.btSinkId = "";
-        else
-            bt.btSourceId = "";
-        const explicit = String(isSink
-            ? (Config.audio.fallbackSink || "")
-            : (Config.audio.fallbackSource || ""));
-        const last = String(isSink
-            ? (Config.audio.lastSink || "")
-            : (Config.audio.lastSource || ""));
-        const want = explicit.length ? explicit : last;
+        const want = bt._want(isSink);
         if (!want.length)
             return;
         const node = bt.findByKey(isSink ? a.sinks : a.sources, want);
         if (!node)
             return;
         const cur = isSink ? a.sink : a.source;
-        if (cur && bt.nodeKey(cur) === want)
+        if (bt._matches(cur, want))
             return;
+        bt._applying = true;
         if (isSink)
             a.setDefaultSink(node);
         else
             a.setDefaultSource(node);
+        bt._applying = false;
+    }
+
+    function _sinkOk(): bool {
+        const want = bt._want(true);
+        return !want.length || bt._matches(bt.audio ? bt.audio.sink : null, want);
+    }
+
+    function _sourceOk(): bool {
+        const want = bt._want(false);
+        return !want.length || bt._matches(bt.audio ? bt.audio.source : null, want);
+    }
+
+    function _stopSettle() {
+        bt._settle = 0;
+        settle.stop();
+    }
+
+    function _tickSettle() {
+        if (bt._settle <= 0) {
+            bt._stopSettle();
+            return;
+        }
+        bt._settle -= 1;
+        bt.applyFallback(false);
+        bt.applyFallback(true);
+        if (bt._sinkOk() && bt._sourceOk())
+            bt._stopSettle();
+    }
+
+    function _armSettle() {
+        bt.applyFallback(false);
+        bt.applyFallback(true);
+        const beat = Math.max(1, Motion.extraLongMs);
+        bt._settle = Math.max(3, Math.ceil(Motion.recordingChromeMs / beat));
+        settle.restart();
     }
 
     function sync() {
@@ -154,20 +225,26 @@ QtObject {
         const prev = bt.seen;
         const goneBtSink = bt._goneBluetooth(prev, now, true);
         const goneBtSource = bt._goneBluetooth(prev, now, false);
+        let tookBt = false;
         if (bt.enabled) {
             for (let s = 0; s < freshSinks.length; s++) {
-                if (bt.isBluetoothNode(freshSinks[s]))
+                if (bt.isBluetoothNode(freshSinks[s])) {
+                    bt._stopSettle();
                     a.setDefaultSink(freshSinks[s]);
+                    tookBt = true;
+                }
             }
             for (let c = 0; c < freshSources.length; c++) {
-                if (bt.isBluetoothNode(freshSources[c]))
+                if (bt.isBluetoothNode(freshSources[c])) {
                     a.setDefaultSource(freshSources[c]);
+                    tookBt = true;
+                }
             }
         }
-        if (goneBtSink && bt.btSinkId.length && !now[bt.btSinkId])
-            Qt.callLater(() => bt.applyFallback(true));
-        if (goneBtSource && bt.btSourceId.length && !now[bt.btSourceId])
-            Qt.callLater(() => bt.applyFallback(false));
+        const dropSink = goneBtSink && bt.btSinkId.length && !now[bt.btSinkId];
+        const dropSource = goneBtSource && bt.btSourceId.length && !now[bt.btSourceId];
+        if (!tookBt && (dropSink || dropSource))
+            bt._armSettle();
         bt.seen = now;
     }
 
