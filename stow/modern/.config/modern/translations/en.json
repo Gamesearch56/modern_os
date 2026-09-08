@@ -54,7 +54,12 @@
     "input": "Microphone",
     "applications": "Applications",
     "noOutputs": "No output devices",
-    "noInputs": "No input devices"
+    "noInputs": "No input devices",
+    "fallback": "Set default",
+    "fallbackOutputTitle": "Default speaker",
+    "fallbackOutputBody": "When Bluetooth headphones disconnect, use this speaker. None uses the last speaker you chose.",
+    "fallbackInputTitle": "Default microphone",
+    "fallbackInputBody": "When a Bluetooth microphone disconnects, use this input. None uses the last microphone you chose."
   },
   "network": {
     "disconnected": "Disconnected",

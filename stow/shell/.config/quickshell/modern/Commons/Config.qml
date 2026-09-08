@@ -223,6 +223,10 @@ Singleton {
 
             property JsonObject audio: JsonObject {
                 property string autoSwitchBluetooth: "on"
+                property string fallbackSink: ""
+                property string fallbackSource: ""
+                property string lastSink: ""
+                property string lastSource: ""
                 property var perAppVolume: ({})
                 property int masterVolume: -1
                 property int masterVolumeLimit: 100

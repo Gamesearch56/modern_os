@@ -54,7 +54,12 @@
     "input": "Mikrofon",
     "applications": "Anwendungen",
     "noOutputs": "Keine Ausgabegeräte",
-    "noInputs": "Keine Eingabegeräte"
+    "noInputs": "Keine Eingabegeräte",
+    "fallback": "Standard festlegen",
+    "fallbackOutputTitle": "Standard-Lautsprecher",
+    "fallbackOutputBody": "Wenn Bluetooth-Kopfhörer getrennt werden, diesen Lautsprecher verwenden. Keine verwendet den zuletzt gewählten Lautsprecher.",
+    "fallbackInputTitle": "Standard-Mikrofon",
+    "fallbackInputBody": "Wenn ein Bluetooth-Mikrofon getrennt wird, dieses Eingabegerät verwenden. Keine verwendet das zuletzt gewählte Mikrofon."
   },
   "network": {
     "disconnected": "Getrennt",

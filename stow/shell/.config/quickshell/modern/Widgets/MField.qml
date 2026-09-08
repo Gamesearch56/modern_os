@@ -9,6 +9,7 @@ ColumnLayout {
     property string labelKey: ""
     property string hintKey: ""
     property string hintValue: ""
+    property alias headerExtra: headerSlot.data
 
     default property alias extra: controlSlot.data
 
@@ -16,11 +17,23 @@ ColumnLayout {
     Layout.fillWidth: true
     clip: false
 
-    MText {
-        visible: root.labelKey.length > 0
-        key: root.labelKey
-        styleName: "titleSmall"
+    RowLayout {
+        visible: root.labelKey.length > 0 || headerSlot.children.length > 0
         Layout.fillWidth: true
+        spacing: Tokens.spacing.sm
+
+        MText {
+            visible: root.labelKey.length > 0
+            key: root.labelKey
+            styleName: "titleSmall"
+            Layout.fillWidth: true
+        }
+
+        Row {
+            id: headerSlot
+            spacing: Tokens.spacing.xs
+            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+        }
     }
 
     Item {
