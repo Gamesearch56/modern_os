@@ -225,6 +225,9 @@ case "$TARGET" in
                 if [ "$dismissed" = "true" ]; then
                     exit 0
                 fi
+                if qs -c modern ipc call shell closeFocused >/dev/null 2>&1; then
+                    exit 0
+                fi
                 exec hyprctl dispatch "hl.dsp.window.close()"
                 ;;
             *)

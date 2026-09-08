@@ -61,6 +61,8 @@ log "autologin apply"
 "$ROOT/scripts/test-autologin-apply.sh"
 log "hypridle apply"
 "$ROOT/scripts/test-hypridle-apply.sh"
+log "modern-launch autostart"
+"$ROOT/scripts/test-modern-launch.sh"
 log "snapper setup"
 "$ROOT/scripts/test-snapper-setup.sh"
 

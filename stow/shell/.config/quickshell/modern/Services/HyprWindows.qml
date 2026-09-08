@@ -7,6 +7,9 @@ QtObject {
     id: root
 
     property var host: null
+    readonly property HyprAutostart autostart: HyprAutostart {
+        windows: root
+    }
 
     function focusWindow(address: string) {
         const addr = String(address || "");
@@ -170,7 +173,24 @@ QtObject {
         return null;
     }
 
+    function isAutostartWindow(toplevel: var): bool {
+        return autostart.isAutostartWindow(toplevel);
+    }
+
+    function hideAutostart(address: string): bool {
+        return autostart.hide(address);
+    }
+
+    function closeFocused() {
+        const t = Hyprland.focusedToplevel;
+        if (!t)
+            return;
+        root.closeWindow(String(t.address || ""));
+    }
+
     function closeWindow(address: string) {
+        if (root.hideAutostart(address))
+            return;
         const addr = String(address || "").replace(/^address:/i, "");
         if (!addr.length)
             return;
@@ -186,6 +206,8 @@ QtObject {
     }
 
     function killWindow(address: string) {
+        if (root.hideAutostart(address))
+            return;
         const addr = String(address || "").replace(/^address:/i, "");
         if (!addr.length || !root.host._lua)
             return;

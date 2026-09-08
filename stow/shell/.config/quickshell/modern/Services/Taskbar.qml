@@ -179,6 +179,14 @@ Singleton {
     function close(entry: var) {
         if (!entry)
             return;
+        if (entry.kind === "window") {
+            const t = Hypr.toplevelByAddress(String(entry.address || ""));
+            if (t && Hypr.isAutostartWindow(t)) {
+                Hypr.closeWindow(String(entry.address || ""));
+                Hypr.refreshToplevels();
+                return;
+            }
+        }
         RunningApps.killEntry(entry);
         if (entry.kind === "window")
             Hypr.killWindow(String(entry.address || ""));

@@ -200,7 +200,9 @@ Singleton {
     function raiseDesktop(desktopId: string): bool { return wins.raiseDesktop(desktopId); }
     function toplevelByAddress(address: string): var { return wins.toplevelByAddress(address); }
     function closeWindow(address: string) { wins.closeWindow(address); }
+    function closeFocused() { wins.closeFocused(); }
     function killWindow(address: string) { wins.killWindow(address); }
+    function isAutostartWindow(toplevel: var): bool { return wins.isAutostartWindow(toplevel); }
     function windowOnScreen(toplevel: var, screen: var): bool { return wins.windowOnScreen(toplevel, screen); }
     function toggleFloating(address: string) { wins.toggleFloating(address); }
     function toggleFullscreen(address: string) { wins.toggleFullscreen(address); }

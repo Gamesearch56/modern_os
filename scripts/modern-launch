@@ -45,7 +45,9 @@ scheme_for_desktop() {
 if [[ "${1:-}" == "--background" ]]; then
     shift
     inner=$(printf '%q ' "$0" "$@")
-    exec hyprctl dispatch exec "[workspace special:background silent] ${inner% }"
+    inner="${inner% }"
+    # Hyprland 0.56 Lua treats `hyprctl dispatch exec` as invalid syntax.
+    exec hyprctl dispatch "hl.dsp.exec_cmd([=[${inner}]=], { workspace = \"special:background silent\" })"
 fi
 
 if [[ "${1:-}" == "--raise" ]]; then
