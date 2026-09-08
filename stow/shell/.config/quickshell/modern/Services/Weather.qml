@@ -26,7 +26,8 @@ Singleton {
     property string display: ""
     property string iconName: "weather-none"
     property string conditionKey: "weather.unavailable"
-    property bool watching: false
+    property int _watchers: 0
+    readonly property bool watching: root._watchers > 0
     property int weatherCode: -1
     property bool isDay: true
     property bool _fromUser: false
@@ -47,6 +48,10 @@ Singleton {
         root.refresh()
     onImperialChanged: if (root.watching)
         root.refresh()
+    onWatchingChanged: {
+        if (root.watching && !root.available && !proc.running)
+            root.refresh();
+    }
 
     Process {
         id: proc
@@ -65,17 +70,40 @@ Singleton {
                     Logger.warn("Weather", t);
             }
         }
+        onExited: (code) => {
+            if (code === 0 || !root.busy)
+                return;
+            root._clear();
+            root.busy = false;
+            root._fromUser = false;
+        }
     }
 
     Timer {
         interval: Config.widgets?.weather?.pollIntervalMs ?? 600000
-        running: root.watching
+        running: root.watching && root.available
         repeat: true
-        triggeredOnStart: true
         onTriggered: root.refresh()
     }
 
+    Timer {
+        interval: Motion.wifiScanMs
+        running: root.watching && !root.available && !proc.running
+        repeat: true
+        onTriggered: root.refresh()
+    }
+
+    function watch() {
+        root._watchers += 1;
+    }
+
+    function unwatch() {
+        root._watchers = Math.max(0, root._watchers - 1);
+    }
+
     function refresh(fromUser: bool) {
+        if (proc.running && !fromUser)
+            return;
         root._fromUser = !!fromUser;
         root.busy = true;
         proc.running = false;
