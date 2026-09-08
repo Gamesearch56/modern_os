@@ -4,7 +4,7 @@ local config = require("modules.config")
 
 local rounding = math.floor(16 * (config.value("design.cornerRounding", 1.0)))
 local blur = config.value("design.blurStrength", 40)
-local win_alpha = config.value("windows.opacity", 1.0)
+local win_alpha = math.max(0, math.min(1, config.value("windows.opacity", 1.0)))
 local gaps_in = config.value("windows.gapsIn", 5)
 local gaps_out = config.value("windows.gapsOut", 10)
 
@@ -20,7 +20,7 @@ hl.config({
     decoration = {
         rounding = rounding,
         active_opacity = win_alpha,
-        inactive_opacity = math.min(1, win_alpha * 0.98),
+        inactive_opacity = win_alpha,
         blur = {
             enabled = true,
             size = math.floor(blur / 10),

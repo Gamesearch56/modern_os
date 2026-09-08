@@ -236,6 +236,13 @@ Singleton {
         Quickshell.execDetached(["hyprctl", "keyword", k, v]);
     }
 
+    function setWindowOpacity(alpha: var) {
+        const n = Math.max(0, Math.min(1, Number(alpha ?? 1)));
+        const s = String(n);
+        root.keyword("decoration:active_opacity", s);
+        root.keyword("decoration:inactive_opacity", s);
+    }
+
     function setCursor(theme: string, size: int) {
         const t = String(theme || "").trim();
         if (!t.length)
@@ -277,16 +284,12 @@ Singleton {
             root.keyword("general:gaps_in", String(value ?? win.gapsIn ?? 5));
         else if (p === "windows.gapsOut")
             root.keyword("general:gaps_out", String(value ?? win.gapsOut ?? 10));
-        else if (p === "windows.opacity") {
-            const a = value ?? win.opacity ?? 1;
-            root.keyword("decoration:active_opacity", String(a));
-            root.keyword("decoration:inactive_opacity", String(Math.min(1, a * 0.98)));
-        } else if (p === "windows") {
+        else if (p === "windows.opacity")
+            root.setWindowOpacity(value ?? win.opacity ?? 1);
+        else if (p === "windows") {
             root.keyword("general:gaps_in", String(win.gapsIn ?? 5));
             root.keyword("general:gaps_out", String(win.gapsOut ?? 10));
-            const a = win.opacity ?? 1;
-            root.keyword("decoration:active_opacity", String(a));
-            root.keyword("decoration:inactive_opacity", String(Math.min(1, a * 0.98)));
+            root.setWindowOpacity(win.opacity ?? 1);
         } else if (p === "design.cornerRounding") {
             const r = value ?? design.cornerRounding ?? 1;
             root.keyword("decoration:rounding", String(Math.floor(16 * r)));
