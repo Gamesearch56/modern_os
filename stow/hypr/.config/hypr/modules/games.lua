@@ -70,11 +70,20 @@ end
 
 local function excluded(w)
     local c = string.lower(tostring(w.class or w.initial_class or ""))
+    local t = string.lower(tostring(w.title or w.initial_title or ""))
     if c == "steam" or c == "lutris" or c == "zenity" then
         return true
     end
     if c:find("heroic", 1, true) or c:find("steamwebhelper", 1, true) then
         return true
+    end
+    -- Battle.net launcher (not World of Warcraft): keep windowed.
+    local hay = c .. "\n" .. t
+    if hay:find("battle%.net", 1, false) or hay:find("battlenet", 1, true)
+        or hay:find("blizzard battle", 1, true) then
+        if not hay:find("warcraft", 1, true) then
+            return true
+        end
     end
     return false
 end

@@ -128,6 +128,15 @@
         "title": "win0"
       },
       "float": true
+    },
+    {
+      "name": "battlenet-launcher",
+      "match": {
+        "title": ".*[Bb]attle\\.net.*"
+      },
+      "float": true,
+      "center": true,
+      "size": "1280 800"
     }
   ],
   "launcher": {

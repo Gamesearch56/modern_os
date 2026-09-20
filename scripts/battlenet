@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Launch Battle.net via Steam (non-Steam app id) or umu-run + GE-Proton.
+# Performance defaults: GameMode, RADV, XWayland (no Proton Wayland),
+# no gamescope/MangoHud. Path/id live in gitignored battlenet.env.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODERN_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/modern"
+ENV_FILE="${MODERN_DIR}/battlenet.env"
+EXAMPLE="${SCRIPT_DIR}/../stow/modern/.config/modern/battlenet.env.example"
+
+export PROTON_ENABLE_WAYLAND="${PROTON_ENABLE_WAYLAND:-0}"
+export WINE_SIMULATE_WRITECOPY="${WINE_SIMULATE_WRITECOPY:-1}"
+export AMD_VULKAN_ICD="${AMD_VULKAN_ICD:-RADV}"
+
+if [ -f "$ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    set -a
+    # shellcheck source=/dev/null
+    source "$ENV_FILE"
+    set +a
+fi
+
+STEAM_APPID="${STEAM_APPID:-}"
+BATTLENET_EXE="${BATTLENET_EXE:-}"
+WINEPREFIX="${WINEPREFIX:-}"
+PROTONPATH="${PROTONPATH:-GE-Proton}"
+
+run_wrapped() {
+    if command -v gamemoderun >/dev/null 2>&1; then
+        exec gamemoderun "$@"
+    fi
+    exec "$@"
+}
+
+if [ -n "$STEAM_APPID" ]; then
+    if ! command -v steam >/dev/null 2>&1; then
+        echo "battlenet: steam not found (needed for STEAM_APPID=$STEAM_APPID)" >&2
+        exit 1
+    fi
+    run_wrapped steam -applaunch "$STEAM_APPID"
+fi
+
+if [ -n "$BATTLENET_EXE" ]; then
+    if [ ! -f "$BATTLENET_EXE" ]; then
+        echo "battlenet: BATTLENET_EXE not found: $BATTLENET_EXE" >&2
+        exit 1
+    fi
+    if ! command -v umu-run >/dev/null 2>&1; then
+        echo "battlenet: install umu-launcher for BATTLENET_EXE launches" >&2
+        exit 1
+    fi
+    if [ -n "$WINEPREFIX" ]; then
+        export WINEPREFIX
+    fi
+    export PROTONPATH
+    run_wrapped umu-run "$BATTLENET_EXE"
+fi
+
+cat >&2 <<EOF
+battlenet: not configured.
+
+1. Install Battle.net as a Steam non-Steam game with GE-Proton.
+2. Copy the example and set STEAM_APPID (or BATTLENET_EXE):
+
+   cp ${EXAMPLE} ${ENV_FILE}
+   # edit ${ENV_FILE}
+
+Steam non-Steam app ids appear in shortcuts.vdf / the steam://rungameid/
+link after you add the game. Prefer an NVMe path for World of Warcraft.
+EOF
+exit 1

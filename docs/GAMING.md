@@ -151,3 +151,101 @@ to `special:game` and hide them). That name is no longer in the defaults.
 Fullscreen games cover the bar, so AI (`SUPER + A`) and the taskbar
 (`SUPER + DELETE`) open as Overlay layer-shell windows — the same path
 as the launcher and control panel — instead of bar-anchored popups.
+
+## Battle.net / World of Warcraft (no Lutris)
+
+Preferred stack: **Steam non-Steam game + GE-Proton + XWayland**, with a
+stowed `.desktop` so Super+Space lists Battle.net. Lutris stays in the
+gaming manifest for other titles; Battle.net’s Chromium UI under Proton
+Wayland often white-screens on Hyprland.
+
+### Packages
+
+- `steam`, `gamemode`, `lib32-gamemode`, `umu-launcher` (`50-gaming.txt`)
+- `protonup-qt`, `wowup-cf-bin` (AUR)
+- AMD: `vulkan-radeon` + `lib32-vulkan-radeon` (RADV). Prefer RADV over
+  `amdvlk` if both are installed (`AMD_VULKAN_ICD=RADV`).
+
+Install GE-Proton via ProtonUp-Qt (Steam compatibility tools).
+
+### One-time host tweaks (gated)
+
+```bash
+sudo cp install/system/sysctl.d/99-modern-gaming.conf /etc/sysctl.d/
+sudo sysctl --system
+```
+
+Raises `vm.max_map_count` and optionally disables split-lock mitigation
+(see sections above). Raise `nofile` if Wine hits EMFILE.
+
+### Steam install
+
+1. Add the Battle.net installer as a **Non-Steam game**.
+2. Compatibility: **GE-Proton** (latest).
+3. Launch options:
+
+   ```
+   PROTON_ENABLE_WAYLAND=0 WINE_SIMULATE_WRITECOPY=1 AMD_VULKAN_ICD=RADV gamemoderun %command%
+   ```
+
+4. After install, retarget the shortcut to `Battle.net Launcher.exe`.
+5. Install **World of Warcraft on NVMe/SSD** (HDD streaming hitching is
+   common).
+6. Copy the env example and set the non-Steam app id:
+
+   ```bash
+   cp stow/modern/.config/modern/battlenet.env.example \
+      ~/.config/modern/battlenet.env
+   # set STEAM_APPID=…  (from steam://rungameid/… or shortcuts.vdf)
+   ```
+
+`scripts/battlenet` / `modern battlenet` then launch with GameMode, RADV,
+and XWayland. No gamescope or MangoHud in the default path (use
+`scripts/game-profile.sh` only when profiling or integer-scaling).
+
+Fallback if Steam is unavailable: set `BATTLENET_EXE` (+ optional
+`WINEPREFIX` / `PROTONPATH`) and use `umu-run`.
+
+### Hyprland behaviour
+
+- **Battle.net:** excluded from `games.lua` auto-fullscreen/optimize so
+  it stays a normal window. Default `windowRules` entry
+  `battlenet-launcher` floats, centers, and sizes to `1280 800`.
+- **World of Warcraft:** still matches as a game — keep Settings →
+  Gaming `autoFullscreen` + `autoOptimize` on for exclusive FS, tearing,
+  and opaque game content.
+
+Existing machines that already have a `windowRules` array must **merge**
+`battlenet-launcher` into live `config.json` (JsonAdapter does not
+deep-merge rule arrays). Then reload Hyprland / `modern config restore`
+is not enough for this key alone — edit or paste the rule.
+
+After first launch, confirm with `hyprctl clients` if the title/class
+differs; tighten the rule. WoW’s title must not match Battle.net.
+
+### In-client
+
+- Battle.net: disable **hardware acceleration** if the UI glitches.
+- WoW: DirectX 12, exclusive fullscreen, match monitor refresh.
+- Optional stutter experiment only: `RADV_PERFTEST=gpl` (not default).
+
+### WowUp CF addons
+
+1. Launch WowUp CF (`wowup-cf-bin`).
+2. Point it at the retail AddOns folder, typically under the Steam Proton
+   prefix:
+
+   ```
+   …/compatdata/<id>/pfx/drive_c/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns
+   ```
+
+   Or the path you chose when installing WoW on SSD. Create
+   `Interface/AddOns` if missing.
+3. Install/update addons there; start WoW from Battle.net as usual.
+
+### App manager
+
+- Desktop: `stow/xdg/.local/share/applications/battlenet.desktop`
+- Icon: `stow/xdg/.local/share/icons/hicolor/scalable/apps/battlenet.svg`
+  (replace with your branded SVG if you have one)
+- After restow: Super+Space → **Battle.net**
