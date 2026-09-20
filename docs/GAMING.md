@@ -191,20 +191,27 @@ Raises `vm.max_map_count` and optionally disables split-lock mitigation
 4. After install, retarget the shortcut to `Battle.net Launcher.exe`.
 5. Install **World of Warcraft on NVMe/SSD** (HDD streaming hitching is
    common).
-6. Copy the env example and set the non-Steam app id:
+6. Copy the env example and point it at the **Launcher EXE** inside
+   `compatdata/<id>/pfx` (not `STEAM_APPID` — Non-Steam
+   `-applaunch` / `steam://rungameid/` often fails with “game
+   configuration is not available” on Linux):
 
    ```bash
    cp stow/modern/.config/modern/battlenet.env.example \
       ~/.config/modern/battlenet.env
-   # set STEAM_APPID=…  (from steam://rungameid/… or shortcuts.vdf)
+   # set BATTLENET_EXE=…/Battle.net Launcher.exe
+   # set WINEPREFIX=…/compatdata/<id>/pfx
+   # PROTONPATH defaults to Proton Experimental if unset
    ```
 
-`scripts/battlenet` / `modern battlenet` then launch with GameMode, RADV,
-and XWayland. No gamescope or MangoHud in the default path (use
-`scripts/game-profile.sh` only when profiling or integer-scaling).
+`scripts/battlenet` / `modern battlenet` runs that EXE with Proton
+(Experimental preferred; GE if you set `PROTONPATH`) via `umu-run` when
+installed, otherwise Steam’s `proton run`, under GameMode + RADV +
+XWayland. No gamescope or MangoHud by default.
 
-Fallback if Steam is unavailable: set `BATTLENET_EXE` (+ optional
-`WINEPREFIX` / `PROTONPATH`) and use `umu-run`.
+Optional: `STEAM_APPID` still tries `steam://rungameid/` without wrapping
+the Steam client in GameMode — use only if the EXE path is unavailable.
+Proton Experimental is fine when GE-Proton fails for Battle.net.
 
 ### Hyprland behaviour
 
@@ -225,7 +232,10 @@ differs; tighten the rule. WoW’s title must not match Battle.net.
 
 ### In-client
 
-- Battle.net: disable **hardware acceleration** if the UI glitches.
+- Battle.net: disable **hardware acceleration** if the UI is black/white
+  (Settings, or set `"HardwareAcceleration": "false"` in
+  `…/AppData/Roaming/Battle.net/Battle.net.config`). The wrapper also
+  passes `--in-process-gpu` by default.
 - WoW: DirectX 12, exclusive fullscreen, match monitor refresh.
 - Optional stutter experiment only: `RADV_PERFTEST=gpl` (not default).
 
