@@ -63,6 +63,7 @@ Singleton {
         return dump.bestMode(mon, w, h, preferHz);
     }
     function monitorByDesc(desc: string): var { return dump.monitorByDesc(desc); }
+    function firstConnectedDescription(): string { return dump.firstConnectedDescription(); }
 
     function dispatch(cmd: string) {
         try {
@@ -202,6 +203,24 @@ Singleton {
     function closeWindow(address: string) { wins.closeWindow(address); }
     function closeFocused(): string { return wins.closeFocused(); }
     function killWindow(address: string) { wins.killWindow(address); }
+    function forceKillAutostart(desktopId: string): int {
+        return wins.forceKillAutostart(desktopId);
+    }
+
+    function suppressAutostartRespawn(desktopId: string) {
+        const skip = String(desktopId || "").replace(/\.desktop$/i, "");
+        if (!skip.length)
+            return;
+        Quickshell.execDetached([
+            "hyprctl", "eval",
+            "do local n=[=[" + skip + "]=]; local b=_G.__modern_as_busy; "
+                + "if type(b)~=\"table\" then b={}; _G.__modern_as_busy=b end; b[n]=true; "
+                + "if hl.timer then hl.timer(function() "
+                + "if type(_G.__modern_as_busy)==\"table\" then _G.__modern_as_busy[n]=nil end "
+                + "end, { timeout = 20000, type = \"oneshot\" }) end end"
+        ]);
+    }
+
     function isAutostartWindow(toplevel: var): bool { return wins.isAutostartWindow(toplevel); }
     function windowOnScreen(toplevel: var, screen: var): bool { return wins.windowOnScreen(toplevel, screen); }
     function toggleFloating(address: string) { wins.toggleFloating(address); }

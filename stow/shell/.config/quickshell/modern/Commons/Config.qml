@@ -139,7 +139,7 @@ Singleton {
             // Per-monitor profiles (keyed by "description + serial") and
             // workspace-assignment rules — see docs/ARCHITECTURE.md
             // "Monitors". Free-form since the key set is per-machine.
-            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "dynamic" })
+            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "dynamic", primaryDescription: "" })
 
             property var windowRules: [
                 {

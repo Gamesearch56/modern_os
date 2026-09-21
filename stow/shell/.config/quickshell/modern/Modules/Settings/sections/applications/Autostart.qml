@@ -38,7 +38,10 @@ ColumnLayout {
             if (root._stem(list[i]) !== skip)
                 next.push(list[i]);
         }
+        Hypr.suppressAutostartRespawn(skip);
         ConfigWrite.set("general.autostart", next);
+        Hypr.forceKillAutostart(skip);
+        Hypr.refreshToplevels();
     }
 
     MSectionHeader {

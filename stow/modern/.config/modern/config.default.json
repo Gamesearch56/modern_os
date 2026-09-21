@@ -118,7 +118,8 @@
   "monitors": {
     "profiles": {},
     "rules": [],
-    "workspaceMode": "dynamic"
+    "workspaceMode": "dynamic",
+    "primaryDescription": ""
   },
   "windowRules": [
     {

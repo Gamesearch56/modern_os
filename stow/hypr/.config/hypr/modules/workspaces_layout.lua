@@ -73,6 +73,43 @@ function M.list_monitors()
     return sort_by_x(mons)
 end
 
+-- First connected = lowest Hyprland monitor id (enumeration order).
+function M.first_connected()
+    local mons = {}
+    local raw = hl.get_monitors and hl.get_monitors()
+    if type(raw) ~= "table" then
+        return nil
+    end
+    for _, m in pairs(raw) do
+        if m ~= nil then
+            mons[#mons + 1] = m
+        end
+    end
+    table.sort(mons, function(a, b)
+        return (a.id or 0) < (b.id or 0)
+    end)
+    return mons[1]
+end
+
+-- Saved monitors.primaryDescription, else first connected.
+function M.primary()
+    if config.invalidate then
+        config.invalidate()
+    end
+    local desc = config.value("monitors.primaryDescription", "")
+    if type(desc) == "string" and desc ~= "" then
+        local raw = hl.get_monitors and hl.get_monitors()
+        if type(raw) == "table" then
+            for _, m in pairs(raw) do
+                if m and m.description == desc then
+                    return m
+                end
+            end
+        end
+    end
+    return M.first_connected()
+end
+
 local function list_from_profiles()
     local profiles = config.value("monitors.profiles", {})
     local mons = {}

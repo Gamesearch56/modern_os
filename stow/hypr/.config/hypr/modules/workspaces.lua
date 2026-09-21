@@ -111,6 +111,34 @@ local function show(mon, id)
     end
 end
 
+local function focus_primary()
+    local mon = layout.primary()
+    if not mon then
+        return
+    end
+    local live = layout.live_match(mon) or mon
+    local from = 1
+    if layout.fixed() then
+        local i = layout.index_of(live) or 1
+        from = layout.range_for_index(i)
+    else
+        local cur = layout.active_id(live)
+        from = cur > 0 and cur or 1
+    end
+    show(live, from)
+    local x = (type(live.x) == "number" and live.x or 0)
+    local y = (type(live.y) == "number" and live.y or 0)
+    local w = (type(live.width) == "number" and live.width or 0)
+    local h = (type(live.height) == "number" and live.height or 0)
+    if w > 0 and h > 0 and hl.exec_cmd then
+        pcall(hl.exec_cmd, string.format(
+            "hyprctl dispatch movecursor %d %d",
+            math.floor(x + w / 2),
+            math.floor(y + h / 2)
+        ))
+    end
+end
+
 -- Empty workspace 11 stays until the bound default is focused. Skip
 -- when the active id is unknown so layout events do not steal focus.
 local function ensure_in_range(mon, from, to)
@@ -158,6 +186,7 @@ local function apply_fixed(boot)
         local from = layout.range_for_index(i)
         show(layout.live_match(monitors[i]) or monitors[i], from)
     end
+    focus_primary()
 end
 
 function M.focus(n)
@@ -203,6 +232,9 @@ apply_fixed()
 if hl.on then
     hl.on("hyprland.start", function()
         apply_fixed(true)
+        if not layout.fixed() then
+            focus_primary()
+        end
     end)
     hl.on("monitor.added", apply_fixed)
     hl.on("monitor.removed", apply_fixed)

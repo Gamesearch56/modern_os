@@ -87,81 +87,13 @@ QtObject {
         const id = String(desktopId || "");
         if (!id.length)
             return false;
-        if (root._raiseMatching(id, true))
-            return true;
-        return root._raiseMatching(id, false);
-    }
-
-    function _raiseMatching(desktopId: string, classOnly: bool): bool {
         const list = Hyprland.toplevels?.values ?? [];
         for (let i = 0; i < list.length; i++) {
             const t = list[i];
-            if (!t)
-                continue;
-            const ok = classOnly ? root._windowMatchesClass(t, desktopId) : root._windowMatchesDesktop(t, desktopId);
-            if (!ok)
+            if (!t || !autostart.matchesDesktop(t, id))
                 continue;
             root.activateWindow(String(t.address || ""));
             return true;
-        }
-        return false;
-    }
-
-    function _normId(s: string): string {
-        return String(s || "").replace(/\.desktop$/i, "").toLowerCase().replace(/[\s._-]+/g, "");
-    }
-
-    function _classFields(toplevel: var): var {
-        const ipc = toplevel.lastIpcObject || ({});
-        return [ipc.class, ipc.initialClass, toplevel.class, toplevel.initialClass];
-    }
-
-    function _windowMatchesClass(toplevel: var, desktopId: string): bool {
-        const needle = root._normId(desktopId);
-        if (!needle.length)
-            return false;
-        const fields = root._classFields(toplevel);
-        for (let i = 0; i < fields.length; i++) {
-            const n = root._normId(String(fields[i] || ""));
-            if (!n.length)
-                continue;
-            if (n === needle)
-                return true;
-            if (needle.length >= 5 && n.indexOf(needle) !== -1)
-                return true;
-            if (n.length >= 5 && needle.indexOf(n) !== -1)
-                return true;
-            // Vivaldi --app= uses URL-derived classes (mail.proton.me, …).
-            if (n.indexOf("vivaldi") === 0) {
-                if (needle.indexOf("mail") !== -1 && n.indexOf("mailproton") !== -1)
-                    return true;
-                if (needle.indexOf("calendar") !== -1 && n.indexOf("calendarproton") !== -1)
-                    return true;
-                if (needle.indexOf("whatsapp") !== -1 && n.indexOf("whatsapp") !== -1)
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    function _windowMatchesDesktop(toplevel: var, desktopId: string): bool {
-        if (root._windowMatchesClass(toplevel, desktopId))
-            return true;
-        const needle = root._normId(desktopId);
-        if (!needle.length)
-            return false;
-        const ipc = toplevel.lastIpcObject || ({});
-        const fields = [ipc.title, toplevel.title];
-        for (let i = 0; i < fields.length; i++) {
-            const n = root._normId(String(fields[i] || ""));
-            if (!n.length)
-                continue;
-            if (n === needle)
-                return true;
-            if (needle.length >= 5 && n.indexOf(needle) !== -1)
-                return true;
-            if (n.length >= 5 && needle.indexOf(n) !== -1)
-                return true;
         }
         return false;
     }
@@ -222,10 +154,22 @@ QtObject {
     function killWindow(address: string) {
         if (root.hideAutostart(address))
             return;
+        root.forceKillWindow(address);
+    }
+
+    // Bypass park — Settings Autostart remove only.
+    function forceKillWindow(address: string) {
         const addr = String(address || "").replace(/^address:/i, "");
-        if (!addr.length || !root.host._lua)
+        if (!addr.length || !root.host)
             return;
-        root.host.dispatch("hl.dsp.window.kill({ window = 'address:" + addr + "' })");
+        if (root.host._lua)
+            root.host.dispatch("hl.dsp.window.kill({ window = 'address:" + addr + "' })");
+        else
+            root.host.dispatch("killwindow address:" + addr);
+    }
+
+    function forceKillAutostart(desktopId: string): int {
+        return autostart.forceKillDesktop(desktopId);
     }
 
     function windowOnScreen(toplevel: var, screen: var): bool {

@@ -104,7 +104,10 @@ Singleton {
             const id = String(entry.desktopId || "");
             if (Hypr.raiseDesktop(id))
                 return;
-            Apps.launchId(id);
+            // Foreground start when dead (not --background).
+            const name = id.replace(/\.desktop$/i, "");
+            if (name.length)
+                Quickshell.execDetached([Paths.modernLaunch, name]);
             root._raiseAfter = id;
             raiseWait.restart();
             return;

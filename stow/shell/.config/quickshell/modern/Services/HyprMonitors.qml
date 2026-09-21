@@ -133,6 +133,24 @@ Item {
         return null;
     }
 
+    // Lowest Hyprland monitor id = first connected.
+    function firstConnectedDescription(): string {
+        const list = root.host ? (root.host.monitors?.values ?? []) : [];
+        let best = null;
+        let bestId = Infinity;
+        for (let i = 0; i < list.length; i++) {
+            const m = list[i];
+            if (!m)
+                continue;
+            const id = Number(m.id);
+            if (Number.isNaN(id) || id >= bestId)
+                continue;
+            bestId = id;
+            best = m;
+        }
+        return best ? String(best.description || "") : "";
+    }
+
     Process {
         id: dumpProc
         running: false
