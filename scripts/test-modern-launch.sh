@@ -22,6 +22,13 @@ DEFAULTS="$ROOT/stow/modern/.config/modern/config.default.json"
 EN="$ROOT/stow/modern/.config/modern/translations/en.json"
 DE="$ROOT/stow/modern/.config/modern/translations/de.json"
 
+if grep -Fq 'session_apps' "$AUTO" \
+    && grep -Fq 'on_start' "$AUTO"; then
+    ok "autostart.lua starts session_apps on hyprland.start"
+else
+    err "autostart.lua must require session_apps.on_start"
+fi
+
 if [[ ! -f "$MATCH" ]]; then
     err "session_match.lua missing from stow (restow hypr after adding it)"
 elif grep -Fq 'pcall(require, "modules.session_match")' "$SESSION" \
@@ -41,11 +48,12 @@ fi
 if [[ -x "$ROOT/scripts/session-park.sh" ]] \
     && grep -Fq 'session-park.sh' "$SESSION" \
     && grep -Fq 'special:background silent' "$SESSION" \
-    && grep -Fq 'window.class' "$SESSION" \
-    && grep -Fq 'pin_special_to_primary' "$SESSION"; then
-    ok "session-park.sh sweeps forked Chromium windows onto special:background"
+    && grep -Fq 'follow = false' "$SESSION" \
+    && grep -Fq 'vivaldi-stable --app=' "$SESSION" \
+    && grep -Fq 'window.class' "$SESSION"; then
+    ok "session-park + direct --app= + follow=false special:background park"
 else
-    err "session_apps must call session-park.sh during login grace"
+    err "session_apps must park via follow=false move and session-park.sh"
 fi
 
 if grep -Fq 'url_tokens' "$MATCH" \
@@ -74,12 +82,12 @@ if grep -Fq 'primaryDescription' "$DEFAULTS" \
     && grep -Fq 'settings.fields.primaryMonitor' "$PROFILE" \
     && grep -Fq 'primaryMonitor' "$EN" \
     && grep -Fq 'primaryMonitor' "$DE" \
-    && grep -Fq 'snap_primary' "$GAMES" \
     && grep -Fq 'focus_primary' \
-    "$ROOT/stow/hypr/.config/hypr/modules/workspaces.lua"; then
-    ok "primary display config, UI, boot focus, game snap"
+    "$ROOT/stow/hypr/.config/hypr/modules/workspaces.lua" \
+    && ! grep -Fq 'snap_primary' "$GAMES"; then
+    ok "primary display config/UI/boot focus; games no longer snap to primary"
 else
-    err "primaryDescription + ProfileForm + layout.primary + games snap required"
+    err "primaryDescription + ProfileForm + no games snap_primary required"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

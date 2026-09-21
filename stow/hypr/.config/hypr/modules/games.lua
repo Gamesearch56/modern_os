@@ -8,7 +8,6 @@
 -- as Project Zomboid map tiled, then rename after boot. Dispatch
 -- exclusive fullscreen from open/class/title once; do not re-apply.
 local config = require("modules.config")
-local layout = require("modules.workspaces_layout")
 
 local function on(path, fallback)
     local v = config.value(path, fallback)
@@ -172,46 +171,10 @@ local function addr_of(w)
     return tostring(w.address or "")
 end
 
-local function snap_primary(w)
-    if not w or not is_game(w) then
-        return
-    end
-    local primary = layout.primary()
-    if not primary then
-        return
-    end
-    local live = layout.live_match(primary) or primary
-    if w.monitor and layout.same_output(w.monitor, live) then
-        return
-    end
-    if not (hl.dispatch and hl.dsp and hl.dsp.window and hl.dsp.window.move) then
-        return
-    end
-    local ws = layout.active_id(live)
-    if ws <= 0 then
-        local i = layout.index_of(live) or 1
-        ws = select(1, layout.range_for_index(i))
-    end
-    if not ws or ws <= 0 then
-        return
-    end
-    local spec = { workspace = ws, follow = false, window = w }
-    local ok = pcall(function()
-        hl.dispatch(hl.dsp.window.move(spec))
-    end)
-    if not ok and w.address then
-        spec.window = "address:" .. addr_of(w)
-        pcall(function()
-            hl.dispatch(hl.dsp.window.move(spec))
-        end)
-    end
-end
-
 local function force_fs(w)
     if not auto_fs_on() or not w or not is_game(w) then
         return
     end
-    snap_primary(w)
     local addr = addr_of(w)
     if addr == "" then
         return

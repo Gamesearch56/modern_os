@@ -41,5 +41,5 @@ hyprctl -j clients 2>/dev/null | jq -r --argjson n "$(printf '%s\n' "${needles[@
   $w.address
 ' 2>/dev/null | while read -r addr; do
     [[ -n "$addr" ]] || continue
-    hyprctl dispatch "hl.dsp.window.move({ workspace = \"special:background\", silent = true, window = \"address:${addr}\" })" >/dev/null || true
+    hyprctl dispatch "hl.dsp.window.move({ workspace = \"special:background\", follow = false, window = \"address:${addr}\" })" >/dev/null || true
 done

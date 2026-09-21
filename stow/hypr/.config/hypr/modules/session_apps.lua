@@ -2,8 +2,6 @@
 -- grace only so interactive Apps.launch stays in the foreground.
 local config = require("modules.config")
 local paths = require("modules.paths")
-local layout = require("modules.workspaces_layout")
-
 -- Prefer shared module; inline fallback so a missing stow link cannot
 -- disable the whole login autostart path.
 local match
@@ -155,22 +153,23 @@ local function move_bg(w)
         return
     end
     local addr = tostring(w and w.address or ""):gsub("^address:", "")
+    -- Wiki: window.move({ workspace, follow?, window? }) — no "silent" key;
+    -- follow=false keeps the current workspace focused (scratchpad park).
     local function try(spec)
         return pcall(function()
             hl.dispatch(hl.dsp.window.move(spec))
         end)
     end
-    -- Prefer address form — window objects often fail silently on 0.56.
     if addr ~= "" and try({
         workspace = "special:background",
-        silent = true,
+        follow = false,
         window = "address:" .. addr,
     }) then
         return
     end
     try({
         workspace = "special:background",
-        silent = true,
+        follow = false,
         window = w,
     })
 end
@@ -184,33 +183,29 @@ local function arm_park(ms)
             if gen == park_gen then
                 park = false
             end
-        end, { timeout = ms or 60000, type = "oneshot" })
+        end, { timeout = ms or 90000, type = "oneshot" })
     end
 end
 
-local function pin_special_to_primary()
-    local mon = layout.primary()
-    local sel = layout.selector(mon)
-    if not sel or not (hl.dispatch and hl.dsp and hl.dsp.workspace and hl.dsp.workspace.move) then
-        return
-    end
-    pcall(function()
-        hl.dispatch(hl.dsp.workspace.move({
-            workspace = "special:background",
-            monitor = sel,
-        }))
-    end)
-end
+-- Direct --app= keeps the PID closer to the window than gtk-launch (wiki:
+-- exec_cmd rules track the spawned PID; forks drop the rule).
+local direct_app = {
+    ["proton-mail"] = "vivaldi-stable --app=https://mail.proton.me",
+    ["proton-calendar"] = "vivaldi-stable --app=https://calendar.proton.me",
+    ["whatsapp"] = "vivaldi-stable --app=https://web.whatsapp.com",
+}
 
 local function launch_name(name)
-    local cmd = paths.modern_launch .. " " .. name
-    -- Prefer dsp.exec_cmd so rules attach the same way as modern-launch --background.
+    local cmd = direct_app[name] or (paths.modern_launch .. " " .. name)
     if hl.dispatch and hl.dsp and hl.dsp.exec_cmd then
         pcall(function()
             hl.dispatch(hl.dsp.exec_cmd(cmd, bg_rules))
         end)
     else
         hl.exec_cmd(cmd, bg_rules)
+    end
+    if hl.timer then
+        hl.timer(run_park_script, { timeout = 1500, type = "oneshot" })
     end
 end
 
@@ -249,7 +244,7 @@ local function schedule_sweeps()
     if not hl.timer then
         return
     end
-    for _, ms in ipairs({ 3000, 6000, 10000, 20000, 45000 }) do
+    for _, ms in ipairs({ 1000, 2500, 5000, 8000, 12000, 20000, 35000, 60000 }) do
         hl.timer(function()
             if not park then
                 return
@@ -262,9 +257,9 @@ end
 
 local function start_apps()
     local list = autostart_ids()
-    pin_special_to_primary()
-    arm_park(60000)
+    arm_park(90000)
     schedule_sweeps()
+    run_park_script()
     local delay = 0
     for _, id in ipairs(list) do
         local name = match.stem(id)
@@ -279,7 +274,7 @@ local function start_apps()
             else
                 launch_name(name)
             end
-            delay = delay + 2000
+            delay = delay + 2500
         end
     end
 end
@@ -318,7 +313,6 @@ if hl.on then
         end
         busy[name] = true
         arm_park(20000)
-        pin_special_to_primary()
         launch_name(name)
         if hl.timer then
             hl.timer(run_park_script, { timeout = 2500, type = "oneshot" })

@@ -78,10 +78,10 @@ QtObject {
         if (!addr.length)
             return;
         if (root.host._lua)
-            root.host.dispatch("hl.dsp.window.move({ workspace = \"special:background\", silent = true, window = \"address:" + addr + "\" })");
+            root.host.dispatch("hl.dsp.window.move({ workspace = \"special:background\", follow = false, window = \"address:" + addr + "\" })");
         else
             root.host.dispatch("movetoworkspacesilent special:background,address:" + addr);
-    }
+        }
 
     function raiseDesktop(desktopId: string): bool {
         const id = String(desktopId || "");
