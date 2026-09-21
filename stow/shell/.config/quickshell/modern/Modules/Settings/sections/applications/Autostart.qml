@@ -15,17 +15,6 @@ ColumnLayout {
         return String(id || "").replace(/\.desktop$/, "");
     }
 
-    function _locked() {
-        const out = {};
-        const roles = ["calendar", "mail", "communication"];
-        for (let i = 0; i < roles.length; i++) {
-            const id = String(Config.apps.defaults[roles[i]] || "");
-            if (id.length > 0)
-                out[root._stem(id)] = true;
-        }
-        return out;
-    }
-
     function _addChoices() {
         const all = Apps.allEntries() || [];
         const have = {};
@@ -49,7 +38,10 @@ ColumnLayout {
             if (root._stem(list[i]) !== skip)
                 next.push(list[i]);
         }
+        Hypr.suppressAutostartRespawn(skip);
         ConfigWrite.set("general.autostart", next);
+        Hypr.forceKillAutostart(skip);
+        Hypr.refreshToplevels();
     }
 
     MSectionHeader {
@@ -62,12 +54,6 @@ ColumnLayout {
         MListItem {
             required property var modelData
             readonly property string appId: String(modelData || "")
-            readonly property bool locked: {
-                void Config.apps.defaults.calendar;
-                void Config.apps.defaults.mail;
-                void Config.apps.defaults.communication;
-                return !!(root._locked()[root._stem(appId)]);
-            }
             Layout.fillWidth: true
             hoverHighlight: false
             tintIcon: false
@@ -75,8 +61,11 @@ ColumnLayout {
             iconName: Apps.iconForId(appId)
             titleValue: Apps.labelForId(appId)
             MIconButton {
-                visible: !locked
-                iconName: "list-remove"
+                close: true
+                iconName: "window-close-symbolic"
+                key: "settings.removeAutostart"
+                size: Tokens.spacing.xl
+                iconSize: Tokens.icon.xs
                 onClicked: root.removeId(appId)
             }
         }

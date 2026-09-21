@@ -32,5 +32,7 @@ else
     hl.animation({ leaf = "border", enabled = true, speed = speed(tokens.durationShortMs), bezier = "standard" })
     hl.animation({ leaf = "fade", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasized" })
     hl.animation({ leaf = "workspaces", enabled = true, speed = speed(tokens.durationLongMs), bezier = "emphasizedDecelerate", style = "slide" })
-    hl.animation({ leaf = "specialWorkspace", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasized", style = "slidevert" })
+    -- Off: mapping autostart clients onto special:background must not flash
+    -- a vertical slide of the app on login.
+    hl.animation({ leaf = "specialWorkspace", enabled = false })
 end

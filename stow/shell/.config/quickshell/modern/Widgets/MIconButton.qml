@@ -143,6 +143,12 @@ Item {
         }
     }
 
+    HoverHandler {
+        enabled: root.enabled && !root.busy && root.pointer
+        cursorShape: Qt.PointingHandCursor
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+    }
+
     onBusyChanged: {
         if (!root.busy)
             glyph.rotation = 0;

@@ -63,6 +63,7 @@ Singleton {
         return dump.bestMode(mon, w, h, preferHz);
     }
     function monitorByDesc(desc: string): var { return dump.monitorByDesc(desc); }
+    function firstConnectedDescription(): string { return dump.firstConnectedDescription(); }
 
     function dispatch(cmd: string) {
         try {
@@ -177,7 +178,7 @@ Singleton {
             const ws = t?.workspace ? Number(t.workspace.id) : 0;
             if (ws !== n)
                 continue;
-            const addr = String(t.address || "");
+            const addr = wins._addrHypr(t.address);
             if (!addr.length)
                 continue;
             if (root._lua)
@@ -198,9 +199,32 @@ Singleton {
     function moveToCurrentWorkspace(address: string) { wins.moveToCurrentWorkspace(address); }
     function moveToBackground(address: string) { wins.moveToBackground(address); }
     function raiseDesktop(desktopId: string): bool { return wins.raiseDesktop(desktopId); }
+    function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
+        return wins.raiseDesktopOrLaunch(desktopId, entry);
+    }
     function toplevelByAddress(address: string): var { return wins.toplevelByAddress(address); }
     function closeWindow(address: string) { wins.closeWindow(address); }
+    function closeFocused(): string { return wins.closeFocused(); }
     function killWindow(address: string) { wins.killWindow(address); }
+    function forceKillAutostart(desktopId: string): int {
+        return wins.forceKillAutostart(desktopId);
+    }
+
+    function suppressAutostartRespawn(desktopId: string) {
+        const skip = String(desktopId || "").replace(/\.desktop$/i, "");
+        if (!skip.length)
+            return;
+        Quickshell.execDetached([
+            "hyprctl", "eval",
+            "do local n=[=[" + skip + "]=]; local b=_G.__modern_as_busy; "
+                + "if type(b)~=\"table\" then b={}; _G.__modern_as_busy=b end; b[n]=true; "
+                + "if hl.timer then hl.timer(function() "
+                + "if type(_G.__modern_as_busy)==\"table\" then _G.__modern_as_busy[n]=nil end "
+                + "end, { timeout = 20000, type = \"oneshot\" }) end end"
+        ]);
+    }
+
+    function isAutostartWindow(toplevel: var): bool { return wins.isAutostartWindow(toplevel); }
     function windowOnScreen(toplevel: var, screen: var): bool { return wins.windowOnScreen(toplevel, screen); }
     function toggleFloating(address: string) { wins.toggleFloating(address); }
     function toggleFullscreen(address: string) { wins.toggleFullscreen(address); }
@@ -232,6 +256,13 @@ Singleton {
             return;
         }
         Quickshell.execDetached(["hyprctl", "keyword", k, v]);
+    }
+
+    function setWindowOpacity(alpha: var) {
+        const n = Math.max(0, Math.min(1, Number(alpha ?? 1)));
+        const s = String(n);
+        root.keyword("decoration:active_opacity", s);
+        root.keyword("decoration:inactive_opacity", s);
     }
 
     function setCursor(theme: string, size: int) {
@@ -275,16 +306,12 @@ Singleton {
             root.keyword("general:gaps_in", String(value ?? win.gapsIn ?? 5));
         else if (p === "windows.gapsOut")
             root.keyword("general:gaps_out", String(value ?? win.gapsOut ?? 10));
-        else if (p === "windows.opacity") {
-            const a = value ?? win.opacity ?? 1;
-            root.keyword("decoration:active_opacity", String(a));
-            root.keyword("decoration:inactive_opacity", String(Math.min(1, a * 0.98)));
-        } else if (p === "windows") {
+        else if (p === "windows.opacity")
+            root.setWindowOpacity(value ?? win.opacity ?? 1);
+        else if (p === "windows") {
             root.keyword("general:gaps_in", String(win.gapsIn ?? 5));
             root.keyword("general:gaps_out", String(win.gapsOut ?? 10));
-            const a = win.opacity ?? 1;
-            root.keyword("decoration:active_opacity", String(a));
-            root.keyword("decoration:inactive_opacity", String(Math.min(1, a * 0.98)));
+            root.setWindowOpacity(win.opacity ?? 1);
         } else if (p === "design.cornerRounding") {
             const r = value ?? design.cornerRounding ?? 1;
             root.keyword("decoration:rounding", String(Math.floor(16 * r)));

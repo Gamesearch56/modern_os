@@ -14,7 +14,7 @@ Scope {
     onIdleHoldChanged: IdleInhibit.setActive(idleHold)
     Component.onCompleted: {
         IdleInhibit.setActive(idleHold);
-        void IdleDaemon.dimSec;
+        void IdleDaemon.configGen;
     }
 
     Connections {
@@ -92,20 +92,32 @@ Scope {
             focusable: true
             aboveWindows: true
             WlrLayershell.layer: WlrLayer.Overlay
-            margins.top: Config.bar.position === "top" ? overlay._barReserve : 0
-            margins.bottom: Config.bar.position === "bottom" ? overlay._barReserve : 0
-            margins.left: Config.bar.position === "left" ? overlay._barReserve : 0
-            margins.right: Config.bar.position === "right" ? overlay._barReserve : 0
-
             readonly property real _barReserve: BarLayout.windowInset
 
-            Panel {
+            MouseArea {
                 anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
+                onClicked: Notifications.hide()
+            }
+
+            Item {
+                anchors.fill: parent
+                anchors.topMargin: Config.bar.position === "top" ? overlay._barReserve : 0
+                anchors.bottomMargin: Config.bar.position === "bottom" ? overlay._barReserve : 0
+                anchors.leftMargin: Config.bar.position === "left" ? overlay._barReserve : 0
+                anchors.rightMargin: Config.bar.position === "right" ? overlay._barReserve : 0
+
+                Panel {
+                    anchors.fill: parent
+                }
             }
 
             HyprlandFocusGrab {
                 id: keyGrab
-                windows: [overlay]
+                windows: Popups.grabWindows(overlay, overlay.screen)
                 onCleared: {
                     if (Notifications.panelOpen)
                         Notifications.hide();

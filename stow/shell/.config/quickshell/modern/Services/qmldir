@@ -2,6 +2,8 @@ module Services
 singleton Hypr 1.0 Hypr.qml
 HyprMonitors 1.0 HyprMonitors.qml
 HyprWindows 1.0 HyprWindows.qml
+HyprAutostart 1.0 HyprAutostart.qml
+HyprRaise 1.0 HyprRaise.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml
 AudioNowPlaying 1.0 AudioNowPlaying.qml

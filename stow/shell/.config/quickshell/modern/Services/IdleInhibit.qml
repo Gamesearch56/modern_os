@@ -1,4 +1,4 @@
-// Holds a systemd-inhibit idle lock for caffeine, fullscreen, or media.
+// Holds a ScreenSaver idle lock for caffeine, fullscreen, or media.
 pragma Singleton
 
 import Quickshell
@@ -14,7 +14,7 @@ Singleton {
 
     Process {
         id: inhibit
-        command: ["systemd-inhibit", "--what=idle", "--who=modern", "--why=Idle inhibit", "--mode=block", "sleep", "infinity"]
+        command: [Paths.script("idle-inhibit.sh")]
         running: root.active
     }
 

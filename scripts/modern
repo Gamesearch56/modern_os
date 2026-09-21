@@ -32,6 +32,7 @@ $(t cli.usage)
   modern window close
   modern config set motion.scale 1.2
   modern config restore design typography
+  modern battlenet
 EOF
 }
 
@@ -225,6 +226,15 @@ case "$TARGET" in
                 if [ "$dismissed" = "true" ]; then
                     exit 0
                 fi
+                parked="$(qs -c modern ipc call shell closeFocused 2>/dev/null || true)"
+                parked="$(printf '%s' "$parked" | tr -d '[:space:]\"')"
+                if [ "$parked" = "hidden" ]; then
+                    exit 0
+                fi
+                # QS may miss special-workspace clients or Vivaldi --app= classes.
+                if "$SCRIPT_DIR/session-hide.sh" focused; then
+                    exit 0
+                fi
                 exec hyprctl dispatch "hl.dsp.window.close()"
                 ;;
             *)
@@ -337,6 +347,9 @@ case "$TARGET" in
         # shellcheck source=lib/filepreview.sh
         source "$SCRIPT_DIR/lib/filepreview.sh"
         filepreview_run
+        ;;
+    battlenet)
+        exec "$SCRIPT_DIR/battlenet"
         ;;
     *)
         FUNC="${1:-toggle}"

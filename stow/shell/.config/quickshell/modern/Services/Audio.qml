@@ -18,6 +18,7 @@ Singleton {
     readonly property int volumeCap: Config.audio.masterVolumeLimit ?? 100
 
     AudioBluetooth {
+        id: btAuto
         audio: root
     }
 
@@ -140,6 +141,14 @@ Singleton {
         return n.nickname || n.description || n.name || "";
     }
 
+    function nodeKey(n: var): string {
+        return btAuto.nodeKey(n);
+    }
+
+    function isBluetoothNode(n: var): bool {
+        return btAuto.isBluetoothNode(n);
+    }
+
     function streamAppId(n: var): string {
         if (!n)
             return "";
@@ -240,10 +249,12 @@ Singleton {
 
     function setDefaultSink(node: var) {
         Pipewire.preferredDefaultAudioSink = node;
+        btAuto.remember(node, true);
     }
 
     function setDefaultSource(node: var) {
         Pipewire.preferredDefaultAudioSource = node;
+        btAuto.remember(node, false);
     }
 
     function setStreamVolume(node: var, percent: real) {

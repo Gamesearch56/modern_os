@@ -23,6 +23,9 @@ Singleton {
 
     readonly property string home: Quickshell.env("HOME")
     property int _configMisses: 0
+    // Bumped on every successful load so Services can react when nested
+    // JsonObject ints (idleTimings) do not emit their own changed signals.
+    property int generation: 0
 
     FileView {
         id: file
@@ -30,7 +33,10 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         printErrors: false
-        onLoaded: root._configMisses = 0
+        onLoaded: {
+            root._configMisses = 0
+            root.generation++
+        }
         onLoadFailed: (error) => {
             // FileNotFound (2): atomic replace can fire the watcher between
             // unlink and rename. Retry; do not toast.
@@ -133,7 +139,7 @@ Singleton {
             // Per-monitor profiles (keyed by "description + serial") and
             // workspace-assignment rules — see docs/ARCHITECTURE.md
             // "Monitors". Free-form since the key set is per-machine.
-            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "dynamic" })
+            property var monitors: ({ profiles: ({}), rules: [], workspaceMode: "dynamic", primaryDescription: "" })
 
             property var windowRules: [
                 {
@@ -146,8 +152,9 @@ Singleton {
             property JsonObject gaming: JsonObject {
                 property bool autoFullscreen: true
                 property bool autoOptimize: true
-                property string matchClass: "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl"
-                property string matchTitle: ".*\\.exe|Project Zomboid"
+                property bool hdrSession: false
+                property string matchClass: "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl|wow|Wow|Warcraft.*"
+                property string matchTitle: ".*\\.exe|Project Zomboid|World of Warcraft|Warcraft III|Warcraft 3|Diablo.*|Overwatch.*|Hearthstone|StarCraft.*|Call of Duty.*"
             }
 
             property JsonObject windows: JsonObject {
@@ -217,6 +224,10 @@ Singleton {
 
             property JsonObject audio: JsonObject {
                 property string autoSwitchBluetooth: "on"
+                property string fallbackSink: ""
+                property string fallbackSource: ""
+                property string lastSink: ""
+                property string lastSource: ""
                 property var perAppVolume: ({})
                 property int masterVolume: -1
                 property int masterVolumeLimit: 100

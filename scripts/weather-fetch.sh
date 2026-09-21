@@ -33,7 +33,7 @@ if [ "$UNITS" = "imperial" ]; then
 fi
 
 curl_json() {
-    curl -fsS --max-time 8 "$1"
+    curl -fsS --max-time 12 --retry 2 --retry-connrefused --retry-delay 2 "$1"
 }
 
 lat=""

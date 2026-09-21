@@ -29,7 +29,9 @@ Item {
     opacity: Motion.overlayOpacity(root.open) * root.chromeOpacity
     scale: Motion.overlayScale(root.open)
     transformOrigin: root.opensAbove ? Item.Bottom : Item.Top
-    z: root.open && root.parent === root._host ? 80 : 0
+    // Above MDialog (100): menus reparent onto the window and must
+    // paint over a confirm card, not under its translucent wash.
+    z: root.open && root.parent === root._host ? 200 : 0
     x: {
         if (root.parent !== root._host || !root._field || !root._host)
             return 0;
@@ -80,6 +82,8 @@ Item {
     }
 
     function _clipHost(): var {
+        if (root.reparentToHost && root._host)
+            return root._host;
         let p = root._field;
         while (p) {
             if (p.clip)
@@ -143,14 +147,14 @@ Item {
         anchors.fill: parent
         enabled: root.open && root._host
         visible: enabled
-        z: 40
+        z: 190
         onPressed: (mouse) => {
             if (root._inside(root, mouse.x, mouse.y) || root._inside(root._field, mouse.x, mouse.y)) {
                 mouse.accepted = false;
                 return;
             }
             root.open = false;
-            mouse.accepted = false;
+            mouse.accepted = true;
         }
     }
 

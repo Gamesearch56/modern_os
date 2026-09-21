@@ -210,6 +210,9 @@ ShellRoot {
             }
             return closed ? "true" : "false";
         }
+        function closeFocused(): string {
+            return Hypr.closeFocused();
+        }
     }
 
     Component.onCompleted: {

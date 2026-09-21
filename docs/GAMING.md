@@ -46,13 +46,16 @@ buggy userspace, not a free lunch. Default in `config.json` is
 
 ## HDR environment variables
 
-Set per-game (Steam launch options) or in a wrapper — not globally in
-the session, because not every compositor/client is HDR-ready.
+Set per-game (Steam launch options / Battle.net wrapper) or enable
+**Settings → Gaming → HDR for Proton games** (`gaming.hdrSession`).
+That exports the vars below from `env.lua` for the Hyprland session and
+from `scripts/battlenet` for the Proton prefix (so WoW inherits them).
 
-Keep these as **launch options or Settings → Gaming / Displays**, never
-`~/.bashrc`. `env.lua` exports `PROTON_ENABLE_WAYLAND` / `ENABLE_HDR_WSI`
-only when `config.gaming.protonWayland` / `config.gaming.hdrSession` are
-true (off by default).
+Also turn **HDR on for the display** under Settings → Displays (your
+AW2725DF profile already can). Not every title needs Proton Wayland;
+Battle.net stays on XWayland (`PROTON_ENABLE_WAYLAND=0`) so its UI does
+not white-screen. True HDR in-engine still depends on the game offering
+an HDR option.
 
 ```
 DXVK_HDR=1
@@ -61,6 +64,8 @@ PROTON_ENABLE_HDR=1
 # gamescope --hdr-enabled --hdr-debug-force-output -- %command%
 ```
 
+Optional `gaming.protonWayland: true` exports `PROTON_ENABLE_WAYLAND=1`
+session-wide — do not enable that while using Battle.net’s Chromium UI.
 ## AMD environment presets
 
 These are **not** injected by `scripts/game-profile.sh`. Paste only the
@@ -151,3 +156,117 @@ to `special:game` and hide them). That name is no longer in the defaults.
 Fullscreen games cover the bar, so AI (`SUPER + A`) and the taskbar
 (`SUPER + DELETE`) open as Overlay layer-shell windows — the same path
 as the launcher and control panel — instead of bar-anchored popups.
+
+## Battle.net / World of Warcraft (no Lutris)
+
+Preferred stack: **Steam non-Steam game + GE-Proton + XWayland**, with a
+stowed `.desktop` so Super+Space lists Battle.net. Lutris stays in the
+gaming manifest for other titles; Battle.net’s Chromium UI under Proton
+Wayland often white-screens on Hyprland.
+
+### Packages
+
+- `steam`, `gamemode`, `lib32-gamemode`, `umu-launcher` (`50-gaming.txt`)
+- `protonup-qt`, `wowup-cf-bin` (AUR)
+- AMD: `vulkan-radeon` + `lib32-vulkan-radeon` (RADV). Prefer RADV over
+  `amdvlk` if both are installed (`AMD_VULKAN_ICD=RADV`).
+
+Install GE-Proton via ProtonUp-Qt (Steam compatibility tools).
+
+### One-time host tweaks (gated)
+
+```bash
+sudo cp install/system/sysctl.d/99-modern-gaming.conf /etc/sysctl.d/
+sudo sysctl --system
+```
+
+Raises `vm.max_map_count` and optionally disables split-lock mitigation
+(see sections above). Raise `nofile` if Wine hits EMFILE.
+
+### Steam install
+
+1. Add the Battle.net installer as a **Non-Steam game**.
+2. Compatibility: **GE-Proton** (latest).
+3. Launch options:
+
+   ```
+   PROTON_ENABLE_WAYLAND=0 WINE_SIMULATE_WRITECOPY=1 AMD_VULKAN_ICD=RADV gamemoderun %command%
+   ```
+
+4. After install, retarget the shortcut to `Battle.net Launcher.exe`.
+5. Install **World of Warcraft on NVMe/SSD** (HDD streaming hitching is
+   common).
+6. Copy the env example and point it at the **Launcher EXE** inside
+   `compatdata/<id>/pfx` (not `STEAM_APPID` — Non-Steam
+   `-applaunch` / `steam://rungameid/` often fails with “game
+   configuration is not available” on Linux):
+
+   ```bash
+   cp stow/modern/.config/modern/battlenet.env.example \
+      ~/.config/modern/battlenet.env
+   # set BATTLENET_EXE=…/Battle.net Launcher.exe
+   # set WINEPREFIX=…/compatdata/<id>/pfx
+   # PROTONPATH defaults to Proton Experimental if unset
+   ```
+
+`scripts/battlenet` / `modern battlenet` runs that EXE with Proton
+(Experimental preferred; GE if you set `PROTONPATH`) via `umu-run` when
+installed, otherwise Steam’s `proton run`, under GameMode + RADV +
+XWayland. No gamescope or MangoHud by default.
+
+Optional: `STEAM_APPID` still tries `steam://rungameid/` without wrapping
+the Steam client in GameMode — use only if the EXE path is unavailable.
+Proton Experimental is fine when GE-Proton fails for Battle.net.
+
+### Hyprland behaviour
+
+- **Battle.net:** excluded from `games.lua` auto-fullscreen/optimize so
+  it stays a normal window. Default `windowRules` entry
+  `battlenet-launcher` floats, centers, and sizes to `1280 800`.
+- **World of Warcraft / Warcraft III:** matched by title (and common
+  Proton classes) for Settings → Gaming `autoFullscreen` +
+  `autoOptimize` — exclusive FS, tearing, opaque game content.
+  Relaunch the game after a Hyprland reload if an older session still
+  maps them windowed.
+- **HDR:** enable Settings → Gaming → HDR for Proton games (and Displays
+  HDR on the panel). Restart Battle.net so the Proton prefix inherits
+  `DXVK_HDR` / `ENABLE_HDR_WSI` / `PROTON_ENABLE_HDR`. Turn HDR on in
+  the game’s graphics menu when available.
+
+Existing machines that already have a `windowRules` array must **merge**
+`battlenet-launcher` into live `config.json` (JsonAdapter does not
+deep-merge rule arrays). Then reload Hyprland / `modern config restore`
+is not enough for this key alone — edit or paste the rule.
+
+After first launch, confirm with `hyprctl clients` if the title/class
+differs; tighten the rule. WoW’s title must not match Battle.net.
+
+### In-client
+
+- Battle.net: disable **hardware acceleration** if the UI is black/white
+  (Settings, or set `"HardwareAcceleration": "false"` in
+  `…/AppData/Roaming/Battle.net/Battle.net.config`). The wrapper also
+  passes `--in-process-gpu` by default.
+- WoW: DirectX 12, exclusive fullscreen, match monitor refresh.
+- Optional stutter experiment only: `RADV_PERFTEST=gpl` (not default).
+
+### WowUp CF addons
+
+1. Launch WowUp CF (`wowup-cf-bin`).
+2. Point it at the retail AddOns folder, typically under the Steam Proton
+   prefix:
+
+   ```
+   …/compatdata/<id>/pfx/drive_c/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns
+   ```
+
+   Or the path you chose when installing WoW on SSD. Create
+   `Interface/AddOns` if missing.
+3. Install/update addons there; start WoW from Battle.net as usual.
+
+### App manager
+
+- Desktop: `stow/xdg/.local/share/applications/battlenet.desktop`
+- Icon: `stow/xdg/.local/share/icons/hicolor/scalable/apps/battlenet.svg`
+  (replace with your branded SVG if you have one)
+- After restow: Super+Space → **Battle.net**

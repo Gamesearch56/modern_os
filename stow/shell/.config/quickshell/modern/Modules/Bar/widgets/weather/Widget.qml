@@ -10,8 +10,16 @@ Item {
     property var barScreen: null
     implicitWidth: BarLayout.vertical ? Config.bar.height : (row.implicitWidth + Tokens.spacing.md * 2)
     implicitHeight: Config.bar.height
-    Component.onCompleted: Weather.watching = true
-    Component.onDestruction: Weather.watching = false
+    Component.onCompleted: Weather.watch()
+    Component.onDestruction: Weather.unwatch()
+
+    Connections {
+        target: Network
+        function onConnectedChanged() {
+            if (Network.connected)
+                Weather.refresh();
+        }
+    }
 
     readonly property color _fg: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
 

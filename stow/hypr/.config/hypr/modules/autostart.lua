@@ -29,7 +29,7 @@ hl.on("hyprland.start", function()
         .. "timeout 2 systemctl --user reset-failed phylax.service || true; "
         .. "timeout 2 systemctl --user start phylax || true) &'")
 
-    hl.exec_cmd("hypridle")
+    hl.exec_cmd("sh -lc '" .. paths.scripts .. "/hypridle-apply.sh'")
     -- hyprpm stores plugins in /var/cache/hyprpm/$USER and needs pkexec
     -- to create that tree the first time. Calling reload before the
     -- store exists dies with "Failed to run a superuser cmd" and the
@@ -47,39 +47,5 @@ hl.on("hyprland.start", function()
     -- then restores it — other apps stay on the default policy.
     hl.exec_cmd("sh -lc 'command -v gamemoded >/dev/null 2>&1 || exit 0; pgrep -u \"$USER\" -x gamemoded >/dev/null || gamemoded -d'")
 
-    local autostart = config.value("general.autostart", {})
-    local modern_launch = paths.modern_launch
-
-    local function stem(id)
-        return tostring(id or ""):gsub("%.desktop$", "")
-    end
-
-    local function is_background(name)
-        if name == "" then
-            return false
-        end
-        for _, role in ipairs({ "calendar", "mail", "communication" }) do
-            if stem(config.value("apps.defaults." .. role, "")) == name then
-                return true
-            end
-        end
-        return false
-    end
-
-    if type(autostart) == "table" then
-        local cmds = {}
-        for _, id in ipairs(autostart) do
-            local name = stem(id)
-            if name ~= "" then
-                if is_background(name) then
-                    cmds[#cmds + 1] = modern_launch .. " --background " .. name
-                else
-                    cmds[#cmds + 1] = modern_launch .. " " .. name
-                end
-            end
-        end
-        if #cmds > 0 then
-            hl.exec_cmd("sh -lc 'sleep 2; " .. table.concat(cmds, "; ") .. " &'")
-        end
-    end
+    require("modules.session_apps").on_start()
 end)

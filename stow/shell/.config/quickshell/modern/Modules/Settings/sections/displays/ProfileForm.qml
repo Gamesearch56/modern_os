@@ -50,6 +50,39 @@ ColumnLayout {
         root.patch({ mode: mode });
     }
 
+    readonly property string savedPrimary: String(Config.monitors?.primaryDescription || "")
+    readonly property string firstConnectedDesc: {
+        void Hypr.monitorGen;
+        return Hypr.firstConnectedDescription();
+    }
+    readonly property bool isPrimary: {
+        if (root.savedPrimary.length > 0)
+            return root.savedPrimary === root.selectedDesc;
+        return root.firstConnectedDesc.length > 0 && root.firstConnectedDesc === root.selectedDesc;
+    }
+
+    function setPrimary(on: bool) {
+        if (on)
+            ConfigWrite.set("monitors.primaryDescription", root.selectedDesc);
+        else if (root.savedPrimary === root.selectedDesc)
+            ConfigWrite.set("monitors.primaryDescription", "");
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.primaryMonitor"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: root.isPrimary
+            onToggled: (v) => root.setPrimary(v)
+        }
+    }
+
     RowLayout {
         Layout.fillWidth: true
         spacing: Tokens.spacing.md

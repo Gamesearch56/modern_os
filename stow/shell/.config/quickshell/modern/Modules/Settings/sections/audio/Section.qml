@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
@@ -54,6 +55,13 @@ ColumnLayout {
 
     MField {
         labelKey: "audio.output"
+        headerExtra: [
+            MButton {
+                kind: "text"
+                key: "audio.fallback"
+                onClicked: outputDlg.open = true
+            }
+        ]
         ColumnLayout {
             spacing: Tokens.spacing.sm
             MSelect {
@@ -76,6 +84,13 @@ ColumnLayout {
 
     MField {
         labelKey: "audio.input"
+        headerExtra: [
+            MButton {
+                kind: "text"
+                key: "audio.fallback"
+                onClicked: inputDlg.open = true
+            }
+        ]
         ColumnLayout {
             spacing: Tokens.spacing.sm
             MSelect {
@@ -125,5 +140,19 @@ ColumnLayout {
     }
     StreamList {
         Layout.fillWidth: true
+    }
+
+    FallbackDialog {
+        id: outputDlg
+        sink: true
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+    }
+
+    FallbackDialog {
+        id: inputDlg
+        sink: false
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
     }
 }

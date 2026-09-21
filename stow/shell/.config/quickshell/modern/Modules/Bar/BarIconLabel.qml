@@ -82,4 +82,9 @@ Item {
         cursorShape: Qt.PointingHandCursor
         onClicked: root.clicked()
     }
+
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+    }
 }

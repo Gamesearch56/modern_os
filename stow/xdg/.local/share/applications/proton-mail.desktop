@@ -5,7 +5,7 @@ Name=Proton Mail
 Name[de]=Proton Mail
 Comment=Proton Mail web app
 Comment[de]=Proton Mail als Web-App
-Exec=vivaldi-stable --app=https://mail.proton.me
+Exec=vivaldi-stable --user-data-dir=%h/.config/vivaldi-apps/proton-mail --app=https://mail.proton.me
 TryExec=vivaldi-stable
 Icon=proton-pass
 Terminal=false

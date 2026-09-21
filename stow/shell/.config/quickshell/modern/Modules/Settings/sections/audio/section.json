@@ -3,5 +3,5 @@
   "icon": "audio-volume-high",
   "key": "settings.sections.audio",
   "order": 110,
-  "keywords": ["volume", "limit", "bluetooth", "pipewire", "speakers", "headphones", "output", "input", "sink", "mute"]
+  "keywords": ["volume", "limit", "bluetooth", "pipewire", "speakers", "headphones", "output", "input", "sink", "mute", "fallback", "default", "microphone"]
 }

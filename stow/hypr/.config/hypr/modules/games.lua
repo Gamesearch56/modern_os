@@ -21,8 +21,9 @@ if not auto_fs and not auto_opt then
 end
 
 local class = config.value("gaming.matchClass",
-    "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl")
-local title = config.value("gaming.matchTitle", ".*\\.exe|Project Zomboid")
+    "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl|wow|Wow|Warcraft.*")
+local title = config.value("gaming.matchTitle",
+    ".*\\.exe|Project Zomboid|World of Warcraft|Warcraft III|Warcraft 3|Diablo.*|Overwatch.*|Hearthstone|StarCraft.*|Call of Duty.*")
 
 local function magic(s)
     return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1"))
@@ -70,10 +71,44 @@ end
 
 local function excluded(w)
     local c = string.lower(tostring(w.class or w.initial_class or ""))
+    local t = string.lower(tostring(w.title or w.initial_title or ""))
     if c == "steam" or c == "lutris" or c == "zenity" then
         return true
     end
     if c:find("heroic", 1, true) or c:find("steamwebhelper", 1, true) then
+        return true
+    end
+    -- Battle.net Agent / updater helpers — not games.
+    if c == "agent.exe" or c:find("agent%.exe", 1, false) then
+        return true
+    end
+    -- Battle.net launcher (not World of Warcraft / Warcraft III): keep windowed.
+    local hay = c .. "\n" .. t
+    if hay:find("battle%.net", 1, false) or hay:find("battlenet", 1, true)
+        or hay:find("blizzard battle", 1, true) then
+        if not hay:find("warcraft", 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Titles Proton/XWayland often set without a matching *.exe class.
+local function blizzard_game_title(t)
+    if type(t) ~= "string" or t == "" then
+        return false
+    end
+    local low = string.lower(t)
+    if low:find("world of warcraft", 1, true) then
+        return true
+    end
+    if low:find("warcraft iii", 1, true) or low:find("warcraft 3", 1, true) then
+        return true
+    end
+    if low:find("diablo", 1, true) or low:find("overwatch", 1, true) then
+        return true
+    end
+    if low:find("hearthstone", 1, true) or low:find("starcraft", 1, true) then
         return true
     end
     return false
@@ -87,6 +122,9 @@ local function is_game(w)
         return true
     end
     if matches_spec(w.title, title) or matches_spec(w.initial_title, title) then
+        return true
+    end
+    if blizzard_game_title(w.title) or blizzard_game_title(w.initial_title) then
         return true
     end
     return false

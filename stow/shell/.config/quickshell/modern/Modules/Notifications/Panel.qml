@@ -24,6 +24,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
         onClicked: Notifications.hide()
     }
 

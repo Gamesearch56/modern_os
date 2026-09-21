@@ -21,8 +21,6 @@ Item {
         switch (id) {
         case "system":
             return "preferences-system";
-        case "utilities":
-            return "applications-utilities";
         case "screenshots":
             return "camera-photo";
         case "windowManagement":

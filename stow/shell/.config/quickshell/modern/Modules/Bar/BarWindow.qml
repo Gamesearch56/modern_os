@@ -76,9 +76,11 @@ PanelWindow {
     }
 
     Component.onCompleted: {
+        Popups.registerBar(root);
         if (!root._shown)
             root._slide = 1;
     }
+    Component.onDestruction: Popups.unregisterBar(root)
 
     Timer {
         id: hideTimer
@@ -103,6 +105,7 @@ PanelWindow {
 
         HoverHandler {
             id: barHover
+            cursorShape: undefined
             onHoveredChanged: {
                 if (hovered) {
                     hideTimer.stop();

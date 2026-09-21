@@ -29,6 +29,7 @@ stow/hypr/.config/hypr/hypridle.conf
 **/secrets.json
 **/bashrc.local
 **/*.local.json
+**/battlenet.env
 .gitconfig.local
 
 # Local runtime/user state

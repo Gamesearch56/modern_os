@@ -1,12 +1,14 @@
 // Bar task-manager popup open state. Notifications toggles this without
 // importing Bar internals. `hostScreenName` keeps the popup on the bar
 // that opened it (or the focused monitor from the control panel).
+// One row per application; End task kills the process tree.
 pragma Singleton
 
 import Quickshell
 import Quickshell.Io
 import QtQuick
 import "../Commons"
+import "taskbarEntries.js" as Entries
 
 Singleton {
     id: root
@@ -20,79 +22,13 @@ Singleton {
         void Tray.items;
         void RunningApps.apps;
         const wins = Hypr.toplevelList || [];
-        const out = [];
-        for (let i = 0; i < wins.length; i++) {
-            const t = wins[i];
-            if (!t)
-                continue;
-            const ipc = t.lastIpcObject || ({});
-            const cls = String(ipc.class || t.class || "").toLowerCase();
-            if (cls.indexOf("quickshell") !== -1)
-                continue;
-            const wsId = t.workspace ? Number(t.workspace.id) : 0;
-            const hidden = !!(ipc.hidden === true || ipc.mapped === false);
-            out.push({
-                kind: "window",
-                address: String(t.address || ipc.address || ""),
-                title: String(t.title || ipc.class || cls),
-                cls: String(ipc.class || t.class || "application-x-executable"),
-                icon: Apps.resolveIcon(String(ipc.class || t.class || ipc.initialClass || "")),
-                iconUrl: "",
-                wsId: wsId,
-                background: wsId < 0 || hidden,
-                activated: t.activated === true,
-                item: null,
-                desktopId: "",
-                pid: Number(ipc.pid || 0),
-                pids: []
-            });
-        }
-        const bg = Tray.orphans(wins);
-        for (let j = 0; j < bg.length; j++) {
-            const it = bg[j];
-            const pids = Tray.pidsOf(it);
-            if (!pids.length)
-                continue;
-            const title = String(it.title || it.tooltipTitle || it.id || "");
-            out.push({
-                kind: "tray",
-                address: "",
-                title: title,
-                cls: title,
-                icon: "",
-                iconUrl: String(it.icon || ""),
-                wsId: 0,
-                background: true,
-                activated: false,
-                item: it,
-                desktopId: "",
-                pid: 0,
-                pids: pids
-            });
-        }
-        const procs = RunningApps.hidden(wins, Tray.items);
-        for (let k = 0; k < procs.length; k++) {
-            const app = procs[k];
-            const pids = app.pids || [];
-            if (!pids.length)
-                continue;
-            out.push({
-                kind: "process",
-                address: "",
-                title: String(app.name || app.id || ""),
-                cls: String(app.icon || app.class || app.id || ""),
-                icon: Apps.resolveIcon(String(app.icon || app.class || app.id || "")),
-                iconUrl: "",
-                wsId: 0,
-                background: true,
-                activated: false,
-                item: null,
-                desktopId: String(app.id || ""),
-                pid: 0,
-                pids: app.pids || []
-            });
-        }
-        return out;
+        return Entries.build(
+            wins,
+            Tray.orphans(wins),
+            function (it) { return Tray.pidsOf(it); },
+            RunningApps.hidden(wins, Tray.items),
+            function (hint) { return Apps.resolveIcon(hint); }
+        );
     }
 
     readonly property int count: {
@@ -168,22 +104,75 @@ Singleton {
             const id = String(entry.desktopId || "");
             if (Hypr.raiseDesktop(id))
                 return;
-            Apps.launchId(id);
+            // Foreground start when dead (not --background).
+            const name = id.replace(/\.desktop$/i, "");
+            if (name.length)
+                Quickshell.execDetached([Paths.modernLaunch, name]);
             root._raiseAfter = id;
             raiseWait.restart();
             return;
         }
-        Hypr.activateWindow(String(entry.address || ""));
+        const addr = String(entry.address || (entry.addresses && entry.addresses[0]) || "");
+        Hypr.activateWindow(addr);
     }
 
     function close(entry: var) {
         if (!entry)
             return;
-        RunningApps.killEntry(entry);
-        if (entry.kind === "window")
-            Hypr.killWindow(String(entry.address || ""));
-        if (entry.kind === "tray")
-            Tray.dismiss(entry.item);
+        if (entry.kind === "window") {
+            const addrs = entry.addresses && entry.addresses.length
+                ? entry.addresses
+                : [String(entry.address || "")];
+            let anyAutostart = false;
+            for (let i = 0; i < addrs.length; i++) {
+                const a = String(addrs[i] || "");
+                if (!a.length)
+                    continue;
+                const t = Hypr.toplevelByAddress(a);
+                if (t && Hypr.isAutostartWindow(t)) {
+                    anyAutostart = true;
+                    break;
+                }
+            }
+            // Autostart apps park on special:background — never SIGKILL.
+            if (anyAutostart) {
+                for (let j = 0; j < addrs.length; j++) {
+                    const a = String(addrs[j] || "");
+                    if (a.length)
+                        Hypr.closeWindow(a);
+                }
+                Hypr.refreshToplevels();
+                return;
+            }
+            RunningApps.killEntry(entry);
+            for (let k = 0; k < addrs.length; k++) {
+                const a = String(addrs[k] || "");
+                if (a.length)
+                    Hypr.killWindow(a);
+            }
+        } else {
+            // Headless process/tray: park matching autostart toplevels.
+            const list = Hypr.toplevelList || [];
+            let parked = false;
+            for (let p = 0; p < list.length; p++) {
+                const t = list[p];
+                if (!t || !Hypr.isAutostartWindow(t))
+                    continue;
+                const addr = String(t.address || "");
+                if (!addr.length)
+                    continue;
+                Hypr.closeWindow(addr);
+                parked = true;
+            }
+            if (parked) {
+                Hypr.refreshToplevels();
+                RunningApps.refresh();
+                return;
+            }
+            RunningApps.killEntry(entry);
+            if (entry.kind === "tray")
+                Tray.dismiss(entry.item);
+        }
         Hypr.refreshToplevels();
         RunningApps.refresh();
     }

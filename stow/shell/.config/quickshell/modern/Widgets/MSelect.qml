@@ -196,7 +196,6 @@ Item {
                 + Tokens.spacing.md * 2
                 + (root._searchable ? Tokens.spacing.xxl + Tokens.spacing.lg : 0),
             Tokens.spacing.xxl * 14)
-        z: 80
         onOpenChanged: {
             root._raise(open);
             if (open) {

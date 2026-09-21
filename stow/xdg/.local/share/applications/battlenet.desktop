@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Battle.net
+Name[de]=Battle.net
+Comment=Blizzard Battle.net (World of Warcraft and more)
+Comment[de]=Blizzard Battle.net (World of Warcraft und mehr)
+Exec=modern battlenet
+TryExec=modern
+Icon=battlenet
+Terminal=false
+StartupNotify=true
+Categories=Game;
+Keywords=blizzard;wow;warcraft;overwatch;diablo;
+StartupWMClass=battle.net.exe

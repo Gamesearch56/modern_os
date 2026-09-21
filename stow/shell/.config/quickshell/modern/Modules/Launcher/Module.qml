@@ -130,7 +130,7 @@ Scope {
 
             HyprlandFocusGrab {
                 id: keyGrab
-                windows: [win]
+                windows: Popups.grabWindows(win, win.screen)
                 onCleared: {
                     if (Launcher.open)
                         Launcher.hide();

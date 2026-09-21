@@ -48,4 +48,23 @@ ColumnLayout {
         key: "settings.hints.gameOptimize"
         Layout.fillWidth: true
     }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.gameHdr"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: model.hdrSession
+            onToggled: (v) => ConfigWrite.set("gaming.hdrSession", v)
+        }
+    }
+    MHint {
+        key: "settings.hints.gameHdr"
+        Layout.fillWidth: true
+    }
 }

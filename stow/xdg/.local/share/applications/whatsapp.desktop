@@ -5,7 +5,7 @@ Name=WhatsApp
 Name[de]=WhatsApp
 Comment=WhatsApp Web
 Comment[de]=WhatsApp Web
-Exec=vivaldi-stable --app=https://web.whatsapp.com
+Exec=vivaldi-stable --user-data-dir=%h/.config/vivaldi-apps/whatsapp --app=https://web.whatsapp.com
 TryExec=vivaldi-stable
 Icon=whatsapp
 Terminal=false

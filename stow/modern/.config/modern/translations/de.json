@@ -18,8 +18,8 @@
     "controlPanel": "Kontrollzentrum",
     "power": "Ein/Aus",
     "taskbar": "Anwendungen",
-    "taskbarEmpty": "Keine offenen Fenster",
-    "taskbarEmptyHint": "Laufende Programme erscheinen hier",
+    "taskbarEmpty": "Keine laufenden Apps",
+    "taskbarEmptyHint": "Hauptprogramme erscheinen hier — Beenden beendet den Prozess und seine Kindprozesse",
     "taskbarShow": "Anzeigen",
     "taskbarHide": "In den Hintergrund",
     "taskbarFloat": "Schwebend",
@@ -54,7 +54,12 @@
     "input": "Mikrofon",
     "applications": "Anwendungen",
     "noOutputs": "Keine Ausgabegeräte",
-    "noInputs": "Keine Eingabegeräte"
+    "noInputs": "Keine Eingabegeräte",
+    "fallback": "Standard festlegen",
+    "fallbackOutputTitle": "Standard-Lautsprecher",
+    "fallbackOutputBody": "Wenn Bluetooth-Kopfhörer getrennt werden, diesen Lautsprecher verwenden. Keine verwendet den zuletzt gewählten Lautsprecher.",
+    "fallbackInputTitle": "Standard-Mikrofon",
+    "fallbackInputBody": "Wenn ein Bluetooth-Mikrofon getrennt wird, dieses Eingabegerät verwenden. Keine verwendet das zuletzt gewählte Mikrofon."
   },
   "network": {
     "disconnected": "Getrennt",
@@ -561,6 +566,7 @@
       "resolution": "Auflösung",
       "displayRefresh": "Bildwiederholrate",
       "colorProfile": "Farbprofil",
+      "primaryMonitor": "Standardanzeige",
       "hdr": "HDR",
       "vrr": "Variable Bildwiederholung",
       "bitrate": "Bitrate",
@@ -582,6 +588,7 @@
       "games": "Spiele",
       "gameFullscreen": "Spiele automatisch im Vollbild",
       "gameOptimize": "Spielfenster beschleunigen",
+      "gameHdr": "HDR für Proton-Spiele",
       "speedTest": "Geschwindigkeitstest",
       "ethernet": "Ethernet",
       "wifiPassword": "WLAN-Passwort",
@@ -622,6 +629,7 @@
       "gaming": "Spiele"
     },
     "addAutostart": "Autostart-App hinzufügen",
+    "removeAutostart": "Aus Autostart entfernen",
     "motionOff": "Aus",
     "motionDefault": "Standard",
     "motionSlow": "Langsam",
@@ -721,6 +729,7 @@
       "activeProfile": "Jede Karte ist eine andere Palette, die matugen aus dem aktuellen Hintergrundbild gezogen hat.",
       "themeVariant": "Wie stark Tapetenfarben auftauchen. Jede Karte entsteht aus dem aktuellen Hintergrundbild im gewählten Hell- oder Dunkelmodus.",
       "workspaceMode": "Dynamisch öffnet einen Workspace auf dem Bildschirm unter dem Zeiger; jede Leiste zeigt nur dessen Workspaces. Fixiert hält 1–5, 6–10, 11–15, … von links nach rechts.",
+      "primaryMonitor": "Neue Fenster und Spiele öffnen auf dieser Anzeige. Ohne Auswahl gilt die zuerst verbundene Anzeige.",
       "hdr": "Wide-Gamut-HDR-Panels (QD-OLED) brauchen das. Hyprland mappt sRGB-Sättigung nur im HDR-Modus; 10-Bit-PQ.",
       "storageGated": "Snapshots liegen unter den abgeschotteten install/system-Helfern.",
       "timeMerged": "Datums- und Zeitformate liegen unter Sprache & Zeit.",
@@ -734,6 +743,7 @@
       "windowRulesJson": "JSON-Array der Hyprland-Fensterregeln. Speichern prüft vor dem Schreiben.",
       "gameFullscreen": "Erzwingt exklusives Vollbild, sobald das Spielfenster erscheint, statt auf die Anfrage der Engine zu warten.",
       "gameOptimize": "Schaltet zusätzliche Fenstereffekte am Spiel aus, damit es flüssiger läuft. Andere Fenster behalten ihr gewohntes Aussehen.",
+      "gameHdr": "Setzt DXVK_HDR, ENABLE_HDR_WSI und PROTON_ENABLE_HDR für Spiele. HDR am Monitor unter Anzeigen einschalten. Battle.net bleibt bei XWayland.",
       "repeatRate": "Wie schnell eine gehaltene Taste wiederholt.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn Hyprland startet.",
@@ -810,7 +820,8 @@
       "watts": "{n} W",
       "minSuffix": " Min.",
       "idleMin": "{n} Min.",
-      "idleHour": "{n} Std."
+      "idleHour": "{n} Std.",
+      "idleNever": "Nie"
     },
     "bluetooth": {
       "connected": "Verbunden",

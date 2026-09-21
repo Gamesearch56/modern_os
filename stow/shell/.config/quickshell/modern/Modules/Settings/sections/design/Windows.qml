@@ -61,15 +61,13 @@ ColumnLayout {
     MField {
         labelKey: "settings.fields.windowOpacity"
         MSlider {
-            from: 0.5
-            to: 1
-            value: Config.windows?.opacity ?? 1
-            onMoved: (v) => {
-                const n = Math.round(v * 100) / 100;
-                Hypr.keyword("decoration:active_opacity", String(n));
-                Hypr.keyword("decoration:inactive_opacity", String(Math.min(1, n * 0.98)));
-            }
-            onCommitted: (v) => ConfigWrite.set("windows.opacity", Math.round(v * 100) / 100)
+            from: 0
+            to: 100
+            value: Math.round((Config.windows?.opacity ?? 1) * 100)
+            showValue: true
+            suffix: "%"
+            onMoved: (v) => Hypr.setWindowOpacity(Math.round(v) / 100)
+            onCommitted: (v) => ConfigWrite.set("windows.opacity", Math.round(v) / 100)
         }
     }
 

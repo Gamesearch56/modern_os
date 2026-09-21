@@ -118,7 +118,8 @@
   "monitors": {
     "profiles": {},
     "rules": [],
-    "workspaceMode": "dynamic"
+    "workspaceMode": "dynamic",
+    "primaryDescription": ""
   },
   "windowRules": [
     {
@@ -128,6 +129,15 @@
         "title": "win0"
       },
       "float": true
+    },
+    {
+      "name": "battlenet-launcher",
+      "match": {
+        "title": ".*[Bb]attle\\.net.*"
+      },
+      "float": true,
+      "center": true,
+      "size": "1280 800"
     }
   ],
   "launcher": {
@@ -189,11 +199,16 @@
   "gaming": {
     "autoFullscreen": true,
     "autoOptimize": true,
-    "matchClass": "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl",
-    "matchTitle": ".*\\.exe|Project Zomboid"
+    "hdrSession": false,
+    "matchClass": "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl|wow|Wow|Warcraft.*",
+    "matchTitle": ".*\\.exe|Project Zomboid|World of Warcraft|Warcraft III|Warcraft 3|Diablo.*|Overwatch.*|Hearthstone|StarCraft.*|Call of Duty.*"
   },
   "audio": {
     "autoSwitchBluetooth": "on",
+    "fallbackSink": "",
+    "fallbackSource": "",
+    "lastSink": "",
+    "lastSource": "",
     "perAppVolume": {},
     "masterVolume": -1,
     "masterVolumeLimit": 100

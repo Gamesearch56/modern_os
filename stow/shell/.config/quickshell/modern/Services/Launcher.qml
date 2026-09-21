@@ -96,6 +96,11 @@ Singleton {
             if (!item)
                 return;
             root.record(item.id);
+            const id = String(item.id || item.name || "");
+            if (id.length && Hypr.raiseDesktopOrLaunch(id, item.exec)) {
+                root.hide();
+                return;
+            }
             if (item.exec?.execute)
                 item.exec.execute();
             root.hide();

@@ -121,6 +121,9 @@ Singleton {
     function launch(role: string): bool {
         try {
             const e = root.entryFor(role);
+            const id = String((e && (e.id || e.name)) || root.desktopId(role) || "");
+            if (id.length && Hypr.raiseDesktopOrLaunch(id, e))
+                return true;
             if (e?.execute) {
                 e.execute();
                 return true;
