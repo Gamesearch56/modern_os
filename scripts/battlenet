@@ -27,6 +27,25 @@ if [ -f "$ENV_FILE" ]; then
     set +a
 fi
 
+cfg_bool() {
+    local key="$1"
+    local cfg="${MODERN_DIR}/config.json"
+    if [ -f "$cfg" ] && command -v jq >/dev/null 2>&1; then
+        local v
+        v="$(jq -r --arg k "$key" '.gaming[$k] // empty' "$cfg" 2>/dev/null || true)"
+        [ "$v" = "true" ] && return 0
+    fi
+    return 1
+}
+
+# HDR for games spawned from this Proton prefix (WoW etc.). Battle.net
+# stays on XWayland (PROTON_ENABLE_WAYLAND=0) so the Chromium UI works.
+if [ "${BATTLENET_HDR:-}" = "1" ] || cfg_bool hdrSession; then
+    export DXVK_HDR="${DXVK_HDR:-1}"
+    export ENABLE_HDR_WSI="${ENABLE_HDR_WSI:-1}"
+    export PROTON_ENABLE_HDR="${PROTON_ENABLE_HDR:-1}"
+fi
+
 STEAM_APPID="${STEAM_APPID:-}"
 BATTLENET_EXE="${BATTLENET_EXE:-}"
 WINEPREFIX="${WINEPREFIX:-}"

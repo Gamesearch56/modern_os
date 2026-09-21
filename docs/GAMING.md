@@ -46,13 +46,16 @@ buggy userspace, not a free lunch. Default in `config.json` is
 
 ## HDR environment variables
 
-Set per-game (Steam launch options) or in a wrapper — not globally in
-the session, because not every compositor/client is HDR-ready.
+Set per-game (Steam launch options / Battle.net wrapper) or enable
+**Settings → Gaming → HDR for Proton games** (`gaming.hdrSession`).
+That exports the vars below from `env.lua` for the Hyprland session and
+from `scripts/battlenet` for the Proton prefix (so WoW inherits them).
 
-Keep these as **launch options or Settings → Gaming / Displays**, never
-`~/.bashrc`. `env.lua` exports `PROTON_ENABLE_WAYLAND` / `ENABLE_HDR_WSI`
-only when `config.gaming.protonWayland` / `config.gaming.hdrSession` are
-true (off by default).
+Also turn **HDR on for the display** under Settings → Displays (your
+AW2725DF profile already can). Not every title needs Proton Wayland;
+Battle.net stays on XWayland (`PROTON_ENABLE_WAYLAND=0`) so its UI does
+not white-screen. True HDR in-engine still depends on the game offering
+an HDR option.
 
 ```
 DXVK_HDR=1
@@ -61,6 +64,8 @@ PROTON_ENABLE_HDR=1
 # gamescope --hdr-enabled --hdr-debug-force-output -- %command%
 ```
 
+Optional `gaming.protonWayland: true` exports `PROTON_ENABLE_WAYLAND=1`
+session-wide — do not enable that while using Battle.net’s Chromium UI.
 ## AMD environment presets
 
 These are **not** injected by `scripts/game-profile.sh`. Paste only the
@@ -218,9 +223,15 @@ Proton Experimental is fine when GE-Proton fails for Battle.net.
 - **Battle.net:** excluded from `games.lua` auto-fullscreen/optimize so
   it stays a normal window. Default `windowRules` entry
   `battlenet-launcher` floats, centers, and sizes to `1280 800`.
-- **World of Warcraft:** still matches as a game — keep Settings →
-  Gaming `autoFullscreen` + `autoOptimize` on for exclusive FS, tearing,
-  and opaque game content.
+- **World of Warcraft / Warcraft III:** matched by title (and common
+  Proton classes) for Settings → Gaming `autoFullscreen` +
+  `autoOptimize` — exclusive FS, tearing, opaque game content.
+  Relaunch the game after a Hyprland reload if an older session still
+  maps them windowed.
+- **HDR:** enable Settings → Gaming → HDR for Proton games (and Displays
+  HDR on the panel). Restart Battle.net so the Proton prefix inherits
+  `DXVK_HDR` / `ENABLE_HDR_WSI` / `PROTON_ENABLE_HDR`. Turn HDR on in
+  the game’s graphics menu when available.
 
 Existing machines that already have a `windowRules` array must **merge**
 `battlenet-launcher` into live `config.json` (JsonAdapter does not
