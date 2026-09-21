@@ -1,4 +1,4 @@
--- Shared autostart window identity for session_apps (park / respawn).
+-- Shared autostart window identity for session_apps (respawn) and shell hide/raise.
 -- Vivaldi --app= uses URL-derived classes; StartupWMClass is ignored.
 
 local M = {}
@@ -11,7 +11,7 @@ function M.norm(s)
     return tostring(s or ""):lower():gsub("%.desktop$", ""):gsub("[%s._%-]+", "")
 end
 
--- needle is already norm()'d desktop stem (e.g. protonmail).
+-- needle is already norm()'d desktop stem (e.g. protonmail, whatsapp).
 function M.url_tokens(needle, fieldn)
     if needle == "" or fieldn == "" then
         return false
@@ -43,10 +43,9 @@ function M.field_matches(raw, desktop_id)
     if fieldn == needle then
         return true
     end
+    -- Needle inside field only. Reverse match (field inside needle) falsely
+    -- tied "proton" game titles to proton-mail / proton-calendar.
     if #needle >= 5 and fieldn:find(needle, 1, true) then
-        return true
-    end
-    if #fieldn >= 5 and needle:find(fieldn, 1, true) then
         return true
     end
     return false

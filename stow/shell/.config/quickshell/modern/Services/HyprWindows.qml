@@ -1,13 +1,18 @@
-// Window matching, focus, close, float. Host is the Hypr singleton
-// (dispatch + workspace focus). Keeps Hypr.qml under the line cap.
+// Window matching, focus, close. Host is the Hypr singleton.
+// Raise/float helpers live in HyprRaise (line cap).
+import Quickshell
 import Quickshell.Hyprland
 import QtQuick
+import "../Commons"
 
 QtObject {
     id: root
 
     property var host: null
     readonly property HyprAutostart autostart: HyprAutostart {
+        windows: root
+    }
+    readonly property HyprRaise raise: HyprRaise {
         windows: root
     }
 
@@ -40,16 +45,10 @@ QtObject {
         if (!toplevel)
             return false;
         const ipc = toplevel.lastIpcObject || ({});
-        const cls = String(ipc.class || toplevel.class || "").toLowerCase();
-        if (cls.indexOf("quickshell") !== -1)
+        if (String(ipc.class || toplevel.class || "").toLowerCase().indexOf("quickshell") !== -1)
             return false;
-        const raw = toplevel.workspace?.id ?? ipc.workspace?.id ?? ipc.workspace;
-        const wsId = Number(raw);
-        if (!(wsId > 0))
-            return false;
-        if (ipc.hidden === true || ipc.mapped === false)
-            return false;
-        return true;
+        const wsId = Number(toplevel.workspace?.id ?? ipc.workspace?.id ?? ipc.workspace);
+        return wsId > 0 && ipc.hidden !== true && ipc.mapped !== false;
     }
 
     function moveToCurrentWorkspace(address: string) {
@@ -81,21 +80,14 @@ QtObject {
             root.host.dispatch("hl.dsp.window.move({ workspace = \"special:background\", follow = false, window = \"address:" + addr + "\" })");
         else
             root.host.dispatch("movetoworkspacesilent special:background,address:" + addr);
-        }
+    }
 
     function raiseDesktop(desktopId: string): bool {
-        const id = String(desktopId || "");
-        if (!id.length)
-            return false;
-        const list = Hyprland.toplevels?.values ?? [];
-        for (let i = 0; i < list.length; i++) {
-            const t = list[i];
-            if (!t || !autostart.matchesDesktop(t, id))
-                continue;
-            root.activateWindow(String(t.address || ""));
-            return true;
-        }
-        return false;
+        return root.raise.raiseDesktop(desktopId);
+    }
+
+    function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
+        return root.raise.raiseDesktopOrLaunch(desktopId, entry);
     }
 
     function _addrKey(address: string): string {
@@ -179,7 +171,6 @@ QtObject {
         const ipc = toplevel.lastIpcObject;
         const wsId = toplevel.workspace ? Number(toplevel.workspace.id) : 0;
         const hidden = !!(ipc && (ipc.hidden === true || ipc.mapped === false));
-        const special = wsId < 0;
         if (ipc && ipc.monitor !== undefined && ipc.monitor !== null && ipc.monitor !== "") {
             const mid = Number(ipc.monitor);
             if (!Number.isNaN(mid) && mid < 0)
@@ -190,39 +181,17 @@ QtObject {
                 return true;
             return false;
         }
-        if (hidden || special)
+        if (hidden || wsId < 0)
             return root._taskbarOnFocused(screen);
         return root.host._onMonitor(toplevel.workspace, mon);
     }
 
     function _taskbarOnFocused(screen: var): bool {
         const name = screen && screen.name ? String(screen.name) : "";
-        if (!name.length)
-            return true;
-        return name === root.host.focusedMonitorName();
+        return !name.length || name === root.host.focusedMonitorName();
     }
 
-    function toggleFloating(address: string) {
-        const addr = String(address || "");
-        if (!addr.length)
-            return;
-        root.host.dispatch("togglefloating address:" + addr);
-    }
-
-    function toggleFullscreen(address: string) {
-        const addr = String(address || "");
-        if (!addr.length)
-            return;
-        root.host.dispatch("fullscreen 0,address:" + addr);
-    }
-
-    function toggleSplit(address: string) {
-        const addr = String(address || "").replace(/^address:/i, "");
-        if (addr.length)
-            root.focusWindow(addr);
-        if (root.host._lua)
-            root.host.dispatch("hl.dsp.layout(\"togglesplit\")");
-        else
-            root.host.dispatch("togglesplit");
-    }
+    function toggleFloating(address: string) { root.raise.toggleFloating(address); }
+    function toggleFullscreen(address: string) { root.raise.toggleFullscreen(address); }
+    function toggleSplit(address: string) { root.raise.toggleSplit(address); }
 }

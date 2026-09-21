@@ -46,8 +46,9 @@ Item {
             key: "calendar.open"
             fillWidth: true
             onClicked: {
-                const id = String(Apps.desktopId("calendar") || "");
-                if (!id.length || (!Hypr.raiseDesktop(id) && !Apps.launch("calendar"))) {
+                const e = Apps.entryFor("calendar");
+                const id = String((e && (e.id || e.name)) || Apps.desktopId("calendar") || "");
+                if (!id.length || !Hypr.raiseDesktopOrLaunch(id, e)) {
                     Notifications.toast(I18n.t("calendar.needApp"), "");
                     Settings.openAt("applications", "calendar");
                 }

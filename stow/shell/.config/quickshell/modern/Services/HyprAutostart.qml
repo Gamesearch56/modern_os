@@ -41,9 +41,8 @@ QtObject {
             return true;
         if (fieldn === needle)
             return true;
+        // Needle inside field only — reverse match yanked unrelated windows.
         if (needle.length >= 5 && fieldn.indexOf(needle) !== -1)
-            return true;
-        if (fieldn.length >= 5 && needle.indexOf(fieldn) !== -1)
             return true;
         return false;
     }

@@ -199,6 +199,9 @@ Singleton {
     function moveToCurrentWorkspace(address: string) { wins.moveToCurrentWorkspace(address); }
     function moveToBackground(address: string) { wins.moveToBackground(address); }
     function raiseDesktop(desktopId: string): bool { return wins.raiseDesktop(desktopId); }
+    function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
+        return wins.raiseDesktopOrLaunch(desktopId, entry);
+    }
     function toplevelByAddress(address: string): var { return wins.toplevelByAddress(address); }
     function closeWindow(address: string) { wins.closeWindow(address); }
     function closeFocused(): string { return wins.closeFocused(); }

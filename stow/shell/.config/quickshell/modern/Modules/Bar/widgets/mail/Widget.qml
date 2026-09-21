@@ -14,8 +14,7 @@ RowLayout {
         onClicked: {
             const e = Apps.entryFor("mail");
             const id = (e && (e.id || e.name)) || Apps.desktopId("mail");
-            if (!Hypr.raiseDesktop(String(id || "")))
-                Apps.launch("mail");
+            Hypr.raiseDesktopOrLaunch(String(id || ""), e);
         }
     }
 }

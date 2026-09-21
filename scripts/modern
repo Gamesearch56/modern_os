@@ -231,6 +231,10 @@ case "$TARGET" in
                 if [ "$parked" = "hidden" ]; then
                     exit 0
                 fi
+                # QS may miss special-workspace clients or Vivaldi --app= classes.
+                if "$SCRIPT_DIR/session-hide.sh" focused; then
+                    exit 0
+                fi
                 exec hyprctl dispatch "hl.dsp.window.close()"
                 ;;
             *)

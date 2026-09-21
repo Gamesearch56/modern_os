@@ -1,89 +1,21 @@
--- Session autostart: login/respawn on special:background; park during
--- grace only so interactive Apps.launch stays in the foreground.
+-- Session autostart: spawn on login/respawn with exec workspace rules only.
+-- Never move existing windows onto special:background from timers or
+-- open/class/title handlers — park is Super+Q / taskbar only (shell).
 local config = require("modules.config")
 local paths = require("modules.paths")
--- Prefer shared module; inline fallback so a missing stow link cannot
--- disable the whole login autostart path.
-local match
-do
-    local ok, mod = pcall(require, "modules.session_match")
-    if ok and type(mod) == "table" then
-        match = mod
-    else
-        match = {}
-        function match.stem(id)
-            return tostring(id or ""):gsub("%.desktop$", "")
-        end
-        function match.norm(s)
-            return tostring(s or ""):lower():gsub("%.desktop$", ""):gsub("[%s._%-]+", "")
-        end
-        function match.url_tokens(needle, fieldn)
-            if needle == "" or fieldn == "" then
-                return false
-            end
-            if needle:find("mail", 1, true)
-                and (fieldn:find("mailproton", 1, true) or fieldn:find("mailprotonme", 1, true)) then
-                return true
-            end
-            if needle:find("calendar", 1, true)
-                and (fieldn:find("calendarproton", 1, true) or fieldn:find("calendarprotonme", 1, true)) then
-                return true
-            end
-            if needle:find("whatsapp", 1, true)
-                and (fieldn:find("whatsapp", 1, true) or fieldn:find("webwhatsapp", 1, true)) then
-                return true
-            end
-            return false
-        end
-        function match.field_matches(raw, desktop_id)
-            local needle = match.norm(desktop_id)
-            local fieldn = match.norm(raw)
-            if needle == "" or fieldn == "" then
-                return false
-            end
-            if match.url_tokens(needle, fieldn) then
-                return true
-            end
-            if fieldn == needle then
-                return true
-            end
-            if #needle >= 5 and fieldn:find(needle, 1, true) then
-                return true
-            end
-            if #fieldn >= 5 and needle:find(fieldn, 1, true) then
-                return true
-            end
-            return false
-        end
-        function match.window_matches(w, desktop_id)
-            if type(w) ~= "table" then
-                return false
-            end
-            for _, raw in ipairs({ w.class, w.initial_class, w.title, w.initial_title }) do
-                if match.field_matches(raw, desktop_id) then
-                    return true
-                end
-            end
-            return false
-        end
-    end
+
+local ok_match, match = pcall(require, "modules.session_match")
+if not ok_match or type(match) ~= "table" then
+    error("modules.session_match required (restow hypr)")
 end
 
 local M = {}
-local park = false
-local park_gen = 0
 local shutting_down = false
-local bg_rules = { workspace = "special:background silent" }
-
-local function park_script()
-    return paths.scripts .. "/session-park.sh"
-end
-
-local function run_park_script()
-    if hl.exec_cmd then
-        pcall(hl.exec_cmd, park_script())
-    end
-end
+-- Wiki: exec_cmd rules; "silent" avoids focusing that workspace on map.
+local bg_rules = {
+    workspace = "special:background silent",
+    no_initial_focus = true,
+}
 
 local function addrs()
     local t = _G.__modern_as_addrs
@@ -148,47 +80,14 @@ local function forget(w)
     end
 end
 
-local function move_bg(w)
-    if not (hl.dispatch and hl.dsp and hl.dsp.window and hl.dsp.window.move) then
-        return
-    end
-    local addr = tostring(w and w.address or ""):gsub("^address:", "")
-    -- Wiki: window.move({ workspace, follow?, window? }) — no "silent" key;
-    -- follow=false keeps the current workspace focused (scratchpad park).
-    local function try(spec)
-        return pcall(function()
-            hl.dispatch(hl.dsp.window.move(spec))
-        end)
-    end
-    if addr ~= "" and try({
-        workspace = "special:background",
-        follow = false,
-        window = "address:" .. addr,
-    }) then
-        return
-    end
-    try({
-        workspace = "special:background",
-        follow = false,
-        window = w,
-    })
-end
-
-local function arm_park(ms)
-    park = true
-    park_gen = park_gen + 1
-    local gen = park_gen
-    if hl.timer then
-        hl.timer(function()
-            if gen == park_gen then
-                park = false
-            end
-        end, { timeout = ms or 90000, type = "oneshot" })
+-- Track identity only — never move windows here.
+local function track_window(w)
+    local name = desktop_for_window(w)
+    if name ~= "" then
+        remember(w, name)
     end
 end
 
--- Direct --app= keeps the PID closer to the window than gtk-launch (wiki:
--- exec_cmd rules track the spawned PID; forks drop the rule).
 local direct_app = {
     ["proton-mail"] = "vivaldi-stable --app=https://mail.proton.me",
     ["proton-calendar"] = "vivaldi-stable --app=https://calendar.proton.me",
@@ -204,62 +103,10 @@ local function launch_name(name)
     else
         hl.exec_cmd(cmd, bg_rules)
     end
-    if hl.timer then
-        hl.timer(run_park_script, { timeout = 1500, type = "oneshot" })
-    end
-end
-
-local function park_app_window(w)
-    local name = desktop_for_window(w)
-    if name == "" then
-        return
-    end
-    remember(w, name)
-    if not park then
-        return
-    end
-    move_bg(w)
-end
-
-local function sweep_parked()
-    local wins = hl.get_windows and hl.get_windows()
-    if type(wins) ~= "table" then
-        return
-    end
-    for _, w in pairs(wins) do
-        if type(w) == "table" and desktop_for_window(w) ~= "" then
-            local ws = w.workspace
-            local wsname = ""
-            if type(ws) == "table" then
-                wsname = tostring(ws.name or "")
-            end
-            if not (wsname:find("special:background", 1, true) or wsname == "background") then
-                move_bg(w)
-            end
-        end
-    end
-end
-
-local function schedule_sweeps()
-    if not hl.timer then
-        return
-    end
-    for _, ms in ipairs({ 1000, 2500, 5000, 8000, 12000, 20000, 35000, 60000 }) do
-        hl.timer(function()
-            if not park then
-                return
-            end
-            sweep_parked()
-            run_park_script()
-        end, { timeout = ms, type = "oneshot" })
-    end
 end
 
 local function start_apps()
     local list = autostart_ids()
-    arm_park(90000)
-    schedule_sweeps()
-    run_park_script()
     local delay = 0
     for _, id in ipairs(list) do
         local name = match.stem(id)
@@ -274,6 +121,7 @@ local function start_apps()
             else
                 launch_name(name)
             end
+            -- Stagger so each --app= window is more likely to inherit exec rules.
             delay = delay + 2500
         end
     end
@@ -288,12 +136,14 @@ function M.on_start()
 end
 
 if hl.on then
-    hl.on("window.open", park_app_window)
-    hl.on("window.class", park_app_window)
-    hl.on("window.title", park_app_window)
+    hl.on("window.open", track_window)
+    hl.on("window.class", track_window)
+    hl.on("window.title", track_window)
     hl.on("hyprland.shutdown", function()
         shutting_down = true
     end)
+    -- Client chrome X cannot be cancelled. Respawn with silent exec rules
+    -- so mail/chat keep notifying (still in general.autostart).
     hl.on("window.close", function(w)
         if shutting_down then
             return
@@ -312,10 +162,8 @@ if hl.on then
             return
         end
         busy[name] = true
-        arm_park(20000)
         launch_name(name)
         if hl.timer then
-            hl.timer(run_park_script, { timeout = 2500, type = "oneshot" })
             hl.timer(function()
                 if type(_G.__modern_as_busy) == "table" then
                     _G.__modern_as_busy[name] = nil

@@ -21,6 +21,10 @@ PROFILE="$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/di
 DEFAULTS="$ROOT/stow/modern/.config/modern/config.default.json"
 EN="$ROOT/stow/modern/.config/modern/translations/en.json"
 DE="$ROOT/stow/modern/.config/modern/translations/de.json"
+RAISE="$ROOT/scripts/session-raise.sh"
+HIDE="$ROOT/scripts/session-hide.sh"
+LAUNCHER="$ROOT/stow/shell/.config/quickshell/modern/Services/Launcher.qml"
+MODERN="$ROOT/scripts/modern"
 
 if grep -Fq 'session_apps' "$AUTO" \
     && grep -Fq 'on_start' "$AUTO"; then
@@ -45,24 +49,37 @@ else
     err "modern-launch --background must not call hyprctl dispatch exec"
 fi
 
-if [[ -x "$ROOT/scripts/session-park.sh" ]] \
-    && grep -Fq 'session-park.sh' "$SESSION" \
-    && grep -Fq 'special:background silent' "$SESSION" \
-    && grep -Fq 'follow = false' "$SESSION" \
+if grep -Fq 'special:background silent' "$SESSION" \
+    && grep -Fq 'no_initial_focus' "$SESSION" \
     && grep -Fq 'vivaldi-stable --app=' "$SESSION" \
-    && grep -Fq 'window.class' "$SESSION"; then
-    ok "session-park + direct --app= + follow=false special:background park"
+    && ! grep -Fq 'session-park' "$SESSION" \
+    && ! grep -Fq 'move_bg' "$SESSION" \
+    && ! grep -Fq 'arm_park' "$SESSION" \
+    && ! grep -Fq 'schedule_sweeps' "$SESSION"; then
+    ok "login uses silent exec rules only — no system park/move sweeps"
 else
-    err "session_apps must park via follow=false move and session-park.sh"
+    err "session_apps must not auto-move windows onto special:background"
+fi
+
+if [[ -x "$RAISE" ]] \
+    && [[ -x "$HIDE" ]] \
+    && grep -Fq 'bind the needle' "$RAISE" \
+    && grep -Fq 'raiseDesktopOrLaunch' "$HYPR_WIN" \
+    && grep -Fq 'raiseDesktopOrLaunch' "$LAUNCHER" \
+    && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq 'session-hide.sh' "$MODERN"; then
+    ok "launcher raises via session-raise; Super+Q parks via session-hide"
+else
+    err "raiseDesktopOrLaunch + session-raise/hide required"
 fi
 
 if grep -Fq 'url_tokens' "$MATCH" \
     && grep -Fq 'mailproton' "$MATCH" \
     && grep -Fq '_urlTokens' "$HYPR_AS" \
-    && ! grep -Fq 'classn.indexOf("vivaldi") !== 0' "$HYPR_AS"; then
-    ok "shared URL match does not require vivaldi class prefix"
+    && ! grep -Fq 'needle.indexOf(fieldn)' "$HYPR_AS"; then
+    ok "shared URL match does not reverse-match short field tokens"
 else
-    err "session_match / HyprAutostart must match URL tokens without vivaldi prefix"
+    err "session_match / HyprAutostart must not reverse-match field into needle"
 fi
 
 if grep -Fq 'window.close' "$SESSION" \
