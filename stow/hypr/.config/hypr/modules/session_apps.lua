@@ -1,9 +1,11 @@
--- Session autostart: spawn on login/respawn with exec workspace rules only.
--- Never move existing windows onto special:background from timers or
--- open/class/title handlers — park is Super+Q / taskbar only (shell).
+-- Session autostart: spawn on login/respawn onto special:background.
+-- Per-app Vivaldi profiles (session_direct_apps) so each process inherits
+-- exec_cmd workspace rules. Spawn expect finishes placement when a marked
+-- window maps off special — Super+Q / taskbar still own interactive park.
 local config = require("modules.config")
 local paths = require("modules.paths")
 local layout = require("modules.workspaces_layout")
+local direct_app = require("modules.session_direct_apps")
 
 local ok_match, match = pcall(require, "modules.session_match")
 if not ok_match or type(match) ~= "table" then
@@ -12,15 +14,11 @@ end
 
 local M = {}
 local shutting_down = false
--- Wiki: exec_cmd rules; "silent" avoids focusing that workspace on map.
 local bg_rules = {
     workspace = "special:background silent",
     no_initial_focus = true,
 }
 
--- Autostart clients inherit the special workspace's monitor. Left on a
--- secondary output they look like "workspace 6+" and raise gets adopted
--- back into that range.
 local function pin_background()
     local mon = layout.primary()
     local sel = layout.selector(mon)
@@ -47,10 +45,7 @@ local function autostart_ids()
         config.invalidate()
     end
     local list = config.value("general.autostart", {})
-    if type(list) ~= "table" then
-        return {}
-    end
-    return list
+    return type(list) == "table" and list or {}
 end
 
 local function in_autostart(name)
@@ -96,8 +91,29 @@ local function forget(w)
     end
 end
 
--- Track identity only — never move windows here except finishing a
--- login/respawn spawn when Chromium ignored exec workspace rules.
+local function on_special(w)
+    local ws = w and w.workspace
+    local n = type(ws) == "table" and tostring(ws.name or "") or tostring(ws or "")
+    return n:find("special:background", 1, true) ~= nil or n == "background"
+end
+
+local function move_to_background(w)
+    if not (hl.dsp and hl.dsp.window and hl.dsp.window.move) then
+        return
+    end
+    local addr = tostring(w and w.address or ""):gsub("^address:", "")
+    if addr ~= "" and not addr:lower():find("^0x") then
+        addr = "0x" .. addr
+    end
+    local spec = { workspace = "special:background", follow = false }
+    if addr ~= "" then
+        spec.window = "address:" .. addr
+    else
+        spec.window = w
+    end
+    pcall(hl.dispatch, hl.dsp.window.move(spec))
+end
+
 local function on_window(w)
     local name = desktop_for_window(w)
     if name == "" then
@@ -108,32 +124,12 @@ local function on_window(w)
     if type(spawn) ~= "table" or not spawn[name] then
         return
     end
-    spawn[name] = nil
-    local ws = w and w.workspace
-    local wsname = ""
-    if type(ws) == "table" then
-        wsname = tostring(ws.name or "")
-    elseif type(ws) == "string" then
-        wsname = ws
-    end
-    if wsname:find("special:background", 1, true) or wsname == "background" then
+    if on_special(w) then
+        spawn[name] = nil
         return
     end
-    if not (hl.dsp and hl.dsp.window and hl.dsp.window.move) then
-        return
-    end
-    pcall(hl.dispatch, hl.dsp.window.move({
-        workspace = "special:background",
-        follow = false,
-        window = w,
-    }))
+    move_to_background(w)
 end
-
-local direct_app = {
-    ["proton-mail"] = "vivaldi-stable --app=https://mail.proton.me",
-    ["proton-calendar"] = "vivaldi-stable --app=https://calendar.proton.me",
-    ["whatsapp"] = "vivaldi-stable --app=https://web.whatsapp.com",
-}
 
 local function mark_spawn(name)
     local t = _G.__modern_as_spawn
@@ -142,10 +138,18 @@ local function mark_spawn(name)
         _G.__modern_as_spawn = t
     end
     t[name] = true
+    if hl.timer then
+        hl.timer(function()
+            if type(_G.__modern_as_spawn) == "table" then
+                _G.__modern_as_spawn[name] = nil
+            end
+        end, { timeout = 20000, type = "oneshot" })
+    end
 end
 
 local function launch_name(name)
     local cmd = direct_app[name] or (paths.modern_launch .. " " .. name)
+    pin_background()
     mark_spawn(name)
     if hl.dispatch and hl.dsp and hl.dsp.exec_cmd then
         pcall(function()
@@ -173,8 +177,7 @@ local function start_apps()
             else
                 launch_name(name)
             end
-            -- Stagger so each --app= window is more likely to inherit exec rules.
-            delay = delay + 2500
+            delay = delay + 1500
         end
     end
 end
@@ -195,8 +198,6 @@ if hl.on then
     hl.on("hyprland.shutdown", function()
         shutting_down = true
     end)
-    -- Client chrome X cannot be cancelled. Respawn with silent exec rules
-    -- so mail/chat keep notifying (still in general.autostart).
     hl.on("window.close", function(w)
         if shutting_down then
             return

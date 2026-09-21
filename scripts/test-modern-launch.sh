@@ -52,15 +52,28 @@ fi
 if grep -Fq 'special:background silent' "$SESSION" \
     && grep -Fq 'pin_background' "$SESSION" \
     && grep -Fq '__modern_as_spawn' "$SESSION" \
+    && grep -Fq 'session_direct_apps' "$SESSION" \
+    && grep -Fq 'vivaldi-apps' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
+    && grep -Fq 'user-data-dir' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
     && grep -Fq 'no_initial_focus' "$SESSION" \
-    && grep -Fq 'vivaldi-stable --app=' "$SESSION" \
     && ! grep -Fq 'session-park' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \
     && ! grep -Fq 'arm_park' "$SESSION" \
     && ! grep -Fq 'schedule_sweeps' "$SESSION"; then
-    ok "login uses silent exec on primary special — no system park/move sweeps"
+    ok "login uses per-app Vivaldi profiles + silent special spawn"
 else
-    err "session_apps must pin special:background and not auto-move windows"
+    err "session_apps must use vivaldi-apps user-data-dir and pin special:background"
+fi
+
+WA_DESK="$ROOT/stow/xdg/.local/share/applications/whatsapp.desktop"
+MAIL_DESK="$ROOT/stow/xdg/.local/share/applications/proton-mail.desktop"
+CAL_DESK="$ROOT/stow/xdg/.local/share/applications/proton-calendar.desktop"
+if grep -Fq 'vivaldi-apps/whatsapp' "$WA_DESK" \
+    && grep -Fq 'vivaldi-apps/proton-mail' "$MAIL_DESK" \
+    && grep -Fq 'vivaldi-apps/proton-calendar' "$CAL_DESK"; then
+    ok "desktop entries use separate Vivaldi user-data-dir profiles"
+else
+    err "whatsapp/proton desktop Exec must set --user-data-dir under vivaldi-apps"
 fi
 
 if [[ -x "$RAISE" ]] \
