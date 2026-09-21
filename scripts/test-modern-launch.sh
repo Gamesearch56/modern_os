@@ -21,7 +21,8 @@ fi
 
 if grep -Fq 'session_apps' "$AUTO" \
     && grep -Fq 'hl.exec_cmd(cmd, bg_rules)' "$SESSION" \
-    && grep -Fq 'special:background silent' "$SESSION"; then
+    && grep -Fq 'special:background silent' "$SESSION" \
+    && grep -Fq 'window.class' "$SESSION"; then
     ok "login autostart uses hl.exec_cmd with special:background"
 else
     err "autostart.lua must start session_apps with special:background"

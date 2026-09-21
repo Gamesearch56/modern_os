@@ -120,16 +120,19 @@ Singleton {
             const addrs = entry.addresses && entry.addresses.length
                 ? entry.addresses
                 : [String(entry.address || "")];
-            let onlyAutostart = addrs.length > 0;
+            let anyAutostart = false;
             for (let i = 0; i < addrs.length; i++) {
                 const a = String(addrs[i] || "");
                 if (!a.length)
                     continue;
                 const t = Hypr.toplevelByAddress(a);
-                if (!(t && Hypr.isAutostartWindow(t)))
-                    onlyAutostart = false;
+                if (t && Hypr.isAutostartWindow(t)) {
+                    anyAutostart = true;
+                    break;
+                }
             }
-            if (onlyAutostart) {
+            // Autostart apps park on special:background — never SIGKILL.
+            if (anyAutostart) {
                 for (let j = 0; j < addrs.length; j++) {
                     const a = String(addrs[j] || "");
                     if (a.length)
@@ -145,6 +148,24 @@ Singleton {
                     Hypr.killWindow(a);
             }
         } else {
+            // Headless process/tray: park matching autostart toplevels.
+            const list = Hypr.toplevelList || [];
+            let parked = false;
+            for (let p = 0; p < list.length; p++) {
+                const t = list[p];
+                if (!t || !Hypr.isAutostartWindow(t))
+                    continue;
+                const addr = String(t.address || "");
+                if (!addr.length)
+                    continue;
+                Hypr.closeWindow(addr);
+                parked = true;
+            }
+            if (parked) {
+                Hypr.refreshToplevels();
+                RunningApps.refresh();
+                return;
+            }
             RunningApps.killEntry(entry);
             if (entry.kind === "tray")
                 Tray.dismiss(entry.item);

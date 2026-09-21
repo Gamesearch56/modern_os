@@ -628,6 +628,7 @@
       "gaming": "Spiele"
     },
     "addAutostart": "Autostart-App hinzufügen",
+    "removeAutostart": "Aus Autostart entfernen",
     "motionOff": "Aus",
     "motionDefault": "Standard",
     "motionSlow": "Langsam",

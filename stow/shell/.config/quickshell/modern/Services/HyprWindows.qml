@@ -131,6 +131,15 @@ QtObject {
                 return true;
             if (n.length >= 5 && needle.indexOf(n) !== -1)
                 return true;
+            // Vivaldi --app= uses URL-derived classes (mail.proton.me, …).
+            if (n.indexOf("vivaldi") === 0) {
+                if (needle.indexOf("mail") !== -1 && n.indexOf("mailproton") !== -1)
+                    return true;
+                if (needle.indexOf("calendar") !== -1 && n.indexOf("calendarproton") !== -1)
+                    return true;
+                if (needle.indexOf("whatsapp") !== -1 && n.indexOf("whatsapp") !== -1)
+                    return true;
+            }
         }
         return false;
     }
