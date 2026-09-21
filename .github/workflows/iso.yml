@@ -59,7 +59,7 @@ jobs:
           fetch-depth: 0
 
       - name: Cache AUR packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/iso-out/aur-cache
           key: iso-aur-${{ hashFiles('iso/releng/packages.aur.x86_64', 'iso/releng/calamares-limit-languages.py', 'iso/releng/installer-locales.json') }}
