@@ -16,6 +16,13 @@ PROTECTED = {
     "xdg-desktop-portal-hyprland",
 }
 
+# Never match by these short/shared names — kill by PID tree instead.
+GENERIC_NAMES = {
+    "appimage", "bash", "electron", "env", "flatpak", "gamemoderun",
+    "java", "node", "python", "python3", "sh", "steamwebhelper", "wine",
+    "wine64", "wineserver",
+}
+
 def parse_args(argv):
     pids, names = [], []
     i = 0
@@ -106,18 +113,17 @@ def all_user_pids(uid):
 
 def matches(proc_names, needle):
     n = needle.replace(".desktop", "").strip().lower()
-    if len(n) < 3:
+    if len(n) < 3 or n in GENERIC_NAMES or n in PROTECTED:
         return False
     extras = (n + "-launcher", n + "-bin", n + ".bin")
     for p in proc_names:
-        if p in PROTECTED:
+        if p in PROTECTED or p in GENERIC_NAMES:
             continue
         if p == n or p in extras:
             return True
         if n == p + "-launcher" or n == p + "-bin":
             return True
     return False
-
 def descendants(roots, by_parent):
     seen = set()
     stack = list(roots)

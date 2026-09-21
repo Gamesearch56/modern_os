@@ -66,7 +66,18 @@ Singleton {
 
     function _skipName(n: string): bool {
         const s = String(n || "").toLowerCase();
-        return !s.length || s.indexOf("/") !== -1 || s.indexOf("application-x-") === 0;
+        if (!s.length || s.indexOf("/") !== -1 || s.indexOf("application-x-") === 0)
+            return true;
+        if (s.length < 3)
+            return true;
+        // Shared runtimes — kill by PID tree only, never by name.
+        const generic = {
+            "env": true, "sh": true, "bash": true, "flatpak": true,
+            "electron": true, "java": true, "python": true, "python3": true,
+            "node": true, "wine": true, "wine64": true, "wineserver": true,
+            "steamwebhelper": true, "gamemoderun": true
+        };
+        return !!generic[s];
     }
 
     function _namesOf(entry: var): var {
