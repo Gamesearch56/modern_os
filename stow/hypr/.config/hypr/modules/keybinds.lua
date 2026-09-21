@@ -217,15 +217,15 @@ if not combo("exitSession") then
     hl.bind("SUPER + SHIFT + M", hl.dsp.exit())
 end
 
--- Mouse: drag / resize / workspace on this monitor. Not in the editor.
+-- Mouse: drag / resize on this monitor. Not in the shortcut editor.
 if hl.dsp.window and hl.dsp.window.drag then
     hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true })
 end
 if hl.dsp.window and hl.dsp.window.resize then
     hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 end
-hl.bind("SUPER + mouse_down", hl.dsp.exec_cmd("hyprctl dispatch workspace m-1"), { mouse = true })
-hl.bind("SUPER + mouse_up", hl.dsp.exec_cmd("hyprctl dispatch workspace m+1"), { mouse = true })
+-- SUPER+scroll workspace switching was removed: Hyprland 0.56 rejects
+-- `hyprctl dispatch workspace m±1` from Lua binds (see cheatsheet).
 
 -- Media/backlight keys are hardware-fixed X11 keysyms, not user-remapped
 -- via the shortcut editor, so they're bound directly rather than through

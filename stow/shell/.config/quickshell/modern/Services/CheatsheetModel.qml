@@ -11,11 +11,12 @@ Singleton {
     id: root
 
     readonly property var categoryOf: ({
-        launcher: "applications", terminal: "applications", browser: "applications",
+        launcher: "applications",
+        terminal: "applications", browser: "applications",
         browserIncognito: "applications",
-        fileManager: "applications", settings: "applications", wallpaperPicker: "applications",
-        taskbar: "applications",
-        overview: "applications", spotify: "applications", aiChat: "applications",
+        fileManager: "applications", spotify: "applications",
+        settings: "system", wallpaperPicker: "system",
+        taskbar: "system", overview: "system", aiChat: "system",
         closeWindow: "windowManagement", fullscreen: "windowManagement",
         toggleFloating: "windowManagement", pseudoTile: "windowManagement",
         toggleSplit: "windowManagement",
@@ -33,18 +34,18 @@ Singleton {
         moveToWorkspace7: "workspaces", moveToWorkspace8: "workspaces",
         moveToWorkspace9: "workspaces", moveToWorkspace10: "workspaces",
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
-        screenshotFull: "screenshots", colorPicker: "screenshots",
-        cheatsheet: "system", powerMenu: "system", controlCenter: "system", lockScreen: "system", exitSession: "system",
-        filePreview: "utilities", clipboardHistory: "utilities"
+        screenshotFull: "screenshots",
+        colorPicker: "system",
+        cheatsheet: "system", powerMenu: "system", controlCenter: "system",
+        lockScreen: "system", exitSession: "system"
+        // filePreview / clipboardHistory: omitted (former utilities category)
     })
 
     // Chrome / Super+mouse gestures — not remappable, not in keybinds.
     readonly property var mouseGestures: [
         { action: "mouseMoveSuper", combo: "SUPER + LMB" },
         { action: "mouseResizeSuper", combo: "SUPER + RMB" },
-        { action: "mouseWorkspaceScroll", combo: "SUPER + SCROLL" },
-        { action: "mouseResizeBorder", combo: "BORDER + LMB" },
-        { action: "mouseToggleSplit", combo: "TASKBAR + SPLIT" }
+        { action: "mouseResizeBorder", combo: "BORDER + LMB" }
     ]
 
     function _rowMatches(action: string, combo: string, category: string, needle: string): bool {
@@ -56,6 +57,22 @@ Singleton {
             || combo.toLowerCase().indexOf(needle) !== -1
             || catLabel.indexOf(needle) !== -1
             || category.toLowerCase().indexOf(needle) !== -1;
+    }
+
+    function _labelOf(action: string): string {
+        return I18n.t("cheatsheet.action." + action);
+    }
+
+    // Launcher stays first under Anwendungen; everything else A→Z by label.
+    function _sortItems(items: var): var {
+        items.sort((a, b) => {
+            if (a.action === "launcher")
+                return -1;
+            if (b.action === "launcher")
+                return 1;
+            return root._labelOf(a.action).localeCompare(root._labelOf(b.action));
+        });
+        return items;
     }
 
     function rows(filter: string): var {
@@ -101,13 +118,13 @@ Singleton {
     function grouped(filter: string): var {
         const all = root.rows(filter);
         return {
-            left: root._pack(all, ["applications", "system", "utilities", "screenshots"]),
+            left: root._pack(all, ["applications", "system", "screenshots"]),
             right: root._pack(all, ["windowManagement", "workspaces", "mouse"])
         };
     }
 
     function categoryIds(): var {
-        return ["applications", "system", "utilities", "screenshots", "windowManagement", "workspaces", "mouse"];
+        return ["applications", "system", "screenshots", "windowManagement", "workspaces", "mouse"];
     }
 
     function categories(filter: string): var {
@@ -121,7 +138,7 @@ Singleton {
             if (all[i].category === category)
                 out.push(all[i]);
         }
-        return out;
+        return root._sortItems(out);
     }
 
     function _pack(all: var, ids: var): var {
@@ -133,6 +150,7 @@ Singleton {
                 if (all[j].category === id)
                     items.push(all[j]);
             }
+            root._sortItems(items);
             if (items.length)
                 cats.push({ id: id, items: items });
         }
