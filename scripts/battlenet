@@ -193,7 +193,16 @@ launch_exe() {
         echo "battlenet: set WINEPREFIX or STEAM_COMPAT_DATA_PATH for proton run" >&2
         exit 1
     fi
-    run_wrapped "$proton" run "$exe" "${extra_args[@]}"
+    # waitforexitandrun (Steam's verb) — plain `run` makes ProtonFixes
+    # think this is a unit test and skip, then Wine often aborts early.
+    local app_id
+    app_id="$(basename "$STEAM_COMPAT_DATA_PATH")"
+    if [[ "$app_id" =~ ^[0-9]+$ ]]; then
+        export SteamAppId="${SteamAppId:-$app_id}"
+        export SteamGameId="${SteamGameId:-$app_id}"
+        export STEAM_COMPAT_APP_ID="${STEAM_COMPAT_APP_ID:-$app_id}"
+    fi
+    run_wrapped "$proton" waitforexitandrun "$exe" "${extra_args[@]}"
 }
 
 # Prefer direct EXE — avoids Steam Non-Steam AppID bugs.

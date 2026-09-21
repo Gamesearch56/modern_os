@@ -159,8 +159,10 @@ as the launcher and control panel — instead of bar-anchored popups.
 
 ## Battle.net / World of Warcraft (no Lutris)
 
-Preferred stack: **Steam non-Steam game + GE-Proton + XWayland**, with a
-stowed `.desktop` so Super+Space lists Battle.net. Lutris stays in the
+Preferred stack: **Steam non-Steam game + Proton Experimental (launcher) +
+XWayland**, with a stowed `.desktop` so Super+Space lists Battle.net.
+GE-Proton is fine for *games* launched from the client; the Battle.net
+CEF UI itself often dies on GE 11.x (see below). Lutris stays in the
 gaming manifest for other titles; Battle.net’s Chromium UI under Proton
 Wayland often white-screens on Hyprland.
 
@@ -186,7 +188,9 @@ Raises `vm.max_map_count` and optionally disables split-lock mitigation
 ### Steam install
 
 1. Add the Battle.net installer as a **Non-Steam game**.
-2. Compatibility: **GE-Proton** (latest).
+2. Compatibility: **Proton Experimental** for the launcher (GE-Proton 11.x
+   has been aborting the CEF UI — see below). Use GE on individual games
+   in Steam if needed.
 3. Launch options:
 
    ```
@@ -211,12 +215,24 @@ Raises `vm.max_map_count` and optionally disables split-lock mitigation
 
 `scripts/battlenet` / `modern battlenet` runs that EXE with Proton
 (Experimental preferred; GE if you set `PROTONPATH`) via `umu-run` when
-installed, otherwise Steam’s `proton run`, under GameMode + RADV +
-XWayland. No gamescope or MangoHud by default.
+installed, otherwise Steam’s `proton waitforexitandrun`, under GameMode +
+RADV + XWayland. No gamescope or MangoHud by default.
 
 Optional: `STEAM_APPID` still tries `steam://rungameid/` without wrapping
 the Steam client in GameMode — use only if the EXE path is unavailable.
-Proton Experimental is fine when GE-Proton fails for Battle.net.
+
+**Battle.net UI vs Warcraft III:** leave `PROTONPATH` on **Proton
+Experimental** so the launcher starts. GE-Proton 11.x has been aborting
+the CEF client (`win32u.NtGdiDdDDIQueryFSEBlock`). Games you start *from*
+Battle.net use that same runner — there is no separate Steam
+“Compatibility” for WC3 unless you add `Warcraft III.exe` as its own
+non-Steam shortcut.
+
+For the Forsaken Kingdom / certificate-chain fix, either run the full
+official **GE-Proton11-7** (when the launcher works on it again), or
+transplant that release’s `crypt32.dll` into Experimental per the
+GE-Proton11-7-crypt32 README (`files/lib/wine/{x86_64,i386}-windows/`).
+Do not put those DLLs in the prefix `system32`.
 
 ### Hyprland behaviour
 
