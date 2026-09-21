@@ -22,6 +22,15 @@ DEFAULTS="$ROOT/stow/modern/.config/modern/config.default.json"
 EN="$ROOT/stow/modern/.config/modern/translations/en.json"
 DE="$ROOT/stow/modern/.config/modern/translations/de.json"
 
+if [[ ! -f "$MATCH" ]]; then
+    err "session_match.lua missing from stow (restow hypr after adding it)"
+elif grep -Fq 'pcall(require, "modules.session_match")' "$SESSION" \
+    || grep -Fq 'require("modules.session_match")' "$SESSION"; then
+    ok "session_apps loads session_match (stow must link the new module)"
+else
+    err "session_apps must require session_match"
+fi
+
 if grep -Fq 'hl.dsp.exec_cmd' "$LAUNCH" \
     && ! grep -E '^[[:space:]]*exec hyprctl dispatch exec' "$LAUNCH" >/dev/null; then
     ok "--background uses Lua exec_cmd"
@@ -29,16 +38,14 @@ else
     err "modern-launch --background must not call hyprctl dispatch exec"
 fi
 
-if grep -Fq 'session_apps' "$AUTO" \
-    && grep -Fq 'hl.exec_cmd(cmd, bg_rules)' "$SESSION" \
+if [[ -x "$ROOT/scripts/session-park.sh" ]] \
+    && grep -Fq 'session-park.sh' "$SESSION" \
     && grep -Fq 'special:background silent' "$SESSION" \
     && grep -Fq 'window.class' "$SESSION" \
-    && grep -Fq 'sweep_parked' "$SESSION" \
-    && grep -Fq 'pin_special_to_primary' "$SESSION" \
-    && grep -Fq 'park_gen' "$SESSION"; then
-    ok "login autostart parks with stagger/sweep on primary"
+    && grep -Fq 'pin_special_to_primary' "$SESSION"; then
+    ok "session-park.sh sweeps forked Chromium windows onto special:background"
 else
-    err "session_apps must park login/respawn on special:background with sweeps"
+    err "session_apps must call session-park.sh during login grace"
 fi
 
 if grep -Fq 'url_tokens' "$MATCH" \
