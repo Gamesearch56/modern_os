@@ -16,8 +16,22 @@ QtObject {
         windows: root
     }
 
+    // Quickshell omits 0x; Hyprland Lua needs address:0x… or moves are no-ops.
+    function _addrHypr(address: string): string {
+        let a = String(address || "").replace(/^address:/i, "").trim();
+        if (!a.length)
+            return "";
+        if (a.toLowerCase().indexOf("0x") !== 0)
+            a = "0x" + a;
+        return a;
+    }
+
+    function _addrKey(address: string): string {
+        return root._addrHypr(address).toLowerCase();
+    }
+
     function focusWindow(address: string) {
-        const addr = String(address || "");
+        const addr = root._addrHypr(address);
         if (!addr.length)
             return;
         if (root.host._lua)
@@ -27,7 +41,7 @@ QtObject {
     }
 
     function activateWindow(address: string) {
-        const addr = String(address || "");
+        const addr = root._addrHypr(address);
         if (!addr.length)
             return;
         const t = root.toplevelByAddress(addr);
@@ -54,18 +68,19 @@ QtObject {
     function moveToCurrentWorkspace(address: string) {
         const fw = root.host.focusedWorkspace;
         const id = (fw && Number(fw.id) > 0) ? Number(fw.id) : 1;
-        root.moveWindowToWorkspace(address, id);
+        root.moveWindowToWorkspace(address, id, true);
     }
 
-    function moveWindowToWorkspace(address: string, id: int) {
+    function moveWindowToWorkspace(address: string, id: int, follow: bool) {
         const n = Number(id);
         if (n <= 0 || !root.host)
             return;
         root.host._pinWorkspace(n);
-        const addr = String(address || "").replace(/^address:/i, "");
+        const addr = root._addrHypr(address);
         const win = addr.length ? ", window = \"address:" + addr + "\"" : "";
+        const fol = follow === true ? ", follow = true" : "";
         if (root.host._lua)
-            root.host.dispatch("hl.dsp.window.move({ workspace = " + n + win + " })");
+            root.host.dispatch("hl.dsp.window.move({ workspace = " + n + fol + win + " })");
         else if (addr.length)
             root.host.dispatch("movetoworkspace " + n + ",address:" + addr);
         else
@@ -73,7 +88,7 @@ QtObject {
     }
 
     function moveToBackground(address: string) {
-        const addr = String(address || "");
+        const addr = root._addrHypr(address);
         if (!addr.length)
             return;
         if (root.host._lua)
@@ -88,10 +103,6 @@ QtObject {
 
     function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
         return root.raise.raiseDesktopOrLaunch(desktopId, entry);
-    }
-
-    function _addrKey(address: string): string {
-        return String(address || "").replace(/^address:/i, "").toLowerCase();
     }
 
     function toplevelByAddress(address: string): var {
@@ -129,7 +140,7 @@ QtObject {
     function closeWindow(address: string) {
         if (root.hideAutostart(address))
             return;
-        const addr = String(address || "").replace(/^address:/i, "");
+        const addr = root._addrHypr(address);
         if (!addr.length)
             return;
         const t = root.toplevelByAddress(addr);
@@ -151,7 +162,7 @@ QtObject {
 
     // Bypass park — Settings Autostart remove only.
     function forceKillWindow(address: string) {
-        const addr = String(address || "").replace(/^address:/i, "");
+        const addr = root._addrHypr(address);
         if (!addr.length || !root.host)
             return;
         if (root.host._lua)
@@ -177,9 +188,7 @@ QtObject {
                 return root._taskbarOnFocused(screen);
             if (!Number.isNaN(mid) && mon.id !== undefined && Number(mon.id) === mid)
                 return true;
-            if (String(ipc.monitor) === String(mon.name))
-                return true;
-            return false;
+            return String(ipc.monitor) === String(mon.name);
         }
         if (hidden || wsId < 0)
             return root._taskbarOnFocused(screen);

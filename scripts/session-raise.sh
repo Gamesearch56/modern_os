@@ -26,9 +26,17 @@ case "$stem" in
     *whatsapp*) needles+=("web.whatsapp" "webwhatsapp" "vivaldi-web.whatsapp") ;;
 esac
 
-ws="$(hyprctl -j activeworkspace 2>/dev/null | jq -r '.id // empty')"
+aw="$(hyprctl -j activeworkspace 2>/dev/null || true)"
+ws="$(printf '%s' "$aw" | jq -r '.id // empty')"
+mon="$(printf '%s' "$aw" | jq -r '.monitor // empty')"
 if [[ -z "$ws" || "$ws" == "null" ]]; then
     exit 1
+fi
+
+# Keep special:background on the active output so a later park does not
+# reopen the secondary-monitor / workspace-6 path.
+if [[ -n "$mon" && "$mon" != "null" ]]; then
+    hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"special:background\", monitor = \"${mon}\" })" >/dev/null 2>&1 || true
 fi
 
 addr="$(hyprctl -j clients 2>/dev/null | jq -r --argjson n "$(printf '%s\n' "${needles[@]}" | jq -R . | jq -s .)" '

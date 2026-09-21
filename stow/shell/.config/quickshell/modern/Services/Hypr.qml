@@ -178,7 +178,7 @@ Singleton {
             const ws = t?.workspace ? Number(t.workspace.id) : 0;
             if (ws !== n)
                 continue;
-            const addr = String(t.address || "");
+            const addr = wins._addrHypr(t.address);
             if (!addr.length)
                 continue;
             if (root._lua)

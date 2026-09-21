@@ -73,12 +73,22 @@ local function adopt_if_stray(win)
         return
     end
     local n = layout.workspace_id(win.workspace)
-    local home = layout.assigned_monitor(n)
-    local on = win.monitor
-    if not n or not home or not on then
+    -- Special workspaces and intentional raises onto the focused monitor's
+    -- workspace must not be yanked into the previous output's 6–10 range.
+    if not n or n < 0 then
         return
     end
-    if layout.same_output(on, layout.live_match(home) or home) then
+    local home = layout.assigned_monitor(n)
+    local on = win.monitor
+    if not home or not on then
+        return
+    end
+    local home_live = layout.live_match(home) or home
+    if layout.same_output(on, home_live) then
+        return
+    end
+    local focus_mon = hl.get_active_monitor and hl.get_active_monitor()
+    if focus_mon and layout.same_output(focus_mon, home_live) then
         return
     end
     local target = dest_workspace(on)
@@ -153,6 +163,18 @@ local function ensure_in_range(mon, from, to)
     show(live, from)
 end
 
+local function pin_background()
+    local mon = layout.primary()
+    local sel = layout.selector(mon)
+    if not sel or not hl.dsp or not hl.dsp.workspace or not hl.dsp.workspace.move then
+        return
+    end
+    pcall(hl.dispatch, hl.dsp.workspace.move({
+        workspace = "special:background",
+        monitor = sel,
+    }))
+end
+
 local function bind_range(mon, from, to)
     local sel = layout.selector(mon)
     if not sel or not hl.workspace_rule then
@@ -187,6 +209,7 @@ local function apply_fixed(boot)
         show(layout.live_match(monitors[i]) or monitors[i], from)
     end
     focus_primary()
+    pin_background()
 end
 
 function M.focus(n)
@@ -232,6 +255,7 @@ apply_fixed()
 if hl.on then
     hl.on("hyprland.start", function()
         apply_fixed(true)
+        pin_background()
         if not layout.fixed() then
             focus_primary()
         end

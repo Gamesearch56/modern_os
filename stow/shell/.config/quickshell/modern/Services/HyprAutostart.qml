@@ -83,18 +83,13 @@ QtObject {
         const win = root.windows;
         if (!win)
             return false;
-        const addr = String(address || "").replace(/^address:/i, "");
+        const addr = win._addrHypr ? win._addrHypr(address) : String(address || "").replace(/^address:/i, "");
         if (!addr.length)
             return false;
         const t = win.toplevelByAddress(addr);
         if (!t || !root.isAutostartWindow(t))
             return false;
-        const ipc = t.lastIpcObject || ({});
-        const wsName = String(t.workspace?.name || ipc.workspace?.name || "");
-        const onBg = wsName.indexOf("special:background") !== -1 || wsName === "background";
         win.moveToBackground(addr);
-        if (onBg && win.host && win.host._lua)
-            win.host.dispatch("hl.dsp.workspace.toggle_special(\"background\")");
         return true;
     }
 

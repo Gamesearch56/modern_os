@@ -50,15 +50,17 @@ else
 fi
 
 if grep -Fq 'special:background silent' "$SESSION" \
+    && grep -Fq 'pin_background' "$SESSION" \
+    && grep -Fq '__modern_as_spawn' "$SESSION" \
     && grep -Fq 'no_initial_focus' "$SESSION" \
     && grep -Fq 'vivaldi-stable --app=' "$SESSION" \
     && ! grep -Fq 'session-park' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \
     && ! grep -Fq 'arm_park' "$SESSION" \
     && ! grep -Fq 'schedule_sweeps' "$SESSION"; then
-    ok "login uses silent exec rules only — no system park/move sweeps"
+    ok "login uses silent exec on primary special — no system park/move sweeps"
 else
-    err "session_apps must not auto-move windows onto special:background"
+    err "session_apps must pin special:background and not auto-move windows"
 fi
 
 if [[ -x "$RAISE" ]] \
@@ -66,6 +68,7 @@ if [[ -x "$RAISE" ]] \
     && grep -Fq 'bind the needle' "$RAISE" \
     && grep -Fq 'raiseDesktopOrLaunch' "$HYPR_WIN" \
     && grep -Fq 'raiseDesktopOrLaunch' "$LAUNCHER" \
+    && grep -Fq '_addrHypr' "$HYPR_WIN" \
     && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'session-hide.sh' "$MODERN"; then
     ok "launcher raises via session-raise; Super+Q parks via session-hide"

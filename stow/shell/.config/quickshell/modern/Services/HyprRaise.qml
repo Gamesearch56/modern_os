@@ -45,12 +45,9 @@ Item {
         return false;
     }
 
-    // Raise existing (incl. special:background via hyprctl). Else entry.execute
-    // after session-raise exits non-zero.
+    // Prefer session-raise (hyprctl, correct 0x addresses) so special:background
+    // clients actually move. On miss, entry.execute() starts a new instance.
     function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
-        const win = root.windows;
-        if (!win)
-            return false;
         if (root.raiseDesktop(desktopId))
             return true;
         const stem = String(desktopId || "").replace(/\.desktop$/i, "");
@@ -68,24 +65,24 @@ Item {
     }
 
     function toggleFloating(address: string) {
-        const addr = String(address || "");
         const win = root.windows;
+        const addr = win ? win._addrHypr(address) : "";
         if (!addr.length || !win || !win.host)
             return;
         win.host.dispatch("togglefloating address:" + addr);
     }
 
     function toggleFullscreen(address: string) {
-        const addr = String(address || "");
         const win = root.windows;
+        const addr = win ? win._addrHypr(address) : "";
         if (!addr.length || !win || !win.host)
             return;
         win.host.dispatch("fullscreen 0,address:" + addr);
     }
 
     function toggleSplit(address: string) {
-        const addr = String(address || "").replace(/^address:/i, "");
         const win = root.windows;
+        const addr = win ? win._addrHypr(address) : "";
         if (!win || !win.host)
             return;
         if (addr.length)
