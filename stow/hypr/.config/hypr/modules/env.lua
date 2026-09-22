@@ -54,13 +54,8 @@ do
     end
 end
 
--- Proton HDR / Wayland: opt-in via Settings → Gaming. Not on by default —
--- Battle.net's Chromium UI breaks under PROTON_ENABLE_WAYLAND=1.
-if config.value("gaming.hdrSession", false) == true then
-    hl.env("DXVK_HDR", "1")
-    hl.env("ENABLE_HDR_WSI", "1")
-    hl.env("PROTON_ENABLE_HDR", "1")
-end
-if config.value("gaming.protonWayland", false) == true then
-    hl.env("PROTON_ENABLE_WAYLAND", "1")
-end
+-- Never export Proton HDR / Wayland session-wide. ENABLE_HDR_WSI=1 on the
+-- whole desktop tanks Steam CEF and browser video (ArchWiki: do not set
+-- globally). Settings → Gaming → HDR only feeds scripts/battlenet (and
+-- per-game Steam launch options). protonWayland stays off for the same
+-- reason — Battle.net's Chromium UI white-screens under Wine Wayland.

@@ -743,7 +743,7 @@
       "windowRulesJson": "JSON-Array der Hyprland-Fensterregeln. Speichern prüft vor dem Schreiben.",
       "gameFullscreen": "Erzwingt exklusives Vollbild, sobald das Spielfenster erscheint, statt auf die Anfrage der Engine zu warten.",
       "gameOptimize": "Schaltet zusätzliche Fenstereffekte am Spiel aus, damit es flüssiger läuft. Andere Fenster behalten ihr gewohntes Aussehen.",
-      "gameHdr": "Setzt DXVK_HDR, ENABLE_HDR_WSI und PROTON_ENABLE_HDR für Spiele. HDR am Monitor unter Anzeigen einschalten. Battle.net bleibt bei XWayland.",
+      "gameHdr": "Setzt DXVK_HDR, ENABLE_HDR_WSI und PROTON_ENABLE_HDR nur für Battle.net/Proton-Spiele über modern battlenet — nicht für die ganze Sitzung (sonst laggt Steam und Video). HDR unter Anzeigen einschalten. Für Steam-Titel dieselben Variablen in den Startoptionen. Battle.net bleibt bei XWayland.",
       "repeatRate": "Wie schnell eine gehaltene Taste wiederholt.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn Hyprland startet.",
