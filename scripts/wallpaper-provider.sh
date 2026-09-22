@@ -77,6 +77,11 @@ i18n_json() {
 notify_new() {
     local f="$1"
     [ -f "$f" ] || return 0
+    case "$f" in
+        *.download | *.crdownload | *.part | *.tmp | *.temp)
+            return 0
+            ;;
+    esac
     local mime=""
     if command -v file >/dev/null 2>&1; then
         mime="$(file -b --mime-type "$f" || true)"
@@ -157,7 +162,8 @@ start_filter_proxy
                 seen["$f"]=1
                 notify_new "$f"
             fi
-        done < <(inotifywait -m -e close_write,moved_to,create --format '%w%f' -- "$DEST" 2>/dev/null)
+        # create alone races incomplete writes; close_write/moved_to is the finished file.
+        done < <(inotifywait -m -e close_write,moved_to --format '%w%f' -- "$DEST" 2>/dev/null)
     else
         while true; do
             sleep 1
