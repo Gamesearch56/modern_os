@@ -23,9 +23,10 @@ ColumnLayout {
     }
 
     MField {
+        visible: Brightness.available
         labelKey: "quickSettings.brightness"
         MSlider {
-            enabled: Brightness.available
+            enabled: Brightness.available && !Brightness.setting
             from: 1
             to: 100
             value: Brightness.percent

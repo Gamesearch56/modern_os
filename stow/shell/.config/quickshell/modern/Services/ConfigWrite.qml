@@ -165,6 +165,12 @@ Singleton {
 
     Process {
         id: proc
+        onRunningChanged: {
+            if (running)
+                writeWatch.restart();
+            else if (!restoreProc.running)
+                writeWatch.stop();
+        }
         stdout: StdioCollector {
             onStreamFinished: {
                 const t = this.text.trim();
@@ -205,6 +211,12 @@ Singleton {
 
     Process {
         id: restoreProc
+        onRunningChanged: {
+            if (running)
+                writeWatch.restart();
+            else if (!proc.running)
+                writeWatch.stop();
+        }
         stdout: StdioCollector {
             onStreamFinished: {
                 const t = this.text.trim();
@@ -248,5 +260,22 @@ Singleton {
         interval: Motion.configWriteMs
         repeat: false
         onTriggered: root._kick()
+    }
+
+    Timer {
+        id: writeWatch
+        interval: Motion.followWatchMs
+        repeat: false
+        onTriggered: {
+            if (proc.running)
+                proc.running = false;
+            if (restoreProc.running)
+                restoreProc.running = false;
+            root._queue = [];
+            root._drain = false;
+            follow._abortHang();
+            root.lastError = "config write timed out";
+            Logger.warn("ConfigWrite", root.lastError);
+        }
     }
 }

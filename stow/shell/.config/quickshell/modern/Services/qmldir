@@ -11,6 +11,8 @@ AudioPersist 1.0 AudioPersist.qml
 singleton Network 1.0 Network.qml
 singleton Bluetooth 1.0 Bluetooth.qml
 singleton Brightness 1.0 Brightness.qml
+BrightnessMatch 1.0 BrightnessMatch.qml
+BrightnessWatch 1.0 BrightnessWatch.qml
 singleton Power 1.0 Power.qml
 MediaRoster 1.0 MediaRoster.qml
 singleton Media 1.0 Media.qml
@@ -59,6 +61,7 @@ singleton Tray 1.0 Tray.qml
 TrayRoster 1.0 TrayRoster.qml
 singleton RunningApps 1.0 RunningApps.qml
 singleton Theme 1.0 Theme.qml
+ThemeSpec 1.0 ThemeSpec.qml
 singleton ThemePalettes 1.0 ThemePalettes.qml
 singleton Passwd 1.0 Passwd.qml
 singleton Storage 1.0 Storage.qml

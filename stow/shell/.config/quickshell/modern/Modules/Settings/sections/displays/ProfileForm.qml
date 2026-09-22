@@ -182,6 +182,7 @@ ColumnLayout {
         visible: Brightness.canControl(root.selectedDesc)
         labelKey: "quickSettings.brightness"
         MSlider {
+            enabled: Brightness.canAdjust(root.selectedDesc) && !Brightness.setting
             from: 1
             to: 100
             value: Brightness.percentFor(root.selectedDesc)

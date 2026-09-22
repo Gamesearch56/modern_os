@@ -30,7 +30,10 @@ ColumnLayout {
             root.selectedDesc = list.length ? String(list[0].description || "") : "";
     }
 
-    on_NChanged: root._ensureSelection()
+    on_NChanged: {
+        root._ensureSelection();
+        Brightness.refreshDisplays();
+    }
     Component.onCompleted: {
         Hypr.refreshMonitorDump();
         Brightness.refreshDisplays();

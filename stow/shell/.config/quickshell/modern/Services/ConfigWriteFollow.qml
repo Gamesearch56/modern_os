@@ -41,6 +41,14 @@ Item {
         followProc.running = true;
     }
 
+    function _abortHang() {
+        if (!followProc.running)
+            return;
+        followProc.running = false;
+        root._q = [];
+        Logger.warn("ConfigWrite", "follow job timed out");
+    }
+
     Timer {
         id: chromeDebounce
         interval: Math.max(Motion.mediumMs, 1)
@@ -51,8 +59,21 @@ Item {
         ])
     }
 
+    Timer {
+        id: followWatch
+        interval: Motion.followWatchMs
+        repeat: false
+        onTriggered: root._abortHang()
+    }
+
     Process {
         id: followProc
+        onRunningChanged: {
+            if (running)
+                followWatch.restart();
+            else
+                followWatch.stop();
+        }
         onExited: root.kick()
     }
 }

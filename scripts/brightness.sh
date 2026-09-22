@@ -2,16 +2,24 @@
 # Read/set display brightness for Services/Brightness.qml.
 # Laptop panels: brightnessctl class backlight. External monitors: ddcutil
 # VCP 10. LED class devices (numlock, NIC) are never used.
+# Every ddcutil call is wrapped in timeout — hung I2C must not block the shell.
 set -euo pipefail
+
+DDC_TIMEOUT_SEC="${MODERN_DDC_TIMEOUT_SEC:-5}"
+DDC_DETECT_TIMEOUT_SEC="${MODERN_DDC_DETECT_TIMEOUT_SEC:-10}"
+
+ddc() {
+    command -v ddcutil >/dev/null 2>&1 || return 1
+    timeout "${DDC_TIMEOUT_SEC}" ddcutil "$@" 2>/dev/null
+}
 
 emit() {
     printf '{"available":%s,"percent":%s,"backend":"%s","display":%s}\n' "$1" "$2" "$3" "$4"
 }
 
 first_ddc_display() {
-    command -v ddcutil >/dev/null 2>&1 || return 1
     local n
-    n="$(ddcutil detect --brief 2>/dev/null | grep -i -m1 -oE 'display[[:space:]]+[0-9]+' | grep -oE '[0-9]+' || true)"
+    n="$(ddc detect --brief | grep -i -m1 -oE 'display[[:space:]]+[0-9]+' | grep -oE '[0-9]+' || true)"
     if [ -n "${n}" ]; then
         printf '%s\n' "$n"
         return 0
@@ -34,7 +42,7 @@ backlight_pct() {
 ddc_read() {
     local disp out n
     disp="$(first_ddc_display)" || return 1
-    out="$(ddcutil getvcp 10 --brief --display "${disp}" 2>/dev/null || true)"
+    out="$(ddc getvcp 10 --brief --display "${disp}" || true)"
     n="$(awk '{ for (i = 1; i <= NF; i++) if ($i == "VCP") { print $(i+3); exit } }' <<<"${out}")"
     [[ "${n}" =~ ^[0-9]+$ ]] || return 1
     printf '%s %s\n' "${disp}" "${n}"
@@ -54,15 +62,15 @@ set_pct() {
     local v disp
     v="$(clamp "$1")"
     if [ -n "${2:-}" ]; then
-        ddcutil setvcp 10 "${v}" --display "$2"
-        return 0
+        ddc setvcp 10 "${v}" --display "$2"
+        return $?
     fi
     if backlight_pct >/dev/null; then
         brightnessctl -c backlight set "${v}%"
         return 0
     fi
     disp="$(first_ddc_display)" || return 1
-    ddcutil setvcp 10 "${v}" --display "${disp}"
+    ddc setvcp 10 "${v}" --display "${disp}"
 }
 
 cmd="${1:-get}"
@@ -86,63 +94,110 @@ case "${cmd}" in
         fi
         ;;
     list)
+        MODERN_DDC_TIMEOUT_SEC="${DDC_TIMEOUT_SEC}" \
+        MODERN_DDC_DETECT_TIMEOUT_SEC="${DDC_DETECT_TIMEOUT_SEC}" \
         python3 - <<'PY'
-import json, re, shutil, subprocess
+import json, os, re, shutil, subprocess
 
-def run(cmd):
+timeout = int(os.environ.get("MODERN_DDC_TIMEOUT_SEC", "5"))
+detect_t = int(os.environ.get("MODERN_DDC_DETECT_TIMEOUT_SEC", "10"))
+
+def run(cmd, t=timeout):
     try:
-        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL, text=True, timeout=8)
+        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL, text=True, timeout=t)
     except Exception:
         return ""
 
 displays = []
-line = run(["brightnessctl", "-m", "-c", "backlight"]).splitlines()
+line = run(["brightnessctl", "-m", "-c", "backlight"], t=3).splitlines()
 if line:
     parts = line[0].split(",")
     if len(parts) >= 4 and parts[1] == "backlight":
         pct = parts[3].replace("%", "")
         if pct.isdigit():
             displays.append({
-                "id": 0, "model": "", "serial": "",
-                "percent": int(pct), "backend": "brightnessctl"
+                "id": 0, "model": "", "serial": "", "connector": "",
+                "percent": int(pct), "backend": "brightnessctl", "ok": True
             })
 
+pending = []
 if shutil.which("ddcutil"):
-    text = run(["ddcutil", "detect"])
+    text = run(["timeout", str(detect_t), "ddcutil", "detect"], t=detect_t + 1)
     current = None
 
-    def flush(cur):
-        if not cur:
-            return
-        out = run(["ddcutil", "getvcp", "10", "--brief", "--display", str(cur["id"])])
-        m = re.search(r"VCP\s+\S+\s+\S+\s+(\d+)", out)
-        if m:
-            cur["percent"] = int(m.group(1))
-        displays.append(cur)
+    def push(cur):
+        if cur:
+            pending.append(cur)
 
     for raw in text.splitlines():
         line = raw.strip()
         m = re.match(r"Display\s+(\d+)\b", line)
         if m:
-            flush(current)
+            push(current)
             current = {
                 "id": int(m.group(1)), "model": "", "serial": "",
-                "percent": 0, "backend": "ddcutil"
+                "connector": "", "percent": 0, "backend": "ddcutil", "ok": False
             }
             continue
         if not current:
             continue
+        cm = re.search(r"(?i)\b((?:DP|HDMI|eDP|DVI|VGA)-\d+)\b", line)
+        if cm and "connector" in line.lower():
+            current["connector"] = cm.group(1)
         mm = re.search(r"^Model:\s+(.+)$", line)
         if mm:
             current["model"] = mm.group(1).strip()
-        sm = re.search(r"^Serial number:\s+(.+)$", line)
-        if sm:
+        sm = re.search(r"^Serial number:\s*(.*)$", line)
+        if sm and sm.group(1).strip():
             current["serial"] = sm.group(1).strip()
-    flush(current)
+        bm = re.search(r"^Binary serial number:\s*(\d+)", line)
+        if bm and not current["serial"]:
+            current["serial"] = "0x%08X" % int(bm.group(1))
+    push(current)
+
+    procs = []
+    for cur in pending:
+        try:
+            p = subprocess.Popen(
+                ["timeout", str(timeout), "ddcutil", "getvcp", "10",
+                 "--brief", "--display", str(cur["id"])],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
+            )
+            procs.append((cur, p))
+        except Exception:
+            displays.append(cur)
+
+    def read_vcp(disp_id):
+        try:
+            return run([
+                "timeout", str(timeout), "ddcutil", "getvcp", "10",
+                "--brief", "--display", str(disp_id)
+            ])
+        except Exception:
+            return ""
+
+    for cur, p in procs:
+        try:
+            out, _ = p.communicate(timeout=timeout + 1)
+        except Exception:
+            try:
+                p.kill()
+            except Exception:
+                pass
+            out = ""
+        m = re.search(r"VCP\s+\S+\s+\S+\s+(\d+)", out or "")
+        if not m:
+            out = read_vcp(cur["id"])
+            m = re.search(r"VCP\s+\S+\s+\S+\s+(\d+)", out or "")
+        if m:
+            cur["percent"] = int(m.group(1))
+            cur["ok"] = True
+        displays.append(cur)
 
 print(json.dumps({"displays": displays}))
 PY
         ;;
+
     up)
         if pct="$(backlight_pct)"; then
             set_pct $((pct + 5))
