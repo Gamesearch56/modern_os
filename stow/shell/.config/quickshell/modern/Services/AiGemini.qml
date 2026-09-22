@@ -115,8 +115,10 @@ Item {
     }
 
     function _tidy(s: string): string {
-        let t = String(s || "").replace(/\r/g, "").replace(/\n{4,}/g, "\n\n\n");
-        return t.replace(/([^\n])\n(?![ \t]*[-*•]|\d+\.\s)([^\n])/g, "$1\n\n$2");
+        let t = String(s || "").replace(/\r/g, "");
+        // One blank line between adjacent blocks (including list items) for readable markdown.
+        t = t.replace(/([^\n])\n(?!\n)([^\n])/g, "$1\n\n$2");
+        return t.replace(/\n{3,}/g, "\n\n");
     }
 
     function _contents(messages: var): var {

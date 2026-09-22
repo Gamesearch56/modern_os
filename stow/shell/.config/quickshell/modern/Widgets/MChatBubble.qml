@@ -30,6 +30,8 @@ Item {
         return Math.min(root._max, root._bodyW + root._pad);
     }
 
+    MMarkdown { id: md }
+
     implicitHeight: col.implicitHeight
     implicitWidth: width
 
@@ -105,6 +107,7 @@ Item {
                     value: root.thinking
                     styleName: "bodySmall"
                     color: Colors.color.onSurfaceVariant
+                    markdown: true
                     wrapMode: Text.WordWrap
                     elide: Text.ElideNone
                     Layout.fillWidth: true
@@ -121,8 +124,9 @@ Item {
                     selectByMouse: false
                     cursorVisible: false
                     persistentSelection: true
-                    text: root.text
-                    textFormat: TextEdit.PlainText
+                    text: root.mine ? root.text : md.toHtml(root.text)
+                    // Assistant turns: HTML with real block margins (MarkdownText collapses gaps).
+                    textFormat: root.mine ? TextEdit.PlainText : TextEdit.RichText
                     color: root.mine ? Chrome.tonal.fg : Colors.color.onSurface
                     selectionColor: Colors.color.primary
                     selectedTextColor: Colors.color.onPrimary
