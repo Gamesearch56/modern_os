@@ -122,6 +122,7 @@ Singleton {
     function refresh() { listProc.running = true; }
     function slugFor(s) { return spec.slugFor(s); }
     function findSlug(s) { return spec.findSlug(root.profiles, s); }
+    function _norm(p) { return spec.norm(p); }
 
     function selectSpec(profileSpec) {
         let slug = root.findSlug(profileSpec);
