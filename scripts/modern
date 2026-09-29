@@ -68,18 +68,6 @@ priv() {
 
 case "$TARGET" in
     update)
-        if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
-            if command -v snapper >/dev/null 2>&1 && snapper list-configs >/dev/null 2>&1 \
-                && snapper list-configs 2>/dev/null | grep -q root; then
-                t cli.snapshotting
-                priv /usr/bin/snapper -c root create --description "ModernOS Update" || {
-                    t cli.snapshotFailed >&2
-                    exit 1
-                }
-            else
-                t cli.snapperUnconfigured >&2 || true
-            fi
-        fi
         if [ -x "$SCRIPT_DIR/desktop-sync.sh" ]; then
             desk_json="$("$SCRIPT_DIR/desktop-sync.sh" status 2>/dev/null || true)"
             if printf '%s' "$desk_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("pending") else 1)' 2>/dev/null; then
@@ -97,10 +85,27 @@ case "$TARGET" in
             exit 0
         fi
         if [ -t 0 ]; then
+            if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
+                if command -v snapper >/dev/null 2>&1 && snapper list-configs >/dev/null 2>&1 \
+                    && snapper list-configs 2>/dev/null | grep -q root; then
+                    t cli.snapshotting
+                    sudo /usr/bin/snapper -c root create --description "ModernOS Update" || {
+                        t cli.snapshotFailed >&2
+                        exit 1
+                    }
+                else
+                    t cli.snapperUnconfigured >&2 || true
+                fi
+            fi
             exec yay -Syu
         fi
+        snap_flag=--no-snapshot
+        if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
+            snap_flag=--snapshot
+            t cli.snapshotting
+        fi
         ensure_polkit_agent || true
-        exec pkexec /usr/bin/pacman -Syu --noconfirm
+        exec pkexec "$SCRIPT_DIR/update-apply.sh" "$snap_flag"
         ;;
     cleanup)
         yay -Yc

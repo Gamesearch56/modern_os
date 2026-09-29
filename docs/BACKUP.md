@@ -61,10 +61,10 @@ exists.**
 
 ## `modern update`
 
-If `backup.preUpdateSnapshot` is true, `modern update` runs `snapper
-create`, then `desktop-sync.sh apply` when a newer release tag is
-pending, then `pacman -Syu` if packages are pending. It still runs the
-desktop/package steps when snapper is missing — not Timeshift.
+If `backup.preUpdateSnapshot` is true, `modern update` takes a Snapper
+snapshot and runs `pacman -Syu` in **one** `pkexec` (`scripts/update-apply.sh`),
+after `desktop-sync.sh apply` when a newer release tag is pending. It still
+runs the desktop/package steps when snapper is missing — not Timeshift.
 
 
 ## Restore kit

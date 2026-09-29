@@ -65,5 +65,7 @@ log "modern-launch autostart"
 "$ROOT/scripts/test-modern-launch.sh"
 log "snapper setup"
 "$ROOT/scripts/test-snapper-setup.sh"
+log "update apply"
+"$ROOT/scripts/test-update-apply.sh"
 
 log "ok"
