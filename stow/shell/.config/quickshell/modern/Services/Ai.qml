@@ -283,7 +283,8 @@ Singleton {
             return;
         }
         root.lastError = "";
-        root._patchTail(String(text || "").replace(/\r/g, "").replace(/\n{4,}/g, "\n\n\n").replace(/([^\n])\n(?![ \t]*[-*•]|\d+\.\s)([^\n])/g, "$1\n\n$2").trim(), "", false);
+        root._patchTail(String(text || "").replace(/\r/g, "")
+            .replace(/([^\n])\n(?!\n)([^\n])/g, "$1\n\n$2").replace(/\n{3,}/g, "\n\n").trim(), "", false);
         store.save(root.history);
     }
 }

@@ -101,16 +101,10 @@ ColumnLayout {
         topMargin: Tokens.spacing.xxl
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Tokens.spacing.md
-        MText {
-            key: "settings.fields.recordAudio"
-            styleName: "bodyMedium"
-            color: Colors.color.onSurfaceVariant
-            Layout.fillWidth: true
-        }
-        MSwitch {
+    MField {
+        labelKey: "settings.fields.recordAudio"
+        hintKey: "settings.hints.recordAudio"
+        headerExtra: MSwitch {
             checked: !!(Config.screenshots.recordAudio)
             onToggled: (v) => ConfigWrite.set("screenshots.recordAudio", v)
         }

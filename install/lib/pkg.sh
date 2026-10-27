@@ -22,6 +22,23 @@ collect_packages() {
     done | sort -u
 }
 
+# Settings → Update runs install.sh without a terminal, where every sudo
+# would fail. MODERN_ROOT_PLAN names a file the update's single pkexec
+# (scripts/update-apply.sh --root-plan) executes as root afterwards:
+# `pkg NAME` per missing package, `greetd` for the login screen.
+defer_native() {
+    local missing=() p
+    mapfile -t missing < <(pacman -T "$@" 2>/dev/null || true)
+    for p in "${missing[@]}"; do
+        [ -n "$p" ] && printf 'pkg %s\n' "$p" >>"$MODERN_ROOT_PLAN"
+    done
+    if [ ${#missing[@]} -gt 0 ]; then
+        log_info "deferred ${#missing[@]} package(s) to the update's root step: ${missing[*]}"
+    else
+        log_ok "native packages already installed"
+    fi
+}
+
 bootstrap_yay() {
     if command -v yay >/dev/null 2>&1; then
         log_ok "yay already installed"
@@ -41,6 +58,10 @@ bootstrap_yay() {
 install_native() {
     local pkgs=("$@") providers=() rest=() p
     [ ${#pkgs[@]} -eq 0 ] && return 0
+    if [ -n "${MODERN_ROOT_PLAN:-}" ] && [ "$DRY_RUN" -eq 0 ]; then
+        defer_native "${pkgs[@]}"
+        return 0
+    fi
     log_info "Installing ${#pkgs[@]} native package(s): ${pkgs[*]}"
     # ffmpeg/mpv depend on virtual `jack`; pipewire-pulse replaces
     # pulseaudio. --noconfirm answers No to "Remove jack2?".
@@ -108,6 +129,11 @@ install_aur() {
         return 0
     fi
     log_info "Installing ${#pkgs[@]} AUR package(s): ${pkgs[*]}"
+    if [ -n "${MODERN_ROOT_PLAN:-}" ]; then
+        # yay refuses to run as root, so AUR cannot join the root plan.
+        run yay -S --needed --noconfirm --sudo pkexec "${pkgs[@]}"
+        return 0
+    fi
     run yay -S --needed --noconfirm "${pkgs[@]}"
 }
 
@@ -158,6 +184,14 @@ detect_nvidia_family() {
         return
     fi
     printf 'nvidia\n'
+}
+
+# Broadcom PCI wifi that needs the proprietary wl driver: b43 parts need
+# firmware nothing here ships, the rest have no open driver. brcmsmac
+# (4313, 43224/43225) and brcmfmac chips work in-tree and are not listed.
+detect_wifi_wl() {
+    lspci -nn 2>/dev/null \
+        | grep -Eiq 'network controller.*\[14e4:(4311|4312|4315|4328|432b|4331|4358|4359|43a0|43b1)\]'
 }
 
 # Legacy single-token helper (cpu-or-gpu). Prefer detect_cpu + detect_gpu.

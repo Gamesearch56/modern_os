@@ -33,7 +33,12 @@ ColumnLayout {
             titleValue: modelData.ssid || modelData.name || ""
             subtitleValue: modelData.connected ? I18n.t("settings.network.wifiConnected") : ""
             selected: !!modelData.connected
-            onClicked: Network.connect(modelData, "")
+            onClicked: {
+                if (modelData.connected || Network.needsPassword(modelData))
+                    Settings.openAt("network", "");
+                else
+                    Network.connect(modelData, "");
+            }
         }
 
         MEmptyState {

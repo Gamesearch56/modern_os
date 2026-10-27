@@ -51,6 +51,9 @@ Item {
         height: Config.bar.height
 
         Item {
+            // An icon-only neighbor is centered in the bar height. A labeled
+            // icon is only iconSize wide, so match that inset on the leading edge.
+            Layout.leftMargin: root._named ? (Config.bar.height - root.iconSize) / 2 : 0
             Layout.preferredWidth: root._named ? root.iconSize : Config.bar.height
             Layout.preferredHeight: Config.bar.height
 

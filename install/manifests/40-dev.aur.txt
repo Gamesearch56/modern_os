@@ -1,5 +1,0 @@
-# Editor used for developing this very repo — see docs/CURSOR-SETUP.md.
-cursor-bin
-# Safely reinstall an older package version when a rolling-release update
-# breaks something — used by scripts/doctor.sh's remediation hints.
-downgrade

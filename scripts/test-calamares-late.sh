@@ -38,6 +38,17 @@ fi
 
 PROVISION="$ROOT/install/system/provision-iso.sh"
 GREETD_LIB="$ROOT/install/lib/greetd.sh"
+if grep -F 'zram-generator.conf' "$PROVISION" >/dev/null \
+    && grep -F '99-modern-zram.conf' "$PROVISION" >/dev/null \
+    && grep -F '60-modern-rotational-bfq.rules' "$PROVISION" >/dev/null \
+    && grep -F 'min(ram / 2, 4096)' "$ROOT/install/system/zram/zram-generator.conf" >/dev/null \
+    && grep -F 'vm.swappiness = 180' "$ROOT/install/system/sysctl.d/99-modern-zram.conf" >/dev/null \
+    && grep -F 'ATTR{queue/rotational}=="1"' "$ROOT/install/system/udev/60-modern-rotational-bfq.rules" >/dev/null \
+    && ! grep -F 'sysctl --system' "$PROVISION" >/dev/null; then
+    ok "ISO provision stages zram and bfq for spinning disks, not the live installer"
+else
+    err "provision-iso.sh must install zram + zram sysctl + rotational bfq, and must not sysctl the installer"
+fi
 if grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$GREETD_LIB" >/dev/null \
     || grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$PROVISION" >/dev/null; then
     err "greetd enable_unit must enable one unit per call — one missing unit aborts the rest"
@@ -284,6 +295,12 @@ run_late() {
     if [ -n "${MODERN_LATE_STRIP_ROOT:-}" ]; then
         extra+=(MODERN_LATE_STRIP_ROOT="$MODERN_LATE_STRIP_ROOT")
     fi
+    if [ -n "${MODERN_LATE_EFI_DIR:-}" ]; then
+        extra+=(MODERN_LATE_EFI_DIR="$MODERN_LATE_EFI_DIR")
+    fi
+    if [ -n "${MODERN_DEPLOY_KEY_SRC:-}" ]; then
+        extra+=(MODERN_DEPLOY_KEY_SRC="$MODERN_DEPLOY_KEY_SRC")
+    fi
     env -u MODERN_PROTECT_HOME \
         MODERN_LATE_TEST=1 \
         MODERN_LATE_LOG="$WORKDIR/late.log" \
@@ -353,6 +370,38 @@ if out="$(MODERN_LATE_BUNDLE="$bundle" MODERN_LATE_CLONE_URL="$missing" run_late
         || err "bundle copy succeeded but tree missing: $out"
 else
     err "ISO bundle copy failed: $out"
+fi
+
+# The image may ship the deploy key mode 0644 (mkarchiso drops modes).
+# The clone phase must leave it 0600 in the new home and delete the source.
+key_src="$WORKDIR/deploy-src"
+printf 'deploy-key-bytes\n' >"$key_src"
+chmod 0644 "$key_src"
+rm -rf "${WORKDIR:?}/home"
+if out="$(MODERN_DEPLOY_KEY_SRC="$key_src" MODERN_LATE_BUNDLE="$bundle" \
+    MODERN_LATE_CLONE_URL="$missing" run_late clone 2>&1)"; then
+    dest_key="$WORKDIR/home/.config/modern/deploy_key"
+    if [ ! -e "$key_src" ] && [ "$(cat "$dest_key" 2>/dev/null)" = "deploy-key-bytes" ] \
+        && [ "$(stat -c '%a' "$dest_key")" = 600 ] \
+        && [ "$(stat -c '%a' "$WORKDIR/home/.config/modern")" = 700 ]; then
+        ok "deploy key moves into the new home as mode 600 and leaves the image"
+    else
+        err "deploy key not installed privately: src=$(ls -l "$key_src" 2>&1) dest=$(ls -l "$dest_key" 2>&1)"
+    fi
+else
+    err "clone with a deploy key failed: $out"
+fi
+kept="$WORKDIR/kept-secret"
+printf 'keep-me\n' >"$kept"
+ln -s "$kept" "$WORKDIR/deploy-link"
+rm -rf "${WORKDIR:?}/home"
+if MODERN_DEPLOY_KEY_SRC="$WORKDIR/deploy-link" MODERN_LATE_BUNDLE="$bundle" \
+    MODERN_LATE_CLONE_URL="$missing" run_late clone >/dev/null 2>&1 \
+    && [ ! -e "$WORKDIR/deploy-link" ] && [ "$(cat "$kept")" = keep-me ] \
+    && [ ! -e "$WORKDIR/home/.config/modern/deploy_key" ]; then
+    ok "deploy key symlink is dropped and its target is left alone"
+else
+    err "deploy key symlink was followed or its target was removed"
 fi
 
 # mkarchiso strips modes off the bundle, so the clone phase has to put the
@@ -502,6 +551,11 @@ strip_gone=(
     etc/polkit-1/rules.d/49-modern-liveuser.rules
     etc/calamares/settings.conf
     root/.zlogin
+    etc/systemd/system/multi-user.target.wants/systemd-networkd.service
+    etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service
+    etc/systemd/network/20-ethernet.network
+    etc/systemd/network/20-wlan.network
+    etc/NetworkManager/conf.d/wifi-backend.conf
 )
 strip_kept=(
     etc/mkinitcpio.d/linux-zen.preset
@@ -535,6 +589,50 @@ if out="$(MODERN_LATE_STRIP_ROOT="$STRIPROOT" run_late strip 2>&1)"; then
     fi
 else
     err "strip phase failed: $out"
+fi
+
+# BIOS: grub-mkconfig only finds /boot/vmlinuz-*, which mkarchiso removed.
+BIOSROOT="$WORKDIR/bios"
+mkdir -p "$BIOSROOT/usr/lib/modules/6.99.0-zen1-1-zen" "$BIOSROOT/etc/mkinitcpio.d"
+printf 'linux-zen\n' >"$BIOSROOT/usr/lib/modules/6.99.0-zen1-1-zen/pkgbase"
+printf 'kernel\n' >"$BIOSROOT/usr/lib/modules/6.99.0-zen1-1-zen/vmlinuz"
+printf "PRESETS=('default' 'fallback')\n" >"$BIOSROOT/etc/mkinitcpio.d/linux-zen.preset"
+if MODERN_LATE_STRIP_ROOT="$BIOSROOT" MODERN_LATE_EFI_DIR="$WORKDIR/no-efi" run_late biosboot >/dev/null 2>&1 \
+    && [ -f "$BIOSROOT/boot/vmlinuz-linux-zen" ] \
+    && grep -qF 'ALL_kver="/boot/vmlinuz-linux-zen"' "$BIOSROOT/etc/mkinitcpio.d/linux-zen.preset"; then
+    ok "biosboot puts linux-zen in /boot and pins ALL_kver on BIOS"
+else
+    err "biosboot must copy vmlinuz to /boot and add ALL_kver without UEFI"
+fi
+EFIROOT="$WORKDIR/efi"
+mkdir -p "$EFIROOT/usr/lib/modules/6.99.0-zen1-1-zen" "$WORKDIR/efi-fw"
+printf 'linux-zen\n' >"$EFIROOT/usr/lib/modules/6.99.0-zen1-1-zen/pkgbase"
+printf 'kernel\n' >"$EFIROOT/usr/lib/modules/6.99.0-zen1-1-zen/vmlinuz"
+if MODERN_LATE_STRIP_ROOT="$EFIROOT" MODERN_LATE_EFI_DIR="$WORKDIR/efi-fw" run_late biosboot >/dev/null 2>&1 \
+    && [ ! -e "$EFIROOT/boot/vmlinuz-linux-zen" ]; then
+    ok "biosboot leaves UEFI installs to systemd-boot"
+else
+    err "biosboot must not touch /boot on UEFI"
+fi
+
+# Live-only packages: every name is on the ISO, none is a desktop manifest.
+live_pkgs="$(sed -n '/^LIVE_ONLY_PKGS=(/,/^)/p' "$LATE" | sed '1d;$d' | tr ' ' '\n' | sed '/^$/d')"
+manifest_names="$("$ROOT/scripts/pkg-manifest-names.sh")"
+bad=""
+for p in $live_pkgs; do
+    grep -qx "$p" "$ROOT/iso/releng/packages.x86_64" || bad="$bad $p(not-on-iso)"
+    echo "$manifest_names" | jq -e --arg n "$p" 'index($n) != null' >/dev/null && bad="$bad $p(in-manifest)"
+done
+if [ -n "$live_pkgs" ] && [ -z "$bad" ]; then
+    ok "live-only packages are ISO-only and not shipped by install.sh"
+else
+    err "LIVE_ONLY_PKGS mismatch:${bad:- empty list}"
+fi
+if grep -qF 'strip_live_packages' "$LATE" \
+    && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'strip_live_packages'; then
+    ok "provision phase removes the live-only packages last"
+else
+    err "phase_provision must call strip_live_packages"
 fi
 
 [ "$FAIL" -eq 0 ]

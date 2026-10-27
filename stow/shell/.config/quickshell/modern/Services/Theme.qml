@@ -26,6 +26,8 @@ Singleton {
 
     signal created(string path)
 
+    ThemeSpec { id: spec }
+
     readonly property string dir: Quickshell.env("HOME") + "/.config/modern/themes"
     readonly property string stateDir: {
         const env = Quickshell.env("XDG_STATE_HOME");
@@ -59,6 +61,7 @@ Singleton {
     Process {
         id: writeProc
         running: false
+        onRunningChanged: root._armThemeWatch(running)
         stdout: StdioCollector {
             onStreamFinished: {
                 const t = this.text.trim();
@@ -83,59 +86,53 @@ Singleton {
         }
     }
 
-    function refresh() {
-        listProc.running = true;
+    Timer {
+        id: themeWatch
+        interval: Motion.followWatchMs
+        repeat: false
+        onTriggered: root._abortTheme()
     }
 
-    function _plain(s) {
-        return String(s || "").replace(/\u001b\[[0-9;]*m/g, "").trim();
+    function _armThemeWatch(on: bool) {
+        if (on || applyProc.running || writeProc.running)
+            themeWatch.restart();
+        else
+            themeWatch.stop();
     }
 
-    function _norm(p) {
-        return {
-            variant: String(p.variant || "tonal-spot"),
-            mode: String(p.mode || "dark"),
-            contrast: String(p.contrast || "standard"),
-            sourceMode: String(p.sourceMode || "wallpaper"),
-            fixedSeed: p.fixedSeed ?? null
-        };
-    }
-
-    function slugFor(spec) {
-        const s = root._norm(spec);
-        let slug = s.variant + "-" + s.mode;
-        if (s.contrast !== "standard")
-            slug += "-" + s.contrast;
-        if (s.sourceMode !== "wallpaper")
-            slug += "-fixed";
-        return slug.replace(/[^a-z0-9-]+/g, "-");
-    }
-
-    function _same(a, b) {
-        const x = root._norm(a);
-        const y = root._norm(b);
-        return x.variant === y.variant && x.mode === y.mode && x.contrast === y.contrast
-            && x.sourceMode === y.sourceMode && String(x.fixedSeed) === String(y.fixedSeed);
-    }
-
-    function findSlug(spec) {
-        const list = root.profiles || [];
-        for (let i = 0; i < list.length; i++) {
-            if (root._same(list[i], spec))
-                return String(list[i].slug || "");
+    function _abortTheme() {
+        let hit = false;
+        if (applyProc.running) {
+            applyProc.running = false;
+            hit = true;
         }
-        return "";
+        if (writeProc.running) {
+            writeProc.running = false;
+            hit = true;
+        }
+        const hadQueue = root._queuedApply !== null;
+        root._queuedApply = null;
+        root._pendingSlug = "";
+        if (!hit && !hadQueue)
+            return;
+        root.lastError = I18n.t("theme.applyFailed");
+        Logger.warn("Theme", "apply timed out");
     }
 
-    function selectSpec(spec) {
-        let slug = root.findSlug(spec);
+    function refresh() { listProc.running = true; }
+    function slugFor(s) { return spec.slugFor(s); }
+    function findSlug(s) { return spec.findSlug(root.profiles, s); }
+    function _norm(p) { return spec.norm(p); }
+
+    function selectSpec(profileSpec) {
+        let slug = root.findSlug(profileSpec);
         const exists = slug.length > 0;
         if (!exists)
-            slug = root.slugFor(spec);
+            slug = root.slugFor(profileSpec);
         root.pendingSlug = slug;
-        root.pendingSpec = root._norm(spec);
+        root.pendingSpec = spec.norm(profileSpec);
         if (!exists) {
-            const body = JSON.stringify(root._norm(spec));
+            const body = JSON.stringify(spec.norm(profileSpec));
             root.lastError = "";
             root._pendingSlug = "";
             writeProc.command = [
@@ -161,11 +158,8 @@ Singleton {
             return;
         }
         const body = JSON.stringify({
-            variant: "tonal-spot",
-            mode: "dark",
-            contrast: "standard",
-            sourceMode: "wallpaper",
-            fixedSeed: null
+            variant: "tonal-spot", mode: "dark", contrast: "standard",
+            sourceMode: "wallpaper", fixedSeed: null
         });
         root.lastError = "";
         root._pendingSlug = slug;
@@ -211,37 +205,34 @@ Singleton {
     }
 
     function _runApply(wallpaperPath: string, profile: string, skipWallpaper: bool, seed: string, extract: bool) {
-        const spec = {
-            path: wallpaperPath || "",
-            profile: profile || "",
-            skip: !!skipWallpaper,
-            seed: seed || "",
-            extract: !!extract
+        const job = {
+            path: wallpaperPath || "", profile: profile || "",
+            skip: !!skipWallpaper, seed: seed || "", extract: !!extract
         };
         if (applyProc.running) {
-            root._queuedApply = spec;
+            root._queuedApply = job;
             return;
         }
-        root._startApply(spec);
+        root._startApply(job);
     }
 
-    function _startApply(spec: var) {
+    function _startApply(job: var) {
         const cmd = [Paths.script("theme-apply.sh")];
-        if (spec.profile.length > 0) {
+        if (job.profile.length > 0) {
             cmd.push("--profile");
-            cmd.push(spec.profile);
+            cmd.push(job.profile);
         }
-        if (spec.path.length > 0) {
+        if (job.path.length > 0) {
             cmd.push("--wallpaper");
-            cmd.push(spec.path);
+            cmd.push(job.path);
         }
-        if (spec.skip)
+        if (job.skip)
             cmd.push("--skip-wallpaper");
-        if (spec.extract)
+        if (job.extract)
             cmd.push("--extract");
-        else if (spec.seed && String(spec.seed).length > 0) {
+        else if (job.seed && String(job.seed).length > 0) {
             cmd.push("--seed");
-            cmd.push(String(spec.seed));
+            cmd.push(String(job.seed));
         }
         const tint = root._tintOverride >= 0 ? root._tintOverride : Number(Config.design.surfaceTint ?? 0.7);
         root._tintOverride = -1;
@@ -255,10 +246,9 @@ Singleton {
     Process {
         id: applyProc
         running: false
+        onRunningChanged: root._armThemeWatch(running)
         stdout: StdioCollector {}
-        stderr: StdioCollector {
-            id: applyErr
-        }
+        stderr: StdioCollector { id: applyErr }
         onExited: (code) => {
             Colors.refresh();
             if (code === 0)
@@ -276,7 +266,7 @@ Singleton {
             }
             if (code === 0)
                 return;
-            const err = root._plain(applyErr.text);
+            const err = spec.plain(applyErr.text);
             root.lastError = err;
             Logger.error("Theme", err.length > 0 ? err : I18n.t("theme.applyFailed"));
         }

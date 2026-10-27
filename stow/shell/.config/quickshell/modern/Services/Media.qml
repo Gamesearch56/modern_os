@@ -67,6 +67,8 @@ Singleton {
             return s;
         }
         function playPause() { root.togglePlaying(); }
+        function play() { root.play(); }
+        function pause() { root.pause(); }
         function next() { root.next(); }
         function previous() { root.previous(); }
     }

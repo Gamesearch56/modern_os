@@ -105,6 +105,14 @@ ColumnLayout {
         }
     }
     MField {
+        labelKey: "settings.fields.textEditor"
+        MSelect {
+            model: Apps.entriesFor("textEditor")
+            value: Config.apps.defaults.textEditor
+            onSelected: (v) => ConfigWrite.set("apps.defaults.textEditor", v)
+        }
+    }
+    MField {
         labelKey: "settings.fields.terminal"
         MSelect {
             model: Apps.entriesFor("terminal")

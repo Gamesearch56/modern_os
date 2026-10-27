@@ -176,6 +176,8 @@ Singleton {
             return ["mpv.desktop", "mpv"];
         if (role === "imageViewer")
             return ["imv.desktop", "imv"];
+        if (role === "textEditor")
+            return ["org.gnome.gedit.desktop", "gedit"];
         return [];
     }
 
@@ -190,6 +192,8 @@ Singleton {
             return ["mpv"];
         if (role === "imageViewer")
             return ["imv"];
+        if (role === "textEditor")
+            return ["gedit"];
         if (role === "mail")
             return ["xdg-open", "https://mail.proton.me"];
         return null;

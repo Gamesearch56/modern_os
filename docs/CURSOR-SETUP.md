@@ -1,17 +1,17 @@
 # Installing Cursor
 
-Cursor is installed as `cursor-bin` from the AUR — this is what
-`install/manifests/40-dev.aur.txt` lists.
+Cursor is installed as `cursor-bin` from the AUR. No install profile
+ships it; add it yourself.
 
-## 1. Via the installer (recommended)
+## 1. With yay (recommended)
+
+`install.sh` already bootstraps `yay` for every profile:
 
 ```bash
-cd ~/modern_dotfile
-./install/install.sh --profile dev
+yay -S --needed cursor-bin
 ```
 
-This bootstraps `yay` if needed, then installs `cursor-bin` along with the
-rest of the `40-dev` layer. Skip to step 4.
+Skip to step 4.
 
 ## 2. Manual install (if you want Cursor before anything else)
 

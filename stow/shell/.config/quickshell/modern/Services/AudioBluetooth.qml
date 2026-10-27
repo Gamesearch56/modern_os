@@ -1,8 +1,9 @@
-// When audio.autoSwitchBluetooth is on, a newly appeared BlueZ sink or
-// source becomes the PipeWire default. On Bluetooth disconnect, an
-// explicit fallback device wins; otherwise the last non-Bluetooth
-// endpoint the user chose is restored. Existing endpoints at startup
-// are left as-is so a user-chosen speaker is not stolen on login.
+// When audio.autoSwitchBluetooth is on, a newly appeared BlueZ *sink*
+// becomes the PipeWire default (A2DP). The BlueZ source is never made
+// default automatically — that forces HFP and blocks phone multipoint.
+// On disconnect, an explicit fallback wins; otherwise the last
+// non-Bluetooth endpoint is restored. Startup endpoints are left alone.
+import Quickshell
 import QtQuick
 import "../Commons"
 
@@ -230,13 +231,8 @@ QtObject {
             for (let s = 0; s < freshSinks.length; s++) {
                 if (bt.isBluetoothNode(freshSinks[s])) {
                     bt._stopSettle();
+                    bt.preferA2dp(freshSinks[s]);
                     a.setDefaultSink(freshSinks[s]);
-                    tookBt = true;
-                }
-            }
-            for (let c = 0; c < freshSources.length; c++) {
-                if (bt.isBluetoothNode(freshSources[c])) {
-                    a.setDefaultSource(freshSources[c]);
                     tookBt = true;
                 }
             }
@@ -259,5 +255,29 @@ QtObject {
                 return true;
         }
         return false;
+    }
+
+    function preferA2dp(n: var) {
+        const card = bt.cardName(n);
+        if (!card.length)
+            return;
+        Quickshell.execDetached(["pactl", "set-card-profile", card, "a2dp-sink"]);
+    }
+
+    function cardName(n: var): string {
+        if (!n)
+            return "";
+        void n.ready;
+        void n.properties;
+        const p = n.properties || {};
+        let addr = String(p["api.bluez5.address"] || p["bluez5.address"] || "").trim();
+        if (!addr.length) {
+            const name = String(n.name || "");
+            const m = name.match(/bluez_output\.([0-9A-Fa-f_]+)/);
+            if (m)
+                return "bluez_card." + m[1];
+            return "";
+        }
+        return "bluez_card." + addr.replace(/:/g, "_");
     }
 }

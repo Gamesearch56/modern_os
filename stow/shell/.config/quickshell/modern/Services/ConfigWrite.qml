@@ -103,6 +103,14 @@ Singleton {
     }
 
     function patchMonitor(description, patch) {
+        const one = {};
+        one[description] = patch;
+        root.patchMonitors(one);
+    }
+
+    // One write for several profiles: back-to-back patchMonitor calls
+    // would each start from the not-yet-reloaded Config and drop the rest.
+    function patchMonitors(patches) {
         let m = { profiles: {}, rules: [], workspaceMode: "dynamic" };
         try {
             m = JSON.parse(JSON.stringify(Config.monitors || m));
@@ -111,7 +119,8 @@ Singleton {
         }
         if (!m.profiles)
             m.profiles = {};
-        m.profiles[description] = Object.assign({}, m.profiles[description] || {}, patch);
+        for (const d in patches)
+            m.profiles[d] = Object.assign({}, m.profiles[d] || {}, patches[d]);
         root.set("monitors", m);
     }
 
@@ -165,6 +174,12 @@ Singleton {
 
     Process {
         id: proc
+        onRunningChanged: {
+            if (running)
+                writeWatch.restart();
+            else if (!restoreProc.running)
+                writeWatch.stop();
+        }
         stdout: StdioCollector {
             onStreamFinished: {
                 const t = this.text.trim();
@@ -205,6 +220,12 @@ Singleton {
 
     Process {
         id: restoreProc
+        onRunningChanged: {
+            if (running)
+                writeWatch.restart();
+            else if (!proc.running)
+                writeWatch.stop();
+        }
         stdout: StdioCollector {
             onStreamFinished: {
                 const t = this.text.trim();
@@ -248,5 +269,22 @@ Singleton {
         interval: Motion.configWriteMs
         repeat: false
         onTriggered: root._kick()
+    }
+
+    Timer {
+        id: writeWatch
+        interval: Motion.followWatchMs
+        repeat: false
+        onTriggered: {
+            if (proc.running)
+                proc.running = false;
+            if (restoreProc.running)
+                restoreProc.running = false;
+            root._queue = [];
+            root._drain = false;
+            follow._abortHang();
+            root.lastError = "config write timed out";
+            Logger.warn("ConfigWrite", root.lastError);
+        }
     }
 }

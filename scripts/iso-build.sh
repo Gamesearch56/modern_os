@@ -171,6 +171,17 @@ git clone --depth 1 --single-branch --sparse --branch "$pin" "$ROOT" "$bundle" \
     || die "could not bundle $pin into the live image"
 git -C "$bundle" sparse-checkout set --cone install stow scripts \
     || die "could not sparse-checkout the ISO bundle"
+# shellcheck source=lib/deploy-key.sh
+source "$ROOT/scripts/lib/deploy-key.sh"
+if ! stage_deploy_key "$AIROOTFS_OUT/usr/lib/modern/deploy_key" \
+    "$ROOT/secrets/github-deploy-key"; then
+    die "secrets/github-deploy-key must be an OpenSSH private key owned by you, mode 600, not a symlink"
+fi
+if [ -f "$AIROOTFS_OUT/usr/lib/modern/deploy_key" ]; then
+    log "embedded read-only GitHub deploy key for release updates"
+else
+    log "no secrets/github-deploy-key — release checks use HTTPS"
+fi
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/usr/share/modern/wallpaper.jpg"
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/var/lib/modern/session/wallpaper.jpg"
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/etc/calamares/branding/modern/wallpaper.jpg"
@@ -291,6 +302,15 @@ if [ -d /usr/share/archiso/configs/releng ]; then
 fi
 if [ -f "$ROOT/iso/releng/profiledef.sh" ]; then
     install -m 0755 "$ROOT/iso/releng/profiledef.sh" "$PROFILE_WORK/profiledef.sh"
+fi
+# Absent on a build with no deploy key. mkarchiso warns on a
+# file_permissions entry whose file is not in the image, so add it
+# only when this ISO actually carries the key. cp into the image
+# drops the mode; this puts it back to root-only.
+if [ -f "$PROFILE_WORK/profiledef.sh" ] \
+    && [ -f "$AIROOTFS_OUT/usr/lib/modern/deploy_key" ]; then
+    printf 'file_permissions+=(["/usr/lib/modern/deploy_key"]="0:0:600")\n' \
+        >>"$PROFILE_WORK/profiledef.sh"
 fi
 if [ -f "$ROOT/iso/releng/packages.x86_64" ]; then
     install -m 0644 "$ROOT/iso/releng/packages.x86_64" "$PROFILE_WORK/packages.x86_64"

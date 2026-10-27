@@ -212,6 +212,14 @@ scripts/theme-apply.sh --wallpaper /path/to/image
 
 `scripts/doctor.sh` warns when `~/.config/modern/tokens.json` is absent.
 
+## Update says offline while the repo is still private
+
+HTTPS cannot see a private repo. The laptop needs the read-only deploy
+key at `~/.config/modern/deploy_key` (mode 600), and that public key
+registered under GitHub → Settings → Deploy keys with write access off.
+`scripts/deploy-key-init.sh` creates it; the ISO build embeds it.
+Details: `docs/GIT.md`.
+
 ## `secrets.json` missing
 
 Expected until you create gitignored
@@ -256,6 +264,18 @@ scripts/lint-layers.sh
 Fails on Commons←Services imports, Modules spawning `Process`/`FileView`,
 hardcoded `#hex` in QML, or keys present in only one of `en.json` /
 `de.json`.
+
+## Browser covers the workspace after a video (Vivaldi / Chromium)
+
+HTML5 video fullscreen, then exit (or click another workspace): Chromium
+sends `set_maximized`, Hyprland treats that as `fullscreen: 1`, and the
+browser fills the monitor over other tiles. Fixed by the default window
+rule `suppress-client-maximize` in `modules/windowrules.lua` (Hyprland
+discussion #13322). Reload Hyprland after updating. Immediate recovery:
+
+```bash
+hyprctl dispatch fullscreenstate 0 0
+```
 
 ## hyprbars / compositor titlebars
 

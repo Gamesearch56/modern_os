@@ -1,5 +1,7 @@
-// Installed split: every install/manifests name is "system" (kitty,
-// vivaldi, mpv, neovim, …). Leftovers from another session stay removable.
+// Installed split. Update reads every install/manifests name; Store sets
+// `core` so only base/hardware/desktop/theming layers (and the boot chain
+// below) are undeletable "system" — apps like vivaldi or steam stay
+// removable.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -11,11 +13,14 @@ Item {
     width: 0
     height: 0
 
+    property bool core: false
     property var shipped: ({})
     property bool shippedReady: false
 
     Process {
-        command: [Paths.script("pkg-manifest-names.sh")]
+        command: root.core
+            ? [Paths.script("pkg-manifest-names.sh"), "--core"]
+            : [Paths.script("pkg-manifest-names.sh")]
         running: true
         stdout: StdioCollector {
             onStreamFinished: root._setShipped(this.text)
@@ -47,7 +52,7 @@ Item {
 
     function isProtected(name: string): bool {
         const n = String(name || "");
-        return "pacman pacman-mirrorlist archlinux-keyring glibc gcc-libs filesystem linux linux-lts linux-zen linux-firmware systemd systemd-libs dbus util-linux coreutils bash shadow sudo polkit base hyprland quickshell".split(" ").indexOf(n) !== -1;
+        return "pacman pacman-mirrorlist archlinux-keyring glibc gcc-libs filesystem linux linux-lts linux-zen linux-firmware systemd systemd-libs dbus util-linux coreutils bash shadow sudo polkit base hyprland quickshell grub lvm2 cryptsetup".split(" ").indexOf(n) !== -1;
     }
 
     function isSystem(name: string): bool {

@@ -1,19 +1,30 @@
 #!/usr/bin/env bash
-# Package names this desktop ships (install/manifests). App Store uses
-# this so leftover packages from another session are not "system".
+# Package names this desktop ships (install/manifests). Update uses the
+# full list so leftover packages from another session are not "system".
+# --core: only the layers the desktop cannot run without (base, hardware,
+# desktop, theming) — Store's undeletable "system" list. Apps and gaming
+# layers stay removable there.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/install/manifests"
 
+files=()
+if [ "${1:-}" = "--core" ]; then
+    for f in "$DIR"/00-*.txt "$DIR"/10-*.txt "$DIR"/20-*.txt; do
+        [ -f "$f" ] && files+=("$f")
+    done
+else
+    for f in "$DIR"/*.txt; do
+        [ -f "$f" ] && files+=("$f")
+    done
+fi
+
 names="$(
-    find "$DIR" -maxdepth 1 -type f \( -name '*.txt' -o -name '*.aur.txt' \) -print0 \
-        | sort -z \
-        | xargs -0 -I{} sed -E 's/#.*$//' {} \
+    { [ ${#files[@]} -gt 0 ] && sed -E 's/#.*$//' "${files[@]}"; } \
         | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/\r$//' \
-        | grep -v '^$' \
         | grep -E '^[a-z0-9][a-z0-9.+_-]*$' \
-        | sort -u
+        | sort -u || true
 )"
 printf '%s\n' "$names" | python3 -c '
 import json, sys

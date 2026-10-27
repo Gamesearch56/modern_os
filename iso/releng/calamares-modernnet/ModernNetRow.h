@@ -17,6 +17,8 @@ public:
 
 signals:
     void connectClicked();
+    void forgetClicked();
+    void disconnectClicked();
 
 private:
     QString m_ssid;

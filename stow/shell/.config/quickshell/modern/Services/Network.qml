@@ -17,7 +17,7 @@ Singleton {
     }
     readonly property var wired: {
         void Networking.devices;
-        return root._deviceOfType(DeviceType.Wired);
+        return root._wiredDevice();
     }
     readonly property int connectivity: Networking.connectivity
     readonly property bool wifiEnabled: Networking.wifiEnabled
@@ -63,7 +63,8 @@ Singleton {
             void n?.ssid;
             void n?.connected;
             void n?.known;
-            s += root._wifiKey(n) + ":" + (n && n.connected ? "1" : "0") + (n && n.known ? "k" : "") + ",";
+            void n?.signalStrength;
+            s += root._wifiKey(n) + ":" + (n && n.connected ? "1" : "0") + (n && n.known ? "k" : "") + ":" + (Number(n?.signalStrength) || 0) + ",";
         }
         return s;
     }
@@ -76,15 +77,19 @@ Singleton {
     readonly property var _none: []
     property var _wifiSeen: ({})
     property int _wifiSeq: 0
-    property bool speedTesting: false
-    readonly property bool scanning: scanProc.running
-    property bool speedDone: false
-    property real speedMbps: 0
-    property real speedBytes: 0
-    property real speedSeconds: 0
-    property real speedDnsMs: 0
-    property real speedConnectMs: 0
-    property int speedHttp: 0
+    property string _resumeSsid: ""
+    readonly property bool scanning: scanProc.running || join.waking
+    readonly property bool joining: join.running
+    readonly property string linkKind: root._wifiUp() ? "wifi" : (root._wiredUp() ? "ethernet" : "offline")
+    signal joinFinished(string op, string ssid, bool ok)
+    readonly property bool speedTesting: speed.testing
+    readonly property bool speedDone: speed.done
+    readonly property real speedMbps: speed.mbps
+    readonly property real speedBytes: speed.bytes
+    readonly property real speedSeconds: speed.seconds
+    readonly property real speedDnsMs: speed.dnsMs
+    readonly property real speedConnectMs: speed.connectMs
+    readonly property int speedHttp: speed.http
 
     on_NetSigChanged: root._stampWifi()
     onWifiChanged: root._syncScan()
@@ -132,13 +137,17 @@ Singleton {
         const list = [];
         for (let i = 0; i < raw.length; i++)
             list.push(raw[i]);
-        const seen = root._wifiSeen;
         list.sort((a, b) => {
-            const ak = !!(a && (a.known || a.connected));
-            const bk = !!(b && (b.known || b.connected));
-            if (ak !== bk)
-                return ak ? -1 : 1;
-            return (seen[root._wifiKey(b)] || 0) - (seen[root._wifiKey(a)] || 0);
+            const ar = a?.connected ? 0 : (a?.known ? 1 : 2);
+            const br = b?.connected ? 0 : (b?.known ? 1 : 2);
+            if (ar !== br)
+                return ar - br;
+            const ds = (Number(b?.signalStrength) || 0) - (Number(a?.signalStrength) || 0);
+            if (ds !== 0)
+                return ds;
+            const an = root._wifiKey(a);
+            const bn = root._wifiKey(b);
+            return an < bn ? -1 : (an > bn ? 1 : 0);
         });
         return list;
     }
@@ -172,11 +181,25 @@ Singleton {
         return false;
     }
 
+    function _wiredDevice(): var {
+        const list = root._list(Networking.devices);
+        const virtualIface = /^(lo|docker|veth|virbr|vnet|br-|tun|tap|wg|zt|tailscale|nm-)/;
+        let fallback = null;
+        for (let i = 0; i < list.length; i++) {
+            const d = list[i];
+            if (!d || d.type !== DeviceType.Wired || virtualIface.test(String(d.name || "")))
+                continue;
+            if (d.connected && d.hasLink !== false)
+                return d;
+            if (!fallback)
+                fallback = d;
+        }
+        return fallback;
+    }
+
     function _wiredUp(): bool {
         const d = root.wired;
-        if (!d)
-            return false;
-        return !!(d.connected || d.hasLink);
+        return !!(d && d.connected && d.hasLink !== false);
     }
 
     function _linkUp(): bool {
@@ -192,9 +215,15 @@ Singleton {
     }
 
     function setWifiEnabled(on: bool) {
+        if (!on)
+            root._resumeSsid = root.ssid;
         Networking.wifiEnabled = on;
-        if (on)
-            root._syncScan();
+        if (!on) {
+            scanProc.running = false;
+            return;
+        }
+        root._syncScan();
+        join.wake(root._resumeSsid);
     }
 
     function scan() {
@@ -209,81 +238,50 @@ Singleton {
         });
     }
 
-    function connect(network: var, password: string) {
-        try {
-            if (!network)
-                return;
-            if (password && password.length > 0 && network.connectWithPsk)
-                network.connectWithPsk(password);
-            else if (network.connect)
-                network.connect();
-        } catch (e) {
-            Logger.error("Network", String(e));
-        }
+    function ssidOf(network: var): string {
+        return root._wifiKey(network);
     }
 
-    function disconnect() {
-        if (root.wifi && root.wifi.disconnect)
-            root.wifi.disconnect();
+    function isLocked(network: var): bool {
+        if (!network)
+            return false;
+        const sec = network.security;
+        return sec !== undefined && sec !== null && sec !== WifiSecurityType.Open && sec !== WifiSecurityType.Owe;
+    }
+
+    function connect(network: var, password: string) {
+        join.start("connect", root.ssidOf(network), password || "");
+    }
+
+    function disconnect(network: var) {
+        const ssid = network ? root.ssidOf(network) : root.ssid;
+        join.start("disconnect", ssid, "");
+    }
+
+    function forget(network: var) {
+        join.start("forget", root.ssidOf(network), "");
     }
 
     function needsPassword(network: var): bool {
-        if (!network || network.connected || network.known)
-            return false;
-        const sec = network.security;
-        if (sec === WifiSecurityType.Open || sec === WifiSecurityType.Owe)
-            return false;
-        return true;
+        return !!(network && !network.connected && !network.known && root.isLocked(network));
     }
 
     function speedTest() {
-        if (root.speedTesting)
-            return;
-        root.speedTesting = true;
-        root.speedDone = false;
-        root.speedMbps = 0;
-        root.speedBytes = 0;
-        root.speedSeconds = 0;
-        root.speedDnsMs = 0;
-        root.speedConnectMs = 0;
-        root.speedHttp = 0;
-        speedProc.running = true;
+        speed.start();
     }
 
-    function _parseSpeed(text: string) {
-        try {
-            const obj = JSON.parse((text || "").trim());
-            const bps = Number(obj.speed);
-            if (!isNaN(bps) && bps > 0)
-                root.speedMbps = bps * 8 / 1000000;
-            root.speedBytes = Number(obj.bytes) || 0;
-            root.speedSeconds = Number(obj.time) || 0;
-            root.speedDnsMs = Math.round((Number(obj.dns) || 0) * 1000);
-            root.speedConnectMs = Math.round((Number(obj.connect) || 0) * 1000);
-            root.speedHttp = Number(obj.code) || 0;
-            root.speedDone = true;
-        } catch (e) {
-            Logger.error("Network", String(e));
-        }
-        root.speedTesting = false;
+    NetworkJoin {
+        id: join
+        onFinished: (op, ssid, ok) => root.joinFinished(op, ssid, ok)
+    }
+
+    NetworkSpeed {
+        id: speed
     }
 
     Process {
         id: scanProc
         running: false
         onExited: root._syncScan()
-    }
-
-    Process {
-        id: speedProc
-        command: ["curl", "-L", "--max-time", "8", "-o", "/dev/null", "-s", "-w", "{\"speed\":%{speed_download},\"bytes\":%{size_download},\"time\":%{time_total},\"dns\":%{time_namelookup},\"connect\":%{time_connect},\"code\":\"%{http_code}\"}", "https://geo.mirror.pkgbuild.com/iso/latest/archlinux-x86_64.iso"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: root._parseSpeed(this.text)
-        }
-        onExited: {
-            if (root.speedTesting)
-                root.speedTesting = false;
-        }
     }
 }

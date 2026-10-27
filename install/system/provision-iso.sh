@@ -181,10 +181,25 @@ if command -v loginctl >/dev/null 2>&1; then
     loginctl enable-linger "$USERNAME" || true
 fi
 
+# zram-generator is installed by 00-base and idle until this config
+# exists. sysctl and the scheduler apply on the next boot; running
+# sysctl here would change the live installer, not the target.
+install -D -m 0644 "$PROVISION_ROOT/install/system/zram/zram-generator.conf" \
+    /etc/systemd/zram-generator.conf
+install -D -m 0644 "$PROVISION_ROOT/install/system/sysctl.d/99-modern-zram.conf" \
+    /etc/sysctl.d/99-modern-zram.conf
+install -D -m 0644 "$PROVISION_ROOT/install/system/udev/60-modern-rotational-bfq.rules" \
+    /etc/udev/rules.d/60-modern-rotational-bfq.rules
+log "zram swap and hard-disk scheduler staged for next boot"
+
 gpu="$(lspci 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /VGA compatible controller|3D controller/{print; exit}')"
-if printf '%s' "$gpu" | grep -qi nvidia; then
+# Pre-Turing cards run nouveau (00-hw-gpu-nvidia-legacy): putting nvidia
+# modules in MODULES there fails mkinitcpio and this whole provision.
+if printf '%s' "$gpu" | grep -qi nvidia && pacman -Q nvidia-utils >/dev/null 2>&1; then
     log "NVIDIA GPU — applying modeset and initramfs modules"
     nvidia_apply /
+elif printf '%s' "$gpu" | grep -qi nvidia; then
+    log "NVIDIA GPU on nouveau — skipping NVIDIA drop-ins"
 else
     log "non-NVIDIA GPU — skipping NVIDIA drop-ins"
 fi

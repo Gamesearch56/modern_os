@@ -26,8 +26,8 @@ log() { _emit "calamares-late: $*"; }
 
 phase="${1:-}"
 case "$phase" in
-    strip|clone|desktop|provision) ;;
-    *) die "usage: calamares-late.sh strip|clone|desktop|provision" ;;
+    strip|biosboot|clone|desktop|provision) ;;
+    *) die "usage: calamares-late.sh strip|biosboot|clone|desktop|provision" ;;
 esac
 
 if [ -n "${MODERN_PROTECT_HOME:-}" ] && [ -d "${MODERN_PROTECT_HOME%/}" ]; then
@@ -427,6 +427,14 @@ as_user() {
 # modern-live-setup.service, which creates the passwordless liveuser that
 # 99-liveuser and the polkit rule hand root to. iwd.service enabled on its
 # own fights NetworkManager, which starts iwd as its own wifi backend.
+#
+# Networking is the live split too: releng runs systemd-networkd for wired
+# and wlan DHCP, and wifi-backend.conf tells NetworkManager to leave
+# Ethernet alone and drive wifi through iwd. Kept on the installed system
+# that hides a cable from Settings > Network, races NM's DHCP on wifi, and
+# stalls boot in networkd-wait-online without one. NetworkManager owns
+# every interface there, on its default wpa_supplicant backend — the one
+# Broadcom wl and older drivers work with.
 LIVE_ONLY_PATHS=(
     etc/mkinitcpio.conf.d/archiso.conf
     etc/mkinitcpio.d/linux.preset
@@ -443,6 +451,13 @@ LIVE_ONLY_PATHS=(
     etc/systemd/system/multi-user.target.wants/pacman-init.service
     etc/systemd/system/multi-user.target.wants/iwd.service
     etc/systemd/system/multi-user.target.wants/sshd.service
+    etc/systemd/system/multi-user.target.wants/systemd-networkd.service
+    etc/systemd/system/sockets.target.wants/systemd-networkd.socket
+    etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service
+    etc/systemd/network/20-ethernet.network
+    etc/systemd/network/20-wlan.network
+    etc/systemd/network/20-wwan.network
+    etc/NetworkManager/conf.d/wifi-backend.conf
     etc/systemd/system/greetd.service.wants/modern-live-i18n.service
     etc/systemd/system/greetd.service.wants/modern-live-setup.service
     usr/lib/systemd/system/modern-live-i18n.service
@@ -485,6 +500,42 @@ EOF
     fi
 }
 
+# Installer and kiosk packages from packages.x86_64 that unpackfs copied
+# as explicit installs. Runs last: provision-iso.sh and install.sh still
+# use pacman's db in this chroot, not these binaries. If something outside
+# the set depends on one name, the set fails as a whole; then each name
+# goes on its own so only the depended-on one stays.
+LIVE_ONLY_PKGS=(
+    calamares kcrash cage openbox firefox xorg-xhost xorg-setxkbmap
+    syslinux mkinitcpio-archiso squashfs-tools nano
+)
+
+live_only_removable() {
+    local efi="${MODERN_LATE_EFI_DIR:-/sys/firmware/efi}"
+    local p
+    for p in "${LIVE_ONLY_PKGS[@]}"; do
+        printf '%s\n' "$p"
+    done
+    # systemd-boot owns UEFI installs; GRUB is the BIOS bootloader only.
+    [ -d "$efi" ] && printf 'grub\n'
+    return 0
+}
+
+strip_live_packages() {
+    local p pkgs=() kept=()
+    while IFS= read -r p; do
+        pacman -Q "$p" >/dev/null 2>&1 && pkgs+=("$p")
+    done < <(live_only_removable)
+    [ ${#pkgs[@]} -gt 0 ] || return 0
+    log "removing live-only packages: ${pkgs[*]}"
+    pacman --disable-sandbox -Rns --noconfirm "${pkgs[@]}" >/dev/null 2>&1 && return 0
+    for p in "${pkgs[@]}"; do
+        pacman -Q "$p" >/dev/null 2>&1 || continue
+        pacman --disable-sandbox -Rns --noconfirm "$p" >/dev/null 2>&1 || kept+=("$p")
+    done
+    [ ${#kept[@]} -eq 0 ] || log "kept (still a dependency): ${kept[*]}"
+}
+
 phase_strip() {
     log "removing the live-only files unpackfs copied into the target"
     strip_live
@@ -493,10 +544,76 @@ phase_strip() {
     log "live-only files removed"
 }
 
+# UEFI installs get kernel and initramfs from systemd-boot's kernel-install.
+# On BIOS the bootloader job runs grub-install + grub-mkconfig instead, and
+# grub-mkconfig only finds /boot/vmlinuz-*. mkarchiso empties /boot in the
+# squashfs, so without this GRUB is written with no menu entry at all.
+phase_biosboot() {
+    local efi="${MODERN_LATE_EFI_DIR:-/sys/firmware/efi}"
+    local root="${MODERN_LATE_STRIP_ROOT:-}"
+    if [ -d "$efi" ]; then
+        log "UEFI firmware — systemd-boot installs the kernel"
+        return 0
+    fi
+    local d kver=""
+    for d in "$root"/usr/lib/modules/*/; do
+        if [ "$(cat "$d/pkgbase" 2>/dev/null)" = linux-zen ] && [ -f "$d/vmlinuz" ]; then
+            kver="$(basename "$d")"
+            break
+        fi
+    done
+    [ -n "$kver" ] || die "no linux-zen kernel under /usr/lib/modules"
+    log "BIOS firmware — installing linux-zen $kver to /boot for GRUB"
+    install -D -m 0644 "$root/usr/lib/modules/$kver/vmlinuz" "$root/boot/vmlinuz-linux-zen"
+    # Kernel updates run `mkinitcpio -p linux-zen`; without ALL_kver that
+    # builds against the running kernel instead of the one just installed.
+    local preset="$root/etc/mkinitcpio.d/linux-zen.preset"
+    if [ -f "$preset" ] && ! grep -q '^ALL_kver=' "$preset"; then
+        printf 'ALL_kver="/boot/vmlinuz-linux-zen"\n' >>"$preset"
+    fi
+    if [ -n "${MODERN_LATE_TEST:-}" ]; then
+        return 0
+    fi
+    local out
+    out="$(mktemp)" || die "mktemp mkinitcpio log failed"
+    if ! mkinitcpio -k "$kver" -g /boot/initramfs-linux-zen.img >"$out" 2>&1 \
+        || ! mkinitcpio -k "$kver" -S autodetect -g /boot/initramfs-linux-zen-fallback.img >>"$out" 2>&1; then
+        die "mkinitcpio for $kver failed: $(tail -n 20 "$out" | tr '\n' ' ')"
+    fi
+    rm -f "$out"
+    log "initramfs for $kver written"
+}
+
+# The ISO carries the deploy key root-only. Move it into the new
+# account and drop the system copy so it does not stay on the disk
+# world-reachable after install. No key file means HTTPS updates.
+install_deploy_key() {
+    local src dest
+    if [ -n "${MODERN_DEPLOY_KEY_SRC:-}" ]; then
+        src="$MODERN_DEPLOY_KEY_SRC"
+    elif [ -n "${MODERN_LATE_TEST:-}" ]; then
+        return 0
+    else
+        src="/usr/lib/modern/deploy_key"
+    fi
+    [ -e "$src" ] || [ -L "$src" ] || return 0
+    if [ -L "$src" ]; then
+        rm -f "$src"
+        log "ignored deploy key symlink"
+        return 0
+    fi
+    dest="$USER_HOME/.config/modern/deploy_key"
+    install -d -m 0700 "$USER_HOME/.config/modern"
+    install -m 0600 "$src" "$dest" || die "could not install the GitHub deploy key"
+    rm -f "$src" || die "could not remove the deploy key from the system image"
+    log "GitHub deploy key installed for $USERNAME"
+}
+
 phase_clone() {
     ensure_dns
     ensure_nss
     install -d -m 0750 "$USER_HOME"
+    install_deploy_key
     rm -rf "$REPO"
     log "clone $PIN user=$USERNAME home=$USER_HOME bundle=$BUNDLE url=$ALLOWED_URL"
     if [ -d "$BUNDLE/install" ]; then
@@ -591,11 +708,13 @@ phase_provision() {
     log "provisioning greetd and NetworkManager"
     bash "$REPO/install/system/provision-iso.sh" "$USERNAME" \
         || die "provision-iso.sh failed"
+    [ -n "${MODERN_LATE_TEST:-}" ] || strip_live_packages
     log "late install finished for $USERNAME at $PIN"
 }
 
 case "$phase" in
     strip) phase_strip ;;
+    biosboot) phase_biosboot ;;
     clone) phase_clone ;;
     desktop) phase_desktop ;;
     provision) phase_provision ;;

@@ -1,12 +1,7 @@
 # Daily-driver apps. This is the M0 bar: minimal, but enough to be
-# usable day to day.
-kitty                   # terminal — SUPER+T
-nautilus                # default file manager — SUPER+E (docs/DECISIONS.md #5)
-sushi                   # Nautilus Space previewer (org.gnome.NautilusPreviewer)
-vivaldi                 # browser — SUPER+B, themed per docs/THEMING.md
+# usable day to day. Store lists these as removable apps, not system
+# packages (scripts/pkg-manifest-names.sh --core).
 fastfetch                # terminal banner, themed via matugen (docs/DECISIONS.md, .bashrc)
-imv                      # image viewer — Settings + Nautilus default
-mpv                      # video player — Settings + Nautilus default; seekbar thumbs via ffmpeg
 ffmpeg                    # mpv_thumbnail_script stills (prefer_mpv=no)
 ffmpegthumbnailer         # Nautilus video thumbnails
 gst-plugins-base          # GStreamer codecs for mpv/browser media

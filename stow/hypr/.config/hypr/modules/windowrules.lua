@@ -71,6 +71,18 @@ apply({
     no_initial_focus = true,
 })
 
+-- Chromium/Vivaldi (and other Electron shells): after HTML5 video
+-- fullscreen, the client echoes set_maximized because Hyprland advertised
+-- MAXIMIZED at map time to hide CSD. Honoring that enters fullscreen
+-- mode 1 and covers every other tile on the workspace — often noticed
+-- only when clicking elsewhere or switching workspaces (hyprwm/Hyprland
+-- #13322). Super+F still uses the exclusive-fullscreen dispatcher;
+-- games.lua forces state 2 the same way. Client maximize is unused.
+apply({
+    name = "suppress-client-maximize",
+    suppress_event = "maximize",
+})
+
 -- Phylax (GTK4 polkit agent) app_id. Glass like Settings chrome:
 -- float+center, dim_around as scrim, design.transparency.
 -- pin keeps the prompt above modern.store / modern.settings.

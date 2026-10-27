@@ -9,7 +9,7 @@ ColumnLayout {
     spacing: Tokens.spacing.md
     visible: Network.wifiEnabled
 
-    signal requestPassword(var network)
+    signal networkClicked(var network)
 
     RowLayout {
         Layout.fillWidth: true
@@ -42,7 +42,7 @@ ColumnLayout {
         MListItem {
             required property int index
             readonly property var net: Network.networks[index] || ({})
-            readonly property bool locked: Network.needsPassword(net)
+            readonly property bool locked: Network.isLocked(net)
             readonly property bool online: !!(net.connected)
             readonly property bool remembered: !!(net.known)
 
@@ -51,16 +51,7 @@ ColumnLayout {
             titleValue: net.name || net.ssid || ""
             subtitleKey: online ? "settings.network.wifiConnected" : ""
             selected: online
-            onClicked: {
-                if (online) {
-                    Network.disconnect();
-                    return;
-                }
-                if (locked)
-                    root.requestPassword(net);
-                else
-                    Network.connect(net, "");
-            }
+            onClicked: root.networkClicked(net)
 
             Rectangle {
                 visible: remembered && !online
@@ -80,12 +71,6 @@ ColumnLayout {
                 }
             }
 
-            MButton {
-                visible: online
-                kind: "tonal"
-                key: "settings.disconnect"
-                onClicked: Network.disconnect()
-            }
         }
     }
 

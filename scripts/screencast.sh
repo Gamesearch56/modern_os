@@ -120,9 +120,34 @@ wait_hud_gone() {
     done
 }
 
+# Pulse "default" can be a sink monitor or a stale WirePlumber device
+# (disconnected Bluetooth), so name the live microphone. --audio=DEVICE
+# must be one argv; -a as a flag with an optional argument drops the name.
+audio_source() {
+    command -v pactl >/dev/null 2>&1 || return 1
+    local src
+    src="$(pactl get-default-source 2>/dev/null || true)"
+    case "$src" in
+        "" | *.monitor) ;;
+        *)
+            printf '%s\n' "$src"
+            return 0
+            ;;
+    esac
+    src="$(pactl list short sources 2>/dev/null | awk '$2 !~ /\.monitor$/ { print $2; exit }')"
+    [ -n "$src" ] || return 1
+    printf '%s\n' "$src"
+}
+
 REC=(wf-recorder -y -f "$FILE")
 if [ "$AUDIO" = "true" ]; then
-    REC+=(-a)
+    src=""
+    if src="$(audio_source)"; then
+        REC+=("--audio=${src}")
+        REC+=(--audio-backend=pulse)
+    else
+        echo "screencast: no microphone; recording video only" >&2
+    fi
 fi
 
 focused_output() {

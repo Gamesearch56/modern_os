@@ -21,7 +21,19 @@ openssh                 # remote access / git over ssh
 wget                    # fetched by install.sh and scripts/optiscaler.sh
 unzip                   # unpacking release archives (OptiScaler, fonts)
 zip                     # export/import of config.json and backups
-zram-generator          # swap-on-zram, standard low-RAM-pressure tuning
+zram-generator          # swap-on-zram; provision-iso.sh installs the config that turns it on
 ufw                     # firewall — see docs/SECURITY.md and the KDE Connect port rule
 sof-firmware            # laptop audio (Intel/AMD SOF)
 alsa-firmware           # older Broadwell-era and similar codecs
+# Shipped on the live squashfs, so an ISO install has them marked
+# explicit. Listed so Store keeps them as system packages.
+mkinitcpio              # builds the initramfs for linux-zen
+e2fsprogs               # ext4 tools (fsck at boot when a partition is ext4)
+efibootmgr              # UEFI boot entries for systemd-boot
+polkit                  # pkexec prompts (Store, Update, Firewall)
+python                  # scripts/ JSON helpers (python3)
+xdg-utils               # xdg-open / xdg-mime for default apps
+xorg-xwayland           # X11 apps under Hyprland, Steam included
+wpa_supplicant          # NetworkManager's wifi backend
+wireless-regdb          # wifi regulatory domain
+less                    # pager for man-db and git

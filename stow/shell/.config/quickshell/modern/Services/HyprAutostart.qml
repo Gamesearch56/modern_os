@@ -68,6 +68,18 @@ QtObject {
         return false;
     }
 
+    function isAutostartDesktop(desktopId: string): bool {
+        const list = Config.general.autostart || [];
+        const want = root._norm(desktopId);
+        if (!want.length || list.length === 0)
+            return false;
+        for (let j = 0; j < list.length; j++) {
+            if (root._norm(list[j]) === want)
+                return true;
+        }
+        return false;
+    }
+
     function isAutostartWindow(toplevel: var): bool {
         const list = Config.general.autostart || [];
         if (!toplevel || list.length === 0)

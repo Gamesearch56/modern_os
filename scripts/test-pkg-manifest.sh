@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Default desktop apps must be manifest "system" names for Store/Update.
+# Manifest names: Update treats all as system; Store only the --core layers.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -18,6 +18,24 @@ for pkg in kitty vivaldi neovim mpv nautilus imv cliphist matugen matugen-bin; d
         err "$pkg missing from install/manifests (Store/Update system list)"
     fi
 done
+
+core="$("$ROOT/scripts/pkg-manifest-names.sh" --core)"
+in_core() { echo "$core" | jq -e --arg n "$1" 'index($n) != null' >/dev/null; }
+for pkg in hyprland quickshell kitty nautilus vivaldi gedit mpv imv matugen mkinitcpio pipewire; do
+    if in_core "$pkg"; then ok "$pkg is a core (undeletable) package"
+    else err "$pkg missing from the --core layers"; fi
+done
+for pkg in steam spotify-launcher btop lutris docker; do
+    if in_core "$pkg"; then err "$pkg must stay removable in Store (not --core)"
+    else ok "$pkg is removable in Store"; fi
+done
+if grep -F 'core: true' "$ROOT/stow/shell/.config/quickshell/modern/Services/Store.qml" >/dev/null \
+    && grep -F "protected_pkg \"\$name\"" "$ROOT/scripts/pkg-mutate.sh" >/dev/null \
+    && grep -F 'pkg-manifest-names.sh" --core' "$ROOT/scripts/pkg-mutate.sh" >/dev/null; then
+    ok "Store UI and pkg-mutate.sh both guard the core list"
+else
+    err "Store.qml must set core: true and pkg-mutate.sh must refuse --core names"
+fi
 
 STORE="$ROOT/stow/shell/.config/quickshell/modern/Services/StoreClassify.qml"
 if grep -F 'return root.inShipped(name) || root.isProtected(name);' "$STORE" >/dev/null \

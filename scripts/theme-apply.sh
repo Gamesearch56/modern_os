@@ -510,6 +510,10 @@ merged_config() {
 if [ "$CHROME_ONLY" -eq 1 ]; then
     patch_toolkit_chrome || warn "toolkit chrome patch skipped"
     merge_vivaldi_theme || true
+    # Fonts/radii also live in phylax/style.css — reload when not racing.
+    # shellcheck source=lib/polkit-agent.sh
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/polkit-agent.sh"
+    reload_polkit_theme || true
     log "done (--chrome-only)"
     exit 0
 fi
@@ -675,12 +679,11 @@ finish_live() {
     if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
         hyprctl reload >/dev/null 2>&1 || true
     fi
-    # Do not try-restart: a chrome-only burst hits StartLimit and pkexec
-    # then waits forever with no password window. Phylax reloads CSS on
-    # the next dialog; only start the unit if it is down.
+    # Phylax loads style.css once at start — bounce so wallpaper palettes
+    # land on the next pkexec. Debounced inside reload_polkit_theme.
     # shellcheck source=lib/polkit-agent.sh
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/polkit-agent.sh"
-    ensure_polkit_agent || true
+    reload_polkit_theme || true
 }
 
 if [ "$RELOAD" -eq 0 ]; then

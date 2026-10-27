@@ -1,8 +1,6 @@
 # Gaming layer (M4/M6). Only `gaming` and `full` profiles.
 steam                    # primary game platform
-lutris                   # non-Steam game management (Battle.net, Epic via Heroic instead, GOG)
 gamescope                 # micro-compositor for per-game resolution/upscaling/HDR
-goverlay                  # MangoHud/vkBasalt config GUI
 lib32-mesa                # 32-bit Mesa for Proton/older titles
 protontricks               # winetricks helpers scoped to individual Proton prefixes
 proton-vpn-gtk-app         # Proton VPN GUI client (Services/Vpn talks to its NM connection)

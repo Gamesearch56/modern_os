@@ -178,11 +178,12 @@ one small set of derived, non-sensitive images is strictly less exposure.
 ## 15. Hand-curated layered manifests over a single package list
 
 **Decision:** `00-base` through `60-flatpak`, each entry commented with
-why it's there. `40-dev`/`50-gaming` are the personal layer, deferred to
-M6.
+why it's there. `50-gaming` is the optional layer, deferred to M6. The
+old `40-dev` layer (Docker, JDKs, Cursor, …) was dropped; those install
+from Settings → Store or the AUR when wanted.
 
 **Rejected:** one flat list — conflates "needed for any
-Hyprland desktop" with optional layers (`40-dev` / `50-gaming`).
+Hyprland desktop" with optional layers (`50-gaming`).
 
 ## 16. `property var` object literals for MD3 color roles, not nested QML properties
 

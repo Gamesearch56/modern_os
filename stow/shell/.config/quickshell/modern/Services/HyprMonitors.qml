@@ -133,6 +133,27 @@ Item {
         return null;
     }
 
+    // Left to right as the layout places them, so Settings mirrors the desk.
+    function ordered(): var {
+        const list = root.host ? Array.from(root.host.monitors?.values ?? []) : [];
+        const pos = m => {
+            const ipc = root._ipc(m);
+            return { x: Number(ipc.x ?? m.x ?? 0), y: Number(ipc.y ?? m.y ?? 0) };
+        };
+        return list.sort((a, b) => {
+            const pa = pos(a), pb = pos(b);
+            return pa.x !== pb.x ? pa.x - pb.x : pa.y - pb.y;
+        });
+    }
+
+    function logicalWidth(mon: var): int {
+        const ipc = root._ipc(mon);
+        const rotated = Number(ipc.transform ?? 0) % 2 === 1;
+        const px = Number(rotated ? (ipc.height ?? mon?.height) : (ipc.width ?? mon?.width)) || 0;
+        const scale = Number(ipc.scale ?? mon?.scale ?? 1) || 1;
+        return Math.round(px / scale);
+    }
+
     // Lowest Hyprland monitor id = first connected.
     function firstConnectedDescription(): string {
         const list = root.host ? (root.host.monitors?.values ?? []) : [];

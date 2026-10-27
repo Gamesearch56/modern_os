@@ -56,6 +56,10 @@ chown -R liveuser:liveuser /home/liveuser/.config
 # cannot own the same radio. NM starts iwd as its wifi backend
 # (conf.d/wifi-backend.conf). Leave systemd-networkd for wired DHCP so
 # QEMU still has a default route without NetworkManager claiming the NIC.
+# releng's networkd also DHCPs wlan/wwan; on a real radio that races NM
+# for the same interface once Calamares connects.
+rm -f /etc/systemd/network/20-wlan.network /etc/systemd/network/20-wwan.network
+networkctl reload 2>/dev/null || true
 systemctl enable --now NetworkManager.service
 systemctl disable --now iwd.service 2>/dev/null || true
 systemctl stop iwd.service 2>/dev/null || true

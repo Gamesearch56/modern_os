@@ -3,7 +3,7 @@
 # failure in phase 3 doesn't repeat phases 1-2's work.
 #
 # Usage:
-#   install.sh --profile <m0|dev|gaming|full> [--dry-run] [--yes] [--target DIR]
+#   install.sh --profile <m0|gaming|full> [--dry-run] [--yes] [--target DIR]
 #              [--allow-live-home] [--hw amd|intel|nvidia] [--cpu amd|intel]
 #              [--extra proton]
 #
@@ -15,9 +15,8 @@
 #
 # Profiles (see install/manifests/README.md for exact layer membership):
 #   m0       base + desktop + theming + minimal apps  (default)
-#   dev      m0 + 40-dev
 #   gaming   m0 + 50-gaming
-#   full     everything, including 60-flatpak and optional AUR extras
+#   full     gaming + 60-flatpak
 #
 # This script installs packages, stows this repo's dotfiles into $TARGET
 # (default $HOME), and enables the greetd login screen on a real user
@@ -103,8 +102,8 @@ trap '_err_trap $LINENO' ERR
 log_info "modern_dotfile installer — profile '$PROFILE', gpu='$HW', cpu='$CPU', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN"
 
 case "$PROFILE" in
-    m0|dev|gaming|full) ;;
-    *) die "unknown profile '$PROFILE' — expected m0|dev|gaming|full" ;;
+    m0|gaming|full) ;;
+    *) die "unknown profile '$PROFILE' — expected m0|gaming|full" ;;
 esac
 
 case "$CPU" in
@@ -139,7 +138,13 @@ preflight_checks
 # Phase 2 — yay bootstrap
 # ---------------------------------------------------------------------------
 log_phase "Phase 2/5: yay bootstrap"
-bootstrap_yay
+if [ -n "${MODERN_ROOT_PLAN:-}" ] && ! command -v yay >/dev/null 2>&1; then
+    # makepkg -si needs sudo, which a terminal-less update cannot answer.
+    log_warn "yay missing — skipping AUR until 'modern update' runs in a terminal"
+    MODERN_SKIP_AUR=1
+else
+    bootstrap_yay
+fi
 
 # ---------------------------------------------------------------------------
 # Phase 3 — package manifests
@@ -149,9 +154,7 @@ log_phase "Phase 3/5: package manifests (profile: $PROFILE)"
 MANIFEST_DIR="$REPO_ROOT/install/manifests"
 layers=(00-base 10-desktop 20-theming 30-apps)
 case "$PROFILE" in
-    dev)    layers+=(40-dev) ;;
-    gaming) layers+=(50-gaming) ;;
-    full)   layers+=(40-dev 50-gaming) ;;
+    gaming|full) layers+=(50-gaming) ;;
 esac
 
 native_pkgs=()
@@ -171,8 +174,14 @@ hw_gpu="$MANIFEST_DIR/00-hw-gpu-${GPU_FAMILY}.txt"
 if [ -f "$hw_gpu" ]; then
     mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_gpu")
 fi
+if detect_wifi_wl; then
+    log_info "Broadcom wifi needs the wl driver"
+    mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$MANIFEST_DIR/00-hw-wifi-broadcom-wl.txt")
+fi
 if [ "$PROFILE" = "gaming" ] || [ "$PROFILE" = "full" ]; then
-    hw_game="$MANIFEST_DIR/50-hw-${HW}.txt"
+    # GPU_FAMILY, not HW: 50-hw-nvidia's lib32-nvidia-utils would pull
+    # nvidia-utils onto a nouveau (nvidia-legacy) machine.
+    hw_game="$MANIFEST_DIR/50-hw-${GPU_FAMILY}.txt"
     if [ -f "$hw_game" ]; then
         mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_game")
     fi
@@ -295,11 +304,11 @@ else
     log_warn "matugen not found — run scripts/theme-apply.sh once it is installed"
 fi
 
-# Nautilus / xdg-open follow Settings → Applications video/image/folder defaults.
+# Nautilus / xdg-open follow Settings → Applications video/image/text/folder defaults.
 run "$REPO_ROOT/scripts/mime-defaults.sh" \
     --config "$TARGET/.config/modern/config.json" \
     --mimeapps "$TARGET/.config/mimeapps.list" \
-    || log_warn "mime-defaults.sh failed — set video/image/folder defaults in Settings → Applications"
+    || log_warn "mime-defaults.sh failed — set video/image/text/folder defaults in Settings → Applications"
 run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
     || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
 
@@ -315,7 +324,10 @@ fi
 # kitty.conf globincludes colors.conf; fallbacks in kitty.conf keep
 # SUPER+T working until theme-apply writes the live file.
 
-if greetd_target_is_live_user "$TARGET"; then
+if greetd_target_is_live_user "$TARGET" && [ -n "${MODERN_ROOT_PLAN:-}" ] && [ "$DRY_RUN" -eq 0 ]; then
+    printf 'greetd\n' >>"$MODERN_ROOT_PLAN"
+    log_info "greetd deferred to the update's root step"
+elif greetd_target_is_live_user "$TARGET"; then
     greetd_apply "$(greetd_user_for_home "$TARGET")"
 else
     log_info "skipping greetd (target '$TARGET' is not a login home)"

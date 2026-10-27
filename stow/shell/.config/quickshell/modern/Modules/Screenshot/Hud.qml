@@ -9,6 +9,10 @@ import "../../Services"
 // surface. screenshot.sh adds hyprctl's monitor x/y so grim -g is
 // compositor-global (grim forbids combining -o and -g).
 // Namespace is not "quickshell" so decoration.blur does not frost the crop.
+// Overlay + exclusive keyboard focus: Hyprland only releases a game's
+// pointer lock when keyboard focus leaves its surface, and it never hands
+// focus to a Top layer over a fullscreen window. Focus (and the lock)
+// return to the game when the HUD unmaps.
 PanelWindow {
     id: root
 
@@ -19,8 +23,9 @@ PanelWindow {
     anchors.right: true
     anchors.bottom: true
     exclusionMode: ExclusionMode.Ignore
-    focusable: Screenshot.hudOpen && !Recording.active
     WlrLayershell.namespace: "modern-screenshot"
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
     Item {
         id: hud

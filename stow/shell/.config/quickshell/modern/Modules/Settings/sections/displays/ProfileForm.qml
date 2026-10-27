@@ -38,6 +38,7 @@ ColumnLayout {
         return Hypr.ratesFor(root.mon, root.widthPx, root.heightPx);
     }
     readonly property bool hdrOn: !!(root.profile.hdr)
+    readonly property var caps: MonitorCaps.capsFor(String(root.mon?.name || ""))
 
     function patch(extra: var) {
         ConfigWrite.patchMonitor(root.selectedDesc, extra);
@@ -84,6 +85,7 @@ ColumnLayout {
     }
 
     RowLayout {
+        visible: root.caps.hdr || root.hdrOn
         Layout.fillWidth: true
         spacing: Tokens.spacing.md
         MText {
@@ -116,6 +118,7 @@ ColumnLayout {
     }
 
     RowLayout {
+        visible: root.caps.vrr || !!(root.profile.vrr)
         Layout.fillWidth: true
         spacing: Tokens.spacing.md
         MText {
@@ -127,6 +130,20 @@ ColumnLayout {
         MSwitch {
             checked: !!(root.profile.vrr)
             onToggled: (v) => root.patch({ vrr: v ? 1 : 0 })
+        }
+    }
+
+    MField {
+        visible: Brightness.canAdjust(root.selectedDesc)
+        labelKey: "quickSettings.brightness"
+        MSlider {
+            enabled: !Brightness.setting
+            from: 1
+            to: 100
+            value: Brightness.percentFor(root.selectedDesc)
+            showValue: true
+            suffix: "%"
+            onMoved: (v) => Brightness.setFor(root.selectedDesc, Math.round(v))
         }
     }
 
@@ -179,19 +196,6 @@ ColumnLayout {
     }
 
     MField {
-        visible: Brightness.canControl(root.selectedDesc)
-        labelKey: "quickSettings.brightness"
-        MSlider {
-            from: 1
-            to: 100
-            value: Brightness.percentFor(root.selectedDesc)
-            showValue: true
-            suffix: "%"
-            onMoved: (v) => Brightness.setFor(root.selectedDesc, Math.round(v))
-        }
-    }
-
-    MField {
         visible: !root.hdrOn
         labelKey: "settings.fields.colorProfile"
         MSelect {
@@ -200,7 +204,7 @@ ColumnLayout {
                 { value: "srgb", titleKey: "settings.cmSrgb" },
                 { value: "wide", titleKey: "settings.cmWide" },
                 { value: "edid", titleKey: "settings.cmEdid" }
-            ]
+            ].filter(o => o.value !== "wide" || root.caps.wide || root.profile.cm === "wide")
             onSelected: (v) => root.patch({ cm: v })
         }
     }

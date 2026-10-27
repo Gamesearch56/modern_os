@@ -97,6 +97,31 @@ else
     ok "feature branch is not pending"
 fi
 
+# ISO install: shallow single-tag copy (iso-build.sh bundle). After one
+# update the new tag must exist locally, or the next release is never offered.
+SHALLOW="$TMP/shallow"
+git_cfg clone --depth 1 --single-branch --branch v0.1.0 "file://$REMOTE" "$SHALLOW" >/dev/null 2>&1
+export MODERN_DESKTOP_REPO="$SHALLOW"
+"$SYNC" apply >/dev/null
+if [ "$(status_field .reason)" = "current" ] && [ "$(status_field .from)" = "v0.2.0" ]; then
+    ok "shallow ISO copy keeps the release tag after apply"
+else
+    err "shallow copy lost its tag after apply: $("$SYNC" status)"
+fi
+git_cfg -C "$CLONE" checkout -q v0.2.0 >/dev/null 2>&1
+printf 'three\n' >>"$CLONE/readme"
+git_cfg -C "$CLONE" commit -qam three >/dev/null
+git_cfg -C "$CLONE" tag -a v0.3.0 -m v0.3.0
+git_cfg -C "$CLONE" push origin v0.3.0 >/dev/null 2>&1
+if [ "$(status_field .pending)" = "true" ] && [ "$(status_field .to)" = "v0.3.0" ]; then
+    ok "the next release is offered after the first update"
+else
+    err "second release not offered: $("$SYNC" status)"
+fi
+"$SYNC" apply >/dev/null
+[ "$(status_field .from)" = "v0.3.0" ] || err "second apply did not land on v0.3.0"
+export MODERN_DESKTOP_REPO="$CLONE"
+
 EVIL="$TMP/evil.git"
 git_cfg init --bare "$EVIL" >/dev/null
 export GIT_CONFIG_GLOBAL="$TMP/gitconfig"
@@ -104,9 +129,9 @@ cat >"$GIT_CONFIG_GLOBAL" <<EOF
 [url "$EVIL"]
     insteadOf = $REMOTE
 EOF
-# git_safe clears GIT_CONFIG_GLOBAL. Status must still see v0.2.0, not evil.
+# git_safe clears GIT_CONFIG_GLOBAL. Status must still see v0.3.0, not evil.
 git_cfg -C "$CLONE" checkout --detach v0.1.0 >/dev/null 2>&1
-if [ "$(status_field .to)" != "v0.2.0" ]; then
+if [ "$(status_field .to)" != "v0.3.0" ]; then
     err "url.*.insteadOf leaked into ls-remote: $("$SYNC" status)"
 else
     ok "url.*.insteadOf is ignored"

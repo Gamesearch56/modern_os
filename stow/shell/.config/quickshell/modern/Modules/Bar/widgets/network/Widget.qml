@@ -10,7 +10,7 @@ Item {
     MIconButton {
         tabFocus: false
         anchors.centerIn: parent
-        iconName: Network.connected ? (Network.ssid.length > 0 ? "network-wireless-symbolic" : "network-wired-symbolic") : "network-offline-symbolic"
+        iconName: Network.linkKind === "wifi" ? "network-wireless-symbolic" : (Network.linkKind === "ethernet" ? "network-wired-symbolic" : "network-offline-symbolic")
         key: "bar.network"
         onClicked: Settings.openAt("network", "")
     }

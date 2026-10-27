@@ -44,6 +44,8 @@ Singleton {
             return ["viewer", "graphics", "2dgraphics"];
         if (role === "terminal")
             return ["terminalemulator"];
+        if (role === "textEditor")
+            return ["texteditor"];
         return [];
     }
 
@@ -64,6 +66,8 @@ Singleton {
             return ["imv", "gwenview", "eog", "eom", "loupe", "nsxiv", "feh", "qimgv"];
         if (role === "terminal")
             return ["kitty", "alacritty", "foot", "wezterm", "konsole", "ghostty", "ptyxis"];
+        if (role === "textEditor")
+            return ["gedit", "gnome-text-editor", "kate", "kwrite", "mousepad", "xed", "pluma", "featherpad"];
         return [];
     }
 }

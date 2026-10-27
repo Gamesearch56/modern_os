@@ -305,6 +305,7 @@
       "fileManager": "org.gnome.Nautilus.desktop",
       "videoPlayer": "mpv.desktop",
       "imageViewer": "imv.desktop",
+      "textEditor": "org.gnome.gedit.desktop",
       "terminal": "kitty.desktop"
     }
   },

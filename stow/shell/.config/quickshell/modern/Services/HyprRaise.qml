@@ -39,18 +39,29 @@ Item {
             const t = list[i];
             if (!t || !win.autostart.matchesDesktop(t, id))
                 continue;
-            win.activateWindow(String(t.address || ""));
+            const addr = String(t.address || "");
+            if (!addr.length)
+                continue;
+            win.activateWindow(addr);
             return true;
         }
         return false;
     }
 
-    // Prefer session-raise (hyprctl, correct 0x addresses) so special:background
-    // clients actually move. On miss, entry.execute() starts a new instance.
+    // Raise/park lifecycle is only for general.autostart (mail/calendar/
+    // WhatsApp). Other apps must execute() — raiseDesktop false-positives
+    // on stale QS toplevels returned true and skipped Steam/Battle.net.
     function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
-        if (root.raiseDesktop(desktopId))
+        const id = String(desktopId || "");
+        const win = root.windows;
+        if (!win || !win.autostart.isAutostartDesktop(id)) {
+            if (entry && entry.execute)
+                entry.execute();
+            return !!(entry && entry.execute);
+        }
+        if (root.raiseDesktop(id))
             return true;
-        const stem = String(desktopId || "").replace(/\.desktop$/i, "");
+        const stem = id.replace(/\.desktop$/i, "");
         if (!stem.length) {
             if (entry && entry.execute)
                 entry.execute();

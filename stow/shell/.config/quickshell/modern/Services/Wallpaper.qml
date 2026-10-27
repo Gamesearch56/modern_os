@@ -15,6 +15,8 @@ Singleton {
     property bool fetching: false
     property var images: []
     property string pendingSelect: ""
+    property string _lastIngest: ""
+    property double _lastIngestAt: 0
     readonly property int thumbsRev: thumbs.rev
 
     readonly property string home: Quickshell.env("HOME")
@@ -183,6 +185,14 @@ Singleton {
         const p = String(path || "").trim();
         if (!p.length)
             return;
+        // WebEngine stages as *.download then renames — ignore partials / rapid duplicates.
+        if (/\.(download|crdownload|part|tmp|temp)$/i.test(p))
+            return;
+        const now = Date.now();
+        if (p === root._lastIngest && (now - root._lastIngestAt) < Motion.extraLongMs)
+            return;
+        root._lastIngest = p;
+        root._lastIngestAt = now;
         root.pendingSelect = p;
         root._refresh();
         root.fetched(p);

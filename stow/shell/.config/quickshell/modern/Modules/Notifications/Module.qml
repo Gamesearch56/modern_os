@@ -46,6 +46,7 @@ Scope {
                 item: toastStack
             }
             margins.top: toastWin._edgeMargin(Config.bar.position === "top")
+                + Tokens.panel.toastTopClearance
             margins.bottom: toastWin._edgeMargin(Config.bar.position === "bottom")
             margins.right: toastWin._edgeMargin(Config.bar.position === "right")
             margins.left: toastWin._edgeMargin(Config.bar.position === "left")

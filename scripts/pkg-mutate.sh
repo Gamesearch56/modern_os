@@ -52,7 +52,8 @@ if [ "$action" = "install" ]; then
     exec "$PKEXEC" "$PACMAN" -S --noconfirm --needed -- "$name"
 fi
 
-if protected_pkg "$name"; then
+if protected_pkg "$name" \
+    || "$ROOT/pkg-manifest-names.sh" --core | jq -e --arg n "$name" 'index($n) != null' >/dev/null 2>&1; then
     printf 'refusing to remove protected package: %s\n' "$name" >&2
     exit 5
 fi

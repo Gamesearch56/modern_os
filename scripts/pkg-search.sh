@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
 # Search official sync DBs (pacman -Ss). JSON array, cap 50.
+# Usage: pkg-search.sh QUERY [CURATED_NAME...]
+# Curated names (Store catalog hits for QUERY, e.g. "photo" -> gimp) come
+# first via pkg-info.sh; pacman -Ss matches follow without duplicates.
 # No -Sy — refresh stays with Settings → System.
 set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 query="$(printf '%s' "${1:-}" | tr -d '\n' | head -c 80)"
 if [ -z "$query" ] || [[ "$query" == -* ]]; then
     printf '%s\n' '[]'
     exit 0
 fi
+shift
+
+curated='[]'
+if [ "$#" -gt 0 ]; then
+    curated="$("$ROOT/pkg-info.sh" "$@" 2>/dev/null || printf '[]')"
+fi
 
 PACMAN="/usr/bin/pacman"
-python3 -c '
-import json, re, sys
+CURATED="$curated" python3 -c '
+import json, os, re, sys
+try:
+    rows = json.loads(os.environ.get("CURATED") or "[]")
+except ValueError:
+    rows = []
+seen = {r.get("name") for r in rows}
 text = sys.stdin.read()
 pat = re.compile(r"^([a-z0-9-]+)/([a-z0-9][a-z0-9.+_-]*)\s+(\S+)(.*)$")
-rows = []
 lines = text.splitlines()
 i = 0
 while i < len(lines) and len(rows) < 50:
@@ -29,6 +44,9 @@ while i < len(lines) and len(rows) < 50:
         i += 2
     else:
         i += 1
+    if name in seen:
+        continue
+    seen.add(name)
     rows.append({
         "name": name,
         "repo": repo,

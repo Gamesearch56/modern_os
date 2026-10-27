@@ -2,6 +2,8 @@
 hyprland                       # the compositor
 hyprland-guiutils               # hyprland-dialog; without it Hyprland shows a 15s login overlay
 mesa                           # OpenGL/EGL (Hyprland also pulls this; listed so m0 is explicit)
+libdisplay-info                # di-edid-decode: Settings > Displays reads HDR/wide-gamut support
+libdrm                         # modetest: Settings > Displays reads the connector's vrr_capable
 greetd                         # login (enabled by install.sh on a real user home)
 xdg-user-dirs                  # Desktop/Pictures before wallpaper copy
 gvfs                           # Nautilus trash/network mounts
@@ -32,7 +34,16 @@ swappy                           # screenshot annotation (GTK, follows token gtk
 wf-recorder                      # screen recording backend (Services/Recording)
 ddcutil                         # DDC/CI brightness for external displays — see Services/Brightness
 brightnessctl                    # XF86 brightness keys in modules/keybinds.lua
+upower                           # battery state for Services/Battery (laptops)
 playerctl                        # XF86 / KDE Connect play-pause via MPRIS (scripts/modern media)
 kdialog                          # Qt file picker (wallpaper Add; pick-directory.sh)
 hyprpicker                       # color picker widget backend
 inotify-tools                    # wallpaper-provider.sh watches the download folder
+# Desktop defaults the keybinds and scripts call directly.
+kitty                   # terminal — SUPER+T
+nautilus                # default file manager — SUPER+E (docs/DECISIONS.md #5)
+sushi                   # Nautilus Space previewer (org.gnome.NautilusPreviewer)
+vivaldi                 # browser — SUPER+B, themed per docs/THEMING.md
+gedit                   # text editor — Nautilus/xdg-open default for text files (mime-defaults.sh)
+imv                      # image viewer — Settings + Nautilus default
+mpv                      # video player — Settings + Nautilus default; seekbar thumbs via ffmpeg

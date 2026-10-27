@@ -240,7 +240,9 @@ hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(modern .. " volume down"), locke
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd(modern .. " volume mute"), locked_once)
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), locked_once)
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd(modern .. " media play-pause"), locked_once)
-hl.bind("XF86AudioPause", hl.dsp.exec_cmd(modern .. " media play-pause"), locked_once)
+-- Pause must never resume: multipoint buds send AVRCP Pause to the PC
+-- when the phone takes over, and a toggle restarted paused PC media.
+hl.bind("XF86AudioPause", hl.dsp.exec_cmd(modern .. " media pause"), locked_once)
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd(modern .. " media next"), locked_once)
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd(modern .. " media previous"), locked_once)
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(modern .. " brightness up"), locked)

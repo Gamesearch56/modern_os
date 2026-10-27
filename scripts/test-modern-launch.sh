@@ -81,7 +81,8 @@ if [[ -x "$RAISE" ]] \
     && grep -Fq 'bind the needle' "$RAISE" \
     && grep -Fq 'raiseDesktopOrLaunch' "$HYPR_WIN" \
     && grep -Fq 'raiseDesktopOrLaunch' "$LAUNCHER" \
-    && grep -Fq '_addrHypr' "$HYPR_WIN" \
+    && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprAutostart.qml" \
     && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'session-hide.sh' "$MODERN"; then
     ok "launcher raises via session-raise; Super+Q parks via session-hide"

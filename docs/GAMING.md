@@ -24,17 +24,35 @@ sudo sysctl --system
 
 ## File-descriptor limits
 
-Wine also opens many files. systemd user sessions inherit `DefaultLimitNOFILE`
-from `/etc/systemd/system.conf` / `user.conf`. A typical raise:
+Wine also opens many files. A typical Steam soft limit of **9216** is
+too low once Steam starts probing multiple Proton installs
+(`d3ddriverquery64` → prefix upgrades on `compatdata/0`). Symptoms:
+`Too many open files` in the journal, PipeWire `can't splice`, YouTube
+audio dying while scrolling the Steam store.
+
+Shipped (user stow, no root):
 
 ```
-# /etc/security/limits.d/99-modern-gaming.conf  (gated, not shipped)
-* soft nofile 1048576
-* hard nofile 1048576
+stow/systemd/.config/systemd/user.conf.d/99-modern-nofile.conf
+→ ~/.config/systemd/user.conf.d/99-modern-nofile.conf
+DefaultLimitNOFILE=524288:524288
 ```
+
+After stow: `systemctl --user daemon-reexec` (or log out/in), then restart
+Steam. Optional gated `/etc/security/limits.d/` raise remains in
+`docs/GAMING.md` history for machines that do not use systemd --user.
 
 `config.json` → `gaming.systemFixes.fileDescriptorLimits` records the
 preference; it does not write limits files.
+
+### Too many Proton tools
+
+Keep **one** GE build (plus Steam’s Proton Experimental) under
+`~/.local/share/Steam/compatibilitytools.d/`. Extra GE-11-5/11-6/Latest
+and UMU copies make Steam re-run GPU probes and upgrade `compatdata/0`
+on every startup — that alone can spike load averages into the tens and
+starve PipeWire. Park unused tools outside `compatibilitytools.d` (or
+delete them).
 
 ## `kernel.split_lock_mitigate`
 
@@ -46,16 +64,16 @@ buggy userspace, not a free lunch. Default in `config.json` is
 
 ## HDR environment variables
 
-Set per-game (Steam launch options / Battle.net wrapper) or enable
-**Settings → Gaming → HDR for Proton games** (`gaming.hdrSession`).
-That exports the vars below from `env.lua` for the Hyprland session and
-from `scripts/battlenet` for the Proton prefix (so WoW inherits them).
+**Do not export these for the whole Hyprland session** — `ENABLE_HDR_WSI=1`
+on every child (Steam CEF, browsers) causes lag and video crashes.
+`env.lua` intentionally leaves them unset.
 
-Also turn **HDR on for the display** under Settings → Displays (your
-AW2725DF profile already can). Not every title needs Proton Wayland;
-Battle.net stays on XWayland (`PROTON_ENABLE_WAYLAND=0`) so its UI does
-not white-screen. True HDR in-engine still depends on the game offering
-an HDR option.
+Enable **Settings → Gaming → HDR for Proton games** (`gaming.hdrSession`)
+so `scripts/battlenet` exports them into that Proton prefix (WoW/WC3
+inherit them). For Steam titles, paste the same vars into each game’s
+launch options. Also turn **HDR on for the display** under Settings →
+Displays. Battle.net itself stays on XWayland
+(`PROTON_ENABLE_WAYLAND=0`) so its UI does not white-screen.
 
 ```
 DXVK_HDR=1
@@ -64,8 +82,8 @@ PROTON_ENABLE_HDR=1
 # gamescope --hdr-enabled --hdr-debug-force-output -- %command%
 ```
 
-Optional `gaming.protonWayland: true` exports `PROTON_ENABLE_WAYLAND=1`
-session-wide — do not enable that while using Battle.net’s Chromium UI.
+Do not set `gaming.protonWayland` / `PROTON_ENABLE_WAYLAND=1` session-wide
+while using Battle.net’s Chromium UI.
 ## AMD environment presets
 
 These are **not** injected by `scripts/game-profile.sh`. Paste only the
@@ -159,8 +177,10 @@ as the launcher and control panel — instead of bar-anchored popups.
 
 ## Battle.net / World of Warcraft (no Lutris)
 
-Preferred stack: **Steam non-Steam game + GE-Proton + XWayland**, with a
-stowed `.desktop` so Super+Space lists Battle.net. Lutris stays in the
+Preferred stack: **Steam non-Steam game + Proton Experimental (launcher) +
+XWayland**, with a stowed `.desktop` so Super+Space lists Battle.net.
+GE-Proton is fine for *games* launched from the client; the Battle.net
+CEF UI itself often dies on GE 11.x (see below). Lutris stays in the
 gaming manifest for other titles; Battle.net’s Chromium UI under Proton
 Wayland often white-screens on Hyprland.
 
@@ -186,7 +206,9 @@ Raises `vm.max_map_count` and optionally disables split-lock mitigation
 ### Steam install
 
 1. Add the Battle.net installer as a **Non-Steam game**.
-2. Compatibility: **GE-Proton** (latest).
+2. Compatibility: **Proton Experimental** for the launcher (GE-Proton 11.x
+   has been aborting the CEF UI — see below). Use GE on individual games
+   in Steam if needed.
 3. Launch options:
 
    ```
@@ -211,12 +233,26 @@ Raises `vm.max_map_count` and optionally disables split-lock mitigation
 
 `scripts/battlenet` / `modern battlenet` runs that EXE with Proton
 (Experimental preferred; GE if you set `PROTONPATH`) via `umu-run` when
-installed, otherwise Steam’s `proton run`, under GameMode + RADV +
-XWayland. No gamescope or MangoHud by default.
+installed, otherwise Steam’s `proton waitforexitandrun`, under GameMode +
+RADV + XWayland. No gamescope or MangoHud by default.
 
 Optional: `STEAM_APPID` still tries `steam://rungameid/` without wrapping
 the Steam client in GameMode — use only if the EXE path is unavailable.
-Proton Experimental is fine when GE-Proton fails for Battle.net.
+
+**Battle.net UI vs Warcraft III:** do not put GE-Proton 11.x in
+`compatibilitytools.d` just for WC3 — Steam will GPU-probe every tool on
+startup and tank the desktop. Use a **private** runner instead:
+
+1. Copy Proton Experimental to
+   `~/.local/share/modern/proton/Proton-Experimental-WC3`
+2. Transplant GE-Proton11-7 `crypt32.dll` into that copy (see the
+   GE-Proton11-7-crypt32 README:
+   `files/lib/wine/{x86_64,i386}-windows/`).
+3. Set `PROTONPATH` in `~/.config/modern/battlenet.env` to that directory.
+
+Leave Steam’s stock Experimental alone. Park unused GE/UMU tools outside
+`compatibilitytools.d`. Games started from Battle.net inherit this runner
+(and the crypt32 fix); Steam itself never sees it.
 
 ### Hyprland behaviour
 

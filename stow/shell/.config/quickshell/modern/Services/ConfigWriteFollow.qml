@@ -41,6 +41,25 @@ Item {
         followProc.running = true;
     }
 
+    function _abortHang() {
+        if (!followProc.running)
+            return;
+        followProc.running = false;
+        root._q = [];
+        Logger.warn("ConfigWrite", "follow job timed out");
+    }
+
+    // ConfigWrite enqueues from the write's onExited, while `writing` is
+    // still true, so kick() bails there; without this the queue (and the
+    // Settings busy indicator) would wait for an unrelated later write.
+    Connections {
+        target: root.writer
+        function onWritingChanged() {
+            if (!root.writer.writing)
+                root.kick();
+        }
+    }
+
     Timer {
         id: chromeDebounce
         interval: Math.max(Motion.mediumMs, 1)
@@ -51,8 +70,21 @@ Item {
         ])
     }
 
+    Timer {
+        id: followWatch
+        interval: Motion.followWatchMs
+        repeat: false
+        onTriggered: root._abortHang()
+    }
+
     Process {
         id: followProc
+        onRunningChanged: {
+            if (running)
+                followWatch.restart();
+            else
+                followWatch.stop();
+        }
         onExited: root.kick()
     }
 }
