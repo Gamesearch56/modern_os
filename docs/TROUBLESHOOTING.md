@@ -257,6 +257,18 @@ Fails on Commons←Services imports, Modules spawning `Process`/`FileView`,
 hardcoded `#hex` in QML, or keys present in only one of `en.json` /
 `de.json`.
 
+## Browser covers the workspace after a video (Vivaldi / Chromium)
+
+HTML5 video fullscreen, then exit (or click another workspace): Chromium
+sends `set_maximized`, Hyprland treats that as `fullscreen: 1`, and the
+browser fills the monitor over other tiles. Fixed by the default window
+rule `suppress-client-maximize` in `modules/windowrules.lua` (Hyprland
+discussion #13322). Reload Hyprland after updating. Immediate recovery:
+
+```bash
+hyprctl dispatch fullscreenstate 0 0
+```
+
 ## hyprbars / compositor titlebars
 
 This desktop does not ship hyprbars. Move with Super+left drag, resize
