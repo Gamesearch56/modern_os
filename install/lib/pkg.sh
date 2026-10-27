@@ -160,6 +160,14 @@ detect_nvidia_family() {
     printf 'nvidia\n'
 }
 
+# Broadcom PCI wifi that needs the proprietary wl driver: b43 parts need
+# firmware nothing here ships, the rest have no open driver. brcmsmac
+# (4313, 43224/43225) and brcmfmac chips work in-tree and are not listed.
+detect_wifi_wl() {
+    lspci -nn 2>/dev/null \
+        | grep -Eiq 'network controller.*\[14e4:(4311|4312|4315|4328|432b|4331|4358|4359|43a0|43b1)\]'
+}
+
 # Legacy single-token helper (cpu-or-gpu). Prefer detect_cpu + detect_gpu.
 detect_hw() {
     local gpu

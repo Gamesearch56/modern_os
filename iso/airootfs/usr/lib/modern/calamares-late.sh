@@ -26,8 +26,8 @@ log() { _emit "calamares-late: $*"; }
 
 phase="${1:-}"
 case "$phase" in
-    strip|clone|desktop|provision) ;;
-    *) die "usage: calamares-late.sh strip|clone|desktop|provision" ;;
+    strip|biosboot|clone|desktop|provision) ;;
+    *) die "usage: calamares-late.sh strip|biosboot|clone|desktop|provision" ;;
 esac
 
 if [ -n "${MODERN_PROTECT_HOME:-}" ] && [ -d "${MODERN_PROTECT_HOME%/}" ]; then
@@ -427,6 +427,14 @@ as_user() {
 # modern-live-setup.service, which creates the passwordless liveuser that
 # 99-liveuser and the polkit rule hand root to. iwd.service enabled on its
 # own fights NetworkManager, which starts iwd as its own wifi backend.
+#
+# Networking is the live split too: releng runs systemd-networkd for wired
+# and wlan DHCP, and wifi-backend.conf tells NetworkManager to leave
+# Ethernet alone and drive wifi through iwd. Kept on the installed system
+# that hides a cable from Settings > Network, races NM's DHCP on wifi, and
+# stalls boot in networkd-wait-online without one. NetworkManager owns
+# every interface there, on its default wpa_supplicant backend — the one
+# Broadcom wl and older drivers work with.
 LIVE_ONLY_PATHS=(
     etc/mkinitcpio.conf.d/archiso.conf
     etc/mkinitcpio.d/linux.preset
@@ -443,6 +451,13 @@ LIVE_ONLY_PATHS=(
     etc/systemd/system/multi-user.target.wants/pacman-init.service
     etc/systemd/system/multi-user.target.wants/iwd.service
     etc/systemd/system/multi-user.target.wants/sshd.service
+    etc/systemd/system/multi-user.target.wants/systemd-networkd.service
+    etc/systemd/system/sockets.target.wants/systemd-networkd.socket
+    etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service
+    etc/systemd/network/20-ethernet.network
+    etc/systemd/network/20-wlan.network
+    etc/systemd/network/20-wwan.network
+    etc/NetworkManager/conf.d/wifi-backend.conf
     etc/systemd/system/greetd.service.wants/modern-live-i18n.service
     etc/systemd/system/greetd.service.wants/modern-live-setup.service
     usr/lib/systemd/system/modern-live-i18n.service
@@ -491,6 +506,46 @@ phase_strip() {
     local drop="${MODERN_LATE_STRIP_ROOT:-}/etc/mkinitcpio.conf.d/archiso.conf"
     [ ! -e "$drop" ] || die "$drop survived; the target would boot to a rescue shell"
     log "live-only files removed"
+}
+
+# UEFI installs get kernel and initramfs from systemd-boot's kernel-install.
+# On BIOS the bootloader job runs grub-install + grub-mkconfig instead, and
+# grub-mkconfig only finds /boot/vmlinuz-*. mkarchiso empties /boot in the
+# squashfs, so without this GRUB is written with no menu entry at all.
+phase_biosboot() {
+    local efi="${MODERN_LATE_EFI_DIR:-/sys/firmware/efi}"
+    local root="${MODERN_LATE_STRIP_ROOT:-}"
+    if [ -d "$efi" ]; then
+        log "UEFI firmware — systemd-boot installs the kernel"
+        return 0
+    fi
+    local d kver=""
+    for d in "$root"/usr/lib/modules/*/; do
+        if [ "$(cat "$d/pkgbase" 2>/dev/null)" = linux-zen ] && [ -f "$d/vmlinuz" ]; then
+            kver="$(basename "$d")"
+            break
+        fi
+    done
+    [ -n "$kver" ] || die "no linux-zen kernel under /usr/lib/modules"
+    log "BIOS firmware — installing linux-zen $kver to /boot for GRUB"
+    install -D -m 0644 "$root/usr/lib/modules/$kver/vmlinuz" "$root/boot/vmlinuz-linux-zen"
+    # Kernel updates run `mkinitcpio -p linux-zen`; without ALL_kver that
+    # builds against the running kernel instead of the one just installed.
+    local preset="$root/etc/mkinitcpio.d/linux-zen.preset"
+    if [ -f "$preset" ] && ! grep -q '^ALL_kver=' "$preset"; then
+        printf 'ALL_kver="/boot/vmlinuz-linux-zen"\n' >>"$preset"
+    fi
+    if [ -n "${MODERN_LATE_TEST:-}" ]; then
+        return 0
+    fi
+    local out
+    out="$(mktemp)" || die "mktemp mkinitcpio log failed"
+    if ! mkinitcpio -k "$kver" -g /boot/initramfs-linux-zen.img >"$out" 2>&1 \
+        || ! mkinitcpio -k "$kver" -S autodetect -g /boot/initramfs-linux-zen-fallback.img >>"$out" 2>&1; then
+        die "mkinitcpio for $kver failed: $(tail -n 20 "$out" | tr '\n' ' ')"
+    fi
+    rm -f "$out"
+    log "initramfs for $kver written"
 }
 
 phase_clone() {
@@ -596,6 +651,7 @@ phase_provision() {
 
 case "$phase" in
     strip) phase_strip ;;
+    biosboot) phase_biosboot ;;
     clone) phase_clone ;;
     desktop) phase_desktop ;;
     provision) phase_provision ;;

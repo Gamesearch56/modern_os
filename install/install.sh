@@ -171,8 +171,14 @@ hw_gpu="$MANIFEST_DIR/00-hw-gpu-${GPU_FAMILY}.txt"
 if [ -f "$hw_gpu" ]; then
     mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_gpu")
 fi
+if detect_wifi_wl; then
+    log_info "Broadcom wifi needs the wl driver"
+    mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$MANIFEST_DIR/00-hw-wifi-broadcom-wl.txt")
+fi
 if [ "$PROFILE" = "gaming" ] || [ "$PROFILE" = "full" ]; then
-    hw_game="$MANIFEST_DIR/50-hw-${HW}.txt"
+    # GPU_FAMILY, not HW: 50-hw-nvidia's lib32-nvidia-utils would pull
+    # nvidia-utils onto a nouveau (nvidia-legacy) machine.
+    hw_game="$MANIFEST_DIR/50-hw-${GPU_FAMILY}.txt"
     if [ -f "$hw_game" ]; then
         mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_game")
     fi

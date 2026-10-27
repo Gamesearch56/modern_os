@@ -182,9 +182,13 @@ if command -v loginctl >/dev/null 2>&1; then
 fi
 
 gpu="$(lspci 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /VGA compatible controller|3D controller/{print; exit}')"
-if printf '%s' "$gpu" | grep -qi nvidia; then
+# Pre-Turing cards run nouveau (00-hw-gpu-nvidia-legacy): putting nvidia
+# modules in MODULES there fails mkinitcpio and this whole provision.
+if printf '%s' "$gpu" | grep -qi nvidia && pacman -Q nvidia-utils >/dev/null 2>&1; then
     log "NVIDIA GPU — applying modeset and initramfs modules"
     nvidia_apply /
+elif printf '%s' "$gpu" | grep -qi nvidia; then
+    log "NVIDIA GPU on nouveau — skipping NVIDIA drop-ins"
 else
     log "non-NVIDIA GPU — skipping NVIDIA drop-ins"
 fi

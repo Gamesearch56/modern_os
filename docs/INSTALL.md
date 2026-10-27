@@ -118,8 +118,11 @@ works. Root cannot be a Wayland client of liveuser's compositor, and a
 root compositor never painted in QEMU. `locale-gen` runs beside greetd,
 not before it. `iso-qemu.sh` boots OVMF (install `edk2-ovmf`) and writes
 guest serial to `iso/out/vm-serial.log`. `--headless` drops GTK/GL so
-you can wait on that serial without a display. BIOS QEMU makes
-Calamares try GRUB, which this image does not ship.
+you can wait on that serial without a display. BIOS/CSM firmware takes
+Calamares' GRUB path: an msdos table, then `shellprocess@biosboot` puts
+`vmlinuz-linux-zen` and both initramfs images in `/boot` before
+`grub-mkconfig` runs. `iso-qemu.sh` only boots UEFI, so that path is
+covered by `test-calamares-late.sh`, not a VM run.
 `--unattended` sets QEMU fw_cfg `opt/org.modernos/unattended`; the live
 wrapper writes `/etc/calamares/unattended` so Calamares auto-advances
 and fills user `modern` / password `modern`. `scripts/test-iso-qemu-install.sh`
@@ -434,6 +437,30 @@ The logo is `iso/airootfs/etc/calamares/branding/modern/logo.png`.
 
 Settings → Update later tracks the latest GitHub **release tag**, not
 `dev` or the tip of `main`.
+
+### Real hardware (laptops)
+
+A VM has virtio Ethernet, no radio and UEFI. A laptop differs here:
+
+- **Secure Boot off.** The ISO and the installed systemd-boot/GRUB are
+  unsigned. Prefer UEFI mode; Legacy/CSM works through the GRUB path.
+- **Network during install is required** — the desktop phase downloads
+  packages. Wi-Fi in the Network step goes through NetworkManager.
+  Broadcom chips that need `wl` (BCM4311/4312/4321/4322/43227/43228/
+  4331/4352/4360) have no driver on the live ISO; use Ethernet or USB
+  tethering from a phone (it shows up as a wired NIC). `install.sh`
+  detects the chip and installs `broadcom-wl-dkms`, so Wi-Fi works after
+  the first boot.
+- **Installed networking** is NetworkManager alone (default
+  wpa_supplicant backend) for wired and Wi-Fi; the live image's
+  systemd-networkd and iwd split is stripped. The Wi-Fi joined in the
+  installer is copied over by `networkcfg`.
+- **GPU.** Turing and newer NVIDIA get `nvidia-open-dkms`. Older NVIDIA
+  (Kepler … Volta, e.g. GeForce MX150/GTX 10xx) runs nouveau — the
+  proprietary branch for them is no longer in the repos. Intel gets both
+  VA-API drivers so pre-Broadwell iGPUs decode video too.
+- **Failure:** the error dialog shows the tail of the failed step; the
+  full log is `/var/log/modern-calamares-late.log` on the target.
 
 ## After stow (on the **target** user)
 

@@ -1,0 +1,3 @@
+# Broadcom chips the open drivers cannot run without extra firmware
+# (b43) or at all. Built against linux-zen-headers from 00-base.
+broadcom-wl-dkms

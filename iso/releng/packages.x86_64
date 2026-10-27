@@ -25,6 +25,8 @@ ntfs-3g
 gptfdisk
 parted
 efibootmgr
+# BIOS/CSM laptops: Calamares' bootloader job takes the GRUB path there.
+grub
 cryptsetup
 lvm2
 networkmanager

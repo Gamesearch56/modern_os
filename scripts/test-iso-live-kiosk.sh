@@ -508,7 +508,7 @@ else
     err "settings.conf must run shellprocess@lateclone/desktop/provision"
 fi
 
-if grep -F 'usage: calamares-late.sh strip|clone|desktop|provision' "$LATE" >/dev/null \
+if grep -F 'usage: calamares-late.sh strip|biosboot|clone|desktop|provision' "$LATE" >/dev/null \
     && grep -F 'timeout 180' "$LATE" >/dev/null \
     && grep -F 'GIT_HTTP_LOW_SPEED_LIMIT' "$LATE" >/dev/null \
     && grep -F '/var/log/modern-calamares-late.log' "$LATE" >/dev/null \
@@ -810,6 +810,10 @@ for earlier, later in (
     ("users", "shellprocess@striplive"),
     ("shellprocess@striplive", "initcpiocfg"),
     ("initcpiocfg", "bootloader"),
+    # biosboot runs mkinitcpio with initcpiocfg's HOOKS and must leave
+    # /boot/vmlinuz-* for the bootloader job's grub-mkconfig.
+    ("initcpiocfg", "shellprocess@biosboot"),
+    ("shellprocess@biosboot", "bootloader"),
     ("shellprocess@striplive", "shellprocess@lateclone"),
 ):
     assert earlier in order, f"{earlier} missing from the sequence"

@@ -284,6 +284,9 @@ run_late() {
     if [ -n "${MODERN_LATE_STRIP_ROOT:-}" ]; then
         extra+=(MODERN_LATE_STRIP_ROOT="$MODERN_LATE_STRIP_ROOT")
     fi
+    if [ -n "${MODERN_LATE_EFI_DIR:-}" ]; then
+        extra+=(MODERN_LATE_EFI_DIR="$MODERN_LATE_EFI_DIR")
+    fi
     env -u MODERN_PROTECT_HOME \
         MODERN_LATE_TEST=1 \
         MODERN_LATE_LOG="$WORKDIR/late.log" \
@@ -502,6 +505,11 @@ strip_gone=(
     etc/polkit-1/rules.d/49-modern-liveuser.rules
     etc/calamares/settings.conf
     root/.zlogin
+    etc/systemd/system/multi-user.target.wants/systemd-networkd.service
+    etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service
+    etc/systemd/network/20-ethernet.network
+    etc/systemd/network/20-wlan.network
+    etc/NetworkManager/conf.d/wifi-backend.conf
 )
 strip_kept=(
     etc/mkinitcpio.d/linux-zen.preset
@@ -535,6 +543,30 @@ if out="$(MODERN_LATE_STRIP_ROOT="$STRIPROOT" run_late strip 2>&1)"; then
     fi
 else
     err "strip phase failed: $out"
+fi
+
+# BIOS: grub-mkconfig only finds /boot/vmlinuz-*, which mkarchiso removed.
+BIOSROOT="$WORKDIR/bios"
+mkdir -p "$BIOSROOT/usr/lib/modules/6.99.0-zen1-1-zen" "$BIOSROOT/etc/mkinitcpio.d"
+printf 'linux-zen\n' >"$BIOSROOT/usr/lib/modules/6.99.0-zen1-1-zen/pkgbase"
+printf 'kernel\n' >"$BIOSROOT/usr/lib/modules/6.99.0-zen1-1-zen/vmlinuz"
+printf "PRESETS=('default' 'fallback')\n" >"$BIOSROOT/etc/mkinitcpio.d/linux-zen.preset"
+if MODERN_LATE_STRIP_ROOT="$BIOSROOT" MODERN_LATE_EFI_DIR="$WORKDIR/no-efi" run_late biosboot >/dev/null 2>&1 \
+    && [ -f "$BIOSROOT/boot/vmlinuz-linux-zen" ] \
+    && grep -qF 'ALL_kver="/boot/vmlinuz-linux-zen"' "$BIOSROOT/etc/mkinitcpio.d/linux-zen.preset"; then
+    ok "biosboot puts linux-zen in /boot and pins ALL_kver on BIOS"
+else
+    err "biosboot must copy vmlinuz to /boot and add ALL_kver without UEFI"
+fi
+EFIROOT="$WORKDIR/efi"
+mkdir -p "$EFIROOT/usr/lib/modules/6.99.0-zen1-1-zen" "$WORKDIR/efi-fw"
+printf 'linux-zen\n' >"$EFIROOT/usr/lib/modules/6.99.0-zen1-1-zen/pkgbase"
+printf 'kernel\n' >"$EFIROOT/usr/lib/modules/6.99.0-zen1-1-zen/vmlinuz"
+if MODERN_LATE_STRIP_ROOT="$EFIROOT" MODERN_LATE_EFI_DIR="$WORKDIR/efi-fw" run_late biosboot >/dev/null 2>&1 \
+    && [ ! -e "$EFIROOT/boot/vmlinuz-linux-zen" ]; then
+    ok "biosboot leaves UEFI installs to systemd-boot"
+else
+    err "biosboot must not touch /boot on UEFI"
 fi
 
 [ "$FAIL" -eq 0 ]
