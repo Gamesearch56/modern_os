@@ -1,10 +1,7 @@
 # Gaming layer (M4/M6). Only `gaming` and `full` profiles.
-steam                    # primary game platform
-gamescope                 # micro-compositor for per-game resolution/upscaling/HDR
 lib32-mesa                # 32-bit Mesa for Proton/older titles
 protontricks               # winetricks helpers scoped to individual Proton prefixes
 proton-vpn-gtk-app         # Proton VPN GUI client (Services/Vpn talks to its NM connection)
 mangohud                   # in-game performance overlay, used by game profiles (docs/GAMING.md)
-gamemode                   # CPU governor while a game runs — started from autostart.lua
 lib32-gamemode             # 32-bit GameMode hook for older titles
 umu-launcher               # Proton outside Steam (Battle.net umu-run / GE-Proton via umu)

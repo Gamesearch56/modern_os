@@ -168,8 +168,9 @@ ensure_pacman_db() {
     elif ! grep -qE '^[[:space:]]*IgnorePkg[[:space:]]*=.*jack2' "$conf"; then
         sed -i -E 's/^(IgnorePkg[[:space:]]*=[[:space:]]*)/\1jack2 jack2-dbus lib32-jack2 /' "$conf"
     fi
-    # 50-gaming has lib32-gamemode; stock pacman.conf comments
-    # [multilib] out, so pacman -S dies with target not found.
+    # steam (30-apps) and lib32-gamemode (50-gaming) need multilib.
+    # Stock pacman.conf comments [multilib] out, so pacman -S dies
+    # with target not found.
     if ! grep -qE '^[[:space:]]*\[multilib\]' "$conf"; then
         printf '\n[multilib]\nInclude = /etc/pacman.d/mirrorlist\n' >>"$conf"
     fi
