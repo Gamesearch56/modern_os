@@ -71,5 +71,7 @@ log "snapper setup"
 "$ROOT/scripts/test-snapper-setup.sh"
 log "update apply"
 "$ROOT/scripts/test-update-apply.sh"
+log "wifi join"
+"$ROOT/scripts/test-wifi-join.sh"
 
 log "ok"

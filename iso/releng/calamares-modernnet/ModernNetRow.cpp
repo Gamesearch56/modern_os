@@ -39,6 +39,10 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     {
         status = tr( "Connected" );
     }
+    else if ( wifi.known )
+    {
+        status = tr( "Saved" );
+    }
     else if ( wifi.locked )
     {
         status = tr( "Password required" );
@@ -54,12 +58,26 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     col->addWidget( sub );
     row->addLayout( col, 1 );
 
-    if ( !wifi.inUse )
+    if ( wifi.inUse )
     {
-        auto* btn = new QPushButton( tr( "Connect" ) );
-        btn->setObjectName( QStringLiteral( "networkRowConnect" ) );
+        auto* btn = new QPushButton( tr( "Disconnect" ) );
+        btn->setObjectName( QStringLiteral( "networkRowDisconnect" ) );
         btn->setCursor( Qt::PointingHandCursor );
-        connect( btn, &QPushButton::clicked, this, &ModernNetRow::connectClicked );
+        connect( btn, &QPushButton::clicked, this, &ModernNetRow::disconnectClicked );
         row->addWidget( btn, 0, Qt::AlignVCenter );
+        return;
     }
+    if ( wifi.known )
+    {
+        auto* forget = new QPushButton( tr( "Forget" ) );
+        forget->setObjectName( QStringLiteral( "networkRowForget" ) );
+        forget->setCursor( Qt::PointingHandCursor );
+        connect( forget, &QPushButton::clicked, this, &ModernNetRow::forgetClicked );
+        row->addWidget( forget, 0, Qt::AlignVCenter );
+    }
+    auto* btn = new QPushButton( tr( "Connect" ) );
+    btn->setObjectName( QStringLiteral( "networkRowConnect" ) );
+    btn->setCursor( Qt::PointingHandCursor );
+    connect( btn, &QPushButton::clicked, this, &ModernNetRow::connectClicked );
+    row->addWidget( btn, 0, Qt::AlignVCenter );
 }

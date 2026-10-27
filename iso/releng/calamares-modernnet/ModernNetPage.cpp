@@ -51,6 +51,12 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     ok->addWidget( m_okTitle );
     ok->addSpacing( 8 );
     ok->addWidget( m_okHint );
+    ok->addSpacing( 16 );
+    m_changeWifi = new QPushButton( tr( "Choose another network" ) );
+    m_changeWifi->setObjectName( QStringLiteral( "networkChangeWifi" ) );
+    m_changeWifi->hide();
+    connect( m_changeWifi, &QPushButton::clicked, this, &ModernNetPage::changeWifi );
+    ok->addWidget( m_changeWifi, 0, Qt::AlignHCenter );
     ok->addStretch( 1 );
     m_stack->addWidget( m_okPage );
 
@@ -110,7 +116,6 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     m_list->setObjectName( QStringLiteral( "wifiList" ) );
     m_list->setSelectionMode( QAbstractItemView::SingleSelection );
     m_list->setSpacing( 4 );
-    connect( m_list, &QListWidget::itemClicked, this, &ModernNetPage::rowClicked );
     wifi->addWidget( m_list, 1 );
 
     m_passCard = new QWidget;
@@ -211,8 +216,15 @@ ModernNetPage::showOkPage()
     m_okTitle->setText( eth ? tr( "You're connected with Ethernet" )
                             : tr( "You're connected with Wi-Fi" ) );
     m_okHint->setText( tr( "You can continue to the next step." ) );
+    m_changeWifi->setVisible( m_nm->wifiUp() && !m_nm->ethernetUp() );
     showPassword( false );
     m_stack->setCurrentWidget( m_okPage );
+}
+
+void
+ModernNetPage::changeWifi()
+{
+    m_nm->disconnectWifi();
 }
 
 void
@@ -306,6 +318,12 @@ ModernNetPage::fillWifi()
             selectSsid( ssid );
             connectWifi();
         } );
+        connect( row, &ModernNetRow::forgetClicked, this, [ this, ssid = w.ssid ]() {
+            m_nm->forgetSsid( ssid );
+        } );
+        connect( row, &ModernNetRow::disconnectClicked, this, [ this ]() {
+            m_nm->disconnectWifi();
+        } );
         item->setSizeHint( row->sizeHint() );
         m_list->addItem( item );
         m_list->setItemWidget( item, row );
@@ -337,12 +355,6 @@ ModernNetPage::showPassword( bool on )
         m_password->clear();
         m_passTitle->clear();
     }
-}
-
-void
-ModernNetPage::rowClicked()
-{
-    connectWifi();
 }
 
 void

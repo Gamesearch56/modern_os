@@ -783,6 +783,41 @@ MODERNNET_TS = """
       <source>Could not connect. Check the password.</source>
       <translation>Verbinden fehlgeschlagen. Passwort prüfen.</translation>
     </message>
+    <message>
+      <source>Choose another network</source>
+      <translation>Anderes Netzwerk wählen</translation>
+    </message>
+  </context>
+  <context>
+    <name>ModernNetRow</name>
+    <message>
+      <source>Connected</source>
+      <translation>Verbunden</translation>
+    </message>
+    <message>
+      <source>Saved</source>
+      <translation>Gespeichert</translation>
+    </message>
+    <message>
+      <source>Password required</source>
+      <translation>Passwort erforderlich</translation>
+    </message>
+    <message>
+      <source>Open network</source>
+      <translation>Offenes Netzwerk</translation>
+    </message>
+    <message>
+      <source>Connect</source>
+      <translation>Verbinden</translation>
+    </message>
+    <message>
+      <source>Forget</source>
+      <translation>Vergessen</translation>
+    </message>
+    <message>
+      <source>Disconnect</source>
+      <translation>Trennen</translation>
+    </message>
   </context>
 """
 

@@ -2,8 +2,10 @@
 #define MODERNNETNM_H
 
 #include <QObject>
+#include <QPair>
 #include <QSet>
 #include <QString>
+#include <QStringList>
 #include <QVector>
 
 class QProcess;
@@ -38,6 +40,8 @@ public:
     void scan();
     void setWifiRadio( bool on );
     void connectSsid( const QString& ssid, const QString& password );
+    void forgetSsid( const QString& ssid );
+    void disconnectWifi();
 
 signals:
     void changed();
@@ -46,7 +50,9 @@ signals:
 private:
     static QStringList splitNmcli( const QString& line );
     static QString run( const QString& bin, const QStringList& args, int timeoutMs = 8000 );
+    QVector< QPair< QString, QString > > wirelessProfiles() const;
     QSet< QString > knownWifi() const;
+    QStringList uuidsForSsid( const QString& ssid ) const;
     void loadWifi( const QSet< QString >& known );
 
     bool m_ethernetUp = false;
@@ -57,6 +63,8 @@ private:
     bool m_connecting = false;
     QString m_ethernetAddr;
     QString m_wifiSsid;
+    QString m_joinSsid;
+    QString m_joinPassword;
     QVector< Wifi > m_networks;
     QProcess* m_scan = nullptr;
     QProcess* m_join = nullptr;

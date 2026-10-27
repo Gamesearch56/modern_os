@@ -28,8 +28,8 @@ signals:
 
 private slots:
     void syncUi();
-    void rowClicked();
     void connectWifi();
+    void changeWifi();
     void onConnectFinished( bool ok );
 
 private:
@@ -49,6 +49,7 @@ private:
     QLabel* m_okBadge = nullptr;
     QLabel* m_okTitle = nullptr;
     QLabel* m_okHint = nullptr;
+    QPushButton* m_changeWifi = nullptr;
     QLabel* m_ethStatus = nullptr;
     QLabel* m_ethAddr = nullptr;
     QProgressBar* m_scanBar = nullptr;

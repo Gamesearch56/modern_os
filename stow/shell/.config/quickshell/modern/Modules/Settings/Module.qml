@@ -244,20 +244,6 @@ Scope {
                 source: Qt.resolvedUrl("sections/system/UpdateOverlay.qml")
             }
 
-            Loader {
-                anchors.fill: card
-                z: 22
-                active: Settings.sectionId === "network" && sectionLoader.item
-                    && !!sectionLoader.item.passwordOpen
-                source: Qt.resolvedUrl("sections/network/PasswordOverlay.qml")
-                onLoaded: {
-                    item.net = Qt.binding(() => sectionLoader.item ? sectionLoader.item.pendingNet : null);
-                    item.closed.connect(() => {
-                        if (sectionLoader.item)
-                            sectionLoader.item.pendingNet = null;
-                    });
-                }
-            }
         }
     }
 }

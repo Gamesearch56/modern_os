@@ -6,6 +6,8 @@ HyprAutostart 1.0 HyprAutostart.qml
 HyprRaise 1.0 HyprRaise.qml
 singleton MonitorCaps 1.0 MonitorCaps.qml
 singleton Network 1.0 Network.qml
+NetworkJoin 1.0 NetworkJoin.qml
+NetworkSpeed 1.0 NetworkSpeed.qml
 singleton Bluetooth 1.0 Bluetooth.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml

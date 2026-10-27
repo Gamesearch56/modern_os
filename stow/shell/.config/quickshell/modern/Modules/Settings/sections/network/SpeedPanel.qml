@@ -6,7 +6,7 @@ import "../../../../Services"
 
 ColumnLayout {
     id: root
-    spacing: Tokens.spacing.xl
+    spacing: Tokens.spacing.sm
 
     readonly property var stats: {
         void Network.speedMbps;
