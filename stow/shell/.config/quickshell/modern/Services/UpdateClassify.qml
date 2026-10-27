@@ -40,7 +40,8 @@ QtObject {
             root.stem(defs.fileManager),
             root.stem(defs.terminal),
             root.stem(defs.videoPlayer),
-            root.stem(defs.imageViewer)
+            root.stem(defs.imageViewer),
+            root.stem(defs.textEditor)
         ];
         for (let i = 0; i < stems.length; i++) {
             if (stems[i].length && (n === stems[i] || n.indexOf(stems[i] + "-") === 0))

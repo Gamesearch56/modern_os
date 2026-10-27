@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Write XDG default apps for video/image/folders/mailto into mimeapps.list so
+# Write XDG default apps for video/image/text/folders/mailto into mimeapps.list so
 # Nautilus/Dolphin and xdg-open follow Settings → Applications. Settings
 # itself never touches this file; ConfigWrite runs this after
 # apps.defaults changes. Folders are set explicitly: kitty-open.desktop
@@ -8,23 +8,24 @@
 #
 # Usage:
 #   mime-defaults.sh
-#   mime-defaults.sh --video mpv.desktop --image imv.desktop --files org.gnome.Nautilus.desktop --mail proton-mail.desktop
+#   mime-defaults.sh --video mpv.desktop --image imv.desktop --text org.gnome.gedit.desktop --files org.gnome.Nautilus.desktop --mail proton-mail.desktop
 #
 # Desktop ids default to config.json apps.defaults.videoPlayer /
-# imageViewer / fileManager / mail. Video/image MIME types come from each
-# app's .desktop MimeType= line.
+# imageViewer / textEditor / fileManager / mail. Video/image MIME types come
+# from each app's .desktop MimeType= line; text also pins TEXT_TYPES.
 set -euo pipefail
 
 CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
 MIMEAPPS="${XDG_CONFIG_HOME:-$HOME/.config}/mimeapps.list"
 VIDEO_ID=""
 IMAGE_ID=""
+TEXT_ID=""
 FILES_ID=""
 MAIL_ID=""
 
 usage() {
     cat <<'EOF'
-Usage: mime-defaults.sh [--video DESKTOP] [--image DESKTOP] [--files DESKTOP] [--mail DESKTOP] [--config PATH] [--mimeapps PATH]
+Usage: mime-defaults.sh [--video DESKTOP] [--image DESKTOP] [--text DESKTOP] [--files DESKTOP] [--mail DESKTOP] [--config PATH] [--mimeapps PATH]
 EOF
 }
 
@@ -32,6 +33,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --video) VIDEO_ID="${2:-}"; shift 2 ;;
         --image) IMAGE_ID="${2:-}"; shift 2 ;;
+        --text) TEXT_ID="${2:-}"; shift 2 ;;
         --files) FILES_ID="${2:-}"; shift 2 ;;
         --mail) MAIL_ID="${2:-}"; shift 2 ;;
         --config) CONFIG="${2:-}"; shift 2 ;;
@@ -79,13 +81,16 @@ mime_types() {
 
 [ -n "$VIDEO_ID" ] || VIDEO_ID="$(from_config videoPlayer)"
 [ -n "$IMAGE_ID" ] || IMAGE_ID="$(from_config imageViewer)"
+[ -n "$TEXT_ID" ] || TEXT_ID="$(from_config textEditor)"
 [ -n "$FILES_ID" ] || FILES_ID="$(from_config fileManager)"
 [ -n "$MAIL_ID" ] || MAIL_ID="$(from_config mail)"
 [ -n "$VIDEO_ID" ] || VIDEO_ID="mpv.desktop"
 [ -n "$IMAGE_ID" ] || IMAGE_ID="imv.desktop"
+[ -n "$TEXT_ID" ] || TEXT_ID="org.gnome.gedit.desktop"
 [ -n "$FILES_ID" ] || FILES_ID="org.gnome.Nautilus.desktop"
 VIDEO_ID="$(desktop_id "$VIDEO_ID")"
 IMAGE_ID="$(desktop_id "$IMAGE_ID")"
+TEXT_ID="$(desktop_id "$TEXT_ID")"
 FILES_ID="$(desktop_id "$FILES_ID")"
 MAIL_ID="$(desktop_id "$MAIL_ID")"
 
@@ -106,6 +111,27 @@ add_role() {
     while IFS= read -r t; do
         pairs="${pairs}${t}=${id}"$'\n'
     done <<< "$types"
+}
+
+# Editors list text/plain only, so Nautilus would hand scripts, configs
+# and source files to whatever claims them first (often a browser).
+TEXT_TYPES="text/plain text/markdown text/x-log text/csv text/css text/x-readme
+text/x-python text/x-csrc text/x-chdr text/x-c++src text/x-c++hdr text/x-lua
+text/x-java text/x-rust text/x-go text/x-makefile text/x-cmake text/x-patch
+text/x-diff text/x-sql application/x-shellscript application/json
+application/xml application/x-yaml application/toml application/x-desktop
+application/x-zerosize"
+
+add_text_role() {
+    local id="$1" t
+    [ -n "$id" ] || return 0
+    if ! desktop_file "$id" >/dev/null; then
+        echo "mime-defaults: no desktop file for $id" >&2
+        return 0
+    fi
+    for t in $TEXT_TYPES; do
+        pairs="${pairs}${t}=${id}"$'\n'
+    done
 }
 
 # Do not take MimeType= from the file manager: kitty-open.desktop also
@@ -135,6 +161,7 @@ add_mail_role() {
 
 add_role "$VIDEO_ID"
 add_role "$IMAGE_ID"
+add_text_role "$TEXT_ID"
 add_folder_role "$FILES_ID"
 add_mail_role "$MAIL_ID"
 

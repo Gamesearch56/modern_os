@@ -20,11 +20,11 @@ MListItem {
     tintIcon: root._themeIcon
     preferSymbolic: root._themeIcon
     hoverHighlight: false
-    titleValue: root._name
-    subtitleValue: String(pkg && pkg.desc || "")
+    titleValue: Store.titleFor(root._name)
+    subtitleValue: Store.descFor(root._name, String(pkg && pkg.desc || ""))
 
     MButton {
-        visible: root.removable
+        visible: root.removable && !(root._on && Store.isSystem(root._name))
         kind: root._on ? "destructive" : "filled"
         key: root._on ? "store.remove" : "store.install"
         enabled: Store.mutating.length === 0

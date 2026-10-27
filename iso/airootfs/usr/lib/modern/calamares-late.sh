@@ -500,6 +500,42 @@ EOF
     fi
 }
 
+# Installer and kiosk packages from packages.x86_64 that unpackfs copied
+# as explicit installs. Runs last: provision-iso.sh and install.sh still
+# use pacman's db in this chroot, not these binaries. If something outside
+# the set depends on one name, the set fails as a whole; then each name
+# goes on its own so only the depended-on one stays.
+LIVE_ONLY_PKGS=(
+    calamares kcrash cage openbox firefox xorg-xhost xorg-setxkbmap
+    syslinux mkinitcpio-archiso squashfs-tools nano
+)
+
+live_only_removable() {
+    local efi="${MODERN_LATE_EFI_DIR:-/sys/firmware/efi}"
+    local p
+    for p in "${LIVE_ONLY_PKGS[@]}"; do
+        printf '%s\n' "$p"
+    done
+    # systemd-boot owns UEFI installs; GRUB is the BIOS bootloader only.
+    [ -d "$efi" ] && printf 'grub\n'
+    return 0
+}
+
+strip_live_packages() {
+    local p pkgs=() kept=()
+    while IFS= read -r p; do
+        pacman -Q "$p" >/dev/null 2>&1 && pkgs+=("$p")
+    done < <(live_only_removable)
+    [ ${#pkgs[@]} -gt 0 ] || return 0
+    log "removing live-only packages: ${pkgs[*]}"
+    pacman --disable-sandbox -Rns --noconfirm "${pkgs[@]}" >/dev/null 2>&1 && return 0
+    for p in "${pkgs[@]}"; do
+        pacman -Q "$p" >/dev/null 2>&1 || continue
+        pacman --disable-sandbox -Rns --noconfirm "$p" >/dev/null 2>&1 || kept+=("$p")
+    done
+    [ ${#kept[@]} -eq 0 ] || log "kept (still a dependency): ${kept[*]}"
+}
+
 phase_strip() {
     log "removing the live-only files unpackfs copied into the target"
     strip_live
@@ -646,6 +682,7 @@ phase_provision() {
     log "provisioning greetd and NetworkManager"
     bash "$REPO/install/system/provision-iso.sh" "$USERNAME" \
         || die "provision-iso.sh failed"
+    [ -n "${MODERN_LATE_TEST:-}" ] || strip_live_packages
     log "late install finished for $USERNAME at $PIN"
 }
 

@@ -569,4 +569,24 @@ else
     err "biosboot must not touch /boot on UEFI"
 fi
 
+# Live-only packages: every name is on the ISO, none is a desktop manifest.
+live_pkgs="$(sed -n '/^LIVE_ONLY_PKGS=(/,/^)/p' "$LATE" | sed '1d;$d' | tr ' ' '\n' | sed '/^$/d')"
+manifest_names="$("$ROOT/scripts/pkg-manifest-names.sh")"
+bad=""
+for p in $live_pkgs; do
+    grep -qx "$p" "$ROOT/iso/releng/packages.x86_64" || bad="$bad $p(not-on-iso)"
+    echo "$manifest_names" | jq -e --arg n "$p" 'index($n) != null' >/dev/null && bad="$bad $p(in-manifest)"
+done
+if [ -n "$live_pkgs" ] && [ -z "$bad" ]; then
+    ok "live-only packages are ISO-only and not shipped by install.sh"
+else
+    err "LIVE_ONLY_PKGS mismatch:${bad:- empty list}"
+fi
+if grep -qF 'strip_live_packages' "$LATE" \
+    && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'strip_live_packages'; then
+    ok "provision phase removes the live-only packages last"
+else
+    err "phase_provision must call strip_live_packages"
+fi
+
 [ "$FAIL" -eq 0 ]

@@ -16,7 +16,8 @@ protected_pkg() {
         pacman | pacman-mirrorlist | archlinux-keyring | glibc | gcc-libs | \
         filesystem | linux | linux-lts | linux-zen | linux-firmware | \
         systemd | systemd-libs | dbus | util-linux | coreutils | bash | \
-        shadow | sudo | polkit | base | hyprland | quickshell)
+        shadow | sudo | polkit | base | hyprland | quickshell | \
+        grub | lvm2 | cryptsetup)
             return 0
             ;;
     esac

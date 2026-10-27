@@ -172,6 +172,7 @@ Singleton {
                     property string fileManager: "org.gnome.Nautilus.desktop"
                     property string videoPlayer: "mpv.desktop"
                     property string imageViewer: "imv.desktop"
+                    property string textEditor: "org.gnome.gedit.desktop"
                     property string terminal: "kitty.desktop"
                 }
             }

@@ -40,6 +40,7 @@ Singleton {
 
     StoreClassify {
         id: classify
+        core: true
         onShippedReadyChanged: {
             if (classify.shippedReady && root.open)
                 root.reload();
@@ -171,6 +172,9 @@ Singleton {
         return classify.isSystem(name);
     }
 
+    function titleFor(name: string): string { return catalog.title(name); }
+    function descFor(name: string, fallback: string): string { return catalog.desc(name, fallback); }
+
     function _valid(name: string): bool {
         return mutate.validName(name);
     }
@@ -201,7 +205,8 @@ Singleton {
             root.reload();
             return;
         }
-        root._start([Paths.script("pkg-search.sh"), q], "search");
+        const curated = catalog.search(q).filter((n) => root._valid(n));
+        root._start([Paths.script("pkg-search.sh"), q].concat(curated), "search");
     }
 
     function _start(cmd, mode: string) {

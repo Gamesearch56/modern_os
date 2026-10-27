@@ -13,7 +13,10 @@ Item {
     property var popular: []
     property var categories: []
     property var icons: ({})
+    property var apps: ({})
     readonly property int shelfSize: 6
+    readonly property int popularSize: 9
+    readonly property int searchCap: 30
     signal loaded()
 
     FileView {
@@ -86,7 +89,7 @@ Item {
 
     function discoverLayout() {
         const out = [];
-        const pop = root._take(root.popular, root.shelfSize);
+        const pop = root._take(root.popular, root.popularSize);
         if (pop.length)
             out.push({ id: "popular", names: pop });
         const cats = root.categories || [];
@@ -180,11 +183,64 @@ Item {
                 ? data.categories
                 : root._fallback();
             root.icons = data.icons && typeof data.icons === "object" ? data.icons : ({});
+            root.apps = data.apps && typeof data.apps === "object" ? data.apps : ({});
         } catch (e) {
             root.popular = [];
             root.categories = root._fallback();
             root.icons = ({});
+            root.apps = ({});
         }
+    }
+
+    function title(name: string): string {
+        const a = root.apps[String(name || "")];
+        return a && a.title ? String(a.title) : String(name || "");
+    }
+
+    // Curated apps carry a translated one-liner; everything else keeps
+    // pacman's English description.
+    function desc(name: string, fallback: string): string {
+        const n = String(name || "");
+        if (!root.apps[n])
+            return String(fallback || "");
+        return I18n.t("store.apps." + n.replace(/[^a-z0-9]/g, "_"));
+    }
+
+    // Every word must hit the name, title, tags (en + de) or the
+    // translated description. Title hits rank first.
+    function search(query: string) {
+        const q = String(query || "").toLowerCase().trim();
+        const words = q.replace(/[\s,.;:()\/+-]+/g, " ").split(" ").filter((w) => w.length > 0);
+        if (!words.length)
+            return [];
+        const catOf = {};
+        for (const c of root.categories || []) {
+            const label = c.id + " " + I18n.t("store.categories." + c.id).toLowerCase();
+            for (const p of c.packages || [])
+                catOf[p] = (catOf[p] || "") + " " + label;
+        }
+        const hits = [];
+        for (const n in root.apps) {
+            const a = root.apps[n] || {};
+            const t = String(a.title || n).toLowerCase();
+            const tags = (a.tags || []).join(" ").toLowerCase();
+            const hay = " " + (n + " " + t + " " + tags + " " + root.desc(n, "").toLowerCase() + (catOf[n] || ""))
+                .replace(/[\s,.;:()\/+-]+/g, " ");
+            if (!words.every((w) => hay.indexOf(" " + w) !== -1 || hay.indexOf(" " + root._stem(w)) !== -1))
+                continue;
+            const tagHit = (" " + tags + " ").indexOf(" " + q + " ") !== -1;
+            const rank = t.indexOf(q) === 0 ? 0 : (tagHit ? 1 : (t.indexOf(q) !== -1 ? 2 : 3));
+            hits.push({ n: n, rank: rank, i: hits.length });
+        }
+        hits.sort((x, y) => x.rank - y.rank || x.i - y.i);
+        return hits.slice(0, root.searchCap).map((h) => h.n);
+    }
+
+    // "editing" -> "edit", "bearbeitung" -> "bearbeit": enough for the
+    // everyday words people type without a real stemmer.
+    function _stem(word: string): string {
+        const cut = String(word || "").replace(/(ing|ung|en|er|s)$/, "");
+        return cut.length >= 4 ? cut : String(word || "");
     }
 
     function _fallback() {

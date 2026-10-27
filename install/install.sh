@@ -3,7 +3,7 @@
 # failure in phase 3 doesn't repeat phases 1-2's work.
 #
 # Usage:
-#   install.sh --profile <m0|dev|gaming|full> [--dry-run] [--yes] [--target DIR]
+#   install.sh --profile <m0|gaming|full> [--dry-run] [--yes] [--target DIR]
 #              [--allow-live-home] [--hw amd|intel|nvidia] [--cpu amd|intel]
 #              [--extra proton]
 #
@@ -15,9 +15,8 @@
 #
 # Profiles (see install/manifests/README.md for exact layer membership):
 #   m0       base + desktop + theming + minimal apps  (default)
-#   dev      m0 + 40-dev
 #   gaming   m0 + 50-gaming
-#   full     everything, including 60-flatpak and optional AUR extras
+#   full     gaming + 60-flatpak
 #
 # This script installs packages, stows this repo's dotfiles into $TARGET
 # (default $HOME), and enables the greetd login screen on a real user
@@ -103,8 +102,8 @@ trap '_err_trap $LINENO' ERR
 log_info "modern_dotfile installer — profile '$PROFILE', gpu='$HW', cpu='$CPU', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN"
 
 case "$PROFILE" in
-    m0|dev|gaming|full) ;;
-    *) die "unknown profile '$PROFILE' — expected m0|dev|gaming|full" ;;
+    m0|gaming|full) ;;
+    *) die "unknown profile '$PROFILE' — expected m0|gaming|full" ;;
 esac
 
 case "$CPU" in
@@ -149,9 +148,7 @@ log_phase "Phase 3/5: package manifests (profile: $PROFILE)"
 MANIFEST_DIR="$REPO_ROOT/install/manifests"
 layers=(00-base 10-desktop 20-theming 30-apps)
 case "$PROFILE" in
-    dev)    layers+=(40-dev) ;;
-    gaming) layers+=(50-gaming) ;;
-    full)   layers+=(40-dev 50-gaming) ;;
+    gaming|full) layers+=(50-gaming) ;;
 esac
 
 native_pkgs=()
@@ -301,11 +298,11 @@ else
     log_warn "matugen not found — run scripts/theme-apply.sh once it is installed"
 fi
 
-# Nautilus / xdg-open follow Settings → Applications video/image/folder defaults.
+# Nautilus / xdg-open follow Settings → Applications video/image/text/folder defaults.
 run "$REPO_ROOT/scripts/mime-defaults.sh" \
     --config "$TARGET/.config/modern/config.json" \
     --mimeapps "$TARGET/.config/mimeapps.list" \
-    || log_warn "mime-defaults.sh failed — set video/image/folder defaults in Settings → Applications"
+    || log_warn "mime-defaults.sh failed — set video/image/text/folder defaults in Settings → Applications"
 run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
     || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
 

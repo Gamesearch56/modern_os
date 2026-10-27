@@ -49,6 +49,10 @@ ColumnLayout {
         value: Apps.displayName("imageViewer")
     }
     FactRow {
+        labelKey: "settings.fields.textEditor"
+        value: Apps.displayName("textEditor")
+    }
+    FactRow {
         labelKey: "settings.fields.browser"
         value: Apps.displayName("browser")
     }

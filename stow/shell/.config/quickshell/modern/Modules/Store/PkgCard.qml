@@ -10,6 +10,7 @@ MCard {
     property var pkg: ({})
 
     readonly property bool on: !!(pkg && pkg.installed)
+    readonly property bool locked: root.on && Store.isSystem(root.pkgName)
     readonly property string pkgName: String(pkg && pkg.name || "")
     readonly property string iconName: Store.iconForPkg(root.pkgName)
 
@@ -41,7 +42,7 @@ MCard {
         }
 
         MText {
-            value: root.pkgName
+            value: Store.titleFor(root.pkgName)
             styleName: "titleMedium"
             horizontalAlignment: Text.AlignHCenter
             elide: Text.ElideRight
@@ -49,7 +50,7 @@ MCard {
         }
 
         MText {
-            value: String(pkg && pkg.desc || "")
+            value: Store.descFor(root.pkgName, String(pkg && pkg.desc || ""))
             styleName: "bodySmall"
             color: Colors.color.onSurfaceVariant
             wrapMode: Text.WordWrap
@@ -62,9 +63,9 @@ MCard {
 
         MButton {
             Layout.fillWidth: true
-            kind: root.on ? "destructive" : "filled"
-            key: root.on ? "store.remove" : "store.install"
-            enabled: Store.mutating.length === 0
+            kind: root.locked ? "outlined" : (root.on ? "destructive" : "filled")
+            key: root.locked ? "store.systemPackage" : (root.on ? "store.remove" : "store.install")
+            enabled: !root.locked && Store.mutating.length === 0
             onClicked: {
                 if (root.on)
                     Store.requestRemove(root.pkgName);
