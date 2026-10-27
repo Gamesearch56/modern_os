@@ -5,6 +5,8 @@
 # Sets ROOT_PLAN_PKGS (array) and ROOT_PLAN_GREETD (0/1). The plan sits
 # in the user's state dir and is read by root, so anything that is not a
 # plain package name is dropped rather than handed to pacman.
+# Callers read ROOT_PLAN_PKGS and ROOT_PLAN_GREETD; this file only writes them.
+# shellcheck disable=SC2034
 read_root_plan() {
     local file="$1" kind name
     ROOT_PLAN_PKGS=()
