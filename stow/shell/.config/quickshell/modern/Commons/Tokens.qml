@@ -100,7 +100,7 @@ Singleton {
         readonly property real launcherWidth: root.spacing.xxl * 16
         // Toasts drop below a typical app header bar so they don't hide
         // the window's own buttons in its top row.
-        readonly property real toastTopClearance: root.spacing.xxl * 2
+        readonly property real toastTopClearance: root.spacing.xxl
     }
 
     readonly property QtObject slider: QtObject {
