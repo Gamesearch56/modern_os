@@ -41,6 +41,8 @@ Singleton {
     readonly property int durationWifiScan: 8000
     // BlueZ inquiry restart — not MD3 motion, never scaled.
     readonly property int durationBluetoothScan: 8000
+    // Multipoint buds: release PC audio link after playback stops.
+    readonly property int durationBluetoothIdle: 8000
     // External process watchdog (ddcutil / hyprctl / theme-apply) — wall clock.
     readonly property int durationProcessWatch: 20000
     readonly property int durationFollowWatch: 30000
@@ -58,6 +60,7 @@ Singleton {
     readonly property int recordingChromeMs: root.durationRecordingChrome
     readonly property int wifiScanMs: root.durationWifiScan
     readonly property int bluetoothScanMs: root.durationBluetoothScan
+    readonly property int bluetoothIdleMs: root.durationBluetoothIdle
     readonly property int processWatchMs: root.durationProcessWatch
     readonly property int followWatchMs: root.durationFollowWatch
     readonly property bool overlaysFade: root.scale !== 0 && root.overlay !== "zoom"

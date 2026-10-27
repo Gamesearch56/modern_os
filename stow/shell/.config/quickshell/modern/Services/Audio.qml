@@ -14,13 +14,15 @@ Singleton {
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property PwNode source: Pipewire.defaultAudioSource
     readonly property var nodes: Pipewire.nodes
-    readonly property bool autoBluetooth: (Config.audio.autoSwitchBluetooth || "on") !== "off"
+    readonly property bool autoBluetooth: (Config.audio.autoSwitchBluetooth || "on") === "on"
     readonly property int volumeCap: Config.audio.masterVolumeLimit ?? 100
 
     AudioBluetooth {
         id: btAuto
         audio: root
     }
+
+    AudioBluetoothMultipoint { audio: root; btAuto: btAuto }
 
     AudioNowPlaying {
         id: nowPlaying

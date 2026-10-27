@@ -1,7 +1,9 @@
 // BlueZ via Quickshell.Bluetooth. Adapter power, device list, connect
 // and pair. The bluetooth widget never calls bluetoothctl. When
 // audio.autoSwitchBluetooth is on, paired audio devices are trusted
-// and connected as they appear — mice and keyboards are left alone.
+// as they appear; AudioBluetoothMultipoint connects them only while the PC is
+// playing audio and releases them when idle (multipoint with a phone).
+// Mice and keyboards are left alone.
 pragma Singleton
 
 import Quickshell
@@ -17,7 +19,9 @@ Singleton {
     readonly property bool powered: root.adapter?.enabled ?? false
     readonly property bool discovering: root.adapter?.discovering ?? false
     readonly property bool adapterReady: !!root.adapter && root.adapter.state !== Bluez.BluetoothAdapterState.Blocked
-    readonly property bool autoAudio: (Config.audio.autoSwitchBluetooth || "on") !== "off"
+    // Only an explicit "on" connects. Stray values (e.g. leftover "ask")
+    // must not auto-connect multipoint buds and steal the phone's A2DP.
+    readonly property bool autoAudio: (Config.audio.autoSwitchBluetooth || "on") === "on"
     readonly property int connectedCount: root.connectedDevices.length
 
     readonly property string _devSig: {
@@ -32,7 +36,6 @@ Singleton {
         return s;
     }
 
-    property var _connectTried: ({})
     property var _seenAt: ({})
     property int _seenSeq: 0
     property bool refreshing: false
@@ -58,18 +61,8 @@ Singleton {
         if (root._uiReady)
             root._syncAutoAudio();
     }
-    onAutoAudioChanged: {
-        if (root.autoAudio)
-            root._connectTried = ({});
-        if (root._uiReady)
-            root._syncAutoAudio();
-    }
-    onPoweredChanged: {
-        if (root.powered)
-            root._connectTried = ({});
-        if (root._uiReady)
-            root._syncAutoAudio();
-    }
+    onAutoAudioChanged: if (root._uiReady) root._syncAutoAudio()
+    onPoweredChanged: if (root._uiReady) root._syncAutoAudio()
 
     Timer {
         interval: Math.max(Motion.extraLongMs, 1)
@@ -193,29 +186,18 @@ Singleton {
         if (!root.autoAudio || !root.powered)
             return;
         const list = root._list(root.devices);
-        const present = {};
-        const tried = Object.assign({}, root._connectTried);
         for (let i = 0; i < list.length; i++) {
             const d = list[i];
-            const addr = String(d.address || "");
-            if (!addr.length)
-                continue;
-            present[addr] = true;
             if (!d.paired || d.blocked || !root.isAudioDevice(d))
                 continue;
             if (!d.trusted)
                 d.trusted = true;
-            if (d.connected || tried[addr])
-                continue;
-            tried[addr] = true;
-            Qt.callLater(() => root.connectDevice(d));
         }
-        const next = {};
-        for (const k in tried) {
-            if (present[k])
-                next[k] = true;
-        }
-        root._connectTried = next;
+    }
+
+    function pairedAudio(): var {
+        return Array.from(root._list(root.devices)).filter(d => d && d.paired && !d.blocked
+            && String(d.address || "").length > 0 && root.isAudioDevice(d));
     }
 
     function _stampSeen() {

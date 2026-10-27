@@ -171,6 +171,14 @@ case "$TARGET" in
                 qs -c modern ipc call media playPause >/dev/null 2>&1 \
                     || playerctl play-pause
                 ;;
+            play)
+                qs -c modern ipc call media play >/dev/null 2>&1 \
+                    || playerctl play
+                ;;
+            pause)
+                qs -c modern ipc call media pause >/dev/null 2>&1 \
+                    || playerctl pause
+                ;;
             next)
                 qs -c modern ipc call media next >/dev/null 2>&1 \
                     || playerctl next
