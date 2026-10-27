@@ -38,6 +38,17 @@ fi
 
 PROVISION="$ROOT/install/system/provision-iso.sh"
 GREETD_LIB="$ROOT/install/lib/greetd.sh"
+if grep -F 'zram-generator.conf' "$PROVISION" >/dev/null \
+    && grep -F '99-modern-zram.conf' "$PROVISION" >/dev/null \
+    && grep -F '60-modern-rotational-bfq.rules' "$PROVISION" >/dev/null \
+    && grep -F 'min(ram / 2, 4096)' "$ROOT/install/system/zram/zram-generator.conf" >/dev/null \
+    && grep -F 'vm.swappiness = 180' "$ROOT/install/system/sysctl.d/99-modern-zram.conf" >/dev/null \
+    && grep -F 'ATTR{queue/rotational}=="1"' "$ROOT/install/system/udev/60-modern-rotational-bfq.rules" >/dev/null \
+    && ! grep -F 'sysctl --system' "$PROVISION" >/dev/null; then
+    ok "ISO provision stages zram and bfq for spinning disks, not the live installer"
+else
+    err "provision-iso.sh must install zram + zram sysctl + rotational bfq, and must not sysctl the installer"
+fi
 if grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$GREETD_LIB" >/dev/null \
     || grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$PROVISION" >/dev/null; then
     err "greetd enable_unit must enable one unit per call — one missing unit aborts the rest"

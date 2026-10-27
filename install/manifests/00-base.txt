@@ -21,7 +21,7 @@ openssh                 # remote access / git over ssh
 wget                    # fetched by install.sh and scripts/optiscaler.sh
 unzip                   # unpacking release archives (OptiScaler, fonts)
 zip                     # export/import of config.json and backups
-zram-generator          # swap-on-zram, standard low-RAM-pressure tuning
+zram-generator          # swap-on-zram; provision-iso.sh installs the config that turns it on
 ufw                     # firewall — see docs/SECURITY.md and the KDE Connect port rule
 sof-firmware            # laptop audio (Intel/AMD SOF)
 alsa-firmware           # older Broadwell-era and similar codecs
