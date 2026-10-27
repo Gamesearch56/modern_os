@@ -49,6 +49,17 @@ Item {
         Logger.warn("ConfigWrite", "follow job timed out");
     }
 
+    // ConfigWrite enqueues from the write's onExited, while `writing` is
+    // still true, so kick() bails there; without this the queue (and the
+    // Settings busy indicator) would wait for an unrelated later write.
+    Connections {
+        target: root.writer
+        function onWritingChanged() {
+            if (!root.writer.writing)
+                root.kick();
+        }
+    }
+
     Timer {
         id: chromeDebounce
         interval: Math.max(Motion.mediumMs, 1)

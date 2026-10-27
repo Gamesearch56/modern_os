@@ -103,6 +103,14 @@ Singleton {
     }
 
     function patchMonitor(description, patch) {
+        const one = {};
+        one[description] = patch;
+        root.patchMonitors(one);
+    }
+
+    // One write for several profiles: back-to-back patchMonitor calls
+    // would each start from the not-yet-reloaded Config and drop the rest.
+    function patchMonitors(patches) {
         let m = { profiles: {}, rules: [], workspaceMode: "dynamic" };
         try {
             m = JSON.parse(JSON.stringify(Config.monitors || m));
@@ -111,7 +119,8 @@ Singleton {
         }
         if (!m.profiles)
             m.profiles = {};
-        m.profiles[description] = Object.assign({}, m.profiles[description] || {}, patch);
+        for (const d in patches)
+            m.profiles[d] = Object.assign({}, m.profiles[d] || {}, patches[d]);
         root.set("monitors", m);
     }
 

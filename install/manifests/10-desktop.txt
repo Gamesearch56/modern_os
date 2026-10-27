@@ -2,6 +2,8 @@
 hyprland                       # the compositor
 hyprland-guiutils               # hyprland-dialog; without it Hyprland shows a 15s login overlay
 mesa                           # OpenGL/EGL (Hyprland also pulls this; listed so m0 is explicit)
+libdisplay-info                # di-edid-decode: Settings > Displays reads HDR/wide-gamut support
+libdrm                         # modetest: Settings > Displays reads the connector's vrr_capable
 greetd                         # login (enabled by install.sh on a real user home)
 xdg-user-dirs                  # Desktop/Pictures before wallpaper copy
 gvfs                           # Nautilus trash/network mounts

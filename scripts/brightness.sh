@@ -176,6 +176,21 @@ if shutil.which("ddcutil"):
         except Exception:
             return ""
 
+    # Readable is not adjustable: some panels (HDR modes, locked OSD) answer
+    # getvcp but reject every write. Rewriting the same value always
+    # verifies, so nudge by one step and put it back.
+    def writable(disp_id, pct):
+        nudge = pct - 1 if pct > 1 else pct + 1
+        base = ["timeout", str(timeout), "ddcutil", "--display", str(disp_id), "setvcp", "10"]
+        try:
+            ok = subprocess.run(base + [str(nudge)], stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL, timeout=timeout + 1).returncode == 0
+            subprocess.run(base + [str(pct), "--noverify"], stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL, timeout=timeout + 1)
+            return ok
+        except Exception:
+            return False
+
     for cur, p in procs:
         try:
             out, _ = p.communicate(timeout=timeout + 1)
@@ -191,7 +206,7 @@ if shutil.which("ddcutil"):
             m = re.search(r"VCP\s+\S+\s+\S+\s+(\d+)", out or "")
         if m:
             cur["percent"] = int(m.group(1))
-            cur["ok"] = True
+            cur["ok"] = writable(cur["id"], cur["percent"])
         displays.append(cur)
 
 print(json.dumps({"displays": displays}))

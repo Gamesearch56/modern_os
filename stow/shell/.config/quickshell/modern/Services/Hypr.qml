@@ -64,6 +64,8 @@ Singleton {
     }
     function monitorByDesc(desc: string): var { return dump.monitorByDesc(desc); }
     function firstConnectedDescription(): string { return dump.firstConnectedDescription(); }
+    function orderedMonitors(): var { return dump.ordered(); }
+    function logicalWidth(mon: var): int { return dump.logicalWidth(mon); }
 
     function dispatch(cmd: string) {
         try {

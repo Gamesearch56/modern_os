@@ -18,7 +18,7 @@ ColumnLayout {
     }
 
     function _ensureSelection() {
-        const list = Hypr.monitors?.values ?? [];
+        const list = Hypr.orderedMonitors();
         let found = false;
         for (let i = 0; i < list.length; i++) {
             if (String(list[i].description || "") === root.selectedDesc) {
@@ -33,10 +33,12 @@ ColumnLayout {
     on_NChanged: {
         root._ensureSelection();
         Brightness.refreshDisplays();
+        MonitorCaps.refresh();
     }
     Component.onCompleted: {
         Hypr.refreshMonitorDump();
         Brightness.refreshDisplays();
+        MonitorCaps.refresh();
         root._ensureSelection();
     }
 
