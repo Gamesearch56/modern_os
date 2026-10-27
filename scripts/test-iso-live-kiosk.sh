@@ -590,6 +590,17 @@ else
     err "iso-aur-repo.sh must set MAKEFLAGS (and CMake job count) for modernisoaur"
 fi
 
+if grep -F 'iso_aur_run() {' "$AUR_REPO" >/dev/null \
+    && grep -F 'cd /tmp' "$AUR_REPO" >/dev/null \
+    && grep -F 'cd "$1" && shift && exec "$@"' "$AUR_REPO" >/dev/null \
+    && grep -F 'iso_aur_run "$build" git clone --depth 1' "$AUR_REPO" >/dev/null \
+    && ! grep -F -- '--chdir' "$AUR_REPO" >/dev/null \
+    && ! grep -F 'sudo -u "$ISO_AUR_BUILDER" git clone' "$AUR_REPO" >/dev/null; then
+    ok "AUR commands start in a directory the builder can read"
+else
+    err "iso-aur-repo.sh must cd before git clone and makepkg (builder cannot walk a 0700 home, sudo --chdir is refused)"
+fi
+
 BOOTLOADER="$ROOT/iso/airootfs/etc/calamares/modules/bootloader.conf"
 INSTALL_CONF="$ROOT/iso/airootfs/etc/kernel/install.conf"
 if grep -F 'efiBootLoader: "systemd-boot"' "$BOOTLOADER" >/dev/null \
