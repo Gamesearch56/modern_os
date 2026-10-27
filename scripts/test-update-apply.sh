@@ -1,35 +1,154 @@
 #!/usr/bin/env bash
-# Unprivileged checks for update-apply.sh / modern update auth flow.
+# Simulates Settings → Update end to end without root or network:
+# local release fixture, fake pkexec/checkupdates/reload. Asserts the
+# root plan reaches the single pkexec, a cancelled prompt is retried,
+# and the UI reload runs last with a marker for the reloaded shell.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MODERN="$ROOT/scripts/modern"
+FAIL=0
 err() { printf 'test-update-apply: FAIL %s\n' "$*" >&2; FAIL=1; }
 ok() { printf 'test-update-apply: ok %s\n' "$*"; }
-FAIL=0
 
-SCRIPT="$ROOT/scripts/update-apply.sh"
-MODERN="$ROOT/scripts/modern"
+[ -x "$ROOT/scripts/update-apply.sh" ] || err "update-apply.sh must be executable"
 
-[ -x "$SCRIPT" ] || err "update-apply.sh must be executable"
-[ -f "$MODERN" ] || err "modern missing"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-upd-XXXXXX")"
+trap 'rm -rf "$TMP"' EXIT
+git_cfg() { git -c core.hooksPath=/dev/null -c user.email=t@e -c user.name=t "$@"; }
 
-if grep -F 'update-apply.sh' "$MODERN" >/dev/null \
-    && ! grep -E 'priv /usr/bin/snapper.*ModernOS Update' "$MODERN" >/dev/null \
-    && ! grep -F 'pkexec /usr/bin/pacman -Syu' "$MODERN" >/dev/null; then
-    ok "GUI update uses one pkexec of update-apply.sh"
+REMOTE="$TMP/remote.git"
+CLONE="$TMP/clone"
+git_cfg init -q --bare "$REMOTE"
+git_cfg clone -q "$REMOTE" "$CLONE" 2>/dev/null
+release() {
+    mkdir -p "$CLONE/install"
+    # Literal script body; expands when the fake install.sh runs.
+    # shellcheck disable=SC2016
+    printf '#!/usr/bin/env bash\nset -eu\n[ -n "${MODERN_ROOT_PLAN:-}" ] || exit 0\nprintf "pkg %s\\ngreetd\\n" "%s" >>"$MODERN_ROOT_PLAN"\n' \
+        '%s' "$2" >"$CLONE/install/install.sh"
+    chmod +x "$CLONE/install/install.sh"
+    git_cfg -C "$CLONE" add -A
+    git_cfg -C "$CLONE" commit -qm "$1"
+    git_cfg -C "$CLONE" tag -a "$1" -m "$1"
+    git_cfg -C "$CLONE" push -q origin HEAD:refs/heads/main "$1" 2>/dev/null
+}
+release v0.1.0 base
+release v0.2.0 newpkg
+git_cfg -C "$CLONE" checkout -q --detach v0.1.0
+
+BIN="$TMP/bin"
+mkdir -p "$BIN" "$TMP/home/.local/bin"
+export HOME="$TMP/home" XDG_STATE_HOME="$TMP/state" XDG_CONFIG_HOME="$TMP/cfg" XDG_RUNTIME_DIR="$TMP"
+printf '#!/bin/sh\nexit 0\n' >"$HOME/.local/bin/phylax"
+printf '#!/bin/sh\nexit 0\n' >"$BIN/systemctl"
+printf '#!/bin/sh\n[ -f "%s/pkgs" ] && cat "%s/pkgs"\nexit 0\n' "$TMP" "$TMP" >"$BIN/checkupdates"
+cat >"$BIN/pkexec" <<EOF
+#!/bin/sh
+printf '%s\n' "\$*" >>"$TMP/pkexec.log"
+for a in "\$@"; do [ -f "\$a" ] && cp "\$a" "$TMP/seen-plan"; done
+exit "\$(cat "$TMP/pkexec-rc" 2>/dev/null || echo 0)"
+EOF
+cat >"$BIN/reload" <<EOF
+#!/bin/sh
+[ -f "$TMP/pkexec.log" ] && echo after-root >"$TMP/reloaded" || echo before-root >"$TMP/reloaded"
+EOF
+chmod +x "$BIN"/* "$HOME/.local/bin/phylax"
+export PATH="$BIN:$PATH" MODERN_PKEXEC="$BIN/pkexec" MODERN_RELOAD_UI="$BIN/reload"
+export MODERN_TEST_FIXTURE=1 MODERN_TEST_RUN_INSTALL=1 MODERN_DESKTOP_REPO="$CLONE" MODERN_DESKTOP_REMOTE="$REMOTE"
+
+PLAN="$XDG_STATE_HOME/modern/root-plan"
+MARKER="$XDG_STATE_HOME/modern/update-applied"
+reset() { rm -f "$TMP/pkexec.log" "$TMP/seen-plan" "$TMP/reloaded" "$TMP/pkexec-rc" "$TMP/pkgs"; }
+update() { "$MODERN" update </dev/null >"$TMP/out" 2>&1; }
+wait_reload() {
+    local _
+    for _ in $(seq 1 20); do [ -f "$TMP/reloaded" ] && return 0; sleep 0.05; done
+    return 1
+}
+
+reset
+if update && grep -q -- '--snapshot --root-plan' "$TMP/pkexec.log" \
+    && grep -qx 'pkg newpkg' "$TMP/seen-plan" && grep -qx greetd "$TMP/seen-plan"; then
+    ok "release root needs reach one pkexec (snapshot + root plan)"
 else
-    err "modern update must pkexec update-apply.sh once (not snapper then pacman)"
+    err "root plan not passed to pkexec: $(cat "$TMP/out" "$TMP/pkexec.log" 2>/dev/null)"
 fi
-
-if grep -F 'pacman -Syu --noconfirm' "$SCRIPT" >/dev/null \
-    && grep -F 'ModernOS Update' "$SCRIPT" >/dev/null \
-    && grep -Fe '--snapshot' "$SCRIPT" >/dev/null; then
-    ok "update-apply runs snapper then pacman"
+[ ! -e "$PLAN" ] || err "root plan kept after a successful root step"
+if wait_reload && [ "$(cat "$TMP/reloaded")" = after-root ] && [ "$(cat "$MARKER")" = v0.2.0 ]; then
+    ok "UI reload runs after the root step; marker names v0.2.0"
 else
-    err "update-apply.sh must snapshot (optional) then pacman -Syu"
+    err "reload/marker wrong: $(cat "$TMP/reloaded" "$MARKER" 2>/dev/null)"
+fi
+[ "$(git -C "$CLONE" describe --tags --exact-match)" = v0.2.0 ] || err "checkout not on v0.2.0"
+
+if [ "$("$MODERN" update-notice)" = v0.2.0 ] && [ -z "$("$MODERN" update-notice)" ]; then
+    ok "update-notice reports once after the reload"
+else
+    err "update-notice must print the version once"
 fi
 
-if [ "$FAIL" -ne 0 ]; then
-    exit 1
+reset
+release v0.3.0 otherpkg
+git_cfg -C "$CLONE" checkout -q --detach v0.2.0
+echo 126 >"$TMP/pkexec-rc"
+if ! update && [ -s "$PLAN" ] && [ ! -e "$MARKER" ] && ! wait_reload; then
+    ok "cancelled auth keeps the plan and does not reload"
+else
+    err "cancelled pkexec must fail, keep the plan, skip reload"
 fi
+reset
+if update && grep -qx 'pkg otherpkg' "$TMP/seen-plan" && [ ! -e "$PLAN" ] \
+    && wait_reload && [ "$(cat "$MARKER")" = v0.3.0 ]; then
+    ok "next update retries the kept plan, then reloads"
+else
+    err "retry failed: $(cat "$TMP/out" 2>/dev/null)"
+fi
+"$MODERN" update-notice >/dev/null
+
+reset
+echo 'mesa 1 -> 2' >"$TMP/pkgs"
+if update && grep -q -- '--snapshot' "$TMP/pkexec.log" && ! grep -q -- '--root-plan' "$TMP/pkexec.log" \
+    && ! wait_reload && [ ! -e "$MARKER" ]; then
+    ok "package-only update: pkexec without plan, no reload"
+else
+    err "package-only update wrong: $(cat "$TMP/pkexec.log" 2>/dev/null)"
+fi
+
+reset
+if update && [ ! -e "$TMP/pkexec.log" ] && ! wait_reload; then
+    ok "nothing pending: no prompt, no reload"
+else
+    err "nothing pending must not prompt or reload"
+fi
+
+# shellcheck source=lib/pkg-name.sh
+source "$ROOT/scripts/lib/pkg-name.sh"
+# shellcheck source=lib/root-plan.sh
+source "$ROOT/scripts/lib/root-plan.sh"
+printf 'pkg good-pkg\npkg -Rdd\npkg ../x\nrm -rf /\ngreetd\n' >"$TMP/evil"
+read_root_plan "$TMP/evil" 2>/dev/null
+if [ "${ROOT_PLAN_PKGS[*]}" = good-pkg ] && [ "$ROOT_PLAN_GREETD" -eq 1 ]; then
+    ok "root plan keeps only valid package names"
+else
+    err "root plan parsed: ${ROOT_PLAN_PKGS[*]}"
+fi
+
+# shellcheck disable=SC2016
+printf '#!/bin/sh\n[ "$1" = -T ] && echo missing-one\nexit 127\n' >"$BIN/pacman"
+chmod +x "$BIN/pacman"
+if (
+    REPO_ROOT="$ROOT" LOG_FILE=/dev/null DRY_RUN=0 MODERN_ROOT_PLAN="$TMP/defer"
+    # shellcheck source=../install/lib/log.sh
+    source "$ROOT/install/lib/log.sh"
+    # shellcheck source=../install/lib/pkg.sh
+    source "$ROOT/install/lib/pkg.sh"
+    install_native present missing-one >/dev/null
+) && [ "$(cat "$TMP/defer")" = "pkg missing-one" ]; then
+    ok "install.sh without a terminal defers missing packages, no sudo"
+else
+    err "install_native did not defer to the plan"
+fi
+
+[ "$FAIL" -eq 0 ] || exit 1
 printf 'test-update-apply: ok\n'

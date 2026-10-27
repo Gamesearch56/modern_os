@@ -99,6 +99,38 @@ the baked-in tag. Settings → Update lists **ModernOS** first. It is
 pending only when a **newer** `vX.Y.Z` exists on GitHub. It never tracks
 `dev` or the tip of `main`.
 
+## Private repo, while you are still testing
+
+A read-only **deploy key** lets an installed laptop fetch those tags
+without the repository being public. It is not your account SSH key.
+GitHub attaches it to this one repo, and it cannot push.
+
+```bash
+scripts/deploy-key-init.sh
+```
+
+That writes `secrets/github-deploy-key` (gitignored, mode 600) and prints
+the public half. Add the public half under GitHub → this repo →
+Settings → Deploy keys, and leave **Allow write access** off.
+
+`iso-build.sh` copies the private half into the image only when that
+file exists, root-owned and mode 600. Calamares then moves it to
+`~/.config/modern/deploy_key` for the new user and deletes the system
+copy. Settings → Update uses it for
+`git@github.com:Gamesearch56/modern_dotfile.git` only: no other SSH key,
+no `~/.ssh/config`, and GitHub's host key checked against
+`scripts/lib/github-known-hosts`. With no key file, updates stay on
+HTTPS.
+
+The private half is inside the ISO. Anyone with that file can read this
+repo. They still cannot push. If an image gets passed around, delete the
+key on GitHub and run `deploy-key-init.sh` again (it will not overwrite;
+move the old file aside first).
+
+When you make the repo public, revoke the deploy key and delete
+`secrets/github-deploy-key` before the next ISO build. Updates then use
+HTTPS and nothing else changes.
+
 ## What not to do
 
 - Commit on `main`.
@@ -122,15 +154,17 @@ force-push is blocked after that.
    [TruffleHog](https://github.com/trufflesecurity/trufflehog) (or
    equivalent) against the full git history. The working tree can be
    clean and history still not. Also path-scan for `secrets.json`,
-   `.env`, and API-shaped strings.
+   `secrets/github-deploy-key`, `.env`, and API-shaped strings.
 2. Optional: orphan-squash `main` and `dev` onto a new root (one commit
    each, or `dev` replayed on the squashed `main`). This is the only
    allowed force-push to those branches.
 3. Delete leftover `feature/*` / `fix/*` remotes if any remain.
-4. GitHub → Settings → Danger Zone → Change visibility → Public.
-5. Then apply the rulesets below. **Do not enable “block force-push”
+4. Revoke the read-only deploy key (Settings → Deploy keys) and delete
+   `secrets/github-deploy-key` so later ISOs do not embed it.
+5. GitHub → Settings → Danger Zone → Change visibility → Public.
+6. Then apply the rulesets below. **Do not enable “block force-push”
    until the optional squash is done.**
-6. After the repo is public: enable secret scanning and push protection
+7. After the repo is public: enable secret scanning and push protection
    (free on public repos). Keep private vulnerability reporting
    (`SECURITY.md`).
 

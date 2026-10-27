@@ -27,6 +27,8 @@ stow/hypr/.config/hypr/hypridle.conf
 
 # Secrets — never commit
 **/secrets.json
+# Private half of the read-only GitHub deploy key (and its .pub).
+/secrets/
 **/bashrc.local
 **/*.local.json
 **/battlenet.env

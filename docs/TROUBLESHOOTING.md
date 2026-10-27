@@ -212,6 +212,14 @@ scripts/theme-apply.sh --wallpaper /path/to/image
 
 `scripts/doctor.sh` warns when `~/.config/modern/tokens.json` is absent.
 
+## Update says offline while the repo is still private
+
+HTTPS cannot see a private repo. The laptop needs the read-only deploy
+key at `~/.config/modern/deploy_key` (mode 600), and that public key
+registered under GitHub → Settings → Deploy keys with write access off.
+`scripts/deploy-key-init.sh` creates it; the ISO build embeds it.
+Details: `docs/GIT.md`.
+
 ## `secrets.json` missing
 
 Expected until you create gitignored

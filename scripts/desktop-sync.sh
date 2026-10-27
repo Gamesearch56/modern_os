@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 # Compare / apply ModernOS release tags. Settings never runs git itself.
-# Production fetch is the allowlisted HTTPS repo only. Tests may set
+# Production fetch is the allowlisted repo only: SSH with the read-only
+# deploy key when one is installed, HTTPS otherwise. Tests may set
 # MODERN_TEST_FIXTURE=1 and MODERN_DESKTOP_REMOTE to a local bare repo.
 set -euo pipefail
 
-ALLOWED_URL="https://github.com/Gamesearch56/modern_dotfile.git"
 TAG_RE='^v[0-9]+\.[0-9]+\.[0-9]+$'
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Checkout that holds the gitignored build-machine key. The installed
+# clone has no secrets/ directory; it uses ~/.config/modern/deploy_key.
+MODERN_REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=lib/repo-path.sh
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/repo-path.sh"
+source "$SCRIPT_DIR/lib/repo-path.sh"
+# shellcheck source=lib/deploy-key.sh
+source "$SCRIPT_DIR/lib/deploy-key.sh"
 REPO="${MODERN_DESKTOP_REPO:-$(modern_repo_path)}"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/modern-desktop-sync.lock"
 
@@ -19,12 +25,13 @@ remote_url() {
         printf '%s\n' "$MODERN_DESKTOP_REMOTE"
         return
     fi
-    printf '%s\n' "$ALLOWED_URL"
+    github_sync_url
 }
 
 git_safe() {
     local extra=()
     local runner=()
+    local ssh_cmd=""
     if [ "${MODERN_TEST_FIXTURE:-}" = "1" ]; then
         extra=(-c protocol.file.allow=always)
     else
@@ -33,9 +40,23 @@ git_safe() {
     if [ -n "${GIT_SAFE_TIMEOUT:-}" ]; then
         runner=(timeout "$GIT_SAFE_TIMEOUT")
     fi
-    "${runner[@]}" env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
+    ssh_cmd="$(github_ssh_command)" || die "deploy key is set but GitHub host keys are missing"
+    # Fixture tests read this back. Production never writes the command.
+    if [ "${MODERN_TEST_FIXTURE:-}" = "1" ] && [ -n "${MODERN_SSH_COMMAND_LOG:-}" ]; then
+        printf '%s\n' "$ssh_cmd" >"$MODERN_SSH_COMMAND_LOG"
+    fi
+    local env_cmd=(env -u GIT_SSH -u GIT_SSH_COMMAND
+        GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null)
+    local ssh_cfg=()
+    if [ -n "$ssh_cmd" ]; then
+        # GIT_SSH_COMMAND outranks core.sshCommand, and an inherited value
+        # would replace the command built for this key. Set both, from here.
+        env_cmd+=(GIT_SSH_COMMAND="$ssh_cmd")
+        ssh_cfg=(-c "core.sshCommand=$ssh_cmd")
+    fi
+    "${runner[@]}" "${env_cmd[@]}" \
         /usr/bin/git -c core.hooksPath=/dev/null \
-        -c fetch.recurseSubmodules=false "${extra[@]}" "$@"
+        -c fetch.recurseSubmodules=false "${extra[@]}" "${ssh_cfg[@]}" "$@"
 }
 
 json_escape() {
@@ -129,10 +150,15 @@ cmd_apply() {
     [[ "$latest" =~ $TAG_RE ]] || die "no valid release tag"
     local url
     url="$(remote_url)"
+    # Into refs/tags, not a private ref: installed_tag() describes HEAD by
+    # tag, and without the local tag every later status says "notag" and
+    # never offers the next release.
     git_safe -C "$REPO" fetch --no-tags --no-recurse-submodules \
-        "$url" "refs/tags/${latest}:refs/modern/upstream"
-    git_safe -C "$REPO" merge --ff-only refs/modern/upstream
-    if [ "${MODERN_TEST_FIXTURE:-}" = "1" ]; then
+        "$url" "+refs/tags/${latest}:refs/tags/${latest}"
+    git_safe -C "$REPO" merge --ff-only "refs/tags/${latest}"
+    log "updated to ${latest}"
+    # Fixture releases may ship a fake install.sh to exercise the root plan.
+    if [ "${MODERN_TEST_FIXTURE:-}" = "1" ] && [ "${MODERN_TEST_RUN_INSTALL:-}" != "1" ]; then
         log "test fixture — skipping install.sh"
         return 0
     fi

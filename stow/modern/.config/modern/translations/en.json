@@ -929,7 +929,9 @@
       "mirrorsFailed": "Could not update mirrors",
       "desktop": "ModernOS",
       "desktopCurrent": "This version is current",
-      "desktopUnavailable": "Could not check for a desktop update"
+      "desktopUnavailable": "Could not check for a desktop update",
+      "desktopApplied": "ModernOS updated to {v}",
+      "desktopAppliedBody": "The desktop was reloaded with the new release."
     },
     "overview": {
       "stats": "Live stats",

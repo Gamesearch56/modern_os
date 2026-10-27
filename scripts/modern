@@ -10,6 +10,8 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$REPO_ROOT/install/lib/i18n.sh"
 # shellcheck source=lib/polkit-agent.sh
 source "$SCRIPT_DIR/lib/polkit-agent.sh"
+# shellcheck source=lib/modern-update.sh
+source "$SCRIPT_DIR/lib/modern-update.sh"
 
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
 if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
@@ -68,44 +70,10 @@ priv() {
 
 case "$TARGET" in
     update)
-        if [ -x "$SCRIPT_DIR/desktop-sync.sh" ]; then
-            desk_json="$("$SCRIPT_DIR/desktop-sync.sh" status 2>/dev/null || true)"
-            if printf '%s' "$desk_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("pending") else 1)' 2>/dev/null; then
-                "$SCRIPT_DIR/desktop-sync.sh" apply || exit 1
-                if [ -x "$SCRIPT_DIR/reload-ui.sh" ]; then
-                    "$SCRIPT_DIR/reload-ui.sh" || true
-                fi
-            fi
-        fi
-        has_pkgs=0
-        if command -v checkupdates >/dev/null 2>&1 && checkupdates 2>/dev/null | grep -q .; then
-            has_pkgs=1
-        fi
-        if [ "$has_pkgs" -eq 0 ]; then
-            exit 0
-        fi
-        if [ -t 0 ]; then
-            if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
-                if command -v snapper >/dev/null 2>&1 && snapper list-configs >/dev/null 2>&1 \
-                    && snapper list-configs 2>/dev/null | grep -q root; then
-                    t cli.snapshotting
-                    sudo /usr/bin/snapper -c root create --description "ModernOS Update" || {
-                        t cli.snapshotFailed >&2
-                        exit 1
-                    }
-                else
-                    t cli.snapperUnconfigured >&2 || true
-                fi
-            fi
-            exec yay -Syu
-        fi
-        snap_flag=--no-snapshot
-        if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
-            snap_flag=--snapshot
-            t cli.snapshotting
-        fi
-        ensure_polkit_agent || true
-        exec pkexec "$SCRIPT_DIR/update-apply.sh" "$snap_flag"
+        modern_update
+        ;;
+    update-notice)
+        modern_update_notice
         ;;
     cleanup)
         yay -Yc

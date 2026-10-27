@@ -138,7 +138,13 @@ preflight_checks
 # Phase 2 — yay bootstrap
 # ---------------------------------------------------------------------------
 log_phase "Phase 2/5: yay bootstrap"
-bootstrap_yay
+if [ -n "${MODERN_ROOT_PLAN:-}" ] && ! command -v yay >/dev/null 2>&1; then
+    # makepkg -si needs sudo, which a terminal-less update cannot answer.
+    log_warn "yay missing — skipping AUR until 'modern update' runs in a terminal"
+    MODERN_SKIP_AUR=1
+else
+    bootstrap_yay
+fi
 
 # ---------------------------------------------------------------------------
 # Phase 3 — package manifests
@@ -318,7 +324,10 @@ fi
 # kitty.conf globincludes colors.conf; fallbacks in kitty.conf keep
 # SUPER+T working until theme-apply writes the live file.
 
-if greetd_target_is_live_user "$TARGET"; then
+if greetd_target_is_live_user "$TARGET" && [ -n "${MODERN_ROOT_PLAN:-}" ] && [ "$DRY_RUN" -eq 0 ]; then
+    printf 'greetd\n' >>"$MODERN_ROOT_PLAN"
+    log_info "greetd deferred to the update's root step"
+elif greetd_target_is_live_user "$TARGET"; then
     greetd_apply "$(greetd_user_for_home "$TARGET")"
 else
     log_info "skipping greetd (target '$TARGET' is not a login home)"

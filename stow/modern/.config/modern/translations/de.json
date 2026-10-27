@@ -929,7 +929,9 @@
       "mirrorsFailed": "Spiegelliste konnte nicht aktualisiert werden",
       "desktop": "ModernOS",
       "desktopCurrent": "Diese Version ist aktuell",
-      "desktopUnavailable": "Desktop-Update konnte nicht geprüft werden"
+      "desktopUnavailable": "Desktop-Update konnte nicht geprüft werden",
+      "desktopApplied": "ModernOS auf {v} aktualisiert",
+      "desktopAppliedBody": "Der Desktop wurde mit der neuen Version neu geladen."
     },
     "overview": {
       "stats": "Live-Werte",

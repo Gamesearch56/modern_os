@@ -584,10 +584,36 @@ phase_biosboot() {
     log "initramfs for $kver written"
 }
 
+# The ISO carries the deploy key root-only. Move it into the new
+# account and drop the system copy so it does not stay on the disk
+# world-reachable after install. No key file means HTTPS updates.
+install_deploy_key() {
+    local src dest
+    if [ -n "${MODERN_DEPLOY_KEY_SRC:-}" ]; then
+        src="$MODERN_DEPLOY_KEY_SRC"
+    elif [ -n "${MODERN_LATE_TEST:-}" ]; then
+        return 0
+    else
+        src="/usr/lib/modern/deploy_key"
+    fi
+    [ -e "$src" ] || [ -L "$src" ] || return 0
+    if [ -L "$src" ]; then
+        rm -f "$src"
+        log "ignored deploy key symlink"
+        return 0
+    fi
+    dest="$USER_HOME/.config/modern/deploy_key"
+    install -d -m 0700 "$USER_HOME/.config/modern"
+    install -m 0600 "$src" "$dest" || die "could not install the GitHub deploy key"
+    rm -f "$src" || die "could not remove the deploy key from the system image"
+    log "GitHub deploy key installed for $USERNAME"
+}
+
 phase_clone() {
     ensure_dns
     ensure_nss
     install -d -m 0750 "$USER_HOME"
+    install_deploy_key
     rm -rf "$REPO"
     log "clone $PIN user=$USERNAME home=$USER_HOME bundle=$BUNDLE url=$ALLOWED_URL"
     if [ -d "$BUNDLE/install" ]; then

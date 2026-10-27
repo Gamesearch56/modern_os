@@ -287,6 +287,9 @@ run_late() {
     if [ -n "${MODERN_LATE_EFI_DIR:-}" ]; then
         extra+=(MODERN_LATE_EFI_DIR="$MODERN_LATE_EFI_DIR")
     fi
+    if [ -n "${MODERN_DEPLOY_KEY_SRC:-}" ]; then
+        extra+=(MODERN_DEPLOY_KEY_SRC="$MODERN_DEPLOY_KEY_SRC")
+    fi
     env -u MODERN_PROTECT_HOME \
         MODERN_LATE_TEST=1 \
         MODERN_LATE_LOG="$WORKDIR/late.log" \
@@ -356,6 +359,38 @@ if out="$(MODERN_LATE_BUNDLE="$bundle" MODERN_LATE_CLONE_URL="$missing" run_late
         || err "bundle copy succeeded but tree missing: $out"
 else
     err "ISO bundle copy failed: $out"
+fi
+
+# The image may ship the deploy key mode 0644 (mkarchiso drops modes).
+# The clone phase must leave it 0600 in the new home and delete the source.
+key_src="$WORKDIR/deploy-src"
+printf 'deploy-key-bytes\n' >"$key_src"
+chmod 0644 "$key_src"
+rm -rf "${WORKDIR:?}/home"
+if out="$(MODERN_DEPLOY_KEY_SRC="$key_src" MODERN_LATE_BUNDLE="$bundle" \
+    MODERN_LATE_CLONE_URL="$missing" run_late clone 2>&1)"; then
+    dest_key="$WORKDIR/home/.config/modern/deploy_key"
+    if [ ! -e "$key_src" ] && [ "$(cat "$dest_key" 2>/dev/null)" = "deploy-key-bytes" ] \
+        && [ "$(stat -c '%a' "$dest_key")" = 600 ] \
+        && [ "$(stat -c '%a' "$WORKDIR/home/.config/modern")" = 700 ]; then
+        ok "deploy key moves into the new home as mode 600 and leaves the image"
+    else
+        err "deploy key not installed privately: src=$(ls -l "$key_src" 2>&1) dest=$(ls -l "$dest_key" 2>&1)"
+    fi
+else
+    err "clone with a deploy key failed: $out"
+fi
+kept="$WORKDIR/kept-secret"
+printf 'keep-me\n' >"$kept"
+ln -s "$kept" "$WORKDIR/deploy-link"
+rm -rf "${WORKDIR:?}/home"
+if MODERN_DEPLOY_KEY_SRC="$WORKDIR/deploy-link" MODERN_LATE_BUNDLE="$bundle" \
+    MODERN_LATE_CLONE_URL="$missing" run_late clone >/dev/null 2>&1 \
+    && [ ! -e "$WORKDIR/deploy-link" ] && [ "$(cat "$kept")" = keep-me ] \
+    && [ ! -e "$WORKDIR/home/.config/modern/deploy_key" ]; then
+    ok "deploy key symlink is dropped and its target is left alone"
+else
+    err "deploy key symlink was followed or its target was removed"
 fi
 
 # mkarchiso strips modes off the bundle, so the clone phase has to put the
