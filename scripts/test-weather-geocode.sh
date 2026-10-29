@@ -48,8 +48,8 @@ else
 fi
 
 FETCH="$ROOT/scripts/weather-fetch.sh"
-if grep -F 'if [ "$MODE" = "auto" ]; then' "$FETCH" >/dev/null \
-    && grep -F 'elif [[ "$MANUAL"' "$FETCH" >/dev/null; then
+if grep -F 'MODE" = "auto"' "$FETCH" >/dev/null \
+    && grep -F 'MANUAL" =~' "$FETCH" >/dev/null; then
     ok "weather-fetch uses geolocation before a saved city"
 else
     err "weather-fetch.sh must prefer locationMode auto over manualLocation"
