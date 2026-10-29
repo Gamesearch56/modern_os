@@ -13,6 +13,7 @@ MCard {
 
     readonly property var drive: Storage.systemDrive || ({})
     property string hoveredId: ""
+    readonly property string _hot: StorageClean.open ? "" : root.hoveredId
 
     readonly property real _total: Number(drive.fsSize) || Number(drive.size) || 0
     readonly property real _used: Number(drive.used) || 0
@@ -113,7 +114,7 @@ MCard {
         MStackedBar {
             Layout.fillWidth: true
             implicitHeight: Tokens.spacing.lg
-            activeId: root.hoveredId
+            activeId: root._hot
             segments: {
                 const segs = [];
                 const list = root.rows;
@@ -138,7 +139,7 @@ MCard {
                 required property var modelData
                 Layout.fillWidth: true
                 implicitHeight: catRow.implicitHeight
-                opacity: !root.hoveredId || root.hoveredId === modelData.id ? 1 : 0.38
+                opacity: !root._hot || root._hot === modelData.id ? 1 : 0.38
 
                 Behavior on opacity {
                     NumberAnimation {
@@ -171,9 +172,12 @@ MCard {
                 }
                 MouseArea {
                     anchors.fill: parent
-                    hoverEnabled: true
+                    hoverEnabled: !StorageClean.open
                     cursorShape: Qt.PointingHandCursor
-                    onEntered: root.hoveredId = modelData.id
+                    onEntered: {
+                        if (!StorageClean.open)
+                            root.hoveredId = modelData.id;
+                    }
                     onExited: {
                         if (root.hoveredId === modelData.id)
                             root.hoveredId = "";

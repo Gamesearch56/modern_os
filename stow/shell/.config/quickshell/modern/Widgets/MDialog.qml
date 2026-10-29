@@ -18,6 +18,7 @@ FocusScope {
     property string destructiveKey: ""
     property bool destructive: false
     property bool confirmEnabled: true
+    property bool showCancel: true
     property bool wide: false
     default property alias extra: extraCol.data
 
@@ -58,6 +59,7 @@ FocusScope {
 
         MouseArea {
             anchors.fill: parent
+            hoverEnabled: true
             onClicked: root.cancelled()
         }
     }
@@ -84,6 +86,12 @@ FocusScope {
                 duration: Motion.mediumMs
                 easing.bezierCurve: root.open ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.AllButtons
         }
 
         ColumnLayout {
@@ -141,6 +149,7 @@ FocusScope {
                 spacing: Tokens.spacing.sm
 
                 MButton {
+                    visible: root.showCancel
                     kind: "text"
                     key: root.cancelKey
                     onClicked: root.cancelled()

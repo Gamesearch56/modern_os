@@ -71,6 +71,7 @@ singleton Passwd 1.0 Passwd.qml
 singleton Storage 1.0 Storage.qml
 StorageParse 1.0 StorageParse.qml
 singleton StorageUsage 1.0 StorageUsage.qml
+singleton StorageClean 1.0 StorageClean.qml
 singleton Update 1.0 Update.qml
 UpdateClassify 1.0 UpdateClassify.qml
 singleton Snapshots 1.0 Snapshots.qml

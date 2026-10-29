@@ -188,6 +188,12 @@ Scope {
                         pageHeader.restoreOpen = false;
                         return;
                     }
+                    if (StorageClean.phase === "run")
+                        return;
+                    if (StorageClean.open) {
+                        StorageClean.cancel();
+                        return;
+                    }
                     if (Update.open) {
                         Update.close();
                         return;
@@ -259,6 +265,8 @@ Scope {
                 active: Update.open
                 source: Qt.resolvedUrl("sections/system/UpdateOverlay.qml")
             }
+
+            CleanupDialog { }
 
         }
     }
