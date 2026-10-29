@@ -221,6 +221,7 @@ if grep -F 'Paths.script("usersd.sh")' "$PASSWD_QML" >/dev/null \
     && grep -Fq '.monitors' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '.design.activeProfile' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '_usersd_publish_session' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_publish_wallpaper' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '_usersd_seed_vivaldi' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '_usersd_refresh_greeter' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '_usersd_seed_keyring' "$ROOT/scripts/lib/usersd-desktop.sh" \

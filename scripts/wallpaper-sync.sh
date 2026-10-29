@@ -76,6 +76,13 @@ magick_to() {
 
 copy_as_jpeg "$IMAGE" "$SHARED/wallpaper.jpg"
 
+# Accounts with no snapshot of their own fall back to this file.
+# A later pick must not replace it with someone else's image.
+shipped_default="${XDG_CONFIG_HOME:-$HOME/.config}/modern/wallpapers/default.jpg"
+if [ ! -f "$SHARED/default.jpg" ] && [ -r "$shipped_default" ]; then
+    copy_as_jpeg "$shipped_default" "$SHARED/default.jpg" || warn "shipped login fallback skipped"
+fi
+
 if command -v magick >/dev/null 2>&1; then
     magick_to "$SHARED/wallpaper-boot.jpg" "$IMAGE" -resize '1920x1080>'
     magick_to "$SHARED/wallpaper-blur.jpg" "$SHARED/wallpaper-boot.jpg" -blur 0x16

@@ -29,7 +29,7 @@ hl.on("hyprland.start", function()
         .. "elif [ -r \"$shared\" ]; then img=\"$shared\"; "
         .. "else exit 0; fi; "
         .. "i=0; while ! pgrep -x awww-daemon >/dev/null; do i=$((i+1)); [ \"$i\" -gt 30 ] && exit 0; sleep 0.1; done; "
-        .. "awww img \"$img\" --transition-type none'")
+        .. "i=0; while ! awww img \"$img\" --transition-type none; do i=$((i+1)); [ \"$i\" -gt 20 ] && exit 0; sleep 0.15; done'")
 
     -- Background: import/dbus/polkit overlap; phylax waits on them.
     hl.exec_cmd("sh -lc '("

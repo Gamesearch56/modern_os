@@ -113,6 +113,47 @@ _usersd_copy_prefs() {
     done < <(invoker_names)
 }
 
+_usersd_publish_wallpaper() {
+    local home="$1" state cur base lib shipped resolved pic dirs line
+    state="$home/.local/state/modern/current-wallpaper"
+    shipped="$home/.config/modern/wallpapers/default.jpg"
+    pic="$home/Pictures"
+    dirs="$home/.config/user-dirs.dirs"
+    if [ -f "$dirs" ]; then
+        line="$(sed -nE 's/^XDG_PICTURES_DIR="?([^"]*)"?.*/\1/p' "$dirs" | head -1)"
+        line="${line//\$HOME/$home}"
+        line="${line//\$\{HOME\}/$home}"
+        [ -n "$line" ] && pic="$line"
+    fi
+    lib="$pic/Wallpapers"
+    cur=""
+    [ -f "$state" ] && cur="$(head -n 1 "$state" || true)"
+    resolved=""
+    if [ -n "$cur" ]; then
+        base="$(basename "$cur")"
+        if [ -f "$lib/$base" ]; then
+            resolved="$lib/$base"
+        elif [ -r "$cur" ]; then
+            resolved="$cur"
+        fi
+    fi
+    if [ -z "$resolved" ] && [ -f "$lib/default.jpg" ]; then
+        resolved="$lib/default.jpg"
+    elif [ -z "$resolved" ] && [ -r "$shipped" ]; then
+        resolved="$shipped"
+    fi
+    [ -n "$resolved" ] || return 0
+    mkdir -p "$(dirname "$state")"
+    printf '%s\n' "$resolved" >"$state"
+    chown -- "$username:$(id -gn -- "$username")" "$state" 2>/dev/null || true
+    if [ -x "${USERS_ROOT}/scripts/wallpaper-sync.sh" ]; then
+        HOME="$home" USER="$username" LOGNAME="$username" \
+            XDG_CONFIG_HOME="$home/.config" \
+            XDG_STATE_HOME="$home/.local/state" \
+            bash "${USERS_ROOT}/scripts/wallpaper-sync.sh" "$resolved" || true
+    fi
+}
+
 _usersd_publish_session() {
     local home="$1" script
     for script in session-chrome-sync.sh session-keyboard-sync.sh session-monitors-sync.sh; do
@@ -213,6 +254,7 @@ provision_new_user_desktop() {
         bash "$dest/install/install.sh" --profile m0 --yes --dotfiles-only --target "$home" \
         || return 1
     _usersd_copy_prefs "$home" || true
+    _usersd_publish_wallpaper "$home" || true
     _usersd_publish_session "$home" || true
     _usersd_seed_vivaldi "$home" || true
     _usersd_refresh_greeter || true

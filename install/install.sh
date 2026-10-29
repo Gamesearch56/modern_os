@@ -313,6 +313,12 @@ if [ -d "$shipped_wp_dir" ]; then
         fi
     done
 fi
+# The picker lists the library copy and hides the shipped symlink of
+# the same name. Remember the library file so the tile is selected
+# and the first session can read it.
+if [ -f "$pictures/default.jpg" ]; then
+    default_wp="$pictures/default.jpg"
+fi
 wallpaper_state="$STATE_DIR/current-wallpaper"
 if command -v matugen >/dev/null 2>&1; then
     if [ -f "$wallpaper_state" ]; then

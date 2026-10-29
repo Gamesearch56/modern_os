@@ -264,15 +264,16 @@ fi
 
 SURF_LOCK="$ROOT/stow/shell/.config/quickshell/modern/Modules/Session/SessionSurface.qml"
 lock_block="$(sed -n '/sources: \[/,/]/p' "$SURF_LOCK")"
-lock_file="$(printf '%s\n' "$lock_block" | grep -n 'wallpaperFile' | head -1 | cut -d: -f1)"
-lock_shared="$(printf '%s\n' "$lock_block" | grep -n 'sessionBlur' | head -1 | cut -d: -f1)"
-if [ -n "$lock_file" ] && [ -n "$lock_shared" ] && [ "$lock_file" -lt "$lock_shared" ] \
-    && grep -F 'wallpapers/' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionFrost.qml" >/dev/null \
+if printf '%s\n' "$lock_block" | grep -F 'wallpaperFile' >/dev/null \
+    && ! printf '%s\n' "$lock_block" | grep -F 'sessionBlur' >/dev/null \
+    && grep -F 'session/default.jpg' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionFrost.qml" >/dev/null \
+    && ! grep -F 'session/wallpaper.jpg' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionFrost.qml" >/dev/null \
     && grep -F 'WALLPAPER_EXPLICIT' "$ROOT/scripts/theme-apply.sh" >/dev/null \
-    && grep -F 'SHARED/wallpapers/' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null; then
-    ok "lock and login follow the selected wallpaper, not the shared default"
+    && grep -F 'SHARED/wallpapers/' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
+    && grep -F 'pictures/default.jpg' "$ROOT/install/install.sh" >/dev/null; then
+    ok "lock and login follow the selected account, not another user's wallpaper"
 else
-    err "lock must prefer the session wallpaper; login must read the per-user snapshot"
+    err "lock must use the session wallpaper; login must not fall back to another account"
 fi
 
 [ "$FAIL" -eq 0 ]

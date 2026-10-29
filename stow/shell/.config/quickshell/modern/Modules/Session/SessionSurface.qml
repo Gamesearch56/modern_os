@@ -50,11 +50,9 @@ Item {
         visible: root.showWallpaper
         opacity: root._shown ? 1 : 0
         sources: [
-            // The shared blur is the last account to publish, often the
-            // shipped default. This session's selected file comes first.
+            // Another account's shared snapshot must not fill this lock.
             root.wallpaperFile.length > 0 ? "file://" + root.wallpaperFile : "",
-            "file://" + Wallpaper.stateBlur,
-            "file://" + Wallpaper.sessionBlur
+            "file://" + Quickshell.env("HOME") + "/.config/modern/wallpapers/default.jpg"
         ]
         washOpacity: Chrome.washOpacity
         scrimOpacity: Tokens.overlay.scrim
