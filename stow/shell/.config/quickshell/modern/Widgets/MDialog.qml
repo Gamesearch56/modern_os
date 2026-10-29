@@ -1,5 +1,6 @@
 // Modal dialog: scrim + centered glass card (Settings wash, hairline
-// only — not a window chrome). `titleKey` / `bodyKey` are I18n paths.
+// only — not a window chrome). Actions: optional error-colored text
+// on the left (Forget), Cancel then Confirm buttons on the right.
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"
@@ -101,30 +102,14 @@ FocusScope {
             width: parent.width - Tokens.spacing.lg * 2
             spacing: Tokens.spacing.md
 
-            RowLayout {
+            MText {
+                key: root.titleKey
+                params: root.titleParams
+                value: root.titleValue
+                styleName: "headlineSmall"
+                wrapMode: Text.WordWrap
+                elide: Text.ElideNone
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.md
-
-                MText {
-                    key: root.titleKey
-                    params: root.titleParams
-                    value: root.titleValue
-                    styleName: "headlineSmall"
-                    wrapMode: Text.WordWrap
-                    elide: Text.ElideNone
-                    Layout.fillWidth: true
-                }
-
-                MIconButton {
-                    visible: root.destructiveKey.length > 0
-                    close: true
-                    escapeClicks: false
-                    iconName: "edit-delete-symbolic"
-                    key: root.destructiveKey
-                    iconSize: Tokens.icon.xs
-                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                    onClicked: root.destructiveClicked()
-                }
             }
 
             MText {
@@ -145,8 +130,47 @@ FocusScope {
             }
 
             RowLayout {
-                Layout.alignment: Qt.AlignRight
+                Layout.fillWidth: true
                 spacing: Tokens.spacing.sm
+
+                MText {
+                    visible: root.destructiveKey.length > 0
+                    key: root.destructiveKey
+                    styleName: "labelLarge"
+                    color: Colors.color.error
+                    opacity: tertiaryMa.containsMouse || tertiaryMa.pressed ? 0.72 : 1
+                    Layout.alignment: Qt.AlignVCenter
+                    Accessible.role: Accessible.Button
+                    Accessible.name: root.destructiveKey.length > 0 ? I18n.t(root.destructiveKey) : ""
+                    Accessible.onPressAction: root.destructiveClicked()
+                    activeFocusOnTab: visible
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Motion.shortMs
+                            easing.bezierCurve: Motion.easingStandard
+                        }
+                    }
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                            root.destructiveClicked();
+                            event.accepted = true;
+                        }
+                    }
+
+                    MouseArea {
+                        id: tertiaryMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.destructiveClicked()
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 MButton {
                     visible: root.showCancel
