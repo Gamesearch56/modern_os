@@ -101,6 +101,10 @@ QtObject {
         return root.raise.raiseDesktop(desktopId);
     }
 
+    function raiseApp(desktopId: string, appName: string): bool {
+        return root.raise.raiseApp(desktopId, appName);
+    }
+
     function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
         return root.raise.raiseDesktopOrLaunch(desktopId, entry);
     }

@@ -35,6 +35,7 @@ Item {
         } catch (e) {
         }
         const list = Hyprland.toplevels?.values ?? [];
+        let parked = "";
         for (let i = 0; i < list.length; i++) {
             const t = list[i];
             if (!t || !win.autostart.matchesDesktop(t, id))
@@ -42,8 +43,39 @@ Item {
             const addr = String(t.address || "");
             if (!addr.length)
                 continue;
-            win.activateWindow(addr);
+            const wsId = t.workspace ? Number(t.workspace.id) : 0;
+            if (wsId > 0) {
+                win.activateWindow(addr);
+                return true;
+            }
+            if (!parked.length)
+                parked = addr;
+        }
+        if (parked.length) {
+            win.activateWindow(parked);
             return true;
+        }
+        return false;
+    }
+
+    function raiseApp(desktopId: string, appName: string): bool {
+        const hints = [desktopId, appName];
+        const lookup = String(desktopId || appName || "").replace(/\.desktop$/i, "");
+        if (lookup.length) {
+            const e = DesktopEntries.byId(lookup) || DesktopEntries.byId(lookup + ".desktop")
+                || DesktopEntries.heuristicLookup(String(appName || lookup));
+            if (e)
+                hints.push(e.id, e.startupClass, e.name);
+        }
+        const seen = {};
+        for (let i = 0; i < hints.length; i++) {
+            const n = String(hints[i] || "").replace(/\.desktop$/i, "").trim();
+            const k = n.toLowerCase();
+            if (!n.length || seen[k])
+                continue;
+            seen[k] = true;
+            if (root.raiseDesktop(n))
+                return true;
         }
         return false;
     }

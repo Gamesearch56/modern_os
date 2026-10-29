@@ -59,12 +59,7 @@ MouseArea {
 
     function _activate() {
         const id = root._id();
-        const path = Notifications.attachmentPath(root.notification);
-        Qt.callLater(() => {
-            if (!Notifications.invokeDefault(id) && path.length)
-                Apps.openPath(path);
-            Notifications.dismiss(id);
-        });
+        Qt.callLater(() => Notifications.activate(id));
     }
 
     onShownAtChanged: root._startDrain()

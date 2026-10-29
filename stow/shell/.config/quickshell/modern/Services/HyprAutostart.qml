@@ -9,7 +9,8 @@ QtObject {
     property var windows: null
 
     function _norm(s: string): string {
-        return String(s || "").replace(/\.desktop$/i, "").toLowerCase().replace(/[\s._-]+/g, "");
+        return String(s || "").replace(/\.desktop$/i, "").toLowerCase()
+            .replace(/[-_]?url[-_]?handler$/i, "").replace(/[\s._-]+/g, "");
     }
 
     function _stem(id: string): string {

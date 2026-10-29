@@ -113,6 +113,7 @@ Scope {
 
                 Panel {
                     anchors.fill: parent
+                    monitorDesc: Hypr.monitorDescription(overlay.screen)
                 }
             }
 
