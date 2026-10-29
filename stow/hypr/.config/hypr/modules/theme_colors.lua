@@ -21,6 +21,12 @@ local function apply_surface(surface)
         misc = {
             background_color = "0x" .. surface,
         },
+        -- A whisper of the surface role, not the acrylic default blue.
+        decoration = {
+            blur = {
+                acrylic = { tint = "0x18" .. surface },
+            },
+        },
     })
 end
 

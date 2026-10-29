@@ -137,6 +137,7 @@ local function effects(name, match)
         rule.no_blur = true
         rule.no_shadow = true
         rule.no_anim = true
+        rule.no_wobble = true
         rule.opaque = true
         rule.content = "game"
         rule.idle_inhibit = "fullscreen"

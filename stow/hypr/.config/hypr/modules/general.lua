@@ -23,14 +23,38 @@ hl.config({
         inactive_opacity = win_alpha,
         blur = {
             enabled = true,
+            -- Acrylic is the only new blur that still reads as frosted
+            -- material. Streaks, ripples, and cracked ice fight tonal
+            -- surfaces. No chromatic fringe and no second edge radius:
+            -- corners stay the rounding token. Tint comes from the
+            -- surface role in theme_colors.lua.
+            variant = "acrylic",
             size = math.floor(blur / 10),
             passes = 2,
             new_optimizations = true,
+            acrylic = {
+                aberration = 0,
+                refraction = 6,
+                bulb = 12,
+                clarity = 0.88,
+                tint = "0x00000000",
+            },
         },
         shadow = {
             enabled = true,
             range = 12,
             render_power = 3,
+        },
+        -- A small give on move and resize. Intensity stays under
+        -- the default so it does not outrun the bezier window
+        -- curves. Stiffness is higher than the default 200, with
+        -- damping scaled to match, so the same wobble settles
+        -- sooner. Games opt out with no_wobble.
+        wobble = {
+            enabled = true,
+            intensity = 0.1,
+            stiffness = 500,
+            damping = 19,
         },
     },
     dwindle = {
