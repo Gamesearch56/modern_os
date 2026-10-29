@@ -90,7 +90,7 @@ fi
 MUT="$ROOT/scripts/pkg-mutate.sh"
 MUTATE_QML="$ROOT/stow/shell/.config/quickshell/modern/Services/StoreMutate.qml"
 if grep -F 'install|remove|update' "$MUT" >/dev/null \
-    && grep -F 'PACMAN" -Sy --noconfirm --needed -- "$name"' "$MUT" >/dev/null \
+    && grep -F 'PACMAN" -Sy --noconfirm --needed --' "$MUT" >/dev/null \
     && grep -F 'proc.command = [Paths.script("pkg-mutate.sh"), action, name]' "$MUTATE_QML" >/dev/null \
     && ! grep -F 'action === "update" ? "install"' "$MUTATE_QML" >/dev/null; then
     ok "store update runs pacman -Sy --needed"

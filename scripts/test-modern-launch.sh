@@ -55,6 +55,10 @@ if grep -Fq 'special:background silent' "$SESSION" \
     && grep -Fq 'session_direct_apps' "$SESSION" \
     && grep -Fq 'vivaldi-apps' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
     && grep -Fq 'user-data-dir' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
+    && grep -Fq '{ timeout = 250,' "$SESSION" \
+    && grep -Fq 'delay = delay + 200' "$SESSION" \
+    && ! grep -Fq '{ timeout = 2000,' "$SESSION" \
+    && ! grep -Fq 'delay = delay + 1500' "$SESSION" \
     && grep -Fq 'no_initial_focus' "$SESSION" \
     && ! grep -Fq 'session-park' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \

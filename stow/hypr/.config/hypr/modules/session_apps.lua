@@ -177,7 +177,7 @@ local function start_apps()
             else
                 launch_name(name)
             end
-            delay = delay + 1500
+            delay = delay + 200
         end
     end
 end
@@ -185,7 +185,7 @@ end
 function M.on_start()
     pin_background()
     if hl.timer then
-        hl.timer(start_apps, { timeout = 2000, type = "oneshot" })
+        hl.timer(start_apps, { timeout = 250, type = "oneshot" })
     else
         start_apps()
     end

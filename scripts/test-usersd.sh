@@ -208,6 +208,8 @@ if grep -F 'Paths.script("usersd.sh")' "$PASSWD_QML" >/dev/null \
     && grep -Fq 'provision_new_user_desktop' "$SCRIPT" \
     && grep -Fq '_usersd_repo_ok' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq 'USERS_ROOT/scripts/session-users-sync.sh' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_sync_greeter' "$SCRIPT" \
+    && grep -Fq 'session-users-sync.sh' "$SCRIPT" \
     && grep -Fq 'env -i' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq -- '--exclude=.git' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq -- '--dotfiles-only' "$ROOT/install/install.sh" \

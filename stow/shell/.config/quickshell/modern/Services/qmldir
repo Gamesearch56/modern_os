@@ -51,6 +51,7 @@ WallpaperThumbs 1.0 WallpaperThumbs.qml
 singleton FilePreview 1.0 FilePreview.qml
 singleton FilePick 1.0 FilePick.qml
 singleton Session 1.0 Session.qml
+SessionAuth 1.0 SessionAuth.qml
 singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
 AppsIcons 1.0 AppsIcons.qml

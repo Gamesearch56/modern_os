@@ -196,7 +196,8 @@
     "welcome": "Welcome",
     "loginFailed": "Could not sign in",
     "unavailable": "Sign-in is not available",
-    "capsLock": "Caps Lock is on"
+    "capsLock": "Caps Lock is on",
+    "admin": "Admin"
   },
   "alarm": {
     "title": "Alarm",

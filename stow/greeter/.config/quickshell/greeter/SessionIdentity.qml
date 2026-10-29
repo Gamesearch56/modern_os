@@ -98,12 +98,27 @@ Item {
         Text {
             visible: String(root._picked.titleValue || root._picked.value || "").length > 0
             Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: root._c ? root._c.spaceXl : 24
+            Layout.bottomMargin: root._picked.admin
+                ? 0
+                : (root._c ? root._c.spaceXl : 24)
             text: String(root._picked.titleValue || root._picked.value || "")
             color: root._c ? root._c.color.onSurface : "#E6E0E9"
             font.family: root._c ? root._c.fontFamily : "sans-serif"
             font.pixelSize: root._c ? root._c.typePx("titleMedium") : 16
             font.weight: root._c ? root._c.typeWeight("titleMedium") : 500
+            Accessible.role: Accessible.StaticText
+            Accessible.name: text
+        }
+
+        Text {
+            visible: !!root._picked.admin
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: root._c ? root._c.spaceXl : 24
+            text: root._c ? root._c.t("session.admin") : ""
+            color: root._c ? root._c.color.onSurfaceVariant : "#CAC4D0"
+            font.family: root._c ? root._c.fontFamily : "sans-serif"
+            font.pixelSize: root._c ? root._c.typePx("bodySmall") : 12
+            font.weight: root._c ? root._c.typeWeight("bodySmall") : 400
             Accessible.role: Accessible.StaticText
             Accessible.name: text
         }

@@ -35,12 +35,14 @@ except (OSError, json.JSONDecodeError):
     raise SystemExit(0)
 if not isinstance(users, list):
     raise SystemExit(0)
+keep = set()
 for u in users:
     if not isinstance(u, dict):
         continue
     login = str(u.get("value") or "")
     if not login or "/" in login or "\\" in login or login in (".", ".."):
         continue
+    keep.add(login)
     home = str(u.get("home") or "")
     dest = os.path.join(faces, login)
     cands = []
@@ -48,11 +50,19 @@ for u in users:
         cands.append(os.path.join(home, ".face"))
         cands.append(os.path.join(home, ".face.icon"))
     cands.append(os.path.join("/var/lib/AccountsService/icons", login))
+    copied = False
     for src in cands:
         if os.path.isfile(src) and os.access(src, os.R_OK):
             shutil.copyfile(src, dest)
             os.chmod(dest, 0o644)
+            copied = True
             break
+    if not copied and os.path.isfile(dest):
+        os.remove(dest)
+for name in os.listdir(faces):
+    stale = os.path.join(faces, name)
+    if name not in keep and os.path.isfile(stale):
+        os.remove(stale)
 PY
 chmod a+rX "$SHARED/faces" 2>/dev/null || true
 find "$SHARED/faces" -type f -exec chmod a+r {} + 2>/dev/null || true

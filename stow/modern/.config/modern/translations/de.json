@@ -196,7 +196,8 @@
     "welcome": "Willkommen",
     "loginFailed": "Anmeldung fehlgeschlagen",
     "unavailable": "Anmeldung nicht verfügbar",
-    "capsLock": "Feststelltaste aktiv"
+    "capsLock": "Feststelltaste aktiv",
+    "admin": "Admin"
   },
   "alarm": {
     "title": "Wecker",

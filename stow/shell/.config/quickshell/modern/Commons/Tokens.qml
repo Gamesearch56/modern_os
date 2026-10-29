@@ -129,6 +129,10 @@ Singleton {
         readonly property real thumb: 20
     }
 
+    readonly property QtObject session: QtObject {
+        readonly property real avatar: root.spacing.xxl * 4
+    }
+
     readonly property QtObject store: QtObject {
         readonly property real heroHeight: root.spacing.xxl * 8
         readonly property real heroIcon: root.icon.lg + root.spacing.md * 2

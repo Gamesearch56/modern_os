@@ -40,6 +40,7 @@ if jq -n \
         loginFailed: (.session.loginFailed // "Could not sign in"),
         unavailable: (.session.unavailable // "Sign-in is not available"),
         capsLock: (.session.capsLock // "Caps Lock is on"),
+        admin: (.session.admin // "Admin"),
         restart: (.powerMenu.restart // "Restart"),
         poweroff: (.powerMenu.poweroff // "Shut down"),
         power: (.powerMenu.title // "Power"),

@@ -132,6 +132,7 @@ Item {
             "session.loginFailed": s.loginFailed || "Could not sign in",
             "session.unavailable": s.unavailable || "Sign-in is not available",
             "session.capsLock": s.capsLock || "Caps Lock is on",
+            "session.admin": s.admin || "Admin",
             "powerMenu.restart": s.restart || "Restart",
             "powerMenu.poweroff": s.poweroff || "Shut down",
             "powerMenu.title": s.power || "Power"
@@ -229,6 +230,13 @@ Item {
         if (p === "MM/DD/YYYY")
             return mm + "/" + dd + "/" + yyyy;
         return dd + "." + mm + "." + yyyy;
+    }
+
+    function accountTitle(row: var): string {
+        const name = String((row && (row.titleValue || row.value)) || "");
+        if (row && row.admin && name.length)
+            return name + " · " + root.t("session.admin");
+        return name;
     }
 
     function formatDateLine(d: var): string {

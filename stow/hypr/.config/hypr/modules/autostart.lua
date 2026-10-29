@@ -18,16 +18,17 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("sh -lc 'img=/var/lib/modern/session/wallpaper.jpg; state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; default=\"$HOME/.config/modern/wallpapers/default.jpg\"; if [ -f \"$img\" ]; then :; elif [ -f \"$state\" ]; then img=$(cat \"$state\"); elif [ -f \"$default\" ]; then img=\"$default\"; else exit 0; fi; [ -f \"$img\" ] && awww img \"$img\" --transition-type none'")
 
-    -- Background: sequential timeout 2 calls must not contend with qs.
+    -- Background: import/dbus/polkit overlap; phylax waits on them.
     hl.exec_cmd("sh -lc '("
         .. "if systemctl --user is-active --quiet modern-shell.service; then "
         .. "timeout 1 systemctl --user stop modern-shell.service || true; fi; "
-        .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XDG_SESSION_ID XDG_SESSION_TYPE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true; "
-        .. "timeout 2 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true; "
-        .. "timeout 2 systemctl --user stop hyprpolkitagent.service || true; "
-        .. "timeout 2 systemctl --user daemon-reload || true; "
-        .. "timeout 2 systemctl --user reset-failed phylax.service || true; "
-        .. "timeout 2 systemctl --user start phylax || true) &'")
+        .. "timeout 1 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XDG_SESSION_ID XDG_SESSION_TYPE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true & "
+        .. "timeout 1 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true & "
+        .. "timeout 1 systemctl --user stop hyprpolkitagent.service || true & "
+        .. "wait; "
+        .. "timeout 1 systemctl --user daemon-reload || true; "
+        .. "timeout 1 systemctl --user reset-failed phylax.service || true; "
+        .. "timeout 1 systemctl --user start phylax || true) &'")
 
     hl.exec_cmd("sh -lc '" .. paths.scripts .. "/hypridle-apply.sh'")
     -- logind HandleLidSwitch/HandlePowerKey would steal Energy actions.

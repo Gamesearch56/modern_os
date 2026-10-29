@@ -63,6 +63,7 @@ valid_name() {
 ok() {
     jq -n --arg action "$1" --arg username "$username" --arg group "$groupname" \
         '{ok:true, action:$action, username:$username, group:$group}'
+    _usersd_sync_greeter
 }
 
 run() {
@@ -77,6 +78,12 @@ run() {
 USERS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=lib/usersd-desktop.sh
 source "$USERS_ROOT/scripts/lib/usersd-desktop.sh"
+
+_usersd_sync_greeter() {
+    local s="${USERS_ROOT}/scripts/session-users-sync.sh"
+    [ -x "$s" ] || return 0
+    bash "$s" >/dev/null 2>&1 || true
+}
 
 is_admin_name() {
     if [ "$DRY" -eq 1 ]; then

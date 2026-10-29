@@ -41,11 +41,13 @@ else
 fi
 
 if grep -F 'capsLock' "$ROOT/scripts/session-chrome-sync.sh" >/dev/null \
+    && grep -F 'admin' "$ROOT/scripts/session-chrome-sync.sh" >/dev/null \
     && grep -F 'weekday' "$ROOT/scripts/session-chrome-sync.sh" >/dev/null \
     && grep -F 'session-chrome-sync.sh' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
     && grep -F 'session-keyboard-sync.sh' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
     && grep -F 'session-monitors-sync.sh' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
     && grep -F 'keyboard.json' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
+    && grep -F 'accountTitle' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionChrome.qml" >/dev/null \
     && grep -F 'SessionUsers' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'modern-users.json' "$ROOT/install/system/greetd/kiosk.sh" >/dev/null \
     && grep -F 'monitors.json' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
@@ -73,10 +75,21 @@ else
     err "default-user must be 0664 so greeter can update the last user"
 fi
 
-if python3 "$ROOT/install/system/greetd/list-users.py" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert isinstance(d, list); assert all("home" in x and "value" in x for x in d)' >/dev/null; then
+if python3 "$ROOT/install/system/greetd/list-users.py" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert isinstance(d, list); assert all("home" in x and "value" in x and "admin" in x for x in d)' >/dev/null; then
     ok "list-users.py emits a JSON array"
 else
-    err "list-users.py must print a JSON array of login names with home"
+    err "list-users.py must print a JSON array of login names with home and admin"
+fi
+
+LOCK_AUTH="$ROOT/stow/shell/.config/quickshell/modern/Services/SessionAuth.qml"
+if grep -F 'PamContext' "$LOCK_AUTH" >/dev/null \
+    && grep -F 'system-auth' "$LOCK_AUTH" >/dev/null \
+    && grep -F 'PamResult.Success' "$LOCK_AUTH" >/dev/null \
+    && grep -F 'auth.authenticate' "$ROOT/stow/shell/.config/quickshell/modern/Services/Session.qml" >/dev/null \
+    && ! grep -F 'M1 accepts' "$ROOT/stow/shell/.config/quickshell/modern/Services/Session.qml" >/dev/null; then
+    ok "lock screen verifies the session user with PAM"
+else
+    err "Session.authenticate must use PamContext and fail closed"
 fi
 
 if grep -F 'SessionAvatar' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionIdentity.qml" >/dev/null \

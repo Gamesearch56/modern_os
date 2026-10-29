@@ -69,7 +69,9 @@ Rectangle {
             width: list.width
             height: root._c ? root._c.fieldHeight : 36
             Accessible.role: Accessible.MenuItem
-            Accessible.name: opt.titleValue || String(opt.value || "")
+            Accessible.name: root._c && root._c.accountTitle
+                ? root._c.accountTitle(opt)
+                : (opt.titleValue || String(opt.value || ""))
 
             HoverHandler {
                 id: hover
@@ -96,7 +98,9 @@ Rectangle {
                 anchors.rightMargin: root._c ? root._c.spaceMd : 12
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
-                text: opt.titleValue || String(opt.value || "")
+                text: root._c && root._c.accountTitle
+                    ? root._c.accountTitle(opt)
+                    : (opt.titleValue || String(opt.value || ""))
                 color: row._sel
                     ? (root._c ? root._c.color.onPrimaryContainer : "#EADDFF")
                     : (root._c ? root._c.color.onSurface : "#E6E0E9")
