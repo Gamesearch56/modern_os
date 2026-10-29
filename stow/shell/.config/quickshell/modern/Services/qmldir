@@ -71,6 +71,7 @@ ThemeSpec 1.0 ThemeSpec.qml
 singleton ThemePalettes 1.0 ThemePalettes.qml
 singleton Passwd 1.0 Passwd.qml
 PasswdParse 1.0 PasswdParse.qml
+PasswdSelf 1.0 PasswdSelf.qml
 singleton Storage 1.0 Storage.qml
 StorageParse 1.0 StorageParse.qml
 singleton StorageUsage 1.0 StorageUsage.qml

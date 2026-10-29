@@ -34,13 +34,21 @@ Item {
         id: col
         width: parent.width
         spacing: Tokens.spacing.lg
+        enabled: Passwd.canManage
 
         Status {
             Layout.fillWidth: true
         }
 
+        MHint {
+            visible: !Passwd.canManage
+            key: "settings.systemAdminOnly"
+            Layout.fillWidth: true
+        }
+
         ColumnLayout {
             Layout.fillWidth: true
+            enabled: Passwd.canManage
             spacing: Tokens.spacing.xs
             RowLayout {
                 Layout.fillWidth: true

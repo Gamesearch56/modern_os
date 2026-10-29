@@ -844,12 +844,16 @@
       "memberCount": "{n} members",
       "adminOnly": "Only an administrator can change people and groups.",
       "adminOnlyHint": "Adding, editing, and deleting people and groups needs an administrator.",
+      "passwordSelfHint": "Opens a terminal so you can set a new password.",
+      "displayNameAdminOnly": "Only an administrator can change the display name.",
       "invalid": "Check the name and password.",
       "protected": "That account cannot be changed.",
       "lastAdmin": "Keep at least one administrator.",
       "failed": "Could not update that account.",
+      "busy": "That account is still signed in. Sign it out, then try again.",
       "autologinFailed": "Could not update automatic login."
     },
+    "systemAdminOnly": "Only an administrator can update the system, change the firewall, or manage backups.",
     "screenshots": {
       "stills": "Screenshot",
       "video": "Video"

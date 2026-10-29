@@ -314,9 +314,7 @@ if [ -d "$shipped_wp_dir" ]; then
     done
 fi
 wallpaper_state="$STATE_DIR/current-wallpaper"
-if [ "$DOTFILES_ONLY" -eq 1 ]; then
-    log_info "dotfiles-only: skipping theme-apply (no session bus)"
-elif command -v matugen >/dev/null 2>&1; then
+if command -v matugen >/dev/null 2>&1; then
     if [ -f "$wallpaper_state" ]; then
         run "${theme_env[@]}" "$REPO_ROOT/scripts/theme-apply.sh" --no-reload \
             || log_warn "theme-apply.sh failed — re-run it after Hyprland is up"

@@ -83,18 +83,31 @@ _usersd_clone_tree() {
     [ -x "$dest/install/install.sh" ] || return 1
 }
 
-_usersd_seed_tokens() {
-    local dest_home="$1" inv home src dest
-    dest="$dest_home/.config/modern/tokens.json"
-    [ -f "$dest" ] && return 0
+_usersd_copy_prefs() {
+    local dest_home="$1" dest inv home src tmp
+    dest="$dest_home/.config/modern/config.json"
+    [ -f "$dest" ] || return 0
+    command -v jq >/dev/null 2>&1 || return 0
     while IFS= read -r inv; do
         [ -n "$inv" ] || continue
+        [ "$(id -u -- "$inv" 2>/dev/null || true)" != "0" ] || continue
         home="$(getent passwd -- "$inv" 2>/dev/null | cut -d: -f6)"
-        src="$home/.config/modern/tokens.json"
+        src="$home/.config/modern/config.json"
         [ -f "$src" ] && [ ! -L "$src" ] || continue
-        install -d -m 0755 "$dest_home/.config/modern"
-        install -m 0644 "$src" "$dest"
-        return 0
+        tmp="$(mktemp "${dest}.XXXXXX")"
+        if jq --slurpfile src "$src" '
+            .language.ui = ($src[0].language.ui // .language.ui)
+            | .language.fallback = ($src[0].language.fallback // .language.fallback)
+            | .language.dateFormat = ($src[0].language.dateFormat // .language.dateFormat)
+            | .language.timeFormat = ($src[0].language.timeFormat // .language.timeFormat)
+            | .language.firstDayOfWeek = ($src[0].language.firstDayOfWeek // .language.firstDayOfWeek)
+            | .input.kbLayout = ($src[0].input.kbLayout // .input.kbLayout)
+            | .input.kbVariant = ($src[0].input.kbVariant // .input.kbVariant)
+        ' "$dest" >"$tmp"; then
+            mv -f "$tmp" "$dest"
+            return 0
+        fi
+        rm -f "$tmp"
     done < <(invoker_names)
 }
 
@@ -125,7 +138,6 @@ provision_new_user_desktop() {
     dest="$home/modern_dotfile"
     _usersd_clone_tree "$src" "$dest" || return 1
     _usersd_copy_deploy_key "$home" || true
-    _usersd_seed_tokens "$home" || true
     grp="$(id -gn -- "$username")"
     chown -hR "$username:$grp" "$home"
     lang="$(awk -F= '/^LANG=/{ gsub(/"/, "", $2); print $2; exit }' /etc/locale.conf 2>/dev/null || true)"
@@ -134,7 +146,7 @@ provision_new_user_desktop() {
     [ -x "$dest/install/install.sh" ] || return 1
     # env -i: a leaked D-Bus/sudo from the admin pkexec made install.sh
     # wait on pacman. timeout: Settings must not spin forever.
-    timeout 90 runuser -u "$username" -- env -i \
+    timeout 120 runuser -u "$username" -- env -i \
         HOME="$home" USER="$username" LOGNAME="$username" \
         PATH="/usr/bin:/bin" \
         XDG_CONFIG_HOME="$home/.config" \
@@ -144,6 +156,8 @@ provision_new_user_desktop() {
         GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
         bash "$dest/install/install.sh" --profile m0 --yes --dotfiles-only --target "$home" \
         || return 1
+    _usersd_copy_prefs "$home" || true
+    chown -h -- "$username:$grp" "$home/.config/modern/config.json" 2>/dev/null || true
     if [ -x "${USERS_ROOT:-}/scripts/session-users-sync.sh" ]; then
         bash "$USERS_ROOT/scripts/session-users-sync.sh" || true
     fi

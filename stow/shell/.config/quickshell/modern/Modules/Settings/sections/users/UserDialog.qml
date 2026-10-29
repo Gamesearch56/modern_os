@@ -17,6 +17,7 @@ MDialog {
     property bool admin: false
 
     readonly property bool session: !root.creating && root.login === Passwd.loginName
+    readonly property bool canEditGecos: Passwd.canManage || (root.session && Passwd.canSetOwnGecos)
     readonly property string adminGroup: {
         const rows = Passwd.localGroups || [];
         for (let i = 0; i < rows.length; i++) {
@@ -52,6 +53,7 @@ MDialog {
     confirmKey: root.creating ? "settings.users.addUser" : "settings.save"
     cancelKey: "settings.cancel"
     confirmEnabled: root._valid && !Passwd.running
+        && (root.creating || Passwd.canManage || root.canEditGecos)
     onCancelled: root.open = false
     onConfirmed: root._save()
 
@@ -124,9 +126,13 @@ MDialog {
                 password: root.password, groups: groups
             });
         } else if (root.session) {
-            Passwd.updateUser(Passwd.canManage
-                ? { login: root.originLogin, gecos: root.gecos, groups: groups }
-                : { login: root.originLogin, gecos: root.gecos });
+            if (Passwd.canManage) {
+                Passwd.updateUser({
+                    login: root.originLogin, gecos: root.gecos, groups: groups
+                });
+            } else if (root.canEditGecos) {
+                Passwd.setOwnGecos(root.gecos);
+            }
         } else {
             if (!Passwd.canManage)
                 return;
@@ -148,9 +154,12 @@ MDialog {
     }
     MField {
         labelKey: "settings.users.displayName"
-        hintKey: "settings.users.displayNameHint"
+        hintKey: root.canEditGecos
+            ? "settings.users.displayNameHint"
+            : "settings.users.displayNameAdminOnly"
         MTextField {
             id: gecosField
+            enabled: root.canEditGecos
             onTextEdited: root.gecos = gecosField.text
         }
     }
@@ -178,6 +187,11 @@ MDialog {
         kind: "text"
         key: "settings.users.changePassword"
         onClicked: Passwd.setPassword()
+    }
+    MHint {
+        visible: root.session
+        key: "settings.users.passwordSelfHint"
+        Layout.fillWidth: true
     }
     RowLayout {
         visible: Passwd.canManage

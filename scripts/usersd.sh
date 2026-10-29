@@ -248,21 +248,56 @@ create_user() {
     fi
     { printf '%s:' "$username"; printf '%s\n' "$password"; } | chpasswd
     if ! provision_new_user_desktop; then
-        userdel -r -- "$username" >/dev/null 2>&1 || true
+        _usersd_evict "$username"
+        userdel -f -r -- "$username" >/dev/null 2>&1 || true
         fail "desktop install failed"
     fi
     ok create
+}
+
+# userdel -r fails while a leftover session still holds files (a
+# Settings-created account that was logged into, or a hung install).
+_usersd_evict() {
+    local u="$1" uid n=0
+    [ -n "$u" ] || return 0
+    uid="$(id -u -- "$u" 2>/dev/null || true)"
+    if command -v loginctl >/dev/null 2>&1; then
+        loginctl terminate-user "$u" >/dev/null 2>&1 || true
+        loginctl kill-user "$u" >/dev/null 2>&1 || true
+    fi
+    if [ -n "$uid" ] && command -v systemctl >/dev/null 2>&1; then
+        systemctl stop "user@${uid}.service" >/dev/null 2>&1 || true
+        systemctl stop "user-${uid}.slice" >/dev/null 2>&1 || true
+    fi
+    pkill -KILL -u "$u" >/dev/null 2>&1 || true
+    while pgrep -u "$u" >/dev/null 2>&1; do
+        n=$((n + 1))
+        [ "$n" -le 8 ] || break
+        sleep 0.15
+    done
 }
 
 delete_user() {
     require_existing
     refuse_if_self_or_root "$username"
     refuse_last_admin "$username"
+    local drop_home
+    drop_home="$(jq -r '.removeHome // true' <<<"$json")"
     local -a cmd=(userdel)
-    [ "$(jq -r '.removeHome // true' <<<"$json")" = "true" ] && cmd+=(-r)
+    [ "$drop_home" = "true" ] && cmd+=(-r)
     cmd+=(-- "$username")
-    run "${cmd[@]}"
-    [ "$DRY" -eq 1 ] || ok delete
+    if [ "$DRY" -eq 1 ]; then
+        run "${cmd[@]}"
+        return
+    fi
+    _usersd_evict "$username"
+    if ! "${cmd[@]}"; then
+        cmd=(userdel -f)
+        [ "$drop_home" = "true" ] && cmd+=(-r)
+        cmd+=(-- "$username")
+        "${cmd[@]}" || fail "account is currently used"
+    fi
+    ok delete
 }
 
 rename_user() {

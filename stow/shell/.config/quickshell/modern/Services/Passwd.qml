@@ -20,10 +20,11 @@ Singleton {
     property var localGroups: []
     property var sessionUser: ({})
     readonly property bool canManage: rules.isAdmin(root.sessionUser) || rules.isAdmin({ groups: root.groups })
+    readonly property bool canSetOwnGecos: own.canSetGecos
     property string _payload: ""
-    property string _stderr: ""
 
     PasswdParse { id: rules }
+    PasswdSelf { id: own; host: root }
 
     function refresh() {
         if (!root.watching)
@@ -73,6 +74,8 @@ Singleton {
         Apps.runInTerminal(["passwd"]);
         Settings.close();
     }
+
+    function setOwnGecos(name: string) { own.applyGecos(name); }
 
     function _requireManage(): bool {
         if (root.canManage)
@@ -217,7 +220,6 @@ Singleton {
             return;
         root.running = true;
         root.lastError = "";
-        root._stderr = "";
         root._payload = JSON.stringify(body);
         mutateProc.running = false;
         mutateProc.stdinEnabled = true;
@@ -259,9 +261,7 @@ Singleton {
         id: mutateProc
         stdinEnabled: true
         running: false
-        stderr: StdioCollector {
-            onStreamFinished: root._stderr = String(this.text || "").trim()
-        }
+        stderr: StdioCollector { id: errOut }
         onStarted: {
             mutateProc.write(root._payload);
             mutateProc.stdinEnabled = false;
@@ -271,17 +271,12 @@ Singleton {
             mutateProc.stdinEnabled = true;
             mutateProc.running = false;
             root.running = false;
-            if (code !== 0)
-                root.lastError = rules.mapError(root._stderr);
-            else
-                root.lastError = "";
+            root.lastError = code !== 0
+                ? rules.mapError(String(errOut.text || "").trim()) : "";
             if (root.watching)
                 root.refresh();
         }
     }
 
-    onWatchingChanged: {
-        if (root.watching)
-            root.refresh();
-    }
+    onWatchingChanged: { if (root.watching) root.refresh(); }
 }

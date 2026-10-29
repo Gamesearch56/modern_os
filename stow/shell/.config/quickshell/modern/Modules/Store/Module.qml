@@ -42,7 +42,7 @@ Scope {
                 onClosed: Store.hide()
 
                 trailing: Item {
-                    readonly property bool show: Update.pending.length > 0
+                    readonly property bool show: Passwd.canManage && Update.pending.length > 0
                     visible: show
                     implicitWidth: show ? updBtn.implicitWidth + Tokens.spacing.xs : 0
                     implicitHeight: show ? updBtn.implicitHeight : 0

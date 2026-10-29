@@ -16,6 +16,12 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
+    MHint {
+        visible: !Passwd.canManage
+        key: "settings.systemAdminOnly"
+        Layout.fillWidth: true
+    }
+
     RowLayout {
         Layout.fillWidth: true
         spacing: Tokens.spacing.md
@@ -24,7 +30,7 @@ ColumnLayout {
             key: "settings.systemUpdate"
             iconName: "system-software-update"
             Layout.fillWidth: true
-            enabled: Update.pending.length > 0 && !Update.running && !Update.mirrorsRunning
+            enabled: Passwd.canManage && Update.pending.length > 0 && !Update.running && !Update.mirrorsRunning
             onClicked: Update.start()
         }
         MButton {
@@ -32,7 +38,7 @@ ColumnLayout {
             key: "settings.mirrorsUpdate"
             iconName: "view-refresh"
             busy: Update.mirrorsRunning
-            enabled: !Update.running && !Update.checking
+            enabled: Passwd.canManage && !Update.running && !Update.checking
             onClicked: Update.refreshMirrors()
         }
     }

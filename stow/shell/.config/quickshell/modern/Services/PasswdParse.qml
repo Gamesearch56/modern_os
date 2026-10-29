@@ -46,13 +46,15 @@ QtObject {
     }
 
     function mapError(text: string): string {
-        const t = String(text || "");
+        const t = String(text || "").toLowerCase();
         if (t.indexOf("invoking") !== -1 || t.indexOf("uid 0") !== -1 || t.indexOf("protected") !== -1)
             return I18n.t("settings.users.protected");
         if (t.indexOf("last administrator") !== -1)
             return I18n.t("settings.users.lastAdmin");
         if (t.indexOf("invalid") !== -1)
             return I18n.t("settings.users.invalid");
+        if (t.indexOf("currently used") !== -1 || t.indexOf("signed in") !== -1)
+            return I18n.t("settings.users.busy");
         return I18n.t("settings.users.failed");
     }
 

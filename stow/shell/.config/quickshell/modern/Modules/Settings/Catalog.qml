@@ -1,6 +1,7 @@
 // Runtime search index mirroring sections/*/section.json.
 import QtQuick
 import "../../Commons"
+import "../../Services"
 
 QtObject {
     id: root
@@ -38,11 +39,18 @@ QtObject {
         return root._byId[id]?.restore ?? [];
     }
 
+    function adminOnly(id: string): bool {
+        return !!(root._byId[id]?.adminOnly);
+    }
+
     function filtered(needle) {
+        void Passwd.canManage;
         const n = (needle || "").trim().toLowerCase();
         const items = [];
         for (let i = 0; i < root.ids.length; i++) {
             const id = root.ids[i];
+            if (root.adminOnly(id) && !Passwd.canManage)
+                continue;
             if (n.length === 0 || root._matches(id, n))
                 items.push(id);
         }
@@ -92,8 +100,8 @@ QtObject {
         network: { icon: "network-wireless", order: 54, group: "devices", keywords: ["wifi", "ethernet", "speed"] },
         bluetooth: { icon: "bluetooth", order: 56, group: "devices", keywords: ["devices", "pair", "headphones"] },
         storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["disk", "mount", "eject", "usb", "nvme", "usage", "free", "games", "files"] },
-        backup: { icon: "document-save", order: 72, group: "system", keywords: ["snapper", "snapshot", "restore", "rollback", "prune", "keep"] },
-        firewall: { icon: "preferences-security-firewall", order: 73, group: "system", keywords: ["ufw", "rules", "allow", "deny", "port"] },
-        system: { icon: "system-software-update", order: 74, group: "system", keywords: ["update", "mirrors", "kernel", "hyprland", "packages"] }
+        backup: { icon: "document-save", order: 72, group: "system", keywords: ["snapper", "snapshot", "restore", "rollback", "prune", "keep"], adminOnly: true },
+        firewall: { icon: "preferences-security-firewall", order: 73, group: "system", keywords: ["ufw", "rules", "allow", "deny", "port"], adminOnly: true },
+        system: { icon: "system-software-update", order: 74, group: "system", keywords: ["update", "mirrors", "kernel", "hyprland", "packages"], adminOnly: true }
     })
 }

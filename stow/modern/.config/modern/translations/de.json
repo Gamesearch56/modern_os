@@ -844,12 +844,16 @@
       "memberCount": "{n} Mitglieder",
       "adminOnly": "Nur ein Administrator kann Personen und Gruppen ändern.",
       "adminOnlyHint": "Personen und Gruppen hinzufügen, bearbeiten und löschen darf nur ein Administrator.",
+      "passwordSelfHint": "Öffnet ein Terminal, in dem du ein neues Passwort setzen kannst.",
+      "displayNameAdminOnly": "Nur ein Administrator kann den Anzeigenamen ändern.",
       "invalid": "Prüfe Name und Passwort.",
       "protected": "Dieses Konto kann nicht geändert werden.",
       "lastAdmin": "Mindestens ein Administrator muss bleiben.",
       "failed": "Konto konnte nicht aktualisiert werden.",
+      "busy": "Dieses Konto ist noch angemeldet. Melde es ab und versuche es erneut.",
       "autologinFailed": "Automatische Anmeldung konnte nicht gesetzt werden."
     },
+    "systemAdminOnly": "Nur ein Administrator kann das System aktualisieren, die Firewall ändern oder Sicherungen verwalten.",
     "screenshots": {
       "stills": "Bildschirmfoto",
       "video": "Video"
