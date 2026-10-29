@@ -199,6 +199,8 @@ Scope {
                         return;
                     }
                     if (it) {
+                        if (it.closeOverlays && it.closeOverlays())
+                            return;
                         if (it.createOpen) {
                             it.createOpen = false;
                             return;

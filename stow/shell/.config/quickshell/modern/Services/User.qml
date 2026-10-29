@@ -28,11 +28,13 @@ Singleton {
     }
 
     FileView {
-        id: passwdProcWait
+        id: passwdFile
         path: "/etc/passwd"
+        watchChanges: true
         printErrors: false
         onLoaded: root._parsePasswd(text())
         onLoadFailed: root.displayName = root.loginName
+        onFileChanged: reload()
     }
 
     function _refreshFace() {

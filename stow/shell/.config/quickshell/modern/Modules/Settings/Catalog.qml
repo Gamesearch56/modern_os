@@ -75,7 +75,7 @@ QtObject {
 
     readonly property var _byId: ({
         overview: { icon: "view-pages-overview", order: 10, group: "general", keywords: ["about", "hardware", "software", "boot", "stats"] },
-        users: { icon: "user-identity", order: 12, group: "general", keywords: ["accounts", "passwd", "autologin"] },
+        users: { icon: "user-identity", order: 12, group: "general", keywords: ["accounts", "passwd", "autologin", "groups"] },
         privacy: { icon: "security-high", order: 14, group: "general", keywords: ["dnd", "kdeconnect", "quiet", "notifications"], restore: ["general.dndSchedule", "general.notificationTimeoutMs", "kdeconnect"] },
         power: { icon: "battery", order: 16, group: "general", keywords: ["lid", "suspend", "energy", "idle", "battery", "charge", "remaining", "health"], restore: ["power", "general.idleTimings"] },
         design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "wallpaper", "windows", "gaps", "cursor", "4k", "provider", "palette"], restore: ["design", "typography", "motion", "windows", "windowRules"] },
