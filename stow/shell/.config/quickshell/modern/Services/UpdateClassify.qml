@@ -81,7 +81,9 @@ QtObject {
         const pending = data.pending === true;
         const reason = String(data.reason || "");
         let subtitle = I18n.t("settings.update.desktopCurrent");
-        if ("unavailable offline dirty notag".split(" ").indexOf(reason) !== -1)
+        if (reason === "notag")
+            subtitle = I18n.t("settings.update.desktopUnknown");
+        else if ("unavailable offline dirty".split(" ").indexOf(reason) !== -1)
             subtitle = I18n.t("settings.update.desktopUnavailable");
         else if (pending && from.length && to.length)
             subtitle = I18n.t("settings.update.fromTo", ({ from: from, to: to }));

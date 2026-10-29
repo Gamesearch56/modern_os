@@ -75,10 +75,10 @@ cur="$(git_cfg -C "$CLONE" describe --tags --exact-match HEAD)"
 ok "apply fast-forwards to latest tag; then current"
 
 printf 'dirt\n' >>"$CLONE/readme"
-if [ "$(status_field .reason)" != "dirty" ] || [ "$(status_field .pending)" != "false" ]; then
-    err "dirty tree should not be pending: $("$SYNC" status)"
+if [ "$(status_field .reason)" != "current" ] || [ "$(status_field .pending)" != "false" ]; then
+    err "dirty tree should still report the release: $("$SYNC" status)"
 else
-    ok "dirty tree is not pending"
+    ok "dirty tree still reports the current release"
 fi
 if "$SYNC" apply >/dev/null 2>&1; then
     err "apply should refuse a dirty tree"

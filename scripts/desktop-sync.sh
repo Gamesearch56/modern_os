@@ -118,10 +118,8 @@ cmd_status() {
         emit false "" "" "unavailable"
         return 0
     fi
-    if [ -n "$(git_safe -C "$REPO" status --porcelain)" ]; then
-        emit false "$(installed_tag)" "" "dirty"
-        return 0
-    fi
+    # Local edits must not hide the GitHub result. Apply still refuses a
+    # dirty tree; status only needs the commit and the remote tags.
     local cur latest
     cur="$(installed_tag)"
     latest="$(highest_tag)"
