@@ -3,5 +3,5 @@
   "icon": "security-high",
   "key": "settings.sections.privacy",
   "order": 40,
-  "keywords": ["permissions", "kdeconnect", "notifications", "dnd", "calendar", "ics", "quiet"]
+  "keywords": ["permissions", "kdeconnect", "notifications", "dnd", "quiet"]
 }

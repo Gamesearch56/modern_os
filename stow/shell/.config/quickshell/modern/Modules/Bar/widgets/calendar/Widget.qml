@@ -12,6 +12,6 @@ Item {
         anchors.centerIn: parent
         iconName: "x-office-calendar-symbolic"
         key: "calendar.title"
-        onClicked: Settings.openAt("privacy", "calendar")
+        onClicked: Settings.openAt("bar", "clock")
     }
 }

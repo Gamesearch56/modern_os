@@ -30,7 +30,7 @@ Six groups, 21 pages. Catalog lives in
 |-------|------|----|-------------------|
 | General | Overview | `overview` | `Diagnostics`, `SystemStats`, `Battery` |
 | General | Users | `users` | `general.autologin` writes `config.json`, then `Autologin` pkexecs `scripts/autologin-apply.sh` so the next reboot opens this account (greetd `[initial_session]`, or `getty@tty1` when greetd is not the display manager). `Passwd`, `User`, `Apps.runInTerminal` for confirmed terminal login. Groups are read-only; no usersd edit overlays. |
-| General | Privacy | `privacy` | Live `Notifications.dnd` (same as the control-panel tile) plus applied `general.dndSchedule` quiet hours; `general.notificationTimeoutMs`. `kdeconnect.enabled` starts/stops `kdeconnectd`. `accounts.calendarIcsUrl` feeds the clock popup. No Proton Drive UI. |
+| General | Privacy | `privacy` | Live `Notifications.dnd` (same as the control-panel tile) plus applied `general.dndSchedule` quiet hours; `general.notificationTimeoutMs`. `kdeconnect.enabled` starts/stops `kdeconnectd`. Calendar connect lives on the Date and time widget. No Proton Drive UI. |
 | General | Energy | `power` | Live battery remaining / time-to-full, draw, health, energy, cycles (`Battery` / `scripts/battery-read.sh`). Power button (`ask` = power menu) and lid actions (lid hidden on AC-only PCs) via `modern power` (`session lock` / `systemctl suspend`). `scripts/logind-handles.sh` blocks logind's default lid and power-key so those settings win. `IdleDaemon` runs `scripts/hypridle-apply.sh` on each `config.json` load so `hypridle` listeners match `general.idleTimings`. Fullscreen/media idle inhibit via `org.freedesktop.ScreenSaver` (`scripts/idle-inhibit.sh`). |
 | Appearance | Design | `design` | Wallpaper gallery + four derived theme profiles (`Theme`, `Wallpaper`). `design.*`, `typography`, `motion`, `windows.*`, `windowRules`. Animations and cursor theme are selects; cursor list comes from installed `cursors/` themes. Changing a knob writes `config.json` then applies live: shell chrome (transparency, rounding, type scale, motion), Hyprland (`hyprctl keyword` / reload for animations), cursor (`cursor-apply.sh` + GTK/Qt), and toolkit chrome (`theme-apply.sh --chrome-only` for GTK/Qt/KDE/Vivaldi radii and fonts). |
 | Appearance | Bar | `bar` | `bar.position`, `bar.style`, `bar.height`, `bar.edgeGap`, `bar.endGap`, `bar.autoHide`, `bar.left\|center\|right`, `widgets.*`. Islands drag across left/middle/right (`MSlotBoard`); enabling a widget appends to `bar.left`. Auto-hide slides the bar to an edge strip. |
@@ -80,7 +80,7 @@ Privacy, Energy, Design, Bar, Launcher, Applications, Screenshot,
 Gaming, Language & Time, and Keyboard show **Restore** on the page header.
 Confirm copies that page’s keys from `config.default.json` via
 `modern config restore` (one jq write). Privacy also clears session
-DND and does not reset `accounts.calendarIcsUrl`. Design re-runs `theme-apply.sh` so the palette matches the
+DND. Calendar credentials stay in `secrets.json`. Design re-runs `theme-apply.sh` so the palette matches the
 restored profile. Overview, Users, AI, devices, Storage, Backup, Firewall, and
 Update have no Restore control.
 
@@ -89,7 +89,7 @@ Update have no Restore control.
 
 Click a widget on Settings → Bar. Overlay fields (when the widget has
 them): weather units plus current location (default on) or an
-Open-Meteo city search (`lat,lon`), clock seconds/weekday, audio/media
+Open-Meteo city search (`lat,lon`), Date and time seconds/weekday plus calendar connect (Proton/Google private iCal, Apple CalDAV), audio/media
 scroll steps (Shift+wheel uses the fine step). Customizable widgets
 (clock, weather, volume, media) use a hover outline instead of a gear. Drag rows
 across the three-column Left / Middle / Right table; enable/disable

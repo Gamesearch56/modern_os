@@ -65,7 +65,7 @@ ColumnLayout {
         root.slotsChanged(left, center, right);
     }
 
-    function _hitLane(ma: var, mx: real, my: real) {
+    function _hitLane(ma: var, mx: real, my: real): var {
         const cols = [
             { slot: "left", lane: leftLane },
             { slot: "center", lane: centerLane },
@@ -80,7 +80,7 @@ ColumnLayout {
         return null;
     }
 
-    function hoverFrom(ma: var, mx: real, my: real) {
+    function hoverFrom(ma: var, mx: real, my: real): void {
         const hit = root._hitLane(ma, mx, my);
         if (!hit) {
             root._hoverSlot = "";
@@ -91,7 +91,7 @@ ColumnLayout {
         root._hoverIndex = hit.index;
     }
 
-    function dropFrom(ma: var, mx: real, my: real) {
+    function dropFrom(ma: var, mx: real, my: real): void {
         const hit = root._hitLane(ma, mx, my);
         if (hit)
             root.dropOn(hit.slot, hit.index);

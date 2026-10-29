@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "."
 
 MOverlay {
     id: root
@@ -20,7 +21,7 @@ MOverlay {
     hugContent: true
     cardHeight: root._volumeScroll
         ? Tokens.spacing.xxl * 7
-        : (root.widgetId === "clock" ? Tokens.spacing.xxl * 6
+        : (root.widgetId === "clock" ? Tokens.spacing.xxl * 16
             : (root.widgetId === "weather" ? Tokens.spacing.xxl * 9 : Tokens.spacing.xxl * 7))
     onClosed: {}
 
@@ -80,35 +81,9 @@ MOverlay {
             }
         }
 
-        RowLayout {
+        ClockForm {
             visible: root.widgetId === "clock"
             Layout.fillWidth: true
-            spacing: Tokens.spacing.md
-            MText {
-                key: "settings.fields.showWeekday"
-                styleName: "bodyMedium"
-                color: Colors.color.onSurfaceVariant
-                Layout.fillWidth: true
-            }
-            MSwitch {
-                checked: !!(Config.widgets?.clock?.showWeekday)
-                onToggled: (v) => ConfigWrite.set("widgets.clock.showWeekday", v)
-            }
-        }
-        RowLayout {
-            visible: root.widgetId === "clock"
-            Layout.fillWidth: true
-            spacing: Tokens.spacing.md
-            MText {
-                key: "settings.fields.showSeconds"
-                styleName: "bodyMedium"
-                color: Colors.color.onSurfaceVariant
-                Layout.fillWidth: true
-            }
-            MSwitch {
-                checked: !!(Config.widgets?.clock?.showSeconds)
-                onToggled: (v) => ConfigWrite.set("widgets.clock.showSeconds", v)
-            }
         }
 
         ColumnLayout {

@@ -3,5 +3,5 @@
   "icon": "cs-panel",
   "key": "settings.sections.bar",
   "order": 22,
-  "keywords": ["widgets", "layout", "topbar", "clock", "weather"]
+  "keywords": ["widgets", "layout", "topbar", "clock", "weather", "calendar", "date"]
 }

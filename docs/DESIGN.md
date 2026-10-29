@@ -102,7 +102,7 @@ Equal top/bottom margin (`Tokens.spacing.sm` when floating). Defaults in
 
 - **Left:** own bubbles for launcher, AI, workspaces, media (only while
   something is playing, or Spotify is open), and taskbar
-- **Center:** clock bubble
+- **Center:** Date and time bubble
 - **Right:** own bubbles for weather, connectivity (wifi + bluetooth),
   and audio; battery (when a pack is present, including while charging)
   + control-center gear + power share one pill. Gear opens the control

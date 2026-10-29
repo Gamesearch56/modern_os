@@ -90,7 +90,9 @@
       "dateFormat": "DD.MM.YYYY",
       "timeFormat": "HH:mm",
       "showSeconds": false,
-      "showWeekday": false
+      "showWeekday": false,
+      "calendarProvider": "none",
+      "calendarAccount": ""
     },
     "weather": {
       "locationMode": "auto",

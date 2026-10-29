@@ -1,5 +1,5 @@
-// ICS calendar. Local path via FileView; http(s) via curl when the
-// popup asks. Parsing lives in ics.js so this file stays the I/O owner.
+// Calendar events for the Date and time popup. Fetch I/O lives in
+// calendar-fetch.sh so secrets never appear on a curl argv.
 pragma Singleton
 
 import Quickshell
@@ -23,42 +23,13 @@ Singleton {
 
     signal loadFailed()
 
-    readonly property string home: Quickshell.env("HOME")
-    property string pendingUrl: ""
-
-    readonly property string icsUrl: {
-        if (root.pendingUrl.length > 0)
-            return root.pendingUrl;
-        const u = Config.accounts?.calendarIcsUrl;
-        return typeof u === "string" ? u.trim() : "";
-    }
-    readonly property bool _http: root.icsUrl.indexOf("http://") === 0 || root.icsUrl.indexOf("https://") === 0
-    readonly property string _filePath: {
-        if (root._http || root.icsUrl.length === 0)
-            return "";
-        if (root.icsUrl.indexOf("~/") === 0)
-            return root.home + root.icsUrl.slice(1);
-        return root.icsUrl;
-    }
+    readonly property string icsUrl: CalendarAccount.icsUrl
+    readonly property bool connected: CalendarAccount.connected
     readonly property string todayYmd: Ics.ymd(DateTime.displayDate(new Date()))
-
-    FileView {
-        id: icsFile
-        path: root._filePath
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-        onLoaded: root._ingest(text())
-        onLoadFailed: {
-            if (root._filePath.length > 0)
-                Logger.warn("Calendar", "failed to load ICS file");
-            if (!root._http)
-                root._ingest("");
-        }
-    }
 
     Process {
         id: fetchProc
+        command: [Paths.script("calendar-fetch.sh")]
         running: false
         stdout: StdioCollector {
             id: fetchOut
@@ -66,7 +37,7 @@ Singleton {
         stderr: StdioCollector {
             onStreamFinished: {
                 if (this.text.trim().length > 0)
-                    Logger.warn("Calendar", "ICS fetch failed");
+                    Logger.warn("Calendar", "calendar fetch failed");
             }
         }
         onExited: (code) => {
@@ -74,7 +45,10 @@ Singleton {
         }
     }
 
-    onIcsUrlChanged: root.refresh()
+    onIcsUrlChanged: {
+        if (root.watching)
+            root.refresh();
+    }
     onWatchingChanged: {
         if (root.watching)
             root.refresh();
@@ -82,29 +56,34 @@ Singleton {
     onViewYearChanged: root._recompute()
     onViewMonthChanged: root._recompute()
 
+    Connections {
+        target: CalendarAccount
+        function onConnectedChanged() {
+            if (root.watching)
+                root.refresh();
+        }
+    }
+
     function commitUrl(url: string) {
-        const u = String(url || "").trim();
-        const prev = root.icsUrl;
+        CalendarAccount.saveIcs(url);
+        root.connectNow();
+    }
+
+    function connectNow() {
         root._userCommit = true;
-        root.pendingUrl = u;
-        if (u === prev)
-            root.refresh();
+        root.refresh();
     }
 
     function refresh() {
         root.busy = true;
-        if (root._http) {
-            fetchProc.running = false;
-            fetchProc.command = ["curl", "-fsSL", "--max-time", "20", root.icsUrl];
-            Qt.callLater(() => {
-                fetchProc.running = true;
-            });
+        if (!root.connected && root.icsUrl.length === 0) {
+            root._ingest("");
             return;
         }
-        if (root._filePath.length > 0)
-            icsFile.reload();
-        else
-            root._ingest("");
+        fetchProc.running = false;
+        Qt.callLater(() => {
+            fetchProc.running = true;
+        });
     }
 
     function shiftMonth(delta: int) {
@@ -137,7 +116,7 @@ Singleton {
         const empty = !text || String(text).length === 0;
         if (root._userCommit) {
             root._userCommit = false;
-            if (empty && root.icsUrl.length > 0)
+            if (empty && (root.connected || root.icsUrl.length > 0))
                 root.loadFailed();
         }
         root.raw = text || "";

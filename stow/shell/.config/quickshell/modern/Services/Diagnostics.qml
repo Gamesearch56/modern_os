@@ -15,7 +15,7 @@ Singleton {
     property string memory: ""
     property string board: ""
     property string disk: ""
-    property string os: ""
+    readonly property string os: I18n.t("settings.overview.osName")
     property string kernel: ""
     property string wm: ""
     property string shell: ""
@@ -95,7 +95,6 @@ Singleton {
 
     function _parseSw(text: string) {
         const m = root._facts(text);
-        root.os = m.os || "";
         root.kernel = m.kernel || "";
         root.wm = m.wm || "";
         const shell = (m.shell || "").trim();
@@ -150,7 +149,7 @@ Singleton {
 
     Process {
         id: swProc
-        command: ["sh", "-c", ". /etc/os-release; printf 'os\\t%s\\n' \"$PRETTY_NAME\"; printf 'kernel\\t%s\\n' \"$(uname -r)\"; printf 'wm\\t%s\\n' \"$(hyprland --version 2>/dev/null | head -1 | sed 's/ built from.*//')\"; shell=$(qs --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=$(quickshell --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=Quickshell; printf 'shell\\t%s\\n' \"$shell\""]
+        command: ["sh", "-c", "printf 'kernel\\t%s\\n' \"$(uname -r)\"; printf 'wm\\t%s\\n' \"$(hyprland --version 2>/dev/null | head -1 | sed 's/ built from.*//')\"; shell=$(qs --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=$(quickshell --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=Quickshell; printf 'shell\\t%s\\n' \"$shell\""]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parseSw(this.text)

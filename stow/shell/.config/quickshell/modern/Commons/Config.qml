@@ -130,7 +130,7 @@ Singleton {
             // Per-widget settings blobs — shape varies per widget, each
             // widget reads its own key (e.g. Config.widgets.clock).
             property var widgets: ({
-                clock: { dateFormat: "DD.MM.YYYY", timeFormat: "HH:mm", showSeconds: false, showWeekday: false },
+                clock: { dateFormat: "DD.MM.YYYY", timeFormat: "HH:mm", showSeconds: false, showWeekday: false, calendarProvider: "none", calendarAccount: "" },
                 weather: { locationMode: "auto", manualLocation: "", placeName: "", units: "metric", pollIntervalMs: 600000 },
                 performance: { pollIntervalMs: 2000, showGpu: true, showTemps: true },
                 audio: { scrollStepPercent: 5, scrollStepFinePercent: 1 }
