@@ -12,6 +12,8 @@ Item {
     property bool enabled: true
     property bool showValue: false
     property bool wheel: false
+    property real wheelStep: 0
+    property real wheelFineStep: 0
     property string suffix: ""
     property bool _dragging: false
     property bool _hold: false
@@ -128,9 +130,10 @@ Item {
             WheelHandler {
                 enabled: root.enabled && root.wheel
                 onWheel: (w) => {
-                    const step = (w.modifiers & Qt.ShiftModifier)
-                        ? Math.max(1, root._span / 100)
-                        : Math.max(1, root._span / 20);
+                    const fine = !!(w.modifiers & Qt.ShiftModifier);
+                    const step = fine
+                        ? (root.wheelFineStep > 0 ? root.wheelFineStep : Math.max(1, root._span / 100))
+                        : (root.wheelStep > 0 ? root.wheelStep : Math.max(1, root._span / 20));
                     const next = Math.max(root.from, Math.min(root.to,
                         root._shown + (w.angleDelta.y > 0 ? step : -step)));
                     root._emit(next, true);

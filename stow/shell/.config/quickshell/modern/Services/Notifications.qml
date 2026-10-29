@@ -399,6 +399,58 @@ Singleton {
         }
     }
 
+    function _normApp(s: string): string {
+        return String(s || "").toLowerCase().replace(/\.desktop$/i, "").replace(/[\s._-]+/g, "");
+    }
+
+    function _appDesktopId(live): string {
+        const d = root._str(live.desktopEntry).replace(/\.desktop$/i, "");
+        if (d.length)
+            return d;
+        const name = root._str(live.appName);
+        const want = root._normApp(name);
+        if (!want.length || want === "modern")
+            return "";
+        const heur = DesktopEntries.heuristicLookup(name);
+        if (heur)
+            return String(heur.id || heur.name || "").replace(/\.desktop$/i, "");
+        const entries = DesktopEntries.applications.values;
+        for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            const stem = String(e.id || e.name || "").replace(/\.desktop$/i, "");
+            if (root._normApp(e.name) === want || root._normApp(stem) === want)
+                return stem;
+        }
+        return "";
+    }
+
+    function activate(item): bool {
+        const live = root._live(item) || item;
+        if (!live)
+            return false;
+        if (live.local) {
+            root.dismiss(live);
+            return false;
+        }
+        const id = root._appDesktopId(live);
+        if (Hypr.raiseApp(id, live.appName)) {
+            root.hide();
+            root.dismiss(live);
+            return true;
+        }
+        root.invokeDefault(live);
+        if (id.length)
+            Apps.launchId(id);
+        else {
+            const path = root.attachmentPath(live);
+            if (path.length)
+                Apps.openPath(path);
+        }
+        root.hide();
+        root.dismiss(live);
+        return true;
+    }
+
     function _byUid(uid) {
         const id = Number(uid);
         if (!(id > 0))

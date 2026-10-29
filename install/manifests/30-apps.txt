@@ -13,3 +13,6 @@ libva-utils               # VA-API diagnostics for hardware video decode
 neovim                    # $EDITOR
 btop                      # terminal system monitor, complements the bar's performance widget
 spotify-launcher          # Spotify client — MPRIS source for the media widget
+steam                     # primary game platform
+gamemode                  # CPU governor while a game runs
+gamescope                 # per-game resolution and upscaling

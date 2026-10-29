@@ -93,6 +93,8 @@ Item {
             to: Audio.volumeCap
             value: Audio.volume
             wheel: true
+            wheelStep: Config.widgets.audio?.scrollStepPercent ?? 5
+            wheelFineStep: Config.widgets.audio?.scrollStepFinePercent ?? 1
             onMoved: (v) => Audio.setVolume(v)
         }
     }

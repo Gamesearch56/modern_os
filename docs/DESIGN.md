@@ -102,10 +102,11 @@ Equal top/bottom margin (`Tokens.spacing.sm` when floating). Defaults in
 
 - **Left:** own bubbles for launcher, AI, workspaces, media (only while
   something is playing, or Spotify is open), and taskbar
-- **Center:** clock bubble
+- **Center:** Date and time bubble
 - **Right:** own bubbles for weather, connectivity (wifi + bluetooth),
-  and audio; battery (on battery only) + control-center gear + power
-  share one pill. Gear opens the control center, not the Settings app
+  and audio; battery (when a pack is present, including while charging)
+  + control-center gear + power share one pill. Gear opens the control
+  center, not the Settings app
 
 Tray, mic, performance, vpn, kdeconnect, and the notification
 bell stay on disk under `Modules/Bar/widgets/` if a leftover

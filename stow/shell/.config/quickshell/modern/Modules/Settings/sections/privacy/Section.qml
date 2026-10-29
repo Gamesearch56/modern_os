@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
-import "."
 
 ColumnLayout {
     id: root
@@ -13,10 +12,7 @@ ColumnLayout {
     readonly property bool kdeOn: Config.kdeconnect.enabled
     onKdeOnChanged: KdeConnect.watching = root.kdeOn
 
-    Component.onCompleted: {
-        KdeConnect.watching = Config.kdeconnect.enabled;
-        Qt.callLater(root._scrollToFeed);
-    }
+    Component.onCompleted: KdeConnect.watching = Config.kdeconnect.enabled
 
     MSectionHeader {
         key: "settings.privacy.notifications"
@@ -131,46 +127,4 @@ ColumnLayout {
             onToggled: (v) => ConfigWrite.set("kdeconnect.enabled", v)
         }
     }
-
-    MSectionHeader {
-        id: calendarHeader
-        key: "settings.privacy.calendar"
-        topMargin: Tokens.spacing.xxl
-    }
-    CalendarFeed {
-        id: calendarFeed
-        Layout.fillWidth: true
-    }
-
-    function _flickable() {
-        let p = root.parent;
-        while (p) {
-            if (p.flickableDirection !== undefined)
-                return p;
-            p = p.parent;
-        }
-        return null;
-    }
-
-    function _scrollToFeed() {
-        if (Settings.subsectionId !== "calendar")
-            return;
-        if (calendarFeed.height <= 0 || calendarHeader.y <= 0)
-            return;
-        const flick = root._flickable();
-        if (!flick)
-            return;
-        const pos = calendarHeader.mapToItem(flick.contentItem, 0, 0);
-        const maxY = Math.max(0, flick.contentHeight - flick.height);
-        flick.contentY = Math.min(maxY, Math.max(0, pos.y - Tokens.spacing.md));
-        Settings.subsectionId = "";
-        calendarFeed.focusField();
-    }
-
-    Connections {
-        target: Settings
-        function onSubsectionIdChanged() { Qt.callLater(root._scrollToFeed); }
-    }
-
-    onImplicitHeightChanged: Qt.callLater(root._scrollToFeed)
 }

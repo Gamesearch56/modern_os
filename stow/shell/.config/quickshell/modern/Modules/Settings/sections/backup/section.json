@@ -3,5 +3,5 @@
   "icon": "document-save",
   "key": "settings.sections.backup",
   "order": 72,
-  "keywords": ["snapper", "snapshot", "restore", "rollback"]
+  "keywords": ["snapper", "snapshot", "restore", "rollback", "prune", "keep"]
 }

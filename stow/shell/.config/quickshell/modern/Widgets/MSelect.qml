@@ -1,5 +1,4 @@
-// Pill field that opens a menu of MListItems. Not a native combo —
-// tokens and motion stay on the kit. `model` is
+// Pill field that opens a menu of MListItems. `model` is
 // [{ value, titleKey?, titleValue?, params? }].
 import QtQuick
 import QtQuick.Layouts
@@ -17,8 +16,11 @@ Item {
     property string emptyValue: ""
     property string emptyKey: "settings.selectNone"
     property bool _pointer: false
+    property bool remote: false
+    property string valueLabel: ""
 
     signal selected(var value)
+    signal searched(string query)
 
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
@@ -52,14 +54,14 @@ Item {
         menu.open = false;
     }
 
-    readonly property bool _searchable: (root.model || []).length > 6
+    readonly property bool _searchable: root.remote || (root.model || []).length > 6
     readonly property var _rows: {
         const base = root.model || [];
         if (!root.allowEmpty)
             return base;
         return [{ value: root.emptyValue, titleKey: root.emptyKey }].concat(base);
     }
-    readonly property var _filtered: root._filter(root._rows, root.query)
+    readonly property var _filtered: root.remote ? root._rows : root._filter(root._rows, root.query)
 
     function _labelOf(row: var): string {
         if (!row)
@@ -92,7 +94,7 @@ Item {
             if (String(rows[i].value) === String(root.value))
                 return root._labelOf(rows[i]);
         }
-        return "";
+        return root.valueLabel;
     }
 
     Rectangle {
@@ -236,7 +238,11 @@ Item {
                 Layout.fillWidth: true
                 placeholderKey: "settings.selectSearch"
                 escapeCloses: true
-                onTextEdited: root.query = text
+                onTextEdited: {
+                    root.query = text;
+                    if (root.remote)
+                        root.searched(text);
+                }
                 onDownPressed: list.incrementCurrentIndex()
                 onUpPressed: list.decrementCurrentIndex()
                 onAccepted: {

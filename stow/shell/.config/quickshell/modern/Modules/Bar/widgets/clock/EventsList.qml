@@ -49,9 +49,9 @@ ColumnLayout {
             anchors.fill: parent
             iconName: "x-office-calendar-symbolic"
             titleKey: "calendar.empty"
-            actionKey: Calendar.icsUrl.length === 0 ? "calendar.setupFeed" : ""
+            actionKey: Calendar.connected ? "" : "calendar.setupFeed"
             onActionClicked: {
-                Settings.openAt("privacy", "calendar");
+                Settings.openAt("bar", "clock");
                 Popups.dismiss();
             }
         }

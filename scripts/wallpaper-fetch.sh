@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Download an image URL into ~/Pictures/Wallpapers. Only image MIME types.
+# Download an image URL into XDG PICTURES/Wallpapers. Only image MIME types.
 # Used by Services/Wallpaper.qml — Modules never curl or write the file.
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/paths.sh
+source "$SCRIPT_DIR/lib/paths.sh"
 
 URL="${1:-}"
 DEST_DIR="${2:-}"
@@ -18,11 +22,7 @@ case "$URL" in
 esac
 
 if [ -z "$DEST_DIR" ]; then
-    pic="$(xdg-user-dir PICTURES 2>/dev/null || true)"
-    if [ -z "${pic:-}" ] || [ "$pic" = "$HOME" ]; then
-        pic="$HOME/Pictures"
-    fi
-    DEST_DIR="$pic/Wallpapers"
+    DEST_DIR="$(xdg_wallpapers_dir)"
 fi
 mkdir -p "$DEST_DIR"
 

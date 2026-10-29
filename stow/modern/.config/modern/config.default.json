@@ -90,11 +90,14 @@
       "dateFormat": "DD.MM.YYYY",
       "timeFormat": "HH:mm",
       "showSeconds": false,
-      "showWeekday": false
+      "showWeekday": false,
+      "calendarProvider": "none",
+      "calendarAccount": ""
     },
     "weather": {
       "locationMode": "auto",
       "manualLocation": "",
+      "placeName": "",
       "units": "metric",
       "pollIntervalMs": 600000
     },
@@ -237,7 +240,9 @@
   "backup": {
     "snapperEnabled": false,
     "resticEnabled": false,
-    "preUpdateSnapshot": true
+    "preUpdateSnapshot": true,
+    "pruneEnabled": true,
+    "keepCount": 8
   },
   "keybinds": {
     "_comment": "Combo strings use Hyprland's Lua hl.bind() format: 'MOD + MOD + KEY', matching docs.hypr.land's 0.55+ Lua examples (e.g. 'SUPER + SHIFT + T'). Settings > Keyboard lists this table; Modules/Cheatsheet reads it. SUPER+T and SUPER+RETURN always open kitty even if terminal is omitted.",

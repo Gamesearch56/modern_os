@@ -9,6 +9,7 @@ Item {
 
     property string key: ""
     property var params: ({})
+    property string value: ""
     property bool checked: false
     property bool enabled: true
 
@@ -19,7 +20,7 @@ Item {
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
     Accessible.role: Accessible.Button
-    Accessible.name: root.key.length > 0 ? I18n.t(root.key, root.params) : ""
+    Accessible.name: root.key.length > 0 ? I18n.t(root.key, root.params) : root.value
     Accessible.checkable: true
     Accessible.checked: root.checked
     Accessible.onPressAction: root.clicked()
@@ -54,6 +55,7 @@ Item {
         MText {
             key: root.key
             params: root.params
+            value: root.value
             styleName: "labelLarge"
             color: root.checked ? Colors.color.primary : Colors.color.onSurfaceVariant
         }

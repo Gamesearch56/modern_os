@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Resolve lat/lon (manual city / lat,lon, or IP) and print Open-Meteo JSON
-# for Services/Weather.qml. No API key.
+# Resolve lat/lon (geolocation, saved lat,lon, or a city name) and print
+# Open-Meteo JSON for Services/Weather.qml. No API key. Auto mode ignores
+# a saved city so the location switch in Settings is the source of truth.
 set -euo pipefail
 
 MODERN_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/modern"
@@ -39,15 +40,7 @@ curl_json() {
 lat=""
 lon=""
 
-if [[ "$MANUAL" =~ ^[[:space:]]*(-?[0-9]+(\.[0-9]+)?)[[:space:]]*,[[:space:]]*(-?[0-9]+(\.[0-9]+)?)[[:space:]]*$ ]]; then
-    lat="${BASH_REMATCH[1]}"
-    lon="${BASH_REMATCH[3]}"
-elif [ -n "$MANUAL" ]; then
-    q="$(jq -nr --arg s "$MANUAL" '$s|@uri')"
-    geo="$(curl_json "https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=1")"
-    lat="$(jq -r '.results[0].latitude // empty' <<<"$geo")"
-    lon="$(jq -r '.results[0].longitude // empty' <<<"$geo")"
-elif [ "$MODE" = "auto" ]; then
+if [ "$MODE" = "auto" ]; then
     ipjson="$(curl_json "https://get.geojs.io/v1/ip/geo.json" || true)"
     lat="$(jq -r '.latitude // empty' <<<"${ipjson:-}")"
     lon="$(jq -r '.longitude // empty' <<<"${ipjson:-}")"
@@ -57,6 +50,14 @@ elif [ "$MODE" = "auto" ]; then
         lat="${loc%%,*}"
         lon="${loc#*,}"
     fi
+elif [[ "$MANUAL" =~ ^[[:space:]]*(-?[0-9]+(\.[0-9]+)?)[[:space:]]*,[[:space:]]*(-?[0-9]+(\.[0-9]+)?)[[:space:]]*$ ]]; then
+    lat="${BASH_REMATCH[1]}"
+    lon="${BASH_REMATCH[3]}"
+elif [ -n "$MANUAL" ]; then
+    q="$(jq -nr --arg s "$MANUAL" '$s|@uri')"
+    geo="$(curl_json "https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=1")"
+    lat="$(jq -r '.results[0].latitude // empty' <<<"$geo")"
+    lon="$(jq -r '.results[0].longitude // empty' <<<"$geo")"
 fi
 
 if [ -z "${lat:-}" ] || [ -z "${lon:-}" ] || [ "$lat" = "null" ] || [ "$lon" = "null" ]; then

@@ -12,7 +12,7 @@ hl.config({
     general = {
         gaps_in = gaps_in,
         gaps_out = gaps_out,
-        border_size = 2,
+        border_size = 1,
         layout = "dwindle",
         resize_on_border = true,
         allow_tearing = config.value("gaming.autoOptimize", true) ~= false,
@@ -23,14 +23,42 @@ hl.config({
         inactive_opacity = win_alpha,
         blur = {
             enabled = true,
+            -- Acrylic is the only new blur that still reads as frosted
+            -- material. Streaks, ripples, and cracked ice fight tonal
+            -- surfaces. Bulb/refraction draw a lit glass rim that
+            -- fights MD3 hairline outline + tonal elevation; frost
+            -- stays in the surface. Tint comes from theme_colors.lua.
+            variant = "acrylic",
             size = math.floor(blur / 10),
             passes = 2,
             new_optimizations = true,
+            acrylic = {
+                aberration = 0,
+                refraction = 0,
+                -- Values below 4 are treated as unset and snap to the
+                -- 48px default rim. 4px is the floor that still applies.
+                bulb = 4,
+                clarity = 0.88,
+                tint = "0x00000000",
+            },
         },
+        -- Elevation level 2: Tokens.elevation shadowRadius 6 at 10%
+        -- black. Color is applied from the shadow role in theme_colors.
         shadow = {
             enabled = true,
-            range = 12,
+            range = 6,
             render_power = 3,
+        },
+        -- A small give on move and resize. Intensity stays under
+        -- the default so it does not outrun the bezier window
+        -- curves. Stiffness is higher than the default 200, with
+        -- damping scaled to match, so the same wobble settles
+        -- sooner. Games opt out with no_wobble.
+        wobble = {
+            enabled = true,
+            intensity = 0.1,
+            stiffness = 500,
+            damping = 19,
         },
     },
     dwindle = {

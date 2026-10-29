@@ -188,11 +188,19 @@ Scope {
                         pageHeader.restoreOpen = false;
                         return;
                     }
+                    if (StorageClean.phase === "run")
+                        return;
+                    if (StorageClean.open) {
+                        StorageClean.cancel();
+                        return;
+                    }
                     if (Update.open) {
                         Update.close();
                         return;
                     }
                     if (it) {
+                        if (it.closeOverlays && it.closeOverlays())
+                            return;
                         if (it.createOpen) {
                             it.createOpen = false;
                             return;
@@ -211,6 +219,22 @@ Scope {
                         }
                         if (it.dialogDevice) {
                             it.dialogDevice = null;
+                            return;
+                        }
+                        if (it.pendingEdit) {
+                            it.pendingEdit = null;
+                            return;
+                        }
+                        if (it.pendingRestore) {
+                            it.pendingRestore = null;
+                            return;
+                        }
+                        if (it.pendingClear) {
+                            it.pendingClear = false;
+                            return;
+                        }
+                        if (it.pendingSetup) {
+                            it.pendingSetup = false;
                             return;
                         }
                         if (it.pending) {
@@ -243,6 +267,8 @@ Scope {
                 active: Update.open
                 source: Qt.resolvedUrl("sections/system/UpdateOverlay.qml")
             }
+
+            CleanupDialog { }
 
         }
     }

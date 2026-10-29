@@ -6,6 +6,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/paths.sh
+source "$SCRIPT_DIR/lib/paths.sh"
 bookmarks_only=0
 if [ "${1:-}" = "--bookmarks-only" ]; then
     bookmarks_only=1
@@ -23,21 +25,15 @@ seed_bookmarks() {
     if [ -e "$dest" ]; then
         return 0
     fi
-    if command -v xdg-user-dirs-update >/dev/null 2>&1; then
-        xdg-user-dirs-update >/dev/null 2>&1 || true
-    fi
+    xdg_ensure_user_dirs
     mkdir -p "$(dirname "$dest")"
     : >"$dest"
     for key in DOWNLOAD PICTURES VIDEOS; do
-        if command -v xdg-user-dir >/dev/null 2>&1; then
-            path="$(xdg-user-dir "$key")"
-        else
-            case "$key" in
-                DOWNLOAD) path="$HOME/Downloads" ;;
-                PICTURES) path="$HOME/Pictures" ;;
-                VIDEOS) path="$HOME/Videos" ;;
-            esac
-        fi
+        case "$key" in
+            DOWNLOAD) path="$(xdg_user_dir DOWNLOAD Downloads)" ;;
+            PICTURES) path="$(xdg_user_dir PICTURES Pictures)" ;;
+            VIDEOS) path="$(xdg_user_dir VIDEOS Videos)" ;;
+        esac
         [ -n "$path" ] || continue
         [ "$path" != "$HOME" ] || continue
         mkdir -p "$path"

@@ -25,9 +25,17 @@ for pkg in hyprland quickshell kitty nautilus vivaldi gedit mpv imv matugen mkin
     if in_core "$pkg"; then ok "$pkg is a core (undeletable) package"
     else err "$pkg missing from the --core layers"; fi
 done
-for pkg in steam spotify-launcher btop lutris docker; do
+for pkg in steam gamemode gamescope spotify-launcher btop lutris docker; do
     if in_core "$pkg"; then err "$pkg must stay removable in Store (not --core)"
     else ok "$pkg is removable in Store"; fi
+done
+apps="$ROOT/install/manifests/30-apps.txt"
+for pkg in steam gamemode gamescope; do
+    if grep -qE "^${pkg}([[:space:]]|#|$)" "$apps"; then
+        ok "$pkg is a default app in 30-apps"
+    else
+        err "$pkg must be in 30-apps.txt (default install, not a system package)"
+    fi
 done
 if grep -F 'core: true' "$ROOT/stow/shell/.config/quickshell/modern/Services/Store.qml" >/dev/null \
     && grep -F "protected_pkg \"\$name\"" "$ROOT/scripts/pkg-mutate.sh" >/dev/null \

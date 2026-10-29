@@ -9,7 +9,8 @@ import "."
 Item {
     id: root
 
-    property string pendingLogin: ""
+    property var pendingUser: null
+    property var pendingGroup: null
 
     implicitHeight: col.implicitHeight
 
@@ -19,129 +20,109 @@ Item {
     ColumnLayout {
         id: col
         width: parent.width
-        spacing: Tokens.spacing.md
+        spacing: Tokens.spacing.lg
 
-        MStatusCard {
-            avatarSource: User.faceUrl
-            titleValue: User.displayName
-            subtitleValue: User.loginName
-
-            detail: Flow {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.xs
-                Repeater {
-                    model: Passwd.groups.length
-                    Rectangle {
-                        required property int index
-                        readonly property string name: Passwd.groups[index] || ""
-                        implicitHeight: Tokens.spacing.xl
-                        implicitWidth: lab.implicitWidth + Tokens.spacing.md * 2
-                        radius: Tokens.radius.full
-                        color: Colors.color.surfaceContainerHighest
-                        MText {
-                            id: lab
-                            anchors.centerIn: parent
-                            value: name
-                            styleName: "labelLarge"
-                        }
-                    }
-                }
-            }
-        }
-
-        RowLayout {
+        SessionCard {
             Layout.fillWidth: true
-            spacing: Tokens.spacing.md
-
-            MText {
-                key: "settings.fields.autologin"
-                styleName: "bodyMedium"
-                color: Colors.color.onSurfaceVariant
-                Layout.fillWidth: true
-            }
-            MSwitch {
-                nameKey: "settings.fields.autologin"
-                checked: !!(Config.general.autologin)
-                enabled: !Autologin.running
-                onToggled: (v) => Autologin.setEnabled(v)
+            onEditClicked: {
+                userDlg.load(Passwd.sessionUser);
+                userDlg.open = true;
             }
         }
 
-        MHint {
-            key: "settings.hints.autologin"
+        MLinearProgress {
+            visible: Passwd.running || Autologin.running
             Layout.fillWidth: true
+            indeterminate: true
         }
-
         MText {
-            visible: Autologin.error.length > 0 && !Autologin.running
-            value: Autologin.error
+            visible: Passwd.lastError.length > 0 && !Passwd.running
+            value: Passwd.lastError
             styleName: "bodySmall"
             color: Colors.color.error
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
             Accessible.role: Accessible.Alert
-            Accessible.name: Autologin.error
+            Accessible.name: Passwd.lastError
         }
-
-        MSectionHeader {
-            key: "settings.users.others"
-            topMargin: Tokens.spacing.xxl
-        }
-        UserTable {
-            visible: Passwd.others.length > 0
+        MHint {
+            visible: !Passwd.canManage
+            key: "settings.users.adminOnlyHint"
             Layout.fillWidth: true
-            onTerminalRequested: (login) => root.pendingLogin = login
-        }
-        MEmptyState {
-            visible: Passwd.others.length === 0
-            Layout.fillWidth: true
-            Layout.preferredHeight: Tokens.spacing.xxl * 6
-            iconName: "user-identity"
-            titleKey: "settings.users.empty"
-            hintKey: "settings.users.emptyHint"
         }
 
-        MSectionHeader {
-            key: "settings.users.groupsAll"
-            topMargin: Tokens.spacing.xxl
-        }
-        GridLayout {
-            Layout.fillWidth: true
-            columns: 3
-            columnSpacing: Tokens.spacing.sm
-            rowSpacing: Tokens.spacing.sm
-
-            Repeater {
-                model: Passwd.localGroups.length
-                MCard {
-                    required property int index
-                    readonly property var grp: Passwd.localGroups[index] || ({})
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 1
-                    level: 0
-                    implicitHeight: Tokens.spacing.xxl * 2
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        spacing: 0
-                        MText {
-                            value: grp.name || ""
-                            styleName: "titleSmall"
-                            horizontalAlignment: Text.AlignHCenter
-                            Layout.fillWidth: true
-                        }
-                        MText {
-                            key: "settings.users.memberCount"
-                            params: ({ n: (grp.members || []).length })
-                            styleName: "bodySmall"
-                            color: Colors.color.onSurfaceVariant
-                            horizontalAlignment: Text.AlignHCenter
-                            Layout.fillWidth: true
-                        }
-                    }
-                }
+        UserList {
+            onAddClicked: {
+                if (!Passwd.canManage)
+                    return;
+                userDlg.reset();
+                userDlg.open = true;
             }
+            onEditClicked: (p) => {
+                if (!Passwd.canManage)
+                    return;
+                userDlg.load(p);
+                userDlg.open = true;
+            }
+            onRemoveClicked: (p) => root.askDeleteUser(p)
         }
+
+        GroupList {
+            Layout.topMargin: Tokens.spacing.xxl
+            onAddClicked: {
+                if (!Passwd.canManage)
+                    return;
+                groupDlg.reset();
+                groupDlg.open = true;
+            }
+            onEditClicked: (g) => {
+                if (!Passwd.canManage)
+                    return;
+                groupDlg.load(g);
+                groupDlg.open = true;
+            }
+            onRemoveClicked: (g) => root.askDeleteGroup(g)
+        }
+    }
+
+    function askDeleteUser(person) {
+        if (!Passwd.canManage)
+            return;
+        root.pendingUser = person || null;
+        if (!root.pendingUser)
+            return;
+        delUser.open = true;
+    }
+
+    function askDeleteGroup(grp) {
+        if (!Passwd.canManage)
+            return;
+        root.pendingGroup = grp || null;
+        if (!root.pendingGroup)
+            return;
+        delGroup.open = true;
+    }
+
+    function closeOverlays() {
+        if (delUser.open) {
+            delUser.open = false;
+            root.pendingUser = null;
+            return true;
+        }
+        if (delGroup.open) {
+            delGroup.open = false;
+            root.pendingGroup = null;
+            return true;
+        }
+        if (userDlg.open) {
+            userDlg.open = false;
+            return true;
+        }
+        if (groupDlg.open) {
+            groupDlg.open = false;
+            return true;
+        }
+        return false;
     }
 
     Connections {
@@ -151,20 +132,65 @@ Item {
         }
     }
 
-    MDialog {
+    UserDialog {
+        id: userDlg
         parent: Window.window ? Window.window.contentItem : root
         anchors.fill: parent
-        open: root.pendingLogin.length > 0
-        titleKey: "settings.users.terminalConfirmTitle"
-        titleParams: ({ user: root.pendingLogin })
-        bodyKey: "settings.users.terminalConfirmBody"
-        bodyParams: ({ user: root.pendingLogin })
-        confirmKey: "settings.users.login"
+        enabled: userDlg.open
+    }
+
+    GroupDialog {
+        id: groupDlg
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        enabled: groupDlg.open
+    }
+
+    MDialog {
+        id: delUser
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        z: 200
+        titleKey: "settings.users.deleteUserTitle"
+        titleParams: ({ user: root.pendingUser ? (root.pendingUser.login || "") : "" })
+        bodyKey: "settings.users.deleteUserBody"
+        bodyParams: ({ user: root.pendingUser ? (root.pendingUser.login || "") : "" })
+        confirmKey: "settings.users.deleteUser"
+        cancelKey: "settings.cancel"
+        destructive: true
         onConfirmed: {
-            Passwd.openLogin(root.pendingLogin);
-            root.pendingLogin = "";
-            Settings.close();
+            if (root.pendingUser)
+                Passwd.deleteUser(root.pendingUser.login || "", true);
+            delUser.open = false;
+            root.pendingUser = null;
         }
-        onCancelled: root.pendingLogin = ""
+        onCancelled: {
+            delUser.open = false;
+            root.pendingUser = null;
+        }
+    }
+
+    MDialog {
+        id: delGroup
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        z: 200
+        titleKey: "settings.users.deleteGroupTitle"
+        titleParams: ({ group: root.pendingGroup ? (root.pendingGroup.name || "") : "" })
+        bodyKey: "settings.users.deleteGroupBody"
+        bodyParams: ({ group: root.pendingGroup ? (root.pendingGroup.name || "") : "" })
+        confirmKey: "settings.users.deleteGroup"
+        cancelKey: "settings.cancel"
+        destructive: true
+        onConfirmed: {
+            if (root.pendingGroup)
+                Passwd.deleteGroup(root.pendingGroup.name || "");
+            delGroup.open = false;
+            root.pendingGroup = null;
+        }
+        onCancelled: {
+            delGroup.open = false;
+            root.pendingGroup = null;
+        }
     }
 }

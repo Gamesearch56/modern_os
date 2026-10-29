@@ -139,11 +139,18 @@ PanelWindow {
             anchors.bottomMargin: Tokens.spacing.xl
             width: hintLabel.implicitWidth + Tokens.spacing.md * 2
             height: hintLabel.implicitHeight + Tokens.spacing.sm * 2
-            color: Colors.color.surface
+            color: "transparent"
             radius: Tokens.radius.full
             border.color: Colors.color.outlineVariant
             border.width: Tokens.stroke.hairline
-            opacity: Config.design.transparency ?? 0.85
+
+            Rectangle {
+                anchors.fill: parent
+                radius: parent.radius
+                color: Colors.color.surface
+                opacity: Chrome.washOpacity
+                z: -1
+            }
 
             MText {
                 id: hintLabel

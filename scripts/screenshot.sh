@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Capture a screenshot into config.json's screenshots.directory (default
-# ~/Pictures/Screenshots) using screenshots.format / quality / clipboard /
-# editor / cursor. Used by Hyprland binds via `modern screenshot <mode>`.
+# Capture a screenshot into config.json's screenshots.directory. Stock
+# English ~/Pictures/Screenshots follows XDG PICTURES (e.g. ~/Bilder).
 set -euo pipefail
 
 usage() {
@@ -42,7 +41,7 @@ merged() {
 }
 
 CFG="$(merged)"
-DIR="$(expand_home "$(jq -r '.screenshots.directory // "~/Pictures/Screenshots"' <<<"$CFG")")"
+DIR="$(xdg_resolve_stills "$(jq -r '.screenshots.directory // "~/Pictures/Screenshots"' <<<"$CFG")")"
 TEMPLATE="$(jq -r '.screenshots.filenameTemplate // "screenshot-%Y%m%d-%H%M%S"' <<<"$CFG")"
 COPY="$(jq -r 'if .screenshots.copyToClipboard == false then "false" else "true" end' <<<"$CFG")"
 EDIT="$(jq -r '.screenshots.openEditorAfterCapture // false' <<<"$CFG")"
@@ -65,9 +64,6 @@ if [ "$QUALITY" -lt 1 ]; then
     QUALITY=1
 fi
 
-if [ -z "$DIR" ]; then
-    DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
-fi
 mkdir -p "$DIR"
 
 # Capture PNG first so swappy can edit; convert after if the user

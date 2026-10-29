@@ -12,41 +12,80 @@ Singleton {
         const stem = String(id || "").replace(/\.desktop$/, "").toLowerCase();
         if (keep && keep[stem])
             return true;
-        const want = root._cats(role);
-        const list = cats || [];
-        for (let i = 0; i < list.length; i++) {
-            if (want.indexOf(String(list[i]).toLowerCase()) !== -1)
-                return true;
-        }
-        const hay = (String(name || "") + " " + String(generic || "") + " " + stem).toLowerCase();
+        const list = root._lower(cats);
+        if (root._blocked(role, list, stem))
+            return false;
+        if (root._catMatch(role, list))
+            return true;
+        return root._nameMatch(role, stem, name, generic);
+    }
+
+    function _lower(cats: var): var {
+        const src = cats || [];
+        const out = [];
+        for (let i = 0; i < src.length; i++)
+            out.push(String(src[i] || "").toLowerCase());
+        return out;
+    }
+
+    function _has(list: var, name: string): bool {
+        return list.indexOf(name) !== -1;
+    }
+
+    function _blocked(role: string, cats: var, stem: string): bool {
+        if (role === "communication" && stem.indexOf("kdeconnect") !== -1)
+            return true;
+        if (role === "textEditor" && root._has(cats, "ide"))
+            return true;
+        if (role === "imageViewer" && (root._has(cats, "office") || root._has(cats, "vectorgraphics")))
+            return true;
+        if (role === "videoPlayer" && (root._has(cats, "audiovideoediting") || root._has(cats, "music")))
+            return true;
+        return false;
+    }
+
+    function _catMatch(role: string, cats: var): bool {
+        if (role === "browser")
+            return root._has(cats, "webbrowser");
+        if (role === "calendar")
+            return root._has(cats, "calendar") || root._has(cats, "officecalendar");
+        if (role === "mail")
+            return root._has(cats, "email") || root._has(cats, "officeemail");
+        if (role === "communication")
+            return root._has(cats, "instantmessaging") || root._has(cats, "chat")
+                || root._has(cats, "videoconference");
+        if (role === "fileManager")
+            return root._has(cats, "filemanager");
+        if (role === "videoPlayer")
+            return root._has(cats, "video") && root._has(cats, "player");
+        if (role === "imageViewer")
+            return root._has(cats, "viewer") && root._has(cats, "graphics");
+        if (role === "terminal")
+            return root._has(cats, "terminalemulator");
+        if (role === "textEditor")
+            return root._has(cats, "texteditor");
+        return false;
+    }
+
+    function _nameMatch(role: string, stem: string, name: string, generic: string): bool {
         const needles = root._needles(role);
-        for (let j = 0; j < needles.length; j++) {
-            if (hay.indexOf(needles[j]) !== -1)
+        const words = (String(name || "") + " " + String(generic || "")).toLowerCase()
+            .split(/[^a-z0-9]+/).filter(s => s.length > 0);
+        for (let i = 0; i < needles.length; i++) {
+            const n = needles[i];
+            if (root._stemHit(stem, n) || words.indexOf(n) !== -1)
                 return true;
         }
         return false;
     }
 
-    function _cats(role: string): var {
-        if (role === "browser")
-            return ["webbrowser"];
-        if (role === "calendar")
-            return ["calendar", "officecalendar"];
-        if (role === "mail")
-            return ["email", "officeemail"];
-        if (role === "communication")
-            return ["instantmessaging", "chat", "ircclient", "videoconference", "telephony"];
-        if (role === "fileManager")
-            return ["filemanager"];
-        if (role === "videoPlayer")
-            return ["video", "audiovideo"];
-        if (role === "imageViewer")
-            return ["viewer", "graphics", "2dgraphics"];
-        if (role === "terminal")
-            return ["terminalemulator"];
-        if (role === "textEditor")
-            return ["texteditor"];
-        return [];
+    function _stemHit(stem: string, needle: string): bool {
+        if (stem === needle || stem.endsWith("." + needle))
+            return true;
+        if (stem === needle + "-stable" || stem === needle + "-browser"
+            || stem === needle + "-esr" || stem === needle + "-beta")
+            return true;
+        return stem.startsWith(needle + ".");
     }
 
     function _needles(role: string): var {

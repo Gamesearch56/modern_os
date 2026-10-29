@@ -201,6 +201,9 @@ Singleton {
     function moveToCurrentWorkspace(address: string) { wins.moveToCurrentWorkspace(address); }
     function moveToBackground(address: string) { wins.moveToBackground(address); }
     function raiseDesktop(desktopId: string): bool { return wins.raiseDesktop(desktopId); }
+    function raiseApp(desktopId: string, appName: string): bool {
+        return wins.raiseApp(desktopId, appName);
+    }
     function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
         return wins.raiseDesktopOrLaunch(desktopId, entry);
     }
@@ -378,6 +381,13 @@ Singleton {
                 return m;
         }
         return null;
+    }
+
+    function monitorDescription(screen: var): string {
+        void root.monitors;
+        void root.monitorGen;
+        const m = root.monitorForScreen(screen);
+        return m ? String(m.description || "") : "";
     }
 
     function _sortedMonitors(): var {

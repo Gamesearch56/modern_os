@@ -61,7 +61,7 @@ Item {
         if (group[0] === "media")
             return false;
         if (group[0] === "battery")
-            return !Battery.onBattery;
+            return !Battery.hasBattery;
         return false;
     }
 
@@ -89,6 +89,7 @@ Item {
                     void Media.trackTitle;
                     void Media.identity;
                     void Audio.playback;
+                    void Battery.hasBattery;
                     void Battery.onBattery;
                     return root._empty(modelData);
                 }

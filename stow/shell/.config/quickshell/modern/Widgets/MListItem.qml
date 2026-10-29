@@ -29,6 +29,8 @@ Item {
     property bool compact: false
     property bool preferSymbolic: !root._nav
     property bool tabFocus: true
+    property int subtitleLines: 1
+    property int imageFillMode: Image.PreserveAspectCrop
 
     default property alias extra: trailing.data
 
@@ -63,9 +65,8 @@ Item {
     implicitHeight: {
         if (root.compact)
             return Tokens.spacing.xxl;
-        if (root.imageSource.length > 0)
-            return root.imageSize + Tokens.spacing.md * 2;
-        return Tokens.spacing.xxl + Tokens.spacing.md * 2;
+        const minH = Tokens.spacing.xxl + Tokens.spacing.md * 2;
+        return Math.max(minH, body.implicitHeight + root._padV * 2);
     }
     implicitWidth: root.compact ? Tokens.spacing.xxl * 7 : Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
@@ -117,7 +118,7 @@ Item {
     }
 
     MouseArea {
-        z: -1
+        z: 1
         anchors.fill: parent
         enabled: root.enabled && root.hoverHighlight
         hoverEnabled: true
@@ -145,6 +146,7 @@ Item {
     }
 
     RowLayout {
+        id: body
         anchors.fill: parent
         anchors.leftMargin: root._padH
         anchors.rightMargin: root._padH
@@ -154,6 +156,7 @@ Item {
 
         Rectangle {
             visible: root.imageSource.length > 0 && thumb.status === Image.Ready
+            Layout.alignment: Qt.AlignVCenter
             Layout.preferredWidth: root.imageSize
             Layout.preferredHeight: root.imageSize
             radius: Tokens.radius.small
@@ -164,7 +167,7 @@ Item {
                 id: thumb
                 anchors.fill: parent
                 source: root.imageSource
-                fillMode: Image.PreserveAspectCrop
+                fillMode: root.imageFillMode
                 asynchronous: true
                 sourceSize.width: root.imageSize
                 sourceSize.height: root.imageSize
@@ -174,6 +177,9 @@ Item {
         MIcon {
             visible: (root.iconName.length > 0 || root.iconSource.length > 0)
                 && thumb.status !== Image.Ready
+            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredWidth: root._glyph
+            Layout.preferredHeight: root._glyph
             name: root.iconSource.length > 0 ? "" : root.iconName
             source: root.iconSource
             size: root._glyph
@@ -184,36 +190,32 @@ Item {
 
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.preferredWidth: 0
+            Layout.fillHeight: false
+            Layout.alignment: Qt.AlignVCenter
             spacing: 0
 
-            Item {
+            RowLayout {
                 Layout.fillWidth: true
-                implicitHeight: titleRow.implicitHeight
+                spacing: Tokens.spacing.xs
 
-                Row {
-                    id: titleRow
-                    spacing: Tokens.spacing.xs
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    MText {
-                        key: root.titleKey
-                        params: root.titleParams
-                        value: root.titleValue
-                        styleName: root.compact ? "bodyMedium" : "bodyLarge"
-                        color: root._fg
-                        width: {
-                            const extra = titleBadge.visible ? titleBadge.width + titleRow.spacing : 0;
-                            return Math.min(implicitWidth, Math.max(0, titleRow.parent.width - extra));
-                        }
-                    }
-                    MIcon {
-                        id: titleBadge
-                        visible: root.badgeIcon.length > 0
-                        name: root.badgeIcon
-                        size: Tokens.icon.xs
-                        color: Colors.color.onSurfaceVariant
-                    }
+                MText {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    key: root.titleKey
+                    params: root.titleParams
+                    value: root.titleValue
+                    styleName: root.compact ? "bodyMedium" : "bodyLarge"
+                    color: root._fg
+                    elide: Text.ElideRight
+                    maximumLineCount: 1
+                }
+                MIcon {
+                    id: titleBadge
+                    visible: root.badgeIcon.length > 0
+                    name: root.badgeIcon
+                    size: Tokens.icon.xs
+                    color: Colors.color.onSurfaceVariant
                 }
             }
 
@@ -225,6 +227,12 @@ Item {
                 styleName: "bodySmall"
                 color: Colors.color.onSurfaceVariant
                 Layout.fillWidth: true
+                Layout.preferredWidth: 0
+                Layout.preferredHeight: visible ? implicitHeight : 0
+                Layout.maximumHeight: visible ? implicitHeight : 0
+                wrapMode: root.subtitleLines > 1 ? Text.WordWrap : Text.NoWrap
+                maximumLineCount: Math.max(1, root.subtitleLines)
+                elide: Text.ElideRight
             }
         }
 

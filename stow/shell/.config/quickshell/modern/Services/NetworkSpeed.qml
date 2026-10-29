@@ -1,4 +1,5 @@
-// One curl download. Settings reads the result off Network.
+// Settings speed test. Several curl streams of the Arch ISO via
+// scripts/network-speed.sh so a gigabit link can fill.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -50,7 +51,7 @@ Item {
 
     Process {
         id: speedProc
-        command: ["curl", "-L", "--max-time", "8", "-o", "/dev/null", "-s", "-w", "{\"speed\":%{speed_download},\"bytes\":%{size_download},\"time\":%{time_total},\"dns\":%{time_namelookup},\"connect\":%{time_connect},\"code\":\"%{http_code}\"}", "https://geo.mirror.pkgbuild.com/iso/latest/archlinux-x86_64.iso"]
+        command: [Paths.script("network-speed.sh")]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parse(this.text)

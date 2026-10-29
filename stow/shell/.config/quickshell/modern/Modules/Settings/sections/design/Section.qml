@@ -41,7 +41,6 @@ ColumnLayout {
     }
     MField {
         labelKey: "settings.fields.wallpaperColor"
-        hintKey: "settings.hints.surfaceTint"
         MSlider {
             from: 0.5
             to: 2

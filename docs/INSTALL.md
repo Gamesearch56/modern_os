@@ -358,7 +358,7 @@ same as `pacstrap -K` — unpackfs does not copy the live overlay's
 `pacman-init` gnupg home), then `pacman --disable-sandbox -Sy
 archlinux-keyring` (pacman 7's landlock sandbox cannot download
 inside the Calamares chroot), enables
-`[multilib]` (needed for `lib32-gamemode`), sets `IgnorePkg` for
+`[multilib]` (needed for `steam` and `lib32-gamemode`), sets `IgnorePkg` for
 `jack2` / `pulseaudio` (`--noconfirm` answers **No** to “Remove jack2?”),
 installs the PipeWire stack, overlays pin `install_native` so old tags
 cannot one-shot ffmpeg+pipewire-jack, rewrites pin `matugen` /

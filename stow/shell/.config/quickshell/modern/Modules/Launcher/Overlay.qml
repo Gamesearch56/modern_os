@@ -113,19 +113,29 @@ Item {
                 }
             }
 
-            Rectangle {
+            Item {
                 id: card
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(
                     results.implicitHeight + Tokens.spacing.md * 2,
                     root._belowSearch
                 )
-                color: Colors.color.surface
-                radius: Tokens.radius.medium
-                border.color: Colors.color.outlineVariant
-                border.width: Tokens.stroke.hairline
                 clip: true
-                opacity: Config.design.transparency ?? 0.85
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Tokens.radius.medium
+                    color: Colors.color.surface
+                    opacity: Chrome.washOpacity
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Tokens.radius.medium
+                    color: "transparent"
+                    border.color: Colors.color.outlineVariant
+                    border.width: Tokens.stroke.hairline
+                }
 
                 Results {
                     id: results

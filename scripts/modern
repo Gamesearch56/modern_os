@@ -298,10 +298,21 @@ case "$TARGET" in
         ACTION="${1:-button}"
         act() {
             case "$1" in
-                lock) exec loginctl lock-session ;;
-                suspend) exec systemctl suspend ;;
-                poweroff) exec systemctl poweroff ;;
-                ask | *) exec qs -c modern ipc call powermenu show ;;
+                lock)
+                    exec qs -c modern ipc call session lock
+                    ;;
+                suspend)
+                    # hypridle before_sleep_cmd also locks; call it here so
+                    # lid/button sleep still locks if hypridle is down.
+                    timeout 2 qs -c modern ipc call session lock >/dev/null 2>&1 || true
+                    exec systemctl suspend
+                    ;;
+                poweroff)
+                    exec systemctl poweroff
+                    ;;
+                ask | *)
+                    exec qs -c modern ipc call powermenu show
+                    ;;
             esac
         }
         on_battery() {

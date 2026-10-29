@@ -13,10 +13,11 @@ ColumnLayout {
 
     signal addClicked()
     signal removeClicked(var rule)
+    signal editClicked(var rule)
 
     readonly property bool _busy: Firewall.running || !Firewall.active
     readonly property real fromWidth: Tokens.spacing.xxl * 7
-    readonly property real actionWidth: Tokens.spacing.xxl * 2
+    readonly property real actionWidth: Tokens.spacing.xxl * 2 + Tokens.spacing.sm
 
     spacing: Tokens.spacing.sm
     Layout.fillWidth: true
@@ -78,6 +79,7 @@ ColumnLayout {
             rule: root.rules[index]
             busy: root._busy
             onRemoveClicked: (r) => root.removeClicked(r)
+            onEditClicked: (r) => root.editClicked(r)
         }
     }
 

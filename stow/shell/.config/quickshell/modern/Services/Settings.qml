@@ -35,6 +35,10 @@ Singleton {
     }
 
     function openAt(section: string, subsection: string) {
+        if (section === "privacy" && subsection === "calendar") {
+            section = "bar";
+            subsection = "clock";
+        }
         const id = root.resolve(section);
         root.sectionId = id;
         root.subsectionId = subsection || "";

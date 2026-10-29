@@ -130,8 +130,8 @@ Singleton {
             // Per-widget settings blobs — shape varies per widget, each
             // widget reads its own key (e.g. Config.widgets.clock).
             property var widgets: ({
-                clock: { dateFormat: "DD.MM.YYYY", timeFormat: "HH:mm", showSeconds: false, showWeekday: false },
-                weather: { locationMode: "auto", manualLocation: "", units: "metric", pollIntervalMs: 600000 },
+                clock: { dateFormat: "DD.MM.YYYY", timeFormat: "HH:mm", showSeconds: false, showWeekday: false, calendarProvider: "none", calendarAccount: "" },
+                weather: { locationMode: "auto", manualLocation: "", placeName: "", units: "metric", pollIntervalMs: 600000 },
                 performance: { pollIntervalMs: 2000, showGpu: true, showTemps: true },
                 audio: { scrollStepPercent: 5, scrollStepFinePercent: 1 }
             })
@@ -252,6 +252,8 @@ Singleton {
                 property bool snapperEnabled: false
                 property bool resticEnabled: false
                 property bool preUpdateSnapshot: true
+                property bool pruneEnabled: true
+                property int keepCount: 8
             }
 
             // Combo strings use Hyprland's Lua hl.bind() format:

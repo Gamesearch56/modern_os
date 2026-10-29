@@ -117,17 +117,19 @@ tests failing for months, cannot resolve files created by Proton's 3.x
 SDK clients. The official CLI is first-party and covers exactly the
 list/upload/download/move/trash operations the notes widget needs.
 
-## 10. ICS-only calendar, launcher-button mail — no Proton API integration
+## 10. Calendar connect on Date and time — ICS for Proton/Google, CalDAV for Apple
 
-**Decision:** `Services/Calendar` consumes a Proton Calendar ICS share
-link (read-only). Mail is a bar button opening the Proton Mail web app.
+**Decision:** The Date and time bar widget connects calendars. Proton and
+Google use a private iCal link (their supported subscribe path). Apple
+uses CalDAV with an Apple ID and an app-specific password. The link and
+password live in gitignored `secrets.json`; `config.json` only stores
+the provider id and Apple ID. Mail stays a bar button to the mail web
+app. Privacy does not hold calendar credentials.
 
-**Rejected:** any deeper Proton Mail/Calendar integration — Proton
-Calendar has no public API or CalDAV by design (end-to-end encrypted,
-server can't read events); Proton Mail's only sanctioned integration
-route (Bridge) requires a paid plan, and unofficial bridges decrypt a
-session to disk and break on protocol changes. Not worth the fragility
-for what a launcher button and an ICS subscription already cover.
+**Rejected:** Google/Apple OAuth client IDs (would need a shipped app
+registration), a Proton Calendar API (still none; events stay
+end-to-end encrypted), and a raw ICS URL field on Privacy. Unofficial
+Proton bridges still decrypt a session to disk.
 
 ## 11. No pacman hook for the new manifests
 

@@ -79,6 +79,8 @@ Rectangle {
                         readonly property string itemId: String((root.items || [])[index] || "")
                         readonly property bool canEdit: root.configurable(row.itemId)
                         property bool _moved: false
+                        property real _pressX: 0
+                        property real _pressY: 0
                         Layout.fillWidth: true
                         implicitHeight: root._rowH
                         z: drag.drag.active ? 20 : 0
@@ -165,20 +167,29 @@ Rectangle {
                             anchors.fill: parent
                             preventStealing: true
                             hoverEnabled: true
-                            cursorShape: Qt.SizeAllCursor
+                            cursorShape: drag.drag.active
+                                ? Qt.ClosedHandCursor
+                                : (row.canEdit ? Qt.PointingHandCursor : Qt.OpenHandCursor)
                             drag.target: tile
                             drag.axis: Drag.XAndYAxis
-                            onPressed: {
+                            drag.threshold: Tokens.spacing.md
+                            onPressed: (mouse) => {
                                 ring.markPointer();
                                 row._moved = false;
-                                if (root.board)
-                                    root.board.beginDrag(root.slotId, row.index, row.itemId);
+                                row._pressX = mouse.x;
+                                row._pressY = mouse.y;
                             }
                             onPositionChanged: (mouse) => {
                                 if (!pressed)
                                     return;
-                                if (Math.abs(tile.x) > Tokens.spacing.xs || Math.abs(tile.y) > Tokens.spacing.xs)
+                                const slop = Tokens.spacing.md;
+                                if (!row._moved
+                                        && (Math.abs(mouse.x - row._pressX) > slop
+                                            || Math.abs(mouse.y - row._pressY) > slop)) {
                                     row._moved = true;
+                                    if (root.board)
+                                        root.board.beginDrag(root.slotId, row.index, row.itemId);
+                                }
                                 if (row._moved && root.board)
                                     root.board.hoverFrom(drag, mouse.x, mouse.y);
                             }

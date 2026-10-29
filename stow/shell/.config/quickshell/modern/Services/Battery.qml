@@ -1,4 +1,5 @@
-// UPower / sysfs battery. The bar island is hidden on AC-only desktops.
+// UPower via battery-read.sh. The bar island is hidden on AC-only
+// desktops, not while a laptop pack is charging.
 pragma Singleton
 
 import Quickshell
@@ -9,62 +10,80 @@ import "../Commons"
 Singleton {
     id: root
 
-    property bool watching: false
+    property int _watchers: 0
+    readonly property bool watching: root._watchers > 0
     property bool hasBattery: false
     property bool onBattery: false
     property int percent: 100
     property bool charging: false
-    property string iconName: "battery"
     property var percentSamples: []
     property int timeSeconds: 0
     property bool timeToFull: false
+    property int timeEmptySeconds: 0
+    property int timeFullSeconds: 0
     property real rateWatts: 0
+    property real energyWh: 0
+    property real energyFullWh: 0
+    property int healthPercent: 0
+    property real voltage: 0
+    property int cycles: -1
 
+    readonly property string iconName: {
+        if (!root.hasBattery)
+            return "battery-missing-symbolic";
+        const step = Math.round(Math.max(0, Math.min(100, root.percent)) / 10) * 10;
+        if (root.charging && root.percent >= 99)
+            return "battery-level-100-charged-symbolic";
+        if (root.charging)
+            return "battery-level-" + step + "-charging-symbolic";
+        return "battery-level-" + step + "-symbolic";
+    }
+
+    readonly property bool full: root.hasBattery && root.charging && root.percent >= 99
+    readonly property string remainingLabel: root.formatDuration(root.timeEmptySeconds)
+    readonly property string untilFullLabel: root.formatDuration(root.timeFullSeconds)
     readonly property string timeLabel: {
-        if (root.timeSeconds <= 0)
-            return "";
-        const mins = Math.max(1, Math.round(root.timeSeconds / 60));
-        const hours = mins >= 120;
-        const n = hours ? Math.round(mins / 60) : mins;
-        let key = "";
         if (root.timeToFull)
-            key = hours ? "settings.energy.untilFullHours" : "settings.energy.untilFullMin";
-        else
-            key = hours ? "settings.energy.remainingHours" : "settings.energy.remainingMin";
-        return I18n.t(key, ({ n: n }));
+            return root._span(root.timeFullSeconds, true);
+        return root._span(root.timeEmptySeconds, false);
     }
 
-    Process {
-        id: proc
-        command: ["sh", "-c", "upower -i $(upower -e 2>/dev/null | grep -m1 BAT) 2>/dev/null || true"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: root._parse(this.text)
-        }
+    function watch() {
+        root._watchers += 1;
     }
 
-    Timer {
-        interval: 15000
-        running: root.watching
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: proc.running = true
+    function unwatch() {
+        root._watchers = Math.max(0, root._watchers - 1);
     }
 
-    function _parseDuration(s: string): int {
-        const t = String(s || "").trim().toLowerCase();
-        if (t.length === 0 || t.indexOf("unknown") >= 0)
-            return 0;
-        const n = parseFloat(t);
-        if (n !== n)
-            return 0;
-        if (t.indexOf("hour") >= 0)
-            return Math.round(n * 3600);
-        if (t.indexOf("minute") >= 0)
-            return Math.round(n * 60);
-        if (t.indexOf("second") >= 0)
-            return Math.round(n);
-        return 0;
+    function formatDuration(sec: int): string {
+        if (sec <= 0)
+            return "";
+        const mins = Math.max(1, Math.round(sec / 60));
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        if (h > 0 && m > 0)
+            return I18n.t("settings.energy.durationHm", ({ h: h, m: m }));
+        if (h > 0)
+            return I18n.t("settings.energy.durationH", ({ n: h }));
+        return I18n.t("settings.energy.durationM", ({ n: m }));
+    }
+
+    function formatWh(n: real): string {
+        return String(Math.round(Number(n) * 10) / 10);
+    }
+
+    function _span(sec: int, full: bool): string {
+        if (sec <= 0)
+            return "";
+        const mins = Math.max(1, Math.round(sec / 60));
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        if (h > 0 && m > 0)
+            return I18n.t(full ? "settings.energy.untilFullHm" : "settings.energy.remainingHm", ({ h: h, m: m }));
+        if (h > 0)
+            return I18n.t(full ? "settings.energy.untilFullHours" : "settings.energy.remainingHours", ({ n: h }));
+        return I18n.t(full ? "settings.energy.untilFullMin" : "settings.energy.remainingMin", ({ n: m }));
     }
 
     function _clear() {
@@ -73,57 +92,63 @@ Singleton {
         root.charging = false;
         root.timeSeconds = 0;
         root.timeToFull = false;
+        root.timeEmptySeconds = 0;
+        root.timeFullSeconds = 0;
         root.rateWatts = 0;
+        root.energyWh = 0;
+        root.energyFullWh = 0;
+        root.healthPercent = 0;
+        root.voltage = 0;
+        root.cycles = -1;
         root.percentSamples = [];
-        root.iconName = "ac-adapter";
     }
 
     function _parse(text: string) {
-        const t = text || "";
-        if (t.indexOf("percentage") === -1) {
+        try {
+            const obj = JSON.parse((text || "").trim() || "{}");
+            if (!obj.hasBattery) {
+                root._clear();
+                return;
+            }
+            root.hasBattery = true;
+            root.percent = Number(obj.percent) || 0;
+            root.charging = !!obj.charging;
+            root.onBattery = !!obj.onBattery;
+            root.timeEmptySeconds = Number(obj.timeEmptySeconds) || 0;
+            root.timeFullSeconds = Number(obj.timeFullSeconds) || 0;
+            root.timeToFull = !!obj.timeToFull;
+            root.timeSeconds = Number(obj.timeSeconds) || (root.timeToFull ? root.timeFullSeconds : root.timeEmptySeconds);
+            root.rateWatts = Number(obj.rateWatts) || 0;
+            root.energyWh = Number(obj.energyWh) || 0;
+            root.energyFullWh = Number(obj.energyFullWh) || 0;
+            root.healthPercent = Number(obj.healthPercent) || 0;
+            root.voltage = Number(obj.voltage) || 0;
+            root.cycles = (obj.cycles === 0 || obj.cycles > 0) ? Number(obj.cycles) : -1;
+            const next = (root.percentSamples || []).slice();
+            next.push(root.percent);
+            if (next.length > 32)
+                next.shift();
+            root.percentSamples = next;
+        } catch (e) {
+            Logger.error("Battery", String(e));
             root._clear();
-            return;
         }
-        root.hasBattery = true;
-        const pct = t.match(/percentage:\s*([0-9]+)/);
-        if (pct)
-            root.percent = Number(pct[1]);
-        const st = t.match(/state:\s*(\S+)/);
-        const state = st ? st[1] : "";
-        root.charging = state === "charging" || state === "fully-charged";
-        root.onBattery = state === "discharging" || state === "pending-charge" || (!root.charging && root.percent < 100);
-        if (state === "fully-charged")
-            root.onBattery = false;
-        if (root.charging)
-            root.iconName = "battery-charging";
-        else if (root.percent <= 15)
-            root.iconName = "battery-low";
-        else if (root.percent <= 40)
-            root.iconName = "battery-caution";
-        else
-            root.iconName = "battery";
-        if (!t.match(/native-path:.*(BAT|battery)/i) && t.indexOf("line-power") !== -1) {
-            root._clear();
-            return;
+    }
+
+    Process {
+        id: proc
+        command: [Paths.script("battery-read.sh")]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: root._parse(this.text)
         }
-        const empty = t.match(/time to empty:\s*(.+)/i);
-        const full = t.match(/time to full:\s*(.+)/i);
-        if (full && root.charging) {
-            root.timeSeconds = root._parseDuration(full[1]);
-            root.timeToFull = true;
-        } else if (empty) {
-            root.timeSeconds = root._parseDuration(empty[1]);
-            root.timeToFull = false;
-        } else {
-            root.timeSeconds = 0;
-            root.timeToFull = false;
-        }
-        const rate = t.match(/energy-rate:\s*([0-9.]+)/i);
-        root.rateWatts = rate ? Number(rate[1]) : 0;
-        const next = (root.percentSamples || []).slice();
-        next.push(root.percent);
-        if (next.length > 32)
-            next.shift();
-        root.percentSamples = next;
+    }
+
+    Timer {
+        interval: Motion.processWatchMs
+        running: root.watching
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: proc.running = true
     }
 }

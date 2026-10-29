@@ -98,7 +98,8 @@ QtObject {
             else
                 ring.markPointer();
         }
-        root._reveal(item);
+        if (reveal)
+            root._reveal(item);
     }
 
     function _reveal(item: var) {

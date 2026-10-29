@@ -16,10 +16,11 @@ FocusScope {
     property int elevation: 3
     property real cardWidth: Tokens.spacing.xxl * 16
     property real cardHeight: Tokens.spacing.xxl * 14
+    property bool hugContent: false
     property bool closeVisible: true
     property string actionKey: ""
     property string actionIcon: ""
-    property real chromeOpacity: Config.design.transparency ?? 0.85
+    property real chromeOpacity: Chrome.washOpacity
     property real scrimOpacity: Tokens.overlay.scrim
     property color cardColor: Colors.color.surfaceContainer
     property bool chromeHover: true
@@ -31,6 +32,18 @@ FocusScope {
 
     property bool _entered: false
     readonly property bool _shown: root.open && root._entered
+    readonly property real _hugHeight: {
+        void titleBar.implicitHeight;
+        const kids = contentSlot.children;
+        const body = kids.length > 0 ? kids[0].implicitHeight : 0;
+        const head = Math.max(titleBar.implicitHeight, Tokens.spacing.xxl);
+        return Tokens.spacing.md * 2
+            + head
+            + Tokens.spacing.md
+            + Math.max(1, Tokens.stroke.hairline)
+            + Tokens.spacing.md
+            + body;
+    }
 
     MFocusWalk {
         id: overlayWalk
@@ -40,6 +53,16 @@ FocusScope {
     function arrowMove(dx: int, dy: int): bool {
         overlayWalk.move(dx, dy);
         return true;
+    }
+
+    function _placeBody() {
+        if (contentSlot.children.length !== 1)
+            return;
+        const c = contentSlot.children[0];
+        c.anchors.left = contentSlot.left;
+        c.anchors.right = contentSlot.right;
+        c.anchors.top = contentSlot.top;
+        c.anchors.bottom = root.hugContent ? undefined : contentSlot.bottom;
     }
 
     Keys.onPressed: (event) => {
@@ -91,27 +114,17 @@ FocusScope {
         }
     }
 
-    MCard {
-        id: card
-        level: root.elevation
-        color: root.cardColor
+    Item {
+        id: cardHost
         width: Math.min(root.cardWidth, root.width - Tokens.spacing.xxl)
-        height: Math.min(root.cardHeight, root.height - Tokens.spacing.xxl * 2)
+        height: Math.min(root.hugContent ? root._hugHeight : root.cardHeight,
+            root.height - Tokens.spacing.xxl * 2)
         anchors.centerIn: parent
         anchors.horizontalCenterOffset: titleBar.offsetX
         anchors.verticalCenterOffset: titleBar.offsetY
-        padding: Tokens.spacing.md
         scale: Motion.overlayScale(root._shown)
-        opacity: Motion.overlayOpacity(root._shown) * root.chromeOpacity
+        opacity: Motion.overlayOpacity(root._shown)
         transformOrigin: Item.Center
-        borderWidth: root.chromeHover && cardHover.hovered ? Tokens.stroke.focus : Tokens.stroke.hairline
-        borderColor: root.chromeHover && cardHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
-
-        HoverHandler {
-            id: cardHover
-            enabled: root.chromeHover
-            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-        }
 
         Behavior on opacity {
             enabled: Motion.overlaysFade
@@ -127,12 +140,35 @@ FocusScope {
                 easing.bezierCurve: root._shown ? Motion.easingEmphasizedDecelerate : Motion.easingEmphasizedAccelerate
             }
         }
-        Behavior on borderColor {
-            ColorAnimation {
-                duration: Motion.shortMs
-                easing.bezierCurve: Motion.easingStandard
-            }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Tokens.radius.medium
+            color: root.cardColor
+            opacity: root.chromeOpacity
         }
+
+        MCard {
+            id: card
+            anchors.fill: parent
+            level: root.elevation
+            color: "transparent"
+            padding: Tokens.spacing.md
+            borderWidth: root.chromeHover && cardHover.hovered ? Tokens.stroke.focus : Tokens.stroke.hairline
+            borderColor: root.chromeHover && cardHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
+
+            HoverHandler {
+                id: cardHover
+                enabled: root.chromeHover
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            }
+
+            Behavior on borderColor {
+                ColorAnimation {
+                    duration: Motion.shortMs
+                    easing.bezierCurve: Motion.easingStandard
+                }
+            }
 
         ColumnLayout {
             anchors.fill: parent
@@ -159,13 +195,15 @@ FocusScope {
             Item {
                 id: contentSlot
                 Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                onChildrenChanged: {
-                    if (children.length === 1)
-                        children[0].anchors.fill = contentSlot;
+                Layout.fillHeight: !root.hugContent
+                implicitHeight: {
+                    const kids = contentSlot.children;
+                    return kids.length > 0 ? kids[0].implicitHeight : 0;
                 }
+
+                onChildrenChanged: root._placeBody()
             }
+        }
         }
     }
 }

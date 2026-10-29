@@ -5,6 +5,7 @@
 -- compositor so the greetd handoff is not a black frame.
 
 local json = require("lib.json")
+local glass = require("modules.glass")
 
 local function hex_stripped(value)
     if type(value) ~= "string" then
@@ -20,6 +21,29 @@ local function apply_surface(surface)
     hl.config({
         misc = {
             background_color = "0x" .. surface,
+        },
+        -- A whisper of the surface role, not the acrylic default blue.
+        -- Alpha follows glass.lua so light surfaces do not milk the frost.
+        decoration = {
+            blur = {
+                acrylic = { tint = glass.acrylic_tint(surface) },
+            },
+        },
+    })
+end
+
+-- MD3 shadow role at elevation opacities (level 2 active / level 1
+-- inactive). Hyprland's unset color_inactive is opaque white.
+local function apply_shadow(shadow)
+    if type(shadow) ~= "string" or #shadow ~= 6 then
+        shadow = "000000"
+    end
+    hl.config({
+        decoration = {
+            shadow = {
+                color = "rgba(" .. shadow .. "1a)",
+                color_inactive = "rgba(" .. shadow .. "14)",
+            },
         },
     })
 end
@@ -37,10 +61,12 @@ if f then
 end
 
 local surface = tokens and hex_stripped(tokens.surface) or nil
+local shadow = tokens and hex_stripped(tokens.shadow) or nil
 
 local ok, generated = pcall(require, "modules.colors")
 if ok then
     apply_surface(surface)
+    apply_shadow(shadow)
     return generated
 end
 
@@ -59,4 +85,5 @@ if primary and outline then
     })
 end
 apply_surface(surface)
+apply_shadow(shadow)
 return {}

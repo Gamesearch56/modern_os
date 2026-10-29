@@ -1,5 +1,5 @@
-// Snapper list/create/delete. Restore stays gated (docs/BACKUP.md).
-// Probe and list as the user; create/delete/setup go through pkexec.
+// Snapper list/create/delete/restore. Probe and list as the user;
+// create/delete/setup/restore go through pkexec.
 pragma Singleton
 
 import Quickshell
@@ -21,6 +21,8 @@ Singleton {
     property string _stderr: ""
 
     readonly property bool ready: root.status === "ready"
+
+    signal restoreFinished()
 
     Process {
         id: probeProc
@@ -100,13 +102,57 @@ Singleton {
         ]], I18n.t("settings.backup.settingUp"));
     }
 
+    function keepLimit(): int {
+        const n = Number(Config.backup.keepCount);
+        if (n >= 3 && n <= 20)
+            return Math.round(n);
+        return 8;
+    }
+
+    function pruneOn(): bool {
+        return Config.backup.pruneEnabled !== false;
+    }
+
     function create() {
         if (!root.ready || root.running)
             return;
-        root._start("create", [[
-            "pkexec", "/usr/bin/snapper", "-c", "root", "create",
-            "--description", I18n.t("settings.backup.manual")
-        ]], I18n.t("settings.backup.creating"));
+        const cmd = [
+            "pkexec", Paths.script("snapper-gc.sh"), "create",
+            I18n.t("settings.backup.manual")
+        ];
+        if (root.pruneOn())
+            cmd.push(String(root.keepLimit()));
+        root._start("create", [cmd], I18n.t("settings.backup.creating"));
+    }
+
+    function prune(keep: var) {
+        if (!root.ready || root.running || !root.pruneOn())
+            return;
+        let n = Number(keep);
+        if (!(n >= 3 && n <= 20))
+            n = root.keepLimit();
+        if (root.items.length <= n)
+            return;
+        root._start("prune", [[
+            "pkexec", Paths.script("snapper-gc.sh"), "prune", String(n)
+        ]], I18n.t("settings.backup.pruning"));
+    }
+
+    function clearAll() {
+        if (!root.ready || root.running || root.items.length === 0)
+            return;
+        root._start("clear", [[
+            "pkexec", Paths.script("snapper-gc.sh"), "clear"
+        ]], I18n.t("settings.backup.clearing"));
+    }
+
+    function restore(num: string) {
+        const n = String(num || "").replace(/[^0-9]/g, "");
+        if (!n || n === "0" || !root.ready || root.running)
+            return;
+        root._start("restore", [[
+            "pkexec", Paths.script("snapper-restore.sh"), n
+        ]], I18n.t("settings.backup.restoring"));
     }
 
     function remove(num: string) {
@@ -130,9 +176,14 @@ Singleton {
 
     function _kick() {
         if (root._queue.length === 0) {
+            const kind = root.mutating;
             root.running = false;
             root.mutating = "";
             root.step = "";
+            if (kind === "restore") {
+                root.restoreFinished();
+                return;
+            }
             if (root.watching)
                 root.refresh();
             return;

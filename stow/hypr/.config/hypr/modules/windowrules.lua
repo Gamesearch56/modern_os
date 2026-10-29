@@ -9,6 +9,7 @@
 -- that plugin and must not be applied.
 
 local config = require("modules.config")
+local glass = require("modules.glass")
 local overlays = require("modules.windows")
 
 local function hyprbars_loaded()
@@ -98,7 +99,7 @@ apply({
     stay_focused = true,
     focus_on_activate = true,
     border_size = 1,
-    opacity = config.value("design.transparency", 0.85),
+    opacity = glass.wash(),
 })
 
 local function phylax_focus(w)

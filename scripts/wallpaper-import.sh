@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Copy an image into ~/Pictures/Wallpapers via a file chooser.
+# Copy an image into XDG PICTURES/Wallpapers via a file chooser.
 # Refuses a pick whose realpath already lives in that destination folder.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=lib/paths.sh
+source "$SCRIPT_DIR/lib/paths.sh"
 # shellcheck source=../install/lib/i18n.sh
 source "$REPO_ROOT/install/lib/i18n.sh"
 
@@ -14,11 +16,7 @@ if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
     [ "$I18N_LANG" = "de" ] || I18N_LANG="en"
 fi
 
-pic="$(xdg-user-dir PICTURES 2>/dev/null || true)"
-if [ -z "${pic:-}" ] || [ "$pic" = "$HOME" ]; then
-    pic="$HOME/Pictures"
-fi
-DEST="$pic/Wallpapers"
+DEST="$(xdg_wallpapers_dir)"
 mkdir -p "$DEST"
 DEST_REAL="$(realpath "$DEST")"
 

@@ -19,7 +19,11 @@ Btrfs subvolumes created by `scripts/bootstrap.sh` (print-only until
 | `@swap`      | swap file host     | **never** |
 
 `config.json` → `backup.preUpdateSnapshot` is the Settings flag that
-`modern update` honors. `backup.snapperEnabled` and `backup.resticEnabled`
+`modern update` honors. `backup.pruneEnabled` (default on) and
+`backup.keepCount` (3–20, default 8) drop the oldest Snapper snapshots
+when more than that exist — after a manual create, after changing the
+keep setting, and after `modern update`. Snapshot 0 is never deleted.
+`backup.snapperEnabled` and `backup.resticEnabled`
 stay in config for compatibility; Settings no longer shows those
 toggles (they did not install snapper or configure a restic repo).
 Settings → Backup **Create config** writes the Snapper `root` config
@@ -27,8 +31,12 @@ through one `pkexec` of `scripts/snapper-setup.sh`. When `/.snapshots`
 is already the `@snapshots` mount, that script writes the config files
 and leaves the mount alone — `snapper create-config /` would fail
 because it cannot create a nested `.snapshots`. Hourly Snapper
-snapshots stay off. Restore/rollback stays gated. Settings then lists,
-creates, and deletes snapshots when the `root` config exists.
+snapshots stay off. Settings then lists, creates, deletes, and restores
+snapshots when the `root` config exists. Restore is one `pkexec` of
+`scripts/snapper-restore.sh`: it clones the chosen snapshot over
+subvolume `@` (fstab pins `subvol=/@`, so `snapper rollback` would not
+change the next boot). `@home` is left alone. The previous `@` is kept
+as `@rollback-<UTC>`. Settings reboots when that script succeeds.
 
 ## Swapfile lives on `@swap`
 

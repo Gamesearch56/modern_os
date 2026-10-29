@@ -9,32 +9,31 @@ if [ -z "$FILE" ] || [ ! -f "$FILE" ]; then
     exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/paths.sh
+source "$SCRIPT_DIR/lib/paths.sh"
+
 real="$(realpath "$FILE")"
 if [ ! -f "$real" ]; then
     exit 1
 fi
 
-pic="$(xdg-user-dir PICTURES 2>/dev/null || true)"
-if [ -z "${pic:-}" ] || [ "$pic" = "$HOME" ]; then
-    pic="$HOME/Pictures"
-fi
-
+shipped="$(realpath "${XDG_CONFIG_HOME:-$HOME/.config}/modern/wallpapers" 2>/dev/null || true)"
 ok=0
-for d in \
-    "$HOME/Pictures/Wallpapers" \
-    "$HOME/Pictures/Wallpaper" \
-    "$pic/Wallpapers" \
-    "$pic/Wallpaper"
-do
+while IFS= read -r d; do
     [ -d "$d" ] || continue
     prefix="$(realpath "$d")"
+    [ -n "$prefix" ] || continue
+    if [ -n "$shipped" ] && [ "$prefix" = "$shipped" ]; then
+        continue
+    fi
     case "$real" in
         "$prefix"/*)
             ok=1
             break
             ;;
     esac
-done
+done < <(xdg_wallpaper_library_dirs)
 if [ "$ok" -ne 1 ]; then
     exit 2
 fi

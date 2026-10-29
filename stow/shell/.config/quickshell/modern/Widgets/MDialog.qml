@@ -1,5 +1,6 @@
 // Modal dialog: scrim + centered glass card (Settings wash, hairline
-// only — not a window chrome). `titleKey` / `bodyKey` are I18n paths.
+// only — not a window chrome). Actions: optional error-colored text
+// on the left (Forget), Cancel then Confirm buttons on the right.
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"
@@ -18,6 +19,8 @@ FocusScope {
     property string destructiveKey: ""
     property bool destructive: false
     property bool confirmEnabled: true
+    property bool showCancel: true
+    property bool wide: false
     default property alias extra: extraCol.data
 
     signal confirmed()
@@ -57,13 +60,15 @@ FocusScope {
 
         MouseArea {
             anchors.fill: parent
+            hoverEnabled: true
             onClicked: root.cancelled()
         }
     }
 
     MPanelSurface {
         id: card
-        width: Math.min(parent.width - Tokens.spacing.xxl, Tokens.spacing.xxl * 12)
+        width: Math.min(parent.width - Tokens.spacing.xxl,
+            root.wide ? Tokens.panel.dialogWide : Tokens.panel.dialogWidth)
         implicitHeight: dialogCol.implicitHeight + Tokens.spacing.lg * 2
         anchors.centerIn: parent
         scale: Motion.overlayScale(root.open)
@@ -84,6 +89,12 @@ FocusScope {
             }
         }
 
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.AllButtons
+        }
+
         ColumnLayout {
             id: dialogCol
             x: Tokens.spacing.lg
@@ -91,32 +102,18 @@ FocusScope {
             width: parent.width - Tokens.spacing.lg * 2
             spacing: Tokens.spacing.md
 
-            RowLayout {
+            MText {
+                key: root.titleKey
+                params: root.titleParams
+                value: root.titleValue
+                styleName: "headlineSmall"
+                wrapMode: Text.WordWrap
+                elide: Text.ElideNone
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.md
-
-                MText {
-                    key: root.titleKey
-                    params: root.titleParams
-                    value: root.titleValue
-                    styleName: "headlineSmall"
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                }
-
-                MIconButton {
-                    visible: root.destructiveKey.length > 0
-                    close: true
-                    escapeClicks: false
-                    iconName: "edit-delete-symbolic"
-                    key: root.destructiveKey
-                    iconSize: Tokens.icon.xs
-                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                    onClicked: root.destructiveClicked()
-                }
             }
 
             MText {
+                visible: root.bodyKey.length > 0
                 key: root.bodyKey
                 params: root.bodyParams
                 styleName: "bodyMedium"
@@ -128,14 +125,55 @@ FocusScope {
                 id: extraCol
                 visible: extraCol.children.length > 0
                 Layout.fillWidth: true
+                Layout.bottomMargin: Tokens.spacing.md
                 spacing: Tokens.spacing.sm
             }
 
             RowLayout {
-                Layout.alignment: Qt.AlignRight
+                Layout.fillWidth: true
                 spacing: Tokens.spacing.sm
 
+                MText {
+                    visible: root.destructiveKey.length > 0
+                    key: root.destructiveKey
+                    styleName: "labelLarge"
+                    color: Colors.color.error
+                    opacity: tertiaryMa.containsMouse || tertiaryMa.pressed ? 0.72 : 1
+                    Layout.alignment: Qt.AlignVCenter
+                    Accessible.role: Accessible.Button
+                    Accessible.name: root.destructiveKey.length > 0 ? I18n.t(root.destructiveKey) : ""
+                    Accessible.onPressAction: root.destructiveClicked()
+                    activeFocusOnTab: visible
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Motion.shortMs
+                            easing.bezierCurve: Motion.easingStandard
+                        }
+                    }
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                            root.destructiveClicked();
+                            event.accepted = true;
+                        }
+                    }
+
+                    MouseArea {
+                        id: tertiaryMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.destructiveClicked()
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
                 MButton {
+                    visible: root.showCancel
                     kind: "text"
                     key: root.cancelKey
                     onClicked: root.cancelled()

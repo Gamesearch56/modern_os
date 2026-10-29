@@ -12,4 +12,5 @@ singleton Logger 1.0 Logger.qml
 singleton DateTime 1.0 DateTime.qml
 singleton SelectMenus 1.0 SelectMenus.qml
 singleton Paths 1.0 Paths.qml
+singleton XdgDirs 1.0 XdgDirs.qml
 singleton DesktopRoles 1.0 DesktopRoles.qml

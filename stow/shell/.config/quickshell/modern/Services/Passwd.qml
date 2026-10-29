@@ -1,6 +1,5 @@
-// Local accounts for Settings > Users. Human getent lists; chfn for
-// the session name; passwd/su in the configured terminal. Group
-// mutation uses gated modern-usersd only when that binary exists.
+// Local accounts for Settings → Users. getent is unprivileged; mutate
+// is one pkexec of usersd.sh with JSON on stdin so passwords stay off argv.
 pragma Singleton
 
 import Quickshell
@@ -13,161 +12,229 @@ Singleton {
 
     readonly property string loginName: Quickshell.env("USER") || ""
     property bool watching: false
+    property bool running: false
     property string lastError: ""
-    property bool helperPresent: false
     property var users: []
     property var others: []
     property var groups: []
     property var localGroups: []
-    property var _queue: []
+    property var sessionUser: ({})
+    readonly property bool canManage: rules.isAdmin(root.sessionUser) || rules.isAdmin({ groups: root.groups })
+    property string _payload: ""
+    property string _stderr: ""
+
+    PasswdParse { id: rules }
 
     function refresh() {
         if (!root.watching)
             return;
         snapProc.running = true;
         myGroupsProc.running = true;
-        helperProc.running = true;
     }
 
-    function setDisplayName(name: string) {
-        const n = String(name || "").trim();
-        if (n.length === 0)
-            return;
-        nameProc.command = ["chfn", "-f", n];
-        nameProc.running = true;
+    function nameOk(s): bool { return rules.nameOk(s); }
+    function gecosOk(s): bool { return rules.gecosOk(s); }
+    function passwordOk(s): bool { return rules.passwordOk(s); }
+    function isAdmin(person): bool { return rules.isAdmin(person); }
+    function groupProtected(grp): bool { return rules.groupProtected(grp); }
+    function canRenameGroup(grp): bool { return root.canManage && rules.canRenameGroup(grp, root.users); }
+    function canDeleteGroup(grp): bool { return root.canManage && rules.canDeleteGroup(grp, root.users); }
+    function userByLogin(login: string) {
+        return rules.findUser(root.users, login);
+    }
+
+    function canDemote(person): bool {
+        return rules.canDemote(person, root.users, root.loginName);
+    }
+    function assignableGroups(login: string) {
+        return rules.assignableGroups(root.users, root.localGroups, login);
+    }
+    function canToggleMember(groupName: string, login: string): bool {
+        return rules.canToggleMember(groupName, login, root.users, root.loginName);
+    }
+
+    function canDelete(login: string): bool {
+        const u = String(login || "");
+        if (!root.canManage || !u.length || u === root.loginName)
+            return false;
+        const person = rules.findUser(root.users, u);
+        if (!person || person.uid === 0)
+            return false;
+        if (root.isAdmin(person) && rules.adminCount(root.users) < 2)
+            return false;
+        return true;
+    }
+
+    function canRename(login: string): bool {
+        return String(login || "") !== root.loginName;
     }
 
     function setPassword() {
         Apps.runInTerminal(["passwd"]);
+        Settings.close();
     }
 
-    function openLogin(login: string) {
-        const u = String(login || "");
-        if (u.length > 0)
-            Apps.runInTerminal(["su", "-", u]);
+    function _requireManage(): bool {
+        if (root.canManage)
+            return true;
+        root.lastError = I18n.t("settings.users.adminOnly");
+        return false;
     }
 
-    function setUserGroups(login: string, names: var): bool {
-        if (!root.helperPresent) {
-            root.lastError = "gated";
-            return false;
-        }
-        const u = String(login || "");
-        const list = names || [];
-        if (!u.length || list.length === 0)
-            return false;
-        root._queue = root._queue.concat([{ login: u, groups: list }]);
-        root._drain();
-        return true;
-    }
-
-    function setGroupMembers(groupName: string, memberLogins: var): bool {
-        const g = String(groupName || "");
-        const want = memberLogins || [];
-        const people = root.users || [];
-        for (let i = 0; i < people.length; i++) {
-            const u = people[i];
-            const has = (u.groups || []).indexOf(g) !== -1;
-            const should = want.indexOf(u.login) !== -1;
-            if (has === should)
-                continue;
-            let next = (u.groups || []).filter(n => n !== g);
-            if (should)
-                next.push(g);
-            if (next.length === 0)
-                next = [u.login];
-            if (!root.setUserGroups(u.login, next))
-                return false;
-        }
-        return true;
-    }
-
-    function _drain() {
-        if (mutateProc.running)
+    function createUser(fields) {
+        if (!root._requireManage())
             return;
-        const q = root._queue || [];
-        if (q.length === 0) {
-            root.refresh();
+        const f = fields || ({});
+        const u = String(f.login || "").trim();
+        const gecos = String(f.gecos || "").trim();
+        const password = String(f.password || "");
+        const groups = f.groups || [];
+        if (!rules.nameOk(u) || !rules.passwordOk(password)) {
+            root.lastError = I18n.t("settings.users.invalid");
             return;
         }
-        const job = q[0];
-        root._queue = q.slice(1);
-        const body = JSON.stringify({ action: "groups", username: job.login, groups: job.groups });
-        mutateProc.command = ["sh", "-c", "printf '%s\\n' \"$1\" | pkexec /usr/local/bin/modern-usersd", "usersd", body];
-        mutateProc.running = true;
+        if (gecos.length && !rules.gecosOk(gecos)) {
+            root.lastError = I18n.t("settings.users.invalid");
+            return;
+        }
+        root._start({
+            action: "create", username: u, gecos: gecos, password: password,
+            groups: rules.sanitizeGroups(u, groups, root.isAdmin({ groups: groups }),
+                root.users, root.localGroups, root.loginName)
+        });
     }
 
-    function _parseSnap(text: string) {
-        const parts = (text || "").split("\n---\n");
-        const people = [];
-        const passLines = (parts[0] || "").trim().split("\n");
-        for (let i = 0; i < passLines.length; i++) {
-            const p = passLines[i].split("\t");
-            if (p.length < 6)
-                continue;
-            const uid = Number(p[1]);
-            const gecos = (p[3] || "").split(",")[0];
-            const shell = p[5] || "";
-            const home = p[4] || "";
-            if (uid < 1000 || uid >= 60000)
-                continue;
-            if (shell.indexOf("nologin") !== -1 || shell.indexOf("false") !== -1)
-                continue;
-            if (home.indexOf("/run/") === 0 || gecos === "Dynamic User")
-                continue;
-            people.push({ login: p[0], uid: uid, gid: Number(p[2]), gecos: gecos, home: home, shell: shell, groups: [] });
+    function updateUser(fields) {
+        const f = fields || ({});
+        const u = String(f.login || "").trim();
+        if (!u.length) {
+            root.lastError = I18n.t("settings.users.invalid");
+            return;
         }
-        const table = [];
-        const gLines = (parts[1] || "").trim().split("\n");
-        for (let i = 0; i < gLines.length; i++) {
-            const p = gLines[i].split("\t");
-            if (!p[0])
-                continue;
-            table.push({
-                name: p[0],
-                gid: Number(p[1] || 0),
-                members: (p[2] || "").split(",").map(s => s.trim()).filter(s => s.length > 0)
-            });
-        }
-        const byGid = ({});
-        for (let i = 0; i < table.length; i++)
-            byGid[table[i].gid] = table[i];
-        for (let i = 0; i < people.length; i++) {
-            const names = [];
-            const primary = byGid[people[i].gid];
-            if (primary)
-                names.push(primary.name);
-            for (let j = 0; j < table.length; j++) {
-                if ((table[j].members || []).indexOf(people[i].login) !== -1 && names.indexOf(table[j].name) === -1)
-                    names.push(table[j].name);
+        if (u !== root.loginName && !root._requireManage())
+            return;
+        const body = { action: "update", username: u };
+        const neu = String(f.newLogin || "").trim();
+        if (neu.length && neu !== u) {
+            if (!root.canRename(u) || !rules.nameOk(neu)) {
+                root.lastError = I18n.t("settings.users.protected");
+                return;
             }
-            people[i].groups = names;
+            body.newUsername = neu;
         }
-        root.users = people;
-        root.others = people.filter(u => u.login !== root.loginName);
-        const logins = people.map(u => u.login);
-        const shown = [];
-        for (let i = 0; i < table.length; i++) {
-            const g = table[i];
-            const mem = (g.members || []).slice();
-            for (let j = 0; j < people.length; j++) {
-                if (people[j].gid === g.gid && mem.indexOf(people[j].login) === -1)
-                    mem.push(people[j].login);
+        const gecos = String(f.gecos || "").trim();
+        if (gecos.length) {
+            if (!rules.gecosOk(gecos)) {
+                root.lastError = I18n.t("settings.users.invalid");
+                return;
             }
-            const humans = mem.filter(n => logins.indexOf(n) !== -1);
-            if (g.gid >= 1000 || humans.length > 0)
-                shown.push({ name: g.name, gid: g.gid, members: humans });
+            body.gecos = gecos;
         }
-        root.localGroups = shown;
+        const password = String(f.password || "");
+        if (password.length) {
+            if (u === root.loginName) {
+                root.setPassword();
+            } else if (!rules.passwordOk(password)) {
+                root.lastError = I18n.t("settings.users.invalid");
+                return;
+            } else {
+                body.password = password;
+            }
+        }
+        if (Array.isArray(f.groups) && root.canManage) {
+            const person = rules.findUser(root.users, u);
+            body.groups = rules.sanitizeGroups(u, f.groups, root.isAdmin({
+                groups: f.groups
+            }) || (!root.canDemote(person) && root.isAdmin(person)),
+                root.users, root.localGroups, root.loginName);
+        }
+        root._start(body);
     }
 
-    Process {
-        id: helperProc
-        command: ["sh", "-c", "test -x /usr/local/bin/modern-usersd && echo 1 || echo 0"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: root.helperPresent = this.text.trim() === "1"
+    function deleteUser(login: string, removeHome: bool) {
+        if (!root._requireManage())
+            return;
+        const u = String(login || "");
+        if (!root.canDelete(u)) {
+            root.lastError = I18n.t("settings.users.protected");
+            return;
         }
+        root._start({ action: "delete", username: u, removeHome: !!removeHome });
+    }
+
+    function createGroup(name: string, members) {
+        if (!root._requireManage())
+            return;
+        const g = String(name || "").trim();
+        if (!rules.nameOk(g)) {
+            root.lastError = I18n.t("settings.users.invalid");
+            return;
+        }
+        const body = { action: "group-create", group: g };
+        if (Array.isArray(members))
+            body.members = rules.sanitizeMembers(g, members, root.users);
+        root._start(body);
+    }
+
+    function updateGroup(fields) {
+        if (!root._requireManage())
+            return;
+        const f = fields || ({});
+        const g = String(f.name || "").trim();
+        if (!g.length) {
+            root.lastError = I18n.t("settings.users.invalid");
+            return;
+        }
+        const body = { action: "group-update", group: g };
+        const neu = String(f.newName || "").trim();
+        if (neu.length && neu !== g) {
+            const cur = rules.findGroup(root.localGroups, g);
+            if (!root.canRenameGroup(cur || ({ name: g, gid: 0 })) || !rules.nameOk(neu)) {
+                root.lastError = I18n.t("settings.users.protected");
+                return;
+            }
+            body.newGroup = neu;
+        }
+        if (Array.isArray(f.members))
+            body.members = rules.sanitizeMembers(g, f.members, root.users);
+        root._start(body);
+    }
+
+    function deleteGroup(name: string) {
+        if (!root._requireManage())
+            return;
+        const g = String(name || "").trim();
+        const grp = rules.findGroup(root.localGroups, g);
+        if (!grp || !root.canDeleteGroup(grp)) {
+            root.lastError = I18n.t("settings.users.protected");
+            return;
+        }
+        root._start({ action: "group-delete", group: g });
+    }
+
+    function _start(body) {
+        if (root.running)
+            return;
+        root.running = true;
+        root.lastError = "";
+        root._stderr = "";
+        root._payload = JSON.stringify(body);
+        mutateProc.running = false;
+        mutateProc.stdinEnabled = true;
+        mutateProc.command = ["pkexec", Paths.script("usersd.sh")];
+        Qt.callLater(() => {
+            if (root.running)
+                mutateProc.running = true;
+        });
+    }
+
+    function _applySnap(text: string) {
+        const out = rules.parseSnap(text, root.loginName);
+        root.users = out.users;
+        root.others = out.users.filter(u => u.login !== root.loginName);
+        root.localGroups = out.groups;
+        const self = out.users.filter(u => u.login === root.loginName);
+        root.sessionUser = self.length ? self[0] : ({ login: root.loginName, gecos: "", groups: [] });
     }
 
     Process {
@@ -175,7 +242,7 @@ Singleton {
         command: ["sh", "-c", "getent passwd | awk -F: 'BEGIN{OFS=\"\\t\"} $3>=1000 && $3<60000 {print $1,$3,$4,$5,$6,$7}'; echo ---; getent group | awk -F: 'BEGIN{OFS=\"\\t\"} {print $1,$3,$4}'"]
         running: false
         stdout: StdioCollector {
-            onStreamFinished: root._parseSnap(this.text)
+            onStreamFinished: root._applySnap(this.text)
         }
     }
 
@@ -189,32 +256,27 @@ Singleton {
     }
 
     Process {
-        id: nameProc
-        running: false
-        stderr: StdioCollector {
-            onStreamFinished: {
-                if (this.text.trim().length > 0)
-                    Logger.error("Passwd", this.text.trim());
-            }
-        }
-        onRunningChanged: {
-            if (!nameProc.running)
-                root.refresh();
-        }
-    }
-
-    Process {
         id: mutateProc
+        stdinEnabled: true
         running: false
         stderr: StdioCollector {
-            onStreamFinished: {
-                if (this.text.trim().length > 0)
-                    Logger.error("Passwd", this.text.trim());
-            }
+            onStreamFinished: root._stderr = String(this.text || "").trim()
         }
-        onRunningChanged: {
-            if (!mutateProc.running)
-                root._drain();
+        onStarted: {
+            mutateProc.write(root._payload);
+            mutateProc.stdinEnabled = false;
+            root._payload = "";
+        }
+        onExited: (code) => {
+            mutateProc.stdinEnabled = true;
+            mutateProc.running = false;
+            root.running = false;
+            if (code !== 0)
+                root.lastError = rules.mapError(root._stderr);
+            else
+                root.lastError = "";
+            if (root.watching)
+                root.refresh();
         }
     }
 

@@ -44,6 +44,15 @@ RowLayout {
     }
 
     MButton {
+        visible: Settings.sectionId === "storage"
+        kind: "tonal"
+        key: "settings.storage.clean"
+        enabled: !StorageClean.running
+        Layout.alignment: Qt.AlignVCenter
+        onClicked: StorageClean.ask()
+    }
+
+    MButton {
         visible: root._paths.length > 0
         kind: "outlined"
         key: "settings.restore"

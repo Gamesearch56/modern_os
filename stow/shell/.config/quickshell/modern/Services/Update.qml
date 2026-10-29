@@ -28,7 +28,7 @@ Singleton {
     property string _checkText: ""
     property bool _checkDone: false
     property bool _desktopDone: false
-    property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
+    property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, reason: "", iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
     signal finished(bool ok)
     signal notify(string summary, string body)
 
@@ -157,6 +157,18 @@ Singleton {
         root.error = "";
         proc.command = [Paths.modern, "update"];
         proc.running = true;
+    }
+
+    function openChangelog(pkg) {
+        const kind = String(pkg && pkg.kind || "pkg");
+        const name = String(pkg && pkg.name || "");
+        const from = String(pkg && pkg.from || "");
+        const to = String(pkg && pkg.to || "");
+        if (name.length === 0)
+            return;
+        if (kind !== "desktop" && to.length === 0)
+            return;
+        Quickshell.execDetached([Paths.script("update-changelog.sh"), kind, name, from, to]);
     }
 
     function refreshMirrors() {

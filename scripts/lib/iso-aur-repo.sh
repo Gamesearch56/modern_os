@@ -45,17 +45,34 @@ iso_aur_cleanup() {
     fi
 }
 
+# The builder cannot walk the caller's cwd when that is under a 0700
+# home. git-remote-https discovers a repo from cwd and aborts with
+# "Invalid path … Permission denied" before the clone writes anything.
+# sudo's -D directory option is refused by sudoers for this command.
+# The German message names that option -C. cd to /tmp as root first so the
+# inherited cwd is one the builder may keep, then cd to the work dir.
+iso_aur_run() {
+    local dir="$1"
+    shift
+    (
+        cd /tmp || exit
+        sudo -u "$ISO_AUR_BUILDER" \
+            /bin/bash -c 'cd "$1" && shift && exec "$@"' bash "$dir" "$@"
+    )
+}
+
 iso_aur_ensure_rustup() {
     # Host rustup provides cargo/rustc shims. modernisoaur has an empty
     # ~/.rustup, so phylax-git (makedepend cargo) dies in the same way
     # source matugen did. Skip when rustup is absent (makepkg -s can
     # install extra/rust instead).
+    local home="${ISO_AUR_HOME:-/tmp}"
     command -v rustup >/dev/null 2>&1 || return 0
-    if sudo -u "$ISO_AUR_BUILDER" rustc --version >/dev/null 2>&1; then
+    if iso_aur_run "$home" rustc --version >/dev/null 2>&1; then
         return 0
     fi
     log "rustup default stable for $ISO_AUR_BUILDER (host has rustup, no toolchain)"
-    sudo -u "$ISO_AUR_BUILDER" rustup default stable \
+    iso_aur_run "$home" rustup default stable \
         || die "rustup default stable failed for $ISO_AUR_BUILDER"
 }
 
@@ -121,11 +138,11 @@ iso_aur_makepkg() {
     local jobs
     jobs="$(nproc 2>/dev/null || echo 1)"
     if [ "$force" = force ]; then
-        sudo -u "$ISO_AUR_BUILDER" \
+        iso_aur_run "$src" \
             env MAKEFLAGS="-j${jobs}" CMAKE_BUILD_PARALLEL_LEVEL="$jobs" \
             makepkg --dir "$src" -sf --noconfirm
     else
-        sudo -u "$ISO_AUR_BUILDER" \
+        iso_aur_run "$src" \
             env MAKEFLAGS="-j${jobs}" CMAKE_BUILD_PARALLEL_LEVEL="$jobs" \
             makepkg --dir "$src" -s --noconfirm
     fi
@@ -150,6 +167,7 @@ iso_attach_aur_repo() {
     repo="$ISO_AUR_MNT/repo"
     build="$ISO_AUR_MNT/build"
     home="$ISO_AUR_MNT/home"
+    ISO_AUR_HOME="$home"
 
     command -v repo-add >/dev/null 2>&1 || pacman -S --needed --noconfirm pacman-contrib
     pacman -S --needed --noconfirm base-devel git sudo
@@ -168,7 +186,7 @@ iso_attach_aur_repo() {
         dest="https://aur.archlinux.org/${pkg}.git"
         log "building AUR $pkg for the ISO local repo"
         if [ ! -d "$src/.git" ]; then
-            sudo -u "$ISO_AUR_BUILDER" git clone --depth 1 "$dest" "$src"
+            iso_aur_run "$build" git clone --depth 1 "$dest" "$src"
         fi
         if [ "$pkg" = calamares ]; then
             iso_calamares_limit_languages "$src"

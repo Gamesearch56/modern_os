@@ -157,6 +157,22 @@ apply_system_language() {
 
 apply_system_language
 
+# install.sh already seeded capture folders; re-run with the installed
+# LANG so a stock ~/Pictures/Screenshots becomes ~/Bilder/Screenshots.
+if [ -f "${USER_HOME}/.config/modern/config.json" ] \
+    && [ -x "$PROVISION_ROOT/scripts/xdg-capture-seed.sh" ]; then
+    seed_lang="$(locale_var LANG)"
+    [ -n "$seed_lang" ] || seed_lang="C.UTF-8"
+    runuser -u "$USERNAME" -- env \
+        HOME="$USER_HOME" \
+        XDG_CONFIG_HOME="${USER_HOME}/.config" \
+        XDG_STATE_HOME="${USER_HOME}/.local/state" \
+        LANG="$seed_lang" \
+        LC_MESSAGES="$seed_lang" \
+        bash "$PROVISION_ROOT/scripts/xdg-capture-seed.sh" \
+        "${USER_HOME}/.config/modern/config.json" || true
+fi
+
 # Ordering, not coincidence: wallpaper-sync.sh rebakes chrome.json and
 # keyboard.json from the config.json just written.
 wp="${USER_HOME}/.config/modern/wallpapers/default.jpg"

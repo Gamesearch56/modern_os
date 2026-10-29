@@ -10,6 +10,8 @@ ColumnLayout {
 
     readonly property string format: Config.screenshots.format || "png"
     readonly property bool lossy: root.format === "jpeg" || root.format === "webp"
+    readonly property string stillsDir: XdgDirs.toTilde(XdgDirs.resolveStills(Config.screenshots.directory))
+    readonly property string recordingsDir: XdgDirs.toTilde(XdgDirs.resolveRecordings(Config.screenshots.videoDirectory))
 
     MSectionHeader {
         key: "settings.screenshots.stills"
@@ -87,11 +89,11 @@ ColumnLayout {
     MField {
         labelKey: "settings.fields.screenshotDir"
         MFolderField {
-            path: Config.screenshots.directory || ""
+            path: root.stillsDir
             onBrowse: {
-                const dir = Config.screenshots.directory || "";
                 Settings.close();
-                FilePick.pickDirectory(dir, "screenshots", "screenshots.directory");
+                FilePick.pickDirectory(XdgDirs.resolveStills(Config.screenshots.directory),
+                    "screenshots", "screenshots.directory");
             }
         }
     }
@@ -113,11 +115,11 @@ ColumnLayout {
     MField {
         labelKey: "settings.fields.videoDir"
         MFolderField {
-            path: Config.screenshots.videoDirectory || ""
+            path: root.recordingsDir
             onBrowse: {
-                const dir = Config.screenshots.videoDirectory || "";
                 Settings.close();
-                FilePick.pickDirectory(dir, "screenshots", "screenshots.videoDirectory");
+                FilePick.pickDirectory(XdgDirs.resolveRecordings(Config.screenshots.videoDirectory),
+                    "screenshots", "screenshots.videoDirectory");
             }
         }
     }

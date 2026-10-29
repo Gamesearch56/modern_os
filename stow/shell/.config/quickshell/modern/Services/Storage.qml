@@ -17,9 +17,27 @@ Singleton {
     property var _speeds: ({})
     property string _lsblkText: ""
 
+    readonly property var systemDrive: {
+        const list = root.internal || [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].system)
+                return list[i];
+        }
+        return list.length ? list[0] : ({});
+    }
+    readonly property var otherInternal: {
+        const list = root.internal || [];
+        const out = [];
+        for (let i = 0; i < list.length; i++) {
+            if (!list[i].system)
+                out.push(list[i]);
+        }
+        return out;
+    }
+
     Process {
         id: lsblkProc
-        command: ["lsblk", "-J", "-b", "-o", "NAME,PATH,TYPE,SIZE,TRAN,RM,HOTPLUG,ROTA,MODEL,SERIAL,VENDOR,FSTYPE,FSSIZE,FSUSED,FSAVAIL,MOUNTPOINT,LABEL"]
+        command: ["lsblk", "-J", "-b", "-o", "NAME,PATH,TYPE,SIZE,TRAN,RM,HOTPLUG,ROTA,MODEL,SERIAL,VENDOR,FSTYPE,FSSIZE,FSUSED,FSAVAIL,MOUNTPOINT,MOUNTPOINTS,LABEL"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parseLsblk(this.text)
@@ -80,72 +98,11 @@ Singleton {
         ejectProc.running = true;
     }
 
-    function _skip(d: var): bool {
-        const n = String(d.name || "");
-        const t = String(d.type || "");
-        if (t !== "disk")
-            return true;
-        if (n.indexOf("loop") === 0 || n.indexOf("zram") === 0 || n.indexOf("ram") === 0)
-            return true;
-        return false;
-    }
-
-    function _isExternal(d: var): bool {
-        const t = String(d.tran || "").toLowerCase();
-        if (t === "usb" || t === "ieee1394" || t === "sbp2" || t === "firewire")
-            return true;
-        return d.rm === true || d.rm === "1";
-    }
-
-    function _walkUsage(node: var, acc: var) {
-        const kids = node.children || [];
-        if (kids.length) {
-            for (let i = 0; i < kids.length; i++)
-                root._walkUsage(kids[i], acc);
+    function openMount(path: string) {
+        const p = String(path || "");
+        if (p.charAt(0) !== "/")
             return;
-        }
-        const fs = Number(node.fssize);
-        if (fs > 0) {
-            const key = String(node.label || node.path || fs);
-            if (!acc.seen[key]) {
-                acc.seen[key] = true;
-                acc.fsSize += fs;
-                acc.used += Number(node.fsused) || 0;
-                acc.avail += Number(node.fsavail) || 0;
-                if (fs >= acc.bestFs && node.fstype) {
-                    acc.bestFs = fs;
-                    acc.fstype = String(node.fstype);
-                }
-            }
-        } else if (node.fstype && !acc.fstype)
-            acc.fstype = String(node.fstype);
-        const mp = String(node.mountpoint || "");
-        if (mp.indexOf("/") === 0)
-            acc.mounts.push(mp);
-    }
-
-    function _normalize(d: var): var {
-        const acc = { seen: ({}), fsSize: 0, used: 0, avail: 0, fstype: "", mounts: [], bestFs: 0 };
-        root._walkUsage(d, acc);
-        const external = root._isExternal(d);
-        const rota = d.rota === true || d.rota === "1";
-        const name = String(d.name || "");
-        return {
-            name: name,
-            title: String(d.model || name).trim(),
-            serial: String(d.serial || "").trim(),
-            tran: String(d.tran || "").toLowerCase(),
-            external: external,
-            rota: rota,
-            size: Number(d.size) || 0,
-            fsSize: acc.fsSize,
-            used: acc.used,
-            avail: acc.avail,
-            fstype: acc.fstype,
-            mount: acc.mounts.length ? acc.mounts[0] : "",
-            speedRaw: root._speeds[name] || "",
-            iconName: external ? "drive-removable-media" : "drive-harddisk"
-        };
+        Quickshell.execDetached(["xdg-open", p]);
     }
 
     function _parseSpeeds(text: string) {
@@ -169,9 +126,9 @@ Singleton {
             const intern = [];
             const extern = [];
             for (let i = 0; i < list.length; i++) {
-                if (root._skip(list[i]))
+                if (parse.skip(list[i]))
                     continue;
-                const d = root._normalize(list[i]);
+                const d = parse.normalize(list[i], root._speeds);
                 if (d.external)
                     extern.push(d);
                 else
@@ -182,5 +139,9 @@ Singleton {
         } catch (e) {
             Logger.warn("Storage", String(e));
         }
+    }
+
+    StorageParse {
+        id: parse
     }
 }

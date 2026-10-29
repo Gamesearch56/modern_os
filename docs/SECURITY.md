@@ -1,8 +1,14 @@
 # Threat model: modern-usersd
 
-`install/system/modern-usersd` is a **gated** root helper for local
-account CRUD. `install.sh` never copies it to `/usr`. Applying it is an
-explicit, separate step (see `docs/ISOLATION.md`).
+Settings → Users mutates accounts through one `pkexec` of
+`scripts/usersd.sh` after **admin** authentication (`auth_admin`). JSON
+on stdin; names as argv arrays; passwords never on argv. The session
+account, uid 0, and the last administrator cannot be deleted. System
+groups (gid < 1000) cannot be renamed or removed.
+
+`install/system/modern-usersd` is a gated copy of that helper for
+`/usr/local/bin`. `install.sh` never copies it to `/usr`. Applying it is
+an explicit, separate step (see `docs/ISOLATION.md`).
 
 ## Assets
 
@@ -21,25 +27,27 @@ explicit, separate step (see `docs/ISOLATION.md`).
 
 1. **JSON stdin, not argv strings.** The helper parses one object with
    `jq` and passes `username` / group names as **array elements** to
-   `useradd` / `userdel` / `usermod` / `chpasswd`. Names are never
-   concatenated into a shell command line, so metacharacters cannot run
-   code even if validation were bypassed.
-2. **Username grammar.** Only `^[a-z_][a-z0-9_-]*$` is accepted.
-   Groups use the same pattern and must already exist (`getent group`).
-   Login shells must appear verbatim in `/etc/shells`.
-3. **Self-protection.** Delete / passwd / groups refuse the invoking
-   identity (`SUDO_USER`, `PKEXEC_UID`, and `id -un`) and uid 0.
-4. **Polkit.** `install/system/polkit/link.modern.usermanager.policy`
-   documents `pkexec` of `/usr/local/bin/modern-usersd`. That path is
-   not populated unless you copy the staged files yourself.
+   `useradd` / `userdel` / `usermod` / `chpasswd` / `groupadd`. Names
+   are never concatenated into a shell command line, so metacharacters
+   cannot run code even if validation were bypassed. The password is
+   piped to `chpasswd` and is never in `ps`.
+2. **Username grammar.** Only `^[a-z_][a-z0-9_-]{0,31}$` is accepted,
+   minus a reserved set (`root`, `nobody`, `greeter`, …). Groups use
+   the same pattern. Login shells must appear verbatim in `/etc/shells`.
+3. **Self-protection.** Delete / rename / passwd refuse the invoking
+   identity (`SUDO_USER`, `PKEXEC_UID`, and `id -un`) and uid 0. The
+   last `wheel`/`sudo` human account cannot be deleted or demoted.
+4. **Polkit.** Settings uses `org.freedesktop.policykit.exec`
+   (`auth_admin`) on `scripts/usersd.sh`, same as autologin and UFW.
+   `install/system/polkit/link.modern.usermanager.policy` still
+   documents a pinned `/usr/local/bin/modern-usersd` if you copy the
+   staged files yourself.
 
 ## Non-goals
 
 - Remote / networked account management
 - Directory (LDAP/FreeIPA) users
 - Password-quality policy (callers should enforce that before `passwd`)
-- Running from the Settings GUI without a future `Services/Users.qml`
-  + polkit prompt; Settings > Users is informational until that lands
 
 ## KDE Connect ports (staged, not applied)
 

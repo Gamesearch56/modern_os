@@ -1,2 +1,8 @@
 Model 1.0 Model.qml
-UserTable 1.0 UserTable.qml
+SessionCard 1.0 SessionCard.qml
+UserList 1.0 UserList.qml
+UserRow 1.0 UserRow.qml
+GroupList 1.0 GroupList.qml
+GroupRow 1.0 GroupRow.qml
+UserDialog 1.0 UserDialog.qml
+GroupDialog 1.0 GroupDialog.qml

@@ -7,6 +7,7 @@ import "../../Services"
 Item {
     id: root
 
+    property string monitorDesc: ""
     readonly property bool _barBottom: Config.bar.position === "bottom"
     readonly property bool _barLeft: Config.bar.position === "left"
 
@@ -20,6 +21,19 @@ Item {
         target: Brightness
         property: "watching"
         value: Notifications.panelOpen
+    }
+
+    Connections {
+        target: Notifications
+        function onPanelOpenChanged() {
+            if (Notifications.panelOpen)
+                Brightness.refreshDisplays();
+        }
+    }
+
+    Component.onCompleted: {
+        if (Notifications.panelOpen)
+            Brightness.refreshDisplays();
     }
 
     MouseArea {
@@ -48,6 +62,7 @@ Item {
         }
 
         MouseArea {
+            z: -1
             anchors.fill: parent
             onClicked: {}
         }
@@ -60,7 +75,9 @@ Item {
 
             Header {}
             Toggles {}
-            Sliders {}
+            Sliders {
+                monitorDesc: root.monitorDesc
+            }
             Stats {}
 
             RowLayout {
@@ -83,8 +100,9 @@ Item {
                 Layout.fillHeight: list.visible
                 Layout.minimumHeight: Tokens.spacing.xxl * 4
                 Layout.preferredHeight: list.visible
-                    ? Math.min(list.contentHeight + Tokens.spacing.sm * 2, Tokens.spacing.xxl * 16)
+                    ? Math.min(list.contentHeight + Tokens.spacing.md * 2, Tokens.spacing.xxl * 16)
                     : Tokens.spacing.xxl * 6
+                padding: Tokens.spacing.md
 
                 ListView {
                     id: list
@@ -93,7 +111,8 @@ Item {
                     clip: true
                     spacing: Tokens.spacing.sm
                     boundsBehavior: Flickable.StopAtBounds
-                    bottomMargin: Tokens.spacing.sm
+                    topMargin: Tokens.spacing.xs
+                    bottomMargin: Tokens.spacing.xs
                     model: Notifications.list
                     delegate: MListItem {
                         required property var modelData
@@ -104,14 +123,11 @@ Item {
                         iconSource: Notifications.displayIconSource(modelData)
                         imageSource: Notifications.displayImage(modelData)
                         imageSize: Tokens.icon.lg
+                        imageFillMode: Image.PreserveAspectFit
+                        subtitleLines: 2
                         titleValue: modelData.summary || modelData.appName || ""
                         subtitleValue: modelData.body || ""
-                        onClicked: {
-                            const path = Notifications.attachmentPath(modelData);
-                            if (!Notifications.invokeDefault(modelData) && path.length)
-                                Apps.openPath(path);
-                            Notifications.dismiss(modelData);
-                        }
+                        onClicked: Notifications.activate(modelData)
                         MIconButton {
                             z: 3
                             close: true

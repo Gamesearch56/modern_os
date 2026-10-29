@@ -67,6 +67,8 @@ BarPopup {
         to: 100
         value: Audio.streamVolume(root.stream)
         wheel: true
+        wheelStep: Config.widgets.audio?.scrollStepPercent ?? 5
+        wheelFineStep: Config.widgets.audio?.scrollStepFinePercent ?? 1
         onMoved: (v) => Audio.setStreamVolume(root.stream, v)
         onCommitted: (v) => Audio.setStreamVolume(root.stream, v)
     }

@@ -186,7 +186,8 @@ Wayland often white-screens on Hyprland.
 
 ### Packages
 
-- `steam`, `gamemode`, `lib32-gamemode`, `umu-launcher` (`50-gaming.txt`)
+- `steam`, `gamemode`, `gamescope` (`30-apps.txt`, every profile)
+- `lib32-gamemode`, `umu-launcher` (`50-gaming.txt`)
 - `protonup-qt`, `wowup-cf-bin` (AUR)
 - AMD: `vulkan-radeon` + `lib32-vulkan-radeon` (RADV). Prefer RADV over
   `amdvlk` if both are installed (`AMD_VULKAN_ICD=RADV`).

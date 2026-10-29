@@ -5,6 +5,16 @@ import "../../Widgets"
 import "../../Services"
 
 ColumnLayout {
+    id: root
+
+    property string monitorDesc: ""
+
+    readonly property bool _canBright: {
+        void Brightness.displays;
+        void Brightness.listReady;
+        return root.monitorDesc.length > 0 && Brightness.canAdjust(root.monitorDesc);
+    }
+
     Layout.fillWidth: true
     Layout.topMargin: Tokens.spacing.sm
     Layout.bottomMargin: Tokens.spacing.sm
@@ -23,16 +33,16 @@ ColumnLayout {
     }
 
     MField {
-        visible: Brightness.available
+        visible: root._canBright
         labelKey: "quickSettings.brightness"
         MSlider {
-            enabled: Brightness.available && !Brightness.setting
+            enabled: root._canBright && !Brightness.setting
             from: 1
             to: 100
-            value: Brightness.percent
+            value: Brightness.percentFor(root.monitorDesc)
             showValue: true
             wheel: true
-            onMoved: (v) => Brightness.setPercent(v)
+            onMoved: (v) => Brightness.setFor(root.monitorDesc, Math.round(v))
         }
     }
 }

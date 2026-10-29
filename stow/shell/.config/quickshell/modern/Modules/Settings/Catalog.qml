@@ -75,11 +75,11 @@ QtObject {
 
     readonly property var _byId: ({
         overview: { icon: "view-pages-overview", order: 10, group: "general", keywords: ["about", "hardware", "software", "boot", "stats"] },
-        users: { icon: "user-identity", order: 12, group: "general", keywords: ["accounts", "passwd", "autologin"] },
-        privacy: { icon: "security-high", order: 14, group: "general", keywords: ["dnd", "kdeconnect", "calendar", "ics", "quiet", "notifications"], restore: ["general.dndSchedule", "general.notificationTimeoutMs", "kdeconnect"] },
-        power: { icon: "battery", order: 16, group: "general", keywords: ["lid", "suspend", "energy", "idle", "battery"], restore: ["power", "general.idleTimings"] },
+        users: { icon: "user-identity", order: 12, group: "general", keywords: ["accounts", "passwd", "autologin", "groups"] },
+        privacy: { icon: "security-high", order: 14, group: "general", keywords: ["dnd", "kdeconnect", "quiet", "notifications"], restore: ["general.dndSchedule", "general.notificationTimeoutMs", "kdeconnect"] },
+        power: { icon: "battery", order: 16, group: "general", keywords: ["lid", "suspend", "energy", "idle", "battery", "charge", "remaining", "health"], restore: ["power", "general.idleTimings"] },
         design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "wallpaper", "windows", "gaps", "cursor", "4k", "provider", "palette"], restore: ["design", "typography", "motion", "windows", "windowRules"] },
-        bar: { icon: "cs-panel", order: 22, group: "appearance", keywords: ["widgets", "layout", "topbar"], restore: ["bar", "widgets"] },
+        bar: { icon: "cs-panel", order: 22, group: "appearance", keywords: ["widgets", "layout", "topbar", "clock", "calendar", "date"], restore: ["bar", "widgets"] },
         launcher: { icon: "view-app-grid-symbolic", order: 24, group: "appearance", keywords: ["frecency", "icons", "results", "search"], restore: ["launcher"] },
         applications: { icon: "applications-other", order: 30, group: "apps", keywords: ["autostart", "browser", "calendar", "mail", "messenger", "video", "mpv", "image", "imv", "text", "editor", "gedit"], restore: ["apps.defaults", "general.autostart"] },
         screenshots: { icon: "video-x-generic", order: 32, group: "apps", keywords: ["capture", "grim", "png", "jpeg", "webp", "clipboard", "video", "mp4", "wf-recorder"], restore: ["screenshots"] },
@@ -91,8 +91,8 @@ QtObject {
         audio: { icon: "audio-volume-high", order: 52, group: "devices", keywords: ["volume", "speakers", "microphone", "headphones", "mute", "bluetooth"] },
         network: { icon: "network-wireless", order: 54, group: "devices", keywords: ["wifi", "ethernet", "speed"] },
         bluetooth: { icon: "bluetooth", order: 56, group: "devices", keywords: ["devices", "pair", "headphones"] },
-        storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["disk", "mount", "eject", "usb", "nvme"] },
-        backup: { icon: "document-save", order: 72, group: "system", keywords: ["snapper", "snapshot", "restore", "rollback"] },
+        storage: { icon: "drive-harddisk", order: 70, group: "system", keywords: ["disk", "mount", "eject", "usb", "nvme", "usage", "free", "games", "files"] },
+        backup: { icon: "document-save", order: 72, group: "system", keywords: ["snapper", "snapshot", "restore", "rollback", "prune", "keep"] },
         firewall: { icon: "preferences-security-firewall", order: 73, group: "system", keywords: ["ufw", "rules", "allow", "deny", "port"] },
         system: { icon: "system-software-update", order: 74, group: "system", keywords: ["update", "mirrors", "kernel", "hyprland", "packages"] }
     })

@@ -46,6 +46,16 @@ if [ "$SNAPSHOT" -eq 1 ]; then
         && snapper list-configs >/dev/null 2>&1 \
         && snapper list-configs 2>/dev/null | grep -q root; then
         snapper -c root create --description "ModernOS Update"
+        uid="${PKEXEC_UID:-${SUDO_UID:-}}"
+        home=""
+        if [ -n "$uid" ]; then
+            home="$(getent passwd "$uid" | cut -d: -f6 || true)"
+        fi
+        cfg=""
+        if [ -n "$home" ]; then
+            cfg="$home/.config/modern/config.json"
+        fi
+        "$SCRIPT_DIR/snapper-gc.sh" prune-from-config "$cfg" || true
     fi
 fi
 

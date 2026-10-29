@@ -10,6 +10,7 @@ Item {
     id: root
 
     property var pending: null
+    property var pendingEdit: null
     property string pendingToggle: ""
 
     implicitHeight: col.implicitHeight
@@ -92,6 +93,7 @@ Item {
                 addDlg.open = true;
             }
             onRemoveClicked: (r) => root.pending = r
+            onEditClicked: (r) => root.pendingEdit = r
         }
 
         RulesTable {
@@ -102,6 +104,7 @@ Item {
                 addDlg.open = true;
             }
             onRemoveClicked: (r) => root.pending = r
+            onEditClicked: (r) => root.pendingEdit = r
         }
     }
 
@@ -109,6 +112,20 @@ Item {
         id: addDlg
         parent: Window.window ? Window.window.contentItem : root
         anchors.fill: parent
+    }
+
+    CommentDialog {
+        id: editDlg
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        rule: root.pendingEdit
+        open: root.pendingEdit !== null
+        onCancelled: root.pendingEdit = null
+        onConfirmed: {
+            if (root.pendingEdit)
+                Firewall.setComment(root.pendingEdit.number, editDlg.comment);
+            root.pendingEdit = null;
+        }
     }
 
     MDialog {

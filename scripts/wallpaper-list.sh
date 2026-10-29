@@ -1,37 +1,27 @@
 #!/usr/bin/env bash
 # Print wallpaper paths, one per line. Used by Services/Wallpaper.qml.
-# User library first so a seeded Pictures copy wins over the same
+# User library (XDG PICTURES/Wallpapers) first so it wins over the same
 # basename in the shipped ~/.config/modern/wallpapers pack.
-# xdg-user-dir PICTURES returns $HOME when user-dirs.dirs is missing, so
-# we always also scan $HOME/Pictures/{Wallpaper,Wallpapers}.
 set -euo pipefail
 
-pic="$(xdg-user-dir PICTURES 2>/dev/null || true)"
-if [ -z "${pic:-}" ] || [ "$pic" = "$HOME" ]; then
-    pic="$HOME/Pictures"
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/paths.sh
+source "$SCRIPT_DIR/lib/paths.sh"
 
 dirs=()
-for d in \
-    "$HOME/Pictures/Wallpapers" \
-    "$HOME/Pictures/Wallpaper" \
-    "$pic/Wallpapers" \
-    "$pic/Wallpaper" \
-    "$HOME/.config/modern/wallpapers"
-do
-    if [ -d "$d" ]; then
-        already=0
-        for e in "${dirs[@]+"${dirs[@]}"}"; do
-            if [ "$e" = "$d" ]; then
-                already=1
-                break
-            fi
-        done
-        if [ "$already" -eq 0 ]; then
-            dirs+=("$d")
+while IFS= read -r d; do
+    [ -d "$d" ] || continue
+    already=0
+    for e in "${dirs[@]+"${dirs[@]}"}"; do
+        if [ "$e" = "$d" ]; then
+            already=1
+            break
         fi
+    done
+    if [ "$already" -eq 0 ]; then
+        dirs+=("$d")
     fi
-done
+done < <(xdg_wallpaper_library_dirs)
 
 if [ "${#dirs[@]}" -eq 0 ]; then
     exit 0
