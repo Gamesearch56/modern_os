@@ -74,6 +74,10 @@ run() {
     "$@"
 }
 
+USERS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib/usersd-desktop.sh
+source "$USERS_ROOT/scripts/lib/usersd-desktop.sh"
+
 is_admin_name() {
     if [ "$DRY" -eq 1 ]; then
         printf '%s\n' "${MODERN_USERSD_ADMINS:-}" | tr ',' '\n' | grep -qx -- "$1"
@@ -228,6 +232,7 @@ create_user() {
         grep -qxF -- "$shell" /etc/shells || fail "shell is not in /etc/shells"
     fi
     read_list groups
+    _usersd_session_groups
     local -a cmd=(useradd -m -s "$shell")
     [ -n "$gecos" ] && cmd+=(-c "$gecos")
     if [ "${#_list[@]}" -gt 0 ]; then
@@ -238,9 +243,14 @@ create_user() {
     cmd+=(-- "$username")
     run "${cmd[@]}"
     if [ "$DRY" -eq 1 ]; then
+        provision_new_user_desktop
         return
     fi
     { printf '%s:' "$username"; printf '%s\n' "$password"; } | chpasswd
+    if ! provision_new_user_desktop; then
+        userdel -r -- "$username" >/dev/null 2>&1 || true
+        fail "desktop install failed"
+    fi
     ok create
 }
 

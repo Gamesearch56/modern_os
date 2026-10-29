@@ -104,7 +104,7 @@ a bar popup is showing.
 | Mirrorlist | `modern mirrors` | `reflector --protocol https` using `network.mirrorCountry` (pacman/libcurl cannot use `rsync://`). **Update mirrors** sits next to **Update system**. **Search for Updates** on the status card re-runs `checkupdates` and shows a spinner while it runs. |
 | Snapshots | `snapper-setup.sh` / `snapper-gc.sh` / `snapper-restore.sh` | Settings writes the Snapper `root` config with one `pkexec` of `scripts/snapper-setup.sh` (keeps an existing `/.snapshots` mount). It lists snapshots with timestamps, can create, delete, prune, clear, and restore. Restore clones the snapshot over `@` (`scripts/snapper-restore.sh`) and reboots; `/home` stays. |
 | Firewall | `ufw-status.sh` / `ufw-apply.sh` / `allow` / `deny` / `delete NUM` | Settings lists numbered allow/deny rules from `/etc/ufw` without a password. Enable and disable are one `pkexec` of `ufw-apply.sh` (defaults + `--force enable` in that process). Add and delete use `pkexec /usr/bin/ufw`. Disable asks for confirmation. No `reset`, no default-allow, no config.json copy of rules. |
-| Users | `usersd.sh` | Listing is unprivileged `getent`. Add/edit/delete of people and groups is one `pkexec` of `usersd.sh` with JSON on stdin. The signed-in account cannot be deleted or renamed. |
+| Users | `usersd.sh` | Listing is unprivileged `getent`. Add/edit/delete of people and groups is one `pkexec` of `usersd.sh` with JSON on stdin. Create clones this desktop into the new home and runs `install.sh --dotfiles-only` (stow + theme; no packages or greetd). The signed-in account cannot be deleted or renamed. |
 
 ## How to add a page
 

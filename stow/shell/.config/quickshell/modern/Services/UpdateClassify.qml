@@ -117,6 +117,7 @@ QtObject {
             all.push(card);
         for (let i = 0; i < pacmanAll.length; i++)
             all.push(pacmanAll[i]);
-        return { systemPkgs: [card].concat(pacmanSys), otherPkgs: pacmanOther, pending: all };
+        const sys = card.pending ? [card].concat(pacmanSys) : pacmanSys;
+        return { systemPkgs: sys, otherPkgs: pacmanOther, pending: all };
     }
 }

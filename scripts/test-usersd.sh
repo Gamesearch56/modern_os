@@ -51,8 +51,9 @@ fi
 out="$(dry '{"action":"create","username":"carol","password":"secret","groups":["wheel"]}')"
 if printf '%s\n' "$out" | grep -Fq '"useradd"' \
     && printf '%s\n' "$out" | grep -Fq '"carol"' \
+    && printf '%s\n' "$out" | grep -Fq -- '--dotfiles-only' \
     && ! printf '%s\n' "$out" | grep -Fq 'secret'; then
-    ok "create dry-run uses argv arrays and hides the password"
+    ok "create dry-run uses argv arrays, stows the desktop, and hides the password"
 else
     err "create dry-run: $out"
 fi
@@ -201,6 +202,12 @@ if grep -F 'Paths.script("usersd.sh")' "$PASSWD_QML" >/dev/null \
     && grep -Fq 'assignableGroups' "$USERS/UserDialog.qml" \
     && grep -Fq 'gecos: root.gecos' "$USERS/UserDialog.qml" \
     && ! grep -Fq 'setDisplayName' "$PASSWD_QML" \
+    && grep -Fq 'provision_new_user_desktop' "$SCRIPT" \
+    && grep -Fq '_usersd_repo_ok' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq 'USERS_ROOT/scripts/session-users-sync.sh' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq -- '--dotfiles-only' "$ROOT/install/install.sh" \
+    && grep -Fq 'skipping greetd (dotfiles-only)' "$ROOT/install/install.sh" \
+    && [ -f "$ROOT/scripts/lib/usersd-desktop.sh" ] \
     && ! grep -Fq 'sudo useradd' "$USERS/Section.qml"; then
     ok "Settings pkexecs usersd.sh and the main user cannot be deleted"
 else
