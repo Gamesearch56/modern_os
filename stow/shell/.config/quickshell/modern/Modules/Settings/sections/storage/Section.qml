@@ -9,19 +9,19 @@ ColumnLayout {
     id: root
     spacing: Tokens.spacing.lg
 
-    Component.onCompleted: Storage.watching = true
-    Component.onDestruction: Storage.watching = false
-
-    MSectionHeader {
-        key: "settings.storage.internal"
-        topMargin: 0
+    Component.onCompleted: {
+        Storage.watching = true;
+        StorageUsage.watching = true;
     }
-    Repeater {
-        model: Storage.internal.length
-        DriveCard {
-            required property int index
-            drive: Storage.internal[index]
-        }
+    Component.onDestruction: {
+        Storage.watching = false;
+        StorageUsage.watching = false;
+    }
+
+    SystemCard {
+        visible: (Storage.systemDrive && Storage.systemDrive.name)
+            || Storage.internal.length > 0
+        Layout.fillWidth: true
     }
     MEmptyState {
         visible: Storage.internal.length === 0
@@ -29,6 +29,19 @@ ColumnLayout {
         Layout.preferredHeight: Tokens.spacing.xxl * 4
         iconName: "drive-harddisk"
         titleKey: "settings.storage.emptyInternal"
+    }
+
+    MSectionHeader {
+        visible: Storage.otherInternal.length > 0
+        key: "settings.storage.otherDrives"
+        topMargin: Tokens.spacing.xl
+    }
+    Repeater {
+        model: Storage.otherInternal.length
+        DriveCard {
+            required property int index
+            drive: Storage.otherInternal[index]
+        }
     }
 
     MSectionHeader {

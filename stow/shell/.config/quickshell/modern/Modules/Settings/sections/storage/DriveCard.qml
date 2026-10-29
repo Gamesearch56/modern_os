@@ -91,6 +91,12 @@ MCard {
                         Layout.fillWidth: true
                     }
                     MButton {
+                        visible: String(drive.mount || "").indexOf("/") === 0
+                        kind: "tonal"
+                        key: "settings.storage.open"
+                        onClicked: Storage.openMount(drive.mount)
+                    }
+                    MButton {
                         visible: root._ejectable
                         kind: "destructive"
                         key: "settings.storage.eject"
@@ -111,13 +117,20 @@ MCard {
                     value: root._frac
                 }
                 MText {
-                    visible: (Number(drive.size) || 0) > 0
+                    visible: (Number(drive.fsSize) || 0) > 0
                     key: "settings.storage.space"
                     params: ({
                         used: Storage.formatBytes(drive.used),
-                        total: Storage.formatBytes(drive.fsSize || drive.size),
+                        total: Storage.formatBytes(drive.fsSize),
                         free: Storage.formatBytes(drive.avail)
                     })
+                    styleName: "bodySmall"
+                    color: Colors.color.onSurfaceVariant
+                    Layout.fillWidth: true
+                }
+                MText {
+                    visible: (Number(drive.fsSize) || 0) <= 0 && (Number(drive.size) || 0) > 0
+                    key: "settings.storage.unmounted"
                     styleName: "bodySmall"
                     color: Colors.color.onSurfaceVariant
                     Layout.fillWidth: true

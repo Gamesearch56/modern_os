@@ -38,6 +38,7 @@ MPerfGrid 1.0 MPerfGrid.qml
 MQuickTile 1.0 MQuickTile.qml
 MSparkline 1.0 MSparkline.qml
 MLinearProgress 1.0 MLinearProgress.qml
+MStackedBar 1.0 MStackedBar.qml
 MTypingDots 1.0 MTypingDots.qml
 MChatBubble 1.0 MChatBubble.qml
 MMarkdown 1.0 MMarkdown.qml
