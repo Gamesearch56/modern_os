@@ -253,10 +253,17 @@ fi
 lang_line="$(grep -n '^apply_system_language$' "$PROVISION" | head -1 | cut -d: -f1)"
 sync_line="$(grep -n 'wallpaper-sync.sh' "$PROVISION" | head -1 | cut -d: -f1)"
 seed_line="$(grep -n 'xdg-capture-seed.sh' "$PROVISION" | head -1 | cut -d: -f1)"
+# shellcheck disable=SC2016  # fixed string; $USERNAME is the call site, not this script
+greet_line="$(grep -nF 'greetd_apply "$USERNAME"' "$PROVISION" | head -1 | cut -d: -f1)"
 if [ -n "$lang_line" ] && [ -n "$sync_line" ] && [ "$lang_line" -lt "$sync_line" ]; then
     ok "the language is set before the greeter's chrome.json is baked"
 else
     err "apply_system_language must run before wallpaper-sync.sh (greeter strings)"
+fi
+if [ -n "$lang_line" ] && [ -n "$greet_line" ] && [ "$lang_line" -lt "$greet_line" ]; then
+    ok "greetd copies the login screen after the installed language"
+else
+    err "greetd_apply must run after apply_system_language so chrome.json is not baked in English"
 fi
 if [ -n "$lang_line" ] && [ -n "$seed_line" ] && [ -n "$sync_line" ] \
     && [ "$lang_line" -lt "$seed_line" ] && [ "$seed_line" -lt "$sync_line" ]; then

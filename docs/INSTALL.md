@@ -237,13 +237,15 @@ of German still left the test field on `us`: cage's Xwayland ignores
 because it is in `non-ascii-layouts`). The same patch now always sends
 `-option` and runs `setxkbmap` twice.
 
-The Keyboard step always opens on English. `guessLayout: false` turns off
-Calamares' locale→layout guess, which otherwise flipped the page to German
-the moment German was picked on Welcome or Location. The initial selection
-then comes from `setxkbmap -print` (a fresh Xwayland reports `pc+us`).
-Do not treat the combo's first row as the default — Calamares sorts by
-description, so Arabic would lead the shared catalog. Picking another
-layout by hand still reaches the installed system.
+The Keyboard step opens on the Welcome language's layout. English stays
+`us`, German is `de`, from `installer-locales.json`. `guessLayout: false`
+stays off: Calamares' own guess flipped this page when the Location step
+settled on a timezone, including while Welcome was still English.
+Startup detection only sees the live ISO locale (`setxkbmap -print` is
+`pc+us`), so the same detection runs again when the Keyboard page opens.
+A layout picked on that page is kept. Do not treat the combo's first row
+as the default — Calamares sorts by description, so Arabic would lead the
+shared catalog.
 
 The Keyboard combo lists the common layouts in
 `iso/releng/installer-locales.json` `layouts` (same ids as Settings →
@@ -266,14 +268,17 @@ layout later in Settings → Keyboard updates the desktop live and rewrites
 `keyboard.json` so the next login matches. TTY and the X11 snippet stay
 as Calamares left them.
 
-The Locale step has the same gap and the same fix. Its job writes `LANG=`
-to `/etc/locale.conf`, which covers the system locale every PAM session and
-`install/lib/i18n.sh` inherit, but `Commons/I18n.qml` picks its translation
-file from `language.ui` in `config.json` — so a German install used to give
-a German system and an English shell. `provision-iso.sh` reads `LANG` out of
-`/etc/locale.conf` and sets `language.ui` with `jq`, leaving the rest of the
-file (including `language.fallback`, always English) untouched. The mapping
-is `de_DE.UTF-8` → `de`: everything before the first `_` or `.`, lowercased.
+The Locale step follows the same Welcome choice. Its job writes `LANG=`
+to `/etc/locale.conf` (`de` → `de_DE.UTF-8`), which covers the system
+locale every PAM session and `install/lib/i18n.sh` inherit, but
+`Commons/I18n.qml` picks its translation file from `language.ui` in
+`config.json`. `provision-iso.sh` reads `LANG` out of `/etc/locale.conf`
+and sets `language.ui` with `jq`, leaving the rest of the file (including
+`language.fallback`, always English) untouched. The mapping is
+`de_DE.UTF-8` → `de`: everything before the first `_` or `.`, lowercased.
+The Location step used to keep a `LANG` already stored from the live ISO,
+so choosing German on Welcome still installed `en_US.UTF-8`. The AUR
+patch reads the Welcome language first.
 It is accepted only if `translations/<code>.json` exists in the user's home,
 so anything else the installer could produce — and `C.UTF-8` — lands on `en`
 rather than on a file `I18n` cannot open. A missing `/etc/locale.conf` or a
@@ -284,7 +289,11 @@ same key and `session-chrome-sync.sh` rebakes the greeter `chrome.json`.
 The greeter strings come from `/var/lib/modern/session/chrome.json`, which
 `session-chrome-sync.sh` (via wallpaper-sync or Settings → Language) bakes
 from `language.ui`. Keyboard layout is the sibling snapshot
-`keyboard.json`. Both must be written after `config.json` is updated;
+`keyboard.json`. `greetd_apply` bakes both while it copies the greeter, so
+that call has to come after `language.ui` and `kbLayout` are in
+`config.json`. An earlier bake left the login screen in English on a `us`
+layout even when the desktop later followed the install. The second
+wallpaper-sync still refreshes the same files.
 `scripts/test-calamares-late.sh` pins that ordering.
 
 The **Network** / **Netzwerk** page sits after Keyboard. Next stays off

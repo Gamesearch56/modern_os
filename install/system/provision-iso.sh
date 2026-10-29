@@ -30,8 +30,6 @@ source "$PROVISION_ROOT/install/system/nvidia/apply.sh"
 # shellcheck source=../lib/greetd.sh
 source "$PROVISION_ROOT/install/lib/greetd.sh"
 
-greetd_apply "$USERNAME"
-
 USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 
 # Calamares' keyboard job writes the chosen layout to /etc/vconsole.conf and
@@ -156,6 +154,12 @@ apply_system_language() {
 }
 
 apply_system_language
+
+# greetd_apply's wallpaper-sync bakes chrome.json and keyboard.json.
+# Doing that before the two copies above froze the login screen on the
+# stock English strings and the us layout, and a later sync that cannot
+# replace those root-owned files never gets a second chance.
+greetd_apply "$USERNAME"
 
 # install.sh already seeded capture folders; re-run with the installed
 # LANG so a stock ~/Pictures/Screenshots becomes ~/Bilder/Screenshots.

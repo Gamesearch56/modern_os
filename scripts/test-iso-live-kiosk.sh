@@ -425,14 +425,20 @@ fi
 
 if grep -F 'convertedKeymapPath: "/usr/share/kbd/keymaps/xkb"' "$KB_CONF" >/dev/null \
     && grep -E '^useLocale1:[[:space:]]+false$' "$KB_CONF" >/dev/null \
-    && grep -E '^guessLayout:[[:space:]]+false$' "$KB_CONF" >/dev/null; then
-    ok "keyboard.conf uses the Arch keymap path, setxkbmap, and no locale guessing"
+    && grep -E '^guessLayout:[[:space:]]+false$' "$KB_CONF" >/dev/null \
+    && grep -F 'modernWelcomeLayout' "$LANGHOOK" >/dev/null \
+    && grep -F 'modernWelcomeLanguage' "$LANGHOOK" >/dev/null \
+    && grep -F 'detectCurrentKeyboardLayout' "$LANGHOOK" >/dev/null \
+    && grep -F 'welcome_cpp_fn("modernWelcomeLanguage", "glibc")' "$LANGHOOK" >/dev/null \
+    && grep -F 'welcome_cpp_fn("modernWelcomeLayout", "xkb")' "$LANGHOOK" >/dev/null; then
+    ok "keyboard.conf uses the Arch keymap path; Welcome language picks locale and layout"
 else
-    err "keyboard.conf must set convertedKeymapPath, disable locale1, and disable guessLayout"
+    err "keyboard.conf must disable locale guessing, and the Calamares patch must map Welcome language to glibc and xkb"
 fi
 
-# Default is still English via setxkbmap -print, not list order (Arabic
-# would sort first). The two catalogs and both translation files must agree.
+# The Welcome language picks the layout (en → us, de → de), not list
+# order (Arabic would sort first). The two catalogs and both translation
+# files must agree.
 if python3 - "$ROOT/iso/releng/installer-locales.json" \
     "$ROOT/stow/modern/.config/modern/keyboard-layouts.json" \
     "$ROOT/stow/modern/.config/modern/translations/en.json" \
