@@ -76,6 +76,10 @@ github_sync_url() {
     fi
 }
 
+github_web_url() {
+    printf '%s\n' "${GITHUB_HTTPS_URL%.git}"
+}
+
 # Empty when no usable key. Fails when a key exists but the pinned
 # GitHub host keys (next to this file) are missing: unverified SSH
 # would accept a network attacker as GitHub.

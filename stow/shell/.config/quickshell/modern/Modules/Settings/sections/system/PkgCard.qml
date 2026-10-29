@@ -2,12 +2,18 @@ import QtQuick
 import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
+import "../../../../Services"
 
 MCard {
     id: root
 
     property var pkg: ({})
 
+    readonly property bool _update: {
+        if (String(pkg.kind || "") === "desktop")
+            return pkg.pending === true || String(pkg.reason || "") === "notag";
+        return String(pkg.from || "").length > 0 && String(pkg.to || "").length > 0;
+    }
     readonly property string _logo: String(pkg.iconSource || "")
     readonly property string _icon: {
         if (root._logo.length > 0)
@@ -59,6 +65,13 @@ MCard {
                 color: Colors.color.onSurfaceVariant
                 Layout.fillWidth: true
             }
+        }
+        MButton {
+            visible: root._update
+            kind: "tonal"
+            key: "settings.update.changelog"
+            Layout.alignment: Qt.AlignVCenter
+            onClicked: Update.openChangelog(root.pkg)
         }
     }
 }

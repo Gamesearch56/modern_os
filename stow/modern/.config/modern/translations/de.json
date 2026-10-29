@@ -931,6 +931,7 @@
       "desktopCurrent": "Diese Version ist aktuell",
       "desktopUnknown": "Unbekannte Version",
       "desktopUnavailable": "Desktop-Update konnte nicht geprüft werden",
+      "changelog": "Änderungen",
       "desktopApplied": "ModernOS auf {v} aktualisiert",
       "desktopAppliedBody": "Der Desktop wurde mit der neuen Version neu geladen."
     },

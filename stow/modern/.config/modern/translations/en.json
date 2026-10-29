@@ -931,6 +931,7 @@
       "desktopCurrent": "This version is current",
       "desktopUnknown": "Unknown version",
       "desktopUnavailable": "Could not check for a desktop update",
+      "changelog": "Changelog",
       "desktopApplied": "ModernOS updated to {v}",
       "desktopAppliedBody": "The desktop was reloaded with the new release."
     },

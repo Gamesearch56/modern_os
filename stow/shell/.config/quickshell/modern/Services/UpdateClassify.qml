@@ -93,6 +93,7 @@ QtObject {
             from: from,
             to: to,
             pending: pending,
+            reason: reason,
             iconName: "",
             iconSource: Paths.brandLogo,
             subtitle: subtitle
@@ -106,6 +107,7 @@ QtObject {
             from: desk.from,
             to: desk.to,
             pending: desk.pending === true,
+            reason: String(desk.reason || ""),
             iconName: desk.iconName || "",
             iconSource: desk.iconSource || Paths.brandLogo,
             subtitle: desk.subtitle || I18n.t("settings.update.desktopCurrent")
