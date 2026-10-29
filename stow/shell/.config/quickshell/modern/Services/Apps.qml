@@ -56,7 +56,11 @@ Singleton {
             if (role.length > 0 && !DesktopRoles.matches(role, e.categories, e.name, e.genericName, e.id, keep))
                 continue;
             const value = pinned ? (keep[stem] || e.id || e.name) : (e.id || e.name);
-            out.push({ value: value, titleValue: e.name || e.id });
+            out.push({
+                value: value,
+                titleValue: e.name || e.id,
+                iconName: icons.resolve(String(e.icon || e.startupClass || e.id || value))
+            });
             seen[stem] = true;
         }
         const missing = Object.keys(keep);
@@ -68,7 +72,8 @@ Singleton {
             const e = root._entryById(id);
             out.push({
                 value: id,
-                titleValue: (e && e.name) ? e.name : stem
+                titleValue: (e && e.name) ? e.name : stem,
+                iconName: icons.resolve(String((e && (e.icon || e.startupClass || e.id)) || id))
             });
         }
         out.sort((a, b) => a.titleValue.localeCompare(b.titleValue));

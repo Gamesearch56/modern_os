@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
@@ -11,6 +12,22 @@ ColumnLayout {
 
     function _stem(id) {
         return String(id || "").replace(/\.desktop$/, "");
+    }
+
+    function closeOverlays() {
+        if (picker.open) {
+            picker.open = false;
+            return true;
+        }
+        return false;
+    }
+
+    function applyRole(role, v) {
+        if (role === "calendar" || role === "mail" || role === "communication") {
+            root.setBackgroundApp(role, v);
+            return;
+        }
+        ConfigWrite.set("apps.defaults." + role, String(v || ""));
     }
 
     function setBackgroundApp(role, v) {
@@ -44,85 +61,41 @@ ColumnLayout {
             Apps.launchBackground(id);
     }
 
-    MField {
-        labelKey: "settings.fields.browser"
-        MSelect {
-            model: Apps.entriesFor("browser")
-            value: Config.apps.defaults.browser
-            onSelected: (v) => ConfigWrite.set("apps.defaults.browser", v)
-        }
+    MSectionHeader {
+        key: "settings.applications.web"
+        hintKey: "settings.applications.hint"
+        topMargin: 0
     }
-    MField {
-        id: calendarField
-        labelKey: "settings.fields.calendar"
-        MSelect {
-            model: Apps.entriesFor("calendar")
-            value: Config.apps.defaults.calendar
-            allowEmpty: true
-            onSelected: (v) => root.setBackgroundApp("calendar", v)
-        }
+    RoleRow { role: "browser"; onPick: picker.openRole(role, false) }
+    RoleRow {
+        id: calendarRow
+        role: "calendar"
+        allowEmpty: true
+        onPick: picker.openRole(role, true)
     }
-    MField {
-        labelKey: "settings.fields.mail"
-        MSelect {
-            model: Apps.entriesFor("mail")
-            value: Config.apps.defaults.mail
-            allowEmpty: true
-            onSelected: (v) => root.setBackgroundApp("mail", v)
-        }
+    RoleRow { role: "mail"; allowEmpty: true; onPick: picker.openRole(role, true) }
+    RoleRow { role: "communication"; allowEmpty: true; onPick: picker.openRole(role, true) }
+
+    MSectionHeader {
+        key: "settings.applications.files"
+        topMargin: Tokens.spacing.xxl
     }
-    MField {
-        labelKey: "settings.fields.communication"
-        MSelect {
-            model: Apps.entriesFor("communication")
-            value: Config.apps.defaults.communication
-            allowEmpty: true
-            onSelected: (v) => root.setBackgroundApp("communication", v)
-        }
-    }
-    MField {
-        labelKey: "settings.fields.fileManager"
-        MSelect {
-            model: Apps.entriesFor("fileManager")
-            value: Config.apps.defaults.fileManager
-            onSelected: (v) => ConfigWrite.set("apps.defaults.fileManager", v)
-        }
-    }
-    MField {
-        labelKey: "settings.fields.videoPlayer"
-        MSelect {
-            model: Apps.entriesFor("videoPlayer")
-            value: Config.apps.defaults.videoPlayer
-            onSelected: (v) => ConfigWrite.set("apps.defaults.videoPlayer", v)
-        }
-    }
-    MField {
-        labelKey: "settings.fields.imageViewer"
-        MSelect {
-            model: Apps.entriesFor("imageViewer")
-            value: Config.apps.defaults.imageViewer
-            onSelected: (v) => ConfigWrite.set("apps.defaults.imageViewer", v)
-        }
-    }
-    MField {
-        labelKey: "settings.fields.textEditor"
-        MSelect {
-            model: Apps.entriesFor("textEditor")
-            value: Config.apps.defaults.textEditor
-            onSelected: (v) => ConfigWrite.set("apps.defaults.textEditor", v)
-        }
-    }
-    MField {
-        labelKey: "settings.fields.terminal"
-        MSelect {
-            model: Apps.entriesFor("terminal")
-            value: Config.apps.defaults.terminal
-            onSelected: (v) => ConfigWrite.set("apps.defaults.terminal", v)
-        }
-    }
+    RoleRow { role: "fileManager"; onPick: picker.openRole(role, false) }
+    RoleRow { role: "videoPlayer"; onPick: picker.openRole(role, false) }
+    RoleRow { role: "imageViewer"; onPick: picker.openRole(role, false) }
+    RoleRow { role: "textEditor"; onPick: picker.openRole(role, false) }
+    RoleRow { role: "terminal"; onPick: picker.openRole(role, false) }
 
     Autostart {
         Layout.fillWidth: true
+    }
+
+    RolePicker {
+        id: picker
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        enabled: picker.open
+        onPicked: (role, id) => root.applyRole(role, id)
     }
 
     function _flickable() {
@@ -138,12 +111,12 @@ ColumnLayout {
     function _scrollToCalendar() {
         if (Settings.subsectionId !== "calendar")
             return;
-        if (calendarField.height <= 0)
+        if (calendarRow.height <= 0)
             return;
         const flick = root._flickable();
         if (!flick)
             return;
-        const pos = calendarField.mapToItem(flick.contentItem, 0, 0);
+        const pos = calendarRow.mapToItem(flick.contentItem, 0, 0);
         const maxY = Math.max(0, flick.contentHeight - flick.height);
         flick.contentY = Math.min(maxY, Math.max(0, pos.y - Tokens.spacing.md));
         Settings.subsectionId = "";

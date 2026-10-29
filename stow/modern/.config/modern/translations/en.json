@@ -403,6 +403,12 @@
     "loadError": "This section failed to load. Check qs -c modern log.",
     "save": "Save",
     "cancel": "Cancel",
+    "done": "Done",
+    "applications": {
+      "web": "Web and accounts",
+      "files": "Files and system",
+      "hint": "Each row opens apps that fit that job."
+    },
     "themeCreate": "New theme",
     "themeName": "Name (letters, numbers, dashes)",
     "themeCreated": "Theme saved",

@@ -1,2 +1,4 @@
 Model 1.0 Model.qml
 Autostart 1.0 Autostart.qml
+RoleRow 1.0 RoleRow.qml
+RolePicker 1.0 RolePicker.qml

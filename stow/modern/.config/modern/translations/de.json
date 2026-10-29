@@ -403,6 +403,12 @@
     "loadError": "Dieser Abschnitt konnte nicht geladen werden. Siehe qs -c modern log.",
     "save": "Speichern",
     "cancel": "Abbrechen",
+    "done": "Fertig",
+    "applications": {
+      "web": "Web und Konten",
+      "files": "Dateien und System",
+      "hint": "Jede Zeile öffnet Apps, die zu dieser Aufgabe passen."
+    },
     "themeCreate": "Neues Thema",
     "themeName": "Name (Buchstaben, Zahlen, Bindestriche)",
     "themeCreated": "Thema gespeichert",
