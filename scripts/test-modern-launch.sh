@@ -35,6 +35,8 @@ fi
 
 if grep -Fq 'current-wallpaper' "$AUTO" \
     && grep -Fq 'session/wallpaper.jpg' "$AUTO" \
+    && grep -Fq 'head -n 1' "$AUTO" \
+    && grep -Fq 'pgrep -x awww-daemon' "$AUTO" \
     && grep -Fq 'transition-type none' "$AUTO"; then
     state_line="$(grep -n 'current-wallpaper' "$AUTO" | head -1 | cut -d: -f1)"
     shared_line="$(grep -n 'session/wallpaper.jpg' "$AUTO" | head -1 | cut -d: -f1)"

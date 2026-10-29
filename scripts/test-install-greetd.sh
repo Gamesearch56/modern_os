@@ -239,4 +239,27 @@ else
     err "i18n.sh must not abort when LANG is unset (SUPER+Q / reload_ui)"
 fi
 
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-greetd-sync-XXXXXX")"
+cleanup_sync() { rm -rf "$TMP"; }
+trap cleanup_sync EXIT
+mkdir -p "$TMP/session" "$TMP/config"
+printf '%s\n' '{"profiles":{"Keep Me":{"position":"0x0"}}}' >"$TMP/session/monitors.json"
+printf '%s\n' '{"monitors":{"profiles":{}}}' >"$TMP/config/config.json"
+if MODERN_SESSION_DIR="$TMP/session" XDG_CONFIG_HOME="$TMP/config" HOME="$TMP" \
+    bash "$ROOT/scripts/session-monitors-sync.sh" \
+    && jq -e '.profiles["Keep Me"]' "$TMP/session/monitors.json" >/dev/null; then
+    ok "empty monitor map does not replace a saved login layout"
+else
+    err "session-monitors-sync replaced a saved layout with an empty map"
+fi
+printf '%s\n' 'nosuch-login-user' >"$TMP/session/default-user"
+if MODERN_SESSION_DIR="$TMP/session" bash "$ROOT/scripts/session-users-sync.sh" \
+    && remembered="$(tr -d '\n' <"$TMP/session/default-user")" \
+    && [ "$remembered" != "nosuch-login-user" ] \
+    && jq -e --arg u "$remembered" 'map(.value) | index($u) != null' "$TMP/session/users.json" >/dev/null; then
+    ok "deleted default-user is replaced with a real account"
+else
+    err "session-users-sync left a deleted default-user in place"
+fi
+
 [ "$FAIL" -eq 0 ]

@@ -90,4 +90,8 @@ merge_vivaldi_prefs() {
         )
     ' "$state" >"$state.tmp" && mv "$state.tmp" "$state"
     chmod 600 "$state" 2>/dev/null || true
+    # Chromium drops a pre-seeded profile when this file is missing.
+    # theme-apply may already have written Preferences, so this is not
+    # limited to a brand-new file.
+    : >"$cfg/First Run" || true
 }

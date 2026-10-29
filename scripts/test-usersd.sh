@@ -219,6 +219,10 @@ if grep -F 'Paths.script("usersd.sh")' "$PASSWD_QML" >/dev/null \
     && grep -Fq '.language.ui' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '.input.kbLayout' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '.monitors' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '.design.activeProfile' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_publish_session' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_seed_vivaldi' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_refresh_greeter' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '_usersd_seed_keyring' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq 'pam_gnome_keyring' "$ROOT/install/system/greetd/greetd.pam" \
     && grep -Fq '.local/share/keyrings' "$ROOT/scripts/lib/usersd-desktop.sh" \

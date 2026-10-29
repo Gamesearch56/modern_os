@@ -104,12 +104,50 @@ _usersd_copy_prefs() {
             | .input.kbLayout = ($src[0].input.kbLayout // .input.kbLayout)
             | .input.kbVariant = ($src[0].input.kbVariant // .input.kbVariant)
             | .monitors = ($src[0].monitors // .monitors)
+            | .design.activeProfile = ($src[0].design.activeProfile // .design.activeProfile)
         ' "$dest" >"$tmp"; then
             mv -f "$tmp" "$dest"
             return 0
         fi
         rm -f "$tmp"
     done < <(invoker_names)
+}
+
+_usersd_publish_session() {
+    local home="$1" script
+    for script in session-chrome-sync.sh session-keyboard-sync.sh session-monitors-sync.sh; do
+        [ -x "${USERS_ROOT}/scripts/$script" ] || continue
+        HOME="$home" USER="$username" LOGNAME="$username" \
+            XDG_CONFIG_HOME="$home/.config" \
+            XDG_STATE_HOME="$home/.local/state" \
+            bash "${USERS_ROOT}/scripts/$script" || true
+    done
+}
+
+_usersd_seed_vivaldi() {
+    local home="$1"
+    local tokens="$home/.config/modern/tokens.json"
+    [ -f "$tokens" ] || return 0
+    [ -f "${USERS_ROOT}/scripts/lib/vivaldi-prefs.sh" ] || return 0
+    # $1 and $2 are the child shell's arguments.
+    # shellcheck disable=SC2016
+    runuser -u "$username" -- env \
+        HOME="$home" USER="$username" LOGNAME="$username" \
+        XDG_CONFIG_HOME="$home/.config" \
+        bash -c 'source "$1" && merge_vivaldi_prefs "$2"' \
+        _ "${USERS_ROOT}/scripts/lib/vivaldi-prefs.sh" "$tokens" \
+        || true
+}
+
+_usersd_refresh_greeter() {
+    local src="${USERS_ROOT}/stow/greeter/.config/quickshell/greeter"
+    local dest="/var/lib/greeter/.config/quickshell/greeter"
+    [ -d "$src" ] || return 0
+    [ -d /var/lib/greeter ] || return 0
+    rm -rf "$dest"
+    mkdir -p "$(dirname "$dest")"
+    cp -a "$src" "$dest"
+    chown -R greeter:modern "$dest" 2>/dev/null || true
 }
 
 _usersd_seed_keyring() {
@@ -175,6 +213,9 @@ provision_new_user_desktop() {
         bash "$dest/install/install.sh" --profile m0 --yes --dotfiles-only --target "$home" \
         || return 1
     _usersd_copy_prefs "$home" || true
+    _usersd_publish_session "$home" || true
+    _usersd_seed_vivaldi "$home" || true
+    _usersd_refresh_greeter || true
     _usersd_seed_keyring "$home" || true
     _usersd_install_greetd_pam || true
     chown -h -- "$username:$grp" "$home/.config/modern/config.json" 2>/dev/null || true

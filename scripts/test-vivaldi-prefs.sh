@@ -60,6 +60,12 @@ else
     err "Local State missing vivaldi-css-mods@1"
 fi
 
+if [ -f "$HOME/.config/vivaldi/First Run" ]; then
+    ok "First Run sentinel keeps the seeded theme"
+else
+    err "merge must write the First Run sentinel"
+fi
+
 foreign=$( { grep -oE '/home/[^/"]+' "$prefs" "$state" 2>/dev/null || true; } | grep -vF "$HOME" || true )
 if [ -n "$foreign" ]; then
     err "prefs hardcoded a path outside throwaway HOME: $foreign"

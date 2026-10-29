@@ -18,6 +18,22 @@ else
     exit 1
 fi
 
+# Last-used login must still exist. A deleted account here makes the
+# next sign-in attempt use that name.
+if [ -f "$SHARED/default-user" ]; then
+    remembered="$(tr -d '\n' <"$SHARED/default-user")"
+    if [ -n "$remembered" ] && ! jq -e --arg u "$remembered" 'map(.value) | index($u) != null' "$SHARED/users.json" >/dev/null; then
+        first="$(jq -r '.[0].value // empty' "$SHARED/users.json")"
+        if [ -n "$first" ]; then
+            printf '%s\n' "$first" >"$SHARED/default-user"
+            chmod 0664 "$SHARED/default-user" 2>/dev/null || true
+            chgrp modern "$SHARED/default-user" 2>/dev/null || true
+        else
+            rm -f "$SHARED/default-user"
+        fi
+    fi
+fi
+
 export MODERN_SESSION_DIR="$SHARED"
 python3 - <<'PY' || true
 import json

@@ -22,11 +22,14 @@ hl.on("hyprland.start", function()
         .. "state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; "
         .. "default=\"$HOME/.config/modern/wallpapers/default.jpg\"; "
         .. "shared=/var/lib/modern/session/wallpaper.jpg; "
-        .. "if [ -f \"$state\" ]; then img=$(cat \"$state\"); "
-        .. "elif [ -f \"$default\" ]; then img=\"$default\"; "
-        .. "elif [ -f \"$shared\" ]; then img=\"$shared\"; "
+        .. "img=\"\"; cand=\"\"; "
+        .. "if [ -f \"$state\" ]; then cand=$(head -n 1 \"$state\"); fi; "
+        .. "if [ -n \"$cand\" ] && [ -r \"$cand\" ]; then img=\"$cand\"; "
+        .. "elif [ -r \"$default\" ]; then img=\"$default\"; "
+        .. "elif [ -r \"$shared\" ]; then img=\"$shared\"; "
         .. "else exit 0; fi; "
-        .. "[ -f \"$img\" ] && awww img \"$img\" --transition-type none'")
+        .. "i=0; while ! pgrep -x awww-daemon >/dev/null; do i=$((i+1)); [ \"$i\" -gt 30 ] && exit 0; sleep 0.1; done; "
+        .. "awww img \"$img\" --transition-type none'")
 
     -- Background: import/dbus/polkit overlap; phylax waits on them.
     hl.exec_cmd("sh -lc '("
