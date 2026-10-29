@@ -84,6 +84,8 @@ if [[ -x "$RAISE" ]] \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprAutostart.qml" \
     && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq 'hl.dsp.window.float' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq 'hl.dsp.window.fullscreen' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'session-hide.sh' "$MODERN"; then
     ok "launcher raises via session-raise; Super+Q parks via session-hide"
 else
@@ -117,6 +119,10 @@ if grep -Fq 'primaryDescription' "$DEFAULTS" \
     && grep -Fq 'primaryMonitor' "$EN" \
     && grep -Fq 'primaryMonitor' "$DE" \
     && grep -Fq 'focus_primary' \
+    "$ROOT/stow/hypr/.config/hypr/modules/workspaces.lua" \
+    && grep -Fq 'hl.dsp.cursor.move' \
+    "$ROOT/stow/hypr/.config/hypr/modules/workspaces.lua" \
+    && ! grep -Fq 'movetoworkspace' \
     "$ROOT/stow/hypr/.config/hypr/modules/workspaces.lua" \
     && ! grep -Fq 'snap_primary' "$GAMES"; then
     ok "primary display config/UI/boot focus; games no longer snap to primary"

@@ -135,7 +135,8 @@ if grep -F 'xdg_wallpapers_dir' "$ROOT/install/install.sh" >/dev/null \
     && grep -F 'xdg_wallpapers_dir' "$ROOT/scripts/wallpaper-import.sh" >/dev/null \
     && grep -F 'xdg_wallpaper_library_dirs' "$ROOT/scripts/wallpaper-list.sh" >/dev/null \
     && grep -F 'xdg_wallpaper_library_dirs' "$ROOT/scripts/wallpaper-delete.sh" >/dev/null \
-    && grep -F 'XdgDirs.wallpapers' "$ROOT/stow/shell/.config/quickshell/modern/Services/Wallpaper.qml" >/dev/null; then
+    && grep -F 'XdgDirs.wallpapers' "$ROOT/stow/shell/.config/quickshell/modern/Services/Wallpaper.qml" >/dev/null \
+    && grep -F 'hl.dsp.focus' "$ROOT/stow/shell/.config/quickshell/modern/Services/Wallpaper.qml" >/dev/null; then
     ok "wallpaper library paths follow XDG PICTURES"
 else
     err "wallpaper list/import/fetch/delete/install still hardcode Pictures"

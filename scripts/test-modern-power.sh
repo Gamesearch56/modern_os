@@ -34,6 +34,7 @@ if grep -Fq 'switch:on:Lid Switch' "$POWER_LUA" \
     && grep -Fq 'switch:off:Lid Switch' "$POWER_LUA" \
     && grep -Fq 'power button' "$POWER_LUA" \
     && grep -Fq 'power lid' "$POWER_LUA" \
+    && grep -Fq 'hl.dsp.dpms' "$POWER_LUA" \
     && grep -Fq 'locked = true' "$POWER_LUA"; then
     ok "Hyprland lid and power-button binds"
 else
