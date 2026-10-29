@@ -32,7 +32,7 @@ FocusScope {
     MFocusWalk {
         id: walk
         scope: root
-        flick: discover.visible ? discover.flick : results.flick
+        flick: detail.visible ? detail.flick : (discover.visible ? discover.flick : results.flick)
     }
 
     onActiveFocusChanged: {
@@ -64,13 +64,19 @@ FocusScope {
     Discover {
         id: discover
         anchors.fill: parent
-        visible: Store.query.trim().length === 0 && Store.categoryId === "discover"
+        visible: Store.detailName.length === 0 && Store.query.trim().length === 0 && Store.categoryId === "discover"
     }
 
     Results {
         id: results
         anchors.fill: parent
-        visible: Store.query.trim().length > 0 || Store.categoryId !== "discover"
+        visible: Store.detailName.length === 0 && (Store.query.trim().length > 0 || Store.categoryId !== "discover")
+    }
+
+    Detail {
+        id: detail
+        anchors.fill: parent
+        visible: Store.detailName.length > 0
     }
 
     MouseArea {

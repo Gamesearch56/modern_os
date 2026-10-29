@@ -8,7 +8,6 @@ Item {
     id: root
 
     property int currentIndex: 0
-    readonly property int columns: Math.max(1, Math.floor(Math.max(width, 1) / (Tokens.spacing.xxl * 7)))
     readonly property var windows: {
         void Hypr.toplevelList;
         const all = Hypr.toplevelList || [];
@@ -22,6 +21,22 @@ Item {
         return out;
     }
     readonly property int count: (root.windows || []).length
+    readonly property int columns: Math.min(3, Math.max(1, root.count))
+    readonly property real tileWidth: {
+        const gap = Tokens.recents.gap;
+        const boxW = root.width > 0 ? root.width : Tokens.window.overviewWidth;
+        const availW = Math.max(1, boxW - Tokens.recents.inset * 2);
+        return Math.max(Tokens.recents.wellHeight, (availW - gap * 2) / 3);
+    }
+    readonly property real tileHeight: {
+        const ratio = Tokens.recents.cardHeight / Math.max(1, Tokens.recents.cardWidth);
+        return Math.max(Tokens.recents.wellHeight, root.tileWidth * ratio);
+    }
+    implicitHeight: {
+        if (root.count === 0)
+            return Tokens.recents.cardHeight;
+        return layout.implicitHeight + Tokens.recents.insetY * 2;
+    }
 
     function moveBy(delta: int) {
         const n = root.count;
@@ -43,31 +58,12 @@ Item {
         const tile = tiles.itemAt(root.currentIndex);
         if (!tile || flick.height <= 0)
             return;
-        const top = tile.y;
-        const bottom = tile.y + tile.height;
+        const top = layout.y + tile.y;
+        const bottom = top + tile.height;
         if (top < flick.contentY)
             flick.contentY = Math.max(0, top);
         else if (bottom > flick.contentY + flick.height)
             flick.contentY = Math.max(0, bottom - flick.height);
-    }
-
-    function _icon(win: var): string {
-        const ipc = win?.lastIpcObject || ({});
-        return Apps.resolveIcon(String(ipc.class || win?.class || ipc.initialClass || ""));
-    }
-
-    function _title(win: var): string {
-        const ipc = win?.lastIpcObject || ({});
-        return String(win?.title || ipc.title || ipc.class || "");
-    }
-
-    function _subtitle(win: var): string {
-        const ipc = win?.lastIpcObject || ({});
-        const raw = win?.workspace?.id ?? ipc.workspace?.id ?? ipc.workspace;
-        const id = Number(raw);
-        if (id > 0)
-            return I18n.t("overview.workspace", { id: id });
-        return "";
     }
 
     onCountChanged: {
@@ -89,35 +85,37 @@ Item {
         anchors.fill: parent
         clip: true
         contentWidth: width
-        contentHeight: layout.implicitHeight
+        contentHeight: holder.height
         boundsBehavior: Flickable.StopAtBounds
 
-        GridLayout {
-            id: layout
+        Item {
+            id: holder
             width: flick.width
-            columns: root.columns
-            columnSpacing: Tokens.spacing.md
-            rowSpacing: Tokens.spacing.md
+            height: layout.implicitHeight + Tokens.recents.insetY * 2
 
-            Repeater {
-                id: tiles
-                model: root.count
-                delegate: MWindowTile {
-                    required property int index
-                    readonly property var win: (root.windows || [])[index]
-                    readonly property string address: win?.address || ""
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    Layout.preferredWidth: (layout.width - layout.columnSpacing * Math.max(0, root.columns - 1)) / root.columns
-                    Layout.preferredHeight: Tokens.spacing.xxl * 7
-                    iconName: root._icon(win)
-                    titleValue: root._title(win)
-                    subtitleValue: root._subtitle(win)
-                    selected: root.currentIndex === index
-                    onHovered: root.currentIndex = index
-                    onClicked: {
-                        root.currentIndex = index;
-                        root.activate();
+            GridLayout {
+                id: layout
+                anchors.centerIn: parent
+                columns: root.columns
+                columnSpacing: Tokens.recents.gap
+                rowSpacing: Tokens.recents.gap
+
+                Repeater {
+                    id: tiles
+                    model: root.count
+                    delegate: Tile {
+                        required property int index
+                        win: (root.windows || [])[index]
+                        Layout.preferredWidth: root.tileWidth
+                        Layout.preferredHeight: root.tileHeight
+                        Layout.fillWidth: false
+                        Layout.fillHeight: false
+                        selected: root.currentIndex === index
+                        onHovered: root.currentIndex = index
+                        onClicked: {
+                            root.currentIndex = index;
+                            root.activate();
+                        }
                     }
                 }
             }

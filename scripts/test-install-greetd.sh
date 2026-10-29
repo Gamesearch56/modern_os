@@ -13,7 +13,9 @@ LIB="$ROOT/install/lib/greetd.sh"
 
 if grep -F "source \"\$REPO_ROOT/install/lib/greetd.sh\"" "$INSTALL" >/dev/null \
     && grep -F 'greetd_target_is_live_user' "$INSTALL" >/dev/null \
-    && grep -F 'greetd_apply' "$INSTALL" >/dev/null; then
+    && grep -F 'greetd_apply' "$INSTALL" >/dev/null \
+    && grep -F 'skipping greetd (dotfiles-only)' "$INSTALL" >/dev/null \
+    && ! grep -F 'skipping theme-apply' "$INSTALL" >/dev/null; then
     ok "install.sh sources greetd.sh and calls greetd_apply"
 else
     err "install.sh must source greetd.sh and apply on a login home"
@@ -39,11 +41,13 @@ else
 fi
 
 if grep -F 'capsLock' "$ROOT/scripts/session-chrome-sync.sh" >/dev/null \
+    && grep -F 'admin' "$ROOT/scripts/session-chrome-sync.sh" >/dev/null \
     && grep -F 'weekday' "$ROOT/scripts/session-chrome-sync.sh" >/dev/null \
     && grep -F 'session-chrome-sync.sh' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
     && grep -F 'session-keyboard-sync.sh' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
     && grep -F 'session-monitors-sync.sh' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
     && grep -F 'keyboard.json' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
+    && grep -F 'accountTitle' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionChrome.qml" >/dev/null \
     && grep -F 'SessionUsers' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'modern-users.json' "$ROOT/install/system/greetd/kiosk.sh" >/dev/null \
     && grep -F 'monitors.json' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
@@ -71,10 +75,21 @@ else
     err "default-user must be 0664 so greeter can update the last user"
 fi
 
-if python3 "$ROOT/install/system/greetd/list-users.py" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert isinstance(d, list); assert all("home" in x and "value" in x for x in d)' >/dev/null; then
+if python3 "$ROOT/install/system/greetd/list-users.py" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert isinstance(d, list); assert all("home" in x and "value" in x and "admin" in x for x in d)' >/dev/null; then
     ok "list-users.py emits a JSON array"
 else
-    err "list-users.py must print a JSON array of login names with home"
+    err "list-users.py must print a JSON array of login names with home and admin"
+fi
+
+LOCK_AUTH="$ROOT/stow/shell/.config/quickshell/modern/Services/SessionAuth.qml"
+if grep -F 'PamContext' "$LOCK_AUTH" >/dev/null \
+    && grep -F 'system-auth' "$LOCK_AUTH" >/dev/null \
+    && grep -F 'PamResult.Success' "$LOCK_AUTH" >/dev/null \
+    && grep -F 'auth.authenticate' "$ROOT/stow/shell/.config/quickshell/modern/Services/Session.qml" >/dev/null \
+    && ! grep -F 'M1 accepts' "$ROOT/stow/shell/.config/quickshell/modern/Services/Session.qml" >/dev/null; then
+    ok "lock screen verifies the session user with PAM"
+else
+    err "Session.authenticate must use PamContext and fail closed"
 fi
 
 if grep -F 'SessionAvatar' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionIdentity.qml" >/dev/null \
@@ -129,6 +144,8 @@ if grep -F 'kiosk.sh' "$LIB" >/dev/null \
     && grep -F 'GREETD_SOCK' "$ROOT/install/system/greetd/kiosk.sh" >/dev/null \
     && grep -F 'GREETD_SOCK' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
     && grep -F 'list-users.py' "$LIB" >/dev/null \
+    && grep -F 'greetd.pam' "$LIB" >/dev/null \
+    && grep -F 'pam_gnome_keyring' "$ROOT/install/system/greetd/greetd.pam" >/dev/null \
     && grep -F 'json.lua' "$LIB" >/dev/null \
     && grep -Fq 'source_profile = false' "$ROOT/install/system/greetd/config.toml" \
     && grep -Fq 'disable_hyprland_guiutils_check' "$ROOT/install/system/greetd/hyprland.lua" \
@@ -140,6 +157,8 @@ if grep -F 'kiosk.sh' "$LIB" >/dev/null \
     && grep -F 'onLaunched' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
     && grep -F '/usr/bin/systemctl' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionPower.qml" >/dev/null \
     && grep -F 'hl.dsp.exit()' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
+    && grep -Fq 'hl.dsp.cursor.move' "$ROOT/install/system/greetd/hyprland.lua" \
+    && ! grep -F 'movecursor' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
     && grep -F 'hl.dsp.exit()' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
     && ! grep -F '"exit"' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
     && ! grep -F 'awww-daemon' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
@@ -218,6 +237,43 @@ if (
     ok "i18n.sh survives unset LANG"
 else
     err "i18n.sh must not abort when LANG is unset (SUPER+Q / reload_ui)"
+fi
+
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-greetd-sync-XXXXXX")"
+cleanup_sync() { rm -rf "$TMP"; }
+trap cleanup_sync EXIT
+mkdir -p "$TMP/session" "$TMP/config"
+printf '%s\n' '{"profiles":{"Keep Me":{"position":"0x0"}}}' >"$TMP/session/monitors.json"
+printf '%s\n' '{"monitors":{"profiles":{}}}' >"$TMP/config/config.json"
+if MODERN_SESSION_DIR="$TMP/session" XDG_CONFIG_HOME="$TMP/config" HOME="$TMP" \
+    bash "$ROOT/scripts/session-monitors-sync.sh" \
+    && jq -e '.profiles["Keep Me"]' "$TMP/session/monitors.json" >/dev/null; then
+    ok "empty monitor map does not replace a saved login layout"
+else
+    err "session-monitors-sync replaced a saved layout with an empty map"
+fi
+printf '%s\n' 'nosuch-login-user' >"$TMP/session/default-user"
+if MODERN_SESSION_DIR="$TMP/session" bash "$ROOT/scripts/session-users-sync.sh" \
+    && remembered="$(tr -d '\n' <"$TMP/session/default-user")" \
+    && [ "$remembered" != "nosuch-login-user" ] \
+    && jq -e --arg u "$remembered" 'map(.value) | index($u) != null' "$TMP/session/users.json" >/dev/null; then
+    ok "deleted default-user is replaced with a real account"
+else
+    err "session-users-sync left a deleted default-user in place"
+fi
+
+SURF_LOCK="$ROOT/stow/shell/.config/quickshell/modern/Modules/Session/SessionSurface.qml"
+lock_block="$(sed -n '/sources: \[/,/]/p' "$SURF_LOCK")"
+if printf '%s\n' "$lock_block" | grep -F 'wallpaperFile' >/dev/null \
+    && ! printf '%s\n' "$lock_block" | grep -F 'sessionBlur' >/dev/null \
+    && grep -F 'session/default.jpg' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionFrost.qml" >/dev/null \
+    && ! grep -F 'session/wallpaper.jpg' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionFrost.qml" >/dev/null \
+    && grep -F 'WALLPAPER_EXPLICIT' "$ROOT/scripts/theme-apply.sh" >/dev/null \
+    && grep -F 'SHARED/wallpapers/' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
+    && grep -F 'pictures/default.jpg' "$ROOT/install/install.sh" >/dev/null; then
+    ok "lock and login follow the selected account, not another user's wallpaper"
+else
+    err "lock must use the session wallpaper; login must not fall back to another account"
 fi
 
 [ "$FAIL" -eq 0 ]

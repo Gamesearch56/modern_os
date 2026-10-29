@@ -50,9 +50,9 @@ Item {
         visible: root.showWallpaper
         opacity: root._shown ? 1 : 0
         sources: [
-            "file://" + Wallpaper.sessionBlur,
-            "file://" + Wallpaper.stateBlur,
-            root.wallpaperFile.length > 0 ? "file://" + root.wallpaperFile : ""
+            // Another account's shared snapshot must not fill this lock.
+            root.wallpaperFile.length > 0 ? "file://" + root.wallpaperFile : "",
+            "file://" + Quickshell.env("HOME") + "/.config/modern/wallpapers/default.jpg"
         ]
         washOpacity: Chrome.washOpacity
         scrimOpacity: Tokens.overlay.scrim
@@ -109,7 +109,7 @@ Item {
                 visible: root.mode !== "shutdown"
                 Layout.alignment: Qt.AlignHCenter
                 Layout.bottomMargin: Tokens.spacing.sm
-                size: Tokens.spacing.xxl * 2
+                size: Tokens.session.avatar
                 source: User.faceUrl
                 Accessible.ignored: true
             }
@@ -120,7 +120,7 @@ Item {
                 Layout.bottomMargin: Tokens.spacing.xl
                 horizontalAlignment: Text.AlignHCenter
                 value: User.displayName
-                styleName: "titleMedium"
+                styleName: "headlineMedium"
                 Accessible.role: Accessible.StaticText
                 Accessible.name: User.displayName
             }

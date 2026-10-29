@@ -11,8 +11,7 @@ ColumnLayout {
 
     readonly property string sectionId: String(section && section.id || "")
     readonly property var packages: section && section.packages ? section.packages : []
-    readonly property int columns: 3
-    readonly property bool popular: root.sectionId === "popular"
+    readonly property int columns: 6
 
     spacing: Tokens.spacing.sm
     Layout.fillWidth: true
@@ -22,16 +21,18 @@ ColumnLayout {
         spacing: Tokens.spacing.md
 
         MSectionHeader {
-            key: root.popular ? "store.popular" : ("store.categories." + root.sectionId)
+            key: "store.categories." + root.sectionId
             styleName: "titleMedium"
             topMargin: 0
             Layout.fillWidth: true
         }
 
         MButton {
-            visible: !root.popular && root.sectionId.length > 0
+            visible: root.sectionId.length > 0
             kind: "text"
             key: "store.seeAll"
+            iconName: "go-next"
+            iconAfter: true
             onClicked: Store.setCategory(root.sectionId)
         }
     }
@@ -40,15 +41,15 @@ ColumnLayout {
         Layout.fillWidth: true
         columns: root.columns
         columnSpacing: Tokens.spacing.xs
-        rowSpacing: Tokens.spacing.xs
+        rowSpacing: Tokens.spacing.sm
 
         Repeater {
             model: root.packages.length
 
-            PkgCard {
+            PkgTile {
                 required property int index
                 Layout.fillWidth: true
-                            Layout.preferredHeight: Tokens.spacing.xxl * 6
+                Layout.preferredHeight: Tokens.store.tile + Tokens.spacing.xl
                 pkg: root.packages[index] || ({})
             }
         }

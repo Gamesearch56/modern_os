@@ -58,7 +58,7 @@ Item {
     readonly property real formWidth: root.spaceXxl * 11
     readonly property real iconMd: 24
     readonly property real iconLg: 28
-    readonly property real avatarSize: root.spaceXxl * 2
+    readonly property real avatarSize: root.spaceXxl * 4
     readonly property real hoverLayer: 0.08
 
     readonly property var _fallbackColor: ({
@@ -132,6 +132,7 @@ Item {
             "session.loginFailed": s.loginFailed || "Could not sign in",
             "session.unavailable": s.unavailable || "Sign-in is not available",
             "session.capsLock": s.capsLock || "Caps Lock is on",
+            "session.admin": s.admin || "Admin",
             "powerMenu.restart": s.restart || "Restart",
             "powerMenu.poweroff": s.poweroff || "Shut down",
             "powerMenu.title": s.power || "Power"
@@ -148,6 +149,7 @@ Item {
     function typePx(name: string): int {
         const sizes = ({
             displayLarge: 57,
+            headlineMedium: 28,
             headlineSmall: 24,
             titleMedium: 16,
             bodyLarge: 16,
@@ -229,6 +231,13 @@ Item {
         if (p === "MM/DD/YYYY")
             return mm + "/" + dd + "/" + yyyy;
         return dd + "." + mm + "." + yyyy;
+    }
+
+    function accountTitle(row: var): string {
+        const name = String((row && (row.titleValue || row.value)) || "");
+        if (row && row.admin && name.length)
+            return name + " · " + root.t("session.admin");
+        return name;
     }
 
     function formatDateLine(d: var): string {

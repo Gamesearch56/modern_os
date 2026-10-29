@@ -33,7 +33,7 @@ MStatusCard {
                 enabled: !Snapshots.running
                 onClicked: {
                     if (Snapshots.status === "missing")
-                        Store.showQuery("snapper");
+                        Store.showPackage("snapper");
                     else
                         root.setupRequested();
                 }

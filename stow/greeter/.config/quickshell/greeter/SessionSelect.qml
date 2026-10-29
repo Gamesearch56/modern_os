@@ -29,7 +29,9 @@ Item {
         for (let i = 0; i < n; i++) {
             const row = root._rows[i];
             if (row && String(row.value) === String(root.value))
-                return row.titleValue || String(row.value || "");
+                return root._c && root._c.accountTitle
+                    ? root._c.accountTitle(row)
+                    : (row.titleValue || String(row.value || ""));
         }
         return "";
     }

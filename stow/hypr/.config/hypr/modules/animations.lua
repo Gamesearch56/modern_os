@@ -29,6 +29,8 @@ else
     -- both use medium, not a snappier windowsOut.
     hl.animation({ leaf = "windowsIn", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedDecelerate", style = "popin 92%" })
     hl.animation({ leaf = "windowsOut", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedAccelerate", style = "popin 92%" })
+    -- Super+arrows swap/resize; short so the wobble does not linger.
+    hl.animation({ leaf = "windowsMove", enabled = true, speed = speed(tokens.durationShortMs), bezier = "emphasized" })
     hl.animation({ leaf = "border", enabled = true, speed = speed(tokens.durationShortMs), bezier = "standard" })
     hl.animation({ leaf = "fade", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasized" })
     hl.animation({ leaf = "workspaces", enabled = true, speed = speed(tokens.durationLongMs), bezier = "emphasizedDecelerate", style = "slide" })

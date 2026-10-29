@@ -51,6 +51,7 @@ WallpaperThumbs 1.0 WallpaperThumbs.qml
 singleton FilePreview 1.0 FilePreview.qml
 singleton FilePick 1.0 FilePick.qml
 singleton Session 1.0 Session.qml
+SessionAuth 1.0 SessionAuth.qml
 singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
 AppsIcons 1.0 AppsIcons.qml
@@ -71,6 +72,7 @@ ThemeSpec 1.0 ThemeSpec.qml
 singleton ThemePalettes 1.0 ThemePalettes.qml
 singleton Passwd 1.0 Passwd.qml
 PasswdParse 1.0 PasswdParse.qml
+PasswdSelf 1.0 PasswdSelf.qml
 singleton Storage 1.0 Storage.qml
 StorageParse 1.0 StorageParse.qml
 singleton StorageUsage 1.0 StorageUsage.qml
@@ -81,7 +83,11 @@ singleton Snapshots 1.0 Snapshots.qml
 SnapshotsParse 1.0 SnapshotsParse.qml
 singleton Firewall 1.0 Firewall.qml
 FirewallParse 1.0 FirewallParse.qml
+StoreHistory 1.0 StoreHistory.qml
 singleton Store 1.0 Store.qml
 StoreCatalog 1.0 StoreCatalog.qml
 StoreClassify 1.0 StoreClassify.qml
 StoreMutate 1.0 StoreMutate.qml
+StoreBrowse 1.0 StoreBrowse.qml
+StoreDetail 1.0 StoreDetail.qml
+StoreFetch 1.0 StoreFetch.qml

@@ -123,6 +123,8 @@ Singleton {
         return icons.resolve(hint);
     }
 
+    function displayNameForHint(hint: string): string { return icons.nameForHint(hint); }
+
     function launch(role: string): bool {
         try {
             const e = root.entryFor(role);

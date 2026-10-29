@@ -5,6 +5,7 @@ mesa                           # OpenGL/EGL (Hyprland also pulls this; listed so
 libdisplay-info                # di-edid-decode: Settings > Displays reads HDR/wide-gamut support
 libdrm                         # modetest: Settings > Displays reads the connector's vrr_capable
 greetd                         # login (enabled by install.sh on a real user home)
+gnome-keyring                  # login keyring via greetd PAM; without it Electron/libsecret prompt for Default Keyring
 xdg-user-dirs                  # Desktop/Pictures before wallpaper copy
 gvfs                           # Nautilus trash/network mounts
 gvfs-mtp                       # phone MTP in Nautilus

@@ -167,7 +167,10 @@ Singleton {
     function openProvider() {
         root.pickerOpen = false;
         if (providerProc.running) {
-            Quickshell.execDetached(["hyprctl", "dispatch", "focuswindow", "title:modern.wallpaper-provider"]);
+            Quickshell.execDetached([
+                "hyprctl", "dispatch",
+                "hl.dsp.focus({ window = \"title:modern.wallpaper-provider\" })"
+            ]);
             return;
         }
         root._reopenPicker = true;

@@ -82,11 +82,13 @@ trap 'rm -f -- "$tmp"' EXIT
         "general {" \
         "    lock_cmd = qs -c modern ipc call session lock" \
         "    before_sleep_cmd = qs -c modern ipc call session lock" \
-        "    after_sleep_cmd = hyprctl dispatch dpms on" \
+        "    after_sleep_cmd = hyprctl dispatch 'hl.dsp.dpms({ action = \"on\" })'" \
         "    ignore_dbus_inhibit = false" \
         "}"
     append_listener "$dim" "${BRIGHT} dim" "${BRIGHT} undim"
-    append_listener "$off" "hyprctl dispatch dpms off" "hyprctl dispatch dpms on"
+    append_listener "$off" \
+        "hyprctl dispatch 'hl.dsp.dpms({ action = \"off\" })'" \
+        "hyprctl dispatch 'hl.dsp.dpms({ action = \"on\" })'"
     append_listener "$lock" "qs -c modern ipc call session lock"
     append_listener "$suspend" "systemctl suspend"
 } >"$tmp"

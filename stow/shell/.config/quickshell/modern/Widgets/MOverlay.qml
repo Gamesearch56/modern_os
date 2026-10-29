@@ -110,6 +110,7 @@ FocusScope {
 
         MouseArea {
             anchors.fill: parent
+            enabled: root.open
             onClicked: root.closed()
         }
     }

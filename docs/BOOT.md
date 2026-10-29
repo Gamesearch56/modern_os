@@ -115,7 +115,7 @@ Per-user state stays in `$XDG_STATE_HOME/modern/` and
 |---------|--------|------|
 | Plymouth splash | gated theme + mkinitcpio hook | `plymouth-sync.sh`; never rewrite initramfs from `install.sh` |
 | greetd greeter | `stow/greeter` + `install/system/greetd/` | Applied by `install.sh` on a real user home (`install/lib/greetd.sh`). tty1 `.bash_profile` is the fallback if greetd is down. |
-| lock screen | `Modules/Session` + `WlSessionLock` | Power menu, idle, and lid run `qs -c modern ipc call session lock`. One `WlSessionLockSurface` per output; `Session.password` is shared. Unlock sets `locked` false and calls `loginctl unlock-session`. Backdrop is the synced blur plus `design.transparency`. Any non-empty password unlocks. |
+| lock screen | `Modules/Session` + `WlSessionLock` | Power menu, idle, and lid run `qs -c modern ipc call session lock`. One `WlSessionLockSurface` per output; `Session.password` is shared. Unlock is PAM (`system-auth`) for the session user, then `loginctl unlock-session`. Backdrop is the synced blur plus `design.transparency`. |
 
 `config.json` → `design.bootScreen` chooses whether the current wallpaper
 is shown on splash/lock/login.

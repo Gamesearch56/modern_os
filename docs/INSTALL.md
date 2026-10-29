@@ -469,8 +469,8 @@ A VM has virtio Ethernet, no radio and UEFI. A laptop differs here:
 `/var/lib/modern/session` after greetd apply (else
 `$XDG_STATE_HOME/modern/session`). Nautilus sidebar starts with Downloads, Pictures, and Videos
 (`nautilus-prefs.sh`, XDG dirs for the target user). First-hour UI is
-**English**. Power-menu lock is an overlay
-preview, not a real lock. Titlebars need a one-time `hyprpm` + pkexec
+**English**. Power-menu lock is `WlSessionLock` and checks the session
+password with PAM. Titlebars need a one-time `hyprpm` + pkexec
 in a graphical session (`docs/TROUBLESHOOTING.md`).
 
 To use a different image later:

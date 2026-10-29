@@ -16,11 +16,17 @@ Singleton {
     property string pendingAction: ""
     property string lastError: ""
     property string password: ""
+    readonly property bool busy: auth.busy
 
     IpcHandler {
         target: "session"
         function lock() { root.lock(); }
         function unlock() { root.unlock(); }
+    }
+
+    SessionAuth {
+        id: auth
+        host: root
     }
 
     function lock() {
@@ -30,6 +36,7 @@ Singleton {
             // put the overlay back after unlock.
             if (root.locked && root.mode === "lock")
                 return;
+            auth.abort();
             root.mode = "lock";
             root.pendingAction = "";
             root.lastError = "";
@@ -42,6 +49,7 @@ Singleton {
     }
 
     function unlock() {
+        auth.abort();
         root.locked = false;
         root.mode = "lock";
         root.pendingAction = "";
@@ -51,18 +59,9 @@ Singleton {
     }
 
     function authenticate(password: string) {
-        // Quickshell.Services.Pam.PamContext (`import Quickshell.Services.Pam`)
-        // is the real verifier. Importing it unconditionally would fail the
-        // whole shell on hosts where the session PAM stack isn't wired yet,
-        // so M1 accepts a non-empty password and unlocks the overlay.
-        // Replace this body with pam.start()/respond() once the gated
-        // greetd phase lands (docs/ISOLATION.md).
-        if (!password || password.length === 0) {
-            root.lastError = "empty";
+        if (root.mode === "shutdown" || root.busy)
             return;
-        }
-        root.lastError = "";
-        root.unlock();
+        auth.authenticate(password);
     }
 
     function shutdownOverlay(action: string) {

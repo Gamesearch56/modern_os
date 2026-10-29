@@ -13,7 +13,7 @@ warn() { printf '[wallpaper-sync] WARN %s\n' "$*" >&2; }
 die()  { printf '[wallpaper-sync] ERROR %s\n' "$*" >&2; exit 1; }
 
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
-SHARED="/var/lib/modern/session"
+SHARED="${MODERN_SESSION_DIR:-/var/lib/modern/session}"
 
 # Gated tmpfiles.d may not have been applied yet — fall back so the
 # picker still produces assets a future greeter can consume.
@@ -76,6 +76,13 @@ magick_to() {
 
 copy_as_jpeg "$IMAGE" "$SHARED/wallpaper.jpg"
 
+# Accounts with no snapshot of their own fall back to this file.
+# A later pick must not replace it with someone else's image.
+shipped_default="${XDG_CONFIG_HOME:-$HOME/.config}/modern/wallpapers/default.jpg"
+if [ ! -f "$SHARED/default.jpg" ] && [ -r "$shipped_default" ]; then
+    copy_as_jpeg "$shipped_default" "$SHARED/default.jpg" || warn "shipped login fallback skipped"
+fi
+
 if command -v magick >/dev/null 2>&1; then
     magick_to "$SHARED/wallpaper-boot.jpg" "$IMAGE" -resize '1920x1080>'
     magick_to "$SHARED/wallpaper-blur.jpg" "$SHARED/wallpaper-boot.jpg" -blur 0x16
@@ -90,6 +97,30 @@ else
     warn "ImageMagick not on PATH — blur/boot variants are copies"
     copy_as_jpeg "$SHARED/wallpaper.jpg" "$SHARED/wallpaper-blur.jpg"
     copy_as_jpeg "$SHARED/wallpaper.jpg" "$SHARED/wallpaper-boot.jpg"
+fi
+
+# The shared JPEG is whoever published last, often a new account's
+# default.jpg. The login screen needs one readable copy per account.
+session_user="${USER:-}"
+if [ -z "$session_user" ] || [ "$session_user" = "root" ]; then
+    session_user="$(id -un 2>/dev/null || true)"
+fi
+session_user="$(printf '%s' "$session_user" | tr -cd 'A-Za-z0-9._-')"
+case "$session_user" in
+    ""|root|.*) session_user="" ;;
+esac
+if [ -n "$session_user" ]; then
+    mkdir -p "$SHARED/wallpapers"
+    chmod a+rx "$SHARED/wallpapers" 2>/dev/null || true
+    copy_as_jpeg "$IMAGE" "$SHARED/wallpapers/${session_user}.jpg" || warn "per-user wallpaper copy skipped"
+    if [ -f "$SHARED/wallpaper-blur.jpg" ]; then
+        tmp="$(stage_tmp "$SHARED/wallpapers/${session_user}-blur.jpg")"
+        if cp "$SHARED/wallpaper-blur.jpg" "$tmp"; then
+            commit_tmp "$tmp" "$SHARED/wallpapers/${session_user}-blur.jpg"
+        else
+            rm -f "$tmp"
+        fi
+    fi
 fi
 
 TOKENS="$HOME/.config/modern/tokens.json"

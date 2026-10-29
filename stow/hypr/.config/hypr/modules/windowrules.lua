@@ -165,13 +165,19 @@ apply({
 })
 
 for _, w in ipairs(overlays) do
-    apply({
+    local rule = {
         name = w.name,
         match = { title = w.title },
         float = true,
         center = true,
-        size = w.size,
         dim_around = true,
         opaque = w.opaque == true,
-    })
+    }
+    if w.size then
+        rule.size = w.size
+    end
+    if w.max_size then
+        rule.max_size = w.max_size
+    end
+    apply(rule)
 end

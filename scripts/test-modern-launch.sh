@@ -33,6 +33,22 @@ else
     err "autostart.lua must require session_apps.on_start"
 fi
 
+if grep -Fq 'current-wallpaper' "$AUTO" \
+    && grep -Fq 'session/wallpaper.jpg' "$AUTO" \
+    && grep -Fq 'head -n 1' "$AUTO" \
+    && grep -Fq 'pgrep -x awww-daemon' "$AUTO" \
+    && grep -Fq 'transition-type none' "$AUTO"; then
+    state_line="$(grep -n 'current-wallpaper' "$AUTO" | head -1 | cut -d: -f1)"
+    shared_line="$(grep -n 'session/wallpaper.jpg' "$AUTO" | head -1 | cut -d: -f1)"
+    if [ -n "$state_line" ] && [ -n "$shared_line" ] && [ "$state_line" -le "$shared_line" ]; then
+        ok "login wallpaper prefers the session account over the greeter snapshot"
+    else
+        err "autostart must read current-wallpaper before session/wallpaper.jpg"
+    fi
+else
+    err "autostart must restore current-wallpaper, then default, then the greeter JPEG"
+fi
+
 if [[ ! -f "$MATCH" ]]; then
     err "session_match.lua missing from stow (restow hypr after adding it)"
 elif grep -Fq 'pcall(require, "modules.session_match")' "$SESSION" \
@@ -55,6 +71,10 @@ if grep -Fq 'special:background silent' "$SESSION" \
     && grep -Fq 'session_direct_apps' "$SESSION" \
     && grep -Fq 'vivaldi-apps' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
     && grep -Fq 'user-data-dir' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
+    && grep -Fq '{ timeout = 250,' "$SESSION" \
+    && grep -Fq 'delay = delay + 200' "$SESSION" \
+    && ! grep -Fq '{ timeout = 2000,' "$SESSION" \
+    && ! grep -Fq 'delay = delay + 1500' "$SESSION" \
     && grep -Fq 'no_initial_focus' "$SESSION" \
     && ! grep -Fq 'session-park' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \
@@ -84,6 +104,8 @@ if [[ -x "$RAISE" ]] \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprAutostart.qml" \
     && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq 'hl.dsp.window.float' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq 'hl.dsp.window.fullscreen' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'session-hide.sh' "$MODERN"; then
     ok "launcher raises via session-raise; Super+Q parks via session-hide"
 else
@@ -110,6 +132,22 @@ else
     err "close must hide; Autostart.qml must forceKillAutostart"
 fi
 
+OV_GRID="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/WindowGrid.qml"
+OV_TILE="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/Tile.qml"
+OV_MOD="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/Module.qml"
+if grep -Fq 'modern.overview' "$HYPR_WIN" \
+    && grep -Fq 'modern.settings' "$HYPR_WIN" \
+    && grep -Fq '_overlayTitle' "$HYPR_WIN" \
+    && grep -Fq 'GridLayout' "$OV_GRID" \
+    && ! grep -Fq 'PathView' "$OV_GRID" \
+    && grep -Fq 'ScreencopyView' "$OV_TILE" \
+    && grep -Fq 'displayNameForHint' "$OV_TILE" \
+    && grep -Fq 'sequence: "Tab"' "$OV_MOD"; then
+    ok "overview grid shows every window with live tiles"
+else
+    err "overview must filter overlays, grid all windows, Tab cycle"
+fi
+
 if grep -Fq 'primaryDescription' "$DEFAULTS" \
     && grep -Fq 'function M.primary' "$LAYOUT" \
     && grep -Fq 'first_connected' "$LAYOUT" \
@@ -117,6 +155,10 @@ if grep -Fq 'primaryDescription' "$DEFAULTS" \
     && grep -Fq 'primaryMonitor' "$EN" \
     && grep -Fq 'primaryMonitor' "$DE" \
     && grep -Fq 'focus_primary' \
+    "$ROOT/stow/hypr/.config/hypr/modules/workspaces.lua" \
+    && grep -Fq 'hl.dsp.cursor.move' \
+    "$ROOT/stow/hypr/.config/hypr/modules/workspaces.lua" \
+    && ! grep -Fq 'movetoworkspace' \
     "$ROOT/stow/hypr/.config/hypr/modules/workspaces.lua" \
     && ! grep -Fq 'snap_primary' "$GAMES"; then
     ok "primary display config/UI/boot focus; games no longer snap to primary"

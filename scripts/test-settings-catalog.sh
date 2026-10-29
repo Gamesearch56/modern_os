@@ -110,6 +110,14 @@ for p in "${RESTORE_PATHS[@]}"; do
 done
 ok "config-set / restore round-trip (non D-Bus paths)"
 
+if grep -Fq 'function adminOnly' "$CATALOG" \
+    && grep -Fq 'adminOnly: true' "$CATALOG" \
+    && grep -Fq 'Passwd.canManage' "$CATALOG"; then
+    ok "backup/firewall/system are admin-only in Catalog"
+else
+    err "Catalog must hide backup, firewall, and system from non-admins"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

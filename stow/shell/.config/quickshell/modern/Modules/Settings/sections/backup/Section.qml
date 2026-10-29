@@ -50,10 +50,20 @@ Item {
         id: col
         width: parent.width
         spacing: Tokens.spacing.lg
+        enabled: Passwd.canManage
 
         Status {
             Layout.fillWidth: true
-            onSetupRequested: root.pendingSetup = true
+            onSetupRequested: {
+                if (Passwd.canManage)
+                    root.pendingSetup = true;
+            }
+        }
+
+        MHint {
+            visible: !Passwd.canManage
+            key: "settings.systemAdminOnly"
+            Layout.fillWidth: true
         }
 
         ColumnLayout {

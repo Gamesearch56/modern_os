@@ -33,6 +33,7 @@ Item {
     SessionFrost {
         anchors.fill: parent
         chrome: root.chrome
+        username: root.auth ? root.auth.username : ""
     }
 
     MouseArea {

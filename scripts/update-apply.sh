@@ -68,6 +68,7 @@ PACMAN="${MODERN_PACMAN:-/usr/bin/pacman}"
 source "$SCRIPT_DIR/lib/pkg-name.sh"
 # shellcheck source=lib/root-plan.sh
 source "$SCRIPT_DIR/lib/root-plan.sh"
+assert_root_plan_file "$PLAN" || exit 1
 read_root_plan "$PLAN"
 
 if [ ${#ROOT_PLAN_PKGS[@]} -gt 0 ]; then

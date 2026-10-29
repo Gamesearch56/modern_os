@@ -51,8 +51,9 @@ fi
 out="$(dry '{"action":"create","username":"carol","password":"secret","groups":["wheel"]}')"
 if printf '%s\n' "$out" | grep -Fq '"useradd"' \
     && printf '%s\n' "$out" | grep -Fq '"carol"' \
+    && printf '%s\n' "$out" | grep -Fq -- '--dotfiles-only' \
     && ! printf '%s\n' "$out" | grep -Fq 'secret'; then
-    ok "create dry-run uses argv arrays and hides the password"
+    ok "create dry-run uses argv arrays, stows the desktop, and hides the password"
 else
     err "create dry-run: $out"
 fi
@@ -200,7 +201,37 @@ if grep -F 'Paths.script("usersd.sh")' "$PASSWD_QML" >/dev/null \
     && grep -Fq 'canManage' "$USERS/GroupList.qml" \
     && grep -Fq 'assignableGroups' "$USERS/UserDialog.qml" \
     && grep -Fq 'gecos: root.gecos' "$USERS/UserDialog.qml" \
-    && ! grep -Fq 'setDisplayName' "$PASSWD_QML" \
+    && grep -Fq 'setOwnGecos' "$PASSWD_QML" \
+    && grep -Fq '_usersd_evict' "$SCRIPT" \
+    && grep -Fq 'loginctl terminate-user' "$SCRIPT" \
+    && grep -Fq 'currently used' "$ROOT/stow/shell/.config/quickshell/modern/Services/PasswdParse.qml" \
+    && grep -Fq 'provision_new_user_desktop' "$SCRIPT" \
+    && grep -Fq '_usersd_repo_ok' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq 'USERS_ROOT/scripts/session-users-sync.sh' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_sync_greeter' "$SCRIPT" \
+    && grep -Fq 'session-users-sync.sh' "$SCRIPT" \
+    && grep -Fq 'env -i' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq -- '--exclude=.git' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq -- '--dotfiles-only' "$ROOT/install/install.sh" \
+    && grep -Fq 'skipping greetd (dotfiles-only)' "$ROOT/install/install.sh" \
+    && ! grep -Fq 'skipping theme-apply' "$ROOT/install/install.sh" \
+    && grep -Fq '_usersd_copy_prefs' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '.language.ui' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '.input.kbLayout' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '.monitors' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '.design.activeProfile' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_publish_session' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_publish_wallpaper' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_seed_vivaldi' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_refresh_greeter' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq '_usersd_seed_keyring' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq 'pam_gnome_keyring' "$ROOT/install/system/greetd/greetd.pam" \
+    && grep -Fq '.local/share/keyrings' "$ROOT/scripts/lib/usersd-desktop.sh" \
+    && grep -Fq 'setOwnGecos' "$PASSWD_QML" \
+    && grep -Fq 'canSetOwnGecos' "$PASSWD_QML" \
+    && [ -f "$ROOT/stow/shell/.config/quickshell/modern/Services/PasswdSelf.qml" ] \
+    && grep -Fq 'DOTFILES_ONLY' "$ROOT/install/lib/pkg.sh" \
+    && [ -f "$ROOT/scripts/lib/usersd-desktop.sh" ] \
     && ! grep -Fq 'sudo useradd' "$USERS/Section.qml"; then
     ok "Settings pkexecs usersd.sh and the main user cannot be deleted"
 else

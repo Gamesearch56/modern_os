@@ -40,6 +40,18 @@ Scope {
 
             Catalog { id: catalog }
 
+            Connections {
+                target: Settings
+                function onSectionIdChanged() {
+                    if (catalog.adminOnly(Settings.sectionId) && !Passwd.canManage)
+                        Settings.sectionId = "overview";
+                }
+            }
+            Component.onCompleted: {
+                if (catalog.adminOnly(Settings.sectionId) && !Passwd.canManage)
+                    Settings.sectionId = "overview";
+            }
+
             onVisibleChanged: {
                 if (!visible) {
                     Settings.close();
@@ -143,7 +155,7 @@ Scope {
                                 contentHeight: sectionLoader.item
                                     ? sectionLoader.item.implicitHeight
                                     : 0
-                                readonly property string pageId: Settings.sectionId
+                                readonly property string pageId: catalog.adminOnly(Settings.sectionId) && !Passwd.canManage ? "overview" : Settings.sectionId
                                 onPageIdChanged: contentY = 0
 
                                 MouseArea {
@@ -163,7 +175,7 @@ Scope {
                                 Loader {
                                     id: sectionLoader
                                     width: pane.width
-                                    source: Qt.resolvedUrl("sections/" + Settings.sectionId + "/Section.qml")
+                                    source: Qt.resolvedUrl("sections/" + pane.pageId + "/Section.qml")
                                     onLoaded: {
                                         pane.contentY = 0;
                                         if (item)

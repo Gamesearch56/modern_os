@@ -112,7 +112,11 @@ Item {
         const addr = win ? win._addrHypr(address) : "";
         if (!addr.length || !win || !win.host)
             return;
-        win.host.dispatch("togglefloating address:" + addr);
+        win.focusWindow(addr);
+        if (win.host._lua)
+            win.host.dispatch("hl.dsp.window.float({ action = \"toggle\", window = \"address:" + addr + "\" })");
+        else
+            win.host.dispatch("togglefloating address:" + addr);
     }
 
     function toggleFullscreen(address: string) {
@@ -120,7 +124,11 @@ Item {
         const addr = win ? win._addrHypr(address) : "";
         if (!addr.length || !win || !win.host)
             return;
-        win.host.dispatch("fullscreen 0,address:" + addr);
+        win.focusWindow(addr);
+        if (win.host._lua)
+            win.host.dispatch("hl.dsp.window.fullscreen({ window = \"address:" + addr + "\" })");
+        else
+            win.host.dispatch("fullscreen 0,address:" + addr);
     }
 
     function toggleSplit(address: string) {

@@ -49,23 +49,26 @@ hl.config({
             range = 6,
             render_power = 3,
         },
-        -- A small give on move and resize. Intensity stays under
-        -- the default so it does not outrun the bezier window
-        -- curves. Stiffness is higher than the default 200, with
-        -- damping scaled to match, so the same wobble settles
-        -- sooner. Games opt out with no_wobble.
+        -- A light give on move and resize. Intensity is well under
+        -- the 0.2 default so the mesh does not look jelly-like.
+        -- Stiffness stays high so swaps settle quickly; extra damping
+        -- cuts the bounce. Games opt out with no_wobble.
         wobble = {
             enabled = true,
-            intensity = 0.1,
-            stiffness = 500,
-            damping = 19,
+            intensity = 0.05,
+            stiffness = 800,
+            damping = 40,
         },
     },
     dwindle = {
         preserve_split = true,
-        -- Drop / Super+mouse insert follows the cursor instead of
-        -- always opening on the left of the destination monitor.
-        smart_split = true,
+        -- Side-by-side while the tile is wider than it is tall, because
+        -- these panels are landscape. Once a column would be narrower
+        -- than it is tall, the next window stacks. smart_split follows
+        -- the cursor triangle and stacks a wide tile whenever the
+        -- pointer sits in its top or bottom half.
+        -- Dragging a window still inserts toward the cursor.
+        split_width_multiplier = 1.0,
         precise_mouse_move = true,
     },
     binds = {

@@ -40,6 +40,7 @@ defer_native() {
 }
 
 bootstrap_yay() {
+    [ "${DOTFILES_ONLY:-0}" -eq 1 ] && return 0
     if command -v yay >/dev/null 2>&1; then
         log_ok "yay already installed"
         return 0
@@ -57,6 +58,7 @@ bootstrap_yay() {
 
 install_native() {
     local pkgs=("$@") providers=() rest=() p
+    [ "${DOTFILES_ONLY:-0}" -eq 1 ] && return 0
     [ ${#pkgs[@]} -eq 0 ] && return 0
     if [ -n "${MODERN_ROOT_PLAN:-}" ] && [ "$DRY_RUN" -eq 0 ]; then
         defer_native "${pkgs[@]}"
@@ -107,6 +109,7 @@ aur_pkg_present() {
 
 install_aur() {
     local requested=("$@") pkgs=() p
+    [ "${DOTFILES_ONLY:-0}" -eq 1 ] && return 0
     [ ${#requested[@]} -eq 0 ] && return 0
     # yay -S --needed still hits aur.archlinux.org. Skip names already
     # in the local db (ISO squashfs already has m0 AUR packages), and

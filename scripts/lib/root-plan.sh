@@ -7,6 +7,37 @@
 # plain package name is dropped rather than handed to pacman.
 # Callers read ROOT_PLAN_PKGS and ROOT_PLAN_GREETD; this file only writes them.
 # shellcheck disable=SC2034
+
+# Root (pkexec) must only read a plan the calling user owns, under that
+# home. Tests call read_root_plan without this check.
+assert_root_plan_file() {
+    local file="$1" uid owner home resolved hp
+    [ -n "$file" ] || return 0
+    [ "$(id -u)" -eq 0 ] || return 0
+    uid="${PKEXEC_UID:-${SUDO_UID:-}}"
+    [ -n "$uid" ] && [ "$uid" != "0" ] || return 0
+    [ -e "$file" ] || return 0
+    [ ! -L "$file" ] || {
+        printf 'root-plan: refusing symlink %q\n' "$file" >&2
+        return 1
+    }
+    [ -f "$file" ] || return 1
+    owner="$(stat -c '%u' -- "$file" 2>/dev/null || true)"
+    [ "$owner" = "$uid" ] || {
+        printf 'root-plan: owner %s is not the calling uid %s\n' "$owner" "$uid" >&2
+        return 1
+    }
+    home="$(getent passwd "$uid" | cut -d: -f6 || true)"
+    hp="$(readlink -f -- "$home" 2>/dev/null || true)"
+    resolved="$(readlink -f -- "$file" 2>/dev/null || true)"
+    [ -n "$hp" ] && [ -n "$resolved" ] || return 1
+    case "$resolved" in
+        "$hp"/.local/state/modern|"$hp"/.local/state/modern/*) return 0 ;;
+    esac
+    printf 'root-plan: refusing path outside the caller state dir\n' >&2
+    return 1
+}
+
 read_root_plan() {
     local file="$1" kind name
     ROOT_PLAN_PKGS=()

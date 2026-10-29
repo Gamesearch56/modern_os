@@ -133,6 +133,12 @@ if [ "${ROOT_PLAN_PKGS[*]}" = good-pkg ] && [ "$ROOT_PLAN_GREETD" -eq 1 ]; then
 else
     err "root plan parsed: ${ROOT_PLAN_PKGS[*]}"
 fi
+if grep -Fq 'assert_root_plan_file' "$ROOT/scripts/update-apply.sh" \
+    && grep -Fq 'assert_root_plan_file' "$ROOT/scripts/lib/root-plan.sh"; then
+    ok "update-apply verifies root-plan owner and path"
+else
+    err "update-apply must call assert_root_plan_file"
+fi
 
 # shellcheck disable=SC2016
 printf '#!/bin/sh\n[ "$1" = -T ] && echo missing-one\nexit 127\n' >"$BIN/pacman"

@@ -1,5 +1,5 @@
-// Window switcher tile: tonal preview well, full-color app icon,
-// title + caption. Stateless — the host resolves the icon name.
+// Window switcher tile: tonal preview well, identity chip, title +
+// captions. Stateless — the host fills the well and resolves names.
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"
@@ -10,14 +10,17 @@ Item {
     property string iconName: ""
     property string titleValue: ""
     property string subtitleValue: ""
+    property string captionValue: ""
     property bool selected: false
+    property bool previewReady: false
+    default property alias preview: wellHost.data
 
     signal clicked()
     signal hovered()
 
-    implicitWidth: Tokens.spacing.xxl * 7
-    implicitHeight: Tokens.spacing.xxl * 7
-    activeFocusOnTab: true
+    implicitWidth: Tokens.recents.cardWidth
+    implicitHeight: Tokens.recents.cardHeight
+    activeFocusOnTab: false
     Accessible.role: Accessible.Button
     Accessible.name: root.titleValue
     Accessible.description: root.subtitleValue
@@ -31,7 +34,7 @@ Item {
 
     MCard {
         anchors.fill: parent
-        level: root.selected ? 3 : 1
+        level: root.selected ? 4 : 1
         highlighted: root.selected
         padding: Tokens.spacing.sm
 
@@ -43,45 +46,75 @@ Item {
                 id: well
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                radius: Tokens.radius.small
+                Layout.preferredHeight: Tokens.recents.wellHeight
+                radius: Tokens.radius.medium
                 color: Colors.color.surfaceContainerHighest
                 clip: true
 
                 Rectangle {
                     anchors.fill: parent
                     radius: parent.radius
+                    visible: !root.previewReady
                     color: Colors.color.primary
                     opacity: root.selected ? Tokens.interaction.focus : Chrome.stateLayer(ma.containsMouse, ma.pressed)
                 }
 
                 MIcon {
                     anchors.centerIn: parent
+                    visible: !root.previewReady
                     name: root.iconName.length ? root.iconName : "application-x-executable"
                     size: Math.max(Tokens.icon.lg, Math.round(Math.min(well.width, well.height) * 0.42))
                     tint: false
                     preferSymbolic: false
                 }
+
+                Item {
+                    id: wellHost
+                    anchors.fill: parent
+                }
             }
 
-            ColumnLayout {
+            RowLayout {
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.xxs
+                spacing: Tokens.spacing.sm
 
-                MText {
-                    value: root.titleValue
-                    styleName: "titleSmall"
-                    elide: Text.ElideRight
-                    maximumLineCount: 1
-                    Layout.fillWidth: true
+                MIcon {
+                    name: root.iconName.length ? root.iconName : "application-x-executable"
+                    size: Tokens.icon.md
+                    tint: false
+                    preferSymbolic: false
+                    Layout.alignment: Qt.AlignVCenter
                 }
-                MText {
-                    visible: root.subtitleValue.length > 0
-                    value: root.subtitleValue
-                    styleName: "labelSmall"
-                    color: Colors.color.onSurfaceVariant
-                    elide: Text.ElideRight
-                    maximumLineCount: 1
+
+                ColumnLayout {
                     Layout.fillWidth: true
+                    spacing: Tokens.spacing.xxs
+
+                    MText {
+                        value: root.titleValue
+                        styleName: "titleSmall"
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        Layout.fillWidth: true
+                    }
+                    MText {
+                        visible: root.subtitleValue.length > 0
+                        value: root.subtitleValue
+                        styleName: "labelSmall"
+                        color: Colors.color.onSurfaceVariant
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        Layout.fillWidth: true
+                    }
+                    MText {
+                        visible: root.captionValue.length > 0
+                        value: root.captionValue
+                        styleName: "labelSmall"
+                        color: Colors.color.onSurfaceVariant
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        Layout.fillWidth: true
+                    }
                 }
             }
         }

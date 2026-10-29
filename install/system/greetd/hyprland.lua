@@ -154,5 +154,9 @@ hl.on("hyprland.start", function()
     end
     -- A warp before the layer maps does not send pointer-enter. The
     -- greeter holds HyprlandFocusGrab; this retry is only a fallback.
-    hl.exec_cmd("sh -c 'sleep 0.4; hyprctl dispatch movecursor 96 96'")
+    if hl.timer and hl.dsp and hl.dsp.cursor and hl.dsp.cursor.move then
+        hl.timer(function()
+            pcall(hl.dispatch, hl.dsp.cursor.move({ x = 96, y = 96 }))
+        end, { timeout = 400, type = "oneshot" })
+    end
 end)

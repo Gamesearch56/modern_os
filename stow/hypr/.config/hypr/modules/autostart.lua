@@ -16,18 +16,32 @@ hl.on("hyprland.start", function()
         .. "exec qs -c modern >>\"$log\" 2>&1'")
 
     hl.exec_cmd("awww-daemon")
-    hl.exec_cmd("sh -lc 'img=/var/lib/modern/session/wallpaper.jpg; state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; default=\"$HOME/.config/modern/wallpapers/default.jpg\"; if [ -f \"$img\" ]; then :; elif [ -f \"$state\" ]; then img=$(cat \"$state\"); elif [ -f \"$default\" ]; then img=\"$default\"; else exit 0; fi; [ -f \"$img\" ] && awww img \"$img\" --transition-type none'")
+    -- Own current-wallpaper first. The shared greeter JPEG is last so a
+    -- new account keeps the shipped default instead of the previous seat.
+    hl.exec_cmd("sh -lc '"
+        .. "state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; "
+        .. "default=\"$HOME/.config/modern/wallpapers/default.jpg\"; "
+        .. "shared=/var/lib/modern/session/wallpaper.jpg; "
+        .. "img=\"\"; cand=\"\"; "
+        .. "if [ -f \"$state\" ]; then cand=$(head -n 1 \"$state\"); fi; "
+        .. "if [ -n \"$cand\" ] && [ -r \"$cand\" ]; then img=\"$cand\"; "
+        .. "elif [ -r \"$default\" ]; then img=\"$default\"; "
+        .. "elif [ -r \"$shared\" ]; then img=\"$shared\"; "
+        .. "else exit 0; fi; "
+        .. "i=0; while ! pgrep -x awww-daemon >/dev/null; do i=$((i+1)); [ \"$i\" -gt 30 ] && exit 0; sleep 0.1; done; "
+        .. "i=0; while ! awww img \"$img\" --transition-type none; do i=$((i+1)); [ \"$i\" -gt 20 ] && exit 0; sleep 0.15; done'")
 
-    -- Background: sequential timeout 2 calls must not contend with qs.
+    -- Background: import/dbus/polkit overlap; phylax waits on them.
     hl.exec_cmd("sh -lc '("
         .. "if systemctl --user is-active --quiet modern-shell.service; then "
         .. "timeout 1 systemctl --user stop modern-shell.service || true; fi; "
-        .. "timeout 2 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XDG_SESSION_ID XDG_SESSION_TYPE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true; "
-        .. "timeout 2 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true; "
-        .. "timeout 2 systemctl --user stop hyprpolkitagent.service || true; "
-        .. "timeout 2 systemctl --user daemon-reload || true; "
-        .. "timeout 2 systemctl --user reset-failed phylax.service || true; "
-        .. "timeout 2 systemctl --user start phylax || true) &'")
+        .. "timeout 1 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XDG_SESSION_ID XDG_SESSION_TYPE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true & "
+        .. "timeout 1 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true & "
+        .. "timeout 1 systemctl --user stop hyprpolkitagent.service || true & "
+        .. "wait; "
+        .. "timeout 1 systemctl --user daemon-reload || true; "
+        .. "timeout 1 systemctl --user reset-failed phylax.service || true; "
+        .. "timeout 1 systemctl --user start phylax || true) &'")
 
     hl.exec_cmd("sh -lc '" .. paths.scripts .. "/hypridle-apply.sh'")
     -- logind HandleLidSwitch/HandlePowerKey would steal Energy actions.

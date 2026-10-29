@@ -33,6 +33,7 @@ Item {
             placeholderKey: "session.password"
             echoMode: TextInput.Password
             onTextEdited: Session.password = text
+            enabled: !Session.busy
             onAccepted: Session.authenticate(Session.password)
             Component.onCompleted: {
                 if (Session.password.length)
@@ -74,8 +75,8 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: Tokens.spacing.xl
             kind: "filled"
-            key: "session.unlock"
-            enabled: Session.password.length > 0
+            key: Session.busy ? "session.starting" : "session.unlock"
+            enabled: Session.password.length > 0 && !Session.busy
             onClicked: Session.authenticate(Session.password)
         }
 

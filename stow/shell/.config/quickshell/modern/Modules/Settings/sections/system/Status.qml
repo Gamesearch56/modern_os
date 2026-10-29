@@ -25,7 +25,7 @@ MStatusCard {
         iconName: "view-refresh"
         iconAfter: true
         busy: Update.checking
-        enabled: !Update.running && !Update.mirrorsRunning
+        enabled: Passwd.canManage && !Update.running && !Update.mirrorsRunning
         onClicked: Update.refresh()
     }
 

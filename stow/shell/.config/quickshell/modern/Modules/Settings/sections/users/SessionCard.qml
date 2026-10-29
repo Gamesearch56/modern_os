@@ -71,7 +71,7 @@ ColumnLayout {
         MSwitch {
             nameKey: "settings.fields.autologin"
             checked: !!(Config.general.autologin)
-            enabled: !Autologin.running
+            enabled: Passwd.canManage && !Autologin.running
             onToggled: (v) => Autologin.setEnabled(v)
         }
     }

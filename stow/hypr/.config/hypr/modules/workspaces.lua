@@ -140,12 +140,11 @@ local function focus_primary()
     local y = (type(live.y) == "number" and live.y or 0)
     local w = (type(live.width) == "number" and live.width or 0)
     local h = (type(live.height) == "number" and live.height or 0)
-    if w > 0 and h > 0 and hl.exec_cmd then
-        pcall(hl.exec_cmd, string.format(
-            "hyprctl dispatch movecursor %d %d",
-            math.floor(x + w / 2),
-            math.floor(y + h / 2)
-        ))
+    if w > 0 and h > 0 and hl.dsp and hl.dsp.cursor and hl.dsp.cursor.move then
+        pcall(hl.dispatch, hl.dsp.cursor.move({
+            x = math.floor(x + w / 2),
+            y = math.floor(y + h / 2),
+        }))
     end
 end
 
@@ -235,9 +234,7 @@ function M.move_window(n)
     end
     if hl.dsp.window and hl.dsp.window.move then
         hl.dispatch(hl.dsp.window.move({ workspace = n }))
-        return
     end
-    hl.dispatch(hl.dsp.exec_cmd("hyprctl dispatch movetoworkspace " .. tostring(n)))
 end
 
 local rules = config.value("monitors.rules", {})

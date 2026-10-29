@@ -4,8 +4,13 @@
 #
 # Usage:
 #   install.sh --profile <m0|gaming|full> [--dry-run] [--yes] [--target DIR]
-#              [--allow-live-home] [--hw amd|intel|nvidia] [--cpu amd|intel]
+#              [--allow-live-home] [--dotfiles-only]
+#              [--hw amd|intel|nvidia] [--cpu amd|intel]
 #              [--extra proton]
+#
+# --dotfiles-only stows this tree into --target and seeds config/theme.
+# Packages and greetd are left alone (already on the machine). Settings
+# → Users uses it after useradd so a new account is not a blank Hyprland.
 #
 # --hw / --gpu selects the GPU stack (mesa/RADV, Intel, or NVIDIA DKMS).
 # --cpu selects microcode. Both default to auto-detect so Intel CPU +
@@ -36,6 +41,7 @@ EXTRA=""
 DRY_RUN=0
 ASSUME_YES=0
 ALLOW_LIVE_HOME=0
+DOTFILES_ONLY=0
 TARGET="$HOME"
 
 for arg in "$@"; do
@@ -44,6 +50,7 @@ for arg in "$@"; do
         --dry-run) DRY_RUN=1 ;;
         --yes|-y) ASSUME_YES=1 ;;
         --allow-live-home) ALLOW_LIVE_HOME=1 ;;
+        --dotfiles-only) DOTFILES_ONLY=1 ;;
         --hw=*) HW="${arg#*=}" ;;
         --gpu=*) HW="${arg#*=}" ;;
         --cpu=*) CPU="${arg#*=}" ;;
@@ -76,7 +83,7 @@ for i in "${!args[@]}"; do
     fi
 done
 
-export DRY_RUN ASSUME_YES ALLOW_LIVE_HOME REPO_ROOT LOG_FILE TARGET
+export DRY_RUN ASSUME_YES ALLOW_LIVE_HOME DOTFILES_ONLY REPO_ROOT LOG_FILE TARGET
 
 # shellcheck source=lib/log.sh
 source "$REPO_ROOT/install/lib/log.sh"
@@ -99,7 +106,7 @@ _err_trap() {
 }
 trap '_err_trap $LINENO' ERR
 
-log_info "modern_dotfile installer — profile '$PROFILE', gpu='$HW', cpu='$CPU', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN"
+log_info "modern_dotfile installer — profile '$PROFILE', gpu='$HW', cpu='$CPU', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN, dotfiles-only=$DOTFILES_ONLY"
 
 case "$PROFILE" in
     m0|gaming|full) ;;
@@ -137,6 +144,9 @@ preflight_checks
 # ---------------------------------------------------------------------------
 # Phase 2 — yay bootstrap
 # ---------------------------------------------------------------------------
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "dotfiles-only: skipping yay and package manifests"
+else
 log_phase "Phase 2/5: yay bootstrap"
 if [ -n "${MODERN_ROOT_PLAN:-}" ] && ! command -v yay >/dev/null 2>&1; then
     # makepkg -si needs sudo, which a terminal-less update cannot answer.
@@ -197,6 +207,7 @@ if [ "$PROFILE" = "full" ]; then
     flatpak_ids=()
     mapfile -t flatpak_ids < <(parse_manifest "$MANIFEST_DIR/60-flatpak.txt")
     install_flatpak "${flatpak_ids[@]}"
+fi
 fi
 
 # ---------------------------------------------------------------------------
@@ -260,7 +271,11 @@ else
     log_ok "wrote $STATE_DIR/hw.json"
 fi
 
-run systemctl --user daemon-reload 2>/dev/null || true
+if [ -S "${XDG_RUNTIME_DIR:-}/bus" ]; then
+    run systemctl --user daemon-reload 2>/dev/null || true
+else
+    log_info "no user session bus — skip daemon-reload"
+fi
 
 # tokens.json + lock/login assets come from the shipped default wallpaper
 # (stow/modern/.../wallpapers/default.jpg) so a first session is not
@@ -298,6 +313,12 @@ if [ -d "$shipped_wp_dir" ]; then
         fi
     done
 fi
+# The picker lists the library copy and hides the shipped symlink of
+# the same name. Remember the library file so the tile is selected
+# and the first session can read it.
+if [ -f "$pictures/default.jpg" ]; then
+    default_wp="$pictures/default.jpg"
+fi
 wallpaper_state="$STATE_DIR/current-wallpaper"
 if command -v matugen >/dev/null 2>&1; then
     if [ -f "$wallpaper_state" ]; then
@@ -322,12 +343,18 @@ run "$REPO_ROOT/scripts/mime-defaults.sh" \
     --config "$TARGET/.config/modern/config.json" \
     --mimeapps "$TARGET/.config/mimeapps.list" \
     || log_warn "mime-defaults.sh failed — set video/image/text/folder defaults in Settings → Applications"
-run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
-    || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "dotfiles-only: skipping nautilus-prefs (gsettings needs a session)"
+else
+    run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
+        || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
+fi
 
 # Patched Phylax Confirms as $USER. Without it, phylax.service falls
 # back to the AUR binary and the identity dropdown returns.
-if command -v cargo >/dev/null 2>&1; then
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "dotfiles-only: skipping Phylax rebuild"
+elif command -v cargo >/dev/null 2>&1; then
     run "${theme_env[@]}" "$REPO_ROOT/scripts/build-phylax.sh" \
         || log_warn "build-phylax.sh failed — AUR phylax will show the identity dropdown until it succeeds"
 else
@@ -337,7 +364,9 @@ fi
 # kitty.conf globincludes colors.conf; fallbacks in kitty.conf keep
 # SUPER+T working until theme-apply writes the live file.
 
-if greetd_target_is_live_user "$TARGET" && [ -n "${MODERN_ROOT_PLAN:-}" ] && [ "$DRY_RUN" -eq 0 ]; then
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "skipping greetd (dotfiles-only)"
+elif greetd_target_is_live_user "$TARGET" && [ -n "${MODERN_ROOT_PLAN:-}" ] && [ "$DRY_RUN" -eq 0 ]; then
     printf 'greetd\n' >>"$MODERN_ROOT_PLAN"
     log_info "greetd deferred to the update's root step"
 elif greetd_target_is_live_user "$TARGET"; then

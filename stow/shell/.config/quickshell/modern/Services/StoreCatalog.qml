@@ -87,6 +87,15 @@ Item {
         return [];
     }
 
+    function browseQuery(id: string): string {
+        const cats = root.categories;
+        for (let i = 0; i < cats.length; i++) {
+            if (cats[i].id === id)
+                return String(cats[i].browse || "");
+        }
+        return "";
+    }
+
     function discoverLayout() {
         const out = [];
         const pop = root._take(root.popular, root.popularSize);

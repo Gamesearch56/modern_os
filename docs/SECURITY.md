@@ -63,8 +63,10 @@ sudo ufw allow 1714:1764/udp comment kdeconnect
 ## Residual risk
 
 A user who can already authenticate as admin can create extra local
-accounts. That is equivalent to `useradd` via sudo. Rollback: remove
-the binary and the `.policy` file; existing accounts are untouched.
+accounts. Create also copies this desktop into the new home (`install.sh
+--dotfiles-only`). That is equivalent to `useradd` plus stow via sudo.
+Rollback: remove the binary and the `.policy` file; existing accounts
+are untouched.
 
 ## Settings → Firewall (UFW)
 

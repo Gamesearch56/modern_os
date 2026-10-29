@@ -57,6 +57,7 @@ Singleton {
     readonly property QtObject overlay: QtObject {
         readonly property real scrim: 0.32
         readonly property real lock: 0.48
+        readonly property real previewFill: 0.8
     }
 
     // Light surfaces sit near tone 98; the same alpha as dark chrome
@@ -92,8 +93,8 @@ Singleton {
         readonly property real settingsHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
-        readonly property real overviewWidth: root.spacing.xxl * 22
-        readonly property real overviewHeight: root.spacing.xxl * 18
+        readonly property real overviewWidth: root.spacing.xxl * 30
+        readonly property real overviewHeight: root.spacing.xxl * 20
         readonly property real overlayWidth: root.spacing.xxl * 24
         readonly property real overlayHeight: root.spacing.xxl * 20
         readonly property real chatWidth: root.spacing.xxl * 14
@@ -114,9 +115,30 @@ Singleton {
         readonly property real toastTopClearance: root.spacing.xxl
     }
 
+    readonly property QtObject recents: QtObject {
+        readonly property real cardWidth: root.spacing.xxl * 11
+        readonly property real cardHeight: root.spacing.xxl * 10
+        readonly property real wellHeight: root.spacing.xxl * 7
+        readonly property real gap: root.spacing.xl
+        readonly property real inset: root.spacing.xl
+        readonly property real insetY: root.spacing.sm
+    }
+
     readonly property QtObject slider: QtObject {
         readonly property real trackHeight: 8
         readonly property real thumb: 20
+    }
+
+    readonly property QtObject session: QtObject {
+        readonly property real avatar: root.spacing.xxl * 4
+    }
+
+    readonly property QtObject store: QtObject {
+        readonly property real heroHeight: root.spacing.xxl * 8
+        readonly property real heroIcon: root.icon.lg + root.spacing.md * 2
+        readonly property real tile: root.spacing.xxl * 3 + root.spacing.md
+        readonly property real tileIcon: root.icon.lg + root.spacing.sm * 2
+        readonly property real sectionGap: root.spacing.xl
     }
 
     function elevationFor(level: int): var {

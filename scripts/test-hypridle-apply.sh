@@ -52,7 +52,8 @@ if grep -q 'timeout = 7200' "$MODERN_HYPRIDLE_CONF" \
     && [ "$(grep -c 'timeout = 7200' "$MODERN_HYPRIDLE_CONF")" -eq 3 ] \
     && grep -q 'timeout = 43200' "$MODERN_HYPRIDLE_CONF" \
     && grep -Fq "$MODERN_BRIGHTNESS_SH dim" "$MODERN_HYPRIDLE_CONF" \
-    && grep -Fq 'qs -c modern ipc call session lock' "$MODERN_HYPRIDLE_CONF"; then
+    && grep -Fq 'qs -c modern ipc call session lock' "$MODERN_HYPRIDLE_CONF" \
+    && grep -Fq 'hl.dsp.dpms' "$MODERN_HYPRIDLE_CONF"; then
     ok "writes idle timings from config.json"
 else
     err "render: $(cat "$MODERN_HYPRIDLE_CONF")"

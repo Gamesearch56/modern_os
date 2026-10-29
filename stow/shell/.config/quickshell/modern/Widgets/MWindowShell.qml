@@ -23,6 +23,11 @@ Item {
 
     default property alias body: contentSlot.data
 
+    implicitHeight: {
+        const body = contentSlot.children.length === 1 ? contentSlot.children[0].implicitHeight : 0;
+        return chrome.implicitHeight + Tokens.spacing.md * 3 + body;
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Colors.color.surface

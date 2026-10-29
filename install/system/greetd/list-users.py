@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # Human login names for the greetd select. stdout is a JSON array.
 # Skip nologin shells and the greeter system account — never a specific
-# person's login.
+# person's login. Admin is wheel/sudo, same rule as PasswdParse.isAdmin.
+import grp
 import json
 import pwd
 import sys
@@ -15,9 +16,25 @@ SKIP_SHELL = {
     "/usr/bin/false",
     "/sbin/false",
 }
+ADMIN_GROUPS = ("wheel", "sudo")
+
+
+def admin_logins() -> set[str]:
+    names: set[str] = set()
+    for gname in ADMIN_GROUPS:
+        try:
+            g = grp.getgrnam(gname)
+        except KeyError:
+            continue
+        names.update(g.gr_mem)
+        for e in pwd.getpwall():
+            if int(e.pw_gid) == int(g.gr_gid):
+                names.add(e.pw_name)
+    return names
 
 
 def main() -> int:
+    admins = admin_logins()
     out = []
     for e in pwd.getpwall():
         login = e.pw_name or ""
@@ -33,6 +50,7 @@ def main() -> int:
             "value": login,
             "titleValue": gecos if gecos else login,
             "home": e.pw_dir or "",
+            "admin": login in admins,
         })
     json.dump(out, sys.stdout, ensure_ascii=False)
     sys.stdout.write("\n")

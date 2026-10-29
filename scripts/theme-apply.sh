@@ -25,6 +25,7 @@
 #                       unless --skip-wallpaper (picker already showed it).
 #   --skip-wallpaper   Remember --wallpaper / regenerate colors only;
 #                       do not call awww (avoids a second delayed fade).
+#                       The login snapshot still updates from --wallpaper.
 #   --seed HEX         Use this source color (from theme-previews.sh)
 #                       instead of extracting from the wallpaper.
 #   --extract          Ignore a stored source seed and extract again
@@ -122,8 +123,14 @@ apply_color_scheme() {
         scheme="prefer-light"
         gtk_dark=0
     fi
+    # A new account is themed before it has a session bus. A private
+    # bus still writes dconf, which the portal reads on the first login.
     if command -v gsettings >/dev/null 2>&1; then
-        gsettings set org.gnome.desktop.interface color-scheme "$scheme" >/dev/null 2>&1 || true
+        if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+            gsettings set org.gnome.desktop.interface color-scheme "$scheme" >/dev/null 2>&1 || true
+        elif command -v dbus-run-session >/dev/null 2>&1; then
+            dbus-run-session -- gsettings set org.gnome.desktop.interface color-scheme "$scheme" >/dev/null 2>&1 || true
+        fi
     fi
     local gini
     for gini in \
@@ -465,6 +472,7 @@ EXTRACT=0
 RELOAD=1
 CHROME_ONLY=0
 SKIP_WALLPAPER=0
+WALLPAPER_EXPLICIT=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -473,7 +481,7 @@ while [ $# -gt 0 ]; do
             PROFILE="$2"; shift 2 ;;
         --wallpaper)
             [ $# -ge 2 ] || die "--wallpaper needs a value"
-            WALLPAPER="$2"; shift 2 ;;
+            WALLPAPER="$2"; WALLPAPER_EXPLICIT=1; shift 2 ;;
         --seed)
             [ $# -ge 2 ] || die "--seed needs a value"
             SEED="$2"; shift 2 ;;
@@ -648,7 +656,8 @@ selection_foreground #E8DEF8
 EOF
 fi
 
-if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ] && [ "$SKIP_WALLPAPER" -eq 0 ]; then
+if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ] \
+    && { [ "$SKIP_WALLPAPER" -eq 0 ] || [ "$WALLPAPER_EXPLICIT" -eq 1 ]; }; then
     sync_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-sync.sh"
     if [ -f "$sync_script" ]; then
         bash "$sync_script" "$WALLPAPER" || warn "wallpaper-sync.sh failed — lock/login may miss the new image"

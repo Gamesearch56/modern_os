@@ -28,6 +28,7 @@ FocusScope {
     signal destructiveClicked()
 
     visible: root.open || scrim.opacity > 0
+    enabled: root.open
     z: 100
     activeFocusOnTab: root.open
     Accessible.role: Accessible.Dialog

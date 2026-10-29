@@ -66,6 +66,13 @@ QtObject {
         return null;
     }
 
+    function nameForHint(hint: string): string {
+        const e = root._fromDesktop(hint);
+        if (e && e.name)
+            return String(e.name);
+        return String(hint || "").trim();
+    }
+
     function resolve(hint: string): string {
         const raw = String(hint || "").trim();
         if (!raw.length)

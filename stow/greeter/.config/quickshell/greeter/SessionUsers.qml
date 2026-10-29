@@ -25,7 +25,8 @@ Item {
             out.push({
                 value: login,
                 titleValue: String(r.titleValue || login),
-                home: String(r.home || "")
+                home: String(r.home || ""),
+                admin: !!r.admin
             });
         }
         if (!out.length)
@@ -74,7 +75,8 @@ Item {
             out.push({
                 value: login,
                 titleValue: gecos.length > 0 ? gecos : login,
-                home: parts[5] || ""
+                home: parts[5] || "",
+                admin: false
             });
         }
         root._apply(out);
