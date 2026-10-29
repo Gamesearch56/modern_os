@@ -123,8 +123,14 @@ apply_color_scheme() {
         scheme="prefer-light"
         gtk_dark=0
     fi
+    # A new account is themed before it has a session bus. A private
+    # bus still writes dconf, which the portal reads on the first login.
     if command -v gsettings >/dev/null 2>&1; then
-        gsettings set org.gnome.desktop.interface color-scheme "$scheme" >/dev/null 2>&1 || true
+        if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+            gsettings set org.gnome.desktop.interface color-scheme "$scheme" >/dev/null 2>&1 || true
+        elif command -v dbus-run-session >/dev/null 2>&1; then
+            dbus-run-session -- gsettings set org.gnome.desktop.interface color-scheme "$scheme" >/dev/null 2>&1 || true
+        fi
     fi
     local gini
     for gini in \

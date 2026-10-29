@@ -25,7 +25,7 @@ export LANG=C LC_ALL=C
 unset XDG_CONFIG_HOME
 mkdir -p "$HOME/.config/modern"
 cat >"$HOME/.config/modern/tokens.json" <<'EOF'
-{"color":{"primary":"#d0bcff","surface":"#141218","onSurface":"#e6e0e9","onPrimary":"#381e72","primaryContainer":"#4f378b"}}
+{"mode":"dark","color":{"primary":"#d0bcff","surface":"#141218","onSurface":"#e6e0e9","onPrimary":"#381e72","primaryContainer":"#4f378b"}}
 EOF
 
 # shellcheck source=lib/vivaldi-prefs.sh
@@ -47,7 +47,9 @@ if [ -f "$prefs" ] \
     && [ "$(jq -r '.vivaldi.customUiMods' "$prefs")" = true ] \
     && [ "$(jq -r '.vivaldi.appearance.css_ui_mods_directory' "$prefs")" = "$css" ] \
     && [ "$(jq -r '.vivaldi.appearance.disable_title_bar' "$prefs")" = true ] \
-    && [ "$(jq -r '.vivaldi.theme.schedule.o_s.dark' "$prefs")" = modern ]; then
+    && [ "$(jq -r '.vivaldi.theme.schedule.o_s.dark' "$prefs")" = modern ] \
+    && [ "$(jq -r '.vivaldi.system.desktop_theme_color' "$prefs")" = dark ] \
+    && [ "$(jq -r '.vivaldi.PreferredColorScheme' "$prefs")" = 2 ]; then
     ok "theme id, accent, CSS path, and title-bar flag are set"
 else
     err "Preferences missing modern theme or CSS mods path"

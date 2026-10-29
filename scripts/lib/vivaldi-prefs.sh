@@ -59,7 +59,14 @@ merge_vivaldi_prefs() {
     on_surface="$(jq -r '.color.onSurface' "$tokens")"
     on_primary="$(jq -r '.color.onPrimary' "$tokens")"
     primary_container="$(jq -r '.color.primaryContainer' "$tokens")"
+    mode="$(jq -r '.mode // "dark"' "$tokens")"
     case "$primary" in \#*) ;; *) return 1 ;; esac
+    # Vivaldi's own default for the system color is light, so menus and
+    # dialogs stay bright until this is set. 2 = dark sites, 1 = light.
+    case "$mode" in
+        light) ui_scheme="light"; web_scheme=1 ;;
+        *) ui_scheme="dark"; web_scheme=2 ;;
+    esac
 
     jq \
         --arg bg "$surface" \
@@ -68,6 +75,8 @@ merge_vivaldi_prefs() {
         --arg accent_fg "$on_primary" \
         --arg highlight "$primary_container" \
         --arg css "$css_dir" \
+        --arg ui "$ui_scheme" \
+        --argjson web "$web_scheme" \
         '.vivaldi.themes.current = "modern"
          | .vivaldi.themes.user = ((.vivaldi.themes.user // []) | map(select(.id != "modern")))
            + [{id:"modern", name:"modern",
@@ -77,6 +86,8 @@ merge_vivaldi_prefs() {
                windowBg:$bg}]
          | .vivaldi.theme.schedule.o_s.dark = "modern"
          | .vivaldi.theme.schedule.o_s.light = "modern"
+         | .vivaldi.system.desktop_theme_color = $ui
+         | .vivaldi.PreferredColorScheme = $web
          | .vivaldi.customUiMods = true
          | .vivaldi.appearance.css_ui_mods_directory = $css
          | .vivaldi.appearance.disable_title_bar = true' \
