@@ -27,7 +27,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + SHIFT + B` | Browser private window | Same desktop id, with `--incognito` or `--private-window` |
 | `SUPER + E` | File manager | Configured `apps.defaults.fileManager` via `modern-launch` |
 | `SPACE` | Nautilus: Sushi overlay (native; bind no-ops) | `modern filepreview` |
-| `SUPER + R` | Spotify | `spotify-launcher` |
+| `SUPER + R` | Spotify | `modern-launch --on-active spotify-launcher` (moves an open window here) |
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |
 | `SUPER + G` | Game mode | |

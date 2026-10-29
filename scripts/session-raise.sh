@@ -13,11 +13,38 @@ if [[ -z "$desktop" ]]; then
     exit 1
 fi
 
-stem="${desktop,,}"
-stem="${stem//[^a-z0-9]/}"
+raw="${desktop,,}"
+stem="${raw//[^a-z0-9]/}"
 if [[ ${#stem} -lt 3 ]]; then
     exit 1
 fi
+
+# Exact class match. A compacted id (orggnomenautilus) never appears in
+# "org.gnome.Nautilus", and contains() would also grab the previewer.
+exacts=("$raw")
+base="${raw##*.}"
+if [[ "$base" != "$raw" && ${#base} -ge 5 ]]; then
+    exacts+=("$base")
+fi
+
+# spotify-launcher.desktop starts class "spotify". The desktop id never
+# appears in the window class, so Super+R would launch a second copy.
+dirs="${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+IFS=:
+for d in $dirs; do
+    path="$d/applications/${desktop}.desktop"
+    if [[ -f "$path" ]]; then
+        wm="$(grep -i '^StartupWMClass=' "$path" | head -n1 || true)"
+        wm="${wm#*=}"
+        wm="${wm,,}"
+        wm="${wm//[[:space:]]/}"
+        if [[ ${#wm} -ge 3 ]]; then
+            exacts+=("$wm")
+        fi
+        break
+    fi
+done
+unset IFS
 
 needles=("$stem")
 case "$stem" in
@@ -25,6 +52,39 @@ case "$stem" in
     *calendar*) needles+=("calendarproton" "calendar.proton" "calendarprotonme" "vivaldi-calendar.proton") ;;
     *whatsapp*) needles+=("web.whatsapp" "webwhatsapp" "vivaldi-web.whatsapp") ;;
 esac
+
+clients_json() {
+    if [[ -n "${MODERN_RAISE_CLIENTS:-}" && -f "$MODERN_RAISE_CLIENTS" ]]; then
+        cat "$MODERN_RAISE_CLIENTS"
+        return
+    fi
+    hyprctl -j clients 2>/dev/null || true
+}
+
+addr="$(clients_json | jq -r \
+    --argjson n "$(printf '%s\n' "${needles[@]}" | jq -R . | jq -s .)" \
+    --argjson exact "$(printf '%s\n' "${exacts[@]}" | jq -R . | jq -s .)" '
+  .[] |
+  . as $w |
+  (($w.class // "") | ascii_downcase) as $cls |
+  (($w.initialClass // "") | ascii_downcase) as $icls |
+  ((($w.class // "") + " " + ($w.initialClass // "") + " " + ($w.title // "") + " " + ($w.initialTitle // ""))
+    | ascii_downcase) as $hay |
+  select(
+    any($exact[]; . == $cls or . == $icls or . == ($cls | split(".") | last) or . == ($icls | split(".") | last))
+    or any($n[]; . as $needle | ($needle | length) >= 3 and ($hay | contains($needle)))
+  ) |
+  $w.address
+' 2>/dev/null | head -n1)"
+
+if [[ -z "$addr" ]]; then
+    exit 1
+fi
+
+if [[ "${MODERN_RAISE_DRY:-}" == "1" ]]; then
+    printf '%s\n' "$addr"
+    exit 0
+fi
 
 aw="$(hyprctl -j activeworkspace 2>/dev/null || true)"
 ws="$(printf '%s' "$aw" | jq -r '.id // empty')"
@@ -37,19 +97,6 @@ fi
 # reopen the secondary-monitor / workspace-6 path.
 if [[ -n "$mon" && "$mon" != "null" ]]; then
     hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"special:background\", monitor = \"${mon}\" })" >/dev/null 2>&1 || true
-fi
-
-addr="$(hyprctl -j clients 2>/dev/null | jq -r --argjson n "$(printf '%s\n' "${needles[@]}" | jq -R . | jq -s .)" '
-  .[] |
-  . as $w |
-  ((($w.class // "") + " " + ($w.initialClass // "") + " " + ($w.title // "") + " " + ($w.initialTitle // ""))
-    | ascii_downcase) as $hay |
-  select(any($n[]; . as $needle | ($needle | length) >= 3 and ($hay | contains($needle)))) |
-  $w.address
-' 2>/dev/null | head -n1)"
-
-if [[ -z "$addr" ]]; then
-    exit 1
 fi
 
 hyprctl dispatch "hl.dsp.window.move({ workspace = ${ws}, follow = true, window = \"address:${addr}\" })" >/dev/null
