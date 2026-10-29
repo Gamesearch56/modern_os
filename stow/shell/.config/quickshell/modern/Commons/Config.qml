@@ -252,6 +252,8 @@ Singleton {
                 property bool snapperEnabled: false
                 property bool resticEnabled: false
                 property bool preUpdateSnapshot: true
+                property bool pruneEnabled: true
+                property int keepCount: 8
             }
 
             // Combo strings use Hyprland's Lua hl.bind() format:

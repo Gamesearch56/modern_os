@@ -91,6 +91,7 @@ _update_tty() {
                 t cli.snapshotFailed >&2
                 return 1
             }
+            sudo "$SCRIPT_DIR/snapper-gc.sh" prune-from-config "$CFG" || true
         else
             t cli.snapperUnconfigured >&2 || true
         fi

@@ -10,7 +10,9 @@ Item {
     id: root
 
     property var pending: null
+    property var pendingRestore: null
     property bool pendingSetup: false
+    property bool pendingClear: false
 
     implicitHeight: col.implicitHeight
 
@@ -26,6 +28,13 @@ Item {
         function onLastNameChanged() {
             if (String(Store.lastName) === "snapper")
                 Snapshots.refresh();
+        }
+    }
+
+    Connections {
+        target: Snapshots
+        function onRestoreFinished() {
+            Power.reboot();
         }
     }
 
@@ -70,6 +79,10 @@ Item {
             }
         }
 
+        Keep {
+            Layout.fillWidth: true
+        }
+
         ColumnLayout {
             Layout.fillWidth: true
             Layout.topMargin: Tokens.spacing.xxl
@@ -90,6 +103,13 @@ Item {
                     iconSize: Tokens.icon.sm
                     enabled: !Snapshots.running
                     onClicked: Snapshots.refresh()
+                }
+                MButton {
+                    kind: "outlined"
+                    key: "settings.backup.clearAll"
+                    enabled: Snapshots.ready && !Snapshots.running
+                        && Snapshots.items.length > 0
+                    onClicked: root.pendingClear = true
                 }
                 MButton {
                     kind: "filled"
@@ -128,6 +148,7 @@ Item {
                     required property int index
                     snap: Snapshots.items[index]
                     onRequestDelete: (s) => root.pending = s
+                    onRequestRestore: (s) => root.pendingRestore = s
                 }
             }
             MEmptyState {
@@ -165,6 +186,28 @@ Item {
     MDialog {
         parent: Window.window ? Window.window.contentItem : root
         anchors.fill: parent
+        open: root.pendingRestore !== null
+        wide: true
+        titleKey: "settings.backup.restoreTitle"
+        bodyKey: "settings.backup.restoreBody"
+        bodyParams: ({
+            n: root.pendingRestore ? String(root.pendingRestore.number || "") : "",
+            date: root.pendingRestore ? Snapshots.formatWhen(root.pendingRestore.date || "") : ""
+        })
+        confirmKey: "settings.backup.restoreConfirm"
+        cancelKey: "powerMenu.cancel"
+        destructive: true
+        onConfirmed: {
+            if (root.pendingRestore)
+                Snapshots.restore(root.pendingRestore.number);
+            root.pendingRestore = null;
+        }
+        onCancelled: root.pendingRestore = null
+    }
+
+    MDialog {
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
         open: root.pendingSetup
         titleKey: "settings.backup.setupTitle"
         bodyKey: "settings.backup.setupBody"
@@ -175,5 +218,21 @@ Item {
             root.pendingSetup = false;
         }
         onCancelled: root.pendingSetup = false
+    }
+
+    MDialog {
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        open: root.pendingClear
+        titleKey: "settings.backup.clearTitle"
+        bodyKey: "settings.backup.clearBody"
+        confirmKey: "settings.backup.clearAll"
+        cancelKey: "powerMenu.cancel"
+        destructive: true
+        onConfirmed: {
+            Snapshots.clearAll();
+            root.pendingClear = false;
+        }
+        onCancelled: root.pendingClear = false
     }
 }

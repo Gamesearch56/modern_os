@@ -18,6 +18,7 @@ FocusScope {
     property string destructiveKey: ""
     property bool destructive: false
     property bool confirmEnabled: true
+    property bool wide: false
     default property alias extra: extraCol.data
 
     signal confirmed()
@@ -63,7 +64,8 @@ FocusScope {
 
     MPanelSurface {
         id: card
-        width: Math.min(parent.width - Tokens.spacing.xxl, Tokens.spacing.xxl * 12)
+        width: Math.min(parent.width - Tokens.spacing.xxl,
+            root.wide ? Tokens.panel.dialogWide : Tokens.panel.dialogWidth)
         implicitHeight: dialogCol.implicitHeight + Tokens.spacing.lg * 2
         anchors.centerIn: parent
         scale: Motion.overlayScale(root.open)
@@ -100,7 +102,8 @@ FocusScope {
                     params: root.titleParams
                     value: root.titleValue
                     styleName: "headlineSmall"
-                    elide: Text.ElideRight
+                    wrapMode: Text.WordWrap
+                    elide: Text.ElideNone
                     Layout.fillWidth: true
                 }
 

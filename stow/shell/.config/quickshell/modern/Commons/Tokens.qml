@@ -97,6 +97,8 @@ Singleton {
         readonly property real popupMin: root.spacing.xxl * 10
         readonly property real cheatsheetNav: root.spacing.xxl * 8
         readonly property real powerWidth: root.spacing.xxl * 12
+        readonly property real dialogWidth: root.spacing.xxl * 12
+        readonly property real dialogWide: root.spacing.xxl * 18
         readonly property real launcherWidth: root.spacing.xxl * 16
         // Toasts drop below a typical app header bar so they don't hide
         // the window's own buttons in its top row.

@@ -27,6 +27,7 @@ MCard {
     implicitHeight: body.implicitHeight + Tokens.spacing.md * 2
 
     signal requestDelete(var snap)
+    signal requestRestore(var snap)
 
     ColumnLayout {
         id: body
@@ -56,6 +57,12 @@ MCard {
                         value: root._title
                         styleName: "titleLarge"
                         Layout.fillWidth: true
+                    }
+                    MButton {
+                        kind: "outlined"
+                        key: "settings.backup.restore"
+                        enabled: !Snapshots.running
+                        onClicked: root.requestRestore(root.snap)
                     }
                     MButton {
                         kind: "destructive"

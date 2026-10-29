@@ -217,6 +217,18 @@ Scope {
                             it.pendingEdit = null;
                             return;
                         }
+                        if (it.pendingRestore) {
+                            it.pendingRestore = null;
+                            return;
+                        }
+                        if (it.pendingClear) {
+                            it.pendingClear = false;
+                            return;
+                        }
+                        if (it.pendingSetup) {
+                            it.pendingSetup = false;
+                            return;
+                        }
                         if (it.pending) {
                             it.pending = null;
                             return;
