@@ -62,9 +62,13 @@ hl.config({
     },
     dwindle = {
         preserve_split = true,
-        -- Drop / Super+mouse insert follows the cursor instead of
-        -- always opening on the left of the destination monitor.
-        smart_split = true,
+        -- Side-by-side while the tile is wider than it is tall, because
+        -- these panels are landscape. Once a column would be narrower
+        -- than it is tall, the next window stacks. smart_split follows
+        -- the cursor triangle and stacks a wide tile whenever the
+        -- pointer sits in its top or bottom half.
+        -- Dragging a window still inserts toward the cursor.
+        split_width_multiplier = 1.0,
         precise_mouse_move = true,
     },
     binds = {
