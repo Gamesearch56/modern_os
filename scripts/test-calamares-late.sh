@@ -68,6 +68,13 @@ if [ "$units_ok" -eq 1 ]; then
 else
     err "greetd_apply must mark each enabled unit required or optional"
 fi
+if grep -F 'systemctl --root=/ is-enabled' "$GREETD_LIB" >/dev/null \
+    && grep -F 'systemctl --root=/ enable' "$GREETD_LIB" >/dev/null \
+    && ! grep -E '^[[:space:]]*if systemctl is-enabled ' "$GREETD_LIB" >/dev/null; then
+    ok "unit enable checks this system, not the live session"
+else
+    err "enable_unit must use systemctl --root=/ so the live NetworkManager does not skip the install"
+fi
 
 if python3 - "$ROOT/install/system/greetd/config.toml" "$ROOT/install/system/greetd/kiosk.sh" "$ROOT/install/system/greetd/hyprland.lua" <<'PY'; then
 import re, shlex, sys

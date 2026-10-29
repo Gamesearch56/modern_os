@@ -47,17 +47,21 @@ greetd_user_for_home() {
 
 # One unit per call: `systemctl enable a b c` aborts the whole list on the
 # first missing unit, so one absent package used to take the install down.
+# --root=/ reads this filesystem. During install, /run is the live
+# session, where NetworkManager is already enabled. A plain is-enabled
+# then skips the installed copy, systemd-networkd has been removed, and
+# the new system boots with no address.
 enable_unit() {
     local unit="$1" need="$2"
     if [ "${DRY_RUN:-0}" = "1" ]; then
         greetd_log "would enable $unit ($need)"
         return 0
     fi
-    if systemctl is-enabled "$unit" >/dev/null 2>&1; then
+    if systemctl --root=/ is-enabled "$unit" >/dev/null 2>&1; then
         greetd_log "already enabled $unit"
         return 0
     fi
-    if greetd_as_root systemctl enable "$unit"; then
+    if greetd_as_root systemctl --root=/ enable "$unit"; then
         greetd_log "enabled $unit"
         return 0
     fi
