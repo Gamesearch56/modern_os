@@ -147,16 +147,16 @@ Item {
 
     RowLayout {
         id: body
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.fill: parent
         anchors.leftMargin: root._padH
         anchors.rightMargin: root._padH
         anchors.topMargin: root._padV
+        anchors.bottomMargin: root._padV
         spacing: root.compact ? Tokens.spacing.sm : Tokens.spacing.md
 
         Rectangle {
             visible: root.imageSource.length > 0 && thumb.status === Image.Ready
+            Layout.alignment: Qt.AlignVCenter
             Layout.preferredWidth: root.imageSize
             Layout.preferredHeight: root.imageSize
             radius: Tokens.radius.small
@@ -177,6 +177,9 @@ Item {
         MIcon {
             visible: (root.iconName.length > 0 || root.iconSource.length > 0)
                 && thumb.status !== Image.Ready
+            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredWidth: root._glyph
+            Layout.preferredHeight: root._glyph
             name: root.iconSource.length > 0 ? "" : root.iconName
             source: root.iconSource
             size: root._glyph
@@ -188,6 +191,8 @@ Item {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.preferredWidth: 0
+            Layout.fillHeight: false
+            Layout.alignment: Qt.AlignVCenter
             spacing: 0
 
             RowLayout {
@@ -223,6 +228,8 @@ Item {
                 color: Colors.color.onSurfaceVariant
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
+                Layout.preferredHeight: visible ? implicitHeight : 0
+                Layout.maximumHeight: visible ? implicitHeight : 0
                 wrapMode: root.subtitleLines > 1 ? Text.WordWrap : Text.NoWrap
                 maximumLineCount: Math.max(1, root.subtitleLines)
                 elide: Text.ElideRight
