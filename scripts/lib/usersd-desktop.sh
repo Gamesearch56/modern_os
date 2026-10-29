@@ -54,7 +54,7 @@ _usersd_invoker_repo() {
 
 _usersd_session_groups() {
     local g
-    for g in video input audio render seat i2c; do
+    for g in video input audio render seat i2c modern; do
         if [ "$DRY" -eq 1 ] || getent group "$g" >/dev/null 2>&1; then
             list_add "$g"
         fi
@@ -103,12 +103,30 @@ _usersd_copy_prefs() {
             | .language.firstDayOfWeek = ($src[0].language.firstDayOfWeek // .language.firstDayOfWeek)
             | .input.kbLayout = ($src[0].input.kbLayout // .input.kbLayout)
             | .input.kbVariant = ($src[0].input.kbVariant // .input.kbVariant)
+            | .monitors = ($src[0].monitors // .monitors)
         ' "$dest" >"$tmp"; then
             mv -f "$tmp" "$dest"
             return 0
         fi
         rm -f "$tmp"
     done < <(invoker_names)
+}
+
+_usersd_seed_keyring() {
+    local dest_home="$1" dir
+    dir="$dest_home/.local/share/keyrings"
+    mkdir -p "$dir" || return 0
+    chmod 0700 "$dir" || true
+    printf 'login\n' >"$dir/default"
+    chmod 0600 "$dir/default" || true
+}
+
+_usersd_install_greetd_pam() {
+    local src="${USERS_ROOT:-}/install/system/greetd/greetd.pam"
+    [ "${DRY:-0}" -eq 1 ] && return 0
+    [ -f "$src" ] || return 0
+    [ "$(id -u)" -eq 0 ] || return 0
+    install -m 0644 "$src" /etc/pam.d/greetd || true
 }
 
 _usersd_copy_deploy_key() {
@@ -157,7 +175,10 @@ provision_new_user_desktop() {
         bash "$dest/install/install.sh" --profile m0 --yes --dotfiles-only --target "$home" \
         || return 1
     _usersd_copy_prefs "$home" || true
+    _usersd_seed_keyring "$home" || true
+    _usersd_install_greetd_pam || true
     chown -h -- "$username:$grp" "$home/.config/modern/config.json" 2>/dev/null || true
+    chown -hR -- "$username:$grp" "$home/.local/share/keyrings" 2>/dev/null || true
     if [ -x "${USERS_ROOT:-}/scripts/session-users-sync.sh" ]; then
         bash "$USERS_ROOT/scripts/session-users-sync.sh" || true
     fi

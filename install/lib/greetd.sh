@@ -97,6 +97,9 @@ greetd_apply() {
 
     greetd_as_root install -d -m 0755 /etc/greetd
     greetd_as_root install -m 0644 "$repo/install/system/greetd/config.toml" /etc/greetd/config.toml
+    if [ -f "$repo/install/system/greetd/greetd.pam" ]; then
+        greetd_as_root install -m 0644 "$repo/install/system/greetd/greetd.pam" /etc/pam.d/greetd
+    fi
     greetd_as_root install -m 0644 "$repo/install/system/greetd/hyprland.lua" /etc/greetd/hyprland.lua
     greetd_as_root install -m 0755 "$repo/install/system/greetd/kiosk.sh" /etc/greetd/kiosk.sh
     greetd_as_root install -m 0755 "$repo/install/system/greetd/list-users.py" /etc/greetd/list-users.py

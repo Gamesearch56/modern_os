@@ -16,7 +16,17 @@ hl.on("hyprland.start", function()
         .. "exec qs -c modern >>\"$log\" 2>&1'")
 
     hl.exec_cmd("awww-daemon")
-    hl.exec_cmd("sh -lc 'img=/var/lib/modern/session/wallpaper.jpg; state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; default=\"$HOME/.config/modern/wallpapers/default.jpg\"; if [ -f \"$img\" ]; then :; elif [ -f \"$state\" ]; then img=$(cat \"$state\"); elif [ -f \"$default\" ]; then img=\"$default\"; else exit 0; fi; [ -f \"$img\" ] && awww img \"$img\" --transition-type none'")
+    -- Own current-wallpaper first. The shared greeter JPEG is last so a
+    -- new account keeps the shipped default instead of the previous seat.
+    hl.exec_cmd("sh -lc '"
+        .. "state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; "
+        .. "default=\"$HOME/.config/modern/wallpapers/default.jpg\"; "
+        .. "shared=/var/lib/modern/session/wallpaper.jpg; "
+        .. "if [ -f \"$state\" ]; then img=$(cat \"$state\"); "
+        .. "elif [ -f \"$default\" ]; then img=\"$default\"; "
+        .. "elif [ -f \"$shared\" ]; then img=\"$shared\"; "
+        .. "else exit 0; fi; "
+        .. "[ -f \"$img\" ] && awww img \"$img\" --transition-type none'")
 
     -- Background: import/dbus/polkit overlap; phylax waits on them.
     hl.exec_cmd("sh -lc '("

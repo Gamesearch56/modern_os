@@ -1,0 +1,14 @@
+#%PAM-1.0
+# greetd's PAM service. Copied by install/lib/greetd.sh and by
+# usersd when it provisions a new home. gnome-keyring is optional so a
+# host without the package still logs in; auto_start unlocks the login
+# keyring with the password just typed so libsecret/Electron do not
+# prompt for a separate Default Keyring.
+
+auth       required     pam_securetty.so
+auth       requisite    pam_nologin.so
+auth       include      system-local-login
+auth       optional     pam_gnome_keyring.so
+account    include      system-local-login
+session    include      system-local-login
+session    optional     pam_gnome_keyring.so auto_start

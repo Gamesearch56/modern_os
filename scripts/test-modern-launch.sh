@@ -33,6 +33,20 @@ else
     err "autostart.lua must require session_apps.on_start"
 fi
 
+if grep -Fq 'current-wallpaper' "$AUTO" \
+    && grep -Fq 'session/wallpaper.jpg' "$AUTO" \
+    && grep -Fq 'transition-type none' "$AUTO"; then
+    state_line="$(grep -n 'current-wallpaper' "$AUTO" | head -1 | cut -d: -f1)"
+    shared_line="$(grep -n 'session/wallpaper.jpg' "$AUTO" | head -1 | cut -d: -f1)"
+    if [ -n "$state_line" ] && [ -n "$shared_line" ] && [ "$state_line" -le "$shared_line" ]; then
+        ok "login wallpaper prefers the session account over the greeter snapshot"
+    else
+        err "autostart must read current-wallpaper before session/wallpaper.jpg"
+    fi
+else
+    err "autostart must restore current-wallpaper, then default, then the greeter JPEG"
+fi
+
 if [[ ! -f "$MATCH" ]]; then
     err "session_match.lua missing from stow (restow hypr after adding it)"
 elif grep -Fq 'pcall(require, "modules.session_match")' "$SESSION" \
