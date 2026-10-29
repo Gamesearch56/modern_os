@@ -1103,6 +1103,7 @@
       "speedDns": "DNS",
       "speedConnect": "Verbindung",
       "speedHttp": "HTTP",
+      "speedFailed": "Die Verbindung konnte nicht gemessen werden.",
       "mb": "{n} MB",
       "seconds": "{n} s",
       "ms": "{n} ms",

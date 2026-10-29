@@ -2,6 +2,30 @@
 -- (that slider is shell chrome). Rounding follows Tokens.radius.medium.
 local config = require("modules.config")
 
+-- virtio, qxl, vmware, and bochs paint the acrylic shader as solid
+-- black. The bar strip, imv, and the capture overlay are transparent,
+-- so a virtual display goes black while a real GPU stays frosted.
+local function virtual_gpu()
+    for i = 0, 7 do
+        local f = io.open("/sys/class/drm/card" .. i .. "/device/uevent", "r")
+        if f then
+            local raw = (f:read("*a") or ""):lower()
+            f:close()
+            if raw:find("virtio", 1, true) or raw:find("qxl", 1, true)
+                or raw:find("vmwgfx", 1, true) or raw:find("bochs", 1, true)
+                or raw:find("vboxvideo", 1, true) or raw:find("hyperv", 1, true) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local soft = virtual_gpu()
+if soft then
+    hl.env("MODERN_SOFTWARE_GPU", "1")
+end
+
 local rounding = math.floor(16 * (config.value("design.cornerRounding", 1.0)))
 local blur = config.value("design.blurStrength", 40)
 local win_alpha = math.max(0, math.min(1, config.value("windows.opacity", 1.0)))
@@ -22,7 +46,7 @@ hl.config({
         active_opacity = win_alpha,
         inactive_opacity = win_alpha,
         blur = {
-            enabled = true,
+            enabled = not soft,
             -- Acrylic is the only new blur that still reads as frosted
             -- material. Streaks, ripples, and cracked ice fight tonal
             -- surfaces. Bulb/refraction draw a lit glass rim that
@@ -86,7 +110,7 @@ hl.config({
     },
 })
 
-if hl.layer_rule then
+if hl.layer_rule and not soft then
     hl.layer_rule({
         name = "quickshell-blur",
         match = { namespace = "quickshell" },

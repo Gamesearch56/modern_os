@@ -46,8 +46,17 @@ ColumnLayout {
         indeterminate: true
     }
 
+    MText {
+        visible: Network.speedFailed && !Network.speedTesting
+        key: "settings.network.speedFailed"
+        styleName: "bodyMedium"
+        color: Colors.color.error
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+    }
+
     GridLayout {
-        visible: Network.speedDone
+        visible: Network.speedDone && !Network.speedFailed
         Layout.fillWidth: true
         Layout.topMargin: Tokens.spacing.md
         columns: 2

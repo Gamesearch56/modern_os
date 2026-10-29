@@ -84,6 +84,15 @@ apply({
     suppress_event = "maximize",
 })
 
+-- imv fills its tile. On a virtual GPU the acrylic pass replaces that
+-- tile with black, so the picture never shows. A real GPU is unchanged
+-- because the viewer background is already opaque.
+apply({
+    name = "imv-no-blur",
+    match = { class = "imv" },
+    no_blur = true,
+})
+
 -- Phylax (GTK4 polkit agent) app_id. Glass like Settings chrome:
 -- float+center, dim_around as scrim, design.transparency.
 -- pin keeps the prompt above modern.store / modern.settings.

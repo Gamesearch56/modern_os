@@ -10,6 +10,7 @@ Item {
 
     property bool testing: false
     property bool done: false
+    property bool failed: false
     property real mbps: 0
     property real bytes: 0
     property real seconds: 0
@@ -22,6 +23,7 @@ Item {
             return;
         root.testing = true;
         root.done = false;
+        root.failed = false;
         root.mbps = 0;
         root.bytes = 0;
         root.seconds = 0;
@@ -32,8 +34,14 @@ Item {
     }
 
     function _parse(text: string) {
+        root.testing = false;
         try {
             const obj = JSON.parse((text || "").trim());
+            if (obj.ok === false) {
+                root.failed = true;
+                root.done = false;
+                return;
+            }
             const bps = Number(obj.speed);
             if (!isNaN(bps) && bps > 0)
                 root.mbps = bps * 8 / 1000000;
@@ -42,11 +50,12 @@ Item {
             root.dnsMs = Math.round((Number(obj.dns) || 0) * 1000);
             root.connectMs = Math.round((Number(obj.connect) || 0) * 1000);
             root.http = Number(obj.code) || 0;
+            root.failed = false;
             root.done = true;
         } catch (e) {
-            Logger.error("Network", String(e));
+            root.failed = true;
+            root.done = false;
         }
-        root.testing = false;
     }
 
     Process {

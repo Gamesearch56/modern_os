@@ -19,12 +19,36 @@ fi
 out="$("$SCRIPT")"
 if printf '%s\n' "$out" | python3 -c 'import json,sys
 o=json.load(sys.stdin)
-assert o["speed"]>0 and o["bytes"]>0 and o["time"]>0
+assert o["ok"] is True and o["speed"]>0 and o["bytes"]>0 and o["time"]>0
 assert "dns" in o and "connect" in o and str(o["code"])
 '; then
     ok "fixture prints a speed JSON object"
 else
     err "fixture json: $out"
+fi
+
+MODERN_TEST_FIXTURE=fail
+fail="$("$SCRIPT")"
+if printf '%s\n' "$fail" | python3 -c 'import json,sys
+o=json.load(sys.stdin)
+assert o["ok"] is False and o["bytes"]==0
+'; then
+    ok "a failed run still prints JSON"
+else
+    err "fail fixture json: $fail"
+fi
+unset MODERN_TEST_FIXTURE
+export MODERN_TEST_FIXTURE=1
+
+if grep -F 'curl' "$ROOT/install/manifests/10-desktop.txt" >/dev/null \
+    && grep -F 'speedFailed' "$ROOT/stow/shell/.config/quickshell/modern/Services/Network.qml" >/dev/null \
+    && grep -F '"speedFailed"' \
+        "$ROOT/stow/modern/.config/modern/translations/en.json" >/dev/null \
+    && grep -F '"speedFailed"' \
+        "$ROOT/stow/modern/.config/modern/translations/de.json" >/dev/null; then
+    ok "speed test ships curl and a readable failure"
+else
+    err "curl manifest and speedFailed copy required"
 fi
 
 if grep -F 'Paths.script("network-speed.sh")' \

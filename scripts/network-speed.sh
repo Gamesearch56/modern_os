@@ -9,12 +9,20 @@ die() { printf 'network-speed: ERROR: %s\n' "$*" >&2; exit 1; }
 
 [ "$#" -eq 0 ] || die "usage: network-speed.sh"
 
+fail_json() {
+    printf '%s\n' '{"ok":false,"speed":0,"bytes":0,"time":0,"dns":0,"connect":0,"code":"0"}'
+}
+
 if [ "${MODERN_TEST_FIXTURE:-}" = "1" ]; then
-    printf '%s\n' '{"speed":125000000,"bytes":1875000000,"time":15,"dns":0.02,"connect":0.05,"code":"200"}'
+    printf '%s\n' '{"ok":true,"speed":125000000,"bytes":1875000000,"time":15,"dns":0.02,"connect":0.05,"code":"200"}'
+    exit 0
+fi
+if [ "${MODERN_TEST_FIXTURE:-}" = "fail" ]; then
+    fail_json
     exit 0
 fi
 
-command -v curl >/dev/null 2>&1 || die "curl missing"
+command -v curl >/dev/null 2>&1 || { fail_json; exit 0; }
 
 URL="${MODERN_SPEED_URL:-https://geo.mirror.pkgbuild.com/iso/latest/archlinux-x86_64.iso}"
 STREAMS=4
@@ -30,7 +38,8 @@ start_ns="$(date +%s%N)"
 pids=()
 i=0
 while [ "$i" -lt "$STREAMS" ]; do
-    curl -L --tcp-nodelay --connect-timeout "$CONNECT" --max-time "$MAX_TIME" \
+    curl -L --tcp-nodelay --happy-eyeballs-timeout-ms 300 \
+        --connect-timeout "$CONNECT" --max-time "$MAX_TIME" \
         -o /dev/null -s -w "${WRITE}\n" "$URL" >"$DIR/$i.json" || true &
     pids+=("$!")
     i=$((i + 1))
@@ -58,8 +67,11 @@ for p in sorted(d.glob("*.json")):
         continue
 bytes_ = sum(max(0, int(float(r.get("bytes") or 0))) for r in rows)
 if bytes_ <= 0:
-    print("network-speed: ERROR: no bytes downloaded", file=sys.stderr)
-    sys.exit(1)
+    print(json.dumps({
+        "ok": False, "speed": 0, "bytes": 0, "time": elapsed,
+        "dns": 0, "connect": 0, "code": "0",
+    }, separators=(",", ":")))
+    sys.exit(0)
 dns = min((float(r.get("dns") or 0) for r in rows), default=0)
 connect = min((float(r.get("connect") or 0) for r in rows), default=0)
 code = "000"
@@ -70,6 +82,7 @@ for r in rows:
         if c == "200" or c == "206":
             break
 print(json.dumps({
+    "ok": True,
     "speed": bytes_ / elapsed,
     "bytes": bytes_,
     "time": elapsed,

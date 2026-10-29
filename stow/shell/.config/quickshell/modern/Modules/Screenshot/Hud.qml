@@ -40,6 +40,8 @@ PanelWindow {
         readonly property real selY: Math.min(hud.y0, hud.y1)
         readonly property real selW: Math.abs(hud.x1 - hud.x0)
         readonly property real selH: Math.abs(hud.y1 - hud.y0)
+        // A virtual GPU draws this fullscreen wash as solid black.
+        readonly property bool softwareGpu: Quickshell.env("MODERN_SOFTWARE_GPU") === "1"
 
         function outputName() {
             const scr = root.screen;
@@ -53,7 +55,7 @@ PanelWindow {
 
         component DimBand: Rectangle {
             color: Colors.color.scrim
-            opacity: Tokens.overlay.scrim
+            opacity: hud.softwareGpu ? 0 : Tokens.overlay.scrim
         }
 
         DimBand {
