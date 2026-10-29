@@ -271,7 +271,11 @@ else
     log_ok "wrote $STATE_DIR/hw.json"
 fi
 
-run systemctl --user daemon-reload 2>/dev/null || true
+if [ -S "${XDG_RUNTIME_DIR:-}/bus" ]; then
+    run systemctl --user daemon-reload 2>/dev/null || true
+else
+    log_info "no user session bus — skip daemon-reload"
+fi
 
 # tokens.json + lock/login assets come from the shipped default wallpaper
 # (stow/modern/.../wallpapers/default.jpg) so a first session is not
@@ -310,7 +314,9 @@ if [ -d "$shipped_wp_dir" ]; then
     done
 fi
 wallpaper_state="$STATE_DIR/current-wallpaper"
-if command -v matugen >/dev/null 2>&1; then
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "dotfiles-only: skipping theme-apply (no session bus)"
+elif command -v matugen >/dev/null 2>&1; then
     if [ -f "$wallpaper_state" ]; then
         run "${theme_env[@]}" "$REPO_ROOT/scripts/theme-apply.sh" --no-reload \
             || log_warn "theme-apply.sh failed — re-run it after Hyprland is up"
@@ -333,8 +339,12 @@ run "$REPO_ROOT/scripts/mime-defaults.sh" \
     --config "$TARGET/.config/modern/config.json" \
     --mimeapps "$TARGET/.config/mimeapps.list" \
     || log_warn "mime-defaults.sh failed — set video/image/text/folder defaults in Settings → Applications"
-run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
-    || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "dotfiles-only: skipping nautilus-prefs (gsettings needs a session)"
+else
+    run "${theme_env[@]}" "$REPO_ROOT/scripts/nautilus-prefs.sh" \
+        || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
+fi
 
 # Patched Phylax Confirms as $USER. Without it, phylax.service falls
 # back to the AUR binary and the identity dropdown returns.

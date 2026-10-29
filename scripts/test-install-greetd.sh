@@ -14,7 +14,8 @@ LIB="$ROOT/install/lib/greetd.sh"
 if grep -F "source \"\$REPO_ROOT/install/lib/greetd.sh\"" "$INSTALL" >/dev/null \
     && grep -F 'greetd_target_is_live_user' "$INSTALL" >/dev/null \
     && grep -F 'greetd_apply' "$INSTALL" >/dev/null \
-    && grep -F 'skipping greetd (dotfiles-only)' "$INSTALL" >/dev/null; then
+    && grep -F 'skipping greetd (dotfiles-only)' "$INSTALL" >/dev/null \
+    && grep -F 'skipping theme-apply' "$INSTALL" >/dev/null; then
     ok "install.sh sources greetd.sh and calls greetd_apply"
 else
     err "install.sh must source greetd.sh and apply on a login home"

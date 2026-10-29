@@ -63,25 +63,39 @@ _usersd_session_groups() {
 
 _usersd_clone_tree() {
     local src="$1" dest="$2"
-    if [ -x "$dest/install/install.sh" ]; then
-        return 0
-    fi
+    case "$dest" in
+        */modern_dotfile) ;;
+        *) return 1 ;;
+    esac
+    local d
     mkdir -p "$(dirname "$dest")" || return 1
-    if [ -d "$src/.git" ]; then
-        GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
-            git -c core.hooksPath=/dev/null -c protocol.file.allow=always \
-            clone -- "$src" "$dest" || return 1
-    else
-        mkdir -p "$dest" || return 1
-        tar -C "$src" --exclude=iso/out -cf - . \
+    rm -rf "$dest"
+    mkdir -p "$dest" || return 1
+    # Live stow/install/scripts only — not `git clone` of HEAD (that
+    # skipped uncommitted install.sh and reused a stale dest, then
+    # Settings waited on sudo pacman) and not iso/out.
+    for d in stow install scripts; do
+        [ -d "$src/$d" ] || return 1
+        tar -C "$src" --exclude=iso/out --exclude=.git -cf - "$d" \
             | tar -C "$dest" --no-same-owner --no-overwrite-dir -xf - \
             || return 1
-    fi
-    if [ -d "$dest/.git" ]; then
-        GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
-            git -C "$dest" -c core.hooksPath=/dev/null config core.hooksPath /dev/null \
-            || true
-    fi
+    done
+    [ -x "$dest/install/install.sh" ] || return 1
+}
+
+_usersd_seed_tokens() {
+    local dest_home="$1" inv home src dest
+    dest="$dest_home/.config/modern/tokens.json"
+    [ -f "$dest" ] && return 0
+    while IFS= read -r inv; do
+        [ -n "$inv" ] || continue
+        home="$(getent passwd -- "$inv" 2>/dev/null | cut -d: -f6)"
+        src="$home/.config/modern/tokens.json"
+        [ -f "$src" ] && [ ! -L "$src" ] || continue
+        install -d -m 0755 "$dest_home/.config/modern"
+        install -m 0644 "$src" "$dest"
+        return 0
+    done < <(invoker_names)
 }
 
 _usersd_copy_deploy_key() {
@@ -111,16 +125,22 @@ provision_new_user_desktop() {
     dest="$home/modern_dotfile"
     _usersd_clone_tree "$src" "$dest" || return 1
     _usersd_copy_deploy_key "$home" || true
+    _usersd_seed_tokens "$home" || true
     grp="$(id -gn -- "$username")"
     chown -hR "$username:$grp" "$home"
     lang="$(awk -F= '/^LANG=/{ gsub(/"/, "", $2); print $2; exit }' /etc/locale.conf 2>/dev/null || true)"
     lang="${lang:-C.UTF-8}"
     command -v runuser >/dev/null 2>&1 || return 1
-    runuser -u "$username" -- env HOME="$home" USER="$username" LOGNAME="$username" \
+    [ -x "$dest/install/install.sh" ] || return 1
+    # env -i: a leaked D-Bus/sudo from the admin pkexec made install.sh
+    # wait on pacman. timeout: Settings must not spin forever.
+    timeout 90 runuser -u "$username" -- env -i \
+        HOME="$home" USER="$username" LOGNAME="$username" \
+        PATH="/usr/bin:/bin" \
         XDG_CONFIG_HOME="$home/.config" \
         XDG_STATE_HOME="$home/.local/state" \
         XDG_DATA_HOME="$home/.local/share" \
-        LANG="$lang" LC_MESSAGES="$lang" \
+        LANG="$lang" LC_MESSAGES="$lang" LC_ALL="$lang" \
         GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
         bash "$dest/install/install.sh" --profile m0 --yes --dotfiles-only --target "$home" \
         || return 1
