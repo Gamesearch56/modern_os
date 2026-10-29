@@ -48,6 +48,8 @@ if grep -F 'capsLock' "$ROOT/scripts/session-chrome-sync.sh" >/dev/null \
     && grep -F 'session-monitors-sync.sh' "$ROOT/scripts/wallpaper-sync.sh" >/dev/null \
     && grep -F 'keyboard.json' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
     && grep -F 'accountTitle' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionChrome.qml" >/dev/null \
+    && ! grep -F 'session.admin' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionChrome.qml" >/dev/null \
+    && ! grep -F 'session.admin' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionIdentity.qml" >/dev/null \
     && grep -F 'SessionUsers' "$ROOT/stow/greeter/.config/quickshell/greeter/shell.qml" >/dev/null \
     && grep -F 'modern-users.json' "$ROOT/install/system/greetd/kiosk.sh" >/dev/null \
     && grep -F 'monitors.json' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \

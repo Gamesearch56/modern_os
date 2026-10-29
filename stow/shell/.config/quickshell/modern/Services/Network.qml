@@ -84,6 +84,7 @@ Singleton {
     signal joinFinished(string op, string ssid, bool ok)
     readonly property bool speedTesting: speed.testing
     readonly property bool speedDone: speed.done
+    readonly property bool speedFailed: speed.failed
     readonly property real speedMbps: speed.mbps
     readonly property real speedBytes: speed.bytes
     readonly property real speedSeconds: speed.seconds

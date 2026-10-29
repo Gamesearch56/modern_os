@@ -166,6 +166,18 @@ else
     err "primaryDescription + ProfileForm + no games snap_primary required"
 fi
 
+if grep -Fq 'virtual_gpu' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'virtio' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'MODERN_SOFTWARE_GPU' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'enabled = not soft' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'imv-no-blur' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && grep -Fq 'MODERN_SOFTWARE_GPU' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Modules/Screenshot/Hud.qml"; then
+    ok "virtual GPUs skip acrylic blur so the bar, images, and capture stay visible"
+else
+    err "virtual GPU must disable blur and keep imv and capture from going black"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

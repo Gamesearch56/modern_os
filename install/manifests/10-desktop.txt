@@ -19,6 +19,7 @@ qt6-declarative                 # qml6 for wallpaper-provider.sh
 qt6-webengine                   # wallpaper provider: WebEngine process (scripts/wallpaper-provider.sh)
 qt6ct                           # Qt6 theme configuration, written by theme-apply.sh
 networkmanager                  # network management daemon
+curl                             # Settings speed test (scripts/network-speed.sh)
 bluez                            # bluetoothd + bluetooth.service; org.bluez for Services/Bluetooth
 bluez-utils                      # bluetoothctl and friends (does not depend on bluez)
 kdeconnect                       # Android integration — see Services/KdeConnect
