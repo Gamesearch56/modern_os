@@ -85,10 +85,20 @@ Scope {
             visible: Notifications.panelOpen
             screen: root._focusedScreen()
             color: "transparent"
-            anchors.top: true
-            anchors.left: true
-            anchors.right: true
-            anchors.bottom: true
+            // Fullscreen transparent layers go black on a virtual GPU.
+            // The card stays; a desktop GPU keeps the click-outside layer.
+            readonly property bool _soft: Chrome.softwareGpu
+            readonly property real _cardW: Tokens.spacing.xxl * 16 + (Config.bar.endGap ?? Tokens.spacing.md)
+            anchors.top: overlay._soft ? Config.bar.position !== "bottom" : true
+            anchors.bottom: overlay._soft ? Config.bar.position === "bottom" : true
+            anchors.left: overlay._soft ? Config.bar.position === "left" : true
+            anchors.right: overlay._soft ? Config.bar.position !== "left" : true
+            implicitWidth: overlay._soft ? overlay._cardW : 0
+            implicitHeight: overlay._soft ? Math.min(overlay.screen ? overlay.screen.height : Tokens.spacing.xxl * 24, Tokens.spacing.xxl * 24) : 0
+            margins.top: overlay._soft && Config.bar.position === "top" ? overlay._barReserve : 0
+            margins.bottom: overlay._soft && Config.bar.position === "bottom" ? overlay._barReserve : 0
+            margins.left: overlay._soft && Config.bar.position === "left" ? overlay._barReserve : 0
+            margins.right: overlay._soft && Config.bar.position === "right" ? overlay._barReserve : 0
             exclusionMode: ExclusionMode.Ignore
             focusable: true
             aboveWindows: true
@@ -106,10 +116,10 @@ Scope {
 
             Item {
                 anchors.fill: parent
-                anchors.topMargin: Config.bar.position === "top" ? overlay._barReserve : 0
-                anchors.bottomMargin: Config.bar.position === "bottom" ? overlay._barReserve : 0
-                anchors.leftMargin: Config.bar.position === "left" ? overlay._barReserve : 0
-                anchors.rightMargin: Config.bar.position === "right" ? overlay._barReserve : 0
+                anchors.topMargin: overlay._soft ? 0 : (Config.bar.position === "top" ? overlay._barReserve : 0)
+                anchors.bottomMargin: overlay._soft ? 0 : (Config.bar.position === "bottom" ? overlay._barReserve : 0)
+                anchors.leftMargin: overlay._soft ? 0 : (Config.bar.position === "left" ? overlay._barReserve : 0)
+                anchors.rightMargin: overlay._soft ? 0 : (Config.bar.position === "right" ? overlay._barReserve : 0)
 
                 Panel {
                     anchors.fill: parent

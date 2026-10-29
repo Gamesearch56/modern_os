@@ -2,28 +2,82 @@
 -- (that slider is shell chrome). Rounding follows Tokens.radius.medium.
 local config = require("modules.config")
 
--- virtio, qxl, vmware, and bochs paint the acrylic shader as solid
--- black. The bar strip, imv, and the capture overlay are transparent,
--- so a virtual display goes black while a real GPU stays frosted.
+-- A virtual display paints Hyprland's acrylic blur, FP16 buffer, and
+-- color-management pass as solid black. Transparent shell surfaces (the
+-- bar strip, a widget popup, image viewers) then cover the desktop.
+-- NVIDIA, AMD, and Intel keep the frosted path, including when a
+-- leftover simple-framebuffer card sits beside the real GPU.
+local real_vendor = {
+    ["0x10de"] = true, -- NVIDIA
+    ["0x1002"] = true, -- AMD
+    ["0x8086"] = true, -- Intel
+}
+local virtual_vendor = {
+    ["0x1af4"] = true, -- Red Hat virtio
+    ["0x1234"] = true, -- QEMU / Bochs
+    ["0x1b36"] = true, -- QXL
+    ["0x15ad"] = true, -- VMware
+    ["0x80ee"] = true, -- VirtualBox
+    ["0x1414"] = true, -- Hyper-V
+}
+
+local function slurp(path)
+    local f = io.open(path, "r")
+    if not f then
+        return ""
+    end
+    local raw = f:read("*a") or ""
+    f:close()
+    return raw:lower()
+end
+
+local function virtual_driver(text)
+    return text:find("virtio", 1, true) or text:find("qxl", 1, true)
+        or text:find("vmwgfx", 1, true) or text:find("bochs", 1, true)
+        or text:find("vbox", 1, true) or text:find("hyperv", 1, true)
+        or text:find("virgl", 1, true) or text:find("vkms", 1, true)
+end
+
+local function simple_fb(text)
+    return text:find("simple-framebuffer", 1, true) or text:find("simpledrm", 1, true)
+        or text:find("ramfb", 1, true)
+end
+
 local function virtual_gpu()
-    for i = 0, 7 do
-        local f = io.open("/sys/class/drm/card" .. i .. "/device/uevent", "r")
-        if f then
-            local raw = (f:read("*a") or ""):lower()
-            f:close()
-            if raw:find("virtio", 1, true) or raw:find("qxl", 1, true)
-                or raw:find("vmwgfx", 1, true) or raw:find("bochs", 1, true)
-                or raw:find("vboxvideo", 1, true) or raw:find("hyperv", 1, true) then
-                return true
+    local real, virt, simple = false, false, false
+    for i = 0, 15 do
+        local base = "/sys/class/drm/card" .. i
+        local vendor = (slurp(base .. "/device/vendor"):gsub("%s+", ""))
+        local uevent = slurp(base .. "/device/uevent")
+        if vendor ~= "" or uevent ~= "" then
+            if real_vendor[vendor] then
+                real = true
+            end
+            if virtual_vendor[vendor] or virtual_driver(uevent) then
+                virt = true
+            elseif simple_fb(uevent) then
+                simple = true
             end
         end
     end
-    return false
+    -- A passed-through desktop GPU wins over the hypervisor flag and
+    -- over a firmware framebuffer that is still registered.
+    if real then
+        return false
+    end
+    if virt or simple then
+        return true
+    end
+    return slurp("/proc/cpuinfo"):find("hypervisor", 1, true) ~= nil
 end
 
 local soft = virtual_gpu()
 if soft then
     hl.env("MODERN_SOFTWARE_GPU", "1")
+    -- Virtio's GLES path drops the alpha channel. The software scene
+    -- graph writes a real ARGB buffer, so the bar and popups stay
+    -- see-through instead of covering the desktop.
+    hl.env("QSG_RHI_BACKEND", "software")
 end
 
 local rounding = math.floor(16 * (config.value("design.cornerRounding", 1.0)))
@@ -55,7 +109,7 @@ hl.config({
             variant = "acrylic",
             size = math.floor(blur / 10),
             passes = 2,
-            new_optimizations = true,
+            new_optimizations = not soft,
             acrylic = {
                 aberration = 0,
                 refraction = 0,
@@ -107,14 +161,26 @@ hl.config({
     },
     render = {
         cm_auto_hdr = 0,
+        -- Both default on. On a virtual GPU their shaders replace any
+        -- translucent layer with black; a desktop GPU is left as shipped.
+        cm_enabled = not soft,
+        use_fp16 = soft and 0 or 2,
     },
 })
 
-if hl.layer_rule and not soft then
-    hl.layer_rule({
-        name = "quickshell-blur",
-        match = { namespace = "quickshell" },
-        blur = true,
-        ignore_alpha = 0.2,
-    })
+if hl.layer_rule then
+    if soft then
+        hl.layer_rule({
+            name = "quickshell-noblur",
+            match = { namespace = "quickshell" },
+            blur = false,
+        })
+    else
+        hl.layer_rule({
+            name = "quickshell-blur",
+            match = { namespace = "quickshell" },
+            blur = true,
+            ignore_alpha = 0.2,
+        })
+    end
 end
