@@ -210,14 +210,59 @@ else
 fi
 rm -rf "$langdir"
 
+# xdg-user-dirs-update follows LANG. The live ISO is often English, so
+# as_user must pass the target's locale.conf, not inherit the installer.
+udir="$(mktemp -d)"
+printf 'LANG=de_DE.UTF-8\n' >"$udir/locale.conf"
+{
+    printf 'set -euo pipefail\n'
+    printf 'MODERN_LOCALE_CONF=%s/locale.conf\n' "$udir"
+    sed -n '/^user_locale_lang()/,/^}$/p' "$LATE"
+    printf 'user_locale_lang\n'
+} >"$udir/lang.sh"
+if [ "$(bash "$udir/lang.sh")" = "de_DE.UTF-8" ]; then
+    ok "user_locale_lang reads LANG from locale.conf"
+else
+    err "user_locale_lang: $(bash "$udir/lang.sh" 2>&1 || true)"
+fi
+{
+    printf 'set -euo pipefail\n'
+    printf 'MODERN_LATE_TEST=1\n'
+    printf 'USERNAME=test\n'
+    printf 'USER_HOME=%s\n' "$udir"
+    printf 'MODERN_LOCALE_CONF=%s/locale.conf\n' "$udir"
+    sed -n '/^user_locale_lang()/,/^}$/p' "$LATE"
+    sed -n '/^as_user()/,/^}$/p' "$LATE"
+    printf 'as_user printenv LANG\n'
+} >"$udir/as.sh"
+if [ "$(bash "$udir/as.sh")" = "de_DE.UTF-8" ]; then
+    ok "as_user exports the target LANG"
+else
+    err "as_user LANG: $(bash "$udir/as.sh" 2>&1 || true)"
+fi
+rm -rf "$udir"
+
+if grep -A 40 '^as_user()' "$LATE" | grep -q 'LANG='; then
+    ok "as_user passes LANG to install.sh"
+else
+    err "as_user must export LANG so xdg-user-dirs-update is localized"
+fi
+
 # The greeter picks its strings up from chrome.json (session-chrome-sync.sh
 # from language.ui), so provision has to set the language before wallpaper-sync.
 lang_line="$(grep -n '^apply_system_language$' "$PROVISION" | head -1 | cut -d: -f1)"
 sync_line="$(grep -n 'wallpaper-sync.sh' "$PROVISION" | head -1 | cut -d: -f1)"
+seed_line="$(grep -n 'xdg-capture-seed.sh' "$PROVISION" | head -1 | cut -d: -f1)"
 if [ -n "$lang_line" ] && [ -n "$sync_line" ] && [ "$lang_line" -lt "$sync_line" ]; then
     ok "the language is set before the greeter's chrome.json is baked"
 else
     err "apply_system_language must run before wallpaper-sync.sh (greeter strings)"
+fi
+if [ -n "$lang_line" ] && [ -n "$seed_line" ] && [ -n "$sync_line" ] \
+    && [ "$lang_line" -lt "$seed_line" ] && [ "$seed_line" -lt "$sync_line" ]; then
+    ok "capture folders are seeded after the installed language"
+else
+    err "xdg-capture-seed.sh must run after apply_system_language and before wallpaper-sync"
 fi
 
 CHROME="$ROOT/scripts/session-chrome-sync.sh"

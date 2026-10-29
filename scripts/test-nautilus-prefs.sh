@@ -59,12 +59,39 @@ else
     err "dangling nautilus config dir still $(ls -ld "$HOME/.config/nautilus" 2>/dev/null || echo missing)"
 fi
 
-if grep -F 'xdg-user-dir' "$ROOT/scripts/nautilus-prefs.sh" >/dev/null \
+if grep -F 'xdg_user_dir' "$ROOT/scripts/nautilus-prefs.sh" >/dev/null \
     && grep -F 'DOWNLOAD PICTURES VIDEOS' "$ROOT/scripts/nautilus-prefs.sh" >/dev/null \
     && grep -F 'bookmarks' "$ROOT/stow/gtk/.stow-local-ignore" >/dev/null; then
     ok "stow will not ship a hardcoded bookmarks file"
 else
     err "nautilus-prefs / stow-local-ignore missing the XDG seed"
+fi
+
+bindir="$TMP/bin"
+mkdir -p "$bindir" "$TMP/dehome/.config"
+cat >"$bindir/xdg-user-dir" <<'EOF'
+#!/bin/sh
+case "$1" in
+    DOWNLOAD) printf '%s\n' "${HOME}/Downloads" ;;
+    PICTURES) printf '%s\n' "${HOME}/Bilder" ;;
+    VIDEOS) printf '%s\n' "${HOME}/Videos" ;;
+    *) printf '%s\n' "$HOME" ;;
+esac
+EOF
+cat >"$bindir/xdg-user-dirs-update" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+chmod +x "$bindir/xdg-user-dir" "$bindir/xdg-user-dirs-update"
+export HOME="$TMP/dehome"
+export LANG=de_DE.UTF-8
+unset XDG_CONFIG_HOME XDG_DATA_HOME
+if PATH="$bindir:$PATH" "$ROOT/scripts/nautilus-prefs.sh" --bookmarks-only \
+    && grep -F "file://$HOME/Bilder Bilder" "$HOME/.config/gtk-3.0/bookmarks" >/dev/null \
+    && grep -F "file://$HOME/Videos Videos" "$HOME/.config/gtk-3.0/bookmarks" >/dev/null; then
+    ok "German LANG bookmarks PICTURES as Bilder"
+else
+    err "German bookmarks were '$(cat "$HOME/.config/gtk-3.0/bookmarks" 2>/dev/null || echo missing)'"
 fi
 
 [ "$FAIL" -eq 0 ]

@@ -389,12 +389,29 @@ ensure_pts() {
         devpts /dev/pts 2>/dev/null || true
 }
 
+# Prefer the target's locale.conf over the live ISO LANG so
+# xdg-user-dirs-update creates Bilder rather than Pictures.
+user_locale_lang() {
+    local conf="${MODERN_LOCALE_CONF:-/etc/locale.conf}" line
+    if [ -f "$conf" ]; then
+        line="$(sed -nE "s/^[[:space:]]*LANG=[\"']?([^\"'[:space:]]+).*/\1/p" "$conf" | head -1)"
+        if [ -n "$line" ]; then
+            printf '%s\n' "$line"
+            return
+        fi
+    fi
+    printf '%s\n' "${LANG:-C.UTF-8}"
+}
+
 as_user() {
+    local lang
+    lang="$(user_locale_lang)"
     if [ -n "${MODERN_LATE_TEST:-}" ]; then
         env HOME="$USER_HOME" \
             XDG_CONFIG_HOME="$USER_HOME/.config" \
             XDG_STATE_HOME="$USER_HOME/.local/state" \
             XDG_DATA_HOME="$USER_HOME/.local/share" \
+            LANG="$lang" LC_MESSAGES="$lang" \
             GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
             MODERN_PACMAN_NOSANDBOX=1 \
             MODERN_SKIP_AUR=1 \
@@ -406,6 +423,7 @@ as_user() {
         XDG_CONFIG_HOME="$USER_HOME/.config" \
         XDG_STATE_HOME="$USER_HOME/.local/state" \
         XDG_DATA_HOME="$USER_HOME/.local/share" \
+        LANG="$lang" LC_MESSAGES="$lang" \
         GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
         MODERN_PACMAN_NOSANDBOX=1 \
         MODERN_SKIP_AUR=1 \

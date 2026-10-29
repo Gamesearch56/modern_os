@@ -55,13 +55,10 @@ merged() {
 }
 
 CFG="$(merged)"
-DIR="$(expand_home "$(jq -r '.screenshots.videoDirectory // "~/Videos/Recordings"' <<<"$CFG")")"
+DIR="$(xdg_resolve_recordings "$(jq -r '.screenshots.videoDirectory // "~/Videos/Recordings"' <<<"$CFG")")"
 TEMPLATE="$(jq -r '.screenshots.videoFilenameTemplate // "recording-%Y%m%d-%H%M%S"' <<<"$CFG")"
 AUDIO="$(jq -r '.screenshots.recordAudio // true' <<<"$CFG")"
 
-if [ -z "$DIR" ]; then
-    DIR="${XDG_VIDEOS_DIR:-$HOME/Videos}/Recordings"
-fi
 mkdir -p "$DIR"
 
 FILE="$DIR/$(date +"$TEMPLATE").mp4"

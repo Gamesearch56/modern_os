@@ -7,6 +7,12 @@ hl.config({
         ["col.active_border"] = "rgba({{colors.primary.default.hex_stripped}}ff)",
         ["col.inactive_border"] = "rgba({{colors.outline_variant.default.hex_stripped}}ff)",
     },
+    decoration = {
+        shadow = {
+            color = "rgba({{colors.shadow.default.hex_stripped}}1a)",
+            color_inactive = "rgba({{colors.shadow.default.hex_stripped}}14)",
+        },
+    },
 })
 
 return {}

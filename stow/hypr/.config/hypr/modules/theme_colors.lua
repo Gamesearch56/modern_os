@@ -32,6 +32,22 @@ local function apply_surface(surface)
     })
 end
 
+-- MD3 shadow role at elevation opacities (level 2 active / level 1
+-- inactive). Hyprland's unset color_inactive is opaque white.
+local function apply_shadow(shadow)
+    if type(shadow) ~= "string" or #shadow ~= 6 then
+        shadow = "000000"
+    end
+    hl.config({
+        decoration = {
+            shadow = {
+                color = "rgba(" .. shadow .. "1a)",
+                color_inactive = "rgba(" .. shadow .. "14)",
+            },
+        },
+    })
+end
+
 local home = os.getenv("HOME") or ""
 local tokens = nil
 local f = io.open(home .. "/.config/modern/tokens.json", "r")
@@ -45,10 +61,12 @@ if f then
 end
 
 local surface = tokens and hex_stripped(tokens.surface) or nil
+local shadow = tokens and hex_stripped(tokens.shadow) or nil
 
 local ok, generated = pcall(require, "modules.colors")
 if ok then
     apply_surface(surface)
+    apply_shadow(shadow)
     return generated
 end
 
@@ -67,4 +85,5 @@ if primary and outline then
     })
 end
 apply_surface(surface)
+apply_shadow(shadow)
 return {}

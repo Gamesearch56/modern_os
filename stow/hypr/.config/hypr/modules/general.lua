@@ -12,7 +12,7 @@ hl.config({
     general = {
         gaps_in = gaps_in,
         gaps_out = gaps_out,
-        border_size = 2,
+        border_size = 1,
         layout = "dwindle",
         resize_on_border = true,
         allow_tearing = config.value("gaming.autoOptimize", true) ~= false,
@@ -25,24 +25,28 @@ hl.config({
             enabled = true,
             -- Acrylic is the only new blur that still reads as frosted
             -- material. Streaks, ripples, and cracked ice fight tonal
-            -- surfaces. No chromatic fringe and no second edge radius:
-            -- corners stay the rounding token. Tint comes from the
-            -- surface role in theme_colors.lua.
+            -- surfaces. Bulb/refraction draw a lit glass rim that
+            -- fights MD3 hairline outline + tonal elevation; frost
+            -- stays in the surface. Tint comes from theme_colors.lua.
             variant = "acrylic",
             size = math.floor(blur / 10),
             passes = 2,
             new_optimizations = true,
             acrylic = {
                 aberration = 0,
-                refraction = 6,
-                bulb = 12,
+                refraction = 0,
+                -- Values below 4 are treated as unset and snap to the
+                -- 48px default rim. 4px is the floor that still applies.
+                bulb = 4,
                 clarity = 0.88,
                 tint = "0x00000000",
             },
         },
+        -- Elevation level 2: Tokens.elevation shadowRadius 6 at 10%
+        -- black. Color is applied from the shadow role in theme_colors.
         shadow = {
             enabled = true,
-            range = 12,
+            range = 6,
             render_power = 3,
         },
         -- A small give on move and resize. Intensity stays under

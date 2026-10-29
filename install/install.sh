@@ -267,10 +267,23 @@ run systemctl --user daemon-reload 2>/dev/null || true
 # unstyled. --no-reload: no Hyprland on this TTY yet. Failure must not
 # abort the install — Colors.qml already ships a dark baseline.
 # The rest of that directory is the preinstalled picker library; seed
-# missing names into Pictures/Wallpapers and never overwrite user files.
+# missing names into XDG Pictures/Wallpapers and never overwrite user files.
+# Stock capture paths in config.json follow the same locale folders.
+run env HOME="$TARGET" \
+    XDG_CONFIG_HOME="$TARGET/.config" \
+    XDG_STATE_HOME="$TARGET/.local/state" \
+    XDG_DATA_HOME="$TARGET/.local/share" \
+    "$REPO_ROOT/scripts/xdg-capture-seed.sh" "$CONFIG_DIR/config.json" \
+    || log_warn "xdg-capture-seed.sh skipped — capture folders stay at the config.json defaults"
 shipped_wp_dir="$TARGET/.config/modern/wallpapers"
 default_wp="$shipped_wp_dir/default.jpg"
-pictures="$TARGET/Pictures/Wallpapers"
+pictures="$(
+    export HOME="$TARGET"
+    export XDG_CONFIG_HOME="$TARGET/.config"
+    # shellcheck source=../scripts/lib/paths.sh
+    source "$REPO_ROOT/scripts/lib/paths.sh"
+    xdg_wallpapers_dir
+)"
 if [ -d "$shipped_wp_dir" ]; then
     run mkdir -p "$pictures"
     for f in "$shipped_wp_dir"/*; do
