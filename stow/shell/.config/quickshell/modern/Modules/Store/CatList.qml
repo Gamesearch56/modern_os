@@ -14,6 +14,7 @@ Flickable {
     contentWidth: width
     contentHeight: col.implicitHeight
     boundsBehavior: Flickable.StopAtBounds
+    interactive: contentHeight > height
 
     function itemAt(pos: int): var {
         if (pos < 0)
@@ -87,7 +88,7 @@ Flickable {
                 tabFocus: false
                 iconName: installedRow.rowData.icon || Store.iconFor(installedRow.rowData.id)
                 titleKey: "store.categories." + (installedRow.rowData.id || "")
-                selected: Store.categoryId === row.rowData.id && Store.query.trim().length === 0
+                selected: Store.categoryId === installedRow.rowData.id && Store.query.trim().length === 0
                 onClicked: Store.setCategory(installedRow.rowData.id)
             }
         }

@@ -28,6 +28,10 @@ Singleton {
     property string _checkText: ""
     property bool _checkDone: false
     property bool _desktopDone: false
+    property bool _queued: false
+    property var _omit: ({})
+    property int _gen: 0
+    property int _hold: 0
     property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, reason: "", iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
     signal finished(bool ok)
     signal notify(string summary, string body)
@@ -135,9 +139,24 @@ Singleton {
             root.refresh();
     }
 
+    function drop(name: string) {
+        const n = String(name || "");
+        root.pending = (root.pending || []).filter(p => String(p && p.name || "") !== n);
+        const omit = Object.assign({}, root._omit);
+        omit[n] = true;
+        root._omit = omit;
+        root._hold = root._gen + 1;
+        root.refresh();
+    }
+
     function refresh() {
-        if (root.checking || root.running)
+        if (root.running)
             return;
+        if (root.checking) {
+            root._queued = true;
+            return;
+        }
+        root._gen += 1;
         root.checking = true;
         root.error = "";
         root._checkDone = false;
@@ -238,19 +257,31 @@ Singleton {
             return;
         root.checking = false;
         root._rebuildLists();
+        if (root._queued) {
+            root._queued = false;
+            root.refresh();
+        }
     }
 
     function _rebuildLists() {
         const lists = classify.rebuild(root.desktop, root._pacmanAll, root._pacmanSys, root._pacmanOther);
         root.systemPkgs = lists.systemPkgs;
         root.otherPkgs = lists.otherPkgs;
-        root.pending = lists.pending;
-        const key = lists.pending.map(p => p.name).join(" ");
-        if (lists.pending.length > 0 && key !== root._notified) {
-            root._notified = key;
-            root.notify(I18n.t("settings.update.available", ({ n: String(lists.pending.length) })), "");
+        let pending = lists.pending;
+        if (root._gen < root._hold) {
+            const omit = root._omit;
+            pending = pending.filter(p => !omit[String(p && p.name || "")]);
+        } else {
+            root._omit = ({});
+            root._hold = 0;
         }
-        if (lists.pending.length === 0)
+        root.pending = pending;
+        const key = pending.map(p => p.name).join(" ");
+        if (pending.length > 0 && key !== root._notified) {
+            root._notified = key;
+            root.notify(I18n.t("settings.update.available", ({ n: String(pending.length) })), "");
+        }
+        if (pending.length === 0)
             root._notified = "";
     }
 }

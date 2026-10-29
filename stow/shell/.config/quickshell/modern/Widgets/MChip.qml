@@ -12,20 +12,26 @@ Item {
     property string value: ""
     property bool checked: false
     property bool enabled: true
+    property bool interactive: true
 
     signal clicked()
 
     implicitWidth: row.implicitWidth + Tokens.spacing.lg * 2
     implicitHeight: Tokens.spacing.xl + Tokens.spacing.sm
     opacity: root.enabled ? 1 : 0.38
-    activeFocusOnTab: root.enabled
-    Accessible.role: Accessible.Button
+    activeFocusOnTab: root.enabled && root.interactive
+    Accessible.role: root.interactive ? Accessible.Button : Accessible.StaticText
     Accessible.name: root.key.length > 0 ? I18n.t(root.key, root.params) : root.value
-    Accessible.checkable: true
+    Accessible.checkable: root.interactive
     Accessible.checked: root.checked
-    Accessible.onPressAction: root.clicked()
+    Accessible.onPressAction: {
+        if (root.interactive)
+            root.clicked();
+    }
 
     Keys.onPressed: (event) => {
+        if (!root.interactive)
+            return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
             root.clicked();
             event.accepted = true;
@@ -47,6 +53,13 @@ Item {
         }
     }
 
+    Rectangle {
+        anchors.fill: parent
+        radius: Tokens.radius.full
+        color: Colors.color.primary
+        opacity: root.interactive ? Chrome.stateLayer(ma.containsMouse, ma.pressed) : 0
+    }
+
     RowLayout {
         id: row
         anchors.centerIn: parent
@@ -62,11 +75,20 @@ Item {
     }
 
     MouseArea {
+        id: ma
         anchors.fill: parent
-        enabled: root.enabled
-        cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onPressed: ring.markPointer()
-        onClicked: root.clicked()
+        enabled: true
+        hoverEnabled: true
+        acceptedButtons: root.interactive ? Qt.LeftButton : Qt.NoButton
+        cursorShape: root.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onPressed: {
+            if (root.interactive)
+                ring.markPointer();
+        }
+        onClicked: {
+            if (root.interactive)
+                root.clicked();
+        }
     }
 
     MFocusRing {

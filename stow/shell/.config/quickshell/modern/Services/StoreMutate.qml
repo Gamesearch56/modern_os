@@ -36,11 +36,14 @@ Item {
     }
 
     function requestInstall(name: string) { root._request(name, "install"); }
+    function requestUpdate(name: string) { root._request(name, "update"); }
     function requestRemove(name: string) { root._request(name, "remove"); }
 
     function _request(name: string, action: string) {
         try {
             if (root.busy)
+                return;
+            if (!Passwd.canManage)
                 return;
             if (!root.validName(name)) {
                 Logger.warn("Store", "rejected package name");
@@ -78,7 +81,7 @@ Item {
             const action = root.pendingAction;
             root.pendingName = "";
             root.pendingAction = "";
-            if (!root.validName(name) || (action !== "install" && action !== "remove")) {
+            if (!root.validName(name) || (action !== "install" && action !== "remove" && action !== "update")) {
                 Logger.warn("Store", "confirm rejected");
                 return;
             }
@@ -145,7 +148,8 @@ Item {
             root.mutAction = "";
             if (ok) {
                 Logger.info("Store", "done " + action + " " + name);
-                const key = action === "remove" ? "store.doneRemove" : "store.doneInstall";
+                const key = action === "remove" ? "store.doneRemove"
+                    : (action === "update" ? "store.doneUpdate" : "store.doneInstall");
                 root.notify(I18n.t(key, ({ name: name })), "");
                 root.finished(true);
                 return;

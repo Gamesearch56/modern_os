@@ -14,6 +14,7 @@ Item {
     property bool selected: false
     property bool current: false
     property bool hoverRing: true
+    property bool dimRest: true
     property bool removable: false
 
     property bool tabFocus: false
@@ -27,8 +28,8 @@ Item {
         return Math.max(w, h);
     }
 
-    scale: (root.selected || root._ring) ? 1 : Motion.overlayScale(false)
-    opacity: (root.selected || root._ring) ? 1 : (1 - Tokens.interaction.hover)
+    scale: (!root.dimRest || root.selected || root._ring) ? 1 : Motion.overlayScale(false)
+    opacity: (!root.dimRest || root.selected || root._ring) ? 1 : (1 - Tokens.interaction.hover)
     transformOrigin: Item.Center
 
     Behavior on scale {

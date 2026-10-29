@@ -15,6 +15,7 @@ Item {
     readonly property string action: Store.mutating.length > 0 ? Store.mutAction : ""
 
     visible: root.open || scrim.opacity > 0
+    enabled: root.open
     z: 110
 
     Rectangle {
@@ -71,7 +72,8 @@ Item {
             MText {
                 key: root.failed
                     ? (Store.errorKey.length > 0 ? Store.errorKey : "store.failed")
-                    : (root.action === "remove" ? "store.removing" : "store.installing")
+                    : (root.action === "remove" ? "store.removing"
+                        : (root.action === "update" ? "store.updating" : "store.installing"))
                 params: ({ name: Store.mutating.length > 0 ? Store.mutating : Store.lastName })
                 styleName: "headlineSmall"
                 elide: Text.ElideRight

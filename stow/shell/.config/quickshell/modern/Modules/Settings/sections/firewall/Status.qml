@@ -28,7 +28,7 @@ MStatusCard {
             MButton {
                 kind: "filled"
                 key: "store.title"
-                onClicked: Store.showQuery("ufw")
+                onClicked: Store.showPackage("ufw")
             }
         }
     }

@@ -278,5 +278,11 @@ Singleton {
         }
     }
 
+    function ensureGroups() {
+        if (!myGroupsProc.running)
+            myGroupsProc.running = true;
+    }
+
     onWatchingChanged: { if (root.watching) root.refresh(); }
+    Component.onCompleted: root.ensureGroups()
 }

@@ -37,9 +37,12 @@ Scope {
                 id: card
                 anchors.fill: parent
                 titleKey: "store.title"
+                actionKey: Store.detailName.length ? "store.back" : ""
+                actionIcon: Store.detailName.length ? "go-previous" : ""
                 titleColumnWidth: Tokens.spacing.xxl * 9
-                busy: Store.loading || Store.mutating.length > 0
+                busy: Store.loading || Store.detailLoading || Store.mutating.length > 0
                 onClosed: Store.hide()
+                onActionClicked: Store.goBack()
 
                 trailing: Item {
                     readonly property bool show: Passwd.canManage && Update.pending.length > 0
@@ -90,6 +93,10 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 onActivated: {
+                    if (Store.previewShot.length > 0) {
+                        Store.closePreview();
+                        return;
+                    }
                     if (Store.pendingName.length > 0) {
                         Store.cancel();
                         return;
@@ -102,6 +109,10 @@ Scope {
                         Store.dismissError();
                         return;
                     }
+                    if (Store.detailName.length > 0) {
+                        Store.goBack();
+                        return;
+                    }
                     Store.hide();
                 }
             }
@@ -110,15 +121,39 @@ Scope {
                 parent: win.contentItem
                 anchors.fill: parent
                 open: Store.pendingName.length > 0
-                titleKey: Store.pendingAction === "remove" ? "store.confirmRemove" : "store.confirmInstall"
+                titleKey: Store.pendingAction === "remove"
+                    ? "store.confirmRemove"
+                    : (Store.pendingAction === "update" ? "store.confirmUpdate" : "store.confirmInstall")
                 titleParams: ({ name: Store.pendingName })
-                bodyKey: Store.pendingAction === "remove" ? "store.confirmRemoveBody" : "store.confirmInstallBody"
+                bodyKey: Store.pendingAction === "remove"
+                    ? "store.confirmRemoveBody"
+                    : (Store.pendingAction === "update" ? "store.confirmUpdateBody" : "store.confirmInstallBody")
                 bodyParams: ({ name: Store.pendingName })
-                confirmKey: Store.pendingAction === "remove" ? "store.remove" : "store.install"
+                confirmKey: Store.pendingAction === "remove"
+                    ? "store.remove"
+                    : (Store.pendingAction === "update" ? "store.update" : "store.install")
                 confirmEnabled: Store.mutating.length === 0
                 destructive: Store.pendingAction === "remove"
                 onConfirmed: Store.confirm()
                 onCancelled: Store.cancel()
+            }
+
+            TapHandler {
+                parent: win.contentItem
+                acceptedButtons: Qt.BackButton
+                onTapped: Store.goBack()
+            }
+
+            TapHandler {
+                parent: win.contentItem
+                acceptedButtons: Qt.ForwardButton
+                onTapped: Store.goForward()
+            }
+
+            ShotPreview {
+                parent: win.contentItem
+                anchors.fill: parent
+                z: 90
             }
 
             Progress {

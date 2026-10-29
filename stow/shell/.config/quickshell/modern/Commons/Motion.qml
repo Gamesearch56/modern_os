@@ -35,6 +35,8 @@ Singleton {
     readonly property int durationLong: 400
     readonly property int durationExtraLong: 600
     readonly property int durationConfigWrite: 200
+    // Store load-more footer — wall clock so the bar is readable.
+    readonly property int durationStorePage: 1000
     // Wall-clock hide for recording chrome — not MD3 motion, never scaled.
     readonly property int durationRecordingChrome: 3000
     // NetworkManager wifi rescan — not MD3 motion, never scaled.
@@ -57,6 +59,7 @@ Singleton {
     readonly property int longMs: Math.round(durationLong * root.scale)
     readonly property int extraLongMs: Math.round(durationExtraLong * root.scale)
     readonly property int configWriteMs: Math.round(durationConfigWrite * (root.scale === 0 ? 1 : root.scale))
+    readonly property int storePageMs: root.durationStorePage
     readonly property int recordingChromeMs: root.durationRecordingChrome
     readonly property int wifiScanMs: root.durationWifiScan
     readonly property int bluetoothScanMs: root.durationBluetoothScan

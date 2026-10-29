@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install or remove one official-repo package. Hardcoded pkexec + pacman
+# Install, update, or remove one official-repo package. Hardcoded pkexec + pacman
 # argv only — never PACMAN= from the environment, never a shell.
 # Preflight is unprivileged; the transaction is the only pkexec step.
 # Do not SIGKILL this process: a live pacman transaction is unsafe to abort.
@@ -12,7 +12,7 @@ source "$ROOT/lib/pkg-name.sh"
 source "$ROOT/lib/polkit-agent.sh"
 
 if [ "$#" -ne 2 ]; then
-    printf 'usage: pkg-mutate.sh install|remove <name>\n' >&2
+    printf 'usage: pkg-mutate.sh install|remove|update <name>\n' >&2
     exit 2
 fi
 
@@ -21,8 +21,8 @@ name="$2"
 PACMAN="/usr/bin/pacman"
 PKEXEC="/usr/bin/pkexec"
 
-if [ "$action" != "install" ] && [ "$action" != "remove" ]; then
-    printf 'usage: pkg-mutate.sh install|remove <name>\n' >&2
+if [ "$action" != "install" ] && [ "$action" != "remove" ] && [ "$action" != "update" ]; then
+    printf 'usage: pkg-mutate.sh install|remove|update <name>\n' >&2
     exit 2
 fi
 if ! valid_pkg_name "$name"; then
@@ -50,6 +50,20 @@ if [ "$action" = "install" ]; then
         exit 3
     fi
     exec "$PKEXEC" "$PACMAN" -S --noconfirm --needed -- "$name"
+fi
+
+if [ "$action" = "update" ]; then
+    if ! "$PACMAN" -Q -- "$name" >/dev/null 2>&1; then
+        printf 'package is not installed: %s\n' "$name" >&2
+        exit 4
+    fi
+    if ! "$PACMAN" -Si -- "$name" >/dev/null 2>&1; then
+        printf 'package not in official repositories: %s\n' "$name" >&2
+        exit 3
+    fi
+    # checkupdates privately -Sy's; -S --needed against the stale local
+    # sync DB is a no-op (exit 0) while an update remains offered.
+    exec "$PKEXEC" "$PACMAN" -Sy --noconfirm --needed -- "$name"
 fi
 
 if protected_pkg "$name" \

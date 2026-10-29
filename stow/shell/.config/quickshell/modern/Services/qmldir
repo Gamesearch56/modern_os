@@ -82,7 +82,11 @@ singleton Snapshots 1.0 Snapshots.qml
 SnapshotsParse 1.0 SnapshotsParse.qml
 singleton Firewall 1.0 Firewall.qml
 FirewallParse 1.0 FirewallParse.qml
+StoreHistory 1.0 StoreHistory.qml
 singleton Store 1.0 Store.qml
 StoreCatalog 1.0 StoreCatalog.qml
 StoreClassify 1.0 StoreClassify.qml
 StoreMutate 1.0 StoreMutate.qml
+StoreBrowse 1.0 StoreBrowse.qml
+StoreDetail 1.0 StoreDetail.qml
+StoreFetch 1.0 StoreFetch.qml

@@ -109,22 +109,19 @@ Item {
         anchors.fill: parent
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
         color: Colors.color.primary
-        opacity: root.selected || !root.hoverHighlight ? 0 : Chrome.stateLayer(hover.hovered, false)
-    }
-
-    HoverHandler {
-        id: hover
-        enabled: root.enabled && root.hoverHighlight
+        opacity: root.selected || !root.hoverHighlight ? 0 : Chrome.stateLayer(ma.containsMouse, false)
     }
 
     MouseArea {
-        z: 1
+        id: ma
+        z: 3
         anchors.fill: parent
+        anchors.rightMargin: trailing.visible ? trailing.width + root._padH : 0
         enabled: root.enabled && root.hoverHighlight
         hoverEnabled: true
         propagateComposedEvents: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        cursorShape: root.hoverHighlight ? Qt.PointingHandCursor : Qt.ArrowCursor
+        cursorShape: Qt.PointingHandCursor
         onPressed: (mouse) => {
             ring.markPointer();
             if (root._onTrailing(mouse.x, mouse.y))
@@ -147,6 +144,7 @@ Item {
 
     RowLayout {
         id: body
+        z: 0
         anchors.fill: parent
         anchors.leftMargin: root._padH
         anchors.rightMargin: root._padH
@@ -241,12 +239,13 @@ Item {
             Layout.alignment: Qt.AlignVCenter
         }
 
-        Item {
+        RowLayout {
             id: trailing
             z: 2
-            visible: childrenRect.width > 0
-            Layout.preferredWidth: childrenRect.width
-            Layout.preferredHeight: childrenRect.height
+            spacing: Tokens.spacing.xs
+            visible: implicitWidth > 0
+            Layout.fillWidth: false
+            Layout.fillHeight: false
             Layout.alignment: Qt.AlignVCenter
         }
     }

@@ -54,18 +54,25 @@ Six groups, 21 pages. Catalog lives in
 
 A Hyprland `FloatingWindow` titled `modern.store` (control panel header
 opens it; Super+Q is `killactive`). Chrome title is **App Store**. It
-installs and removes official Arch packages only — no `-Sy`/`-Syu`.
-System upgrades stay on Settings → System.
+installs, updates, and removes official Arch packages only. Install and
+remove do not `-Sy`; a per-package Update is `pacman -Sy --needed` of
+that name so it actually fetches what `checkupdates` listed. Full
+system upgrades stay on Settings → System.
 
-- Catalog: `~/.config/modern/store/catalog.json` (popular grid +
-  category allowlists). Discover shows Popular (6) then each category
-  (6, three per row). Installed is `pacman -Qe`, not a name list.
+- Catalog: `~/.config/modern/store/catalog.json` (popular list +
+  category allowlists). Discover is a featured hero (first three
+  popular), category chips, a compact Popular list, then each category
+  as a tile strip (6). Installed is `pacman -Qe`, not a name list.
 - Search: `scripts/pkg-search.sh` (`pacman -Ss`). Info:
   `scripts/pkg-info.sh`. Mutate: `scripts/pkg-mutate.sh` via
   `/usr/bin/pkexec /usr/bin/pacman` only (no `PACMAN=` override, no
-  shell). Install preflights `pacman -Si`; remove preflights `pacman -Q`
-  and refuses a protected set (glibc, pacman, systemd, hyprland,
-  quickshell, …). Remove is `-R` of that name only (`-s`/`-n` stay off).
+  shell). Install preflights `pacman -Si` then `-S --needed` (no `-y`).
+  Update preflights `-Q` and `-Si` then `-Sy --needed` of that name
+  (`checkupdates` uses a privately synced DB; without `-y` the store
+  reported success while the installed version stayed put). Remove
+  preflights `pacman -Q` and refuses a protected set (glibc, pacman,
+  systemd, hyprland, quickshell, …). Remove is `-R` of that name only
+  (`-s`/`-n` stay off).
   The shell never SIGKILLs an in-flight transaction. `pkg-mutate.sh`
   starts `phylax.service` if it is down so the password window can
   appear; Cancel is allowed only while still waiting for that prompt.

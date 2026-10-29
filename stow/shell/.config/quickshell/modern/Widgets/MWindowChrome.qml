@@ -71,13 +71,6 @@ Item {
         Layout.alignment: Qt.AlignVCenter
     }
 
-    MIconButton {
-        visible: root.actionKey.length > 0 || root.actionIcon.length > 0
-        iconName: root.actionIcon.length > 0 ? root.actionIcon : "list-add"
-        key: root.actionKey
-        onClicked: root.actionClicked()
-    }
-
     Item {
         visible: root.busy
         implicitWidth: Tokens.icon.md
@@ -107,6 +100,13 @@ Item {
             if (!visible)
                 saveGlyph.rotation = 0;
         }
+    }
+
+    MIconButton {
+        visible: root.actionKey.length > 0 || root.actionIcon.length > 0
+        iconName: root.actionIcon.length > 0 ? root.actionIcon : "list-add"
+        key: root.actionKey
+        onClicked: root.actionClicked()
     }
 
     MIconButton {

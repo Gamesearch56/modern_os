@@ -57,6 +57,7 @@ Singleton {
     readonly property QtObject overlay: QtObject {
         readonly property real scrim: 0.32
         readonly property real lock: 0.48
+        readonly property real previewFill: 0.8
     }
 
     // Light surfaces sit near tone 98; the same alpha as dark chrome
@@ -126,6 +127,14 @@ Singleton {
     readonly property QtObject slider: QtObject {
         readonly property real trackHeight: 8
         readonly property real thumb: 20
+    }
+
+    readonly property QtObject store: QtObject {
+        readonly property real heroHeight: root.spacing.xxl * 8
+        readonly property real heroIcon: root.icon.lg + root.spacing.md * 2
+        readonly property real tile: root.spacing.xxl * 3 + root.spacing.md
+        readonly property real tileIcon: root.icon.lg + root.spacing.sm * 2
+        readonly property real sectionGap: root.spacing.xl
     }
 
     function elevationFor(level: int): var {
