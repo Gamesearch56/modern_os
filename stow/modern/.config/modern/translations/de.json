@@ -940,7 +940,7 @@
       "open": "Öffnen",
       "unmounted": "Nicht eingehängt",
       "space": "{used} / {total} · {free} frei",
-      "freeOf": "{free} von {total} frei",
+      "usedOf": "{used} von {total} belegt",
       "catGames": "Spiele",
       "catFiles": "Dateien",
       "catApps": "Programme",
