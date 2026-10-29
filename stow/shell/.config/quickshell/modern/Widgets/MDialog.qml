@@ -117,6 +117,7 @@ FocusScope {
             }
 
             MText {
+                visible: root.bodyKey.length > 0
                 key: root.bodyKey
                 params: root.bodyParams
                 styleName: "bodyMedium"
@@ -128,6 +129,7 @@ FocusScope {
                 id: extraCol
                 visible: extraCol.children.length > 0
                 Layout.fillWidth: true
+                Layout.bottomMargin: Tokens.spacing.md
                 spacing: Tokens.spacing.sm
             }
 

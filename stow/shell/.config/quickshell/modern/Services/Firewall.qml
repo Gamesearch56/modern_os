@@ -1,6 +1,7 @@
 // Live UFW. Status is unprivileged (`ufw-status.sh`). Enable/disable
 // is one pkexec of `ufw-apply.sh` (defaults + enable in that process).
 // Rule add/delete still pkexec /usr/bin/ufw with an argv allowlist.
+// Comment edits pkexec `ufw-comment.sh` so the tuple is not deleted.
 pragma Singleton
 
 import Quickshell
@@ -105,6 +106,25 @@ Singleton {
             return;
         }
         root._start("delete", [["pkexec", root.bin, "--force", "delete", n]]);
+    }
+
+    function setComment(num, text) {
+        const n = String(num || "").replace(/[^0-9]/g, "");
+        const c = String(text || "").trim();
+        if (!n || root.running || !root.active)
+            return;
+        if (!root._hasNumber(n)) {
+            root.error = I18n.t("settings.firewall.stale");
+            return;
+        }
+        if (!rules.commentOk(c)) {
+            root.error = I18n.t("settings.firewall.invalid");
+            return;
+        }
+        const argv = ["pkexec", Paths.script("ufw-comment.sh"), n];
+        if (c.length)
+            argv.push(c);
+        root._start("comment", [argv]);
     }
 
     function portOk(s): bool { return rules.portOk(s); }

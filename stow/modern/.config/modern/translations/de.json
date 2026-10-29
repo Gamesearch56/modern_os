@@ -908,6 +908,8 @@
       "anywhere": "Überall",
       "ipv6": "IPv6",
       "comment": "Kommentar",
+      "edit": "Bearbeiten",
+      "editTitle": "Regel bearbeiten",
       "invalid": "Diese Regel ist ungültig.",
       "stale": "Diese Regel ist nicht mehr in der Liste. Aktualisieren und erneut versuchen.",
       "failed": "Der Firewall-Befehl ist fehlgeschlagen."

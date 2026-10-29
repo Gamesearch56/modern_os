@@ -908,6 +908,8 @@
       "anywhere": "Anywhere",
       "ipv6": "IPv6",
       "comment": "Comment",
+      "edit": "Edit",
+      "editTitle": "Edit rule",
       "invalid": "That rule is not valid.",
       "stale": "That rule is no longer in the list. Refresh and try again.",
       "failed": "The firewall command failed."

@@ -11,9 +11,10 @@ ColumnLayout {
     property bool busy: false
 
     signal removeClicked(var rule)
+    signal editClicked(var rule)
 
     readonly property real fromWidth: Tokens.spacing.xxl * 7
-    readonly property real actionWidth: Tokens.spacing.xxl * 2
+    readonly property real actionWidth: Tokens.spacing.xxl * 2 + Tokens.spacing.sm
 
     readonly property string _port: {
         void I18n._gen;
@@ -107,14 +108,20 @@ ColumnLayout {
             Layout.alignment: Qt.AlignVCenter
         }
 
-        Item {
+        RowLayout {
             Layout.preferredWidth: root.actionWidth
             Layout.maximumWidth: root.actionWidth
-            implicitHeight: delBtn.implicitHeight
             Layout.alignment: Qt.AlignVCenter
+            spacing: Tokens.spacing.xs
+            Item { Layout.fillWidth: true }
             MIconButton {
-                id: delBtn
-                anchors.centerIn: parent
+                iconName: "document-edit-symbolic"
+                key: "settings.firewall.edit"
+                iconSize: Tokens.icon.md
+                enabled: !root.busy
+                onClicked: root.editClicked(root.rule)
+            }
+            MIconButton {
                 iconName: "edit-delete-symbolic"
                 key: "settings.firewall.delete"
                 iconSize: Tokens.icon.md

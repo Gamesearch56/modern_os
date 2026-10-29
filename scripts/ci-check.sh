@@ -75,5 +75,7 @@ log "update changelog"
 "$ROOT/scripts/test-update-changelog.sh"
 log "wifi join"
 "$ROOT/scripts/test-wifi-join.sh"
+log "ufw comment"
+"$ROOT/scripts/test-ufw-comment.sh"
 
 log "ok"
