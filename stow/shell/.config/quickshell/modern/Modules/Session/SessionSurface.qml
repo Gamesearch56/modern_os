@@ -50,9 +50,11 @@ Item {
         visible: root.showWallpaper
         opacity: root._shown ? 1 : 0
         sources: [
-            "file://" + Wallpaper.sessionBlur,
+            // The shared blur is the last account to publish, often the
+            // shipped default. This session's selected file comes first.
+            root.wallpaperFile.length > 0 ? "file://" + root.wallpaperFile : "",
             "file://" + Wallpaper.stateBlur,
-            root.wallpaperFile.length > 0 ? "file://" + root.wallpaperFile : ""
+            "file://" + Wallpaper.sessionBlur
         ]
         washOpacity: Chrome.washOpacity
         scrimOpacity: Tokens.overlay.scrim

@@ -6,7 +6,22 @@ Item {
     id: root
 
     property var chrome: null
+    property string username: ""
     property string source: "file:///var/lib/modern/session/wallpaper-blur.jpg"
+
+    function _user() {
+        return String(root.username || "").replace(/[^A-Za-z0-9._-]/g, "");
+    }
+
+    function _userBlur() {
+        const u = root._user();
+        return u.length ? "file:///var/lib/modern/session/wallpapers/" + u + "-blur.jpg" : "";
+    }
+
+    onUsernameChanged: {
+        const next = root._userBlur();
+        root.source = next.length ? next : "file:///var/lib/modern/session/wallpaper-blur.jpg";
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -23,7 +38,15 @@ Item {
         onStatusChanged: {
             if (status !== Image.Error)
                 return;
-            if (root.source.indexOf("wallpaper-blur.jpg") >= 0)
+            const u = root._user();
+            const userBlur = u.length ? "file:///var/lib/modern/session/wallpapers/" + u + "-blur.jpg" : "";
+            const userJpg = u.length ? "file:///var/lib/modern/session/wallpapers/" + u + ".jpg" : "";
+            const sharedBlur = "file:///var/lib/modern/session/wallpaper-blur.jpg";
+            if (userBlur.length && root.source === userBlur)
+                root.source = userJpg;
+            else if (userJpg.length && root.source === userJpg)
+                root.source = sharedBlur;
+            else if (root.source === sharedBlur)
                 root.source = "file:///var/lib/modern/session/wallpaper.jpg";
             else if (root.source.indexOf("default.jpg") < 0)
                 root.source = "file://" + Quickshell.env("HOME") + "/.config/modern/wallpapers/default.jpg";
