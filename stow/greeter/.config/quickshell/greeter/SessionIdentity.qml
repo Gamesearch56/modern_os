@@ -104,8 +104,8 @@ Item {
             text: String(root._picked.titleValue || root._picked.value || "")
             color: root._c ? root._c.color.onSurface : "#E6E0E9"
             font.family: root._c ? root._c.fontFamily : "sans-serif"
-            font.pixelSize: root._c ? root._c.typePx("titleMedium") : 16
-            font.weight: root._c ? root._c.typeWeight("titleMedium") : 500
+            font.pixelSize: root._c ? root._c.typePx("headlineMedium") : 28
+            font.weight: root._c ? root._c.typeWeight("headlineMedium") : 400
             Accessible.role: Accessible.StaticText
             Accessible.name: text
         }
