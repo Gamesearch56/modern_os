@@ -31,7 +31,10 @@ PanelWindow {
     implicitWidth: root.vertical ? (root._expanded ? root._fullW : root._strip) : 0
     exclusiveZone: root._cover ? 0 : BarLayout.exclusive
     visible: !root._cover
-    color: "transparent"
+    // A virtual GPU draws this transparent strip as a black bar. An
+    // opaque surface fill keeps the islands visible; a desktop GPU
+    // still sees the wallpaper through the gaps.
+    color: Chrome.softwareGpu ? Colors.color.surface : "transparent"
     focusable: Popups.active !== null
 
     Behavior on _slide {

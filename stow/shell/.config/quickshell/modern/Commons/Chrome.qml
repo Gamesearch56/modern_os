@@ -38,7 +38,13 @@ Singleton {
         return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
     }
 
+    // Set by Hyprland only when the display is virtual. Desktop GPUs
+    // leave it unset, so glass and blur stay as designed.
+    readonly property bool softwareGpu: Quickshell.env("MODERN_SOFTWARE_GPU") === "1"
+
     readonly property real washOpacity: {
+        if (root.softwareGpu)
+            return 1;
         void Config.design.transparency;
         void Tokens.glass;
         const t = Config.design.transparency ?? 0.85;

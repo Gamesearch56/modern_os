@@ -449,6 +449,74 @@ KB_XKB_NEW = """        basicArguments.append( xkbmap_layout_args( settings.sele
         QProcess::execute( "setxkbmap", basicArguments );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
 
+# setConfigurationMap() detects the layout while Welcome is still the live
+# ISO locale. onActivate runs after the language combo has moved. A layout
+# the user already picked (state UserSelected) is left alone.
+KB_ACTIVATE_OLD = """void
+KeyboardViewStep::onActivate()
+{
+    m_config->guessLocaleKeyboardLayout();
+}"""
+KB_ACTIVATE_NEW = """void
+KeyboardViewStep::onActivate()
+{
+    m_config->detectCurrentKeyboardLayout();
+    m_config->guessLocaleKeyboardLayout();
+}"""
+
+KB_LOCALE_INC_OLD = """#include <QGuiApplication>
+#include <QProcess>"""
+KB_LOCALE_INC_NEW = """#include <QGuiApplication>
+#include <QLocale>
+#include <QProcess>"""
+
+# Prefer the Welcome language over setxkbmap -print. A fresh Xwayland
+# reports pc+us even after the Welcome combo is German, and detect runs
+# again from onActivate while the choice is still the initial one.
+KB_DETECT_OLD = """    if ( m_configureLocale1 )
+    {
+        getCurrentKeyboardLayoutLocale1( currentLayout, currentVariant, currentModel );
+    }
+    else
+    {
+        getCurrentKeyboardLayoutXkb( currentLayout, currentVariant, currentModel );
+    }"""
+KB_DETECT_NEW = """    const QString welcomeLayout = modernWelcomeLayout();
+    if ( !welcomeLayout.isEmpty() )
+    {
+        currentLayout = welcomeLayout;
+    }
+    else if ( m_configureLocale1 )
+    {
+        getCurrentKeyboardLayoutLocale1( currentLayout, currentVariant, currentModel );
+    }
+    else
+    {
+        getCurrentKeyboardLayoutXkb( currentLayout, currentVariant, currentModel );
+    }"""
+
+# automaticLocaleConfiguration() used to prefer a LANG already stored from
+# the live ISO. That stays en_US after Welcome moves to German, so the
+# Location step installed English and the login screen followed it.
+LOCALE_LANG_OLD = """    auto* gs = Calamares::JobQueue::instance()->globalStorage();
+    QString lang = Calamares::Locale::readGS( *gs, QStringLiteral( "LANG" ) );
+    if ( lang.isEmpty() )
+    {
+        lang = QLocale().name();
+    }
+    return LocaleConfiguration::fromLanguageAndLocation( lang, supportedLocales(), currentLocation()->country() );"""
+LOCALE_LANG_NEW = """    QString lang = modernWelcomeLanguage();
+    if ( lang.isEmpty() )
+    {
+        auto* gs = Calamares::JobQueue::instance()->globalStorage();
+        lang = Calamares::Locale::readGS( *gs, QStringLiteral( "LANG" ) );
+    }
+    if ( lang.isEmpty() )
+    {
+        lang = QLocale().name();
+    }
+    return LocaleConfiguration::fromLanguageAndLocation( lang, supportedLocales(), currentLocation()->country() );"""
+
 SUMMARY_CONTENT_OLD = """    delete m_contentWidget;  // It might have been created previously
     m_contentWidget = new QWidget;
     m_layout = new QVBoxLayout( m_contentWidget );"""
@@ -838,6 +906,59 @@ def load_calamares_codes() -> list[str]:
     sys.exit(1)
 
 
+def _installer_locale_rows() -> list[dict]:
+    here = Path(__file__).resolve().parent
+    for path in (
+        here / "installer-locales.json",
+        Path("/usr/lib/modern/installer-locales.json"),
+    ):
+        if not path.is_file():
+            continue
+        data = json.loads(path.read_text(encoding="utf-8"))
+        rows = [loc for loc in (data.get("locales") or []) if isinstance(loc, dict)]
+        if rows:
+            return rows
+    print("live-calamares: installer-locales.json missing or empty", file=sys.stderr)
+    sys.exit(1)
+
+
+def _cpp_literal(value: str) -> str:
+    if not value or any(c not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-" for c in value):
+        print(f"live-calamares: refusing locale value {value!r}", file=sys.stderr)
+        sys.exit(1)
+    return value
+
+
+def welcome_cpp_fn(name: str, field: str) -> str:
+    """Map the Welcome language onto one installer-locales.json column."""
+    arms = []
+    for loc in _installer_locale_rows():
+        code = _cpp_literal(str(loc.get("calamares") or ""))
+        value = _cpp_literal(str(loc.get(field) or ""))
+        arms.append(
+            "    if ( lang == QLatin1String( \""
+            + code
+            + "\" ) )\n"
+            "    {\n"
+            "        return QStringLiteral( \""
+            + value
+            + "\" );\n"
+            "    }"
+        )
+    body = "\n".join(arms)
+    return (
+        "static QString\n"
+        + name
+        + "()\n"
+        "{\n"
+        "    const QString lang = QLocale().name().section( QLatin1Char( '_' ), 0, 0 ).toLower();\n"
+        + body
+        + "\n"
+        "    return QString();\n"
+        "}\n\n"
+    )
+
+
 def translations_new(codes: list[str]) -> str:
     inner = ", ".join(f'QStringLiteral( "{c}" )' for c in codes)
     return f"""TranslationsModel*
@@ -907,6 +1028,8 @@ def main() -> int:
     execstep = src / "libcalamaresui" / "viewpages" / "ExecutionViewStep.cpp"
     keyboard = src / "modules" / "keyboard" / "KeyboardPage.cpp"
     keyboard_cfg = src / "modules" / "keyboard" / "Config.cpp"
+    keyboard_step = src / "modules" / "keyboard" / "KeyboardViewStep.cpp"
+    locale_cfg = src / "modules" / "locale" / "Config.cpp"
     summary = src / "modules" / "summary" / "SummaryPage.cpp"
     summary_cfg = src / "modules" / "summary" / "Config.h"
     partition = src / "modules" / "partition" / "PartitionViewStep.cpp"
@@ -939,6 +1062,23 @@ def main() -> int:
     patch(keyboard, KB_OLD, KB_NEW, "hide Keyboard model row")
     patch(keyboard_cfg, KB_APPLY_OLD, KB_APPLY_NEW, "apply layout when variants are empty")
     patch(keyboard_cfg, KB_XKB_OLD, KB_XKB_NEW, "setxkbmap -option so Xwayland rebuilds")
+    patch(keyboard_cfg, KB_LOCALE_INC_OLD, KB_LOCALE_INC_NEW, "QLocale include for Welcome layout")
+    patch(
+        keyboard_cfg,
+        "void\nConfig::detectCurrentKeyboardLayout()\n",
+        welcome_cpp_fn("modernWelcomeLayout", "xkb") + "void\nConfig::detectCurrentKeyboardLayout()\n",
+        "Welcome language keyboard layout",
+    )
+    patch(keyboard_cfg, KB_DETECT_OLD, KB_DETECT_NEW, "detect Welcome layout instead of setxkbmap")
+    patch(keyboard_step, KB_ACTIVATE_OLD, KB_ACTIVATE_NEW, "re-detect layout after Welcome")
+    patch(
+        locale_cfg,
+        "LocaleConfiguration\nConfig::automaticLocaleConfiguration() const\n",
+        welcome_cpp_fn("modernWelcomeLanguage", "glibc")
+        + "LocaleConfiguration\nConfig::automaticLocaleConfiguration() const\n",
+        "Welcome language glibc locale",
+    )
+    patch(locale_cfg, LOCALE_LANG_OLD, LOCALE_LANG_NEW, "prefer Welcome language over stored LANG")
     patch(summary, SUMMARY_CONTENT_OLD, SUMMARY_CONTENT_NEW, "summary content object name")
     patch(summary, SUMMARY_WRAP_OLD, SUMMARY_WRAP_NEW, "summary item wrap object name")
     patch(summary_cfg, SUMMARY_TITLE_OLD, SUMMARY_TITLE_NEW, "Summary title live tr()")

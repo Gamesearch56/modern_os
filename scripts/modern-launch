@@ -50,6 +50,12 @@ if [[ "${1:-}" == "--background" ]]; then
     exec hyprctl dispatch "hl.dsp.exec_cmd([=[${inner}]=], { workspace = \"special:background silent\" })"
 fi
 
+on_active=0
+if [[ "${1:-}" == "--on-active" ]]; then
+    on_active=1
+    shift
+fi
+
 if [[ "${1:-}" == "--raise" ]]; then
     shift
     desktop="${1:-}"
@@ -105,6 +111,14 @@ case "$desktop" in
 esac
 
 if [[ $# -eq 0 ]]; then
+    # gtk-launch of a running app activates its existing window, which
+    # stays on the other monitor. Bring that window here first.
+    if [[ "$on_active" -eq 1 ]]; then
+        raise_sh="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/session-raise.sh"
+        if [[ -x "$raise_sh" ]] && "$raise_sh" "$desktop"; then
+            exit 0
+        fi
+    fi
     exec gtk-launch "$desktop"
 fi
 

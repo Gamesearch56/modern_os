@@ -58,6 +58,42 @@ else
     err "session_apps must require session_match"
 fi
 
+if grep -Fq -- '--on-active' "$ROOT/stow/hypr/.config/hypr/modules/keybinds.lua" \
+    && grep -Fq -- '--on-active' "$LAUNCH" \
+    && grep -Fq 'session-raise.sh' "$LAUNCH"; then
+    ok "Super+E brings an existing file manager to this monitor"
+else
+    err "fileManager must launch with modern-launch --on-active"
+fi
+
+raise_fix="$(mktemp)"
+printf '%s\n' '[{"class":"org.gnome.NautilusPreviewer","address":"0xpreview"},{"class":"org.gnome.Nautilus","address":"0xfiles"}]' >"$raise_fix"
+got="$(MODERN_RAISE_DRY=1 MODERN_RAISE_CLIENTS="$raise_fix" "$RAISE" org.gnome.Nautilus || true)"
+rm -f "$raise_fix"
+if [[ "$got" == "0xfiles" ]]; then
+    ok "file manager raise matches Nautilus, not the previewer"
+else
+    err "session-raise org.gnome.Nautilus should be 0xfiles, got ${got:-empty}"
+fi
+
+if grep -Fq -- '--on-active spotify-launcher' "$ROOT/stow/hypr/.config/hypr/modules/keybinds.lua"; then
+    ok "Super+R brings an existing Spotify window to this monitor"
+else
+    err "spotify must launch with modern-launch --on-active spotify-launcher"
+fi
+
+spot_home="$(mktemp -d)"
+mkdir -p "$spot_home/applications"
+printf '%s\n' '[Desktop Entry]' 'StartupWMClass=spotify' >"$spot_home/applications/spotify-launcher.desktop"
+printf '%s\n' '[{"class":"Spotify","address":"0xmusic"}]' >"$spot_home/clients.json"
+got="$(XDG_DATA_HOME="$spot_home" XDG_DATA_DIRS="$spot_home" MODERN_RAISE_DRY=1 MODERN_RAISE_CLIENTS="$spot_home/clients.json" "$RAISE" spotify-launcher || true)"
+rm -rf "$spot_home"
+if [[ "$got" == "0xmusic" ]]; then
+    ok "spotify-launcher raise matches StartupWMClass spotify"
+else
+    err "session-raise spotify-launcher should be 0xmusic, got ${got:-empty}"
+fi
+
 if grep -Fq 'hl.dsp.exec_cmd' "$LAUNCH" \
     && ! grep -E '^[[:space:]]*exec hyprctl dispatch exec' "$LAUNCH" >/dev/null; then
     ok "--background uses Lua exec_cmd"
@@ -167,15 +203,24 @@ else
 fi
 
 if grep -Fq 'virtual_gpu' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
-    && grep -Fq 'virtio' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq '0x1af4' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'hypervisor' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq '0x10de' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'MODERN_SOFTWARE_GPU' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'QSG_RHI_BACKEND' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'enabled = not soft' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'cm_enabled = not soft' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'use_fp16 = soft and 0 or 2' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'imv-no-blur' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
-    && grep -Fq 'MODERN_SOFTWARE_GPU' \
-        "$ROOT/stow/shell/.config/quickshell/modern/Modules/Screenshot/Hud.qml"; then
-    ok "virtual GPUs skip acrylic blur so the bar, images, and capture stay visible"
+    && grep -Fq 'softwareGpu' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Commons/Chrome.qml" \
+    && grep -Fq 'Chrome.softwareGpu ? Colors.color.surface' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/BarWindow.qml" \
+    && grep -Fq 'anchors.right: !root._soft' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/BarLayerPopup.qml"; then
+    ok "virtual GPUs skip the black translucent path; desktop GPUs stay frosted"
 else
-    err "virtual GPU must disable blur and keep imv and capture from going black"
+    err "virtual GPU must disable blur, fp16, and color management without changing a real GPU"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

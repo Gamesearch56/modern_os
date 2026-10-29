@@ -33,10 +33,18 @@ PanelWindow {
     visible: root.open
     screen: root.barScreen
     color: "transparent"
+    // A fullscreen transparent layer is what a virtual GPU paints black
+    // across the desktop. There the window is only the card. A desktop
+    // GPU keeps the full layer so a click outside the card dismisses it.
+    readonly property bool _soft: Chrome.softwareGpu
     anchors.top: true
     anchors.left: true
-    anchors.right: true
-    anchors.bottom: true
+    anchors.right: !root._soft
+    anchors.bottom: !root._soft
+    implicitWidth: root._soft ? root.panelWidth : 0
+    implicitHeight: root._soft ? root.panelHeight : 0
+    margins.left: root._soft ? root._place().x : 0
+    margins.top: root._soft ? root._place().y : 0
     exclusionMode: ExclusionMode.Ignore
     focusable: true
     aboveWindows: true
@@ -49,6 +57,38 @@ PanelWindow {
         const g = p.mapToGlobal(0, 0);
         const o = chrome.mapToGlobal(0, 0);
         return Qt.point(g.x - o.x, g.y - o.y);
+    }
+
+    function _place(): point {
+        root.open;
+        const s = root.screen;
+        const sw = s ? s.width : root.panelWidth;
+        const sh = s ? s.height : root.panelHeight;
+        const ox = s ? s.virtualX : 0;
+        const oy = s ? s.virtualY : 0;
+        const p = root.anchorItem;
+        let x = root._gap;
+        let y = root._gap;
+        if (p) {
+            const g = p.mapToGlobal(0, 0);
+            x = g.x - ox;
+            y = g.y - oy;
+            if (root._barRight)
+                x = sw - root.panelWidth - root._gap;
+            else if (root._barLeft)
+                x = root._gap;
+            else if (root.hAlign === Qt.AlignRight)
+                x = g.x - ox + p.width - root.panelWidth;
+            else if (root.hAlign === Qt.AlignHCenter)
+                x = g.x - ox + (p.width - root.panelWidth) / 2;
+            if (root._barBottom)
+                y = g.y - oy - root.panelHeight;
+            else if (!root._side)
+                y = g.y - oy + p.height + root._gap;
+        }
+        const maxX = Math.max(root._gap, sw - root.panelWidth - root._gap);
+        const maxY = Math.max(0, sh - root.panelHeight);
+        return Qt.point(Math.max(root._gap, Math.min(x, maxX)), Math.max(0, Math.min(y, maxY)));
     }
 
     function _cardX(): real {
@@ -114,26 +154,15 @@ PanelWindow {
         Item {
             id: chrome
             anchors.fill: parent
-            anchors.topMargin: Config.bar.position === "top" ? BarLayout.windowInset : 0
-            anchors.bottomMargin: Config.bar.position === "bottom" ? BarLayout.windowInset : 0
-            anchors.leftMargin: Config.bar.position === "left" ? BarLayout.windowInset : 0
-            anchors.rightMargin: Config.bar.position === "right" ? BarLayout.windowInset : 0
+            anchors.topMargin: root._soft ? 0 : (Config.bar.position === "top" ? BarLayout.windowInset : 0)
+            anchors.bottomMargin: root._soft ? 0 : (Config.bar.position === "bottom" ? BarLayout.windowInset : 0)
+            anchors.leftMargin: root._soft ? 0 : (Config.bar.position === "left" ? BarLayout.windowInset : 0)
+            anchors.rightMargin: root._soft ? 0 : (Config.bar.position === "right" ? BarLayout.windowInset : 0)
 
             MPanelSurface {
                 id: host
-            x: {
-                void root.open;
-                void chrome.width;
-                void root.panelWidth;
-                void root.hAlign;
-                return root._cardX();
-            }
-            y: {
-                void root.open;
-                void chrome.height;
-                void root.panelHeight;
-                return root._cardY();
-            }
+            x: root._soft ? 0 : root._cardX()
+            y: root._soft ? 0 : root._cardY()
             width: root.panelWidth
             height: root.panelHeight
             scale: Motion.overlayScale(root.open)

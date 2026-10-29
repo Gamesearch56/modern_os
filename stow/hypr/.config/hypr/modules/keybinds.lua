@@ -34,7 +34,13 @@ local have_launch = readable(modern_launch)
 local function app_cmd(role, fallback)
     local id = config.value("apps.defaults." .. role, fallback) or fallback
     id = tostring(id):gsub("%.desktop$", "")
-    return hl.dsp.exec_cmd(modern_launch .. " " .. id)
+    -- File manager is one process. A plain gtk-launch focuses the
+    -- window where it already is, so Super+E looks dead on this monitor.
+    local flag = ""
+    if role == "fileManager" then
+        flag = "--on-active "
+    end
+    return hl.dsp.exec_cmd(modern_launch .. " " .. flag .. id)
 end
 
 local function browser_incognito()
@@ -95,7 +101,9 @@ local bindings = {
     browser = app_cmd("browser", "vivaldi-stable.desktop"),
     browserIncognito = browser_incognito(),
     fileManager = app_cmd("fileManager", "org.gnome.Nautilus.desktop"),
-    spotify = hl.dsp.exec_cmd("spotify-launcher"),
+    -- Already-open Spotify lives on another monitor. spotify-launcher
+    -- focuses that window in place, so Super+R looks dead here.
+    spotify = have_launch and hl.dsp.exec_cmd(modern_launch .. " --on-active spotify-launcher") or hl.dsp.exec_cmd("spotify-launcher"),
     -- Overlay HUD first, then graceful close. If the clone path is
     -- missing, close the window directly — a dead exec is worse.
     -- Same grab bypass as HUDs: Super+Q must still run while a
