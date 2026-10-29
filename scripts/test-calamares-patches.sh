@@ -76,8 +76,23 @@ def wrap(old: str) -> str:
     wrap(mod.TOGGLE_OLD), encoding="utf-8"
 )
 (src / "modules/keyboard/KeyboardPage.cpp").write_text(wrap(mod.KB_OLD), encoding="utf-8")
+(src / "modules/keyboard/KeyboardViewStep.cpp").write_text(
+    wrap(mod.KB_ACTIVATE_OLD), encoding="utf-8"
+)
 (src / "modules/keyboard/Config.cpp").write_text(
-    wrap(mod.KB_APPLY_OLD) + wrap(mod.KB_XKB_OLD), encoding="utf-8"
+    wrap(mod.KB_LOCALE_INC_OLD)
+    + wrap(mod.KB_APPLY_OLD)
+    + wrap(mod.KB_XKB_OLD)
+    + "void\nConfig::detectCurrentKeyboardLayout()\n{\n"
+    + wrap(mod.KB_DETECT_OLD)
+    + "}\n",
+    encoding="utf-8",
+)
+(src / "modules/locale/Config.cpp").write_text(
+    "LocaleConfiguration\nConfig::automaticLocaleConfiguration() const\n{\n"
+    + wrap(mod.LOCALE_LANG_OLD)
+    + "}\n",
+    encoding="utf-8",
 )
 (src / "modules/summary/SummaryPage.cpp").write_text(
     wrap(mod.SUMMARY_CONTENT_OLD) + wrap(mod.SUMMARY_WRAP_OLD), encoding="utf-8"
@@ -155,6 +170,14 @@ check "$src/libcalamaresui/viewpages/ExecutionViewStep.cpp" 'tr( "Toggle log" )'
 check "$src/modules/keyboard/KeyboardPage.cpp" "physicalModelSelector->hide()" "hide keyboard model"
 check "$src/modules/keyboard/Config.cpp" "somethingChanged();" "layout change applies with no variants"
 check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-option" )' "setxkbmap -option forces Xwayland remap"
+check "$src/modules/keyboard/Config.cpp" "#include <QLocale>" "Welcome layout includes QLocale"
+check "$src/modules/keyboard/Config.cpp" "modernWelcomeLayout" "Welcome language keyboard layout"
+check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "de" )' "German Welcome layout is xkb de"
+check "$src/modules/keyboard/Config.cpp" "currentLayout = welcomeLayout" "detect uses the Welcome layout"
+check "$src/modules/keyboard/KeyboardViewStep.cpp" "m_config->detectCurrentKeyboardLayout();" "re-detect layout after Welcome"
+check "$src/modules/locale/Config.cpp" "modernWelcomeLanguage" "Welcome language glibc locale"
+check "$src/modules/locale/Config.cpp" 'QStringLiteral( "de_DE.UTF-8" )' "German Welcome locale is de_DE.UTF-8"
+check "$src/modules/locale/Config.cpp" "QString lang = modernWelcomeLanguage();" "prefer Welcome language over stored LANG"
 check "$src/modules/summary/SummaryPage.cpp" "summaryContent" "summary content object name"
 check "$src/modules/partition/PartitionViewStep.cpp" "summaryPartition" "partition summary object name"
 check "$src/modules/partition/gui/PartitionLabelsView.cpp" "QPalette::WindowText" "partition legend palette text"
