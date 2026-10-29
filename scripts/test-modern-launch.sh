@@ -112,6 +112,22 @@ else
     err "close must hide; Autostart.qml must forceKillAutostart"
 fi
 
+OV_GRID="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/WindowGrid.qml"
+OV_TILE="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/Tile.qml"
+OV_MOD="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/Module.qml"
+if grep -Fq 'modern.overview' "$HYPR_WIN" \
+    && grep -Fq 'modern.settings' "$HYPR_WIN" \
+    && grep -Fq '_overlayTitle' "$HYPR_WIN" \
+    && grep -Fq 'GridLayout' "$OV_GRID" \
+    && ! grep -Fq 'PathView' "$OV_GRID" \
+    && grep -Fq 'ScreencopyView' "$OV_TILE" \
+    && grep -Fq 'displayNameForHint' "$OV_TILE" \
+    && grep -Fq 'sequence: "Tab"' "$OV_MOD"; then
+    ok "overview grid shows every window with live tiles"
+else
+    err "overview must filter overlays, grid all windows, Tab cycle"
+fi
+
 if grep -Fq 'primaryDescription' "$DEFAULTS" \
     && grep -Fq 'function M.primary' "$LAYOUT" \
     && grep -Fq 'first_connected' "$LAYOUT" \

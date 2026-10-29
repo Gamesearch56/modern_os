@@ -14,7 +14,7 @@ Scope {
             title: "modern.overview"
             color: "transparent"
             implicitWidth: Tokens.window.overviewWidth
-            implicitHeight: Tokens.window.overviewHeight
+            implicitHeight: Math.min(Tokens.window.overviewHeight, shell.implicitHeight)
 
             onVisibleChanged: {
                 if (visible)
@@ -24,8 +24,20 @@ Scope {
             }
 
             MWindowShell {
+                id: shell
                 anchors.fill: parent
                 titleKey: "overview.title"
+                focus: true
+                Keys.priority: Keys.BeforeItem
+                Keys.onPressed: (event) => {
+                    if (event.key === Qt.Key_Tab) {
+                        grid.moveBy(1);
+                        event.accepted = true;
+                    } else if (event.key === Qt.Key_Backtab) {
+                        grid.moveBy(-1);
+                        event.accepted = true;
+                    }
+                }
                 onClosed: Overview.hide()
 
                 WindowGrid {
@@ -52,6 +64,14 @@ Scope {
             Shortcut {
                 sequence: "Down"
                 onActivated: grid.moveBy(grid.columns)
+            }
+            Shortcut {
+                sequence: "Tab"
+                onActivated: grid.moveBy(1)
+            }
+            Shortcut {
+                sequences: ["Shift+Tab", "Backtab"]
+                onActivated: grid.moveBy(-1)
             }
             Shortcut {
                 sequence: "Return"

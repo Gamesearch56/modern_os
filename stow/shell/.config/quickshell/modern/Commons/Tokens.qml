@@ -92,8 +92,8 @@ Singleton {
         readonly property real settingsHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
-        readonly property real overviewWidth: root.spacing.xxl * 22
-        readonly property real overviewHeight: root.spacing.xxl * 18
+        readonly property real overviewWidth: root.spacing.xxl * 30
+        readonly property real overviewHeight: root.spacing.xxl * 20
         readonly property real overlayWidth: root.spacing.xxl * 24
         readonly property real overlayHeight: root.spacing.xxl * 20
         readonly property real chatWidth: root.spacing.xxl * 14
@@ -112,6 +112,15 @@ Singleton {
         // Toasts drop below a typical app header bar so they don't hide
         // the window's own buttons in its top row.
         readonly property real toastTopClearance: root.spacing.xxl
+    }
+
+    readonly property QtObject recents: QtObject {
+        readonly property real cardWidth: root.spacing.xxl * 11
+        readonly property real cardHeight: root.spacing.xxl * 10
+        readonly property real wellHeight: root.spacing.xxl * 7
+        readonly property real gap: root.spacing.xl
+        readonly property real inset: root.spacing.xl
+        readonly property real insetY: root.spacing.sm
     }
 
     readonly property QtObject slider: QtObject {

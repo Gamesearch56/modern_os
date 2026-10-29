@@ -55,11 +55,21 @@ QtObject {
         root.focusWindow(addr);
     }
 
+    function _overlayTitle(title: string): bool {
+        const t = String(title || "");
+        return t === "modern.overview" || t === "modern.settings"
+            || t === "modern.store" || t === "modern.wallpaper"
+            || t === "modern.cheatsheet" || t === "modern.wallpaper-provider";
+    }
+
     function isWorkspaceToplevel(toplevel: var): bool {
         if (!toplevel)
             return false;
         const ipc = toplevel.lastIpcObject || ({});
-        if (String(ipc.class || toplevel.class || "").toLowerCase().indexOf("quickshell") !== -1)
+        const cls = String(ipc.class || toplevel.class || "").toLowerCase();
+        if (cls.indexOf("quickshell") !== -1)
+            return false;
+        if (root._overlayTitle(String(ipc.title || toplevel.title || ipc.initialTitle || "")))
             return false;
         const wsId = Number(toplevel.workspace?.id ?? ipc.workspace?.id ?? ipc.workspace);
         return wsId > 0 && ipc.hidden !== true && ipc.mapped !== false;
