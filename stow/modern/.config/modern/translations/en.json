@@ -758,7 +758,7 @@
       "snapperReady": "Point-in-time copies of the system disk (btrfs).",
       "snapperMissing": "Snapper is not installed. Setup is gated and is not applied from Settings.",
       "snapperUnconfigured": "Snapper needs a root config before it can take snapshots. Create config asks for an admin password and writes that config.",
-      "speedTest": "Downloads a short sample from the Arch geo mirror via curl. Not a third-party speed-test site.",
+      "speedTest": "Downloads from the Arch geo mirror over several connections for about 15 seconds. Not a third-party speed-test site.",
       "bluetooth": "Turns the adapter on. Nearby devices appear below.",
       "bluetoothBlocked": "No Bluetooth adapter, or the radio is hardware-blocked.",
       "wifi": "Turns the wireless radio on. Nearby networks appear below.",

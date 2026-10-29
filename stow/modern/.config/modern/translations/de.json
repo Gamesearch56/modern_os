@@ -758,7 +758,7 @@
       "snapperReady": "Zeitpunkte der Systemplatte (btrfs).",
       "snapperMissing": "Snapper ist nicht installiert. Die Einrichtung ist abgeschottet und wird nicht aus den Einstellungen gesetzt.",
       "snapperUnconfigured": "Snapper braucht eine root-Config, bevor Snapshots möglich sind. Config anlegen fragt nach dem Admin-Passwort und schreibt die Config.",
-      "speedTest": "Kurzer curl-Download vom Arch-Geo-Spiegel. Keine Speedtest-Website.",
+      "speedTest": "Lädt etwa 15 Sekunden lang vom Arch-Geo-Spiegel über mehrere Verbindungen. Keine Speedtest-Website.",
       "bluetooth": "Schaltet den Adapter ein. Geräte erscheinen darunter.",
       "bluetoothBlocked": "Kein Bluetooth-Adapter, oder der Funk ist hardwareseitig gesperrt.",
       "wifi": "Schaltet das Funkmodul ein. Netzwerke erscheinen darunter.",
