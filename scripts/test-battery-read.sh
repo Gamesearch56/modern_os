@@ -61,6 +61,30 @@ else
     err "empty: $out"
 fi
 
+export MODERN_BATTERY_TEXT=$'native-path:          BAT0\npercentage:          80%\nstate:               discharging\nenergy:              40.0 Wh\nenergy-empty:        0 Wh\nenergy-full:         50.0 Wh\nenergy-full-design:  60.0 Wh\nenergy-rate:         10.0 W\nvoltage:             12.1 V\ncharge-cycles:       100\ncapacity:            83.3%\ntime to empty:       4.0 hours'
+out="$("$SCRIPT")"
+if printf '%s\n' "$out" | python3 -c 'import json,sys
+o=json.load(sys.stdin)
+assert o["energyWh"]==40 and o["energyFullWh"]==50 and o["healthPercent"]==83
+assert o["cycles"]==100 and abs(o["voltage"]-12.1)<0.01
+assert o["timeEmptySeconds"]==14400 and o["timeFullSeconds"]==0
+'; then
+    ok "health energy cycles and remaining"
+else
+    err "stats: $out"
+fi
+
+export MODERN_BATTERY_TEXT=$'native-path:          BAT0\npercentage:          50%\nstate:               discharging\nenergy:              20.0 Wh\nenergy-full:         40.0 Wh\nenergy-rate:         10.0 W'
+out="$("$SCRIPT")"
+if printf '%s\n' "$out" | python3 -c 'import json,sys
+o=json.load(sys.stdin)
+assert o["onBattery"] and o["timeEmptySeconds"]==7200
+'; then
+    ok "estimates remaining from energy and rate"
+else
+    err "estimate: $out"
+fi
+
 if grep -F 'Paths.script("battery-read.sh")' \
     "$ROOT/stow/shell/.config/quickshell/modern/Services/Battery.qml" >/dev/null; then
     ok "Settings/bar battery is this script"

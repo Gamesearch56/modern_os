@@ -1,6 +1,7 @@
 -- Power button and lid switch. Actions come from config.json
 -- (Settings → Energy). The bind is stable; modern power reads the
 -- current value so a Settings change does not need a compositor reload.
+-- logind-handles.sh blocks logind's own lid/power defaults.
 
 local paths = require("modules.paths")
 local modern = paths.modern

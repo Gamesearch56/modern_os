@@ -77,7 +77,7 @@ QtObject {
         overview: { icon: "view-pages-overview", order: 10, group: "general", keywords: ["about", "hardware", "software", "boot", "stats"] },
         users: { icon: "user-identity", order: 12, group: "general", keywords: ["accounts", "passwd", "autologin"] },
         privacy: { icon: "security-high", order: 14, group: "general", keywords: ["dnd", "kdeconnect", "calendar", "ics", "quiet", "notifications"], restore: ["general.dndSchedule", "general.notificationTimeoutMs", "kdeconnect"] },
-        power: { icon: "battery", order: 16, group: "general", keywords: ["lid", "suspend", "energy", "idle", "battery"], restore: ["power", "general.idleTimings"] },
+        power: { icon: "battery", order: 16, group: "general", keywords: ["lid", "suspend", "energy", "idle", "battery", "charge", "remaining", "health"], restore: ["power", "general.idleTimings"] },
         design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "wallpaper", "windows", "gaps", "cursor", "4k", "provider", "palette"], restore: ["design", "typography", "motion", "windows", "windowRules"] },
         bar: { icon: "cs-panel", order: 22, group: "appearance", keywords: ["widgets", "layout", "topbar"], restore: ["bar", "widgets"] },
         launcher: { icon: "view-app-grid-symbolic", order: 24, group: "appearance", keywords: ["frecency", "icons", "results", "search"], restore: ["launcher"] },

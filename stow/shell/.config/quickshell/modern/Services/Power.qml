@@ -9,7 +9,7 @@ Singleton {
     id: root
 
     function lock() {
-        Quickshell.execDetached(["loginctl", "lock-session"]);
+        Quickshell.execDetached(["qs", "-c", "modern", "ipc", "call", "session", "lock"]);
     }
 
     function logout() {
@@ -18,6 +18,7 @@ Singleton {
     }
 
     function suspend() {
+        Quickshell.execDetached(["qs", "-c", "modern", "ipc", "call", "session", "lock"]);
         Quickshell.execDetached(["systemctl", "suspend"]);
     }
 

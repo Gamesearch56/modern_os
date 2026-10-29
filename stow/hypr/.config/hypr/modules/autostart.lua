@@ -30,6 +30,8 @@ hl.on("hyprland.start", function()
         .. "timeout 2 systemctl --user start phylax || true) &'")
 
     hl.exec_cmd("sh -lc '" .. paths.scripts .. "/hypridle-apply.sh'")
+    -- logind HandleLidSwitch/HandlePowerKey would steal Energy actions.
+    hl.exec_cmd("sh -lc '" .. paths.scripts .. "/logind-handles.sh &'")
     -- hyprpm stores plugins in /var/cache/hyprpm/$USER and needs pkexec
     -- to create that tree the first time. Calling reload before the
     -- store exists dies with "Failed to run a superuser cmd" and the

@@ -4,65 +4,98 @@ import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
 
-MStatusCard {
+MCard {
     id: root
 
-    iconName: Battery.hasBattery ? Battery.iconName : "battery-ac-adapter-symbolic"
-    iconColor: Colors.color.primary
-    titleValue: Battery.hasBattery
-        ? I18n.t("settings.energyBattery", ({ n: Battery.percent }))
-        : I18n.t("settings.energy.onAc")
-    subtitleValue: Battery.hasBattery ? root._subtitle : ""
+    Layout.fillWidth: true
+    level: 0
+    implicitHeight: body.implicitHeight + Tokens.spacing.md * 2
 
-    readonly property string _subtitle: {
+    readonly property string _headline: {
+        if (!Battery.hasBattery)
+            return "";
+        if (Battery.full)
+            return I18n.t("settings.energy.full");
+        if (Battery.charging && Battery.untilFullLabel.length > 0)
+            return I18n.t("settings.energy.untilFullIn", ({ t: Battery.untilFullLabel }));
+        if (Battery.onBattery && Battery.remainingLabel.length > 0)
+            return I18n.t("settings.energy.remainingIn", ({ t: Battery.remainingLabel }));
+        if (Battery.charging)
+            return I18n.t("settings.energy.charging");
+        return I18n.t("settings.energy.onBattery");
+    }
+
+    readonly property string _state: {
         if (!Battery.hasBattery)
             return I18n.t("settings.energy.onAc");
-        if (Battery.charging && Battery.percent < 100)
+        if (Battery.full)
+            return I18n.t("settings.energy.pluggedIn");
+        if (Battery.charging)
             return I18n.t("settings.energy.charging");
         if (Battery.onBattery)
             return I18n.t("settings.energy.onBattery");
         return I18n.t("settings.energy.pluggedIn");
     }
 
-    detail: Flow {
-        visible: Battery.hasBattery && (Battery.timeLabel.length > 0 || Battery.rateWatts > 0)
-        Layout.fillWidth: true
-        spacing: Tokens.spacing.xs
+    ColumnLayout {
+        id: body
+        width: parent.width
+        spacing: Tokens.spacing.md
 
-        Rectangle {
-            visible: Battery.timeLabel.length > 0
-            implicitHeight: Tokens.spacing.xl
-            implicitWidth: timeLab.implicitWidth + Tokens.spacing.md * 2
-            radius: Tokens.radius.full
-            color: Colors.color.surfaceContainerHighest
-            MText {
-                id: timeLab
-                anchors.centerIn: parent
-                value: Battery.timeLabel
-                styleName: "labelLarge"
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.lg
+
+            MIcon {
+                name: Battery.hasBattery ? Battery.iconName : "battery-ac-adapter-symbolic"
+                size: Tokens.spacing.xxl * 2
+                color: Battery.hasBattery && Battery.percent <= 15 && !Battery.charging
+                    ? Colors.color.error : Colors.color.primary
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                spacing: Tokens.spacing.xs
+
+                MText {
+                    value: Battery.hasBattery
+                        ? I18n.t("settings.energyBattery", ({ n: Battery.percent }))
+                        : I18n.t("settings.energy.onAc")
+                    styleName: "titleLarge"
+                    Layout.fillWidth: true
+                }
+                MText {
+                    value: root._state
+                    styleName: "bodyMedium"
+                    color: Colors.color.onSurfaceVariant
+                    Layout.fillWidth: true
+                }
             }
         }
-        Rectangle {
-            visible: Battery.rateWatts > 0
-            implicitHeight: Tokens.spacing.xl
-            implicitWidth: wattLab.implicitWidth + Tokens.spacing.md * 2
-            radius: Tokens.radius.full
-            color: Colors.color.surfaceContainerHighest
-            MText {
-                id: wattLab
-                anchors.centerIn: parent
-                value: I18n.t("settings.energy.watts", ({ n: Math.round(Battery.rateWatts * 10) / 10 }))
-                styleName: "labelLarge"
-            }
-        }
-    }
 
-    Loader {
-        active: Battery.hasBattery
-        visible: active
-        Layout.fillWidth: true
-        Layout.preferredHeight: active ? Tokens.spacing.xxl + Tokens.spacing.md : 0
-        sourceComponent: spark
+        MText {
+            visible: Battery.hasBattery && root._headline.length > 0
+            value: root._headline
+            styleName: "displaySmall"
+            color: Colors.color.primary
+            Layout.fillWidth: true
+        }
+
+        MLinearProgress {
+            visible: Battery.hasBattery
+            Layout.fillWidth: true
+            value: Battery.percent / 100
+        }
+
+        Loader {
+            active: Battery.hasBattery
+            visible: active
+            Layout.fillWidth: true
+            Layout.preferredHeight: active ? Tokens.spacing.xxl + Tokens.spacing.md : 0
+            sourceComponent: spark
+        }
     }
 
     Component {
