@@ -15,9 +15,13 @@ MOverlay {
     chromeOpacity: 1
     scrimOpacity: Tokens.overlay.lock
     cardWidth: Tokens.spacing.xxl * 14
-    cardHeight: root.widgetId === "audio"
-        ? Tokens.spacing.xxl * 8
-        : (root.widgetId === "clock" ? Tokens.spacing.xxl * 6 : Tokens.spacing.xxl * 7)
+    readonly property bool _volumeScroll: root.widgetId === "audio" || root.widgetId === "media"
+
+    hugContent: true
+    cardHeight: root._volumeScroll
+        ? Tokens.spacing.xxl * 7
+        : (root.widgetId === "clock" ? Tokens.spacing.xxl * 6
+            : (root.widgetId === "weather" ? Tokens.spacing.xxl * 9 : Tokens.spacing.xxl * 7))
     onClosed: {}
 
     ColumnLayout {
@@ -37,22 +41,42 @@ MOverlay {
                 ]
                 onSelected: (v) => ConfigWrite.set("widgets.weather.units", v)
             }
-            MText {
-                key: "settings.fields.weatherLocation"
-                styleName: "titleSmall"
+            RowLayout {
                 Layout.fillWidth: true
                 Layout.topMargin: Tokens.spacing.md
-            }
-            MTextField {
-                Layout.fillWidth: true
-                text: Config.widgets?.weather?.manualLocation ?? ""
-                placeholderKey: "settings.weatherLocationPlaceholder"
-                onAccepted: ConfigWrite.set("widgets.weather.manualLocation", text)
-                onEditingFinished: ConfigWrite.set("widgets.weather.manualLocation", text)
+                spacing: Tokens.spacing.md
+                MText {
+                    key: "settings.fields.weatherGeo"
+                    styleName: "bodyMedium"
+                    color: Colors.color.onSurfaceVariant
+                    Layout.fillWidth: true
+                }
+                MSwitch {
+                    checked: (Config.widgets?.weather?.locationMode || "auto") !== "manual"
+                    onToggled: (v) => ConfigWrite.set("widgets.weather.locationMode", v ? "auto" : "manual")
+                }
             }
             MHint {
                 key: "settings.hints.weatherLocation"
                 Layout.fillWidth: true
+            }
+            MField {
+                visible: (Config.widgets?.weather?.locationMode || "auto") === "manual"
+                labelKey: "settings.fields.weatherCity"
+                MSelect {
+                    remote: true
+                    placeholderKey: "settings.weatherSearchCity"
+                    value: Config.widgets?.weather?.manualLocation ?? ""
+                    valueLabel: Config.widgets?.weather?.placeName ?? ""
+                    model: WeatherGeocode.results
+                    onSearched: (q) => WeatherGeocode.search(q)
+                    onSelected: (v) => {
+                        ConfigWrite.set("widgets.weather.manualLocation", v);
+                        const lab = WeatherGeocode.labelFor(v);
+                        if (lab.length)
+                            ConfigWrite.set("widgets.weather.placeName", lab);
+                    }
+                }
             }
         }
 
@@ -87,26 +111,31 @@ MOverlay {
             }
         }
 
-        MField {
-            visible: root.widgetId === "audio"
-            labelKey: "settings.fields.scrollStep"
-            MSlider {
-                from: 1
-                to: 20
-                value: Config.widgets?.audio?.scrollStepPercent ?? 5
-                showValue: true
-                onCommitted: (v) => ConfigWrite.set("widgets.audio.scrollStepPercent", Math.round(v))
+        ColumnLayout {
+            visible: root._volumeScroll
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignTop
+            spacing: Tokens.spacing.sm
+
+            MField {
+                labelKey: "settings.fields.scrollStep"
+                MSlider {
+                    from: 1
+                    to: 20
+                    value: Config.widgets?.audio?.scrollStepPercent ?? 5
+                    showValue: true
+                    onCommitted: (v) => ConfigWrite.set("widgets.audio.scrollStepPercent", Math.round(v))
+                }
             }
-        }
-        MField {
-            visible: root.widgetId === "audio"
-            labelKey: "settings.fields.scrollStepFine"
-            MSlider {
-                from: 1
-                to: 5
-                value: Config.widgets?.audio?.scrollStepFinePercent ?? 1
-                showValue: true
-                onCommitted: (v) => ConfigWrite.set("widgets.audio.scrollStepFinePercent", Math.round(v))
+            MField {
+                labelKey: "settings.fields.scrollStepFine"
+                MSlider {
+                    from: 1
+                    to: 5
+                    value: Config.widgets?.audio?.scrollStepFinePercent ?? 1
+                    showValue: true
+                    onCommitted: (v) => ConfigWrite.set("widgets.audio.scrollStepFinePercent", Math.round(v))
+                }
             }
         }
     }

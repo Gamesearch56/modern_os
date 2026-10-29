@@ -37,6 +37,7 @@ singleton Overview 1.0 Overview.qml
 singleton Plugins 1.0 Plugins.qml
 singleton Mail 1.0 Mail.qml
 singleton Weather 1.0 Weather.qml
+singleton WeatherGeocode 1.0 WeatherGeocode.qml
 singleton Calendar 1.0 Calendar.qml
 singleton Ai 1.0 Ai.qml
 AiStatus 1.0 AiStatus.qml

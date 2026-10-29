@@ -9,8 +9,8 @@ ColumnLayout {
     id: root
     spacing: Tokens.spacing.md
 
-    Component.onCompleted: Battery.watching = true
-    Component.onDestruction: Battery.watching = false
+    Component.onCompleted: Battery.watch()
+    Component.onDestruction: Battery.unwatch()
 
     readonly property var lidActions: [
         { value: "ask", titleKey: "settings.powerAsk" },

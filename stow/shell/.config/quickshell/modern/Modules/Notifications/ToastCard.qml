@@ -96,7 +96,7 @@ MouseArea {
         anchors.fill: parent
         radius: Tokens.radius.medium
         color: Colors.color.surface
-        opacity: Config.design.transparency ?? 0.85
+        opacity: Chrome.washOpacity
     }
 
     MLinearProgress {

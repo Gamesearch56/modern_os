@@ -5,6 +5,7 @@
 -- compositor so the greetd handoff is not a black frame.
 
 local json = require("lib.json")
+local glass = require("modules.glass")
 
 local function hex_stripped(value)
     if type(value) ~= "string" then
@@ -22,9 +23,10 @@ local function apply_surface(surface)
             background_color = "0x" .. surface,
         },
         -- A whisper of the surface role, not the acrylic default blue.
+        -- Alpha follows glass.lua so light surfaces do not milk the frost.
         decoration = {
             blur = {
-                acrylic = { tint = "0x18" .. surface },
+                acrylic = { tint = glass.acrylic_tint(surface) },
             },
         },
     })

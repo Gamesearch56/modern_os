@@ -7,7 +7,7 @@ Item {
     id: root
 
     property var sources: []
-    property real washOpacity: Config.design.transparency ?? 0.85
+    property real washOpacity: Chrome.washOpacity
     property real scrimOpacity: Tokens.overlay.scrim
     property int _i: 0
 

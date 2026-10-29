@@ -82,7 +82,22 @@ ColumnLayout {
     }
 
     function _configurable(id) {
-        return id === "weather" || id === "clock" || id === "audio";
+        return id === "weather" || id === "clock" || id === "audio" || id === "media";
+    }
+
+    function _openLinkedEditor() {
+        const id = String(Settings.subsectionId || "");
+        if (!root._configurable(id))
+            return;
+        root.editorId = id;
+        Settings.subsectionId = "";
+    }
+
+    Component.onCompleted: Qt.callLater(root._openLinkedEditor)
+
+    Connections {
+        target: Settings
+        function onSubsectionIdChanged() { Qt.callLater(root._openLinkedEditor); }
     }
 
     function _enabled(id) {

@@ -22,11 +22,18 @@ Item {
         y: root._barReserve
         width: inner.implicitWidth + Tokens.spacing.md * 2
         height: inner.implicitHeight + Tokens.spacing.md * 2
-        color: Colors.color.surface
+        color: "transparent"
         radius: Tokens.radius.medium
         border.color: Colors.color.outlineVariant
         border.width: Tokens.stroke.hairline
-        opacity: Config.design.transparency ?? 0.85
+
+        Rectangle {
+            anchors.fill: parent
+            radius: parent.radius
+            color: Colors.color.surface
+            opacity: Chrome.washOpacity
+            z: -1
+        }
         scale: Motion.overlayScale(Screenshot.hudOpen)
         transformOrigin: Item.Top
 

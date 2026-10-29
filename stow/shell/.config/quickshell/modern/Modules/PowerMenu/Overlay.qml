@@ -79,12 +79,19 @@ Item {
             width: Tokens.spacing.xxl * 12
             implicitHeight: inner.implicitHeight + Tokens.spacing.lg * 2
             height: implicitHeight
-            color: Colors.color.surface
+            color: "transparent"
             radius: Tokens.radius.medium
             border.color: Colors.color.outlineVariant
             border.width: Tokens.stroke.hairline
             clip: true
-            opacity: Config.design.transparency ?? 0.85
+
+            Rectangle {
+                anchors.fill: parent
+                radius: parent.radius
+                color: Colors.color.surface
+                opacity: Chrome.washOpacity
+                z: -1
+            }
 
             MIconButton {
                 z: 1

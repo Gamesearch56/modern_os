@@ -54,7 +54,7 @@ Item {
             "file://" + Wallpaper.stateBlur,
             root.wallpaperFile.length > 0 ? "file://" + root.wallpaperFile : ""
         ]
-        washOpacity: Config.design.transparency ?? 0.85
+        washOpacity: Chrome.washOpacity
         scrimOpacity: Tokens.overlay.scrim
 
         Behavior on opacity {

@@ -10,8 +10,8 @@ Item {
     width: parent ? parent.width : Tokens.spacing.xxl * 14
     implicitWidth: Tokens.spacing.xxl * 14
     implicitHeight: chrome.implicitHeight
-
     property string range: "today"
+    signal setupRequested()
 
     onRangeChanged: {
         if (root.hourly)
@@ -282,8 +282,8 @@ Item {
                 iconName: "weather-none"
                 titleKey: "weather.unavailableTitle"
                 hintKey: "weather.unavailableHint"
-                actionKey: "weather.refresh"
-                onActionClicked: Weather.refresh(true)
+                actionKey: "weather.setup"
+                onActionClicked: root.setupRequested()
             }
         }
     }

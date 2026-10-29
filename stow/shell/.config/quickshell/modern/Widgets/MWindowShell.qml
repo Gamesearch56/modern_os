@@ -14,7 +14,7 @@ Item {
     property string actionKey: ""
     property string actionIcon: ""
     property real titleColumnWidth: 0
-    property real chromeOpacity: Config.design.transparency ?? 0.85
+    property real chromeOpacity: Chrome.washOpacity
     property bool busy: false
     property alias trailing: chrome.trailing
 
@@ -27,10 +27,15 @@ Item {
         anchors.fill: parent
         color: Colors.color.surface
         radius: Tokens.radius.medium
+        opacity: root.chromeOpacity
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: "transparent"
+        radius: Tokens.radius.medium
         border.color: Colors.color.outlineVariant
         border.width: Tokens.stroke.hairline
-        clip: true
-        opacity: root.chromeOpacity
     }
 
     ColumnLayout {

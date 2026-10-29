@@ -66,8 +66,13 @@ Item {
             height: item ? item.implicitHeight : parent.height
             source: Qt.resolvedUrl("Panel.qml")
             onLoaded: {
-                if (item)
-                    item.width = Qt.binding(() => panelLoader.width);
+                if (!item)
+                    return;
+                item.width = Qt.binding(() => panelLoader.width);
+                item.setupRequested.connect(() => {
+                    popup.open = false;
+                    Settings.openAt("bar", "weather");
+                });
             }
         }
     }

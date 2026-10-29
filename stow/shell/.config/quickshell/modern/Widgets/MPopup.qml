@@ -16,7 +16,7 @@ Item {
     property real gap: Tokens.spacing.xs
     property bool autoPlace: true
     property bool opensAbove: false
-    property real chromeOpacity: Config.design.transparency ?? 0.85
+    property real chromeOpacity: Chrome.washOpacity
     property bool reparentToHost: true
     default property alias content: card.content
 
@@ -26,7 +26,7 @@ Item {
     readonly property Item _field: root._anchor || root.parent
 
     visible: root.open || opacity > 0.01
-    opacity: Motion.overlayOpacity(root.open) * root.chromeOpacity
+    opacity: Motion.overlayOpacity(root.open)
     scale: Motion.overlayScale(root.open)
     transformOrigin: root.opensAbove ? Item.Bottom : Item.Top
     // Above MDialog (100): menus reparent onto the window and must
@@ -158,12 +158,20 @@ Item {
         }
     }
 
+    Rectangle {
+        anchors.fill: parent
+        radius: Tokens.radius.medium
+        color: Colors.color.surface
+        opacity: root.chromeOpacity
+        z: 0
+    }
+
     MCard {
         id: card
         anchors.fill: parent
         level: 0
-        color: Colors.color.surface
-        borderWidth: popupHover.hovered ? 2 : 1
+        color: "transparent"
+        borderWidth: popupHover.hovered ? Tokens.stroke.focus : Tokens.stroke.hairline
         borderColor: popupHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
         z: 1
 

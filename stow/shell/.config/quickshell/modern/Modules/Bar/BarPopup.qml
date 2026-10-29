@@ -146,7 +146,7 @@ PopupWindow {
                 anchors.fill: parent
                 radius: root.barIslandChrome ? Tokens.radius.full : Tokens.radius.medium
                 color: Colors.color.surface
-                opacity: Config.design.transparency ?? 0.85
+                opacity: Chrome.washOpacity
                 border.width: root.barIslandChrome ? Tokens.stroke.hairline : (root.open ? Tokens.stroke.focus : Tokens.stroke.hairline)
                 border.color: root.barIslandChrome ? Colors.color.outlineVariant : (root.open ? Colors.color.primary : Colors.color.outlineVariant)
             }

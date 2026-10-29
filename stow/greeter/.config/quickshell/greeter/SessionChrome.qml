@@ -48,8 +48,9 @@ Item {
     readonly property var easingDecel: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
     readonly property var easingAccel: [0.3, 0.0, 0.8, 0.15, 1.0, 1.0]
     readonly property real transparency: {
+        void root.color;
         const t = Number(root._chrome.design?.transparency);
-        return (t > 0 && t <= 1) ? t : 0.85;
+        return root.washOpacity((t > 0 && t <= 1) ? t : 0.85);
     }
     readonly property real strokeHairline: 1
     readonly property real strokeFocus: 2
@@ -160,6 +161,23 @@ Item {
         if (name === "titleMedium" || name === "labelLarge" || name === "headlineSmall")
             return 500;
         return 400;
+    }
+
+    // Keep in sync with Commons/Chrome.washOpacity (Tokens.glass).
+    function washOpacity(t: real): real {
+        const base = (t > 0 && t <= 1) ? t : 0.85;
+        const hex = String((root.color && root.color.surface) || root._fallbackColor.surface).replace("#", "");
+        if (hex.length < 6)
+            return base;
+        const r = parseInt(hex.slice(0, 2), 16) / 255;
+        const g = parseInt(hex.slice(2, 4), 16) / 255;
+        const b = parseInt(hex.slice(4, 6), 16) / 255;
+        if (isNaN(r) || isNaN(g) || isNaN(b))
+            return base;
+        const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const lift = Math.max(0, L - 0.25);
+        const pass = (1 - base) * (1 + lift * 3.2);
+        return Math.max(0.28, Math.min(1, 1 - pass));
     }
 
     function overlayOpacity(open: bool): real {

@@ -88,9 +88,10 @@ Update have no Restore control.
 ## Bar widget forms
 
 Click a widget on Settings → Bar. Overlay fields (when the widget has
-them): weather location/units, clock seconds/weekday, audio scroll
-steps (Shift+wheel uses the fine step). Customizable widgets (clock,
-weather, volume) use a hover outline instead of a gear. Drag rows
+them): weather units plus current location (default on) or an
+Open-Meteo city search (`lat,lon`), clock seconds/weekday, audio/media
+scroll steps (Shift+wheel uses the fine step). Customizable widgets
+(clock, weather, volume, media) use a hover outline instead of a gear. Drag rows
 across the three-column Left / Middle / Right table; enable/disable
 from Available widgets (on → left). Auto-hide stays pinned open while
 a bar popup is showing.

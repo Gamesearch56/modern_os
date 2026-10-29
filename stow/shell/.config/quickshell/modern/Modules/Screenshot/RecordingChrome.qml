@@ -9,10 +9,18 @@ Rectangle {
     required property bool open
     property int origin: Item.Top
 
-    color: Colors.color.surface
+    color: "transparent"
     border.color: Colors.color.outlineVariant
     border.width: Tokens.stroke.hairline
-    opacity: root.open ? (Config.design.transparency ?? 0.85) : 0
+    opacity: root.open ? 1 : 0
+
+    Rectangle {
+        anchors.fill: parent
+        radius: parent.radius
+        color: Colors.color.surface
+        opacity: Chrome.washOpacity
+        z: -1
+    }
     scale: Motion.overlayScale(root.open)
     transformOrigin: root.origin
 

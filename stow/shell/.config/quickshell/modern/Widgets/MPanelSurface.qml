@@ -16,7 +16,7 @@ Rectangle {
         anchors.fill: parent
         radius: parent.radius
         color: Colors.color.surface
-        opacity: Config.design.transparency ?? 0.85
+        opacity: Chrome.washOpacity
         z: -1
     }
 }

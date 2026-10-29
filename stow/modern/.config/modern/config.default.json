@@ -95,6 +95,7 @@
     "weather": {
       "locationMode": "auto",
       "manualLocation": "",
+      "placeName": "",
       "units": "metric",
       "pollIntervalMs": 600000
     },

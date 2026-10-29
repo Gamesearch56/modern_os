@@ -12,12 +12,15 @@ Item {
     property string label: ""
     property bool showLabel: false
     property bool checked: false
+    property bool alert: false
     property int iconSize: Tokens.icon.md
 
     signal clicked()
 
     readonly property bool _named: root.showLabel && root.label.length > 0
-    readonly property color _fg: root.checked ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+    readonly property color _fg: root.checked
+        ? Colors.color.onPrimaryContainer
+        : (root.alert ? Colors.color.error : Colors.color.onSurface)
     readonly property real _layer: Chrome.stateLayer(ma.containsMouse && !root.checked, ma.pressed && !root.checked)
 
     implicitWidth: row.implicitWidth

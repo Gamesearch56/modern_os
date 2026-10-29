@@ -1,45 +1,32 @@
 import QtQuick
-import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "../../"
 
 Item {
     id: root
-    visible: Battery.onBattery
-    implicitWidth: visible ? (BarLayout.vertical ? Config.bar.height : row.implicitWidth) : 0
-    implicitHeight: visible ? (Tokens.spacing.xl + Tokens.spacing.xs) : 0
 
-    Component.onCompleted: Battery.watching = true
-    Component.onDestruction: Battery.watching = false
+    visible: Battery.hasBattery
+    implicitWidth: visible ? hit.implicitWidth : 0
+    implicitHeight: Config.bar.height
 
-    RowLayout {
-        id: row
-        anchors.centerIn: parent
-        spacing: Tokens.spacing.xs
+    Component.onCompleted: Battery.watch()
+    Component.onDestruction: Battery.unwatch()
 
-        MIcon {
-            name: Battery.iconName
-            size: Tokens.icon.md
-            color: Colors.color.onSurface
+    BarIconLabel {
+        id: hit
+        iconName: Battery.iconName
+        key: "bar.battery"
+        label: String(Battery.percent) + "%"
+        showLabel: !BarLayout.vertical
+        checked: Settings.open && Settings.sectionId === "power"
+        alert: Battery.percent <= 15 && !Battery.charging
+        onClicked: {
+            if (Settings.open && Settings.sectionId === "power")
+                Settings.close();
+            else
+                Settings.openAt("power", "");
         }
-
-        MText {
-            visible: !BarLayout.vertical
-            value: String(Battery.percent) + "%"
-            styleName: "labelLarge"
-            color: Colors.color.onSurface
-        }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: Settings.openAt("power", "")
-    }
-
-    HoverHandler {
-        cursorShape: Qt.PointingHandCursor
-        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     }
 }

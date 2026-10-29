@@ -59,6 +59,15 @@ Singleton {
         readonly property real lock: 0.48
     }
 
+    // Light surfaces sit near tone 98; the same alpha as dark chrome
+    // reads as a sheet. Chrome.washOpacity boosts pass-through once
+    // luminance clears liftFrom. Slider 1.0 stays fully opaque.
+    readonly property QtObject glass: QtObject {
+        readonly property real liftFrom: 0.25
+        readonly property real passBoost: 3.2
+        readonly property real minWash: 0.28
+    }
+
     readonly property QtObject icon: QtObject {
         readonly property real xs: 16
         readonly property real sm: 20

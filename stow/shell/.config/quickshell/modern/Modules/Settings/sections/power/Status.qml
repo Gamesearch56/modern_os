@@ -7,7 +7,7 @@ import "../../../../Services"
 MStatusCard {
     id: root
 
-    iconName: Battery.hasBattery ? Battery.iconName : "ac-adapter"
+    iconName: Battery.hasBattery ? Battery.iconName : "battery-ac-adapter-symbolic"
     iconColor: Colors.color.primary
     titleValue: Battery.hasBattery
         ? I18n.t("settings.energyBattery", ({ n: Battery.percent }))

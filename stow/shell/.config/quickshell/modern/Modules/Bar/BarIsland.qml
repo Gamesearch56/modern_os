@@ -22,7 +22,13 @@ Item {
         anchors.fill: parent
         radius: Tokens.radius.full
         color: Colors.color.surface
-        opacity: Config.design.transparency ?? 0.85
+        opacity: Chrome.washOpacity
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: Tokens.radius.full
+        color: "transparent"
         border.width: Tokens.stroke.hairline
         border.color: Colors.color.outlineVariant
     }
