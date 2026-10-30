@@ -5,7 +5,7 @@
 -- from the same process that grows a title stays a floating dialog.
 
 local TOAST_W, TOAST_H, MARGIN, BAR_FALLBACK, SETTLE_MS = 440, 176, 12, 48, 120
-local focused, state = nil, {}
+local focused, state, seen = nil, {}, {}
 local CLASS_KEYS = { "class", "initial_class", "initialClass" }
 local TITLE_KEYS = { "title", "initial_title", "initialTitle" }
 
@@ -34,7 +34,9 @@ local function browser_pid(w)
     end
     local comm = (f:read("*l") or ""):gsub("%s+", "")
     f:close()
-    if comm == "vivaldi" or comm == "vivaldi-bin" or comm == "chromium" or comm == "electron" then
+    -- vivaldi-bin is the --app process (mail, calendar). vivaldi-stable
+    -- is the same binary when the desktop entry launches it.
+    if comm:sub(1, 7) == "vivaldi" or comm == "chromium" or comm == "electron" then
         return true
     end
     return comm:sub(1, 6) == "chrome" or comm:sub(1, 13) == "google-chrome" or comm:sub(1, 5) == "brave"
@@ -55,10 +57,68 @@ local function origin_stamp(title)
     return title:find(" • ", 1, true) ~= nil or title:find(" · ", 1, true) ~= nil
 end
 
+-- vivaldi-mail.proton.me__-Default is the --app window. vivaldi-stable
+-- (no dot) is the normal browser and must keep tiling.
+local function app_class(class)
+    return class:find("^vivaldi%-") ~= nil and class:find(".", 1, true) ~= nil
+end
+
+local function host_of(class)
+    return class:match("^vivaldi%-(.+)__%-") or ""
+end
+
+-- The inbox title is the site or "Postfach | … | Proton Mail". A notice
+-- is either untitled or a short subject. The bullet form is origin_stamp.
+local function document_title(class, title)
+    if title == "" or origin_stamp(title) then
+        return false
+    end
+    if title:find(" | ", 1, true) or title:find("_/", 1, true) then
+        return true
+    end
+    if title:find("Proton Mail", 1, true) or title:find("Proton Calendar", 1, true) then
+        return true
+    end
+    local host = host_of(class)
+    return host ~= "" and (title == host or title:sub(1, #host + 1) == host .. "/")
+end
+
+local function note(w)
+    local class, addr = field(w, CLASS_KEYS), addr_of(w)
+    if not app_class(class) or addr == "" then
+        return
+    end
+    local bucket = seen[class]
+    if not bucket then
+        bucket = {}
+        seen[class] = bucket
+    end
+    bucket[addr] = true
+end
+
+local function sibling(class, addr)
+    local bucket = seen[class]
+    if not bucket then
+        return false
+    end
+    for a in pairs(bucket) do
+        if a ~= addr then
+            return true
+        end
+    end
+    return false
+end
+
 local function kind_of(w)
     local class, title = field(w, CLASS_KEYS), field(w, TITLE_KEYS)
     if origin_stamp(title) and (class == "" or browser_class(class)) then
         return "toast"
+    end
+    -- The mail app is already open on the background workspace. A further
+    -- window from that same app id is Vivaldi's own notice, and it tiles
+    -- on the workspace in front of you. The inbox title stays a real window.
+    if app_class(class) and sibling(class, addr_of(w)) and not document_title(class, title) then
+        return title == "" and "pending" or "toast"
     end
     if not browser_pid(w) then
         return nil
@@ -92,6 +152,16 @@ local function restore_focus()
     if focused and hl.dsp and hl.dsp.focus then
         dispatch(hl.dsp.focus({ window = focused }))
     end
+end
+
+local function toast_slot()
+    local n = 0
+    for _, st in pairs(state) do
+        if st == "toast" then
+            n = n + 1
+        end
+    end
+    return n
 end
 
 local function place_toast(w)
@@ -129,7 +199,7 @@ local function place_toast(w)
     end
     dispatch(api.move({
         x = (tonumber(m.x) or 0) + mw - TOAST_W - right,
-        y = (tonumber(m.y) or 0) + top,
+        y = (tonumber(m.y) or 0) + top + toast_slot() * (TOAST_H + MARGIN),
         window = w,
     }))
 end
@@ -140,9 +210,9 @@ local function apply_kind(w, kind)
         return
     end
     if kind == "toast" then
-        state[addr] = "toast"
         float_set(w, true)
         place_toast(w)
+        state[addr] = "toast"
         restore_focus()
     elseif kind == "dialog" and state[addr] ~= "toast" then
         state[addr] = "dialog"
@@ -160,6 +230,7 @@ local function apply_kind(w, kind)
 end
 
 local function on_open(w)
+    note(w)
     local addr = addr_of(w)
     if addr == "" or state[addr] == "toast" or state[addr] == "app" then
         return
@@ -201,6 +272,9 @@ if hl.on then
         if origin_stamp(title) or (class == "" and title == "" and browser_pid(w)) then
             return
         end
+        if app_class(class) and not document_title(class, title) then
+            return
+        end
         focused = w
     end)
     hl.on("window.open_early", on_open)
@@ -208,6 +282,41 @@ if hl.on then
     hl.on("window.title", on_open)
     hl.on("window.class", on_open)
     hl.on("window.close", function(w)
-        state[addr_of(w)] = nil
+        local addr = addr_of(w)
+        state[addr] = nil
+        local class = field(w, CLASS_KEYS)
+        local bucket = seen[class]
+        if bucket then
+            bucket[addr] = nil
+        end
     end)
+end
+
+-- Mail is already mapped when this config loads. Asking hyprctl during
+-- the reload deadlocks the IPC, so the list is read on the next tick.
+local function seed_open_apps()
+    local json_ok, json = pcall(require, "lib.json")
+    if not json_ok then
+        return
+    end
+    local ok_f, f = pcall(io.popen, "hyprctl clients -j 2>/dev/null", "r")
+    if not ok_f or not f then
+        return
+    end
+    local raw = f:read("*a") or ""
+    f:close()
+    local ok, data = pcall(json.decode, raw)
+    if not ok or type(data) ~= "table" then
+        return
+    end
+    for i = 1, #data do
+        local c = data[i]
+        if type(c) == "table" then
+            note({ class = c.class, initial_class = c.initialClass, address = c.address })
+        end
+    end
+end
+
+if hl.timer then
+    hl.timer(seed_open_apps, { timeout = 300, type = "oneshot" })
 end

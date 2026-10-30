@@ -91,6 +91,40 @@ local function forget(w)
     end
 end
 
+-- A mail notice uses the same app id as the inbox. Closing the notice
+-- must not start a second Proton Mail while the inbox is still mapped.
+local function another_open(name, closed_addr)
+    local json_ok, json = pcall(require, "lib.json")
+    if not json_ok then
+        return false
+    end
+    local ok_f, f = pcall(io.popen, "hyprctl clients -j 2>/dev/null", "r")
+    if not ok_f or not f then
+        return false
+    end
+    local raw = f:read("*a") or ""
+    f:close()
+    local ok, data = pcall(json.decode, raw)
+    if not ok or type(data) ~= "table" then
+        return false
+    end
+    for i = 1, #data do
+        local c = data[i]
+        if type(c) == "table" and tostring(c.address or "") ~= closed_addr then
+            local w = {
+                class = c.class,
+                initial_class = c.initialClass,
+                title = c.title,
+                initial_title = c.initialTitle,
+            }
+            if match.window_matches(w, name) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 local function on_special(w)
     local ws = w and w.workspace
     local n = type(ws) == "table" and tostring(ws.name or "") or tostring(ws or "")
@@ -202,9 +236,10 @@ if hl.on then
         if shutting_down then
             return
         end
+        local closed = tostring(w and w.address or "")
         local name = desktop_for_window(w)
         forget(w)
-        if name == "" or not in_autostart(name) then
+        if name == "" or not in_autostart(name) or another_open(name, closed) then
             return
         end
         local busy = _G.__modern_as_busy

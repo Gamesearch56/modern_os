@@ -228,7 +228,11 @@ if grep -Fq 'require("modules.browser_popups")' \
         "$ROOT/stow/hypr/.config/hypr/hyprland.lua" \
     && grep -Fq 'action = on and "set" or "unset"' "$POPUPS" \
     && grep -Fq 'origin_stamp' "$POPUPS" \
-    && grep -Fq 'SETTLE_MS' "$POPUPS"; then
+    && grep -Fq 'app_class' "$POPUPS" \
+    && grep -Fq 'document_title' "$POPUPS" \
+    && grep -Fq 'SETTLE_MS' "$POPUPS" \
+    && grep -Fq 'another_open' \
+        "$ROOT/stow/hypr/.config/hypr/modules/session_apps.lua"; then
     ok "browser notification toplevels float instead of tiling"
 else
     err "anonymous browser notification windows must be floated"
