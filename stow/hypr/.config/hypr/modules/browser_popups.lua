@@ -1,8 +1,9 @@
 -- Chromium and Vivaldi draw some web notifications as a Wayland
 -- toplevel that never sets an app id or a title (hyprwm/Hyprland
--- #14087). The layout then tiles that surface, so a one-line toast
--- fills the workspace. Float it and park it under the bar. A dialog
--- from the same process that grows a title stays a floating dialog.
+-- #14087). That happens when the browser starts before the desktop
+-- notification service. Close those toplevels and post a real
+-- notification. A dialog from the same process that grows a title
+-- stays a floating dialog.
 
 local TOAST_W, TOAST_H, MARGIN, BAR_FALLBACK, SETTLE_MS = 440, 176, 12, 48, 120
 local focused, state, seen = nil, {}, {}
@@ -109,6 +110,58 @@ local function sibling(class, addr)
     return false
 end
 
+local config = require("modules.config")
+
+local function live_window(addr)
+    if addr == "" or not hl.get_windows then
+        return nil
+    end
+    local wins = hl.get_windows()
+    if type(wins) ~= "table" then
+        return nil
+    end
+    for i = 1, #wins do
+        local c = wins[i]
+        if type(c) == "table" and tostring(c.address or "") == addr then
+            return c
+        end
+    end
+    return nil
+end
+
+local function pid_of(w)
+    local pid = tonumber(w and w.pid) or 0
+    if pid > 0 then
+        return pid
+    end
+    local live = live_window(addr_of(w))
+    return tonumber(live and live.pid) or 0
+end
+
+local function notice_copy(pid)
+    local ok_lang, lang_v = pcall(function()
+        return config.value("language.ui", "en")
+    end)
+    local lang = ok_lang and tostring(lang_v or "en") or "en"
+    local de = lang:sub(1, 2) == "de"
+    local f = io.open("/proc/" .. tostring(pid) .. "/cmdline", "r")
+    local cmd = ""
+    if f then
+        cmd = (f:read("*a") or ""):gsub("%z", " ")
+        f:close()
+    end
+    if cmd:find("proton-mail", 1, true) then
+        return "Proton Mail", de and "Neue E-Mail" or "New email"
+    end
+    if cmd:find("proton-calendar", 1, true) then
+        return "Proton Calendar", de and "Neuer Termin" or "New event"
+    end
+    if cmd:find("whatsapp", 1, true) then
+        return "WhatsApp", de and "Neue Nachricht" or "New message"
+    end
+    return "Vivaldi", de and "Neue Benachrichtigung" or "New notification"
+end
+
 local function kind_of(w)
     local class, title = field(w, CLASS_KEYS), field(w, TITLE_KEYS)
     if origin_stamp(title) and (class == "" or browser_class(class)) then
@@ -136,6 +189,39 @@ local function dispatch(spec)
     if hl.dispatch and spec then
         pcall(hl.dispatch, spec)
     end
+end
+
+-- Vivaldi's own balloon has no app id and no title. Close it and hand
+-- the desktop a real notification. A file dialog from another process
+-- keeps its window. The pid is resolved on a timer, because the open
+-- event often has none yet.
+local function drop_vivaldi_notice(w)
+    local class, title = field(w, CLASS_KEYS), field(w, TITLE_KEYS)
+    if class ~= "" or title ~= "" then
+        return false
+    end
+    local pid = pid_of(w)
+    if pid <= 0 or not browser_pid({ pid = pid }) then
+        return false
+    end
+    local addr = addr_of(w)
+    if state[addr] == "drop" then
+        return true
+    end
+    state[addr] = "drop"
+    local summary, body = notice_copy(pid)
+    local api = hl.dsp and hl.dsp.window
+    local target = live_window(addr) or w
+    if api and api.close then
+        dispatch(api.close({ window = target }))
+    end
+    if hl.exec_cmd then
+        hl.exec_cmd(string.format(
+            "notify-send --app-name=%q %q %q",
+            summary, summary, body
+        ))
+    end
+    return true
 end
 
 local function win()
@@ -230,6 +316,33 @@ local function apply_kind(w, kind)
 end
 
 local function on_open(w)
+    local class, title = field(w, CLASS_KEYS), field(w, TITLE_KEYS)
+    if class == "" and title == "" then
+        local addr = addr_of(w)
+        if state[addr] == "drop" or state[addr] == "watch" then
+            return
+        end
+        state[addr] = "watch"
+        float_set(w, true)
+        restore_focus()
+        local function finish()
+            if drop_vivaldi_notice(w) then
+                return
+            end
+            if state[addr] == "watch" then
+                state[addr] = nil
+            end
+            float_set(w, false)
+            note(w)
+            apply_kind(w, kind_of(w))
+        end
+        if hl.timer then
+            hl.timer(finish, { timeout = SETTLE_MS, type = "oneshot" })
+        else
+            finish()
+        end
+        return
+    end
     note(w)
     local addr = addr_of(w)
     if addr == "" or state[addr] == "toast" or state[addr] == "app" then
