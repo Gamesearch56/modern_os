@@ -223,6 +223,17 @@ else
     err "virtual GPU must disable blur, fp16, and color management without changing a real GPU"
 fi
 
+POPUPS="$ROOT/stow/hypr/.config/hypr/modules/browser_popups.lua"
+if grep -Fq 'require("modules.browser_popups")' \
+        "$ROOT/stow/hypr/.config/hypr/hyprland.lua" \
+    && grep -Fq 'action = on and "set" or "unset"' "$POPUPS" \
+    && grep -Fq 'origin_stamp' "$POPUPS" \
+    && grep -Fq 'SETTLE_MS' "$POPUPS"; then
+    ok "browser notification toplevels float instead of tiling"
+else
+    err "anonymous browser notification windows must be floated"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi
