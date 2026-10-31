@@ -519,6 +519,8 @@ if [ -x "$WL" ] \
     && grep -F 'broadcom-wl-dkms' "$CUSTOM" >/dev/null \
     && grep -F 'linux-zen-headers' "$CUSTOM" >/dev/null \
     && grep -F 'mount --rbind' "$CUSTOM" >/dev/null \
+    && grep -F 'pacman-key --init' "$CUSTOM" >/dev/null \
+    && grep -F 'pacman-key --populate archlinux' "$CUSTOM" >/dev/null \
     && grep -F 'depmod -a' "$CUSTOM" >/dev/null \
     && grep -F 'mount --bind' "$ROOT/scripts/iso-build.sh" >/dev/null \
     && grep -F 'release_chroot_mounts' "$ROOT/scripts/iso-build.sh" >/dev/null \

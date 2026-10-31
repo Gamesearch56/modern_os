@@ -24,6 +24,13 @@ if [ -z "$kver" ]; then
     exit 1
 fi
 
+# archiso creates this keyring at boot (pacman-init on a tmpfs). The
+# build chroot has none, so pacman -S stops with "keyring is not writable"
+# after the packages have already downloaded.
+install -d -m 0700 /etc/pacman.d/gnupg
+pacman-key --init
+pacman-key --populate archlinux
+
 pacman --disable-sandbox -S --needed --noconfirm broadcom-wl-dkms linux-zen-headers
 
 ko="$(find "/usr/lib/modules/$kver" -name 'wl.ko*' -print -quit)"
@@ -47,6 +54,8 @@ cp -a "$ko" "$keep"
 name="$(basename "$ko")"
 
 pacman --disable-sandbox -Rns --noconfirm broadcom-wl-dkms linux-zen-headers
+# The live boot replaces this with its own tmpfs keyring.
+rm -rf /etc/pacman.d/gnupg
 
 install -D -m 0644 "$keep" "/usr/lib/modules/$kver/updates/$name"
 rm -f "$keep"
