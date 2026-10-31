@@ -1,5 +1,5 @@
-// UPower via battery-read.sh. The bar island is hidden on AC-only
-// desktops, not while a laptop pack is charging.
+// Kernel power_supply plus UPower, via battery-read.sh. The bar icon
+// is hidden on AC-only desktops, not while a laptop pack is charging.
 pragma Singleton
 
 import Quickshell
@@ -16,7 +16,6 @@ Singleton {
     property bool onBattery: false
     property int percent: 100
     property bool charging: false
-    property var percentSamples: []
     property int timeSeconds: 0
     property bool timeToFull: false
     property int timeEmptySeconds: 0
@@ -100,7 +99,6 @@ Singleton {
         root.healthPercent = 0;
         root.voltage = 0;
         root.cycles = -1;
-        root.percentSamples = [];
     }
 
     function _parse(text: string) {
@@ -129,11 +127,6 @@ Singleton {
             root.healthPercent = Number(obj.healthPercent) || 0;
             root.voltage = Number(obj.voltage) || 0;
             root.cycles = (obj.cycles === 0 || obj.cycles > 0) ? Number(obj.cycles) : -1;
-            const next = (root.percentSamples || []).slice();
-            next.push(root.percent);
-            if (next.length > 32)
-                next.shift();
-            root.percentSamples = next;
         } catch (e) {
             Logger.error("Battery", String(e));
         }
@@ -141,7 +134,7 @@ Singleton {
 
     Process {
         id: proc
-        command: [Paths.script("battery-read.sh")]
+        command: ["/bin/bash", Paths.script("battery-read.sh")]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parse(this.text)

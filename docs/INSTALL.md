@@ -464,11 +464,12 @@ A VM has virtio Ethernet, no radio and UEFI. A laptop differs here:
   unsigned. Prefer UEFI mode; Legacy/CSM works through the GRUB path.
 - **Network during install is required** — the desktop phase downloads
   packages. Wi-Fi in the Network step goes through NetworkManager.
-  Broadcom chips that need `wl` (BCM4311/4312/4321/4322/43227/43228/
-  4331/4352/4360) have no driver on the live ISO; use Ethernet or USB
-  tethering from a phone (it shows up as a wired NIC). `install.sh`
-  detects the chip and installs `broadcom-wl-dkms`, so Wi-Fi works after
-  the first boot.
+  The live image builds `wl.ko` for its linux-zen and loads it only for
+  Broadcom chips that need it (BCM4311/4312/4321/4322/43227/43228/
+  4331/4352/4360). Every other radio stays on the in-tree driver.
+  `install.sh` still installs `broadcom-wl-dkms` for those chips so the
+  installed kernel keeps the module. Ethernet or USB tethering remains
+  a way through the Network step when the radio itself has no firmware.
 - **Installed networking** is NetworkManager alone (default
   wpa_supplicant backend) for wired and Wi-Fi; the live image's
   systemd-networkd and iwd split is stripped. The Wi-Fi joined in the

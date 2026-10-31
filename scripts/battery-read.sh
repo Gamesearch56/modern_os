@@ -9,22 +9,92 @@ if [ "${MODERN_TEST_FIXTURE:-}" = "1" ]; then
     [ -n "${MODERN_BATTERY_TEXT:-}" ] || die "MODERN_BATTERY_TEXT missing"
     TEXT="${MODERN_BATTERY_TEXT}"
 else
-    command -v upower >/dev/null 2>&1 || { printf '%s\n' '{"hasBattery":false}'; exit 0; }
-    # upower -e lists mice and headsets before the laptop pack, and that
-    # order changes. Only a power-supply battery is the machine's own.
+    # The kernel names the machine pack under /sys/class/power_supply.
+    # UPower often marks that same pack "power supply: no", and it lists
+    # mice first, so the bar stayed empty on laptops. Scope Device (and
+    # hid* names) are peripherals and must not show an icon on a desktop.
+    supply_root="${MODERN_POWER_SUPPLY_ROOT:-/sys/class/power_supply}"
+    upower_bin=""
+    if command -v upower >/dev/null 2>&1; then
+        upower_bin="$(command -v upower)"
+    elif [ -x /usr/bin/upower ]; then
+        upower_bin=/usr/bin/upower
+    fi
+    system_pack() {
+        local d name type scope
+        [ -d "$supply_root" ] || return 0
+        for d in "$supply_root"/*; do
+            [ -d "$d" ] || continue
+            name="${d##*/}"
+            case "$name" in
+                hid*|HID*) continue ;;
+            esac
+            [ -f "$d/type" ] || continue
+            type="$(tr -d '[:space:]' <"$d/type")"
+            [ "$type" = Battery ] || continue
+            if [ -f "$d/scope" ]; then
+                scope="$(tr -d '[:space:]' <"$d/scope")"
+                [ "$scope" = Device ] && continue
+            fi
+            [ -f "$d/capacity" ] || [ -f "$d/energy_now" ] || [ -f "$d/charge_now" ] || continue
+            printf '%s\n' "$d"
+            return 0
+        done
+    }
+    upower_for() {
+        local name="$1" dev info
+        [ -n "$upower_bin" ] || return 0
+        while IFS= read -r dev; do
+            [ -n "$dev" ] || continue
+            case "$dev" in
+                *"/battery_${name}"|*"/battery_${name}/") ;;
+                *) continue ;;
+            esac
+            info="$(LC_ALL=C "$upower_bin" -i "$dev" 2>/dev/null || true)"
+            printf '%s\n' "$info" | grep -qi 'percentage:' || continue
+            printf '%s\n' "$info"
+            return 0
+        done < <(LC_ALL=C "$upower_bin" -e 2>/dev/null || true)
+    }
+    synth_pack() {
+        local d="$1" cap status state
+        cap="$(tr -d '[:space:]' <"$d/capacity" 2>/dev/null || true)"
+        [ -n "$cap" ] || cap=0
+        status="$(tr -d '[:space:]' <"$d/status" 2>/dev/null || true)"
+        case "$status" in
+            Charging) state=charging ;;
+            Full) state=fully-charged ;;
+            Discharging) state=discharging ;;
+            *) state=fully-charged ;;
+        esac
+        printf '%s\n' \
+            "native-path:          ${d##*/}" \
+            "percentage:          ${cap}%" \
+            "state:               ${state}"
+    }
     TEXT=""
-    while IFS= read -r dev; do
-        [ -n "$dev" ] || continue
-        info="$(LC_ALL=C upower -i "$dev" 2>/dev/null || true)"
-        printf '%s\n' "$info" | grep -qi 'power supply:[[:space:]]*yes' || continue
-        printf '%s\n' "$info" | grep -qi 'percentage:' || continue
-        TEXT="$info"
-        break
-    done < <(LC_ALL=C upower -e 2>/dev/null | grep -F '/battery_' || true)
+    pack="$(system_pack || true)"
+    if [ -n "$pack" ]; then
+        TEXT="$(upower_for "${pack##*/}" || true)"
+        [ -n "$TEXT" ] || TEXT="$(synth_pack "$pack")"
+    elif [ -n "$upower_bin" ]; then
+        while IFS= read -r dev; do
+            [ -n "$dev" ] || continue
+            info="$(LC_ALL=C "$upower_bin" -i "$dev" 2>/dev/null || true)"
+            printf '%s\n' "$info" | grep -qi 'power supply:[[:space:]]*yes' || continue
+            printf '%s\n' "$info" | grep -qi 'percentage:' || continue
+            TEXT="$info"
+            break
+        done < <(LC_ALL=C "$upower_bin" -e 2>/dev/null | grep -F 'battery_' || true)
+    fi
     if [ -z "$TEXT" ]; then
         printf '%s\n' '{"hasBattery":false}'
         exit 0
     fi
+    # UPower's "time to empty: unknown" is why Restlaufzeit stays empty.
+    # shellcheck source=lib/battery-time.sh
+    source "$(dirname "$0")/lib/battery-time.sh"
+    TEXT="$(battery_apply_kernel_time "${pack:-}" "$supply_root" "$TEXT")"
 fi
 
 python3 - "$TEXT" <<'PY'

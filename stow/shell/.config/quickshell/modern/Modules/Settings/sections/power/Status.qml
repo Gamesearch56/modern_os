@@ -88,21 +88,5 @@ MCard {
             Layout.fillWidth: true
             value: Battery.percent / 100
         }
-
-        Loader {
-            active: Battery.hasBattery
-            visible: active
-            Layout.fillWidth: true
-            Layout.preferredHeight: active ? Tokens.spacing.xxl + Tokens.spacing.md : 0
-            sourceComponent: spark
-        }
-    }
-
-    Component {
-        id: spark
-        MSparkline {
-            values: Battery.percentSamples
-            fillColor: Battery.onBattery ? Colors.color.tertiary : Colors.color.primary
-        }
     }
 }

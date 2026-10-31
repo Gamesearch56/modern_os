@@ -2,6 +2,9 @@
 # Package manifest parsing + install helpers. Source, never execute
 # directly. Depends on log.sh and ui.sh being sourced first.
 
+# shellcheck source=wifi-wl.sh
+source "$(dirname "${BASH_SOURCE[0]}")/wifi-wl.sh"
+
 # Strips full-line and trailing '#' comments, blank lines, and whitespace.
 # Manifest lines look like "package   # why it's here".
 parse_manifest() {
@@ -189,12 +192,10 @@ detect_nvidia_family() {
     printf 'nvidia\n'
 }
 
-# Broadcom PCI wifi that needs the proprietary wl driver: b43 parts need
-# firmware nothing here ships, the rest have no open driver. brcmsmac
-# (4313, 43224/43225) and brcmfmac chips work in-tree and are not listed.
+# Same PCI ids as wifi-wl.sh. sysfs, not lspci: a fresh install has no
+# pciutils yet, and a missing lspci used to skip the driver entirely.
 detect_wifi_wl() {
-    lspci -nn 2>/dev/null \
-        | grep -Eiq 'network controller.*\[14e4:(4311|4312|4315|4328|432b|4331|4358|4359|43a0|43b1)\]'
+    wifi_needs_wl
 }
 
 # Legacy single-token helper (cpu-or-gpu). Prefer detect_cpu + detect_gpu.

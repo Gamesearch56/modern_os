@@ -26,6 +26,7 @@ file_permissions=(
   ["/usr/lib/modern/live-xdg-open.sh"]="0:0:755"
   ["/usr/lib/modern/live-xkb-filter.py"]="0:0:755"
   ["/usr/lib/modern/live-wifi-sim.sh"]="0:0:755"
+  ["/usr/lib/modern/live-wifi-wl.sh"]="0:0:755"
   ["/root/.automated_script.sh"]="0:0:755"
   ["/etc/sudoers.d/99-liveuser"]="0:0:440"
 )

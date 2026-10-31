@@ -79,8 +79,10 @@ local function default_number_combo(n, shift)
 end
 
 -- Bare path — a wrapped sh -lc here broke emergency terminal binds on main.
+-- kitty-open retries XWayland when the Wayland backend exits immediately.
 -- colors.conf is globincluded from kitty.conf so a missing theme is not fatal.
-local emergency_kitty = hl.dsp.exec_cmd("/usr/bin/kitty")
+local kitty_open = paths.home .. "/.local/bin/kitty-open"
+local emergency_kitty = readable(kitty_open) and hl.dsp.exec_cmd(kitty_open) or hl.dsp.exec_cmd("/usr/bin/kitty")
 
 -- action name -> dispatcher descriptor (or nil to skip if unbound)
 -- Named config `modern` is ~/.config/quickshell/modern. Bare `qs ipc`

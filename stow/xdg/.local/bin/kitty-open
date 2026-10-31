@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# kitty.conf forces the Wayland GLFW backend. On some laptop GPUs that
+# init exits before a window, so the launcher and Super+T look dead.
+# A process that is still alive after the grace period has mapped; only
+# a fast death is retried, first on XWayland and then with software GL.
+set -u
+
+log="${XDG_STATE_HOME:-$HOME/.local/state}/modern/kitty-open.log"
+grace="${KITTY_OPEN_GRACE:-0.5}"
+if ! mkdir -p "$(dirname "$log")" 2>/dev/null; then
+    log=/dev/null
+fi
+
+if ! command -v kitty >/dev/null 2>&1; then
+    printf 'kitty-open: kitty is not installed\n' >>"$log"
+    exit 127
+fi
+
+# Returns 0 when kitty stayed up, 1 when it died during the grace period.
+launch() {
+    "$@" >>"$log" 2>&1 &
+    pid=$!
+    sleep "$grace"
+    if kill -0 "$pid" 2>/dev/null; then
+        wait "$pid"
+        return 0
+    fi
+    wait "$pid" || true
+    return 1
+}
+
+printf '\n--- %s ---\n' "$(date -Iseconds 2>/dev/null || date)" >>"$log"
+if launch kitty "$@"; then
+    exit 0
+fi
+printf 'wayland start failed, retrying on XWayland\n' >>"$log"
+if KITTY_DISABLE_WAYLAND=1 launch kitty --override linux_display_server=x11 "$@"; then
+    exit 0
+fi
+printf 'XWayland start failed, retrying with software GL\n' >>"$log"
+LIBGL_ALWAYS_SOFTWARE=1 KITTY_DISABLE_WAYLAND=1 exec kitty --override linux_display_server=x11 "$@" >>"$log" 2>&1

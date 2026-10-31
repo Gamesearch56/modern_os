@@ -106,7 +106,9 @@ fi
 exit 1
 EOF
 chmod +x "$updir/upower"
+empty_supply="$(mktemp -d "${TMPDIR:-/tmp}/modern-supply-XXXXXX")"
 out="$(env -u MODERN_TEST_FIXTURE PATH="$updir:$PATH" \
+    MODERN_POWER_SUPPLY_ROOT="$empty_supply" \
     MODERN_FAKE_UPOWER_ENUM=$'/org/freedesktop/UPower/devices/battery_hidpp_battery_0\n/org/freedesktop/UPower/devices/battery_BAT0' \
     "$SCRIPT")"
 if printf '%s\n' "$out" | python3 -c 'import json,sys
@@ -118,6 +120,7 @@ else
     err "peripheral masked the laptop pack: $out"
 fi
 out="$(env -u MODERN_TEST_FIXTURE PATH="$updir:$PATH" \
+    MODERN_POWER_SUPPLY_ROOT="$empty_supply" \
     MODERN_FAKE_UPOWER_ENUM=$'/org/freedesktop/UPower/devices/line_power_AC\n/org/freedesktop/UPower/devices/battery_hidpp_battery_0' \
     "$SCRIPT")"
 if printf '%s\n' "$out" | python3 -c 'import json,sys
@@ -127,7 +130,118 @@ assert json.load(sys.stdin)=={"hasBattery":False}
 else
     err "desktop should stay empty: $out"
 fi
-rm -rf "$updir"
+# UPower says this pack does not power the system. The kernel still
+# lists it as the machine battery, so the bar icon has to stay.
+pack="$(mktemp -d "${TMPDIR:-/tmp}/modern-pack-XXXXXX")"
+install -d "$pack/BAT0"
+printf 'Battery\n' >"$pack/BAT0/type"
+printf '64\n' >"$pack/BAT0/capacity"
+printf 'Discharging\n' >"$pack/BAT0/status"
+cat >"$updir/upower" <<'EOF'
+#!/bin/bash
+set -eu
+if [ "$1" = "-e" ]; then
+    printf '%s\n' '/org/freedesktop/UPower/devices/battery_BAT0'
+    exit 0
+fi
+if [ "$1" = "-i" ]; then
+    printf '%s\n' '  power supply:         no' '  percentage:          64%' '  state:               discharging'
+    exit 0
+fi
+exit 1
+EOF
+out="$(env -u MODERN_TEST_FIXTURE PATH="$updir:$PATH" \
+    MODERN_POWER_SUPPLY_ROOT="$pack" \
+    "$SCRIPT")"
+if printf '%s\n' "$out" | python3 -c 'import json,sys
+o=json.load(sys.stdin)
+assert o["hasBattery"] and o["percent"]==64 and o["onBattery"]
+'; then
+    ok "kernel pack shows even when UPower clears power supply"
+else
+    err "kernel pack was hidden: $out"
+fi
+
+# UPower says the remaining time is unknown and the rate is 0. The
+# kernel still has the seconds, which is what Restlaufzeit shows.
+cat >"$updir/upower" <<'EOF'
+#!/bin/bash
+set -eu
+if [ "$1" = "-e" ]; then
+    printf '%s\n' '/org/freedesktop/UPower/devices/battery_BAT0'
+    exit 0
+fi
+if [ "$1" = "-i" ]; then
+    printf '%s\n' \
+        '  power supply:         no' \
+        '  percentage:          64%' \
+        '  state:               discharging' \
+        '  time to empty:       unknown' \
+        '  energy-rate:         0 W'
+    exit 0
+fi
+exit 1
+EOF
+printf '7200\n' >"$pack/BAT0/time_to_empty_now"
+out="$(env -u MODERN_TEST_FIXTURE PATH="$updir:$PATH" \
+    MODERN_POWER_SUPPLY_ROOT="$pack" \
+    "$SCRIPT")"
+if printf '%s\n' "$out" | python3 -c 'import json,sys
+o=json.load(sys.stdin)
+assert o["timeEmptySeconds"]==7200 and o["onBattery"]
+'; then
+    ok "kernel time_to_empty_now fills remaining time"
+else
+    err "remaining time stayed empty: $out"
+fi
+rm -f "$pack/BAT0/time_to_empty_now"
+printf '20000000\n' >"$pack/BAT0/energy_now"
+printf '10000000\n' >"$pack/BAT0/power_now"
+out="$(env -u MODERN_TEST_FIXTURE PATH="$updir:$PATH" \
+    MODERN_POWER_SUPPLY_ROOT="$pack" \
+    "$SCRIPT")"
+if printf '%s\n' "$out" | python3 -c 'import json,sys
+o=json.load(sys.stdin)
+assert o["timeEmptySeconds"]==7200
+'; then
+    ok "energy and power estimate remaining time"
+else
+    err "energy estimate missed: $out"
+fi
+
+# upower has no devices: capacity from sysfs is enough for the icon.
+cat >"$updir/upower" <<'EOF'
+#!/bin/bash
+exit 0
+EOF
+out="$(env -u MODERN_TEST_FIXTURE PATH="$updir:$PATH" \
+    MODERN_POWER_SUPPLY_ROOT="$pack" \
+    "$SCRIPT")"
+if printf '%s\n' "$out" | python3 -c 'import json,sys
+o=json.load(sys.stdin)
+assert o["hasBattery"] and o["percent"]==64 and o["onBattery"]
+'; then
+    ok "sysfs capacity shows the icon without upower"
+else
+    err "sysfs pack was hidden: $out"
+fi
+
+mouse="$(mktemp -d "${TMPDIR:-/tmp}/modern-mouse-XXXXXX")"
+install -d "$mouse/hidpp_battery_0"
+printf 'Battery\n' >"$mouse/hidpp_battery_0/type"
+printf 'Device\n' >"$mouse/hidpp_battery_0/scope"
+printf '10\n' >"$mouse/hidpp_battery_0/capacity"
+out="$(env -u MODERN_TEST_FIXTURE PATH="$updir:$PATH" \
+    MODERN_POWER_SUPPLY_ROOT="$mouse" \
+    "$SCRIPT")"
+if printf '%s\n' "$out" | python3 -c 'import json,sys
+assert json.load(sys.stdin)=={"hasBattery":False}
+'; then
+    ok "a mouse battery in sysfs stays hidden"
+else
+    err "mouse battery looked like a laptop pack: $out"
+fi
+rm -rf "$updir" "$empty_supply" "$pack" "$mouse"
 
 if grep -F 'Paths.script("battery-read.sh")' \
     "$ROOT/stow/shell/.config/quickshell/modern/Services/Battery.qml" >/dev/null; then
