@@ -874,8 +874,6 @@
       "charging": "Charging",
       "pluggedIn": "Plugged in",
       "full": "Full",
-      "remaining": "Remaining",
-      "untilFull": "Until full",
       "draw": "Power draw",
       "health": "Health",
       "energy": "Charge",

@@ -17,18 +17,6 @@ GridLayout {
 
     MPercentTile {
         Layout.fillWidth: true
-        titleKey: "settings.energy.remaining"
-        valueText: Battery.remainingLabel.length ? Battery.remainingLabel : root._none
-        showTrack: false
-    }
-    MPercentTile {
-        Layout.fillWidth: true
-        titleKey: "settings.energy.untilFull"
-        valueText: Battery.untilFullLabel.length ? Battery.untilFullLabel : root._none
-        showTrack: false
-    }
-    MPercentTile {
-        Layout.fillWidth: true
         titleKey: "settings.energy.draw"
         valueText: Battery.rateWatts > 0
             ? I18n.t("settings.energy.watts", ({ n: Math.round(Battery.rateWatts * 10) / 10 }))

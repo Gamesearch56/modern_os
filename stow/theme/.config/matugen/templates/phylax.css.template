@@ -25,7 +25,8 @@ window.auth-window {
     font-weight: 500;
 }
 
-.auth-message {
+.auth-message,
+.auth-status {
     color: {{colors.on_surface_variant.default.hex}};
 }
 

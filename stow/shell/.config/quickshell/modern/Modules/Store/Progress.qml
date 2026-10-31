@@ -86,39 +86,11 @@ Item {
                 indeterminate: true
             }
 
-            Flickable {
+            MLogView {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Tokens.spacing.xxl * 8
-                clip: true
-                contentWidth: width
-                contentHeight: logText.implicitHeight
-                boundsBehavior: Flickable.StopAtBounds
-                onContentHeightChanged: {
-                    if (contentHeight > height)
-                        contentY = contentHeight - height;
-                }
-
-                TextEdit {
-                    id: logText
-                    width: parent.width
-                    readOnly: true
-                    selectByMouse: true
-                    selectByKeyboard: true
-                    persistentSelection: true
-                    wrapMode: TextEdit.WrapAnywhere
-                    textFormat: TextEdit.PlainText
-                    text: Store.log.trim().length > 0 ? Store.log.trim() : I18n.t("store.installLog")
-                    color: root.failed ? Colors.color.error : Colors.color.onSurfaceVariant
-                    selectionColor: Colors.color.primary
-                    selectedTextColor: Colors.color.onPrimary
-                    font.family: Typography.family.monospace
-                    font.pixelSize: Typography.style("bodySmall").pixelSize
-                    font.weight: Typography.style("bodySmall").weight
-                    font.letterSpacing: Typography.style("bodySmall").letterSpacing
-                    font.hintingPreference: Font.PreferNoHinting
-                    renderType: TextEdit.QtRendering
-                    cursorVisible: false
-                }
+                text: Store.log.trim().length > 0 ? Store.log.trim() : I18n.t("store.installLog")
+                textColor: root.failed ? Colors.color.error : Colors.color.onSurfaceVariant
             }
 
             RowLayout {

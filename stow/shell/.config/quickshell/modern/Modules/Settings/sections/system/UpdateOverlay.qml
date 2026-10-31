@@ -25,22 +25,10 @@ MOverlay {
             indeterminate: Update.indeterminate
             value: Update.progress < 0 ? 0 : Update.progress
         }
-        Flickable {
+        MLogView {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            clip: true
-            contentWidth: width
-            contentHeight: log.implicitHeight
-
-            MText {
-                id: log
-                width: parent.width
-                value: Update.log
-                styleName: "bodySmall"
-                familyRole: "monospace"
-                wrapMode: Text.Wrap
-                elide: Text.ElideNone
-            }
+            text: Update.log
         }
     }
 }

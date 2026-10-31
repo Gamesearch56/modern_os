@@ -206,11 +206,14 @@ Singleton {
     }
 
     function _append(line: string) {
-        const t = String(line || "").trim();
-        if (t.length === 0)
+        const t = String(line || "").replace(/\u001b\[[0-9;]*m/g, "").split("\r").pop().trim();
+        if (!t.length)
             return;
         root.log += t + "\n";
-        root.step = t;
+        // The clock and INFO/OK stay in the log. The title is the message.
+        const label = t.replace(/^\[[0-9:.T +-]+\]\s*/, "").replace(/^(?:INFO|OK|WARN|ERROR)\s+/, "").trim();
+        if (label.length > 0)
+            root.step = label;
         const m = t.match(/\((\d+)\/(\d+)\)/);
         if (m)
             root.progress = Number(m[1]) / Number(m[2]);
