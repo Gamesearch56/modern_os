@@ -470,7 +470,10 @@ if grep -F 'NetworkManager.service' "$SETUP" >/dev/null \
     && grep -F 'disable --now iwd.service' "$SETUP" >/dev/null \
     && grep -F '  - modernnet' "$ROOT/iso/airootfs/etc/calamares/settings.conf" >/dev/null \
     && [ -f "$ROOT/iso/airootfs/etc/calamares/modules/modernnet.conf" ] \
-    && grep -F 'wifi.backend=iwd' "$NM_WIFI" >/dev/null \
+    && grep -F 'wifi.backend=wpa_supplicant' "$NM_WIFI" >/dev/null \
+    && grep -F 'rfkill unblock wifi' "$SETUP" >/dev/null \
+    && grep -F 'copytoram/airootfs.sfs' "$SETUP" >/dev/null \
+    && grep -F 'unpackfs.conf' "$SETUP" >/dev/null \
     && grep -F 'unmanaged-devices=type:ethernet' "$NM_WIFI" >/dev/null \
     && grep -qxF 'iwd' "$ROOT/iso/releng/packages.x86_64"; then
     ok "live Network step uses NetworkManager and sits after keyboard"

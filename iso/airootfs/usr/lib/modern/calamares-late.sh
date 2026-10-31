@@ -445,15 +445,14 @@ as_user() {
 # console when greetd fails. greetd.service.wants starts
 # modern-live-setup.service, which creates the passwordless liveuser that
 # 99-liveuser and the polkit rule hand root to. iwd.service enabled on its
-# own fights NetworkManager, which starts iwd as its own wifi backend.
+# own fights NetworkManager.
 #
 # Networking is the live split too: releng runs systemd-networkd for wired
 # and wlan DHCP, and wifi-backend.conf tells NetworkManager to leave
-# Ethernet alone and drive wifi through iwd. Kept on the installed system
-# that hides a cable from Settings > Network, races NM's DHCP on wifi, and
-# stalls boot in networkd-wait-online without one. NetworkManager owns
-# every interface there, on its default wpa_supplicant backend — the one
-# Broadcom wl and older drivers work with.
+# Ethernet to networkd and drive Wi-Fi with wpa_supplicant. Kept on the
+# installed system that hides a cable from Settings > Network, races NM's
+# DHCP on wifi, and stalls boot in networkd-wait-online without one.
+# NetworkManager owns every interface there, on that same backend.
 LIVE_ONLY_PATHS=(
     etc/mkinitcpio.conf.d/archiso.conf
     etc/mkinitcpio.d/linux.preset

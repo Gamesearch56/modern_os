@@ -232,6 +232,8 @@ if grep -Fq 'require("modules.browser_popups")' \
     && grep -Fq 'document_title' "$POPUPS" \
     && grep -Fq 'SETTLE_MS' "$POPUPS" \
     && grep -Fq 'drop_vivaldi_notice' "$POPUPS" \
+    && grep -Fq 'hl.get_windows' "$POPUPS" \
+    && ! grep -Fq 'hyprctl clients' "$POPUPS" \
     && grep -Fq 'org.freedesktop.Notifications' \
         "$ROOT/stow/hypr/.config/hypr/modules/session_apps.lua" \
     && grep -Fq 'another_open' \

@@ -257,9 +257,13 @@ ModernNetNm::scan()
                  refresh();
              } );
     m_scan->start( QStringLiteral( "nmcli" ),
-                   { QStringLiteral( "device" ),
+                   { QStringLiteral( "-w" ),
+                     QStringLiteral( "20" ),
+                     QStringLiteral( "device" ),
                      QStringLiteral( "wifi" ),
-                     QStringLiteral( "rescan" ) } );
+                     QStringLiteral( "list" ),
+                     QStringLiteral( "--rescan" ),
+                     QStringLiteral( "yes" ) } );
 }
 
 void

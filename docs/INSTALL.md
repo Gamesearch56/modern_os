@@ -301,8 +301,10 @@ until Ethernet or Wi-Fi is up (or a default route exists). Wi-Fi turns
 on (no toggle): nearby list with lock/open labels, **Connect** on each
 row, **Refresh**, and a password card for secured networks. Ethernet or
 Wi-Fi already up shows a centered “You're connected with …” page.
-Live setup enables NetworkManager and stops `iwd` so they do not fight
-over the radio. Unattended QEMU already has virtio-net, so auto-next is
+Live setup enables NetworkManager on the wpa_supplicant backend and
+stops `iwd` so they do not fight over the radio. Before Calamares
+starts, it points `unpackfs` at the `airootfs` image archiso actually
+mounted (the stick, or `copytoram` after that boot entry). Unattended QEMU already has virtio-net, so auto-next is
 not blocked. `stylesheet.qss` paints `#networkPage`, `#networkOkPage`,
 and `#wifiList` from the same tokens as the rest of Calamares. The C++
 module is copied into AUR Calamares at build (`iso/releng/calamares-modernnet`).
