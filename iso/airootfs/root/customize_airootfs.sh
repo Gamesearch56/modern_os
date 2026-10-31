@@ -5,6 +5,13 @@
 # machine, and the package blacklists brcmfmac globally.
 set -euo pipefail
 
+# iso-build.sh bind-mounts the work directory before arch-chroot. A direct
+# mkarchiso call does not, and pacman then cannot see a mount for the
+# package cache (it reports a full disk). Binding here covers that path.
+if ! mountpoint -q /; then
+    mount --rbind / /
+fi
+
 kver=""
 d=""
 for d in /usr/lib/modules/*/; do
@@ -16,6 +23,13 @@ if [ -z "$kver" ]; then
     printf 'customize_airootfs: no linux-zen module tree\n' >&2
     exit 1
 fi
+
+# archiso creates this keyring at boot (pacman-init on a tmpfs). The
+# build chroot has none, so pacman -S stops with "keyring is not writable"
+# after the packages have already downloaded.
+install -d -m 0700 /etc/pacman.d/gnupg
+pacman-key --init
+pacman-key --populate archlinux
 
 pacman --disable-sandbox -S --needed --noconfirm broadcom-wl-dkms linux-zen-headers
 
@@ -40,6 +54,8 @@ cp -a "$ko" "$keep"
 name="$(basename "$ko")"
 
 pacman --disable-sandbox -Rns --noconfirm broadcom-wl-dkms linux-zen-headers
+# The live boot replaces this with its own tmpfs keyring.
+rm -rf /etc/pacman.d/gnupg
 
 install -D -m 0644 "$keep" "/usr/lib/modules/$kver/updates/$name"
 rm -f "$keep"

@@ -43,6 +43,7 @@ ASSUME_YES=0
 ALLOW_LIVE_HOME=0
 DOTFILES_ONLY=0
 TARGET="$HOME"
+SESSION_HOME="$HOME"
 
 for arg in "$@"; do
     case "$arg" in
@@ -357,15 +358,34 @@ else
         || log_warn "nautilus-prefs.sh skipped — Nautilus schemas not installed yet"
 fi
 
-# Patched Phylax Confirms as $USER. Without it, phylax.service falls
-# back to the AUR binary and the identity dropdown returns.
+# Patched Phylax Confirms as $USER and keeps Authenticating off the error
+# color. Cargo rebuilds it; machines without cargo get the prebuilt.
+# Restart afterwards — a running agent keeps the previous binary mapped.
 if [ "$DOTFILES_ONLY" -eq 1 ]; then
     log_info "dotfiles-only: skipping Phylax rebuild"
-elif command -v cargo >/dev/null 2>&1; then
-    run "${theme_env[@]}" "$REPO_ROOT/scripts/build-phylax.sh" \
-        || log_warn "build-phylax.sh failed — AUR phylax will show the identity dropdown until it succeeds"
 else
-    log_warn "cargo missing — skip patched Phylax (scripts/build-phylax.sh)"
+    if command -v cargo >/dev/null 2>&1; then
+        run "${theme_env[@]}" "$REPO_ROOT/scripts/build-phylax.sh" \
+            || log_warn "build-phylax.sh failed — installing the prebuilt agent"
+    else
+        log_warn "cargo missing — installing the prebuilt Phylax agent"
+    fi
+    if [ "$DRY_RUN" -eq 0 ]; then
+        phylax_dest="$TARGET/.local/bin/phylax"
+        phylax_prebuilt="$REPO_ROOT/install/prebuilt/phylax"
+        if ! { [ -f "$phylax_dest" ] && grep -a -F -q 'auth-progress' "$phylax_dest"; }; then
+            if [ -f "$phylax_prebuilt" ]; then
+                mkdir -p "$(dirname "$phylax_dest")"
+                install -m 755 "$phylax_prebuilt" "$phylax_dest" \
+                    || log_warn "prebuilt phylax missing — Authenticating stays on the error color"
+            else
+                log_warn "prebuilt phylax missing — Authenticating stays on the error color"
+            fi
+        fi
+        if [ "$TARGET" = "$SESSION_HOME" ]; then
+            systemctl --user try-restart phylax.service >/dev/null 2>&1 || true
+        fi
+    fi
 fi
 
 # kitty.conf globincludes colors.conf; fallbacks in kitty.conf keep

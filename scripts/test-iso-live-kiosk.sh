@@ -518,7 +518,12 @@ if [ -x "$WL" ] \
         "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" >/dev/null \
     && grep -F 'broadcom-wl-dkms' "$CUSTOM" >/dev/null \
     && grep -F 'linux-zen-headers' "$CUSTOM" >/dev/null \
+    && grep -F 'mount --rbind' "$CUSTOM" >/dev/null \
+    && grep -F 'pacman-key --init' "$CUSTOM" >/dev/null \
+    && grep -F 'pacman-key --populate archlinux' "$CUSTOM" >/dev/null \
     && grep -F 'depmod -a' "$CUSTOM" >/dev/null \
+    && grep -F 'mount --bind' "$ROOT/scripts/iso-build.sh" >/dev/null \
+    && grep -F 'release_chroot_mounts' "$ROOT/scripts/iso-build.sh" >/dev/null \
     && ! grep -Fx linux-zen-headers "$ROOT/iso/releng/packages.x86_64" >/dev/null; then
     ok "live ISO builds wl.ko, loads it only for the proprietary PCI ids, and does not keep the headers"
 else
