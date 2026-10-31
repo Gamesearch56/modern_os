@@ -87,6 +87,30 @@ else
 fi
 git_cfg -C "$CLONE" checkout -- . >/dev/null
 
+# Hyprland reloads when checkout unlinks the watched lua file. The
+# pause has to land before that rewrite, and the watch comes back after.
+watchlog="$TMP/hyprctl.log"
+mkdir -p "$TMP/bin"
+cat >"$TMP/bin/hyprctl" <<EOF
+#!/bin/bash
+printf '%s\n' "\$*" >>"$watchlog"
+if [ "\$1" = eval ] && printf '%s' "\$2" | grep -q 'disable_autoreload = true'; then
+    cp "$CLONE/readme" "$TMP/readme-at-pause"
+fi
+exit 0
+EOF
+chmod +x "$TMP/bin/hyprctl"
+git_cfg -C "$CLONE" checkout --detach v0.1.0 >/dev/null 2>&1
+if PATH="$TMP/bin:$PATH" MODERN_TEST_HYPR_WATCH=1 "$SYNC" apply >/dev/null \
+    && ! grep -q two "$TMP/readme-at-pause" \
+    && grep -q two "$CLONE/readme" \
+    && grep -q 'disable_autoreload = true' "$watchlog" \
+    && grep -q 'disable_autoreload = false' "$watchlog"; then
+    ok "checkout pauses the config watch before replacing files"
+else
+    err "config watch was not paused before checkout: $(cat "$watchlog" 2>/dev/null || true)"
+fi
+
 # A release checkout at ~/modern_dotfile is the installed system. The
 # ISO overlay dirties tracked files; apply must drop that and still
 # refuse an untracked file.

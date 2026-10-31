@@ -14,6 +14,8 @@ MODERN_REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$SCRIPT_DIR/lib/repo-path.sh"
 # shellcheck source=lib/deploy-key.sh
 source "$SCRIPT_DIR/lib/deploy-key.sh"
+# shellcheck source=lib/hypr-watch.sh
+source "$SCRIPT_DIR/lib/hypr-watch.sh"
 REPO="${MODERN_DESKTOP_REPO:-$(modern_repo_path)}"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/modern-desktop-sync.lock"
 
@@ -138,11 +140,8 @@ cmd_status() {
     emit true "$cur" "$latest" "behind"
 }
 
-# ISO install appends a pacman overlay to tracked files and can chmod
-# the work tree. That is not a user edit. A release checkout in the
-# home clone is put back on HEAD so the update can fast-forward.
-# Ignored files (config.json, tokens) stay. Any other clone is left
-# alone, including a development tree sitting on the same tag.
+# Installer chmod/overlay on the home release clone is not a user edit.
+# Ignored files stay. Any other clone, including a dev tree, is left alone.
 discard_installer_edits() {
     local resolved home_repo tag
     resolved="$(readlink -f "$REPO")"
@@ -157,6 +156,8 @@ cmd_apply() {
     exec 9>"$LOCK"
     flock -n 9 || die "another desktop update is running"
     repo_ok || die "repo check failed"
+    pause_hypr_config_watch
+    trap resume_hypr_config_watch EXIT
     discard_installer_edits
     local dirt
     dirt="$(git_safe -C "$REPO" status --porcelain)"
@@ -168,9 +169,7 @@ cmd_apply() {
     [[ "$latest" =~ $TAG_RE ]] || die "no valid release tag"
     local url
     url="$(remote_url)"
-    # Into refs/tags, not a private ref: installed_tag() describes HEAD by
-    # tag, and without the local tag every later status says "notag" and
-    # never offers the next release.
+    # Into refs/tags, not a private ref: without the local tag the next release is never offered.
     git_safe -C "$REPO" fetch --no-tags --no-recurse-submodules \
         "$url" "+refs/tags/${latest}:refs/tags/${latest}"
     git_safe -C "$REPO" merge --ff-only "refs/tags/${latest}"
