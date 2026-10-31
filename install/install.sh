@@ -271,6 +271,12 @@ else
     log_ok "wrote $STATE_DIR/hw.json"
 fi
 
+# A Settings update already has a running shell. Rewriting tokens,
+# config.json, or user units here restarts that shell and kills this
+# installer mid-stow. reload-ui.sh applies the new tree once, after.
+if [ "${MODERN_LIVE_UPDATE:-}" = 1 ]; then
+    log_info "live session update — leaving theme and user services alone"
+else
 if [ -S "${XDG_RUNTIME_DIR:-}/bus" ]; then
     run systemctl --user daemon-reload 2>/dev/null || true
 else
@@ -336,6 +342,7 @@ if command -v matugen >/dev/null 2>&1; then
     fi
 else
     log_warn "matugen not found — run scripts/theme-apply.sh once it is installed"
+fi
 fi
 
 # Nautilus / xdg-open follow Settings → Applications video/image/text/folder defaults.

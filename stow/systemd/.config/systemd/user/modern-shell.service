@@ -13,8 +13,12 @@ ExecStartPre=/bin/mkdir -p %h/.local/state/modern
 ExecStart=quickshell -c modern
 StandardOutput=append:%h/.local/state/modern/quickshell.log
 StandardError=append:%h/.local/state/modern/quickshell.log
-Restart=always
-RestartSec=1
+# A startup crash must not respawn forever. Hyprland owns the shell;
+# this unit is only a fallback and autostart disables it.
+Restart=on-failure
+RestartSec=2
+StartLimitBurst=5
+StartLimitIntervalSec=30
 
 [Install]
 WantedBy=graphical-session.target

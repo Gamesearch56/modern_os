@@ -11,6 +11,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("sh -lc '"
         .. "mkdir -p \"${XDG_STATE_HOME:-$HOME/.local/state}/modern\"; "
         .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
+        .. "if pgrep -u \"$USER\" -x qs >/dev/null 2>&1 || pgrep -u \"$USER\" -x quickshell >/dev/null 2>&1; then exit 0; fi; "
         .. "export QT_QPA_PLATFORM=wayland QT_QPA_PLATFORMTHEME=qt6ct "
         .. "QS_ICON_THEME=\"${QS_ICON_THEME:-Papirus-Dark}\"; "
         .. "exec qs -c modern >>\"$log\" 2>&1'")
@@ -33,8 +34,9 @@ hl.on("hyprland.start", function()
 
     -- Background: import/dbus/polkit overlap; phylax waits on them.
     hl.exec_cmd("sh -lc '("
-        .. "if systemctl --user is-active --quiet modern-shell.service; then "
-        .. "timeout 1 systemctl --user stop modern-shell.service || true; fi; "
+        .. "if systemctl --user is-enabled --quiet modern-shell.service 2>/dev/null "
+        .. "|| systemctl --user is-active --quiet modern-shell.service; then "
+        .. "timeout 3 systemctl --user disable --now modern-shell.service || true; fi; "
         .. "timeout 1 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XDG_SESSION_ID XDG_SESSION_TYPE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true & "
         .. "timeout 1 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true & "
         .. "timeout 1 systemctl --user stop hyprpolkitagent.service || true & "

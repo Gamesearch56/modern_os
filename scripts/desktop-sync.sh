@@ -181,7 +181,15 @@ cmd_apply() {
         return 0
     fi
     if [ -x "$REPO/install/install.sh" ]; then
-        "$REPO/install/install.sh" --profile m0 --yes
+        # Settings runs this inside Quickshell. A new session keeps the
+        # installer alive if that shell restarts, and skips the theme
+        # rewrite that would restart it again.
+        if [ -n "${MODERN_ROOT_PLAN:-}" ]; then
+            export MODERN_LIVE_UPDATE=1
+            setsid -w "$REPO/install/install.sh" --profile m0 --yes
+        else
+            "$REPO/install/install.sh" --profile m0 --yes
+        fi
     fi
 }
 
