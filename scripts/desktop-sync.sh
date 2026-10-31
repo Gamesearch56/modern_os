@@ -138,11 +138,31 @@ cmd_status() {
     emit true "$cur" "$latest" "behind"
 }
 
+# ISO install appends a pacman overlay to tracked files and can chmod
+# the work tree. That is not a user edit. A release checkout in the
+# home clone is put back on HEAD so the update can fast-forward.
+# Ignored files (config.json, tokens) stay. Any other clone is left
+# alone, including a development tree sitting on the same tag.
+discard_installer_edits() {
+    local resolved home_repo tag
+    resolved="$(readlink -f "$REPO")"
+    home_repo="$(readlink -f "$HOME/modern_dotfile" 2>/dev/null || true)"
+    tag="$(installed_tag)"
+    [ -n "$home_repo" ] && [ "$resolved" = "$home_repo" ] || return 0
+    [[ "$tag" =~ $TAG_RE ]] || return 0
+    git_safe -C "$REPO" checkout -- .
+}
+
 cmd_apply() {
     exec 9>"$LOCK"
     flock -n 9 || die "another desktop update is running"
     repo_ok || die "repo check failed"
-    [ -z "$(git_safe -C "$REPO" status --porcelain)" ] || die "work tree is dirty"
+    discard_installer_edits
+    local dirt
+    dirt="$(git_safe -C "$REPO" status --porcelain)"
+    if [ -n "$dirt" ]; then
+        die "work tree is dirty: $(printf '%s' "$dirt" | tr '\n' '; ')"
+    fi
     local latest
     latest="$(highest_tag)"
     [[ "$latest" =~ $TAG_RE ]] || die "no valid release tag"
@@ -161,7 +181,15 @@ cmd_apply() {
         return 0
     fi
     if [ -x "$REPO/install/install.sh" ]; then
-        "$REPO/install/install.sh" --profile m0 --yes
+        # Settings runs this inside Quickshell. A new session keeps the
+        # installer alive if that shell restarts, and skips the theme
+        # rewrite that would restart it again.
+        if [ -n "${MODERN_ROOT_PLAN:-}" ]; then
+            export MODERN_LIVE_UPDATE=1
+            setsid -w "$REPO/install/install.sh" --profile m0 --yes
+        else
+            "$REPO/install/install.sh" --profile m0 --yes
+        fi
     fi
 }
 

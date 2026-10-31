@@ -690,7 +690,8 @@ fi
 if grep -qF 'strip_live_packages' "$LATE" \
     && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'strip_live_packages' \
     && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'mask_iwd' \
-    && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'restore_boot_dns'; then
+    && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'restore_boot_dns' \
+    && sed -n '/^phase_desktop()/,/^}/p' "$LATE" | grep -qF 'restore_installer_edits'; then
     ok "provision phase removes the live-only packages last"
 else
     err "phase_provision must call strip_live_packages"

@@ -104,10 +104,15 @@ Singleton {
     }
 
     function _parse(text: string) {
+        const raw = (text || "").trim();
+        if (!raw.length)
+            return;
         try {
-            const obj = JSON.parse((text || "").trim() || "{}");
+            const obj = JSON.parse(raw);
             if (!obj.hasBattery) {
-                root._clear();
+                // A missed poll must not hide a pack this session already saw.
+                if (!root.hasBattery)
+                    root._clear();
                 return;
             }
             root.hasBattery = true;
@@ -131,7 +136,6 @@ Singleton {
             root.percentSamples = next;
         } catch (e) {
             Logger.error("Battery", String(e));
-            root._clear();
         }
     }
 
@@ -149,6 +153,9 @@ Singleton {
         running: root.watching
         repeat: true
         triggeredOnStart: true
-        onTriggered: proc.running = true
+        onTriggered: {
+            if (!proc.running)
+                proc.running = true;
+        }
     }
 }

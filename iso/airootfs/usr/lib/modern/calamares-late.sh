@@ -411,6 +411,25 @@ install_aur() {
 EOF
 }
 
+# The overlay above is only for this chroot install. Left in the home
+# clone, the next desktop update stops with "work tree is dirty".
+restore_installer_edits() {
+    [ -d "$REPO/.git" ] || return 0
+    local path paths=()
+    for path in install/lib/pkg.sh install/manifests/20-theming.aur.txt; do
+        if GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
+            git -C "$REPO" -c "safe.directory=$REPO" -c core.hooksPath=/dev/null \
+            cat-file -e "HEAD:$path" 2>/dev/null; then
+            paths+=("$path")
+        fi
+    done
+    [ "${#paths[@]}" -eq 0 ] && return 0
+    GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
+        git -C "$REPO" -c "safe.directory=$REPO" -c core.hooksPath=/dev/null \
+        checkout -- "${paths[@]}" \
+        || die "could not restore installer edits in $REPO"
+}
+
 ensure_pts() {
     if [ -n "${MODERN_LATE_TEST:-}" ]; then
         return 0
@@ -748,6 +767,7 @@ phase_desktop() {
     unpin_resolver
     rm -f "$out"
     ensure_provision_units
+    restore_installer_edits
     log "desktop install finished for $USERNAME"
 }
 

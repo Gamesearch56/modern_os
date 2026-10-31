@@ -87,6 +87,36 @@ else
 fi
 git_cfg -C "$CLONE" checkout -- . >/dev/null
 
+# A release checkout at ~/modern_dotfile is the installed system. The
+# ISO overlay dirties tracked files; apply must drop that and still
+# refuse an untracked file.
+old_home="$HOME"
+old_repo="$MODERN_DESKTOP_REPO"
+inst_home="$TMP/home"
+mkdir -p "$inst_home"
+cp -a "$CLONE" "$inst_home/modern_dotfile"
+export HOME="$inst_home"
+export MODERN_DESKTOP_REPO="$inst_home/modern_dotfile"
+printf 'overlay\n' >>"$inst_home/modern_dotfile/readme"
+if "$SYNC" apply >/dev/null 2>"$TMP/apply-overlay.err"; then
+    if ! grep -q overlay "$inst_home/modern_dotfile/readme"; then
+        ok "installed release checkout drops installer edits"
+    else
+        err "installer edit survived apply"
+    fi
+else
+    err "installed release checkout refused installer edits: $(cat "$TMP/apply-overlay.err")"
+fi
+printf 'stray\n' >"$inst_home/modern_dotfile/stray.txt"
+if "$SYNC" apply >/dev/null 2>"$TMP/apply-stray.err"; then
+    err "untracked file in the home clone should still refuse apply"
+else
+    ok "untracked file in the home clone still refuses apply"
+fi
+rm -f "$inst_home/modern_dotfile/stray.txt"
+export HOME="$old_home"
+export MODERN_DESKTOP_REPO="$old_repo"
+
 git_cfg -C "$CLONE" checkout -B feature/x >/dev/null 2>&1
 printf 'feat\n' >>"$CLONE/readme"
 git_cfg -C "$CLONE" add readme

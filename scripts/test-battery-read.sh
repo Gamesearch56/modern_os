@@ -85,6 +85,50 @@ else
     err "estimate: $out"
 fi
 
+# A mouse listed before BAT0 must not hide the laptop pack, and a
+# desktop with only a peripheral battery stays empty.
+updir="$(mktemp -d "${TMPDIR:-/tmp}/modern-upower-XXXXXX")"
+cat >"$updir/upower" <<'EOF'
+#!/bin/bash
+set -eu
+if [ "$1" = "-e" ]; then
+    printf '%s\n' "$MODERN_FAKE_UPOWER_ENUM"
+    exit 0
+fi
+if [ "$1" = "-i" ]; then
+    case "$2" in
+        *hidpp*) printf '%s\n' '  power supply:         no' '  percentage:          10%' ;;
+        *BAT0*) printf '%s\n' '  power supply:         yes' '  percentage:          77%' '  state:               discharging' ;;
+        *) exit 0 ;;
+    esac
+    exit 0
+fi
+exit 1
+EOF
+chmod +x "$updir/upower"
+out="$(env -u MODERN_TEST_FIXTURE PATH="$updir:$PATH" \
+    MODERN_FAKE_UPOWER_ENUM=$'/org/freedesktop/UPower/devices/battery_hidpp_battery_0\n/org/freedesktop/UPower/devices/battery_BAT0' \
+    "$SCRIPT")"
+if printf '%s\n' "$out" | python3 -c 'import json,sys
+o=json.load(sys.stdin)
+assert o["hasBattery"] and o["percent"]==77 and o["onBattery"]
+'; then
+    ok "laptop pack wins over a peripheral listed first"
+else
+    err "peripheral masked the laptop pack: $out"
+fi
+out="$(env -u MODERN_TEST_FIXTURE PATH="$updir:$PATH" \
+    MODERN_FAKE_UPOWER_ENUM=$'/org/freedesktop/UPower/devices/line_power_AC\n/org/freedesktop/UPower/devices/battery_hidpp_battery_0' \
+    "$SCRIPT")"
+if printf '%s\n' "$out" | python3 -c 'import json,sys
+assert json.load(sys.stdin)=={"hasBattery":False}
+'; then
+    ok "desktop with a mouse battery is not a laptop pack"
+else
+    err "desktop should stay empty: $out"
+fi
+rm -rf "$updir"
+
 if grep -F 'Paths.script("battery-read.sh")' \
     "$ROOT/stow/shell/.config/quickshell/modern/Services/Battery.qml" >/dev/null; then
     ok "Settings/bar battery is this script"
