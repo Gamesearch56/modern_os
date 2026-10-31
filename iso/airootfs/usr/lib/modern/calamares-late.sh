@@ -540,6 +540,8 @@ LIVE_ONLY_PATHS=(
     usr/lib/modern/live-xdg-open.sh
     usr/lib/modern/live-xkb-filter.py
     usr/lib/modern/live-wifi-sim.sh
+    usr/lib/modern/live-wifi-wl.sh
+    usr/lib/modern/wifi-wl.sh
     usr/local/bin/xdg-open
     etc/modern/live-hyprland.lua
     etc/modern/openbox-rc.xml

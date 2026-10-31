@@ -474,6 +474,8 @@ if grep -F 'NetworkManager.service' "$SETUP" >/dev/null \
     && [ -f "$ROOT/iso/airootfs/etc/calamares/modules/modernnet.conf" ] \
     && grep -F 'wifi.backend=wpa_supplicant' "$NM_WIFI" >/dev/null \
     && grep -F 'rfkill unblock wifi' "$SETUP" >/dev/null \
+    && grep -F 'ip link set "$name" up' "$SETUP" >/dev/null \
+    && grep -F 'live-wifi-wl.sh' "$SETUP" >/dev/null \
     && grep -F 'copytoram/airootfs.sfs' "$SETUP" >/dev/null \
     && grep -F 'unpackfs.conf' "$SETUP" >/dev/null \
     && grep -F 'unmanaged-devices=type:ethernet' "$NM_WIFI" >/dev/null \
@@ -501,6 +503,26 @@ if [ -x "$WIFI_SIM" ] \
     ok "iso-qemu.sh --wifi-sim drives live-wifi-sim.sh and drops the virtio NIC"
 else
     err "wifi-sim must be wired from iso-qemu.sh through live-setup and stripped after unpackfs"
+fi
+
+WL="$ROOT/iso/airootfs/usr/lib/modern/live-wifi-wl.sh"
+CUSTOM="$ROOT/iso/airootfs/root/customize_airootfs.sh"
+if [ -x "$WL" ] \
+    && grep -F 'modprobe wl' "$WL" >/dev/null \
+    && grep -F 'blacklist brcmfmac' "$WL" >/dev/null \
+    && grep -F 'wifi-wl.sh' "$WL" >/dev/null \
+    && grep -F 'live-wifi-wl.sh' "$PROFILE" >/dev/null \
+    && grep -F 'live-wifi-wl.sh' "$ROOT/scripts/iso-build.sh" >/dev/null \
+    && grep -F 'install/lib/wifi-wl.sh' "$ROOT/scripts/iso-build.sh" >/dev/null \
+    && grep -F 'usr/lib/modern/live-wifi-wl.sh' \
+        "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" >/dev/null \
+    && grep -F 'broadcom-wl-dkms' "$CUSTOM" >/dev/null \
+    && grep -F 'linux-zen-headers' "$CUSTOM" >/dev/null \
+    && grep -F 'depmod -a' "$CUSTOM" >/dev/null \
+    && ! grep -Fx linux-zen-headers "$ROOT/iso/releng/packages.x86_64" >/dev/null; then
+    ok "live ISO builds wl.ko, loads it only for the proprietary PCI ids, and does not keep the headers"
+else
+    err "wl must be built in customize_airootfs.sh, loaded from live-wifi-wl.sh, and stripped with the headers"
 fi
 
 SETTINGS="$ROOT/iso/airootfs/etc/calamares/settings.conf"

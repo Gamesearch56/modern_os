@@ -96,8 +96,10 @@ Then pick a wallpaper: `scripts/theme-apply.sh --wallpaper /path/to/image.jpg`
 
 Wallpaper plus `SUPER+B` / `SUPER+Q` means Hyprland loaded this repo's
 Lua. The bar and `SUPER+M` / `SUPER+K` need Quickshell. `SUPER+T` /
-`SUPER+RETURN` always open kitty; if they do nothing, see
-`~/.config/kitty/colors.conf` and `docs/THEMING.md`.
+`SUPER+RETURN` open kitty through `~/.local/bin/kitty-open`. That tries
+Wayland, then XWayland, then software GL. If nothing appears, see
+`~/.local/state/modern/kitty-open.log`. A missing theme is not fatal
+(`kitty.conf` globincludes `colors.conf`).
 
 If you cannot open a terminal **inside** the session, diagnose from
 another TTY (`docs/BOOT.md`):

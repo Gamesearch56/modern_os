@@ -158,6 +158,10 @@ install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-xkb-filter.py" \
     "$AIROOTFS_OUT/usr/lib/modern/live-xkb-filter.py"
 install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-wifi-sim.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/live-wifi-sim.sh"
+install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-wifi-wl.sh" \
+    "$AIROOTFS_OUT/usr/lib/modern/live-wifi-wl.sh"
+install -m 0644 "$ROOT/install/lib/wifi-wl.sh" \
+    "$AIROOTFS_OUT/usr/lib/modern/wifi-wl.sh"
 [ -f "$ROOT/iso/releng/installer-locales.json" ] \
     || die "missing $ROOT/iso/releng/installer-locales.json"
 install -m 0644 "$ROOT/iso/releng/installer-locales.json" \
