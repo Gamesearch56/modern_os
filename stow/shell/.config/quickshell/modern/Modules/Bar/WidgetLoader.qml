@@ -3,7 +3,6 @@
 // `modelData` is required so Qt 6 Repeaters actually instantiate us
 // (a required `widgetId` is never filled from a string-list model).
 import QtQuick
-import QtQuick.Layouts
 import "../../Commons"
 
 Loader {
@@ -15,14 +14,13 @@ Loader {
 
     active: root.widgetId.length > 0
     visible: !root.item || root.item.visible
-    width: (root.item && root.visible) ? root.item.implicitWidth : 0
-    height: (root.item && root.visible) ? root.item.implicitHeight : 0
-    Layout.minimumWidth: width
-    Layout.preferredWidth: width
-    Layout.minimumHeight: height
-    Layout.preferredHeight: height
-    Layout.fillWidth: false
-    Layout.fillHeight: true
+    // A layout that assigns width deletes this binding and leaves the
+    // slot at 0, so the chip paints under the next buttons. The island
+    // uses a positioner, which keeps the binding.
+    readonly property real _slotW: (root.item && root.visible) ? root.item.implicitWidth : 0
+    readonly property real _slotH: (root.item && root.visible) ? root.item.implicitHeight : 0
+    width: _slotW
+    height: _slotH
     source: Qt.resolvedUrl("widgets/" + root.widgetId + "/Widget.qml")
     onLoaded: {
         if (root.item && root.item.barScreen !== undefined)

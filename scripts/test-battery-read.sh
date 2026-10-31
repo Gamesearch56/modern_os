@@ -253,8 +253,13 @@ fi
 if grep -F 'Battery.onBattery' \
     "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/battery/Widget.qml" >/dev/null; then
     err "bar widget must not hide while charging"
-else
+elif grep -F 'visible: Battery.hasBattery' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/battery/Widget.qml" >/dev/null \
+    && grep -F 'clip: true' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/battery/Widget.qml" >/dev/null; then
     ok "bar widget follows hasBattery"
+else
+    err "bar widget must clip and follow hasBattery"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

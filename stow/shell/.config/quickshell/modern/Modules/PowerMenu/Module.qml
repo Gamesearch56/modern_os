@@ -11,7 +11,9 @@ Scope {
     IpcHandler {
         target: "powermenu"
         function toggle() { PowerMenu.toggle(); }
-        function show() { PowerMenu.show(); }
+        // `show` is a `qs ipc` subcommand, so `ipc call powermenu show`
+        // prints the target and never runs the handler.
+        function open(): void { PowerMenu.show(); }
         function hide() { PowerMenu.hide(); }
     }
 
