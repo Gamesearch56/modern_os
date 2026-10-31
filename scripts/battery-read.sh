@@ -10,12 +10,21 @@ if [ "${MODERN_TEST_FIXTURE:-}" = "1" ]; then
     TEXT="${MODERN_BATTERY_TEXT}"
 else
     command -v upower >/dev/null 2>&1 || { printf '%s\n' '{"hasBattery":false}'; exit 0; }
-    dev="$(LC_ALL=C upower -e 2>/dev/null | grep -Ei 'battery_|/BAT[0-9]' | head -1 || true)"
-    if [ -z "$dev" ]; then
+    # upower -e lists mice and headsets before the laptop pack, and that
+    # order changes. Only a power-supply battery is the machine's own.
+    TEXT=""
+    while IFS= read -r dev; do
+        [ -n "$dev" ] || continue
+        info="$(LC_ALL=C upower -i "$dev" 2>/dev/null || true)"
+        printf '%s\n' "$info" | grep -qi 'power supply:[[:space:]]*yes' || continue
+        printf '%s\n' "$info" | grep -qi 'percentage:' || continue
+        TEXT="$info"
+        break
+    done < <(LC_ALL=C upower -e 2>/dev/null | grep -F '/battery_' || true)
+    if [ -z "$TEXT" ]; then
         printf '%s\n' '{"hasBattery":false}'
         exit 0
     fi
-    TEXT="$(LC_ALL=C upower -i "$dev" 2>/dev/null || true)"
 fi
 
 python3 - "$TEXT" <<'PY'
