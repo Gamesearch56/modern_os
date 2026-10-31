@@ -34,7 +34,12 @@ else
     err "install.sh must write \$TARGET/.config/modern/repo"
 fi
 
-if grep -F 'scripts/build-phylax.sh' "$INSTALL" >/dev/null; then
+if grep -F 'scripts/build-phylax.sh' "$INSTALL" >/dev/null \
+    && grep -F 'install/prebuilt/phylax' "$INSTALL" >/dev/null \
+    && grep -F 'install/prebuilt/phylax' "$ROOT/scripts/lib/polkit-agent.sh" >/dev/null \
+    && grep -F 'auth-progress' "$ROOT/stow/theme/.config/matugen/templates/phylax.css.template" >/dev/null \
+    && grep -F 'on_surface.default.hex' "$ROOT/stow/theme/.config/matugen/templates/phylax.css.template" >/dev/null \
+    && [ -f "$ROOT/install/prebuilt/phylax" ]; then
     ok "install.sh builds patched Phylax when cargo is present"
 else
     err "install.sh must run scripts/build-phylax.sh so Confirm stays the session user"

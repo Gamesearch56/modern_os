@@ -7,12 +7,37 @@
 
 POLKIT_AGENT_UNIT="phylax.service"
 
+# Upstream paints "Authenticating..." with the error class. A binary that
+# lacks auth-progress still does, so an existing file is not "patched".
+phylax_styles_progress() {
+    local bin="$1"
+    [ -f "$bin" ] && grep -a -F -q 'auth-progress' "$bin"
+}
+
+phylax_prebuilt() {
+    local root
+    root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+    printf '%s\n' "$root/install/prebuilt/phylax"
+}
+
+install_prebuilt_phylax() {
+    local dest="$1"
+    local prebuilt
+    prebuilt="$(phylax_prebuilt)"
+    [ -f "$prebuilt" ] || return 1
+    mkdir -p "$(dirname "$dest")"
+    install -m 755 "$prebuilt" "$dest"
+}
+
 # Upstream Phylax shows an identity DropDown and Confirms as the first
 # wheel uid. The patched binary hides that and Confirms as $USER.
 ensure_patched_phylax() {
     local bin="${HOME}/.local/bin/phylax"
     local script
-    if [ -x "$bin" ]; then
+    if phylax_styles_progress "$bin"; then
+        return 0
+    fi
+    if install_prebuilt_phylax "$bin"; then
         return 0
     fi
     command -v cargo >/dev/null 2>&1 || return 1

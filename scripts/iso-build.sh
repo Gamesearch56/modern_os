@@ -16,6 +16,63 @@ FIXED_JSON="$ROOT/stow/modern/.config/modern/themes/fixed-brand.json"
 die() { printf 'iso-build: ERROR: %s\n' "$*" >&2; exit 1; }
 log() { printf 'iso-build: %s\n' "$*"; }
 
+# A failed customize leaves proc (and friends) mounted. The next
+# arch-chroot refuses to mount them again.
+release_chroot_mounts() {
+    local root="$1" mnt
+    [ -d "$root" ] || return 0
+    while read -r mnt; do
+        [ -n "$mnt" ] || continue
+        umount "$mnt" 2>/dev/null || umount -l "$mnt" 2>/dev/null || true
+    done < <(findmnt -nr -o TARGET | awk -v p="$root" 'index($0, p"/")==1 { print length($0), $0 }' | sort -nr | awk '{ $1=""; sub(/^ /, ""); print }')
+}
+
+# Pacman matches the package cache against the chroot mount table.
+# mkarchiso's work directory is a plain folder, so that lookup fails
+# with "not enough free disk space" even when the disk has room.
+# arch-chroot(8): bind the directory to itself before entering it.
+install_arch_chroot_mount_wrapper() {
+    local dir="$1"
+    mkdir -p "$dir"
+    cat >"$dir/arch-chroot" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+real=/usr/bin/arch-chroot
+args=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|-S|-N|-r) args+=("$1"); shift ;;
+        -u) args+=("$1" "${2:-}"); shift 2 ;;
+        --) shift; break ;;
+        -*) args+=("$1"); shift ;;
+        *) break ;;
+    esac
+done
+dir="${1:-}"
+if [ -n "$dir" ]; then
+    shift
+fi
+did=0
+if [ -n "$dir" ] && [ -d "$dir" ] && ! mountpoint -q "$dir"; then
+    mount --bind "$dir" "$dir"
+    did=1
+fi
+set +e
+"$real" "${args[@]}" ${dir:+"$dir"} "$@"
+rc=$?
+set -e
+if [ "$did" -eq 1 ]; then
+    while read -r mnt; do
+        [ -n "$mnt" ] || continue
+        umount "$mnt" 2>/dev/null || umount -l "$mnt" 2>/dev/null || true
+    done < <(findmnt -nr -o TARGET | awk -v p="$dir" 'index($0, p"/")==1 { print length($0), $0 }' | sort -nr | awk '{ $1=""; sub(/^ /, ""); print }')
+    umount "$dir" || umount -l "$dir" || true
+fi
+exit "$rc"
+EOF
+    chmod 755 "$dir/arch-chroot"
+}
+
 usage() {
     cat <<'EOF'
 Usage: iso-build.sh [--mkarchiso] [--out DIR] [--tag vX.Y.Z] [--stale-bundle]
@@ -114,6 +171,13 @@ if ! why="$(git ls-remote "$ROOT" HEAD 2>&1)"; then
 fi
 git -C "$ROOT" rev-parse -q --verify "refs/tags/$pin" >/dev/null \
     || die "$pin is not a tag in this clone — fetch tags (CI needs fetch-depth: 0)"
+
+# A failed mkarchiso leaves proc mounted under the work directory. rm
+# cannot delete those files, and a file manager then offers an unmount
+# it is not allowed to perform. Drop the mounts before either happens.
+if [ "$(id -u)" -eq 0 ]; then
+    release_chroot_mounts "$abs_out/work/mkarchiso/x86_64/airootfs"
+fi
 
 # The live ISO is this working tree, but the bundle Calamares installs from
 # is a clone of $pin. Edit install/ or stow/ without tagging and the change
@@ -353,6 +417,8 @@ iso_attach_aur_repo "$PROFILE_WORK"
 iso_sanitize_package_list "$PROFILE_WORK/packages.x86_64"
 mkdir -p "$PROFILE_WORK/airootfs"
 cp -a "$AIROOTFS_OUT/." "$PROFILE_WORK/airootfs/"
-ISO_VERSION="$pin" mkarchiso -v -w "$WORK/mkarchiso" -o "$abs_out" "$PROFILE_WORK"
+chroot_wrap="$WORK/arch-chroot-bin"
+install_arch_chroot_mount_wrapper "$chroot_wrap"
+ISO_VERSION="$pin" PATH="$chroot_wrap:$PATH" mkarchiso -v -w "$WORK/mkarchiso" -o "$abs_out" "$PROFILE_WORK"
 log "ISO written under $abs_out (live image is this clone; late install still clones $pin)"
 log "boot it with: scripts/iso-qemu.sh"

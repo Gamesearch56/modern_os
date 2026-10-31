@@ -25,12 +25,18 @@ window.auth-window {
     font-weight: 500;
 }
 
-.auth-message,
-.auth-status {
+.auth-message {
     color: {{colors.on_surface_variant.default.hex}};
 }
 
-.auth-retry {
+/* Progress uses the dialog text color. The error role stays on a
+   rejected password only — a rose secondary token still reads as failure. */
+window.auth-window label.auth-progress,
+window.auth-window label.auth-status {
+    color: {{colors.on_surface.default.hex}};
+}
+
+window.auth-window label.auth-retry {
     color: {{colors.error.default.hex}};
 }
 

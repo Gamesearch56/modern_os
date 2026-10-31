@@ -5,6 +5,13 @@
 # machine, and the package blacklists brcmfmac globally.
 set -euo pipefail
 
+# iso-build.sh bind-mounts the work directory before arch-chroot. A direct
+# mkarchiso call does not, and pacman then cannot see a mount for the
+# package cache (it reports a full disk). Binding here covers that path.
+if ! mountpoint -q /; then
+    mount --rbind / /
+fi
+
 kver=""
 d=""
 for d in /usr/lib/modules/*/; do

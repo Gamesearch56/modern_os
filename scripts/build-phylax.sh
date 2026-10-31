@@ -91,14 +91,43 @@ t = t.replace(old_names, new_names, 1)
 old_label = '''                gtk::Label {
                     add_css_class: "auth-retry",
                     #[watch]
-                    set_label: &if let Some(retry_message) = model.retry_message.clone() {'''
+                    set_label: &if let Some(retry_message) = model.retry_message.clone() {
+                        retry_message.to_string()
+                    } else {
+                        "".to_string()
+                    },
+                    #[watch]
+                    set_visible: model.retry_message.is_some(),
+                    #[watch]
+                    set_margin_bottom: 16,
+                    set_halign: gtk::Align::Center,
+                },'''
 new_label = '''                gtk::Label {
-                    // A wrong password stays on the error role. Authenticating
-                    // is progress, so it uses the secondary text role.
+                    add_css_class: "auth-progress",
+                    set_label: "Authenticating...",
                     #[watch]
-                    set_css_classes: if model.authenticating { &["auth-status"] } else { &["auth-retry"] },
+                    set_visible: model.authenticating,
                     #[watch]
-                    set_label: &if let Some(retry_message) = model.retry_message.clone() {'''
+                    set_margin_bottom: 16,
+                    set_halign: gtk::Align::Center,
+                },
+
+                gtk::Label {
+                    add_css_class: "auth-retry",
+                    #[watch]
+                    set_label: &if let Some(retry_message) = model.retry_message.clone() {
+                        retry_message.to_string()
+                    } else {
+                        "".to_string()
+                    },
+                    // The progress line owns "Authenticating...". This one
+                    // stays hidden then, or that string keeps the error role.
+                    #[watch]
+                    set_visible: model.retry_message.is_some() && !model.authenticating,
+                    #[watch]
+                    set_margin_bottom: 16,
+                    set_halign: gtk::Align::Center,
+                },'''
 if old_label not in t:
     sys.exit("phylax ui.rs Authenticating label did not match; update scripts/build-phylax.sh")
 t = t.replace(old_label, new_label, 1)
