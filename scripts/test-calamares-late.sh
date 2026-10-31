@@ -688,10 +688,32 @@ else
     err "LIVE_ONLY_PKGS mismatch:${bad:- empty list}"
 fi
 if grep -qF 'strip_live_packages' "$LATE" \
-    && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'strip_live_packages'; then
+    && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'strip_live_packages' \
+    && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'mask_iwd' \
+    && sed -n '/^phase_provision()/,/^}/p' "$LATE" | grep -qF 'restore_boot_dns'; then
     ok "provision phase removes the live-only packages last"
 else
     err "phase_provision must call strip_live_packages"
 fi
+
+dnsdir="$(mktemp -d "${TMPDIR:-/tmp}/modern-dns-XXXXXX")"
+printf 'nameserver 192.0.2.1\n' >"$dnsdir/resolv.conf"
+{
+    printf 'set -euo pipefail\n'
+    printf 'MODERN_LATE_TEST=1\n'
+    printf 'MODERN_LATE_RESOLV=%s/resolv.conf\n' "$dnsdir"
+    printf 'die() { printf "die: %%s\\n" "$*" >&2; exit 1; }\n'
+    printf 'log() { :; }\n'
+    sed -n '/^restore_boot_dns()/,/^}$/p' "$LATE"
+    printf 'restore_boot_dns\n'
+} >"$dnsdir/run.sh"
+if bash "$dnsdir/run.sh" \
+    && [ -L "$dnsdir/resolv.conf" ] \
+    && [ "$(readlink "$dnsdir/resolv.conf")" = /run/systemd/resolve/stub-resolv.conf ]; then
+    ok "boot DNS replaces the cable nameserver with the resolved stub"
+else
+    err "restore_boot_dns left $(ls -l "$dnsdir/resolv.conf" 2>&1)"
+fi
+rm -rf "$dnsdir"
 
 [ "$FAIL" -eq 0 ]

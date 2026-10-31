@@ -323,6 +323,40 @@ unpin_resolver() {
     fi
 }
 
+# ensure_dns leaves a regular file so the chroot can resolve while /run
+# is empty. That file still holds the cable's nameservers after reboot.
+# NetworkManager then hands the Wi-Fi DNS to systemd-resolved, and glibc
+# never asks it, so the link looks connected and names do not resolve.
+# The stub symlink is what the live image shipped; resolved is already
+# enabled and starts on the installed boot.
+restore_boot_dns() {
+    local resolv="${MODERN_LATE_RESOLV:-/etc/resolv.conf}"
+    if [ -n "${MODERN_LATE_TEST:-}" ] && [ -z "${MODERN_LATE_RESOLV:-}" ]; then
+        return 0
+    fi
+    if command -v chattr >/dev/null 2>&1; then
+        chattr -i "$resolv" /etc/nsswitch.conf 2>/dev/null || true
+    fi
+    ln -sfn /run/systemd/resolve/stub-resolv.conf "$resolv" \
+        || die "cannot point resolv.conf at systemd-resolved"
+    if [ -n "${MODERN_LATE_TEST:-}" ]; then
+        return 0
+    fi
+    systemctl enable systemd-resolved.service 2>/dev/null || true
+    log "DNS handed back to systemd-resolved"
+}
+
+# The live image enables iwd. Stripping its wants symlink is not enough:
+# the D-Bus service starts it again and it takes the radio from
+# NetworkManager on the installed boot.
+mask_iwd() {
+    if [ -n "${MODERN_LATE_TEST:-}" ]; then
+        return 0
+    fi
+    install -d -m 0755 /etc/systemd/system
+    ln -sfn /dev/null /etc/systemd/system/iwd.service
+}
+
 overlay_pin_install_native() {
     local pkg="$REPO/install/lib/pkg.sh"
     [ -f "$pkg" ] || return 0
@@ -727,6 +761,8 @@ phase_provision() {
     bash "$REPO/install/system/provision-iso.sh" "$USERNAME" \
         || die "provision-iso.sh failed"
     [ -n "${MODERN_LATE_TEST:-}" ] || strip_live_packages
+    mask_iwd
+    restore_boot_dns
     log "late install finished for $USERNAME at $PIN"
 }
 

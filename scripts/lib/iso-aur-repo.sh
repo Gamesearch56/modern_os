@@ -105,11 +105,18 @@ EOF
 
 iso_aur_pkg_stamp() {
     local src="$1" pkg="$2"
+    # The network page is copied into the Calamares tree before the
+    # build. Hashing only the PKGBUILD reused an older module, so the
+    # ISO's Refresh button never waited for a scan.
     if [ "$pkg" = calamares ]; then
-        cat "$src/PKGBUILD" \
-            "$ROOT/iso/releng/calamares-limit-languages.py" \
-            "$ROOT/iso/releng/installer-locales.json" \
-            | sha256sum | awk '{print $1}'
+        {
+            cat "$src/PKGBUILD" \
+                "$ROOT/iso/releng/calamares-limit-languages.py" \
+                "$ROOT/iso/releng/installer-locales.json"
+            find "$ROOT/iso/releng/calamares-modernnet" -type f -print0 \
+                | sort -z \
+                | xargs -0 -r cat
+        } | sha256sum | awk '{print $1}'
     else
         sha256sum "$src/PKGBUILD" | awk '{print $1}'
     fi

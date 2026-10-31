@@ -44,13 +44,25 @@ ModernNetNm::run( const QString& bin, const QStringList& args, int timeoutMs )
 {
     QProcess p;
     p.start( bin, args );
-    if ( !p.waitForFinished( timeoutMs ) )
+    // waitForFinished deadlocks once nmcli fills the pipe. Drain while
+    // waiting so a long scan cannot stall the installer.
+    QByteArray out;
+    const int step = 200;
+    int left = timeoutMs;
+    while ( left > 0 && !p.waitForFinished( step ) )
+    {
+        out += p.readAllStandardOutput();
+        p.readAllStandardError();
+        left -= step;
+    }
+    out += p.readAllStandardOutput();
+    if ( p.state() != QProcess::NotRunning )
     {
         p.kill();
         p.waitForFinished( 1000 );
         return {};
     }
-    return QString::fromUtf8( p.readAllStandardOutput() );
+    return QString::fromUtf8( out );
 }
 
 QVector< QPair< QString, QString > >
@@ -247,6 +259,12 @@ ModernNetNm::scan()
     m_scanning = true;
     emit changed();
     m_scan = new QProcess( this );
+    connect( m_scan, &QProcess::readyReadStandardOutput, m_scan, [ this ]() {
+        m_scan->readAllStandardOutput();
+    } );
+    connect( m_scan, &QProcess::readyReadStandardError, m_scan, [ this ]() {
+        m_scan->readAllStandardError();
+    } );
     connect( m_scan,
              QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ),
              this,
@@ -377,6 +395,12 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password )
     m_connecting = true;
     emit changed();
     m_join = new QProcess( this );
+    connect( m_join, &QProcess::readyReadStandardOutput, m_join, [ this ]() {
+        m_join->readAllStandardOutput();
+    } );
+    connect( m_join, &QProcess::readyReadStandardError, m_join, [ this ]() {
+        m_join->readAllStandardError();
+    } );
     connect( m_join,
              QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ),
              this,

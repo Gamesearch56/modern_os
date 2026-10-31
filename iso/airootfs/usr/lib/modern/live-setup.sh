@@ -54,19 +54,42 @@ chown -R liveuser:liveuser /home/liveuser/.config
 
 # Wi-Fi in Calamares uses nmcli. The live image keeps NetworkManager on
 # wpa_supplicant (the same backend the installed desktop uses). archiso
-# also ships iwd; both cannot own the radio, and stopping iwd after NM
-# has already started it leaves the list empty. Leave systemd-networkd
-# for wired DHCP so QEMU still has a default route without NetworkManager
-# claiming the NIC. releng's networkd also DHCPs wlan/wwan; on a real
-# radio that races NM for the same interface once Calamares connects.
+# enables iwd and a networkd .network for every wlan device. iwd is a
+# D-Bus service, so stopping it is not enough: the next lookup starts it
+# again and it keeps the radio. networkctl reload does not drop a link
+# networkd already configured, so the interface stays out of NM and
+# `nmcli device wifi list` prints no names. Mask iwd, release those
+# links, then let NM scan. Leave networkd for wired DHCP so QEMU still
+# has a default route without NetworkManager claiming the NIC.
 rm -f /etc/systemd/network/20-wlan.network /etc/systemd/network/20-wwan.network
+if [ -d /sys/class/net ]; then
+    for nic in /sys/class/net/*; do
+        [ -d "$nic/wireless" ] || [ -d "$nic/phy80211" ] || continue
+        name="${nic##*/}"
+        networkctl down "$name" 2>/dev/null || true
+        ip link set "$name" down 2>/dev/null || true
+    done
+fi
 networkctl reload 2>/dev/null || true
-systemctl disable --now iwd.service 2>/dev/null || true
-systemctl stop iwd.service 2>/dev/null || true
+systemctl mask --now iwd.service 2>/dev/null || true
 rfkill unblock wifi 2>/dev/null || true
 systemctl enable --now NetworkManager.service
 nmcli radio wifi on >/dev/null 2>&1 || true
-nmcli -w 25 device wifi list --rescan yes >/dev/null 2>&1 || true
+if [ -d /sys/class/net ]; then
+    for nic in /sys/class/net/*; do
+        [ -d "$nic/wireless" ] || [ -d "$nic/phy80211" ] || continue
+        nmcli device set "${nic##*/}" managed yes >/dev/null 2>&1 || true
+    done
+fi
+# The radio can appear after firmware loads. One early scan then stays
+# empty, and the installer reads that empty cache.
+for _ in 1 2 3 4 5; do
+    nmcli -w 15 device wifi list --rescan yes >/dev/null 2>&1 || true
+    if nmcli -t -f SSID device wifi list 2>/dev/null | grep -q .; then
+        break
+    fi
+    sleep 2
+done
 
 # QEMU has no 802.11 device. iso-qemu.sh --wifi-sim sets this fw_cfg and
 # omits the virtio NIC so the Network step shows Wi-Fi instead of Ethernet.
