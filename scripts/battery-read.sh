@@ -91,7 +91,7 @@ else
         printf '%s\n' '{"hasBattery":false}'
         exit 0
     fi
-    # UPower's "time to empty: unknown" is why Restlaufzeit stays empty.
+    # UPower's "time to empty: unknown" leaves the status line blank.
     # shellcheck source=lib/battery-time.sh
     source "$(dirname "$0")/lib/battery-time.sh"
     TEXT="$(battery_apply_kernel_time "${pack:-}" "$supply_root" "$TEXT")"

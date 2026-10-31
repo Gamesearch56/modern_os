@@ -163,7 +163,7 @@ else
 fi
 
 # UPower says the remaining time is unknown and the rate is 0. The
-# kernel still has the seconds, which is what Restlaufzeit shows.
+# kernel still has the seconds the status line shows.
 cat >"$updir/upower" <<'EOF'
 #!/bin/bash
 set -eu
@@ -255,8 +255,12 @@ if grep -F 'Battery.onBattery' \
     err "bar widget must not hide while charging"
 elif grep -F 'visible: Battery.hasBattery' \
     "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/battery/Widget.qml" >/dev/null \
+    && grep -F 'implicitWidth: Battery.hasBattery' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/battery/Widget.qml" >/dev/null \
     && grep -F 'clip: true' \
-    "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/battery/Widget.qml" >/dev/null; then
+    "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/battery/Widget.qml" >/dev/null \
+    && ! grep -F 'root.item.visible' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/WidgetLoader.qml" >/dev/null; then
     ok "bar widget follows hasBattery"
 else
     err "bar widget must clip and follow hasBattery"

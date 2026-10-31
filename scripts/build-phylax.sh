@@ -88,13 +88,20 @@ if old_names not in t:
     sys.exit("phylax ui.rs Started identities did not match; update scripts/build-phylax.sh")
 t = t.replace(old_names, new_names, 1)
 
-old_auth = '''                    self.retry_message = Some("Authenticating...".to_string());
-                    self.authenticating = true;'''
-new_auth = '''                    self.retry_message = None;
-                    self.authenticating = true;'''
-if old_auth not in t:
+old_label = '''                gtk::Label {
+                    add_css_class: "auth-retry",
+                    #[watch]
+                    set_label: &if let Some(retry_message) = model.retry_message.clone() {'''
+new_label = '''                gtk::Label {
+                    // A wrong password stays on the error role. Authenticating
+                    // is progress, so it uses the secondary text role.
+                    #[watch]
+                    set_css_classes: if model.authenticating { &["auth-status"] } else { &["auth-retry"] },
+                    #[watch]
+                    set_label: &if let Some(retry_message) = model.retry_message.clone() {'''
+if old_label not in t:
     sys.exit("phylax ui.rs Authenticating label did not match; update scripts/build-phylax.sh")
-t = t.replace(old_auth, new_auth, 1)
+t = t.replace(old_label, new_label, 1)
 
 old_show = '''            connect_show[password_entry, css_path] => move |_| {
                 let _ = relm4::set_global_css_from_file(&css_path);

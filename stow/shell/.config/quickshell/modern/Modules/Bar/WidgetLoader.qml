@@ -13,12 +13,14 @@ Loader {
     readonly property string widgetId: String(root.modelData ?? "")
 
     active: root.widgetId.length > 0
-    visible: !root.item || root.item.visible
     // A layout that assigns width deletes this binding and leaves the
     // slot at 0, so the chip paints under the next buttons. The island
     // uses a positioner, which keeps the binding.
-    readonly property real _slotW: (root.item && root.visible) ? root.item.implicitWidth : 0
-    readonly property real _slotH: (root.item && root.visible) ? root.item.implicitHeight : 0
+    // Do not copy `item.visible` onto this loader. Hiding the loader
+    // makes the child's visible stay false, so a battery the energy
+    // page already shows can never open a slot.
+    readonly property real _slotW: root.item ? root.item.implicitWidth : 0
+    readonly property real _slotH: root.item ? root.item.implicitHeight : 0
     width: _slotW
     height: _slotH
     source: Qt.resolvedUrl("widgets/" + root.widgetId + "/Widget.qml")
