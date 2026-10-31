@@ -405,31 +405,27 @@ if hl.on then
     end)
 end
 
--- Mail is already mapped when this config loads. Asking hyprctl during
--- the reload deadlocks the IPC, so the list is read on the next tick.
+-- Mail is already mapped when this config loads. hyprctl from this
+-- process deadlocks the compositor (the IPC reply needs the same
+-- thread), which is the multi-second freeze on every Settings reload.
 local function seed_open_apps()
-    local json_ok, json = pcall(require, "lib.json")
-    if not json_ok then
+    if not hl.get_windows then
         return
     end
-    local ok_f, f = pcall(io.popen, "hyprctl clients -j 2>/dev/null", "r")
-    if not ok_f or not f then
+    local wins = hl.get_windows()
+    if type(wins) ~= "table" then
         return
     end
-    local raw = f:read("*a") or ""
-    f:close()
-    local ok, data = pcall(json.decode, raw)
-    if not ok or type(data) ~= "table" then
-        return
-    end
-    for i = 1, #data do
-        local c = data[i]
+    for i = 1, #wins do
+        local c = wins[i]
         if type(c) == "table" then
-            note({ class = c.class, initial_class = c.initialClass, address = c.address })
+            note({
+                class = c.class,
+                initial_class = c.initialClass or c.initial_class,
+                address = c.address,
+            })
         end
     end
 end
 
-if hl.timer then
-    hl.timer(seed_open_apps, { timeout = 300, type = "oneshot" })
-end
+seed_open_apps()
