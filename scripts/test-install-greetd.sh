@@ -279,7 +279,7 @@ else
 fi
 
 if grep -F 'XDG_CACHE_HOME=/var/tmp/modern-root-cache' "$LIB" >/dev/null \
-    && grep -F 'chown -hR "$username:$grp" "$cache"' "$LIB" >/dev/null; then
+    && grep -F "chown -hR \"\$username:\$grp\" \"\$cache\"" "$LIB" >/dev/null; then
     ok "login wallpaper sync keeps ~/.cache writable"
 else
     err "greetd wallpaper sync must not leave ~/.cache owned by root"
