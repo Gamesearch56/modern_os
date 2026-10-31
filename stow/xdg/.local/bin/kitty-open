@@ -16,6 +16,16 @@ if ! command -v kitty >/dev/null 2>&1; then
     exit 127
 fi
 
+# Kitty creates this before it opens a window. A root-owned ~/.cache
+# (left by the login wallpaper step) makes every launch die with EACCES.
+kitty_cache="${XDG_CACHE_HOME:-$HOME/.cache}/kitty"
+if ! mkdir -p "$kitty_cache" 2>/dev/null || [ ! -w "$kitty_cache" ]; then
+    export KITTY_CACHE_DIRECTORY="${XDG_STATE_HOME:-$HOME/.local/state}/modern/kitty-cache"
+    mkdir -p "$KITTY_CACHE_DIRECTORY" 2>/dev/null || true
+    printf 'kitty-open: %s is not writable, using %s\n' \
+        "$kitty_cache" "$KITTY_CACHE_DIRECTORY" >>"$log"
+fi
+
 # Returns 0 when kitty stayed up, 1 when it died during the grace period.
 launch() {
     "$@" >>"$log" 2>&1 &

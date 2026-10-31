@@ -7,15 +7,23 @@ import "../../"
 Item {
     id: root
 
-    visible: Battery.hasBattery
-    implicitWidth: visible ? hit.implicitWidth : 0
+    // Clip to the slot the bar layout assigns. The label used to keep
+    // its own width and draw under the control and power buttons.
+    clip: true
+    readonly property real _w: Math.max(hit.implicitWidth, Config.bar.height)
+    implicitWidth: Battery.hasBattery ? root._w : 0
     implicitHeight: Config.bar.height
+    width: implicitWidth
+    height: implicitHeight
+    visible: Battery.hasBattery
 
     Component.onCompleted: Battery.watch()
     Component.onDestruction: Battery.unwatch()
 
     BarIconLabel {
         id: hit
+        width: implicitWidth
+        height: Config.bar.height
         iconName: Battery.iconName
         key: "bar.battery"
         label: String(Battery.percent) + "%"

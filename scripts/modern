@@ -311,7 +311,8 @@ case "$TARGET" in
                     exec systemctl poweroff
                     ;;
                 ask | *)
-                    exec qs -c modern ipc call powermenu show
+                    # `show` is a qs ipc subcommand and would not call the handler.
+                    exec qs -c modern ipc call powermenu open
                     ;;
             esac
         }

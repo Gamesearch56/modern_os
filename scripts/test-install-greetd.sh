@@ -278,4 +278,11 @@ else
     err "lock must use the session wallpaper; login must not fall back to another account"
 fi
 
+if grep -F 'XDG_CACHE_HOME=/var/tmp/modern-root-cache' "$LIB" >/dev/null \
+    && grep -F 'chown -hR "$username:$grp" "$cache"' "$LIB" >/dev/null; then
+    ok "login wallpaper sync keeps ~/.cache writable"
+else
+    err "greetd wallpaper sync must not leave ~/.cache owned by root"
+fi
+
 [ "$FAIL" -eq 0 ]

@@ -172,12 +172,22 @@ greetd_apply() {
 
     wp="${user_home}/.config/modern/wallpapers/default.jpg"
     if [ -f "$repo/scripts/wallpaper-sync.sh" ] && [ -f "$wp" ]; then
+        # magick follows HOME. Without a private cache it creates
+        # ~/.cache as root, and kitty then cannot start.
+        greetd_as_root install -d -m 0700 /var/tmp/modern-root-cache
         greetd_as_root env \
             HOME="$user_home" \
             USER="$username" \
             XDG_CONFIG_HOME="${user_home}/.config" \
             XDG_STATE_HOME="${user_home}/.local/state" \
+            XDG_CACHE_HOME=/var/tmp/modern-root-cache \
+            MAGICK_TMPDIR=/var/tmp/modern-root-cache \
             bash "$repo/scripts/wallpaper-sync.sh" "$wp" || true
+        cache="${user_home}/.cache"
+        if [ -d "$cache" ] && [ ! -L "$cache" ]; then
+            grp="$(id -gn "$username" 2>/dev/null || printf '%s' "$username")"
+            greetd_as_root chown -hR "$username:$grp" "$cache" || true
+        fi
         # setgid 2775 root:modern already tags new files; greeter only needs read.
         greetd_as_root chmod -R a+rX /var/lib/modern/session 2>/dev/null || true
     fi

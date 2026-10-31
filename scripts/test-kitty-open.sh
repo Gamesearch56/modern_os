@@ -26,7 +26,7 @@ trap 'rm -rf "$TMP"' EXIT
 LOG="$TMP/calls"
 cat >"$TMP/kitty" <<'EOF'
 #!/usr/bin/env bash
-printf '%s\n' "$*" >>"$KITTY_CALLS"
+printf 'cache=%s args=%s\n' "${KITTY_CACHE_DIRECTORY-}" "$*" >>"$KITTY_CALLS"
 case "${KITTY_MODE:-die}" in
     stay) sleep 30 ;;
     *) exit 1 ;;
@@ -66,6 +66,19 @@ if [ "$calls" = 1 ]; then
     ok "a kitty that stays up is not started again"
 else
     err "a living kitty was launched ${calls:-0} times"
+fi
+
+locked="$TMP/locked-home"
+mkdir -p "$locked/.cache"
+chmod a-w "$locked/.cache"
+: >"$LOG"
+HOME="$locked" XDG_CACHE_HOME="$locked/.cache" KITTY_MODE=die run_open || true
+chmod u+w "$locked/.cache" || true
+if grep -F "cache=$TMP/state/modern/kitty-cache " "$LOG" >/dev/null \
+    && [ -d "$TMP/state/modern/kitty-cache" ]; then
+    ok "an unwritable ~/.cache uses a private kitty cache"
+else
+    err "kitty-open did not leave the root-owned cache: $(tr '\n' ' ' <"$LOG")"
 fi
 
 if [ "$FAIL" -eq 0 ]; then

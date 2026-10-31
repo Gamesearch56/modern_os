@@ -24,7 +24,7 @@ elif grep -Fq 'exec qs -c modern ipc call session lock' "$MODERN" \
     && grep -Fq 'timeout 2 qs -c modern ipc call session lock' "$MODERN" \
     && grep -Fq 'exec systemctl suspend' "$MODERN" \
     && grep -Fq 'exec systemctl poweroff' "$MODERN" \
-    && grep -Fq 'exec qs -c modern ipc call powermenu show' "$MODERN"; then
+    && grep -Fq 'exec qs -c modern ipc call powermenu open' "$MODERN"; then
     ok "modern power lock/suspend/poweroff/ask"
 else
     err "modern power actions missing"

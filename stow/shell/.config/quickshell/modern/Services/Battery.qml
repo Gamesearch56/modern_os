@@ -30,12 +30,15 @@ Singleton {
     readonly property string iconName: {
         if (!root.hasBattery)
             return "battery-missing-symbolic";
+        // Papirus and Breeze ship battery-090-charging, not the
+        // Adwaita battery-level-90-charging names.
         const step = Math.round(Math.max(0, Math.min(100, root.percent)) / 10) * 10;
+        const n = ("00" + step).slice(-3);
         if (root.charging && root.percent >= 99)
-            return "battery-level-100-charged-symbolic";
+            return "battery-100-charged";
         if (root.charging)
-            return "battery-level-" + step + "-charging-symbolic";
-        return "battery-level-" + step + "-symbolic";
+            return "battery-" + n + "-charging-symbolic";
+        return "battery-" + n + "-symbolic";
     }
 
     readonly property bool full: root.hasBattery && root.charging && root.percent >= 99
