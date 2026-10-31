@@ -42,6 +42,7 @@ private:
     QString currentSsid() const;
 
     bool m_online = false;
+    bool m_askedScan = false;
     ModernNetNm* m_nm = nullptr;
     QStackedWidget* m_stack = nullptr;
     QWidget* m_okPage = nullptr;

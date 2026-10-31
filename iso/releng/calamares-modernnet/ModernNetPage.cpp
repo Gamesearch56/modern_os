@@ -258,6 +258,11 @@ ModernNetPage::syncUi()
         m_hint->setText( tr( "Connect to Wi-Fi to continue." ) );
     }
     m_stack->setCurrentWidget( m_wifiPage );
+    if ( !m_askedScan && m_nm->wifiRadio() && m_nm->networks().isEmpty() && !m_nm->scanning() )
+    {
+        m_askedScan = true;
+        scanWifi();
+    }
 }
 
 QString
