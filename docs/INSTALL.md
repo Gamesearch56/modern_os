@@ -183,10 +183,15 @@ jobs set `verbose: false` so a failure dialog shows stdout (Calamares
 empty). Failures also tee to `/var/log/modern-calamares-late.log`.
 Late `ensure_dns` replaces a dangling systemd `/etc/resolv.conf`
 symlink, strips loopback nameservers, and rewrites `nsswitch.conf`
-`hosts:` to `files dns`. Arch's default `resolve [!UNAVAIL=return]`
-lets nss-resolve fail before glibc ever reads resolv.conf, so yay's
-`git clone` died with `Could not resolve host: aur.archlinux.org`
-even after writing `1.1.1.1`. Late desktop uses `runuser` (not
+`hosts:` to `files dns` for the chroot only. Arch's default
+`resolve [!UNAVAIL=return]` lets nss-resolve fail before glibc ever
+reads resolv.conf, so yay's `git clone` died with `Could not resolve
+host: aur.archlinux.org` even after writing `1.1.1.1`. After provision, `restore_boot_dns` points `resolv.conf` at the
+systemd-resolved stub again, and `dns.conf` tells NetworkManager to
+send the Wi-Fi nameservers there. `iwd` is masked so its D-Bus service
+cannot take the radio back. Left as a regular file, resolv.conf keeps
+the cable's nameservers, and a later Wi-Fi connection looks up with a
+DNS server that is no longer reachable. Late desktop uses `runuser` (not
 `sudo -iu`) and `Defaults !use_pty` so install.sh can run in the
 Calamares chroot without `/dev/pts`. It does not chmod `/etc` to 0750
 (that blocked the target user from `/etc/gitconfig` during yay
@@ -301,8 +306,10 @@ until Ethernet or Wi-Fi is up (or a default route exists). Wi-Fi turns
 on (no toggle): nearby list with lock/open labels, **Connect** on each
 row, **Refresh**, and a password card for secured networks. Ethernet or
 Wi-Fi already up shows a centered “You're connected with …” page.
-Live setup enables NetworkManager on the wpa_supplicant backend and
-stops `iwd` so they do not fight over the radio. Before Calamares
+Live setup enables NetworkManager on the wpa_supplicant backend,
+masks `iwd`, and releases any Wi-Fi interface systemd-networkd already
+claimed. A reload alone leaves that interface out of NetworkManager, so
+the scan list stays empty. Before Calamares
 starts, it points `unpackfs` at the `airootfs` image archiso actually
 mounted (the stick, or `copytoram` after that boot entry). Unattended QEMU already has virtio-net, so auto-next is
 not blocked. `stylesheet.qss` paints `#networkPage`, `#networkOkPage`,

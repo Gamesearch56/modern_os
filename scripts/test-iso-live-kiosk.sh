@@ -392,6 +392,7 @@ if [ -f "$LANGHOOK" ] \
     && grep -F 'calamares-modernnet' "$LANGHOOK" >/dev/null \
     && grep -F '<translation>Netzwerk</translation>' "$LANGHOOK" >/dev/null \
     && grep -F 'calamares-modernnet' "$AUR" >/dev/null \
+    && grep -F 'iso/releng/calamares-modernnet' "$AUR" >/dev/null \
     && [ -f "$ROOT/iso/releng/calamares-modernnet/CMakeLists.txt" ] \
     && [ -f "$ROOT/iso/releng/calamares-modernnet/ModernNetRow.cpp" ] \
     && ! grep -F '<source>Übersicht</source>' "$LANGHOOK" >/dev/null \
@@ -467,7 +468,8 @@ fi
 
 NM_WIFI="$ROOT/iso/airootfs/etc/NetworkManager/conf.d/wifi-backend.conf"
 if grep -F 'NetworkManager.service' "$SETUP" >/dev/null \
-    && grep -F 'disable --now iwd.service' "$SETUP" >/dev/null \
+    && grep -F 'mask --now iwd.service' "$SETUP" >/dev/null \
+    && grep -F 'networkctl down' "$SETUP" >/dev/null \
     && grep -F '  - modernnet' "$ROOT/iso/airootfs/etc/calamares/settings.conf" >/dev/null \
     && [ -f "$ROOT/iso/airootfs/etc/calamares/modules/modernnet.conf" ] \
     && grep -F 'wifi.backend=wpa_supplicant' "$NM_WIFI" >/dev/null \
@@ -534,7 +536,11 @@ if grep -F 'usage: calamares-late.sh strip|biosboot|clone|desktop|provision' "$L
     && grep -F 'pacman --disable-sandbox -Sy --noconfirm archlinux-keyring' "$LATE" >/dev/null \
     && grep -F 'pacman-key --init' "$LATE" >/dev/null \
     && grep -F 'pacman-key --populate archlinux' "$LATE" >/dev/null \
-    && ! grep -F 'stub-resolv.conf' "$LATE" >/dev/null \
+    && grep -F 'restore_boot_dns' "$LATE" >/dev/null \
+    && grep -F 'mask_iwd' "$LATE" >/dev/null \
+    && grep -F 'stub-resolv.conf' "$LATE" >/dev/null \
+    && grep -F 'dns=systemd-resolved' "$ROOT/iso/airootfs/etc/NetworkManager/conf.d/dns.conf" >/dev/null \
+    && ! grep -F 'etc/NetworkManager/conf.d/dns.conf' "$LATE" >/dev/null \
     && grep -F 'Defaults !use_pty' "$LATE" >/dev/null \
     && grep -F 'runuser -u' "$LATE" >/dev/null \
     && grep -F 'chmod a+rx /etc' "$LATE" >/dev/null \
