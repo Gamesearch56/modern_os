@@ -52,7 +52,9 @@ MCard {
         const out = [];
         for (let j = 0; j < cats.length; j++) {
             const n = Number(cats[j].bytes) || 0;
-            if (n <= 0 && cats[j].id !== "free")
+            // A new snapshot shares the live disk, so its own size is 0
+            // until the system changes. Keep the row so that stays visible.
+            if (n <= 0 && cats[j].id !== "free" && cats[j].id !== "backups")
                 continue;
             out.push({
                 id: cats[j].id,
@@ -102,9 +104,9 @@ MCard {
         }
         MText {
             visible: root._total > 0
-            key: "settings.storage.freeOf"
+            key: "settings.storage.usedOf"
             params: ({
-                free: Storage.formatBytes(root._free),
+                used: Storage.formatBytes(root._used),
                 total: Storage.formatBytes(root._total)
             })
             styleName: "bodyMedium"

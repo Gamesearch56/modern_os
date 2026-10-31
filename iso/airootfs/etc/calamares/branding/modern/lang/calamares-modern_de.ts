@@ -37,7 +37,7 @@
     </message>
     <message>
         <source>Launcher</source>
-        <translation>Starter</translation>
+        <translation>Launcher</translation>
     </message>
     <message>
         <source>Super+Space finds apps, runs commands, and does quick sums.</source>

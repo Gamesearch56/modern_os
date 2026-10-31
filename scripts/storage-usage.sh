@@ -68,6 +68,55 @@ def unique_dirs(paths):
     return out
 
 
+def fstype(path):
+    if not path or not os.path.isdir(path):
+        return ""
+    try:
+        proc = subprocess.run(
+            ["stat", "-f", "-c", "%T", path],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    if proc.returncode != 0:
+        return ""
+    return (proc.stdout or "").strip()
+
+
+def btrfs_exclusive(path):
+    # du -sb counts every file in the snapshot at its full size, including
+    # extents the live system still owns. On btrfs that reports a second
+    # copy of the disk. Exclusive is the space that goes away with the
+    # snapshots.
+    if fstype(path) != "btrfs":
+        return None
+    try:
+        proc = subprocess.run(
+            ["btrfs", "filesystem", "du", "-s", "--raw", "--", path],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=45,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return 0
+    exclusive = None
+    for line in (proc.stdout or "").splitlines():
+        parts = line.split()
+        if len(parts) < 4 or parts[0] == "Total":
+            continue
+        try:
+            exclusive = int(parts[1])
+        except ValueError:
+            continue
+    if exclusive is None:
+        return 0
+    return exclusive
+
+
 def du(paths):
     dirs = unique_dirs(paths)
     if not dirs:
@@ -153,7 +202,9 @@ else:
     if apps is None:
         apps = du([usr, flatpak, under(HOME, ".local", "share", "flatpak")])
 cache = du([under(HOME, ".cache"), var_cache])
-backups = du([snapshots])
+backups = btrfs_exclusive(snapshots)
+if backups is None:
+    backups = du([snapshots])
 
 json.dump({
     "games": games,

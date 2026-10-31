@@ -223,6 +223,24 @@ else
     err "virtual GPU must disable blur, fp16, and color management without changing a real GPU"
 fi
 
+POPUPS="$ROOT/stow/hypr/.config/hypr/modules/browser_popups.lua"
+if grep -Fq 'require("modules.browser_popups")' \
+        "$ROOT/stow/hypr/.config/hypr/hyprland.lua" \
+    && grep -Fq 'action = on and "set" or "unset"' "$POPUPS" \
+    && grep -Fq 'origin_stamp' "$POPUPS" \
+    && grep -Fq 'app_class' "$POPUPS" \
+    && grep -Fq 'document_title' "$POPUPS" \
+    && grep -Fq 'SETTLE_MS' "$POPUPS" \
+    && grep -Fq 'drop_vivaldi_notice' "$POPUPS" \
+    && grep -Fq 'org.freedesktop.Notifications' \
+        "$ROOT/stow/hypr/.config/hypr/modules/session_apps.lua" \
+    && grep -Fq 'another_open' \
+        "$ROOT/stow/hypr/.config/hypr/modules/session_apps.lua"; then
+    ok "browser notification toplevels close once the notification service is up"
+else
+    err "anonymous browser notification windows must close into a system notification"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

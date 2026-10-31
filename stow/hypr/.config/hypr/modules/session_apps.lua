@@ -91,6 +91,27 @@ local function forget(w)
     end
 end
 
+-- A mail notice uses the same app id as the inbox. Closing the notice
+-- must not start a second Proton Mail while the inbox is still mapped.
+local function another_open(name, closed_addr)
+    if not hl.get_windows then
+        return false
+    end
+    local wins = hl.get_windows()
+    if type(wins) ~= "table" then
+        return false
+    end
+    for i = 1, #wins do
+        local w = wins[i]
+        if type(w) == "table" and tostring(w.address or "") ~= closed_addr then
+            if match.window_matches(w, name) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 local function on_special(w)
     local ws = w and w.workspace
     local n = type(ws) == "table" and tostring(ws.name or "") or tostring(ws or "")
@@ -182,10 +203,37 @@ local function start_apps()
     end
 end
 
+-- Vivaldi checks for a notification service once, at launch. If mail
+-- starts first, every later message is its own tiled window.
+local function notifier_ready()
+    local ok_f, f = pcall(io.popen, "busctl --user status org.freedesktop.Notifications >/dev/null 2>&1; printf %s $?", "r")
+    if not ok_f or not f then
+        return false
+    end
+    local s = f:read("*a") or ""
+    f:close()
+    return s:match("^0$") ~= nil
+end
+
+local bus_tries = 0
+
+local function start_when_ready()
+    bus_tries = bus_tries + 1
+    if notifier_ready() or bus_tries >= 40 then
+        start_apps()
+        return
+    end
+    if hl.timer then
+        hl.timer(start_when_ready, { timeout = 250, type = "oneshot" })
+    else
+        start_apps()
+    end
+end
+
 function M.on_start()
     pin_background()
     if hl.timer then
-        hl.timer(start_apps, { timeout = 250, type = "oneshot" })
+        hl.timer(start_when_ready, { timeout = 250, type = "oneshot" })
     else
         start_apps()
     end
@@ -202,9 +250,10 @@ if hl.on then
         if shutting_down then
             return
         end
+        local closed = tostring(w and w.address or "")
         local name = desktop_for_window(w)
         forget(w)
-        if name == "" or not in_autostart(name) then
+        if name == "" or not in_autostart(name) or another_open(name, closed) then
             return
         end
         local busy = _G.__modern_as_busy
@@ -225,6 +274,33 @@ if hl.on then
             end, { timeout = 8000, type = "oneshot" })
         end
     end)
+end
+
+-- A reload drops the address map. Remember windows that are already
+-- open so closing one still relaunches that app.
+local function seed_open()
+    if not hl.get_windows then
+        return
+    end
+    local wins = hl.get_windows()
+    if type(wins) ~= "table" then
+        return
+    end
+    for i = 1, #wins do
+        local w = wins[i]
+        if type(w) == "table" then
+            local name = desktop_for_window(w)
+            if name ~= "" then
+                remember(w, name)
+            end
+        end
+    end
+end
+
+if hl.timer then
+    hl.timer(seed_open, { timeout = 300, type = "oneshot" })
+else
+    seed_open()
 end
 
 return M

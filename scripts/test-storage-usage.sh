@@ -66,6 +66,37 @@ else
     err "fixture: $out"
 fi
 
+fake="$TMP/bin"
+mkdir -p "$fake"
+cat >"$fake/stat" <<'EOF'
+#!/bin/sh
+if [ "$1" = "-f" ] && [ "$2" = "-c" ] && [ "$3" = "%T" ]; then
+    printf 'btrfs\n'
+    exit 0
+fi
+exec /usr/bin/stat "$@"
+EOF
+cat >"$fake/btrfs" <<'EOF'
+#!/bin/sh
+printf '%s\n' '     Total   Exclusive  Set shared  Filename' '1000           42  7  /.snapshots'
+exit 0
+EOF
+chmod +x "$fake/stat" "$fake/btrfs"
+btrfs_out="$(PATH="$fake:/usr/bin:/bin" "$SCRIPT")"
+if python3 - "$btrfs_out" <<'PY'
+import json, sys
+d = json.loads(sys.argv[1])
+if d.get("backups") != 42:
+    raise SystemExit(f"backups {d.get('backups')}")
+if d.get("games", 0) < 4:
+    raise SystemExit(f"games {d.get('games')}")
+PY
+then
+    ok "btrfs snapshots count exclusive space, not the shared copy"
+else
+    err "btrfs exclusive: $btrfs_out"
+fi
+
 if grep -F 'Paths.script("storage-usage.sh")' \
     "$ROOT/stow/shell/.config/quickshell/modern/Services/StorageUsage.qml" >/dev/null; then
     ok "Settings usage is this script"
