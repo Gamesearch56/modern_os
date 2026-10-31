@@ -17,6 +17,7 @@ GridLayout {
 
     MPercentTile {
         Layout.fillWidth: true
+        Layout.fillHeight: true
         titleKey: "settings.energy.draw"
         valueText: Battery.rateWatts > 0
             ? I18n.t("settings.energy.watts", ({ n: Math.round(Battery.rateWatts * 10) / 10 }))
@@ -25,6 +26,7 @@ GridLayout {
     }
     MPercentTile {
         Layout.fillWidth: true
+        Layout.fillHeight: true
         titleKey: "settings.energy.health"
         valueText: Battery.healthPercent > 0
             ? I18n.t("settings.energyBattery", ({ n: Battery.healthPercent }))
