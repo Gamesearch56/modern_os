@@ -202,6 +202,14 @@ else
     err "primaryDescription + ProfileForm + no games snap_primary required"
 fi
 
+if grep -Fq 'nautilus' "$GAMES" \
+    && grep -Fq 'MAX_ID' "$GAMES" \
+    && ! grep -Fq 're2_alt' "$GAMES"; then
+    ok "file manager titles stay out of the game matcher"
+else
+    err "games.lua must ignore file managers and not Lua-match window titles"
+fi
+
 if grep -Fq 'virtual_gpu' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq '0x1af4' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'hypervisor' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
