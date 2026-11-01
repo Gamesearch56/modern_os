@@ -120,6 +120,11 @@ hl.config({
         disable_hyprland_guiutils_check = true,
         background_color = hex_bg(tokens.surface),
     },
+    -- Same screen the session disables. The greeter starts first after
+    -- a reboot, so an updated Hyprland would otherwise cover the login.
+    ecosystem = {
+        no_update_news = true,
+    },
     render = {
         cm_auto_hdr = 0,
     },

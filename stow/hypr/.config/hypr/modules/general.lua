@@ -159,6 +159,11 @@ hl.config({
         -- overlay stays for 15s and reads as a stuck login.
         disable_hyprland_guiutils_check = true,
     },
+    -- A system update that ships a newer Hyprland otherwise opens
+    -- hyprland-update-screen ("Hyprland has been updated").
+    ecosystem = {
+        no_update_news = true,
+    },
     render = {
         cm_auto_hdr = 0,
         -- Both default on. On a virtual GPU their shaders replace any
