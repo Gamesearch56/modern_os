@@ -428,23 +428,28 @@ Singleton {
         const live = root._live(item) || item;
         if (!live)
             return false;
+        // Shell toasts carry the file they report (screenshot, recording,
+        // fetched wallpaper): show it selected in the file manager.
         if (live.local) {
+            const file = root._openablePath(root._str(live.image));
+            const shown = file.length > 0 && Apps.openInFileManager(file);
+            if (shown)
+                root.hide();
             root.dismiss(live);
-            return false;
+            return shown;
         }
+        // The app's own action comes first even when its window is up:
+        // raising alone never opens the chat or mail the banner was about.
         const id = root._appDesktopId(live);
-        if (Hypr.raiseApp(id, live.appName)) {
-            root.hide();
-            root.dismiss(live);
-            return true;
-        }
-        root.invokeDefault(live);
-        if (id.length)
-            Apps.launchId(id);
-        else {
-            const path = root.attachmentPath(live);
-            if (path.length)
-                Apps.openPath(path);
+        const invoked = root.invokeDefault(live);
+        if (!Hypr.raiseApp(id, live.appName)) {
+            if (id.length)
+                Apps.launchId(id);
+            else if (!invoked) {
+                const path = root.attachmentPath(live);
+                if (path.length)
+                    Apps.openPath(path);
+            }
         }
         root.hide();
         root.dismiss(live);

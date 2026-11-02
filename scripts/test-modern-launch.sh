@@ -284,6 +284,17 @@ else
     err "anonymous browser notification windows must close into a system notification"
 fi
 
+activate="$(awk '/function activate\(item\)/,/^    }$/' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Services/Notifications.qml")"
+invoke_at="$(grep -n 'invokeDefault(live)' <<<"$activate" | head -n1 | cut -d: -f1)"
+raise_at="$(grep -n 'Hypr.raiseApp' <<<"$activate" | head -n1 | cut -d: -f1)"
+if grep -Fq 'Apps.openInFileManager(file)' <<<"$activate" \
+    && [ -n "$invoke_at" ] && [ -n "$raise_at" ] && [ "$invoke_at" -lt "$raise_at" ]; then
+    ok "a screenshot toast reveals its file; an app notification runs its action before raising"
+else
+    err "notification click must reveal shell toast files and invoke app actions even when the app is open"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi
