@@ -11,7 +11,7 @@ Singleton {
 
     property bool watching: false
     property bool running: false
-    property bool mirrorsRunning: false
+    readonly property bool mirrorsRunning: mirrors.running
     property bool checking: false
     property var pending: []
     property var systemPkgs: []
@@ -46,9 +46,12 @@ Singleton {
         }
     }
 
-    UpdateClassify {
-        id: classify
-    }
+    UpdateClassify { id: classify }
+    UpdateProgress { id: meter }
+
+    // The release rewrites the shell's own files mid-update. A reload then
+    // would restart this service halfway; the finished update reloads once.
+    Binding { target: Quickshell; property: "watchFiles"; value: false; when: root.running }
 
     Process {
         id: checkProc
@@ -80,19 +83,12 @@ Singleton {
         onExited: (code) => root._done(code)
     }
 
-    Process {
-        id: mirrorsProc
-        stderr: StdioCollector {
-            onStreamFinished: {
-                const t = String(this.text || "").trim();
-                if (t.length)
-                    root.error = t;
-            }
-        }
-        onExited: (code) => {
-            root.mirrorsRunning = false;
-            root.notify(code === 0 ? I18n.t("settings.update.mirrorsDone") : I18n.t("settings.update.mirrorsFailed"), "");
-            if (code === 0)
+    UpdateMirrors {
+        id: mirrors
+        onErrorChanged: if (mirrors.error.length) root.error = mirrors.error
+        onFinished: (ok) => {
+            root.notify(ok ? I18n.t("settings.update.mirrorsDone") : I18n.t("settings.update.mirrorsFailed"), "");
+            if (ok)
                 root.refresh();
         }
     }
@@ -123,10 +119,15 @@ Singleton {
         }
     }
 
+    // A desktop release left its UI restart to us: run it only after 100%
+    // has been on screen.
     Timer {
         id: closeTimer
-        interval: Motion.extraLongMs
-        onTriggered: root.close()
+        interval: Motion.updateSettleMs
+        onTriggered: {
+            root.close();
+            Quickshell.execDetached([Paths.script("update-run.sh"), "reload"]);
+        }
     }
 
     onWatchingChanged: if (root.watching) root.refresh()
@@ -163,6 +164,7 @@ Singleton {
         root.open = true;
         root.log = "";
         root.step = I18n.t("settings.updateStep");
+        meter.reset();
         root.progress = -1;
         root.running = true;
         root.error = "";
@@ -183,12 +185,10 @@ Singleton {
     }
 
     function refreshMirrors() {
-        if (root.mirrorsRunning || root.running)
+        if (root.running)
             return;
         root.error = "";
-        root.mirrorsRunning = true;
-        mirrorsProc.command = [Paths.modern, "mirrors"];
-        mirrorsProc.running = true;
+        mirrors.start();
     }
 
     function close() {
@@ -205,16 +205,15 @@ Singleton {
             root.open = true;
             root.running = true;
         }
+        const marker = meter.feed(t);
+        root.progress = meter.value;
+        if (marker)
+            return;
         root.log += t + "\n";
         // The clock and INFO/OK stay in the log. The title is the message.
         const label = t.replace(/^\[[0-9:.T +-]+\]\s*/, "").replace(/^(?:INFO|OK|WARN|ERROR)\s+/, "").trim();
         if (label.length > 0)
             root.step = label;
-        const m = t.match(/\((\d+)\/(\d+)\)/);
-        if (m)
-            root.progress = Number(m[1]) / Number(m[2]);
-        else if (t.toLowerCase().indexOf("snapshot") !== -1)
-            root.progress = 0.1;
     }
 
     // 75: no update to attach to. 3: a half-applied update was rolled back.

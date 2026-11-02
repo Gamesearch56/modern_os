@@ -11,14 +11,23 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SNAPSHOT=0
 PLAN=""
+PROGRESS=0
 ARGS=("$@")
 usage() {
-    printf 'usage: update-apply.sh [--snapshot|--no-snapshot] [--root-plan FILE]\n' >&2
+    printf 'usage: update-apply.sh [--snapshot|--no-snapshot] [--root-plan FILE] [--progress]\n' >&2
+}
+# Stage markers for Services/UpdateProgress.qml. pacman's own messages
+# are translated, so the stages cannot be read from them.
+progress() {
+    [ "$PROGRESS" -eq 0 ] || printf '@@progress %s\n' "$1"
 }
 while [ $# -gt 0 ]; do
     case "$1" in
         --snapshot)
             SNAPSHOT=1
+            ;;
+        --progress)
+            PROGRESS=1
             ;;
         --no-snapshot)
             SNAPSHOT=0
@@ -60,6 +69,7 @@ else
 fi
 
 snap=""
+progress snapshot
 if [ "$SNAPSHOT" -eq 1 ] && [ "$REPAIR" -eq 0 ]; then
     if command -v snapper >/dev/null 2>&1 \
         && snapper list-configs >/dev/null 2>&1 \
@@ -83,6 +93,7 @@ fi
 mkdir -p "$(dirname "$UPDATE_MARK")"
 [ "$REPAIR" -eq 1 ] || printf '%s\n' "${snap:-none}" >"$UPDATE_MARK"
 mark="$(update_guard_log_mark)"
+progress pacman
 if ! "$PACMAN" -Syu --noconfirm; then
     if update_guard_partial "$mark" && [ -n "$snap" ]; then
         printf 'update-apply: packages failed halfway; restoring snapshot %s\n' "$snap" >&2
@@ -102,6 +113,7 @@ if [ "$REPAIR" -eq 1 ]; then
     [ ${#kernels[@]} -eq 0 ] || "$PACMAN" -S --noconfirm "${kernels[@]}"
 fi
 rm -f "$UPDATE_MARK"
+progress finish
 
 [ -n "$PLAN" ] && [ -s "$PLAN" ] || exit 0
 

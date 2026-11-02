@@ -47,6 +47,8 @@ Singleton {
     readonly property int durationBluetoothIdle: 8000
     // Multipoint buds: wait for the headset to take sound back before the speakers.
     readonly property int durationBluetoothReconnect: 12000
+    // Finished update stays on screen at 100% before the shell restarts.
+    readonly property int durationUpdateSettle: 2500
     // External process watchdog (ddcutil / hyprctl / theme-apply) — wall clock.
     readonly property int durationProcessWatch: 20000
     readonly property int durationFollowWatch: 30000
@@ -67,6 +69,7 @@ Singleton {
     readonly property int bluetoothScanMs: root.durationBluetoothScan
     readonly property int bluetoothIdleMs: root.durationBluetoothIdle
     readonly property int bluetoothReconnectMs: root.durationBluetoothReconnect
+    readonly property int updateSettleMs: root.durationUpdateSettle
     readonly property int processWatchMs: root.durationProcessWatch
     readonly property int followWatchMs: root.durationFollowWatch
     readonly property bool overlaysFade: root.scale !== 0 && root.overlay !== "zoom"

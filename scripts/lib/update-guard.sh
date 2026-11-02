@@ -31,19 +31,21 @@ update_guard_detach() {
         return 1
     fi
     systemctl reset-failed "$UPDATE_UNIT" >/dev/null 2>&1 || true
-    local follow rc=0
-    journalctl --follow --lines=0 --output=cat "_SYSTEMD_UNIT=$UPDATE_UNIT.service" 2>/dev/null &
-    follow=$!
+    # A file, not the journal: journald lags the unit, and a follower cut
+    # off after a fixed wait dropped pacman's last lines. tail --pid
+    # reads to the end once systemd-run has returned.
+    local out="${UPDATE_OUT:-/run/$UPDATE_UNIT.log}" runner rc=0
+    install -m 0644 /dev/null "$out"
     systemd-run --quiet --wait --collect --service-type=exec \
         --unit="$UPDATE_UNIT" --description="ModernOS system update" \
+        --property=StandardOutput="append:$out" --property=StandardError="append:$out" \
         --setenv=MODERN_UPDATE_UNIT=1 \
         --setenv=PKEXEC_UID="${PKEXEC_UID:-}" --setenv=SUDO_UID="${SUDO_UID:-}" \
         -- systemd-inhibit --what=shutdown:sleep:idle --mode=block \
-        --who=ModernOS --why="System update" "$@" || rc=$?
-    # The journal lags the unit by a moment; let the last lines through.
-    sleep 1
-    kill "$follow" 2>/dev/null || true
-    wait "$follow" 2>/dev/null || true
+        --who=ModernOS --why="System update" "$@" &
+    runner=$!
+    tail -n +1 -F --pid="$runner" "$out" 2>/dev/null || true
+    wait "$runner" || rc=$?
     return "$rc"
 }
 
