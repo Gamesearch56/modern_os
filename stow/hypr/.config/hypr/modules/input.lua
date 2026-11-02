@@ -24,3 +24,20 @@ hl.config({
 -- Touchpad gestures: 3-finger swipe switches workspaces, matching the
 -- most common Hyprland default and the audited system's laptop use.
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+-- 3-finger swipe up opens the window overview (SUPER+Tab), down closes
+-- it, like Mission Control. open/hide rather than toggle so a repeated
+-- swipe never closes what the user just opened.
+hl.gesture({
+    fingers = 3,
+    direction = "up",
+    action = function()
+        hl.exec_cmd("qs -c modern ipc call overview open")
+    end,
+})
+hl.gesture({
+    fingers = 3,
+    direction = "down",
+    action = function()
+        hl.exec_cmd("qs -c modern ipc call overview hide")
+    end,
+})
