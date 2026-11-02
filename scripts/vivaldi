@@ -1,32 +1,49 @@
 #!/usr/bin/env bash
-# Launch Vivaldi. gaming.browserLight runs the graphics thread inside the
-# browser process. Autologin has no account password to unlock the login
-# keyring, so the browser would ask for a new Default Keyring and then
-# refuse to open after an empty answer. A locked login keyring uses the
-# basic store instead, which does not ask.
+# Launch Vivaldi on the profile the user named. Mail, calendar, and
+# WhatsApp are --app windows of that same profile. The profile list opens
+# beside a second window when the secret portal cannot unlock that
+# profile's keystore, so the directory is passed explicitly.
 set -euo pipefail
 
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+VIVALDI_STATE="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi/Local State"
 
 on=false
 if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
     on="$(jq -r '.gaming.browserLight // false' "$CFG" 2>/dev/null || printf false)"
 fi
 
-login_keyring_open() {
-    local locked
-    locked="$(timeout 1 busctl --user get-property org.freedesktop.secrets \
-        /org/freedesktop/secrets/collection/login \
-        org.freedesktop.Secret.Collection Locked 2>/dev/null || true)"
-    [ "$locked" = "b false" ]
+# The directory the user renamed (is_using_default_name false). Automatic
+# profiles keep Vivaldi's own name. One renamed profile is that choice.
+# Several: the last one used, if it is one of them.
+profile_directory() {
+    local name="Default" picked=""
+    if [ -f "$VIVALDI_STATE" ] && command -v jq >/dev/null 2>&1; then
+        picked="$(jq -r '
+            .profile as $p
+            | ($p.info_cache // {}) as $c
+            | [$c | to_entries[]
+                | select(.value.is_using_default_name == false) | .key] as $named
+            | if ($named | length) == 1 then $named[0]
+              elif ($named | index($p.last_used)) != null then $p.last_used
+              elif ($named | length) > 0 then $named[0]
+              else ($p.last_used // "Default")
+              end
+        ' "$VIVALDI_STATE" 2>/dev/null || true)"
+    fi
+    case "$picked" in
+        ""|null|..|*/|*\\*) ;;
+        *) name="$picked" ;;
+    esac
+    if [ ! -d "${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi/$name" ]; then
+        name="Default"
+    fi
+    printf '%s\n' "$name"
 }
 
-args=()
+args=(--profile-directory="$(profile_directory)")
 if [ "$on" = "true" ]; then
     args+=(--in-process-gpu)
-fi
-if ! login_keyring_open; then
-    args+=(--password-store=basic)
 fi
 
 if ! command -v vivaldi-stable >/dev/null 2>&1; then

@@ -232,7 +232,9 @@ Expected until you create gitignored
 
 Confirm `~/.config/xdg-desktop-portal/hyprland-portals.conf` is stowed
 and `xdg-desktop-portal-hyprland` plus `xdg-desktop-portal-gtk` /
-kde are installed. Restart: `systemctl --user restart xdg-desktop-portal`.
+kde are installed. That file also points the secret portal at
+gnome-keyring so Vivaldi can open its named profile instead of the
+profile list. Restart: `systemctl --user restart xdg-desktop-portal`.
 
 ## KDE Connect phone does not see the PC
 
