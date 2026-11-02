@@ -191,30 +191,6 @@ for _, w in ipairs(overlays) do
     apply(rule)
 end
 
--- Steam's own window, only while gaming.steamLight is on. Kept in this
--- file so a new module cannot drop the compositor into emergency mode
--- before stow links it.
-if config.value("gaming.steamLight", false) == true then
-    apply({
-        name = "modern-steam-light",
-        match = { class = "^steam$" },
-        no_blur = true,
-        no_shadow = true,
-        no_anim = true,
-        no_wobble = true,
-        opaque = true,
-    })
-    apply({
-        name = "modern-steamwebhelper-light",
-        match = { class = "^steamwebhelper$" },
-        no_blur = true,
-        no_shadow = true,
-        no_anim = true,
-        no_wobble = true,
-        opaque = true,
-    })
-end
-
 -- Same switch as scripts/vivaldi. Acrylic on a new browser window shares
 -- the two cores that are still starting the UI.
 if config.value("gaming.browserLight", false) == true then

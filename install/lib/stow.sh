@@ -110,7 +110,30 @@ stow_package() {
         die "stow of '$pkg' aborted — leftover regular files in $target? See above."
     fi
     [ -n "$stow_out" ] && log_info "$stow_out"
+    _stow_prune "$pkg_dir" "$pkg_dir" "$target"
     log_ok "Stowed '$pkg'"
+}
+
+# A file dropped from a package leaves a dangling link in every home it was
+# stowed into; a stale .desktop link would still shadow the system entry.
+# Only broken links that point back into this package are removed.
+_stow_prune() {
+    local dir="$1" pkg_dir="$2" target="$3"
+    local rel="${dir#"$pkg_dir"}" pkg_resolved link f
+    pkg_resolved="$(readlink -f "$pkg_dir")"
+    for link in "$target$rel"/* "$target$rel"/.[!.]*; do
+        [ -L "$link" ] && [ ! -e "$link" ] || continue
+        case "$(readlink -m "$link")" in
+            "$pkg_resolved"/*)
+                log_info "Removing stale link $link"
+                run rm -f "$link"
+                ;;
+        esac
+    done
+    for f in "$dir"/* "$dir"/.[!.]*; do
+        [ -d "$f" ] && [ ! -L "$f" ] && _stow_prune "$f" "$pkg_dir" "$target"
+    done
+    return 0
 }
 
 unstow_package() {

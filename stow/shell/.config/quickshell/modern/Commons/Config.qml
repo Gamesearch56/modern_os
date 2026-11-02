@@ -153,8 +153,6 @@ Singleton {
                 property bool autoFullscreen: true
                 property bool autoOptimize: true
                 property bool hdrSession: false
-                property bool steamLight: false
-                property bool lowEnd: false
                 property bool browserLight: false
                 property string matchClass: "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl|wow|Wow|Warcraft.*"
                 property string matchTitle: ".*\\.exe|Project Zomboid|World of Warcraft|Warcraft III|Warcraft 3|Diablo.*|Overwatch.*|Hearthstone|StarCraft.*|Call of Duty.*"
