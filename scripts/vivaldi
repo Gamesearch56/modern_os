@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Launch Vivaldi. gaming.browserLight runs the graphics thread inside the
-# browser process and is what the compositor uses to drop blur on those
-# windows. A separate graphics process is a large part of a cold start on
-# a two-core chip, and login otherwise starts mail, calendar, and WhatsApp
-# as three more of them.
+# browser process. Autologin has no account password to unlock the login
+# keyring, so the browser would ask for a new Default Keyring and then
+# refuse to open after an empty answer. A locked login keyring uses the
+# basic store instead, which does not ask.
 set -euo pipefail
 
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
@@ -13,9 +13,20 @@ if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
     on="$(jq -r '.gaming.browserLight // false' "$CFG" 2>/dev/null || printf false)"
 fi
 
+login_keyring_open() {
+    local locked
+    locked="$(timeout 1 busctl --user get-property org.freedesktop.secrets \
+        /org/freedesktop/secrets/collection/login \
+        org.freedesktop.Secret.Collection Locked 2>/dev/null || true)"
+    [ "$locked" = "b false" ]
+}
+
 args=()
 if [ "$on" = "true" ]; then
     args+=(--in-process-gpu)
+fi
+if ! login_keyring_open; then
+    args+=(--password-store=basic)
 fi
 
 if ! command -v vivaldi-stable >/dev/null 2>&1; then

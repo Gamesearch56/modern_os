@@ -101,7 +101,7 @@ else
     err "modern-launch --background must not call hyprctl dispatch exec"
 fi
 
-if grep -Fq 'special:background silent' "$SESSION" \
+if grep -Fq 'move_to_background' "$SESSION" \
     && grep -Fq 'pin_background' "$SESSION" \
     && grep -Fq '__modern_as_spawn' "$SESSION" \
     && grep -Fq 'session_direct_apps' "$SESSION" \
@@ -111,7 +111,8 @@ if grep -Fq 'special:background silent' "$SESSION" \
     && grep -Fq 'delay = delay + 200' "$SESSION" \
     && ! grep -Fq '{ timeout = 2000,' "$SESSION" \
     && ! grep -Fq 'delay = delay + 1500' "$SESSION" \
-    && grep -Fq 'no_initial_focus' "$SESSION" \
+    && ! grep -Fq 'special:background silent' "$SESSION" \
+    && grep -Fq 'password-store=basic' "$ROOT/scripts/vivaldi" \
     && ! grep -Fq 'session-park' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \
     && ! grep -Fq 'arm_park' "$SESSION" \

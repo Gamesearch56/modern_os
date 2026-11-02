@@ -14,10 +14,6 @@ end
 
 local M = {}
 local shutting_down = false
-local bg_rules = {
-    workspace = "special:background silent",
-    no_initial_focus = true,
-}
 
 local function pin_background()
     local mon = layout.primary()
@@ -172,12 +168,15 @@ local function launch_name(name)
     local cmd = direct_app[name] or (paths.modern_launch .. " " .. name)
     pin_background()
     mark_spawn(name)
+    -- Do not pin every window of this process. The decryption warning has
+    -- no app class; a process rule parked it on the hidden workspace, so
+    -- the browser looked like it never opened. on_window parks the app.
     if hl.dispatch and hl.dsp and hl.dsp.exec_cmd then
         pcall(function()
-            hl.dispatch(hl.dsp.exec_cmd(cmd, bg_rules))
+            hl.dispatch(hl.dsp.exec_cmd(cmd))
         end)
     else
-        hl.exec_cmd(cmd, bg_rules)
+        hl.exec_cmd(cmd)
     end
 end
 
