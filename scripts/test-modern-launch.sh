@@ -118,6 +118,7 @@ if grep -Fq 'move_to_background' "$SESSION" \
     && ! grep -Fq '"__%-"' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
     && grep -Fq 'profile-directory' "$ROOT/scripts/vivaldi" \
     && grep -Fq 'password-store=basic' "$ROOT/scripts/vivaldi" \
+    && grep -Fq '"--password-store=basic"' "$ROOT/stow/xdg/.config/spotify-launcher.conf" \
     && grep -Fq 'DbusSecretPortal' "$ROOT/scripts/vivaldi" \
     && grep -Fq 'keystore_canary' "$ROOT/scripts/vivaldi" \
     && ! grep -Fq 'gnome-keyring-hyprland' "$ROOT/stow/xdg/.config/xdg-desktop-portal/hyprland-portals.conf" \
