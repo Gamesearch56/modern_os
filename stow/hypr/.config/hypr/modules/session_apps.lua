@@ -125,8 +125,8 @@ local function move_to_background(w)
     if not (hl.dispatch and hl.dsp and hl.dsp.window and hl.dsp.window.move) then
         return
     end
-    -- The special workspace has to sit on the primary output or the
-    -- window move is a no-op and the app stays on workspace 1.
+    -- Create the special workspace if this is the first park, then
+    -- close it so the moved window is not left on screen.
     pin_background()
     -- A window object is what the compositor accepts. An address string
     -- without the 0x prefix is a silent no-op.

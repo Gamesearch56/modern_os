@@ -101,10 +101,13 @@ QtObject {
         const addr = root._addrHypr(address);
         if (!addr.length)
             return;
-        if (root.host._lua)
-            root.host.dispatch("hl.dsp.window.move({ workspace = \"special:background\", follow = false, window = \"address:" + addr + "\" })");
-        else
-            root.host.dispatch("movetoworkspacesilent special:background,address:" + addr);
+        // The script closes special:background before the move. A bare
+        // move onto an open special workspace leaves the window on screen.
+        if (root.host._lua) {
+            Quickshell.execDetached([Paths.script("background-move.sh"), addr]);
+            return;
+        }
+        root.host.dispatch("movetoworkspacesilent special:background,address:" + addr);
     }
 
     function raiseDesktop(desktopId: string): bool {

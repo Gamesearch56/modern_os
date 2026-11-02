@@ -151,6 +151,14 @@ hl.config({
     },
     binds = {
         window_direction_monitor_fallback = true,
+        -- Focusing the normal workspace dismisses special:background.
+        -- The parked windows stay on it.
+        hide_special_on_workspace_change = true,
+    },
+    -- Opening the background workspace must not warp the pointer onto
+    -- another monitor before the matching toggle closes it.
+    cursor = {
+        warp_on_toggle_special = 0,
     },
     misc = {
         disable_hyprland_logo = true,

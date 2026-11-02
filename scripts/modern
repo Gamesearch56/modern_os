@@ -209,13 +209,15 @@ case "$TARGET" in
                 if [ "$dismissed" = "true" ]; then
                     exit 0
                 fi
+                # Close an open background workspace before Quickshell
+                # reports the window hidden. An open special workspace
+                # keeps the app on screen.
+                if "$SCRIPT_DIR/session-hide.sh" focused; then
+                    exit 0
+                fi
                 parked="$(qs -c modern ipc call shell closeFocused 2>/dev/null || true)"
                 parked="$(printf '%s' "$parked" | tr -d '[:space:]\"')"
                 if [ "$parked" = "hidden" ]; then
-                    exit 0
-                fi
-                # QS may miss special-workspace clients or Vivaldi --app= classes.
-                if "$SCRIPT_DIR/session-hide.sh" focused; then
                     exit 0
                 fi
                 exec hyprctl dispatch "hl.dsp.window.close()"

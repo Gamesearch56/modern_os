@@ -195,27 +195,103 @@ local function has_background()
     return false
 end
 
--- A window move onto special:background is "Workspace not found" until
--- the workspace has been created. toggle_special creates it without
--- leaving the current workspace. A second toggle would show it.
-function M.pin_background()
-    if not _G.__modern_bg_workspace then
-        if not has_background() and hl.dispatch and hl.dsp and hl.dsp.workspace and hl.dsp.workspace.toggle_special then
-            pcall(hl.dispatch, hl.dsp.workspace.toggle_special("background"))
-        end
-        if has_background() or not hl.get_workspaces then
-            _G.__modern_bg_workspace = true
+local function workspace_label(obj)
+    if type(obj) == "string" then
+        return obj
+    end
+    if type(obj) ~= "table" and type(obj) ~= "userdata" then
+        return ""
+    end
+    local ok, name = pcall(function()
+        return obj.name
+    end)
+    if ok and name ~= nil then
+        return tostring(name)
+    end
+    return ""
+end
+
+local function monitor_special_name(mon)
+    if type(mon) ~= "table" and type(mon) ~= "userdata" then
+        return ""
+    end
+    for _, key in ipairs({ "specialWorkspace", "special_workspace", "activeSpecialWorkspace" }) do
+        local ok, sp = pcall(function()
+            return mon[key]
+        end)
+        if ok and sp ~= nil then
+            local name = workspace_label(sp)
+            if name ~= "" then
+                return name
+            end
         end
     end
-    local mon = layout.primary()
-    local sel = layout.selector(mon)
-    if not sel or not hl.dsp or not hl.dsp.workspace or not hl.dsp.workspace.move or not hl.dispatch then
+    return ""
+end
+
+-- toggle_special is the only call that creates special:background, and
+-- it shows that workspace on the focused monitor. A window parked there
+-- then covers workspace 1, and SUPER+Q cannot hide it.
+function M.pin_background()
+    local toggle = hl.dsp and hl.dsp.workspace and hl.dsp.workspace.toggle_special
+    if not (hl.dispatch and toggle and hl.get_active_monitor and hl.get_active_monitor()) then
         return
     end
-    pcall(hl.dispatch, hl.dsp.workspace.move({
-        workspace = "special:background",
-        monitor = sel,
-    }))
+    local function flip()
+        pcall(hl.dispatch, toggle("background"))
+    end
+    local function workspace_id_of(ws)
+        local id = layout.workspace_id(ws)
+        if id then
+            return id
+        end
+        if type(ws) ~= "userdata" and type(ws) ~= "table" then
+            return nil
+        end
+        local ok, n = pcall(function()
+            return ws.id
+        end)
+        if ok then
+            return tonumber(n)
+        end
+        return nil
+    end
+    -- Toggle only to create. A later toggle while it is open on the
+    -- other monitor moves the workspace and drops its windows onto
+    -- workspace 1. Focusing the numbered workspace underneath it
+    -- closes the view and leaves the windows parked.
+    if not has_background() then
+        flip()
+        flip()
+    end
+    local prev_id = nil
+    local focused_mon = hl.get_active_monitor and hl.get_active_monitor()
+    if focused_mon then
+        local ok, aw = pcall(function()
+            return focused_mon.activeWorkspace
+        end)
+        prev_id = ok and workspace_id_of(aw) or nil
+    end
+    local raw = hl.get_monitors and hl.get_monitors()
+    if type(raw) == "table" and hl.dsp.focus then
+        for _, mon in pairs(raw) do
+            if monitor_special_name(mon):find("special:background", 1, true) then
+                local ok, aw = pcall(function()
+                    return mon.activeWorkspace
+                end)
+                local id = ok and workspace_id_of(aw) or nil
+                if id and id > 0 then
+                    pcall(hl.dispatch, hl.dsp.focus({ workspace = id }))
+                end
+            end
+        end
+        if prev_id and prev_id > 0 then
+            pcall(hl.dispatch, hl.dsp.focus({ workspace = prev_id }))
+        end
+    end
+    if has_background() or not hl.get_workspaces then
+        _G.__modern_bg_workspace = true
+    end
 end
 
 local function bind_range(mon, from, to)

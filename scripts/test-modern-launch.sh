@@ -123,6 +123,11 @@ if grep -Fq 'move_to_background' "$SESSION" \
     && [ ! -e "$ROOT/stow/xdg/.local/share/xdg-desktop-portal/portals/gnome-keyring-hyprland.portal" ] \
     && grep -Fq 'initialClass' "$ROOT/stow/hypr/.config/hypr/modules/session_match.lua" \
     && grep -Fq 'window = w' "$SESSION" \
+    && grep -Fq 'covers workspace 1' "$ROOT/stow/hypr/.config/hypr/modules/workspaces.lua" \
+    && grep -Fq 'warp_on_toggle_special' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'background-move.sh' "$HIDE" \
+    && grep -Fq 'specialWorkspace.name' "$ROOT/scripts/background-move.sh" \
+    && grep -Fq 'background-move.sh' "$HYPR_WIN" \
     && ! grep -Fq 'session-park' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \
     && ! grep -Fq 'arm_park' "$SESSION" \
