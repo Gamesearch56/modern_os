@@ -789,7 +789,7 @@
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn Hyprland startet.",
       "mouseWindow": "Am Fensterrand ziehen, um die Größe zu ändern. Super+Links verschiebt ein Fenster, Super+Rechts ändert die Größe. Rechtsklick auf ein Fenster in Anwendungen zum Schweben, Vollbild, Teilen oder Schließen. Super+K listet das unter Maus.",
-      "autoSwitchBluetooth": "Gekoppelte Kopfhörer verbinden sich und werden zum Lautsprecher, solange dieser Computer Ton wiedergibt, und trennen sich, wenn er aufhört.",
+      "autoSwitchBluetooth": "Gekoppelte Kopfhörer bleiben verbunden und werden zum Lautsprecher, solange dieser Computer Ton wiedergibt. Danach sind sie für dein anderes Gerät frei.",
       "restoreGated": "Stellt die Systemplatte auf diesen Snapshot zurück. Dein Home-Ordner bleibt. Ein Neustart ist nötig.",
       "preUpdateSnapshot": "Legt vor einem Systemupdate einen Snapper-Snapshot von / an, damit du zurückrollen kannst.",
       "backupPrune": "Gibt es mehr als {n} Snapshots, werden die ältesten gelöscht.",

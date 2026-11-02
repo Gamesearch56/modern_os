@@ -42,6 +42,33 @@ QtObject {
         return s;
     }
 
+    // A multipoint headset reports 0 volume here while the other device
+    // held it, and WirePlumber restores that 0 on the next connect, so the
+    // sink is silent at the shown master level. -1 when not Bluetooth.
+    readonly property real _btSinkVolume: {
+        const a = root.audio;
+        const n = a ? a.sink : null;
+        if (!n || !n.audio || !root.btAuto || !root.btAuto.isBluetoothNode(n))
+            return -1;
+        void n.audio.volume;
+        return Math.round(n.audio.volume * 100);
+    }
+    on_BtSinkVolumeChanged: {
+        if (root._btSinkVolume === 0)
+            holdVolume.restart();
+    }
+
+    property Timer holdVolume: Timer {
+        interval: Math.max(Motion.shortMs, 1)
+        repeat: false
+        onTriggered: {
+            const a = root.audio;
+            if (!a || root._btSinkVolume !== 0 || a.muted || a.volume <= 0)
+                return;
+            a.applyDevice();
+        }
+    }
+
     property var _watch: []
     property bool _audible: false
     property bool _wantAudio: false
@@ -58,7 +85,8 @@ QtObject {
             onPeakChanged: root._sample()
         }
         onObjectAdded: root._sample()
-        onObjectRemoved: root._sample()
+        // The removed meter still counts until this handler returns.
+        onObjectRemoved: Qt.callLater(root._sample)
     }
 
     property Timer confirm: Timer {
@@ -78,10 +106,14 @@ QtObject {
         onTriggered: root._release()
     }
 
-    Component.onCompleted: root._retarget()
+    Component.onCompleted: {
+        root._retarget();
+        if (root._btSinkVolume === 0)
+            holdVolume.restart();
+    }
     onEnabledChanged: { root._tried = ({}); root._sync(); }
     on_PoweredChanged: { root._tried = ({}); root._sync(); }
-    onCandSigChanged: { root._retarget(); root._sync(); }
+    onCandSigChanged: { root._retarget(); root._sample(); root._sync(); }
     onBtSigChanged: root._sync()
 
     function _candidate(n: var): bool {
@@ -128,7 +160,7 @@ QtObject {
     }
 
     function _sample() {
-        const hot = root._level() >= root.soundFloor;
+        const hot = root._watch.length > 0 && root._level() >= root.soundFloor;
         if (hot) {
             if (root._audible)
                 return;
@@ -167,10 +199,13 @@ QtObject {
             root._route();
             return;
         }
-        if (Bluetooth.userSink && !root._wantAudio)
+        // A pick in Settings holds the headset through one idle wait.
+        if (Bluetooth.userSink && !root._wantAudio) {
+            idle.restart();
             return;
+        }
         // A headset that showed up with nothing playing is not a pause
-        // in music. Drop it now so the other device keeps the stream.
+        // in music. Route away now so the other device keeps the stream.
         if (!root._wantAudio) {
             if (root.btSig.length > 0 && !root._releasing)
                 root._release();
@@ -189,12 +224,34 @@ QtObject {
             const addr = String(d.address);
             if (!d.trusted)
                 d.trusted = true;
-            if (d.connected || tried[addr])
+            // Connected may be only the call link while the other device has music.
+            if ((d.connected && root._hasSink(addr)) || tried[addr])
                 continue;
             tried[addr] = true;
             Qt.callLater(() => Bluetooth.connectDevice(d, false));
         }
         root._tried = tried;
+    }
+
+    function _hasSink(addr: string): bool {
+        const a = root.audio;
+        const b = root.btAuto;
+        if (!a || !b)
+            return false;
+        const want = String(addr || "").toLowerCase();
+        const flat = want.replace(/:/g, "_");
+        const sinks = a.sinks || [];
+        for (let i = 0; i < sinks.length; i++) {
+            const n = sinks[i];
+            if (!b.isBluetoothNode(n))
+                continue;
+            void n.properties;
+            const p = n.properties || {};
+            const at = String(p["api.bluez5.address"] || p["bluez5.address"] || "").toLowerCase();
+            if (at === want || String(n.name || "").toLowerCase().indexOf(flat) !== -1)
+                return true;
+        }
+        return false;
     }
 
     function _route() {
@@ -221,11 +278,9 @@ QtObject {
         Bluetooth.userSink = false;
         if (root.btAuto)
             root.btAuto.wantSink = false;
-        const list = Bluetooth.pairedAudio();
-        for (let i = 0; i < list.length; i++) {
-            if (list[i].connected)
-                Bluetooth.disconnectDevice(list[i]);
-        }
+        // Stay connected. With no stream on the headset sink, WirePlumber
+        // suspends it and frees the transport, so the other device can
+        // play. Sound here moves the default back and the headset follows.
         if (root.btAuto) {
             root.btAuto.applyFallback(true);
             root.btAuto.applyFallback(false);

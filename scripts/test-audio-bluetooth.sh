@@ -15,6 +15,11 @@ grep -q 'wantSink' "$BT" || err "sink grab is not gated on audible playback"
 grep -q 'userSink' "$BT" || err "manual connect is not distinguished"
 grep -q 'bluez5.dummy-avrcp-player = true' "$WP" || err "AVRCP playback player missing"
 grep -q 'session.suspend-timeout-seconds = 5' "$WP" || err "idle A2DP must suspend"
+if grep -q 'disconnectDevice' "$MP"; then
+    err "idle must route away, not drop the multipoint connection"
+fi
+grep -q '_hasSink' "$MP" || err "a link without a sink is not reconnected"
+grep -q '_btSinkVolume' "$MP" || err "a headset restored at 0 volume stays silent"
 if grep -q 'session.suspend-timeout-seconds = 0' "$WP"; then
     err "idle A2DP transport is pinned"
 fi

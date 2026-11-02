@@ -158,6 +158,9 @@ QtObject {
             a.setDefaultSink(node);
         else
             a.setDefaultSource(node);
+        // After a shell reload the preferred node can already equal this
+        // one while PipeWire still defaults to the headset.
+        Quickshell.execDetached(["wpctl", "set-default", String(node.id)]);
         bt._applying = false;
     }
 
