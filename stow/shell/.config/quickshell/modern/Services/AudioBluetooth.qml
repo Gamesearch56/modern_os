@@ -36,6 +36,7 @@ QtObject {
     // Set while sound is actually playing. A new BlueZ sink must not
     // become the speaker just because a browser opened a silent stream.
     property bool wantSink: false
+    readonly property AudioBluetoothHold hold: AudioBluetoothHold { audio: bt.audio; bt: bt }
 
     // USB mics (FOX) often expose a playback node on the same card.
     // WirePlumber follows the source onto that sink after BT drops;
@@ -84,7 +85,7 @@ QtObject {
     }
 
     function remember(n: var, isSink: bool) {
-        if (!n)
+        if (!n || bt.hold.isHold(n))
             return;
         const id = (isSink ? "k" : "c") + n.id;
         if (bt.isBluetoothNode(n)) {
@@ -142,7 +143,7 @@ QtObject {
 
     function applyFallback(isSink: bool) {
         const a = bt.audio;
-        if (!a)
+        if (!a || (isSink && bt.hold.parked && bt.hold.active))
             return;
         const want = bt._want(isSink);
         if (!want.length)

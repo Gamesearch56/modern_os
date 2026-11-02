@@ -17,6 +17,8 @@ ColumnLayout {
         const list = Audio.sinks;
         for (let i = 0; i < list.length; i++)
             out.push({ value: String(list[i].id), titleValue: Audio.nodeLabel(list[i]) });
+        if (Audio.outputHeld)
+            out.push({ value: String(Audio.outputSink.id), titleValue: Audio.nodeLabel(Audio.outputSink) });
         return out;
     }
 
@@ -66,7 +68,7 @@ ColumnLayout {
             spacing: Tokens.spacing.sm
             MSelect {
                 Layout.fillWidth: true
-                value: Audio.sink ? String(Audio.sink.id) : ""
+                value: Audio.outputSink ? String(Audio.outputSink.id) : ""
                 model: root._sinkModel()
                 placeholderKey: "audio.noOutputs"
                 onSelected: (v) => Audio.setDefaultSink(root._find(v))

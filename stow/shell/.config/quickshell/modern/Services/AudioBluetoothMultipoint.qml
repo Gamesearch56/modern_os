@@ -193,8 +193,7 @@ QtObject {
         if (root._playing()) {
             idle.stop();
             root._wantAudio = true;
-            if (sink)
-                sink.wantSink = true;
+            if (sink) { sink.wantSink = true; sink.hold.expect(); }
             root._connect();
             root._route();
             return;
@@ -280,9 +279,9 @@ QtObject {
             root.btAuto.wantSink = false;
         // Stay connected. With no stream on the headset sink, WirePlumber
         // suspends it and frees the transport, so the other device can
-        // play. Sound here moves the default back and the headset follows.
+        // play. The output waits on the silent hold, not the speakers.
         if (root.btAuto) {
-            root.btAuto.applyFallback(true);
+            root.btAuto.hold.park();
             root.btAuto.applyFallback(false);
         }
         root._releasing = false;
