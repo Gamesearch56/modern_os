@@ -110,7 +110,7 @@ Item {
             if (root._online)
                 Bluetooth.disconnectDevice(root.dialogDevice);
             else
-                Bluetooth.connectDevice(root.dialogDevice);
+                Bluetooth.connectDevice(root.dialogDevice, true);
             root.dialogDevice = null;
         }
         onCancelled: root.dialogDevice = null

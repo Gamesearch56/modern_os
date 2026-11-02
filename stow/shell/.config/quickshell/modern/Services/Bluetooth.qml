@@ -1,8 +1,8 @@
 // BlueZ via Quickshell.Bluetooth. Adapter power, device list, connect
 // and pair. The bluetooth widget never calls bluetoothctl. When
 // audio.autoSwitchBluetooth is on, paired audio devices are trusted
-// as they appear; AudioBluetoothMultipoint connects them only while the PC is
-// playing audio and releases them when idle (multipoint with a phone).
+// as they appear; AudioBluetoothMultipoint connects them only while the
+// PC is producing sound and releases them when it stops.
 // Mice and keyboards are left alone.
 pragma Singleton
 
@@ -40,6 +40,9 @@ Singleton {
     property int _seenSeq: 0
     property bool refreshing: false
     property bool _uiReady: false
+    // A connect from the panel or Settings. Idle auto-release waits
+    // until sound has played, then stopped.
+    property bool userSink: false
 
     Timer {
         id: refreshBusy
@@ -105,9 +108,11 @@ Singleton {
         refreshKick.restart();
     }
 
-    function connectDevice(device: var) {
+    function connectDevice(device: var, fromUser: bool) {
         if (!device)
             return;
+        if (fromUser)
+            root.userSink = true;
         try {
             if (!device.trusted)
                 device.trusted = true;
@@ -121,6 +126,8 @@ Singleton {
     }
 
     function disconnectDevice(device: var) {
+        if (device && root.isAudioDevice(device))
+            root.userSink = false;
         if (device && device.disconnect)
             device.disconnect();
     }

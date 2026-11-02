@@ -33,6 +33,9 @@ QtObject {
     property string btSourceId: ""
     property bool _applying: false
     property int _settle: 0
+    // Set while sound is actually playing. A new BlueZ sink must not
+    // become the speaker just because a browser opened a silent stream.
+    property bool wantSink: false
 
     // USB mics (FOX) often expose a playback node on the same card.
     // WirePlumber follows the source onto that sink after BT drops;
@@ -227,7 +230,7 @@ QtObject {
         const goneBtSink = bt._goneBluetooth(prev, now, true);
         const goneBtSource = bt._goneBluetooth(prev, now, false);
         let tookBt = false;
-        if (bt.enabled) {
+        if (bt.enabled && (bt.wantSink || Bluetooth.userSink)) {
             for (let s = 0; s < freshSinks.length; s++) {
                 if (bt.isBluetoothNode(freshSinks[s])) {
                     bt._stopSettle();
