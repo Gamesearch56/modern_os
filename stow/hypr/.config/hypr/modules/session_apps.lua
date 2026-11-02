@@ -185,6 +185,13 @@ local function start_apps()
     pin_background()
     local list = autostart_ids()
     local delay = 0
+    -- 200ms only keeps the spawns ordered. On a two-core chip three
+    -- Vivaldi profiles still overlap for their whole cold start, so the
+    -- light-browser switch waits out one start before the next.
+    local step = 200
+    if config.value("gaming.browserLight", false) == true then
+        step = 8000
+    end
     for _, id in ipairs(list) do
         local name = match.stem(id)
         if name ~= "" then
@@ -198,7 +205,7 @@ local function start_apps()
             else
                 launch_name(name)
             end
-            delay = delay + 200
+            delay = delay + step
         end
     end
 end

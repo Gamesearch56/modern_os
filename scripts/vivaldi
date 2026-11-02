@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Launch Vivaldi. gaming.browserLight runs the graphics thread inside the
+# browser process and is what the compositor uses to drop blur on those
+# windows. A separate graphics process is a large part of a cold start on
+# a two-core chip, and login otherwise starts mail, calendar, and WhatsApp
+# as three more of them.
+set -euo pipefail
+
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+
+on=false
+if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    on="$(jq -r '.gaming.browserLight // false' "$CFG" 2>/dev/null || printf false)"
+fi
+
+args=()
+if [ "$on" = "true" ]; then
+    args+=(--in-process-gpu)
+fi
+
+if ! command -v vivaldi-stable >/dev/null 2>&1; then
+    printf 'modern vivaldi: vivaldi-stable is not installed\n' >&2
+    exit 127
+fi
+exec vivaldi-stable "${args[@]}" "$@"

@@ -75,12 +75,12 @@ apply({
 -- Chromium/Vivaldi (and other Electron shells): after HTML5 video
 -- fullscreen, the client echoes set_maximized because Hyprland advertised
 -- MAXIMIZED at map time to hide CSD. Honoring that enters fullscreen
--- mode 1 and covers every other tile on the workspace — often noticed
--- only when clicking elsewhere or switching workspaces (hyprwm/Hyprland
--- #13322). Super+F still uses the exclusive-fullscreen dispatcher;
--- games.lua forces state 2 the same way. Client maximize is unused.
+-- mode 1 and covers every other tile (hyprwm/Hyprland #13322).
+-- Games use that same maximize for borderless fullscreen, so the
+-- suppress stays on browser classes only.
 apply({
     name = "suppress-client-maximize",
+    match = { class = "([Cc]hromium|[Vv]ivaldi|[Cc]hrome|[Bb]rave|[Ee]lectron|[Ee]dge|steamwebhelper)" },
     suppress_event = "maximize",
 })
 
@@ -189,4 +189,42 @@ for _, w in ipairs(overlays) do
         rule.max_size = w.max_size
     end
     apply(rule)
+end
+
+-- Steam's own window, only while gaming.steamLight is on. Kept in this
+-- file so a new module cannot drop the compositor into emergency mode
+-- before stow links it.
+if config.value("gaming.steamLight", false) == true then
+    apply({
+        name = "modern-steam-light",
+        match = { class = "^steam$" },
+        no_blur = true,
+        no_shadow = true,
+        no_anim = true,
+        no_wobble = true,
+        opaque = true,
+    })
+    apply({
+        name = "modern-steamwebhelper-light",
+        match = { class = "^steamwebhelper$" },
+        no_blur = true,
+        no_shadow = true,
+        no_anim = true,
+        no_wobble = true,
+        opaque = true,
+    })
+end
+
+-- Same switch as scripts/vivaldi. Acrylic on a new browser window shares
+-- the two cores that are still starting the UI.
+if config.value("gaming.browserLight", false) == true then
+    apply({
+        name = "modern-vivaldi-light",
+        match = { class = "vivaldi" },
+        no_blur = true,
+        no_shadow = true,
+        no_anim = true,
+        no_wobble = true,
+        opaque = true,
+    })
 end

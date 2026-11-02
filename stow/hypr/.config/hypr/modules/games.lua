@@ -1,7 +1,4 @@
--- Game windows get tearing and exclusive fullscreen. Other clients keep
--- vsync, blur, and animations. Java titles such as Project Zomboid rename
--- after map, so fullscreen is dispatched once from open/class/title and
--- never re-applied — a static rule would pin SUPER+F.
+-- Game windows: tearing, and fullscreen when the title asks for it.
 local config = require("modules.config")
 
 local function on(path, fallback)
@@ -20,8 +17,6 @@ local class = config.value("gaming.matchClass",
 local title = config.value("gaming.matchTitle",
     ".*\\.exe|Project Zomboid|World of Warcraft|Warcraft III|Warcraft 3|Diablo.*|Overwatch.*|Hearthstone|StarCraft.*|Call of Duty.*")
 
--- window.title has a 50ms budget. Lua patterns backtrack on a long
--- Files title, so match literals and .* in plain text and cap the length.
 local MAX_ID = 240
 
 local function compile_alt(alt)
@@ -133,44 +128,19 @@ local function excluded(w)
     if c:find("heroic", 1, true) or c:find("steamwebhelper", 1, true) then
         return true
     end
-    -- Files renames the window while it opens. That is not a game,
-    -- and the title callback cannot afford a second look.
     if c:find("nautilus", 1, true) or c:find("thunar", 1, true)
         or c:find("dolphin", 1, true) or c:find("nemo", 1, true) then
         return true
     end
-    -- Battle.net Agent / updater helpers — not games.
     if c == "agent.exe" or c:find("agent%.exe", 1, false) then
         return true
     end
-    -- Battle.net launcher (not World of Warcraft / Warcraft III): keep windowed.
     local hay = c .. "\n" .. t
     if hay:find("battle%.net", 1, false) or hay:find("battlenet", 1, true)
         or hay:find("blizzard battle", 1, true) then
         if not hay:find("warcraft", 1, true) then
             return true
         end
-    end
-    return false
-end
-
--- Titles Proton/XWayland often set without a matching *.exe class.
-local function blizzard_game_title(t)
-    if type(t) ~= "string" or t == "" then
-        return false
-    end
-    local low = string.lower(t)
-    if low:find("world of warcraft", 1, true) then
-        return true
-    end
-    if low:find("warcraft iii", 1, true) or low:find("warcraft 3", 1, true) then
-        return true
-    end
-    if low:find("diablo", 1, true) or low:find("overwatch", 1, true) then
-        return true
-    end
-    if low:find("hearthstone", 1, true) or low:find("starcraft", 1, true) then
-        return true
     end
     return false
 end
@@ -183,9 +153,6 @@ local function is_game(w)
         return true
     end
     if matches_compiled(w.title, title_pats) or matches_compiled(w.initial_title, title_pats) then
-        return true
-    end
-    if blizzard_game_title(w.title) or blizzard_game_title(w.initial_title) then
         return true
     end
     return false
@@ -218,8 +185,6 @@ local fs_on = true
 local fs_sec = -1
 
 local function auto_fs_on()
-    -- Handlers outlive reload. Re-read fullscreen at most once a second
-    -- so a title storm does not decode config.json inside the 50ms budget.
     local now = os.time()
     if now == fs_sec then
         return fs_on
@@ -233,6 +198,7 @@ local function auto_fs_on()
 end
 
 local done = {}
+local armed = {}
 
 local function addr_of(w)
     if not w then
@@ -241,32 +207,20 @@ local function addr_of(w)
     return tostring(w.address or "")
 end
 
-local function force_fs(w)
-    if not w or excluded(w) or not auto_fs_on() or not is_game(w) then
-        return
-    end
-    local addr = addr_of(w)
-    if addr == "" then
-        return
-    end
-    local fs = tonumber(w.fullscreen) or 0
-    if fs >= 2 then
-        done[addr] = true
-        return
-    end
-    -- Already applied once (or the user Super+F'd out). Do not pin
-    -- exclusive fullscreen with a static rule — that makes toggle a no-op.
-    if done[addr] then
-        return
-    end
+local function fs_of(w)
+    return tonumber(w and w.fullscreen) or 0
+end
+
+local function dispatch_fs(w)
     if not (hl.dispatch and hl.dsp and hl.dsp.window and hl.dsp.window.fullscreen_state) then
         return
     end
+    local addr = addr_of(w)
     local spec = { internal = 2, client = 2, action = "set", window = w }
     local ok = pcall(function()
         hl.dispatch(hl.dsp.window.fullscreen_state(spec))
     end)
-    if not ok and w.address then
+    if not ok and addr ~= "" then
         spec.window = "address:" .. addr
         pcall(function()
             hl.dispatch(hl.dsp.window.fullscreen_state(spec))
@@ -274,15 +228,61 @@ local function force_fs(w)
     end
 end
 
+local function consider(w)
+    if not w or excluded(w) or not auto_fs_on() or not is_game(w) then
+        return
+    end
+    local addr = addr_of(w)
+    if addr == "" or done[addr] then
+        return
+    end
+    if fs_of(w) >= 1 then
+        done[addr] = true
+        return
+    end
+    if armed[addr] then
+        return
+    end
+    armed[addr] = true
+    dispatch_fs(w)
+    if not hl.timer then
+        done[addr] = true
+        return
+    end
+    hl.timer(function()
+        if done[addr] then
+            return
+        end
+        local fs = 0
+        pcall(function()
+            fs = fs_of(w)
+        end)
+        if fs >= 1 then
+            done[addr] = true
+            return
+        end
+        pcall(function()
+            if excluded(w) or not is_game(w) or not auto_fs_on() then
+                done[addr] = true
+                return
+            end
+            dispatch_fs(w)
+        end)
+        done[addr] = true
+    end, { timeout = 500, type = "oneshot" })
+end
+
 if hl.on then
-    hl.on("window.open_early", force_fs)
-    hl.on("window.open", force_fs)
-    hl.on("window.class", force_fs)
-    hl.on("window.title", force_fs)
+    hl.on("window.open_early", consider)
+    hl.on("window.open", consider)
+    hl.on("window.class", consider)
+    hl.on("window.title", consider)
+    hl.on("window.fullscreen", consider)
     hl.on("window.close", function(w)
         local a = addr_of(w)
         if a ~= "" then
             done[a] = nil
+            armed[a] = nil
         end
     end)
 end

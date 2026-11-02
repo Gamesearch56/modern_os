@@ -625,6 +625,9 @@
       "gameFullscreen": "Fullscreen games automatically",
       "gameOptimize": "Optimize the game window",
       "gameHdr": "HDR for Proton games",
+      "steamLight": "Light Steam",
+      "lowEnd": "Light games",
+      "browserLight": "Light browser",
       "speedTest": "Speed test",
       "ethernet": "Ethernet",
       "wifiPassword": "Wi-Fi password",
@@ -779,6 +782,9 @@
       "gameFullscreen": "Forces exclusive fullscreen as soon as the game window appears, instead of waiting for the engine to request it.",
       "gameOptimize": "Turns off extra window effects on the game so it can run smoother. Other windows keep their usual look.",
       "gameHdr": "Exports DXVK_HDR, ENABLE_HDR_WSI, and PROTON_ENABLE_HDR only for Battle.net/Proton games started via modern battlenet — not the whole desktop (that lags Steam and video). Turn HDR on under Displays. For Steam titles, add the same vars to launch options. Battle.net stays on XWayland.",
+      "steamLight": "The store and library skip graphics acceleration, animated covers, and background shader work. Turn this on when opening Steam keeps the processor busy. It applies the next time Steam starts.",
+      "lowEnd": "Games started from Steam skip overlay logs and keep a short frame queue. Turn this on when a game stutters on a slow processor. It applies the next time Steam starts.",
+      "browserLight": "Vivaldi starts without a separate graphics process, and its windows skip blur and shadows. Mail, calendar, and WhatsApp start one after another. Turn this on when the browser takes several seconds to open on a slow processor. It applies the next time Vivaldi starts.",
       "repeatRate": "How fast a held key types again.",
       "repeatDelay": "Wait before a held key starts repeating.",
       "numlockOnBoot": "Turns Num Lock on when Hyprland starts.",
@@ -858,6 +864,10 @@
     "screenshots": {
       "stills": "Screenshot",
       "video": "Video"
+    },
+    "gaming": {
+      "windows": "Game windows",
+      "slow": "Slow hardware"
     },
     "privacy": {
       "notifications": "Notifications",

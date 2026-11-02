@@ -5,7 +5,7 @@ Name=Proton Drive
 Name[de]=Proton Drive
 Comment=Proton Drive web app
 Comment[de]=Proton Drive als Web-App
-Exec=vivaldi-stable --app=https://drive.proton.me
+Exec=modern vivaldi --app=https://drive.proton.me
 TryExec=vivaldi-stable
 Icon=proton-pass
 Terminal=false

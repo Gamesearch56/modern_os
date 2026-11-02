@@ -108,7 +108,10 @@ if grep -Fq 'special:background silent' "$SESSION" \
     && grep -Fq 'vivaldi-apps' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
     && grep -Fq 'user-data-dir' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
     && grep -Fq '{ timeout = 250,' "$SESSION" \
-    && grep -Fq 'delay = delay + 200' "$SESSION" \
+    && grep -Fq 'step = 200' "$SESSION" \
+    && grep -Fq 'delay = delay + step' "$SESSION" \
+    && grep -Fq 'browserLight' "$SESSION" \
+    && grep -Fq '/vivaldi --user-data-dir' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
     && ! grep -Fq '{ timeout = 2000,' "$SESSION" \
     && ! grep -Fq 'delay = delay + 1500' "$SESSION" \
     && grep -Fq 'no_initial_focus' "$SESSION" \
@@ -204,7 +207,10 @@ fi
 
 if grep -Fq 'nautilus' "$GAMES" \
     && grep -Fq 'MAX_ID' "$GAMES" \
-    && ! grep -Fq 're2_alt' "$GAMES"; then
+    && grep -Fq 'window.fullscreen' "$GAMES" \
+    && ! grep -Fq 're2_alt' "$GAMES" \
+    && grep -Fq 'suppress-client-maximize' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && grep -Fq 'steamwebhelper' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua"; then
     ok "file manager titles stay out of the game matcher"
 else
     err "games.lua must ignore file managers and not Lua-match window titles"

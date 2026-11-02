@@ -11,6 +11,11 @@ ColumnLayout {
 
     Model { id: model }
 
+    MSectionHeader {
+        key: "settings.gaming.windows"
+        topMargin: 0
+    }
+
     RowLayout {
         Layout.fillWidth: true
         spacing: Tokens.spacing.md
@@ -65,6 +70,68 @@ ColumnLayout {
     }
     MHint {
         key: "settings.hints.gameHdr"
+        Layout.fillWidth: true
+    }
+
+    MSectionHeader {
+        key: "settings.gaming.slow"
+        topMargin: Tokens.spacing.xl
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.steamLight"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: model.steamLight
+            onToggled: (v) => ConfigWrite.set("gaming.steamLight", v)
+        }
+    }
+    MHint {
+        key: "settings.hints.steamLight"
+        Layout.fillWidth: true
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.lowEnd"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: model.lowEnd
+            onToggled: (v) => ConfigWrite.set("gaming.lowEnd", v)
+        }
+    }
+    MHint {
+        key: "settings.hints.lowEnd"
+        Layout.fillWidth: true
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.fields.browserLight"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: model.browserLight
+            onToggled: (v) => ConfigWrite.set("gaming.browserLight", v)
+        }
+    }
+    MHint {
+        key: "settings.hints.browserLight"
         Layout.fillWidth: true
     }
 }
