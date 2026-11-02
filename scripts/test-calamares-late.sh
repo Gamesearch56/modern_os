@@ -360,6 +360,9 @@ run_late() {
     if [ -n "${MODERN_DEPLOY_KEY_SRC:-}" ]; then
         extra+=(MODERN_DEPLOY_KEY_SRC="$MODERN_DEPLOY_KEY_SRC")
     fi
+    if [ -n "${MODERN_LATE_RTW88_PARAMS:-}" ]; then
+        extra+=(MODERN_LATE_RTW88_PARAMS="$MODERN_LATE_RTW88_PARAMS")
+    fi
     env -u MODERN_PROTECT_HOME \
         MODERN_LATE_TEST=1 \
         MODERN_LATE_LOG="$WORKDIR/late.log" \
@@ -648,6 +651,17 @@ if out="$(MODERN_LATE_STRIP_ROOT="$STRIPROOT" run_late strip 2>&1)"; then
     fi
 else
     err "strip phase failed: $out"
+fi
+
+rtw88_conf="$STRIPROOT/etc/modprobe.d/modern-rtw88.conf"
+[ ! -e "$rtw88_conf" ] || err "strip phase wrote the rtw88 option without the live kernel asking for it"
+mkdir -p "$WORKDIR/rtw88"
+printf 'Y\n' >"$WORKDIR/rtw88/disable_aspm"
+if MODERN_LATE_STRIP_ROOT="$STRIPROOT" MODERN_LATE_RTW88_PARAMS="$WORKDIR/rtw88" run_late strip >/dev/null 2>&1 \
+    && grep -qF 'options rtw88_pci disable_aspm=y disable_msi=y' "$rtw88_conf"; then
+    ok "an rtw88 chip that needed ASPM off keeps it on the installed system"
+else
+    err "strip phase must carry the live rtw88 option to the target"
 fi
 
 # BIOS: grub-mkconfig only finds /boot/vmlinuz-*, which mkarchiso removed.

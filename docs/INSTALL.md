@@ -471,6 +471,11 @@ A VM has virtio Ethernet, no radio and UEFI. A laptop differs here:
   hand the radio to NetworkManager, rescan). An empty list then says
   why: a Wi-Fi switch, a chip with no driver (with its PCI id), or no
   adapter at all.
+  A chip left without an interface gets its driver loaded by PCI id.
+  If that is `rtw88` (RTL8821CE, RTL8822CE, ...) and the probe still
+  fails, it is reloaded with `rtw88_pci disable_aspm=y disable_msi=y`,
+  and the strip phase writes the same option to the target's
+  `/etc/modprobe.d/modern-rtw88.conf`.
   `install.sh` still installs `broadcom-wl-dkms` for those chips so the
   installed kernel keeps the module. Ethernet or USB tethering remains
   a way through the Network step when the radio itself has no firmware.

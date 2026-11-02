@@ -72,7 +72,7 @@ grep -F 'wifi_needs_wl' "$ROOT/install/lib/pkg.sh" >/dev/null \
 UP="$ROOT/iso/airootfs/usr/lib/modern/live-wifi-up.sh"
 STUB="$TMP/stub"
 mkdir -p "$STUB" "$TMP/net"
-for b in systemctl ip modprobe; do
+for b in systemctl ip modprobe udevadm; do
     printf '#!/bin/sh\nexit 0\n' >"$STUB/$b"
 done
 # shellcheck disable=SC2016
@@ -82,7 +82,7 @@ printf '#!/bin/sh\n[ "$1" = -n ] && cat "%s/rfkill" 2>/dev/null\nexit 0\n' "$TMP
 chmod +x "$STUB"/*
 up() {
     PATH="$STUB:$PATH" WIFI_SYS_NET="$TMP/net" WIFI_PCI_ROOT="$TMP" WIFI_STATE_DIR="$TMP/state" \
-        "$UP" | tail -n 1
+        WIFI_MODPROBE_D="$TMP/modprobe.d" "$UP" | tail -n 1
 }
 
 if [ "$(up)" = "nodriver 14e4:4365" ]; then
@@ -110,6 +110,26 @@ else
 fi
 [ "$(cat "$TMP/state/wifi-state" 2>/dev/null)" = none ] \
     || err "the state file the Network step reads was not written"
+
+# RTL8821CE whose rtw88 probe fails until ASPM and MSI are off.
+pci 0000:06:00.0 0x10ec 0xc821 0x028000
+printf 'pci:v000010ECd0000C821sv*sd*bc02sc80i00\n' >"$TMP/0000:06:00.0/modalias"
+cat >"$STUB/modprobe" <<EOF
+#!/bin/sh
+case "\$1" in
+    -R) echo rtw88_8821ce ;;
+    -r) ;;
+    *) [ -e "$TMP/modprobe.d/modern-rtw88.conf" ] \\
+        && mkdir -p "$TMP/0000:06:00.0/net/wlan0" "$TMP/net/wlan0/wireless" ;;
+esac
+exit 0
+EOF
+if [ "$(up)" = ok ] \
+    && grep -qF 'options rtw88_pci disable_aspm=y disable_msi=y' "$TMP/modprobe.d/modern-rtw88.conf"; then
+    ok "an rtw88 chip that fails its probe comes up with ASPM and MSI off"
+else
+    err "rtw88 retry reported '$(cat "$TMP/state/wifi-state")'"
+fi
 for f in iso/airootfs/usr/lib/modern/live-setup.sh iso/releng/calamares-modernnet/ModernNetNm.cpp \
     scripts/iso-build.sh iso/releng/profiledef.sh; do
     grep -F 'live-wifi-up.sh' "$ROOT/$f" >/dev/null || err "$f must use live-wifi-up.sh"
