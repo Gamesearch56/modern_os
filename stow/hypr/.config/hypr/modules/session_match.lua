@@ -52,7 +52,8 @@ function M.field_matches(raw, desktop_id)
 end
 
 function M.window_matches(w, desktop_id)
-    if type(w) ~= "table" then
+    -- Hyprland hands windows back as userdata, not tables.
+    if type(w) ~= "table" and type(w) ~= "userdata" then
         return false
     end
     local fields = {

@@ -5,7 +5,7 @@
 -- still own interactive park.
 local config = require("modules.config")
 local paths = require("modules.paths")
-local layout = require("modules.workspaces_layout")
+local workspaces = require("modules.workspaces")
 local direct_app = require("modules.session_direct_apps")
 
 local ok_match, match = pcall(require, "modules.session_match")
@@ -17,15 +17,9 @@ local M = {}
 local shutting_down = false
 
 local function pin_background()
-    local mon = layout.primary()
-    local sel = layout.selector(mon)
-    if not sel or not hl.dsp or not hl.dsp.workspace or not hl.dsp.workspace.move then
-        return
+    if workspaces.pin_background then
+        workspaces.pin_background()
     end
-    pcall(hl.dispatch, hl.dsp.workspace.move({
-        workspace = "special:background",
-        monitor = sel,
-    }))
 end
 
 local function addrs()
@@ -100,7 +94,7 @@ local function another_open(name, closed_addr)
     end
     for i = 1, #wins do
         local w = wins[i]
-        if type(w) == "table" and tostring(w.address or "") ~= closed_addr then
+        if (type(w) == "table" or type(w) == "userdata") and tostring(w.address or "") ~= closed_addr then
             if match.window_matches(w, name) then
                 return true
             end
@@ -109,9 +103,21 @@ local function another_open(name, closed_addr)
     return false
 end
 
-local function on_special(w)
+local function workspace_name(w)
     local ws = w and w.workspace
-    local n = type(ws) == "table" and tostring(ws.name or "") or tostring(ws or "")
+    if type(ws) == "table" or type(ws) == "userdata" then
+        local ok, name = pcall(function()
+            return ws.name
+        end)
+        if ok and name ~= nil then
+            return tostring(name)
+        end
+    end
+    return tostring(ws or "")
+end
+
+local function on_special(w)
+    local n = workspace_name(w)
     return n:find("special:background", 1, true) ~= nil or n == "background"
 end
 
@@ -124,11 +130,11 @@ local function move_to_background(w)
     pin_background()
     -- A window object is what the compositor accepts. An address string
     -- without the 0x prefix is a silent no-op.
+    -- Dispatch does not error when the move is ignored, so try the
+    -- window and the address. One of the two sticks once the window
+    -- has a workspace.
     local spec = { workspace = "special:background", follow = false, window = w }
-    local moved = pcall(hl.dispatch, hl.dsp.window.move(spec))
-    if moved then
-        return
-    end
+    pcall(hl.dispatch, hl.dsp.window.move(spec))
     local addr = tostring(w and w.address or ""):gsub("^address:", "")
     if addr ~= "" and not addr:lower():find("^0x") then
         addr = "0x" .. addr
@@ -191,7 +197,7 @@ end
 
 -- The app class often arrives after the first map event. While the
 -- spawn mark is set, look again so a late class still leaves workspace 1.
-local function retry_background()
+local function each_window(fn)
     if not hl.get_windows then
         return
     end
@@ -199,12 +205,22 @@ local function retry_background()
     if type(wins) ~= "table" then
         return
     end
-    for i = 1, #wins do
-        local w = wins[i]
-        if type(w) == "table" then
-            on_window(w)
+    local list = wins
+    if #wins == 0 then
+        list = {}
+        for _, w in pairs(wins) do
+            list[#list + 1] = w
         end
     end
+    for i = 1, #list do
+        if type(list[i]) == "table" or type(list[i]) == "userdata" then
+            fn(list[i])
+        end
+    end
+end
+
+local function retry_background()
+    each_window(on_window)
 end
 
 local function arm_background_retries()
@@ -327,7 +343,7 @@ local function seed_open()
     end
     for i = 1, #wins do
         local w = wins[i]
-        if type(w) == "table" then
+        if type(w) == "table" or type(w) == "userdata" then
             local name = desktop_for_window(w)
             if name ~= "" then
                 remember(w, name)
@@ -342,35 +358,23 @@ else
     seed_open()
 end
 
--- Windows already mapped on workspace 1 (a reload, or a class that
--- arrived before this module) are not spawn-marked. Park those once.
+-- Cold boot maps the apps before any spawn mark exists, and the first
+-- move is overwritten by that placement. Keep correcting until login
+-- has finished. Later raises are left alone.
 local function park_open_apps()
-    if not hl.get_windows then
-        return
-    end
-    local wins = hl.get_windows()
-    if type(wins) ~= "table" then
-        return
-    end
-    local list = wins
-    if #wins == 0 then
-        list = {}
-        for _, w in pairs(wins) do
-            list[#list + 1] = w
-        end
-    end
-    for i = 1, #list do
-        local w = list[i]
-        if type(w) == "table" and desktop_for_window(w) ~= "" and not on_special(w) then
+    each_window(function(w)
+        if desktop_for_window(w) ~= "" and not on_special(w) then
             move_to_background(w)
         end
-    end
+    end)
 end
 
-if not _G.__modern_bg_initial_park then
-    _G.__modern_bg_initial_park = true
+if not _G.__modern_bg_startup_park then
+    _G.__modern_bg_startup_park = true
     if hl.timer then
-        hl.timer(park_open_apps, { timeout = 400, type = "oneshot" })
+        for _, wait in ipairs({ 500, 2000, 5000, 10000, 15000 }) do
+            hl.timer(park_open_apps, { timeout = wait, type = "oneshot" })
+        end
     else
         park_open_apps()
     end

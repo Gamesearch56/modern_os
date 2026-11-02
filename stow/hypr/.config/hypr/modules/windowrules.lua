@@ -228,3 +228,33 @@ if config.value("gaming.browserLight", false) == true then
         opaque = true,
     })
 end
+
+-- Map mail, calendar, and WhatsApp onto the background workspace.
+-- A move after open loses to the first placement on a cold boot, so
+-- the class rule has to win at map time. The main browser class does
+-- not match these hosts. "silent" keeps the view on the current workspace.
+local direct_apps = require("modules.session_direct_apps")
+
+local function app_host_pattern(cmd)
+    local host = tostring(cmd or ""):match("%-%-app=https?://([^/%s]+)")
+    if not host or host == "" then
+        return nil
+    end
+    return "^vivaldi%-" .. host:gsub("%.", "%%.") .. "__%-"
+end
+
+for id, cmd in pairs(direct_apps) do
+    local pattern = app_host_pattern(cmd)
+    if pattern then
+        apply({
+            name = "modern-bg-" .. id,
+            match = { class = pattern },
+            workspace = "special:background silent",
+        })
+        apply({
+            name = "modern-bg-" .. id .. "-initial",
+            match = { initial_class = pattern },
+            workspace = "special:background silent",
+        })
+    end
+end

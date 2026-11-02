@@ -162,10 +162,54 @@ local function ensure_in_range(mon, from, to)
     show(live, from)
 end
 
-local function pin_background()
+local function has_background()
+    if not hl.get_workspaces then
+        return false
+    end
+    local list = hl.get_workspaces()
+    if type(list) ~= "table" then
+        return false
+    end
+    local function named(w)
+        if type(w) ~= "table" and type(w) ~= "userdata" then
+            return false
+        end
+        local ok, name = pcall(function()
+            return w.name
+        end)
+        return ok and tostring(name or ""):find("special:background", 1, true) ~= nil
+    end
+    if #list > 0 then
+        for i = 1, #list do
+            if named(list[i]) then
+                return true
+            end
+        end
+        return false
+    end
+    for _, w in pairs(list) do
+        if named(w) then
+            return true
+        end
+    end
+    return false
+end
+
+-- A window move onto special:background is "Workspace not found" until
+-- the workspace has been created. toggle_special creates it without
+-- leaving the current workspace. A second toggle would show it.
+function M.pin_background()
+    if not _G.__modern_bg_workspace then
+        if not has_background() and hl.dispatch and hl.dsp and hl.dsp.workspace and hl.dsp.workspace.toggle_special then
+            pcall(hl.dispatch, hl.dsp.workspace.toggle_special("background"))
+        end
+        if has_background() or not hl.get_workspaces then
+            _G.__modern_bg_workspace = true
+        end
+    end
     local mon = layout.primary()
     local sel = layout.selector(mon)
-    if not sel or not hl.dsp or not hl.dsp.workspace or not hl.dsp.workspace.move then
+    if not sel or not hl.dsp or not hl.dsp.workspace or not hl.dsp.workspace.move or not hl.dispatch then
         return
     end
     pcall(hl.dispatch, hl.dsp.workspace.move({
@@ -208,7 +252,7 @@ local function apply_fixed(boot)
         show(layout.live_match(monitors[i]) or monitors[i], from)
     end
     focus_primary()
-    pin_background()
+    M.pin_background()
 end
 
 function M.focus(n)
@@ -252,7 +296,7 @@ apply_fixed()
 if hl.on then
     hl.on("hyprland.start", function()
         apply_fixed(true)
-        pin_background()
+        M.pin_background()
         if not layout.fixed() then
             focus_primary()
         end
