@@ -241,6 +241,12 @@ uses the basic store instead and drops the old keystore canary once.
 Bookmarks and history stay. Saved passwords and site logins that were
 sealed with the keyring are not opened.
 
+Spotify is the same Chromium client underneath and asked for the keyring
+on every start. `~/.config/spotify-launcher.conf` (stowed from `xdg`)
+passes `--password-store=basic`; spotify-launcher reads that file before
+`/etc/spotify-launcher.conf`. Spotify may ask you to sign in once after
+the switch.
+
 ## KDE Connect phone does not see the PC
 
 Ports 1714–1764 TCP/UDP. Staged rules:

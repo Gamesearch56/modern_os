@@ -203,8 +203,6 @@
     "autoFullscreen": true,
     "autoOptimize": true,
     "hdrSession": false,
-    "steamLight": false,
-    "lowEnd": false,
     "browserLight": false,
     "matchClass": "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl|wow|Wow|Warcraft.*",
     "matchTitle": ".*\\.exe|Project Zomboid|World of Warcraft|Warcraft III|Warcraft 3|Diablo.*|Overwatch.*|Hearthstone|StarCraft.*|Call of Duty.*"

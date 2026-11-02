@@ -78,43 +78,6 @@ ColumnLayout {
         topMargin: Tokens.spacing.xl
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Tokens.spacing.md
-        MText {
-            key: "settings.fields.steamLight"
-            styleName: "bodyMedium"
-            color: Colors.color.onSurfaceVariant
-            Layout.fillWidth: true
-        }
-        MSwitch {
-            checked: model.steamLight
-            onToggled: (v) => ConfigWrite.set("gaming.steamLight", v)
-        }
-    }
-    MHint {
-        key: "settings.hints.steamLight"
-        Layout.fillWidth: true
-    }
-
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Tokens.spacing.md
-        MText {
-            key: "settings.fields.lowEnd"
-            styleName: "bodyMedium"
-            color: Colors.color.onSurfaceVariant
-            Layout.fillWidth: true
-        }
-        MSwitch {
-            checked: model.lowEnd
-            onToggled: (v) => ConfigWrite.set("gaming.lowEnd", v)
-        }
-    }
-    MHint {
-        key: "settings.hints.lowEnd"
-        Layout.fillWidth: true
-    }
 
     RowLayout {
         Layout.fillWidth: true

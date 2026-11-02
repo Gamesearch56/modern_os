@@ -118,6 +118,7 @@ if grep -Fq 'move_to_background' "$SESSION" \
     && ! grep -Fq '"__%-"' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
     && grep -Fq 'profile-directory' "$ROOT/scripts/vivaldi" \
     && grep -Fq 'password-store=basic' "$ROOT/scripts/vivaldi" \
+    && grep -Fq '"--password-store=basic"' "$ROOT/stow/xdg/.config/spotify-launcher.conf" \
     && grep -Fq 'DbusSecretPortal' "$ROOT/scripts/vivaldi" \
     && grep -Fq 'keystore_canary' "$ROOT/scripts/vivaldi" \
     && ! grep -Fq 'gnome-keyring-hyprland' "$ROOT/stow/xdg/.config/xdg-desktop-portal/hyprland-portals.conf" \
@@ -281,6 +282,17 @@ if grep -Fq 'require("modules.browser_popups")' \
     ok "browser notification toplevels close once the notification service is up"
 else
     err "anonymous browser notification windows must close into a system notification"
+fi
+
+activate="$(awk '/function activate\(item\)/,/^    }$/' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Services/Notifications.qml")"
+invoke_at="$(grep -n 'invokeDefault(live)' <<<"$activate" | head -n1 | cut -d: -f1)"
+raise_at="$(grep -n 'Hypr.raiseApp' <<<"$activate" | head -n1 | cut -d: -f1)"
+if grep -Fq 'Apps.openInFileManager(file)' <<<"$activate" \
+    && [ -n "$invoke_at" ] && [ -n "$raise_at" ] && [ "$invoke_at" -lt "$raise_at" ]; then
+    ok "a screenshot toast reveals its file; an app notification runs its action before raising"
+else
+    err "notification click must reveal shell toast files and invoke app actions even when the app is open"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

@@ -181,22 +181,15 @@ as the launcher and control panel — instead of bar-anchored popups.
 
 ## Slow hardware
 
-Settings → Gaming → Slow hardware. The switches default off.
+Settings → Gaming → Slow hardware. The switch defaults off.
 
-`gaming.steamLight` is for a processor that sits at full load while
-Steam's store or library is open. The client is a browser: on a weak
-iGPU its graphics process and the animated library covers keep every
-core busy even when nothing is playing. The next Steam start (via
-`modern steam`, which the Steam launcher entry uses) passes
-`-cef-disable-gpu`, turns on Steam's library low-performance mode, and
-caps background shader work at one thread. Steam's own window also
-drops blur and shadows. Quit Steam and open it again after toggling.
-
-`gaming.lowEnd` is inherited by games that Steam starts: overlay logs
-stay off and DXVK keeps a single frame queued. It does not wrap games
-in gamescope — that extra compositor costs more than it saves on a
-two-core chip. A game can still use `gamemoderun %command%` in its
-launch options; `gamemoded` is already started at login.
+Steam starts from its own launcher entry, unwrapped. Its first start
+bootstraps `~/.local/share/Steam`, and anything in front of it (extra
+flags, edits to its config files) has stopped that bootstrap before.
+For a game that stutters, use its launch options instead, e.g.
+`gamemoderun %command%`; `gamemoded` is already started at login. Steam
+also needs a 32-bit Vulkan driver for this GPU, which
+`install/manifests/30-hw-gpu-*.txt` adds.
 
 `gaming.browserLight` is for the same kind of processor when Vivaldi
 takes several seconds to open. The switch runs the graphics thread
