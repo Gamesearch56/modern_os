@@ -142,6 +142,16 @@ probe_dns() {
 # not exist" / "target not found: base". Pacman 7's DownloadUser/landlock
 # sandbox cannot run in the Calamares chroot (Permission denied on the
 # sync/*.db.part download).
+# The pinned release carries scripts/lib/pacman-conf.sh. An older pin
+# appends, which lands in the last repo section, where pacman ignores it.
+pacman_option() {
+    if declare -F pacman_conf_set >/dev/null; then
+        pacman_conf_set "$1" "$2"
+    else
+        printf '\n%s\n' "$2" >>"$1"
+    fi
+}
+
 ensure_pacman_db() {
     if [ -n "${MODERN_LATE_TEST:-}" ]; then
         return 0
@@ -149,8 +159,12 @@ ensure_pacman_db() {
     command -v pacman >/dev/null 2>&1 || die "pacman missing in the target"
     local conf=/etc/pacman.conf
     [ -f "$conf" ] || die "missing $conf"
+    if [ -f "$REPO/scripts/lib/pacman-conf.sh" ]; then
+        # shellcheck source=/dev/null
+        source "$REPO/scripts/lib/pacman-conf.sh"
+    fi
     if ! grep -qE '^[[:space:]]*DisableSandbox([[:space:]]|$)' "$conf"; then
-        printf '\n# Calamares chroot: pacman 7 landlock cannot download here.\nDisableSandbox\n' >>"$conf"
+        pacman_option "$conf" "DisableSandbox"
     fi
     if grep -qE '^[[:space:]]*DownloadUser' "$conf"; then
         sed -i -E 's/^[[:space:]]*DownloadUser/#DownloadUser/' "$conf"
@@ -159,12 +173,12 @@ ensure_pacman_db() {
     # /run/systemd/resolve. Calamares mounts /run as empty tmpfs, so
     # yay then dies with Temporary failure in name resolution.
     if ! grep -qE '^[[:space:]]*NoExtract[[:space:]]*=.*etc/resolv.conf' "$conf"; then
-        printf '\nNoExtract = etc/resolv.conf etc/nsswitch.conf\n' >>"$conf"
+        pacman_option "$conf" "NoExtract = etc/resolv.conf etc/nsswitch.conf"
     fi
     # --noconfirm answers No to "Remove jack2?". IgnorePkg so the
     # resolver cannot pick jack2/pulseaudio for virtual jack/pulse.
     if ! grep -qE '^[[:space:]]*IgnorePkg[[:space:]]*=' "$conf"; then
-        printf '\nIgnorePkg = jack2 jack2-dbus lib32-jack2 pulseaudio pulseaudio-bluetooth pulseaudio-jack pipewire-media-session\n' >>"$conf"
+        pacman_option "$conf" "IgnorePkg = jack2 jack2-dbus lib32-jack2 pulseaudio pulseaudio-bluetooth pulseaudio-jack pipewire-media-session"
     elif ! grep -qE '^[[:space:]]*IgnorePkg[[:space:]]*=.*jack2' "$conf"; then
         sed -i -E 's/^(IgnorePkg[[:space:]]*=[[:space:]]*)/\1jack2 jack2-dbus lib32-jack2 /' "$conf"
     fi
@@ -800,6 +814,12 @@ phase_provision() {
     bash "$REPO/install/system/provision-iso.sh" "$USERNAME" \
         || die "provision-iso.sh failed"
     [ -n "${MODERN_LATE_TEST:-}" ] || strip_live_packages
+    # DisableSandbox and the commented DownloadUser were for this chroot.
+    if [ -z "${MODERN_LATE_TEST:-}" ] && [ -f "$REPO/scripts/lib/pacman-conf.sh" ]; then
+        # shellcheck source=/dev/null
+        source "$REPO/scripts/lib/pacman-conf.sh"
+        pacman_conf_repair /etc/pacman.conf || log "could not tidy pacman.conf"
+    fi
     mask_iwd
     restore_boot_dns
     log "late install finished for $USERNAME at $PIN"

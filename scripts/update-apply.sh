@@ -92,6 +92,11 @@ fi
 
 mkdir -p "$(dirname "$UPDATE_MARK")"
 [ "$REPAIR" -eq 1 ] || printf '%s\n' "${snap:-none}" >"$UPDATE_MARK"
+# shellcheck source=lib/pacman-conf.sh
+source "$SCRIPT_DIR/lib/pacman-conf.sh"
+pacman_conf_repair "${MODERN_PACMAN_CONF:-/etc/pacman.conf}" \
+    || printf 'update-apply: WARN could not tidy pacman.conf\n' >&2
+
 mark="$(update_guard_log_mark)"
 progress pacman
 if ! "$PACMAN" -Syu --noconfirm; then

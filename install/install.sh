@@ -185,6 +185,12 @@ hw_gpu="$MANIFEST_DIR/00-hw-gpu-${GPU_FAMILY}.txt"
 if [ -f "$hw_gpu" ]; then
     mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_gpu")
 fi
+# Steam (30-apps, every profile) needs a 32-bit Vulkan driver. Unnamed,
+# pacman picks the first provider, lib32-vulkan-radeon, on any GPU.
+hw_apps="$MANIFEST_DIR/30-hw-gpu-${GPU_FAMILY}.txt"
+if [ -f "$hw_apps" ]; then
+    mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_apps")
+fi
 if detect_wifi_wl; then
     log_info "Broadcom wifi needs the wl driver"
     mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$MANIFEST_DIR/00-hw-wifi-broadcom-wl.txt")

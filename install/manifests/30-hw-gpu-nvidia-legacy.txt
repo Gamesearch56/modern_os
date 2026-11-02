@@ -1,0 +1,2 @@
+# 32-bit Vulkan for Steam (30-apps) on pre-Turing NVIDIA (nouveau).
+lib32-vulkan-nouveau       # 32-bit NVK
