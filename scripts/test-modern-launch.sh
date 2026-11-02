@@ -105,13 +105,10 @@ if grep -Fq 'special:background silent' "$SESSION" \
     && grep -Fq 'pin_background' "$SESSION" \
     && grep -Fq '__modern_as_spawn' "$SESSION" \
     && grep -Fq 'session_direct_apps' "$SESSION" \
-    && grep -Fq 'vivaldi-apps' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
-    && grep -Fq 'user-data-dir' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
+    && grep -Fq 'vivaldi --app=' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
+    && ! grep -Fq 'user-data-dir' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
     && grep -Fq '{ timeout = 250,' "$SESSION" \
-    && grep -Fq 'step = 200' "$SESSION" \
-    && grep -Fq 'delay = delay + step' "$SESSION" \
-    && grep -Fq 'browserLight' "$SESSION" \
-    && grep -Fq '/vivaldi --user-data-dir' "$ROOT/stow/hypr/.config/hypr/modules/session_direct_apps.lua" \
+    && grep -Fq 'delay = delay + 200' "$SESSION" \
     && ! grep -Fq '{ timeout = 2000,' "$SESSION" \
     && ! grep -Fq 'delay = delay + 1500' "$SESSION" \
     && grep -Fq 'no_initial_focus' "$SESSION" \
@@ -119,20 +116,23 @@ if grep -Fq 'special:background silent' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \
     && ! grep -Fq 'arm_park' "$SESSION" \
     && ! grep -Fq 'schedule_sweeps' "$SESSION"; then
-    ok "login uses per-app Vivaldi profiles + silent special spawn"
+    ok "login opens Vivaldi apps on the main profile and pins special:background"
 else
-    err "session_apps must use vivaldi-apps user-data-dir and pin special:background"
+    err "session_apps must launch Vivaldi --app on the main profile and pin special:background"
 fi
 
 WA_DESK="$ROOT/stow/xdg/.local/share/applications/whatsapp.desktop"
 MAIL_DESK="$ROOT/stow/xdg/.local/share/applications/proton-mail.desktop"
 CAL_DESK="$ROOT/stow/xdg/.local/share/applications/proton-calendar.desktop"
-if grep -Fq 'vivaldi-apps/whatsapp' "$WA_DESK" \
-    && grep -Fq 'vivaldi-apps/proton-mail' "$MAIL_DESK" \
-    && grep -Fq 'vivaldi-apps/proton-calendar' "$CAL_DESK"; then
-    ok "desktop entries use separate Vivaldi user-data-dir profiles"
+if grep -Fq -- '--app=https://web.whatsapp.com' "$WA_DESK" \
+    && grep -Fq -- '--app=https://mail.proton.me' "$MAIL_DESK" \
+    && grep -Fq -- '--app=https://calendar.proton.me' "$CAL_DESK" \
+    && ! grep -Fq 'user-data-dir' "$WA_DESK" \
+    && ! grep -Fq 'user-data-dir' "$MAIL_DESK" \
+    && ! grep -Fq 'user-data-dir' "$CAL_DESK"; then
+    ok "desktop entries open Vivaldi apps on the main profile"
 else
-    err "whatsapp/proton desktop Exec must set --user-data-dir under vivaldi-apps"
+    err "whatsapp/proton desktop Exec must use --app on the main Vivaldi profile"
 fi
 
 if [[ -x "$RAISE" ]] \

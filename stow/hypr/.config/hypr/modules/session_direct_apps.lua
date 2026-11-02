@@ -1,17 +1,15 @@
--- Per-app Vivaldi --app= commands (own user-data-dir so exec_cmd rules apply).
--- scripts/vivaldi adds --in-process-gpu only while gaming.browserLight is on.
+-- Vivaldi --app windows on the main profile. A private profile is
+-- another browser, so a clicked link opens that profile instead of a
+-- tab in the browser that is already open. The window class still
+-- carries the site, so session_apps can park the window.
 local paths = require("modules.paths")
-local home_cfg = (os.getenv("XDG_CONFIG_HOME") and os.getenv("XDG_CONFIG_HOME") ~= "")
-    and os.getenv("XDG_CONFIG_HOME")
-    or ((os.getenv("HOME") or "") .. "/.config")
 
-local function app_cmd(name, url)
-    return paths.scripts .. "/vivaldi --user-data-dir=" .. home_cfg .. "/vivaldi-apps/" .. name
-        .. " --app=" .. url
+local function app_cmd(url)
+    return paths.scripts .. "/vivaldi --app=" .. url
 end
 
 return {
-    ["proton-mail"] = app_cmd("proton-mail", "https://mail.proton.me"),
-    ["proton-calendar"] = app_cmd("proton-calendar", "https://calendar.proton.me"),
-    ["whatsapp"] = app_cmd("whatsapp", "https://web.whatsapp.com"),
+    ["proton-mail"] = app_cmd("https://mail.proton.me"),
+    ["proton-calendar"] = app_cmd("https://calendar.proton.me"),
+    ["whatsapp"] = app_cmd("https://web.whatsapp.com"),
 }

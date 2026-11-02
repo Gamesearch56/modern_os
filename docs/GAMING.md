@@ -199,12 +199,10 @@ two-core chip. A game can still use `gamemoderun %command%` in its
 launch options; `gamemoded` is already started at login.
 
 `gaming.browserLight` is for the same kind of processor when Vivaldi
-takes several seconds to open. Login starts mail, calendar, and
-WhatsApp as three separate browsers, 200 ms apart, and each one also
-starts its own graphics process. On two cores those starts overlap and
-the next Vivaldi window waits behind them. The switch runs the graphics
-thread inside the browser, drops blur and shadows on Vivaldi windows,
-and waits for one of those apps to finish starting before the next.
+takes several seconds to open. The switch runs the graphics thread
+inside the browser and drops blur and shadows on Vivaldi windows.
+Mail, calendar, and WhatsApp are app windows of that same browser, so
+a link in one of them opens a tab there instead of a second profile.
 Quit Vivaldi and open it again after toggling. Links and the browser
 shortcut go through `modern vivaldi`.
 

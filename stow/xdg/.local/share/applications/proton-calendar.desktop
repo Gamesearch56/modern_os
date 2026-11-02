@@ -5,7 +5,7 @@ Name=Proton Calendar
 Name[de]=Proton Kalender
 Comment=Proton Calendar web app
 Comment[de]=Proton Kalender als Web-App
-Exec=modern vivaldi --user-data-dir=%h/.config/vivaldi-apps/proton-calendar --app=https://calendar.proton.me
+Exec=modern vivaldi --app=https://calendar.proton.me
 TryExec=vivaldi-stable
 Icon=proton-pass
 Terminal=false
