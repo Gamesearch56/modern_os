@@ -114,6 +114,8 @@ if grep -Fq 'move_to_background' "$SESSION" \
     && ! grep -Fq 'special:background silent' "$SESSION" \
     && grep -Fq 'special:background silent' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
     && grep -Fq 'modern-bg-' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && grep -Fq '"__-.*$"' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && ! grep -Fq '"__%-"' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
     && grep -Fq 'profile-directory' "$ROOT/scripts/vivaldi" \
     && grep -Fq 'password-store=basic' "$ROOT/scripts/vivaldi" \
     && grep -Fq 'DbusSecretPortal' "$ROOT/scripts/vivaldi" \

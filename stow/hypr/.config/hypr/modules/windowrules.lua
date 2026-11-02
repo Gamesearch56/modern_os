@@ -240,7 +240,10 @@ local function app_host_pattern(cmd)
     if not host or host == "" then
         return nil
     end
-    return "^vivaldi%-" .. host:gsub("%.", "%%.") .. "__%-"
+    -- Rule matching is a full-string regex, not a Lua pattern. "%." and
+    -- a prefix without ".*" never match the "__-Default" profile suffix.
+    local escaped = host:gsub("%.", "\\.")
+    return "^vivaldi-" .. escaped .. "__-.*$"
 end
 
 for id, cmd in pairs(direct_apps) do
