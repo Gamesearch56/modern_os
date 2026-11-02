@@ -226,6 +226,7 @@ if grep -F 'Paths.script("usersd.sh")' "$PASSWD_QML" >/dev/null \
     && grep -Fq '_usersd_refresh_greeter' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '_usersd_seed_keyring' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq 'pam_gnome_keyring' "$ROOT/install/system/greetd/greetd.pam" \
+    && grep -Fq 'keyring-login.sh' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq '.local/share/keyrings' "$ROOT/scripts/lib/usersd-desktop.sh" \
     && grep -Fq 'setOwnGecos' "$PASSWD_QML" \
     && grep -Fq 'canSetOwnGecos' "$PASSWD_QML" \

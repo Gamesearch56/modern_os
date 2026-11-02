@@ -1,13 +1,15 @@
 #%PAM-1.0
 # greetd's PAM service. Copied by install/lib/greetd.sh and by
 # usersd when it provisions a new home. gnome-keyring is optional so a
-# host without the package still logs in; auto_start unlocks the login
-# keyring with the password just typed so libsecret/Electron do not
-# prompt for a separate Default Keyring.
+# host without the package still logs in. keyring-login.sh drops a login
+# keyring the typed password cannot open, then auto_start creates and
+# unlocks one with that password. Otherwise the session asks for a new
+# Default Keyring, and an empty answer makes Vivaldi drop its secret store.
 
 auth       required     pam_securetty.so
 auth       requisite    pam_nologin.so
 auth       include      system-local-login
+auth       optional     pam_exec.so quiet expose_authtok seteuid /usr/lib/modern/keyring-login.sh
 auth       optional     pam_gnome_keyring.so
 account    include      system-local-login
 session    include      system-local-login

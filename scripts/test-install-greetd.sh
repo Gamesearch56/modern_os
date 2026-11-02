@@ -153,6 +153,9 @@ if grep -F 'kiosk.sh' "$LIB" >/dev/null \
     && grep -F 'list-users.py' "$LIB" >/dev/null \
     && grep -F 'greetd.pam' "$LIB" >/dev/null \
     && grep -F 'pam_gnome_keyring' "$ROOT/install/system/greetd/greetd.pam" >/dev/null \
+    && grep -F 'keyring-login.sh' "$ROOT/install/system/greetd/greetd.pam" >/dev/null \
+    && grep -F 'keyring-login.sh' "$ROOT/install/lib/greetd.sh" >/dev/null \
+    && grep -F 'keyring-login.sh' "$ROOT/scripts/lib/usersd-desktop.sh" >/dev/null \
     && grep -F 'json.lua' "$LIB" >/dev/null \
     && grep -Fq 'source_profile = false' "$ROOT/install/system/greetd/config.toml" \
     && grep -Fq 'disable_hyprland_guiutils_check' "$ROOT/install/system/greetd/hyprland.lua" \
