@@ -6,6 +6,9 @@
 # workspace 1. Focusing the numbered workspace underneath closes the view.
 set -euo pipefail
 
+# shellcheck source=lib/window-fade.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/window-fade.sh"
+
 addr="${1:-}"
 addr="${addr#address:}"
 if [[ -z "$addr" || "$addr" == "null" ]]; then
@@ -45,4 +48,6 @@ if [[ -n "$open_on" ]]; then
     fi
 fi
 
+window_fade_out "$addr"
 hyprctl dispatch "hl.dsp.window.move({ workspace = \"special:background\", follow = false, window = \"address:${addr}\" })" >/dev/null
+window_fade_finish "$addr"

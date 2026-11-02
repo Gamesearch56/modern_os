@@ -86,19 +86,6 @@ if [[ "${MODERN_RAISE_DRY:-}" == "1" ]]; then
     exit 0
 fi
 
-aw="$(hyprctl -j activeworkspace 2>/dev/null || true)"
-ws="$(printf '%s' "$aw" | jq -r '.id // empty')"
-mon="$(printf '%s' "$aw" | jq -r '.monitor // empty')"
-if [[ -z "$ws" || "$ws" == "null" ]]; then
-    exit 1
-fi
-
-# Keep special:background on the active output so a later park does not
-# reopen the secondary-monitor / workspace-6 path.
-if [[ -n "$mon" && "$mon" != "null" ]]; then
-    hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"special:background\", monitor = \"${mon}\" })" >/dev/null 2>&1 || true
-fi
-
-hyprctl dispatch "hl.dsp.window.move({ workspace = ${ws}, follow = true, window = \"address:${addr}\" })" >/dev/null
-hyprctl dispatch "hl.dsp.focus({ window = \"address:${addr}\" })" >/dev/null
-exit 0
+# Moving special:background between monitors drops its other windows
+# onto workspace 1, so only this window moves.
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/background-raise.sh" "$addr"

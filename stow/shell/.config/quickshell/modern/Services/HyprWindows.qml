@@ -48,6 +48,14 @@ QtObject {
         const wsId = t && t.workspace ? Number(t.workspace.id) : 0;
         const ipc = t ? t.lastIpcObject : null;
         const hidden = !!(ipc && (ipc.hidden === true || ipc.mapped === false));
+        // The script fades in place. A plain move slides the window in
+        // from its tile on the background workspace.
+        if ((wsId < 0 || hidden) && root.host._lua) {
+            const fw = root.host.focusedWorkspace;
+            const id = (fw && Number(fw.id) > 0) ? Number(fw.id) : 1;
+            Quickshell.execDetached([Paths.script("background-raise.sh"), addr, String(id)]);
+            return;
+        }
         if (wsId < 0 || hidden)
             root.moveToCurrentWorkspace(addr);
         else if (wsId > 0)

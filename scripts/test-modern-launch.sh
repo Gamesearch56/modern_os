@@ -130,6 +130,14 @@ if grep -Fq 'move_to_background' "$SESSION" \
     && grep -Fq 'background-move.sh' "$HIDE" \
     && grep -Fq 'specialWorkspace.name' "$ROOT/scripts/background-move.sh" \
     && grep -Fq 'background-move.sh' "$HYPR_WIN" \
+    && grep -Fq 'background-raise.sh' "$HYPR_WIN" \
+    && grep -Fq 'background-raise.sh' "$RAISE" \
+    && ! grep -Fq 'workspace.move' "$RAISE" \
+    && grep -Fq 'window_fade_out' "$ROOT/scripts/background-move.sh" \
+    && grep -Fq 'window_fade_prepare_in' "$ROOT/scripts/background-raise.sh" \
+    && grep -Fq 'leaf = "fadeSwitch"' "$ROOT/stow/hypr/.config/hypr/modules/animations.lua" \
+    && grep -Fq 'emphasizedAccelerate' "$ROOT/scripts/lib/window-fade.sh" \
+    && grep -Fq 'durationMediumMs' "$ROOT/scripts/lib/window-fade.sh" \
     && ! grep -Fq 'session-park' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \
     && ! grep -Fq 'arm_park' "$SESSION" \
