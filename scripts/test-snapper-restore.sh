@@ -73,6 +73,23 @@ else
     err "restore layout: $(find "$MODERN_RESTORE_ROOT" -maxdepth 3 | sort)"
 fi
 
+seed 8
+esp="$TMP/esp"
+rm -rf "$esp"
+mkdir -p "$esp/EFI/systemd" "$esp/loader/entries" \
+    "$MODERN_RESTORE_ROOT/@snapshots/8/snapshot/var/lib/modern/esp/loader/entries"
+printf 'fw\n' >"$esp/EFI/systemd/systemd-bootx64.efi"
+printf 'new kernel\n' >"$esp/loader/entries/arch-6.2.conf"
+printf 'old kernel\n' \
+    >"$MODERN_RESTORE_ROOT/@snapshots/8/snapshot/var/lib/modern/esp/loader/entries/arch-6.1.conf"
+MODERN_RESTORE_ESP="$esp" "$SCRIPT" 8 >/dev/null
+if [ -f "$esp/loader/entries/arch-6.1.conf" ] && [ ! -e "$esp/loader/entries/arch-6.2.conf" ] \
+    && [ -f "$esp/EFI/systemd/systemd-bootx64.efi" ]; then
+    ok "restores the snapshot's kernel to the ESP, keeps the firmware"
+else
+    err "ESP after restore: $(find "$esp" | sort)"
+fi
+
 if grep -F 'Paths.script("snapper-restore.sh")' \
     "$ROOT/stow/shell/.config/quickshell/modern/Services/Snapshots.qml" >/dev/null; then
     ok "Settings restore is one pkexec of this script"

@@ -156,5 +156,74 @@ else
     err "install_native did not defer to the plan"
 fi
 
+RUN="$ROOT/scripts/update-run.sh"
+cat >"$BIN/fake-modern" <<EOF
+#!/bin/sh
+echo "(1/2) upgrading a"
+sleep 1
+echo "(2/2) upgrading b"
+exit "\$(cat "$TMP/modern-rc" 2>/dev/null || echo 0)"
+EOF
+chmod +x "$BIN/fake-modern"
+export MODERN_BIN="$BIN/fake-modern"
+rm -f "$TMP/modern-rc"
+"$RUN" start >"$TMP/follow" 2>&1 &
+follower=$!
+sleep 0.3
+kill -9 "$follower" 2>/dev/null || true
+wait "$follower" 2>/dev/null || true
+sleep 1.5
+rc=0
+"$RUN" attach >"$TMP/attach" 2>&1 || rc=$?
+if [ "$rc" -eq 0 ] && grep -q '(2/2) upgrading b' "$XDG_STATE_HOME/modern/update.log" \
+    && grep -q '(2/2)' "$TMP/attach"; then
+    ok "update outlives a killed shell follower; attach reports the result"
+else
+    err "detached update: rc=$rc $(cat "$TMP/attach" "$XDG_STATE_HOME/modern/update.log" 2>/dev/null)"
+fi
+rc=0
+"$RUN" attach >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 75 ]; then
+    ok "attach with nothing running exits 75"
+else
+    err "attach after report gave $rc"
+fi
+echo 3 >"$TMP/modern-rc"
+rc=0
+"$RUN" start >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 3 ]; then
+    ok "start passes the update's exit status through"
+else
+    err "start rc $rc"
+fi
+unset MODERN_BIN
+
+if (
+    # shellcheck source=lib/update-guard.sh
+    source "$ROOT/scripts/lib/update-guard.sh"
+    UPDATE_PACMAN_LOG="$TMP/pacman.log"
+    printf '[ALPM] transaction completed\n' >"$UPDATE_PACMAN_LOG"
+    mark="$(update_guard_log_mark)"
+    printf '[ALPM] transaction started\n[ALPM] upgraded linux-zen\n' >>"$UPDATE_PACMAN_LOG"
+    update_guard_partial "$mark" || exit 1
+    printf '[ALPM] transaction completed\n' >>"$UPDATE_PACMAN_LOG"
+    ! update_guard_partial "$mark" || exit 1
+    mark="$(update_guard_log_mark)"
+    printf '[PACMAN] error: failed retrieving file\n' >>"$UPDATE_PACMAN_LOG"
+    ! update_guard_partial "$mark"
+); then
+    ok "a half-applied transaction is told apart from an early failure"
+else
+    err "update_guard_partial misreads pacman.log"
+fi
+
+for want in update_guard_detach update_guard_esp_backup snapper-restore.sh 'exit 3'; do
+    grep -Fq "$want" "$ROOT/scripts/update-apply.sh" || err "update-apply.sh lacks $want"
+done
+grep -Fq 'update-run.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml" \
+    || err "Settings must run the update through update-run.sh"
+grep -Fq 'vfat?' "$ROOT/iso/airootfs/etc/mkinitcpio.conf.d/50-modern-esp.conf" \
+    || err "initramfs must carry the ESP driver"
+
 [ "$FAIL" -eq 0 ] || exit 1
 printf 'test-update-apply: ok\n'

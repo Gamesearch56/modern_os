@@ -1048,6 +1048,8 @@
       "checkFailed": "Updates konnten nicht geprüft werden",
       "success": "Systemupdate abgeschlossen",
       "failed": "Systemupdate fehlgeschlagen",
+      "rolledBack": "Systemupdate rückgängig gemacht",
+      "rolledBackBody": "Das Update wurde mittendrin abgebrochen, deshalb wurde das System auf den Stand davor zurückgesetzt. Starte neu, um abzuschließen.",
       "mirrorsDone": "Mirrors aktualisiert",
       "mirrorsFailed": "Mirrors konnten nicht aktualisiert werden",
       "desktop": "ModernOS",
