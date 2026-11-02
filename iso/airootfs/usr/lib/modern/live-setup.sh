@@ -79,24 +79,12 @@ networkctl reload 2>/dev/null || true
 systemctl mask --now iwd.service 2>/dev/null || true
 rfkill unblock wifi 2>/dev/null || true
 systemctl enable --now NetworkManager.service
-nmcli radio wifi on >/dev/null 2>&1 || true
-# networkctl down clears IFF_UP. NM will not scan a down radio, so the
-# Network step stays on "No networks found" until something brings it up.
-bring_wifi_up() {
-    local nic name
-    [ -d /sys/class/net ] || return 0
-    for nic in /sys/class/net/*; do
-        [ -d "$nic/wireless" ] || [ -d "$nic/phy80211" ] || continue
-        name="${nic##*/}"
-        nmcli device set "$name" managed yes >/dev/null 2>&1 || true
-        ip link set "$name" up 2>/dev/null || true
-    done
-}
-# The radio can appear after firmware loads. One early scan then stays
-# empty, and the installer reads that empty cache.
+# networkctl down clears IFF_UP; live-wifi-up.sh brings it back and
+# records why a list stays empty. The radio can appear after firmware
+# loads, and one early empty scan is what the installer would show, so
+# retry here. Refresh in the Network step runs the same script again.
 for _ in 1 2 3 4 5; do
-    bring_wifi_up
-    nmcli -w 15 device wifi list --rescan yes >/dev/null 2>&1 || true
+    /usr/lib/modern/live-wifi-up.sh --scan >/dev/null 2>&1 || true
     if nmcli -t -f SSID device wifi list 2>/dev/null | grep -q .; then
         break
     fi

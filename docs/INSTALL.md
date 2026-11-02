@@ -465,8 +465,12 @@ A VM has virtio Ethernet, no radio and UEFI. A laptop differs here:
 - **Network during install is required** — the desktop phase downloads
   packages. Wi-Fi in the Network step goes through NetworkManager.
   The live image builds `wl.ko` for its linux-zen and loads it only for
-  Broadcom chips that need it (BCM4311/4312/4321/4322/43227/43228/
-  4331/4352/4360). Every other radio stays on the in-tree driver.
+  Broadcom chips that need it (BCM4311/4312/4321/4322/43142/43227/
+  43228/4331/4352/4360). Every other radio stays on the in-tree driver.
+  Refresh on the Network step re-runs `live-wifi-up.sh` (unblock, `wl`,
+  hand the radio to NetworkManager, rescan). An empty list then says
+  why: a Wi-Fi switch, a chip with no driver (with its PCI id), or no
+  adapter at all.
   `install.sh` still installs `broadcom-wl-dkms` for those chips so the
   installed kernel keeps the module. Ethernet or USB tethering remains
   a way through the Network step when the radio itself has no firmware.

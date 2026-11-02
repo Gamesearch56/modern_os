@@ -34,6 +34,8 @@ public:
     bool online() const { return m_hasRoute || m_ethernetUp || m_wifiUp; }
     QString ethernetAddr() const { return m_ethernetAddr; }
     QString wifiSsid() const { return m_wifiSsid; }
+    // live-wifi-up.sh: ok, off, blocked, "nodriver <vendor:device>", none.
+    QString wifiState() const { return m_wifiState; }
     QVector< Wifi > networks() const { return m_networks; }
 
     void refresh();
@@ -63,6 +65,7 @@ private:
     bool m_connecting = false;
     QString m_ethernetAddr;
     QString m_wifiSsid;
+    QString m_wifiState;
     QString m_joinSsid;
     QString m_joinPassword;
     QVector< Wifi > m_networks;

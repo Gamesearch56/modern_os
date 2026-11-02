@@ -40,6 +40,7 @@ private:
     void showOkPage();
     void selectSsid( const QString& ssid );
     QString currentSsid() const;
+    QString emptyHint() const;
 
     bool m_online = false;
     bool m_askedScan = false;
