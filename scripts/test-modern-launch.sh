@@ -113,8 +113,12 @@ if grep -Fq 'move_to_background' "$SESSION" \
     && ! grep -Fq 'delay = delay + 1500' "$SESSION" \
     && ! grep -Fq 'special:background silent' "$SESSION" \
     && grep -Fq 'profile-directory' "$ROOT/scripts/vivaldi" \
-    && grep -Fq 'gnome-keyring-hyprland' "$ROOT/stow/xdg/.config/xdg-desktop-portal/hyprland-portals.conf" \
-    && ! grep -Fq 'password-store=basic' "$ROOT/scripts/vivaldi" \
+    && grep -Fq 'password-store=basic' "$ROOT/scripts/vivaldi" \
+    && grep -Fq 'DbusSecretPortal' "$ROOT/scripts/vivaldi" \
+    && grep -Fq 'keystore_canary' "$ROOT/scripts/vivaldi" \
+    && ! grep -Fq 'gnome-keyring-hyprland' "$ROOT/stow/xdg/.config/xdg-desktop-portal/hyprland-portals.conf" \
+    && ! grep -Fq 'gnome-keyring-hyprland' "$ROOT/install/system/portals/hyprland-portals.conf" \
+    && [ ! -e "$ROOT/stow/xdg/.local/share/xdg-desktop-portal/portals/gnome-keyring-hyprland.portal" ] \
     && ! grep -Fq 'session-park' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \
     && ! grep -Fq 'arm_park' "$SESSION" \

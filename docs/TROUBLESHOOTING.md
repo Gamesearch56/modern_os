@@ -232,9 +232,14 @@ Expected until you create gitignored
 
 Confirm `~/.config/xdg-desktop-portal/hyprland-portals.conf` is stowed
 and `xdg-desktop-portal-hyprland` plus `xdg-desktop-portal-gtk` /
-kde are installed. That file also points the secret portal at
-gnome-keyring so Vivaldi can open its named profile instead of the
-profile list. Restart: `systemctl --user restart xdg-desktop-portal`.
+kde are installed. Restart: `systemctl --user restart xdg-desktop-portal`.
+
+Vivaldi does not use the desktop keyring. Sign-in starts the session
+without a typed password, so that keyring stays locked and the browser
+would ask for a new one, then refuse the profile. `scripts/vivaldi`
+uses the basic store instead and drops the old keystore canary once.
+Bookmarks and history stay. Saved passwords and site logins that were
+sealed with the keyring are not opened.
 
 ## KDE Connect phone does not see the PC
 
