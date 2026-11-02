@@ -73,6 +73,16 @@ for lang in en de; do
         || err "copy missing in ${lang}"
 done
 
+# Steam needs a 32-bit Vulkan driver; unnamed, pacman installs
+# lib32-vulkan-radeon on every GPU.
+for gpu in "$ROOT"/install/manifests/00-hw-gpu-*.txt; do
+    family="${gpu##*/00-hw-gpu-}"
+    apps="$ROOT/install/manifests/30-hw-gpu-${family}"
+    grep -Eq '^lib32-(vulkan-|nvidia-utils)' "$apps" 2>/dev/null \
+        || err "no 32-bit Vulkan driver for Steam on ${family%.txt} (30-hw-gpu-${family})"
+done
+grep -Fq '30-hw-gpu-' "$ROOT/install/install.sh" || err "install.sh must install 30-hw-gpu-*"
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

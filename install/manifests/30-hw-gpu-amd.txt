@@ -1,0 +1,3 @@
+# 32-bit Vulkan for Steam (30-apps) on AMD. Without it pacman picks
+# any lib32-vulkan-driver provider.
+lib32-vulkan-radeon        # 32-bit RADV
