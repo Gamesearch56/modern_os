@@ -243,6 +243,15 @@ else
     err "games.lua must ignore file managers and not Lua-match window titles"
 fi
 
+if ! grep -Fq 'window.open_early' "$GAMES" \
+    && ! grep -Eq 'hl\.on\("window\.[a-z_]+", consider\)' "$GAMES" \
+    && grep -Fq 'hl.on("window.open", later)' "$GAMES" \
+    && grep -Fq 'has_fullscreen' "$GAMES"; then
+    ok "game auto-fullscreen runs after the map and leaves a fullscreen game alone"
+else
+    err "games.lua must not dispatch fullscreen inside mapWindow (crashes Hyprland 0.57)"
+fi
+
 if grep -Fq 'virtual_gpu' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq '0x1af4' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'hypervisor' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
