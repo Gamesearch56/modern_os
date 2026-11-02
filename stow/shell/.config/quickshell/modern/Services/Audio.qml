@@ -45,24 +45,14 @@ Singleton {
     // Hardware endpoints only — application streams are not switchable
     // outputs. Tracked so nickname/description bind (docs/DECISIONS.md
     // never-hardcode-device-ids: labels come from PipeWire).
-    readonly property list<PwNode> sinks: {
-        const t = root.trackedNodes;
-        const out = [];
-        for (let i = 0; i < t.length; i++) {
-            if (t[i].isSink && t[i].audio)
-                out.push(t[i]);
-        }
-        return out;
-    }
-    readonly property list<PwNode> sources: {
-        const t = root.trackedNodes;
-        const out = [];
-        for (let i = 0; i < t.length; i++) {
-            if (!t[i].isSink && t[i].audio)
-                out.push(t[i]);
-        }
-        return out;
-    }
+    readonly property list<PwNode> sinks: Array.from(root.trackedNodes)
+        .filter(n => n.isSink && n.audio && !btAuto.hold.isHold(n))
+    readonly property list<PwNode> sources: Array.from(root.trackedNodes)
+        .filter(n => !n.isSink && n.audio)
+    // What pickers show as the output: the headset while sound is parked
+    // on its silent hold, the hold itself if the headset has no sink yet.
+    readonly property var outputSink: btAuto.hold.shown(root.sink)
+    readonly property bool outputHeld: btAuto.hold.isHold(root.outputSink)
     readonly property list<PwNode> trackedNodes: {
         const vals = root.nodes.values;
         const out = [];
@@ -140,6 +130,8 @@ Singleton {
         if (!n)
             return "";
         const _ = n.ready;
+        if (btAuto.hold.isHold(n))
+            return btAuto.hold.label();
         return n.nickname || n.description || n.name || "";
     }
 

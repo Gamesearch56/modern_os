@@ -33,6 +33,10 @@ QtObject {
     property string btSourceId: ""
     property bool _applying: false
     property int _settle: 0
+    // Set while sound is actually playing. A new BlueZ sink must not
+    // become the speaker just because a browser opened a silent stream.
+    property bool wantSink: false
+    readonly property AudioBluetoothHold hold: AudioBluetoothHold { audio: bt.audio; bt: bt }
 
     // USB mics (FOX) often expose a playback node on the same card.
     // WirePlumber follows the source onto that sink after BT drops;
@@ -81,7 +85,7 @@ QtObject {
     }
 
     function remember(n: var, isSink: bool) {
-        if (!n)
+        if (!n || bt.hold.isHold(n))
             return;
         const id = (isSink ? "k" : "c") + n.id;
         if (bt.isBluetoothNode(n)) {
@@ -139,7 +143,7 @@ QtObject {
 
     function applyFallback(isSink: bool) {
         const a = bt.audio;
-        if (!a)
+        if (!a || (isSink && bt.hold.parked && bt.hold.active))
             return;
         const want = bt._want(isSink);
         if (!want.length)
@@ -155,6 +159,9 @@ QtObject {
             a.setDefaultSink(node);
         else
             a.setDefaultSource(node);
+        // After a shell reload the preferred node can already equal this
+        // one while PipeWire still defaults to the headset.
+        Quickshell.execDetached(["wpctl", "set-default", String(node.id)]);
         bt._applying = false;
     }
 
@@ -227,7 +234,7 @@ QtObject {
         const goneBtSink = bt._goneBluetooth(prev, now, true);
         const goneBtSource = bt._goneBluetooth(prev, now, false);
         let tookBt = false;
-        if (bt.enabled) {
+        if (bt.enabled && (bt.wantSink || Bluetooth.userSink)) {
             for (let s = 0; s < freshSinks.length; s++) {
                 if (bt.isBluetoothNode(freshSinks[s])) {
                     bt._stopSettle();

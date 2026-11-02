@@ -1,10 +1,11 @@
 -- Session autostart: spawn on login/respawn onto special:background.
--- Per-app Vivaldi profiles (session_direct_apps) so each process inherits
--- exec_cmd workspace rules. Spawn expect finishes placement when a marked
--- window maps off special — Super+Q / taskbar still own interactive park.
+-- Mail, calendar, and WhatsApp are one Vivaldi process (--app windows).
+-- A process-wide workspace rule would also hide the browser, so each
+-- mapped app window is moved after it has a class. Super+Q / taskbar
+-- still own interactive park.
 local config = require("modules.config")
 local paths = require("modules.paths")
-local layout = require("modules.workspaces_layout")
+local workspaces = require("modules.workspaces")
 local direct_app = require("modules.session_direct_apps")
 
 local ok_match, match = pcall(require, "modules.session_match")
@@ -14,21 +15,11 @@ end
 
 local M = {}
 local shutting_down = false
-local bg_rules = {
-    workspace = "special:background silent",
-    no_initial_focus = true,
-}
 
 local function pin_background()
-    local mon = layout.primary()
-    local sel = layout.selector(mon)
-    if not sel or not hl.dsp or not hl.dsp.workspace or not hl.dsp.workspace.move then
-        return
+    if workspaces.pin_background then
+        workspaces.pin_background()
     end
-    pcall(hl.dispatch, hl.dsp.workspace.move({
-        workspace = "special:background",
-        monitor = sel,
-    }))
 end
 
 local function addrs()
@@ -103,7 +94,7 @@ local function another_open(name, closed_addr)
     end
     for i = 1, #wins do
         local w = wins[i]
-        if type(w) == "table" and tostring(w.address or "") ~= closed_addr then
+        if (type(w) == "table" or type(w) == "userdata") and tostring(w.address or "") ~= closed_addr then
             if match.window_matches(w, name) then
                 return true
             end
@@ -112,26 +103,46 @@ local function another_open(name, closed_addr)
     return false
 end
 
-local function on_special(w)
+local function workspace_name(w)
     local ws = w and w.workspace
-    local n = type(ws) == "table" and tostring(ws.name or "") or tostring(ws or "")
+    if type(ws) == "table" or type(ws) == "userdata" then
+        local ok, name = pcall(function()
+            return ws.name
+        end)
+        if ok and name ~= nil then
+            return tostring(name)
+        end
+    end
+    return tostring(ws or "")
+end
+
+local function on_special(w)
+    local n = workspace_name(w)
     return n:find("special:background", 1, true) ~= nil or n == "background"
 end
 
 local function move_to_background(w)
-    if not (hl.dsp and hl.dsp.window and hl.dsp.window.move) then
+    if not (hl.dispatch and hl.dsp and hl.dsp.window and hl.dsp.window.move) then
         return
     end
+    -- Create the special workspace if this is the first park, then
+    -- close it so the moved window is not left on screen.
+    pin_background()
+    -- A window object is what the compositor accepts. An address string
+    -- without the 0x prefix is a silent no-op.
+    -- Dispatch does not error when the move is ignored, so try the
+    -- window and the address. One of the two sticks once the window
+    -- has a workspace.
+    local spec = { workspace = "special:background", follow = false, window = w }
+    pcall(hl.dispatch, hl.dsp.window.move(spec))
     local addr = tostring(w and w.address or ""):gsub("^address:", "")
     if addr ~= "" and not addr:lower():find("^0x") then
         addr = "0x" .. addr
     end
-    local spec = { workspace = "special:background", follow = false }
-    if addr ~= "" then
-        spec.window = "address:" .. addr
-    else
-        spec.window = w
+    if addr == "" then
+        return
     end
+    spec.window = "address:" .. addr
     pcall(hl.dispatch, hl.dsp.window.move(spec))
 end
 
@@ -172,12 +183,53 @@ local function launch_name(name)
     local cmd = direct_app[name] or (paths.modern_launch .. " " .. name)
     pin_background()
     mark_spawn(name)
+    -- Do not pin every window of this process. The decryption warning has
+    -- no app class; a process rule parked it on the hidden workspace, so
+    -- the browser looked like it never opened. on_window parks the app.
     if hl.dispatch and hl.dsp and hl.dsp.exec_cmd then
         pcall(function()
-            hl.dispatch(hl.dsp.exec_cmd(cmd, bg_rules))
+            hl.dispatch(hl.dsp.exec_cmd(cmd))
         end)
     else
-        hl.exec_cmd(cmd, bg_rules)
+        hl.exec_cmd(cmd)
+    end
+end
+
+-- The app class often arrives after the first map event. While the
+-- spawn mark is set, look again so a late class still leaves workspace 1.
+local function each_window(fn)
+    if not hl.get_windows then
+        return
+    end
+    local wins = hl.get_windows()
+    if type(wins) ~= "table" then
+        return
+    end
+    local list = wins
+    if #wins == 0 then
+        list = {}
+        for _, w in pairs(wins) do
+            list[#list + 1] = w
+        end
+    end
+    for i = 1, #list do
+        if type(list[i]) == "table" or type(list[i]) == "userdata" then
+            fn(list[i])
+        end
+    end
+end
+
+local function retry_background()
+    each_window(on_window)
+end
+
+local function arm_background_retries()
+    if not hl.timer then
+        retry_background()
+        return
+    end
+    for _, wait in ipairs({ 600, 1800, 4500 }) do
+        hl.timer(retry_background, { timeout = wait, type = "oneshot" })
     end
 end
 
@@ -201,6 +253,7 @@ local function start_apps()
             delay = delay + 200
         end
     end
+    arm_background_retries()
 end
 
 -- Vivaldi checks for a notification service once, at launch. If mail
@@ -239,7 +292,9 @@ function M.on_start()
     end
 end
 
-if hl.on then
+if hl.on and not _G.__modern_session_hooked then
+    _G.__modern_session_hooked = true
+    hl.on("window.open_early", on_window)
     hl.on("window.open", on_window)
     hl.on("window.class", on_window)
     hl.on("window.title", on_window)
@@ -288,7 +343,7 @@ local function seed_open()
     end
     for i = 1, #wins do
         local w = wins[i]
-        if type(w) == "table" then
+        if type(w) == "table" or type(w) == "userdata" then
             local name = desktop_for_window(w)
             if name ~= "" then
                 remember(w, name)
@@ -301,6 +356,28 @@ if hl.timer then
     hl.timer(seed_open, { timeout = 300, type = "oneshot" })
 else
     seed_open()
+end
+
+-- Cold boot maps the apps before any spawn mark exists, and the first
+-- move is overwritten by that placement. Keep correcting until login
+-- has finished. Later raises are left alone.
+local function park_open_apps()
+    each_window(function(w)
+        if desktop_for_window(w) ~= "" and not on_special(w) then
+            move_to_background(w)
+        end
+    end)
+end
+
+if not _G.__modern_bg_startup_park then
+    _G.__modern_bg_startup_park = true
+    if hl.timer then
+        for _, wait in ipairs({ 500, 2000, 5000, 10000, 15000 }) do
+            hl.timer(park_open_apps, { timeout = wait, type = "oneshot" })
+        end
+    else
+        park_open_apps()
+    end
 end
 
 return M

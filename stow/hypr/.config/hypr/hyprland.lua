@@ -40,4 +40,9 @@ require("modules.browser_popups")
 require("modules.games")
 require("modules.keybinds")
 require("modules.power")
+require("modules.session_apps")
 require("modules.autostart")
+
+-- After window rules. A reload reapplies special:background onto the
+-- open web apps and shows that workspace; this closes it again.
+require("modules.workspaces").pin_background()

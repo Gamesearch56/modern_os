@@ -151,6 +151,14 @@ hl.config({
     },
     binds = {
         window_direction_monitor_fallback = true,
+        -- Focusing the normal workspace dismisses special:background.
+        -- The parked windows stay on it.
+        hide_special_on_workspace_change = true,
+    },
+    -- Opening the background workspace must not warp the pointer onto
+    -- another monitor before the matching toggle closes it.
+    cursor = {
+        warp_on_toggle_special = 0,
     },
     misc = {
         disable_hyprland_logo = true,
@@ -158,6 +166,11 @@ hl.config({
         -- Greeter PATH is often too thin to see hyprland-dialog; this
         -- overlay stays for 15s and reads as a stuck login.
         disable_hyprland_guiutils_check = true,
+    },
+    -- A system update that ships a newer Hyprland otherwise opens
+    -- hyprland-update-screen ("Hyprland has been updated").
+    ecosystem = {
+        no_update_news = true,
     },
     render = {
         cm_auto_hdr = 0,

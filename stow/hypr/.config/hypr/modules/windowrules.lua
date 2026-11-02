@@ -75,12 +75,12 @@ apply({
 -- Chromium/Vivaldi (and other Electron shells): after HTML5 video
 -- fullscreen, the client echoes set_maximized because Hyprland advertised
 -- MAXIMIZED at map time to hide CSD. Honoring that enters fullscreen
--- mode 1 and covers every other tile on the workspace — often noticed
--- only when clicking elsewhere or switching workspaces (hyprwm/Hyprland
--- #13322). Super+F still uses the exclusive-fullscreen dispatcher;
--- games.lua forces state 2 the same way. Client maximize is unused.
+-- mode 1 and covers every other tile (hyprwm/Hyprland #13322).
+-- Games use that same maximize for borderless fullscreen, so the
+-- suppress stays on browser classes only.
 apply({
     name = "suppress-client-maximize",
+    match = { class = "([Cc]hromium|[Vv]ivaldi|[Cc]hrome|[Bb]rave|[Ee]lectron|[Ee]dge|steamwebhelper)" },
     suppress_event = "maximize",
 })
 
@@ -189,4 +189,75 @@ for _, w in ipairs(overlays) do
         rule.max_size = w.max_size
     end
     apply(rule)
+end
+
+-- Steam's own window, only while gaming.steamLight is on. Kept in this
+-- file so a new module cannot drop the compositor into emergency mode
+-- before stow links it.
+if config.value("gaming.steamLight", false) == true then
+    apply({
+        name = "modern-steam-light",
+        match = { class = "^steam$" },
+        no_blur = true,
+        no_shadow = true,
+        no_anim = true,
+        no_wobble = true,
+        opaque = true,
+    })
+    apply({
+        name = "modern-steamwebhelper-light",
+        match = { class = "^steamwebhelper$" },
+        no_blur = true,
+        no_shadow = true,
+        no_anim = true,
+        no_wobble = true,
+        opaque = true,
+    })
+end
+
+-- Same switch as scripts/vivaldi. Acrylic on a new browser window shares
+-- the two cores that are still starting the UI.
+if config.value("gaming.browserLight", false) == true then
+    apply({
+        name = "modern-vivaldi-light",
+        match = { class = "vivaldi" },
+        no_blur = true,
+        no_shadow = true,
+        no_anim = true,
+        no_wobble = true,
+        opaque = true,
+    })
+end
+
+-- Map mail, calendar, and WhatsApp onto the background workspace.
+-- A move after open loses to the first placement on a cold boot, so
+-- the class rule has to win at map time. The main browser class does
+-- not match these hosts. "silent" keeps the view on the current workspace.
+local direct_apps = require("modules.session_direct_apps")
+
+local function app_host_pattern(cmd)
+    local host = tostring(cmd or ""):match("%-%-app=https?://([^/%s]+)")
+    if not host or host == "" then
+        return nil
+    end
+    -- Rule matching is a full-string regex, not a Lua pattern. "%." and
+    -- a prefix without ".*" never match the "__-Default" profile suffix.
+    local escaped = host:gsub("%.", "\\.")
+    return "^vivaldi-" .. escaped .. "__-.*$"
+end
+
+for id, cmd in pairs(direct_apps) do
+    local pattern = app_host_pattern(cmd)
+    if pattern then
+        apply({
+            name = "modern-bg-" .. id,
+            match = { class = pattern },
+            workspace = "special:background silent",
+        })
+        apply({
+            name = "modern-bg-" .. id .. "-initial",
+            match = { initial_class = pattern },
+            workspace = "special:background silent",
+        })
+    end
 end

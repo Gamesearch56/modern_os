@@ -104,6 +104,15 @@ greetd_apply() {
     if [ -f "$repo/install/system/greetd/greetd.pam" ]; then
         greetd_as_root install -m 0644 "$repo/install/system/greetd/greetd.pam" /etc/pam.d/greetd
     fi
+    if [ -f "$repo/install/system/greetd/keyring-login.sh" ]; then
+        greetd_as_root install -d -m 0755 /usr/lib/modern
+        greetd_as_root install -m 0755 \
+            "$repo/install/system/greetd/keyring-login.sh" \
+            /usr/lib/modern/keyring-login.sh
+        greetd_as_root install -m 0755 \
+            "$repo/install/system/greetd/keyring-match.py" \
+            /usr/lib/modern/keyring-match.py
+    fi
     greetd_as_root install -m 0644 "$repo/install/system/greetd/hyprland.lua" /etc/greetd/hyprland.lua
     greetd_as_root install -m 0755 "$repo/install/system/greetd/kiosk.sh" /etc/greetd/kiosk.sh
     greetd_as_root install -m 0755 "$repo/install/system/greetd/list-users.py" /etc/greetd/list-users.py

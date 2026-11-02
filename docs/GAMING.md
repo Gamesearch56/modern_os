@@ -145,12 +145,16 @@ native titles such as Project Zomboid (`ProjectZomboid*`, window title
 `Project Zomboid`) — see `gaming.matchClass` / `gaming.matchTitle` in
 `config.json`. Launchers stay windowed. Those game windows get:
 
-- **Exclusive fullscreen once**, when Hyprland can identify the game.
-  Static `fullscreen` window rules stay off so `SUPER+F` can leave
-  exclusive mode. Java/LWJGL titles (Project Zomboid) often map tiled
-  first and rename after boot — `games.lua` dispatches
-  `fullscreen_state 2 2` on `window.open` / `window.class` /
-  `window.title`, then leaves that window alone. Listeners re-read
+- **Fullscreen once it can be identified.** A game that already
+  covers the screen (borderless or exclusive) is left alone — pushing
+  exclusive on top of borderless makes the title drop back to a tile.
+  A game that is still tiled gets exclusive fullscreen, then once more
+  half a second later, because Proton and native launchers often set
+  the video mode after the window maps. Static `fullscreen` rules stay
+  off so `SUPER+F` can leave it. Client maximize is honored for games;
+  browsers still ignore the maximize echo that stuck them fullscreen
+  (`windowrules.lua`). Java/LWJGL titles (Project Zomboid) often map
+  tiled first and rename after boot. Listeners re-read
   `gaming.autoFullscreen` so the Settings toggle still stops new
   windows from being forced. The bar hides while the focused window is
   exclusive fullscreen; HUD binds and `SUPER+F` set `dont_inhibit` and
@@ -174,6 +178,33 @@ to `special:game` and hide them). That name is no longer in the defaults.
 Fullscreen games cover the bar, so AI (`SUPER + A`) and the taskbar
 (`SUPER + DELETE`) open as Overlay layer-shell windows — the same path
 as the launcher and control panel — instead of bar-anchored popups.
+
+## Slow hardware
+
+Settings → Gaming → Slow hardware. The switches default off.
+
+`gaming.steamLight` is for a processor that sits at full load while
+Steam's store or library is open. The client is a browser: on a weak
+iGPU its graphics process and the animated library covers keep every
+core busy even when nothing is playing. The next Steam start (via
+`modern steam`, which the Steam launcher entry uses) passes
+`-cef-disable-gpu`, turns on Steam's library low-performance mode, and
+caps background shader work at one thread. Steam's own window also
+drops blur and shadows. Quit Steam and open it again after toggling.
+
+`gaming.lowEnd` is inherited by games that Steam starts: overlay logs
+stay off and DXVK keeps a single frame queued. It does not wrap games
+in gamescope — that extra compositor costs more than it saves on a
+two-core chip. A game can still use `gamemoderun %command%` in its
+launch options; `gamemoded` is already started at login.
+
+`gaming.browserLight` is for the same kind of processor when Vivaldi
+takes several seconds to open. The switch runs the graphics thread
+inside the browser and drops blur and shadows on Vivaldi windows.
+Mail, calendar, and WhatsApp are app windows of that same browser, so
+a link in one of them opens a tab there instead of a second profile.
+Quit Vivaldi and open it again after toggling. Links and the browser
+shortcut go through `modern vivaldi`.
 
 ## Battle.net / World of Warcraft (no Lutris)
 

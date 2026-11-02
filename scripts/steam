@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Launch Steam. gaming.steamLight skips the web-view GPU process, animated
+# library art, and extra shader threads — that combination pegs a two-core
+# processor while the store or library is open. gaming.lowEnd is inherited
+# by games Steam starts: no overlay logs, one frame queued.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+
+cfg_on() {
+    local key="$1"
+    [ -f "$CFG" ] || return 1
+    command -v jq >/dev/null 2>&1 || return 1
+    [ "$(jq -r --arg k "$key" '.gaming[$k] // false' "$CFG" 2>/dev/null || printf false)" = "true" ]
+}
+
+args=()
+if cfg_on steamLight; then
+    args+=(-cef-disable-gpu -cef-force-occlusion -vrdisable)
+    /usr/bin/python3 "$SCRIPT_DIR/steam-light.py" apply
+else
+    /usr/bin/python3 "$SCRIPT_DIR/steam-light.py" clear
+fi
+
+if cfg_on lowEnd; then
+    export DXVK_HUD="${DXVK_HUD:-0}"
+    export DXVK_LOG_LEVEL="${DXVK_LOG_LEVEL:-none}"
+    export MANGOHUD="${MANGOHUD:-0}"
+    export PROTON_LOG="${PROTON_LOG:-0}"
+    export WINEDEBUG="${WINEDEBUG:--all}"
+    if [ -z "${DXVK_CONFIG:-}" ]; then
+        export DXVK_CONFIG="dxgi.maxFrameLatency = 1"
+    fi
+fi
+
+if ! command -v steam >/dev/null 2>&1; then
+    printf 'modern steam: steam is not installed\n' >&2
+    exit 127
+fi
+exec steam "${args[@]}" "$@"

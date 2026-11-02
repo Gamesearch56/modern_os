@@ -73,5 +73,5 @@ if [[ "$matched" -ne 1 ]]; then
     exit 1
 fi
 
-hyprctl dispatch "hl.dsp.window.move({ workspace = \"special:background\", follow = false, window = \"address:${addr}\" })" >/dev/null
-exit 0
+dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$dir/background-move.sh" "$addr"

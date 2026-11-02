@@ -12,6 +12,7 @@ singleton Bluetooth 1.0 Bluetooth.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml
 AudioBluetoothMultipoint 1.0 AudioBluetoothMultipoint.qml
+AudioBluetoothHold 1.0 AudioBluetoothHold.qml
 AudioNowPlaying 1.0 AudioNowPlaying.qml
 AudioPersist 1.0 AudioPersist.qml
 singleton Brightness 1.0 Brightness.qml

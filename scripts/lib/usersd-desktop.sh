@@ -202,9 +202,15 @@ _usersd_seed_keyring() {
 
 _usersd_install_greetd_pam() {
     local src="${USERS_ROOT:-}/install/system/greetd/greetd.pam"
+    local root="${USERS_ROOT:-}/install/system/greetd"
     [ "${DRY:-0}" -eq 1 ] && return 0
     [ -f "$src" ] || return 0
     [ "$(id -u)" -eq 0 ] || return 0
+    install -d -m 0755 /usr/lib/modern || true
+    if [ -f "$root/keyring-login.sh" ]; then
+        install -m 0755 "$root/keyring-login.sh" /usr/lib/modern/keyring-login.sh || true
+        install -m 0755 "$root/keyring-match.py" /usr/lib/modern/keyring-match.py || true
+    fi
     install -m 0644 "$src" /etc/pam.d/greetd || true
 }
 

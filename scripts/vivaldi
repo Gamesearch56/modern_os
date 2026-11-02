@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Launch Vivaldi on the profile the user named. Mail, calendar, and
+# WhatsApp are --app windows of that same profile.
+#
+# Sign-in does not type a password, so the desktop keyring stays locked.
+# Asking Vivaldi to use it shows a password dialog and then the profile
+# list. The basic store never talks to the keyring. The old keystore
+# canary is dropped once; otherwise Vivaldi treats the missing keyring
+# as a changed keystore and refuses the profile. Bookmarks and history
+# stay. Saved passwords and site logins sealed with the keyring do not.
+set -euo pipefail
+
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+VIVALDI_ROOT="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi"
+VIVALDI_STATE="$VIVALDI_ROOT/Local State"
+STAMP="${XDG_CONFIG_HOME:-$HOME/.config}/modern/vivaldi-basic-store"
+
+on=false
+if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    on="$(jq -r '.gaming.browserLight // false' "$CFG" 2>/dev/null || printf false)"
+fi
+
+# The directory the user renamed (is_using_default_name false). Automatic
+# profiles keep Vivaldi's own name. One renamed profile is that choice.
+# Several: the last one used, if it is one of them.
+profile_directory() {
+    local name="Default" picked=""
+    if [ -f "$VIVALDI_STATE" ] && command -v jq >/dev/null 2>&1; then
+        picked="$(jq -r '
+            .profile as $p
+            | ($p.info_cache // {}) as $c
+            | [$c | to_entries[]
+                | select(.value.is_using_default_name == false) | .key] as $named
+            | if ($named | length) == 1 then $named[0]
+              elif ($named | index($p.last_used)) != null then $p.last_used
+              elif ($named | length) > 0 then $named[0]
+              else ($p.last_used // "Default")
+              end
+        ' "$VIVALDI_STATE" 2>/dev/null || true)"
+    fi
+    case "$picked" in
+        ""|null|..|*/|*\\*) ;;
+        *) name="$picked" ;;
+    esac
+    if [ ! -d "$VIVALDI_ROOT/$name" ]; then
+        name="Default"
+    fi
+    printf '%s\n' "$name"
+}
+
+vivaldi_running() {
+    pgrep -x vivaldi >/dev/null 2>&1 || pgrep -x vivaldi-bin >/dev/null 2>&1
+}
+
+# One-time. A later canary is sealed with the basic store and must stay,
+# or the next start would wipe saved state again. Wait out a browser that
+# is still exiting so it cannot write the old canary back after this.
+drop_old_keystore() {
+    local profile="$1" prefs tmp lock i
+    [ -f "$STAMP" ] && return 0
+    prefs="$VIVALDI_ROOT/$profile/Preferences"
+    mkdir -p "${STAMP%/*}"
+    lock="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/modern-vivaldi-basic.lock"
+    exec 9>"$lock"
+    flock -w 5 9 || return 0
+    [ -f "$STAMP" ] && return 0
+    i=0
+    while vivaldi_running; do
+        i=$((i + 1))
+        [ "$i" -ge 30 ] && return 0
+        sleep 0.1
+    done
+    sleep 0.2
+    if [ -f "$prefs" ] && command -v jq >/dev/null 2>&1; then
+        tmp="$prefs.tmp.$$"
+        if jq 'del(.vivaldi.startup.keystore_canary)
+            | .vivaldi.startup.was_encryption_used = false' \
+            "$prefs" >"$tmp"; then
+            mv "$tmp" "$prefs"
+            chmod 600 "$prefs" 2>/dev/null || true
+        else
+            rm -f "$tmp"
+            return 0
+        fi
+    fi
+    : >"$STAMP"
+}
+
+profile="$(profile_directory)"
+drop_old_keystore "$profile"
+
+args=(
+    --profile-directory="$profile"
+    --password-store=basic
+    --disable-features=DbusSecretPortal
+)
+if [ "$on" = "true" ]; then
+    args+=(--in-process-gpu)
+fi
+
+if ! command -v vivaldi-stable >/dev/null 2>&1; then
+    printf 'modern vivaldi: vivaldi-stable is not installed\n' >&2
+    exit 127
+fi
+exec vivaldi-stable "${args[@]}" "$@"

@@ -33,6 +33,10 @@ else
     hl.animation({ leaf = "windowsMove", enabled = true, speed = speed(tokens.durationShortMs), bezier = "emphasized" })
     hl.animation({ leaf = "border", enabled = true, speed = speed(tokens.durationShortMs), bezier = "standard" })
     hl.animation({ leaf = "fade", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasized" })
+    -- Opacity changes. Background apps fade in and out with this instead
+    -- of moving, so it uses the windowsIn curve. scripts/lib/window-fade.sh
+    -- swaps in the windowsOut curve for the fade out, then restores this.
+    hl.animation({ leaf = "fadeSwitch", enabled = true, speed = speed(tokens.durationMediumMs), bezier = "emphasizedDecelerate" })
     hl.animation({ leaf = "workspaces", enabled = true, speed = speed(tokens.durationLongMs), bezier = "emphasizedDecelerate", style = "slide" })
     -- Off: mapping autostart clients onto special:background must not flash
     -- a vertical slide of the app on login.
