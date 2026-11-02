@@ -357,6 +357,21 @@ mask_iwd() {
     ln -sfn /dev/null /etc/systemd/system/iwd.service
 }
 
+# live-wifi-up.sh writes its rtw88 option to the live overlay, which
+# unpackfs does not copy. /sys in this chroot is the live kernel's, so
+# the loaded parameters say whether the chip needed it.
+carry_rtw88_quirk() {
+    local params="${MODERN_LATE_RTW88_PARAMS:-/sys/module/rtw88_pci/parameters}"
+    local dest="${MODERN_LATE_STRIP_ROOT:-}/etc/modprobe.d/modern-rtw88.conf"
+    if [ -n "${MODERN_LATE_TEST:-}" ] && [ -z "${MODERN_LATE_RTW88_PARAMS:-}" ]; then
+        return 0
+    fi
+    [ "$(cat "$params/disable_aspm" 2>/dev/null)" = Y ] || return 0
+    install -d -m 0755 "$(dirname "$dest")"
+    printf 'options rtw88_pci disable_aspm=y disable_msi=y\n' >"$dest"
+    log "rtw88 Wi-Fi keeps PCIe ASPM and MSI off"
+}
+
 overlay_pin_install_native() {
     local pkg="$REPO/install/lib/pkg.sh"
     [ -f "$pkg" ] || return 0
@@ -613,6 +628,7 @@ strip_live_packages() {
 phase_strip() {
     log "removing the live-only files unpackfs copied into the target"
     strip_live
+    carry_rtw88_quirk
     local drop="${MODERN_LATE_STRIP_ROOT:-}/etc/mkinitcpio.conf.d/archiso.conf"
     [ ! -e "$drop" ] || die "$drop survived; the target would boot to a rescue shell"
     log "live-only files removed"
