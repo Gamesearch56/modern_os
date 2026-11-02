@@ -1,7 +1,15 @@
 #include "ModernNetNm.h"
 
+#include <QFile>
+#include <QFileInfo>
 #include <QProcess>
 #include <QSet>
+
+namespace
+{
+const QString kWifiUp = QStringLiteral( "/usr/lib/modern/live-wifi-up.sh" );
+const QString kWifiState = QStringLiteral( "/run/modern/wifi-state" );
+}  // namespace
 
 ModernNetNm::ModernNetNm( QObject* parent )
     : QObject( parent )
@@ -245,6 +253,13 @@ ModernNetNm::refresh()
                               QStringLiteral( "default" ) } );
     m_hasRoute = !v4.trimmed().isEmpty() || !v6.trimmed().isEmpty();
 
+    m_wifiState.clear();
+    QFile state( kWifiState );
+    if ( state.open( QIODevice::ReadOnly ) )
+    {
+        m_wifiState = QString::fromUtf8( state.readLine() ).trimmed();
+    }
+
     loadWifi( knownWifi() );
     emit changed();
 }
@@ -274,6 +289,13 @@ ModernNetNm::scan()
                  m_scanning = false;
                  refresh();
              } );
+    // A bare rescan cannot recover a radio that appeared late, was
+    // soft-blocked, or was taken by iwd again; the helper does that first.
+    if ( QFileInfo( kWifiUp ).isExecutable() )
+    {
+        m_scan->start( kWifiUp, { QStringLiteral( "--scan" ) } );
+        return;
+    }
     m_scan->start( QStringLiteral( "nmcli" ),
                    { QStringLiteral( "-w" ),
                      QStringLiteral( "20" ),

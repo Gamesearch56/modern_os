@@ -2,12 +2,16 @@
 # Privileged system update for Settings → Update. One pkexec from
 # `modern update` so snapper, pacman and the desktop release's root
 # steps (--root-plan, written by install.sh) share a single auth prompt.
+# The work itself runs in the modern-system-update service (see
+# lib/update-guard.sh); this process only streams its log. Exit 3: a
+# half-applied update was rolled back to the pre-update snapshot.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SNAPSHOT=0
 PLAN=""
+ARGS=("$@")
 usage() {
     printf 'usage: update-apply.sh [--snapshot|--no-snapshot] [--root-plan FILE]\n' >&2
 }
@@ -41,11 +45,28 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-if [ "$SNAPSHOT" -eq 1 ]; then
+# shellcheck source=lib/update-guard.sh
+source "$SCRIPT_DIR/lib/update-guard.sh"
+rc=0
+update_guard_detach "$0" "${ARGS[@]}" || rc=$?
+[ "$rc" -eq 255 ] || exit "$rc"
+
+PACMAN="${MODERN_PACMAN:-/usr/bin/pacman}"
+if [ -s "$UPDATE_MARK" ]; then
+    printf 'update-apply: the previous update was interrupted; finishing it\n'
+    REPAIR=1
+else
+    REPAIR=0
+fi
+
+snap=""
+if [ "$SNAPSHOT" -eq 1 ] && [ "$REPAIR" -eq 0 ]; then
     if command -v snapper >/dev/null 2>&1 \
         && snapper list-configs >/dev/null 2>&1 \
         && snapper list-configs 2>/dev/null | grep -q root; then
+        update_guard_esp_backup || printf 'update-apply: WARN could not copy /boot into the snapshot\n' >&2
         snapper -c root create --description "ModernOS Update"
+        snap="$(update_guard_last_snapshot)"
         uid="${PKEXEC_UID:-${SUDO_UID:-}}"
         home=""
         if [ -n "$uid" ]; then
@@ -59,8 +80,28 @@ if [ "$SNAPSHOT" -eq 1 ]; then
     fi
 fi
 
-PACMAN="${MODERN_PACMAN:-/usr/bin/pacman}"
-"$PACMAN" -Syu --noconfirm
+mkdir -p "$(dirname "$UPDATE_MARK")"
+[ "$REPAIR" -eq 1 ] || printf '%s\n' "${snap:-none}" >"$UPDATE_MARK"
+mark="$(update_guard_log_mark)"
+if ! "$PACMAN" -Syu --noconfirm; then
+    if update_guard_partial "$mark" && [ -n "$snap" ]; then
+        printf 'update-apply: packages failed halfway; restoring snapshot %s\n' "$snap" >&2
+        if "$SCRIPT_DIR/snapper-restore.sh" "$snap"; then
+            rm -f "$UPDATE_MARK"
+            printf 'update-apply: restored the system from before the update; restart to finish\n' >&2
+            exit 3
+        fi
+    fi
+    # The mark stays only when packages changed, so the next run repairs.
+    update_guard_partial "$mark" || rm -f "$UPDATE_MARK"
+    exit 1
+fi
+if [ "$REPAIR" -eq 1 ]; then
+    # Hooks of the cut-off run may never have put the kernel on the ESP.
+    mapfile -t kernels < <("$PACMAN" -Qqo /usr/lib/modules/*/vmlinuz 2>/dev/null | sort -u)
+    [ ${#kernels[@]} -eq 0 ] || "$PACMAN" -S --noconfirm "${kernels[@]}"
+fi
+rm -f "$UPDATE_MARK"
 
 [ -n "$PLAN" ] && [ -s "$PLAN" ] || exit 0
 

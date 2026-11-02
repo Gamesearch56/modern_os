@@ -474,7 +474,8 @@ if grep -F 'NetworkManager.service' "$SETUP" >/dev/null \
     && [ -f "$ROOT/iso/airootfs/etc/calamares/modules/modernnet.conf" ] \
     && grep -F 'wifi.backend=wpa_supplicant' "$NM_WIFI" >/dev/null \
     && grep -F 'rfkill unblock wifi' "$SETUP" >/dev/null \
-    && grep -F 'ip link set "$name" up' "$SETUP" >/dev/null \
+    && grep -F 'live-wifi-up.sh --scan' "$SETUP" >/dev/null \
+    && grep -F 'ip link set "$name" up' "$ROOT/iso/airootfs/usr/lib/modern/live-wifi-up.sh" >/dev/null \
     && grep -F 'live-wifi-wl.sh' "$SETUP" >/dev/null \
     && grep -F 'copytoram/airootfs.sfs' "$SETUP" >/dev/null \
     && grep -F 'unpackfs.conf' "$SETUP" >/dev/null \

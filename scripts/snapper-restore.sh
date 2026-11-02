@@ -84,3 +84,18 @@ mv "$NEW" "$ROOT/@"
 [ -d "$ROOT/@" ] || die "restored @ missing"
 [ -d "$ROOT/@home" ] || die "@home missing after restore"
 [ -d "$ROOT/$OLD" ] || die "previous @ was not kept"
+
+# The restored modules only load under the kernel that was on the ESP
+# when the snapshot was taken (update-guard.sh copies it into @).
+ESP_COPY="$ROOT/@/var/lib/modern/esp"
+ESP=/boot
+if [ "$FIXTURE" -eq 1 ]; then
+    ESP="${MODERN_RESTORE_ESP:-}"
+elif [ "$(findmnt -no FSTYPE /boot 2>/dev/null)" != vfat ]; then
+    ESP=""
+fi
+if [ -d "$ESP_COPY" ] && [ -n "$ESP" ] && [ -d "$ESP" ]; then
+    rsync -rt --delete --exclude='/EFI/' --exclude='/System Volume Information/' \
+        "$ESP_COPY/" "$ESP/" || die "could not restore /boot from snapshot $NUM"
+    printf 'snapper-restore: /boot restored from snapshot %s\n' "$NUM"
+fi

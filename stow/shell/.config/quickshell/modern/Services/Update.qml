@@ -53,7 +53,6 @@ Singleton {
     Process {
         id: checkProc
         command: ["checkupdates"]
-        running: false
         stdout: StdioCollector { id: checkOut }
         onExited: (code) => {
             if (code !== 0 && code !== 2)
@@ -65,28 +64,24 @@ Singleton {
     Process {
         id: desktopProc
         command: [Paths.script("desktop-sync.sh"), "status"]
-        running: false
         stdout: StdioCollector { id: desktopOut }
-        onExited: () => {
-            root._parseDesktop(desktopOut.text);
-        }
+        onExited: () => root._parseDesktop(desktopOut.text)
     }
 
+    // update-run.sh owns the update; this only follows its log, so a
+    // reload or crash of the shell cannot cut pacman off. On start it
+    // re-attaches to an update that outlived the previous shell.
     Process {
         id: proc
-        running: false
-        stdout: SplitParser {
-            onRead: line => root._append(line)
-        }
-        stderr: SplitParser {
-            onRead: line => root._append(line)
-        }
-        onExited: (code) => root._done(code === 0)
+        command: [Paths.script("update-run.sh"), "attach"]
+        running: true
+        stdout: SplitParser { onRead: line => root._append(line) }
+        stderr: SplitParser { onRead: line => root._append(line) }
+        onExited: (code) => root._done(code)
     }
 
     Process {
         id: mirrorsProc
-        running: false
         stderr: StdioCollector {
             onStreamFinished: {
                 const t = String(this.text || "").trim();
@@ -134,10 +129,7 @@ Singleton {
         onTriggered: root.close()
     }
 
-    onWatchingChanged: {
-        if (root.watching)
-            root.refresh();
-    }
+    onWatchingChanged: if (root.watching) root.refresh()
 
     function drop(name: string) {
         const n = String(name || "");
@@ -174,7 +166,7 @@ Singleton {
         root.progress = -1;
         root.running = true;
         root.error = "";
-        proc.command = [Paths.modern, "update"];
+        proc.command = [Paths.script("update-run.sh"), "start"];
         proc.running = true;
     }
 
@@ -209,6 +201,10 @@ Singleton {
         const t = String(line || "").replace(/\u001b\[[0-9;]*m/g, "").split("\r").pop().trim();
         if (!t.length)
             return;
+        if (!root.running) {
+            root.open = true;
+            root.running = true;
+        }
         root.log += t + "\n";
         // The clock and INFO/OK stay in the log. The title is the message.
         const label = t.replace(/^\[[0-9:.T +-]+\]\s*/, "").replace(/^(?:INFO|OK|WARN|ERROR)\s+/, "").trim();
@@ -221,10 +217,17 @@ Singleton {
             root.progress = 0.1;
     }
 
-    function _done(ok: bool) {
+    // 75: no update to attach to. 3: a half-applied update was rolled back.
+    function _done(code: int) {
+        if (code === 75 && !root.running)
+            return;
+        const ok = code === 0;
         root.running = false;
         root.progress = ok ? 1 : -1;
-        root.notify(ok ? I18n.t("settings.update.success") : I18n.t("settings.update.failed"), root.step);
+        if (code === 3)
+            root.notify(I18n.t("settings.update.rolledBack"), I18n.t("settings.update.rolledBackBody"));
+        else
+            root.notify(ok ? I18n.t("settings.update.success") : I18n.t("settings.update.failed"), root.step);
         if (ok) {
             closeTimer.restart();
             root.refresh();
@@ -245,15 +248,8 @@ Singleton {
         root._markDesktopDone();
     }
 
-    function _markCheckDone() {
-        root._checkDone = true;
-        root._tryRebuild();
-    }
-
-    function _markDesktopDone() {
-        root._desktopDone = true;
-        root._tryRebuild();
-    }
+    function _markCheckDone() { root._checkDone = true; root._tryRebuild(); }
+    function _markDesktopDone() { root._desktopDone = true; root._tryRebuild(); }
 
     function _tryRebuild() {
         if (!root._checkDone || !root._desktopDone)

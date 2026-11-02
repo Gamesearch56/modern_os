@@ -49,6 +49,13 @@ it from snapshots explicitly.
 
 ## ESP copy hook
 
+`modern update` already mirrors the ESP (minus `EFI/`) into
+`/var/lib/modern/esp` right before its pre-update snapshot, so every
+"ModernOS Update" snapshot carries the kernel that matches its modules.
+`snapper-restore.sh` syncs that copy back to `/boot` after swapping `@`;
+without it, a restored `@` would boot the newer kernel on the ESP with
+no modules for it, and `/boot` itself would fail to mount.
+
 `install/system/pacman/hooks/esp-backup.hook` is staged with
 `Exec = /usr/bin/true` so an accidental install is a no-op. After
 review, point Exec at a copy of `/efi` or `/boot` onto another
@@ -73,6 +80,24 @@ If `backup.preUpdateSnapshot` is true, `modern update` takes a Snapper
 snapshot and runs `pacman -Syu` in **one** `pkexec` (`scripts/update-apply.sh`),
 after `desktop-sync.sh apply` when a newer release tag is pending. It still
 runs the desktop/package steps when snapper is missing — not Timeshift.
+
+Nothing the desktop does can cut pacman off halfway:
+
+- Settings starts `scripts/update-run.sh`, which runs `modern update` in
+  its own session with output in `$XDG_STATE_HOME/modern/update.log`.
+  Settings only follows that log and re-attaches after a shell reload or
+  crash.
+- `update-apply.sh` re-runs itself as the transient system service
+  `modern-system-update` under `systemd-inhibit` (shutdown, sleep,
+  idle). Logout, a dead shell or a closed pipe no longer kill it.
+- If pacman fails after it started changing packages, the pre-update
+  snapshot (with its ESP copy) is restored and Settings asks for a
+  restart. A run cut off anyway (power loss) leaves
+  `/var/lib/modern/update-snapshot`; the next update finishes the
+  transaction and reinstalls the kernel so its hooks run.
+- New installs load `vfat` from the initramfs
+  (`iso/airootfs/etc/mkinitcpio.conf.d/50-modern-esp.conf`), so `/boot`
+  mounts even when the modules on disk do not match the kernel.
 
 
 ## Restore kit

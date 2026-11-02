@@ -1048,6 +1048,8 @@
       "checkFailed": "Could not check for updates",
       "success": "System update finished",
       "failed": "System update failed",
+      "rolledBack": "System update undone",
+      "rolledBackBody": "The update stopped partway, so the system was restored to how it was before. Restart to finish.",
       "mirrorsDone": "Mirror list updated",
       "mirrorsFailed": "Could not update mirrors",
       "desktop": "ModernOS",

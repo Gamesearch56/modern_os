@@ -190,10 +190,7 @@ ModernNetPage::scanWifi()
         return;
     }
     ensureWifi();
-    if ( m_nm->wifiRadio() )
-    {
-        m_nm->scan();
-    }
+    m_nm->scan();
 }
 
 void
@@ -253,16 +250,42 @@ ModernNetPage::syncUi()
     {
         m_hint->setText( tr( "Searching for networks…" ) );
     }
+    else if ( m_nm->networks().isEmpty() )
+    {
+        m_hint->setText( emptyHint() );
+    }
     else
     {
         m_hint->setText( tr( "Connect to Wi-Fi to continue." ) );
     }
     m_stack->setCurrentWidget( m_wifiPage );
-    if ( !m_askedScan && m_nm->wifiRadio() && m_nm->networks().isEmpty() && !m_nm->scanning() )
+    if ( !m_askedScan && m_nm->networks().isEmpty() && !m_nm->scanning() )
     {
         m_askedScan = true;
         scanWifi();
     }
+}
+
+QString
+ModernNetPage::emptyHint() const
+{
+    const QString state = m_nm->wifiState();
+    const QString wired = tr( "Connect an Ethernet cable or share your phone's connection over USB." );
+    if ( state == QLatin1String( "blocked" ) )
+    {
+        return tr( "Wi-Fi is turned off with a switch or key on this computer. "
+                   "Turn it on, then choose Refresh." );
+    }
+    if ( state.startsWith( QLatin1String( "nodriver" ) ) )
+    {
+        return tr( "This computer's Wi-Fi chip (%1) has no driver in the installer. %2" )
+            .arg( state.section( QLatin1Char( ' ' ), 1, 1 ), wired );
+    }
+    if ( state == QLatin1String( "none" ) )
+    {
+        return tr( "No Wi-Fi adapter was found. %1" ).arg( wired );
+    }
+    return tr( "No networks found. Move closer to the router, then choose Refresh." );
 }
 
 QString
