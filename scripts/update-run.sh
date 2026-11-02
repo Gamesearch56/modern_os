@@ -7,6 +7,8 @@
 #   start   start unless running, then follow
 #   attach  follow a running update, or report one that finished while
 #           no shell was watching; exit 75 when there is none
+#   reload  restart the UI if the update left that to Settings, which
+#           calls it once the finished update has been on screen
 # Exit status is the update's.
 set -euo pipefail
 
@@ -15,6 +17,7 @@ STATE="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
 LOG="$STATE/update.log"
 PIDF="$STATE/update.pid"
 RCF="$STATE/update.rc"
+RELOAD="$STATE/reload-pending"
 NONE=75
 
 running_pid() {
@@ -42,7 +45,8 @@ follow() {
 
 cmd_run() {
     local rc=0
-    "${MODERN_BIN:-$SCRIPT_DIR/modern}" update </dev/null >>"$LOG" 2>&1 || rc=$?
+    MODERN_UPDATE_PROGRESS=1 MODERN_UPDATE_DEFER_RELOAD="$RELOAD" \
+        "${MODERN_BIN:-$SCRIPT_DIR/modern}" update </dev/null >>"$LOG" 2>&1 || rc=$?
     printf '%s\n' "$rc" >"$RCF.tmp"
     mv -f "$RCF.tmp" "$RCF"
     rm -f "$PIDF"
@@ -54,7 +58,7 @@ cmd_start() {
         follow "$pid"
     fi
     mkdir -p "$STATE"
-    rm -f "$RCF"
+    rm -f "$RCF" "$RELOAD"
     : >"$LOG"
     # Not a process-group leader under &, so setsid does not fork and $!
     # is the update's own pid.
@@ -71,16 +75,26 @@ cmd_attach() {
         follow "$pid"
     fi
     [ -f "$RCF" ] || exit "$NONE"
+    # This shell started after the update finished, so it already runs
+    # the new release.
+    rm -f "$RELOAD"
     tail -n 1 "$LOG" 2>/dev/null || true
     report
+}
+
+cmd_reload() {
+    [ -f "$RELOAD" ] || exit 0
+    rm -f "$RELOAD"
+    setsid -f "${MODERN_RELOAD_UI:-$SCRIPT_DIR/reload-ui.sh}" </dev/null >/dev/null 2>&1
 }
 
 case "${1:-}" in
     start) cmd_start ;;
     attach) cmd_attach ;;
+    reload) cmd_reload ;;
     _run) cmd_run ;;
     *)
-        printf 'usage: update-run.sh start|attach\n' >&2
+        printf 'usage: update-run.sh start|attach|reload\n' >&2
         exit 2
         ;;
 esac

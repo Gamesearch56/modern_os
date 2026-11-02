@@ -12,15 +12,22 @@
 # succeeds: a cancelled auth prompt is retried by the next update even
 # though the desktop release no longer shows as pending.
 
+# Stage markers for Settings (Services/UpdateProgress.qml); update-run.sh
+# asks for them. A terminal update prints none.
+_update_progress() {
+    [ -z "${MODERN_UPDATE_PROGRESS:-}" ] || printf '@@progress %s\n' "$*"
+}
+
 modern_update() {
     local state="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
-    local plan="$state/root-plan" desk_json desk_to="" has_pkgs=0 snap_flag rc=0
+    local plan="$state/root-plan" desk_json desk_to="" pkgs=0 snap_flag rc=0
     mkdir -p "$state"
 
     if [ -x "$SCRIPT_DIR/desktop-sync.sh" ]; then
         desk_json="$("$SCRIPT_DIR/desktop-sync.sh" status 2>/dev/null || true)"
         desk_to="$(printf '%s' "$desk_json" | _update_json_field pending to)"
         if [ -n "$desk_to" ]; then
+            _update_progress desktop
             if [ -t 0 ]; then
                 "$SCRIPT_DIR/desktop-sync.sh" apply || return 1
             else
@@ -31,11 +38,11 @@ modern_update() {
         fi
     fi
 
-    if command -v checkupdates >/dev/null 2>&1 && checkupdates 2>/dev/null | grep -q .; then
-        has_pkgs=1
+    if command -v checkupdates >/dev/null 2>&1; then
+        pkgs="$(checkupdates 2>/dev/null | grep -c . || true)"
     fi
 
-    if [ "$has_pkgs" -eq 1 ] || [ -s "$plan" ]; then
+    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ]; then
         if [ -t 0 ]; then
             _update_tty "$plan" || return 1
         else
@@ -45,9 +52,13 @@ modern_update() {
                 t cli.snapshotting
             fi
             ensure_polkit_agent || true
-            local plan_args=()
-            [ -s "$plan" ] && plan_args=(--root-plan "$plan")
-            "${MODERN_PKEXEC:-pkexec}" "$SCRIPT_DIR/update-apply.sh" "$snap_flag" "${plan_args[@]}" || rc=$?
+            local extra=()
+            [ -s "$plan" ] && extra=(--root-plan "$plan")
+            if [ -n "${MODERN_UPDATE_PROGRESS:-}" ]; then
+                extra+=(--progress)
+                _update_progress system "${pkgs:-0}"
+            fi
+            "${MODERN_PKEXEC:-pkexec}" "$SCRIPT_DIR/update-apply.sh" "$snap_flag" "${extra[@]}" || rc=$?
             [ "$rc" -eq 0 ] || return "$rc"
         fi
         rm -f "$plan"
@@ -58,6 +69,12 @@ modern_update() {
     printf '%s\n' "$desk_to" >"$state/update-applied"
     local reload="${MODERN_RELOAD_UI:-$SCRIPT_DIR/reload-ui.sh}"
     [ -x "$reload" ] || return 0
+    # Settings shows the finished update first, then runs
+    # `update-run.sh reload`.
+    if [ -n "${MODERN_UPDATE_DEFER_RELOAD:-}" ]; then
+        : >"$MODERN_UPDATE_DEFER_RELOAD"
+        return 0
+    fi
     if [ -t 0 ]; then
         "$reload" || true
     else

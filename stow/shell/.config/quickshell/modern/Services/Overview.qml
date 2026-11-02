@@ -18,6 +18,9 @@ Singleton {
         target: "overview"
         function toggle() { root.toggle(); }
         function show() { root.show(); }
+        // `qs ipc call overview show` is read as qs's own `show` command
+        // (it lists the target); callers use open.
+        function open() { root.show(); }
         function hide() { root.hide(); }
     }
 }

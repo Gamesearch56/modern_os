@@ -65,4 +65,20 @@ if [ -z "${lat:-}" ] || [ -z "${lon:-}" ] || [ "$lat" = "null" ] || [ "$lon" = "
     exit 1
 fi
 
-curl_json "https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,relative_humidity_2m,wind_speed_10m,apparent_temperature,precipitation,cloud_cover,pressure_msl&hourly=temperature_2m,weather_code,precipitation_probability,wind_speed_10m,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,uv_index_max,sunrise,sunset&forecast_days=7&timezone=auto&temperature_unit=${TEMP_UNIT}&wind_speed_unit=${WIND_UNIT}&precipitation_unit=${PRECIP_UNIT}"
+if out="$(curl_json "https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,relative_humidity_2m,wind_speed_10m,apparent_temperature,precipitation,cloud_cover,pressure_msl&hourly=temperature_2m,weather_code,precipitation_probability,wind_speed_10m,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,uv_index_max,sunrise,sunset&forecast_days=7&timezone=auto&temperature_unit=${TEMP_UNIT}&wind_speed_unit=${WIND_UNIT}&precipitation_unit=${PRECIP_UNIT}")"; then
+    printf '%s\n' "$out"
+    exit 0
+fi
+
+# Open-Meteo answers 503 when it is overloaded, for every location. MET
+# Norway's terms require an identifying User-Agent and at most four
+# decimals in the coordinates (more is a 403).
+echo "weather-fetch: Open-Meteo failed, using MET Norway" >&2
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+lat4="$(LC_NUMERIC=C printf '%.4f' "$lat")"
+lon4="$(LC_NUMERIC=C printf '%.4f' "$lon")"
+curl -fsS --max-time 12 --retry 2 --retry-delay 2 -o "$tmp" \
+    -A "ModernOS-weather/1.0 https://github.com/Gamesearch56/modern_dotfile" \
+    "https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${lat4}&lon=${lon4}"
+python3 "$(dirname "$0")/weather-metno.py" "$tmp" "$lat4" "$lon4" "$UNITS"

@@ -196,7 +196,69 @@ if [ "$rc" -eq 3 ]; then
 else
     err "start rc $rc"
 fi
+
+# A release leaves the UI restart to Settings, which runs `reload` after
+# showing 100%. A shell that starts after the update already runs it.
+# shellcheck disable=SC2016
+printf '#!/bin/sh\n: >"$MODERN_UPDATE_DEFER_RELOAD"\n' >"$BIN/fake-modern"
+printf '#!/bin/sh\n: >"%s/reloaded"\n' "$TMP" >"$BIN/fake-reload"
+chmod +x "$BIN/fake-modern" "$BIN/fake-reload"
+pending="$XDG_STATE_HOME/modern/reload-pending"
+"$RUN" start >/dev/null 2>&1 || true
+if [ -f "$pending" ]; then
+    MODERN_RELOAD_UI="$BIN/fake-reload" "$RUN" reload
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        [ -f "$TMP/reloaded" ] && break
+        sleep 0.1
+    done
+fi
+if [ -f "$TMP/reloaded" ] && [ ! -f "$pending" ]; then
+    ok "the UI restart waits for Settings and runs once"
+else
+    err "deferred reload did not run through update-run.sh reload"
+fi
+: >"$pending"
+echo 0 >"$XDG_STATE_HOME/modern/update.rc"
+"$RUN" attach >/dev/null 2>&1 || true
+[ ! -f "$pending" ] || err "a shell started after the update must not reload again"
 unset MODERN_BIN
+
+# The unit's output reaches the caller in full, even what pacman prints
+# in its last moment, and its exit status comes back.
+if [ -d /run/systemd/system ]; then
+    DBIN="$TMP/detach-bin"
+    mkdir -p "$DBIN"
+    # shellcheck disable=SC2016
+    printf '#!/bin/sh\n[ "$1" = is-active ] && exit 1\nexit 0\n' >"$DBIN/systemctl"
+    cat >"$DBIN/systemd-run" <<'EOF'
+#!/bin/sh
+out=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --property=StandardOutput=append:*) out="${1#--property=StandardOutput=append:}" ;;
+        --) shift; break ;;
+    esac
+    shift
+done
+"$@" >>"$out" 2>&1
+EOF
+    # shellcheck disable=SC2016
+    printf '#!/bin/sh\nwhile [ "${1#--}" != "$1" ]; do shift; done\nexec "$@"\n' >"$DBIN/systemd-inhibit"
+    printf '#!/bin/sh\necho first\nsleep 0.5\necho last\nexit 4\n' >"$DBIN/job"
+    chmod +x "$DBIN"/*
+    rc=0
+    out="$(
+        unset MODERN_UPDATE_UNIT
+        # shellcheck source=lib/update-guard.sh
+        source "$ROOT/scripts/lib/update-guard.sh"
+        UPDATE_OUT="$TMP/unit.log" PATH="$DBIN:$PATH" update_guard_detach "$DBIN/job"
+    )" || rc=$?
+    if [ "$rc" -eq 4 ] && [ "$out" = "$(printf 'first\nlast')" ]; then
+        ok "the system step's output arrives complete with its exit status"
+    else
+        err "detach gave rc=$rc output='$out'"
+    fi
+fi
 
 if (
     # shellcheck source=lib/update-guard.sh
