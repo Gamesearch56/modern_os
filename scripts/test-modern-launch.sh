@@ -119,6 +119,8 @@ if grep -Fq 'move_to_background' "$SESSION" \
     && ! grep -Fq 'gnome-keyring-hyprland' "$ROOT/stow/xdg/.config/xdg-desktop-portal/hyprland-portals.conf" \
     && ! grep -Fq 'gnome-keyring-hyprland' "$ROOT/install/system/portals/hyprland-portals.conf" \
     && [ ! -e "$ROOT/stow/xdg/.local/share/xdg-desktop-portal/portals/gnome-keyring-hyprland.portal" ] \
+    && grep -Fq 'initialClass' "$ROOT/stow/hypr/.config/hypr/modules/session_match.lua" \
+    && grep -Fq 'window = w' "$SESSION" \
     && ! grep -Fq 'session-park' "$SESSION" \
     && ! grep -Fq 'move_bg' "$SESSION" \
     && ! grep -Fq 'arm_park' "$SESSION" \

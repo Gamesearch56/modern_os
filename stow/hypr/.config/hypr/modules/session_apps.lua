@@ -1,7 +1,8 @@
 -- Session autostart: spawn on login/respawn onto special:background.
--- Per-app Vivaldi profiles (session_direct_apps) so each process inherits
--- exec_cmd workspace rules. Spawn expect finishes placement when a marked
--- window maps off special — Super+Q / taskbar still own interactive park.
+-- Mail, calendar, and WhatsApp are one Vivaldi process (--app windows).
+-- A process-wide workspace rule would also hide the browser, so each
+-- mapped app window is moved after it has a class. Super+Q / taskbar
+-- still own interactive park.
 local config = require("modules.config")
 local paths = require("modules.paths")
 local layout = require("modules.workspaces_layout")
@@ -115,19 +116,27 @@ local function on_special(w)
 end
 
 local function move_to_background(w)
-    if not (hl.dsp and hl.dsp.window and hl.dsp.window.move) then
+    if not (hl.dispatch and hl.dsp and hl.dsp.window and hl.dsp.window.move) then
+        return
+    end
+    -- The special workspace has to sit on the primary output or the
+    -- window move is a no-op and the app stays on workspace 1.
+    pin_background()
+    -- A window object is what the compositor accepts. An address string
+    -- without the 0x prefix is a silent no-op.
+    local spec = { workspace = "special:background", follow = false, window = w }
+    local moved = pcall(hl.dispatch, hl.dsp.window.move(spec))
+    if moved then
         return
     end
     local addr = tostring(w and w.address or ""):gsub("^address:", "")
     if addr ~= "" and not addr:lower():find("^0x") then
         addr = "0x" .. addr
     end
-    local spec = { workspace = "special:background", follow = false }
-    if addr ~= "" then
-        spec.window = "address:" .. addr
-    else
-        spec.window = w
+    if addr == "" then
+        return
     end
+    spec.window = "address:" .. addr
     pcall(hl.dispatch, hl.dsp.window.move(spec))
 end
 
@@ -180,6 +189,34 @@ local function launch_name(name)
     end
 end
 
+-- The app class often arrives after the first map event. While the
+-- spawn mark is set, look again so a late class still leaves workspace 1.
+local function retry_background()
+    if not hl.get_windows then
+        return
+    end
+    local wins = hl.get_windows()
+    if type(wins) ~= "table" then
+        return
+    end
+    for i = 1, #wins do
+        local w = wins[i]
+        if type(w) == "table" then
+            on_window(w)
+        end
+    end
+end
+
+local function arm_background_retries()
+    if not hl.timer then
+        retry_background()
+        return
+    end
+    for _, wait in ipairs({ 600, 1800, 4500 }) do
+        hl.timer(retry_background, { timeout = wait, type = "oneshot" })
+    end
+end
+
 local function start_apps()
     pin_background()
     local list = autostart_ids()
@@ -200,6 +237,7 @@ local function start_apps()
             delay = delay + 200
         end
     end
+    arm_background_retries()
 end
 
 -- Vivaldi checks for a notification service once, at launch. If mail
@@ -238,7 +276,9 @@ function M.on_start()
     end
 end
 
-if hl.on then
+if hl.on and not _G.__modern_session_hooked then
+    _G.__modern_session_hooked = true
+    hl.on("window.open_early", on_window)
     hl.on("window.open", on_window)
     hl.on("window.class", on_window)
     hl.on("window.title", on_window)
@@ -300,6 +340,40 @@ if hl.timer then
     hl.timer(seed_open, { timeout = 300, type = "oneshot" })
 else
     seed_open()
+end
+
+-- Windows already mapped on workspace 1 (a reload, or a class that
+-- arrived before this module) are not spawn-marked. Park those once.
+local function park_open_apps()
+    if not hl.get_windows then
+        return
+    end
+    local wins = hl.get_windows()
+    if type(wins) ~= "table" then
+        return
+    end
+    local list = wins
+    if #wins == 0 then
+        list = {}
+        for _, w in pairs(wins) do
+            list[#list + 1] = w
+        end
+    end
+    for i = 1, #list do
+        local w = list[i]
+        if type(w) == "table" and desktop_for_window(w) ~= "" and not on_special(w) then
+            move_to_background(w)
+        end
+    end
+end
+
+if not _G.__modern_bg_initial_park then
+    _G.__modern_bg_initial_park = true
+    if hl.timer then
+        hl.timer(park_open_apps, { timeout = 400, type = "oneshot" })
+    else
+        park_open_apps()
+    end
 end
 
 return M

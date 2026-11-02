@@ -58,8 +58,10 @@ function M.window_matches(w, desktop_id)
     local fields = {
         w.class,
         w.initial_class,
+        w.initialClass,
         w.title,
         w.initial_title,
+        w.initialTitle,
     }
     for _, raw in ipairs(fields) do
         if M.field_matches(raw, desktop_id) then
