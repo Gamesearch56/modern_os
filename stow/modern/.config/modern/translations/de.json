@@ -1079,7 +1079,9 @@
       "desktopUnavailable": "Desktop-Update konnte nicht geprüft werden",
       "changelog": "Änderungen",
       "desktopApplied": "ModernOS auf {v} aktualisiert",
-      "desktopAppliedBody": "Der Desktop wurde mit der neuen Version neu geladen."
+      "desktopAppliedBody": "Der Desktop wurde mit der neuen Version neu geladen.",
+      "packagesDone": "{n} Pakete aktualisiert",
+      "packageDone": "1 Paket aktualisiert"
     },
     "overview": {
       "stats": "Live-Werte",

@@ -24,6 +24,19 @@ QtObject {
         return n === "vivaldi" ? "web-browser" : "package-x-generic-symbolic";
     }
 
+    // A desktop release announces itself after the reload ("ModernOS
+    // updated to …"), so a run that carried one stays quiet here.
+    function doneSummary(ran): string {
+        const list = ran || [];
+        if (list.some(p => String(p && p.kind || "") === "desktop"))
+            return "";
+        if (list.length === 1)
+            return I18n.t("settings.update.packageDone");
+        return list.length > 1
+            ? I18n.t("settings.update.packagesDone", ({ n: String(list.length) }))
+            : I18n.t("settings.update.success");
+    }
+
     function stem(id: string): string {
         return String(id || "").replace(/\.desktop$/i, "").replace(/^org\.kde\./, "").replace(/^org\.gnome\./, "").replace(/-stable$/, "").toLowerCase();
     }

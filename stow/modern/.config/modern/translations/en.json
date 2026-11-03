@@ -1079,7 +1079,9 @@
       "desktopUnavailable": "Could not check for a desktop update",
       "changelog": "Changelog",
       "desktopApplied": "ModernOS updated to {v}",
-      "desktopAppliedBody": "The desktop was reloaded with the new release."
+      "desktopAppliedBody": "The desktop was reloaded with the new release.",
+      "packagesDone": "{n} packages updated",
+      "packageDone": "1 package updated"
     },
     "overview": {
       "stats": "Live stats",
