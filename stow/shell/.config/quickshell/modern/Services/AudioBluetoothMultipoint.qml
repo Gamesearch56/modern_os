@@ -12,7 +12,7 @@ QtObject {
 
     property var audio: null
     property var btAuto: null
-    readonly property bool enabled: !!(audio && audio.autoBluetooth)
+    readonly property bool enabled: !!(audio && audio.autoBluetooth && !audio.outputPinned)
     // Linear peak. Silence and a muted tab sit under this; speech does not.
     readonly property real soundFloor: 0.015
 

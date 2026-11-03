@@ -213,6 +213,7 @@
     "fallbackSource": "",
     "lastSink": "",
     "lastSource": "",
+    "pinOutput": false,
     "perAppVolume": {},
     "masterVolume": -1,
     "masterVolumeLimit": 100

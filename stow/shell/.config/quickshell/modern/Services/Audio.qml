@@ -15,6 +15,9 @@ Singleton {
     readonly property PwNode source: Pipewire.defaultAudioSource
     readonly property var nodes: Pipewire.nodes
     readonly property bool autoBluetooth: (Config.audio.autoSwitchBluetooth || "on") === "on"
+    // A wired output picked by hand: no Bluetooth auto-routing until a
+    // headset is picked or connected by hand (Bluetooth.connectDevice).
+    readonly property bool outputPinned: Config.audio.pinOutput === true
     readonly property int volumeCap: Config.audio.masterVolumeLimit ?? 100
 
     AudioBluetooth {
@@ -244,6 +247,11 @@ Singleton {
     function setDefaultSink(node: var) {
         Pipewire.preferredDefaultAudioSink = node;
         btAuto.remember(node, true);
+    }
+
+    function chooseSink(node: var) {
+        ConfigWrite.set("audio.pinOutput", !!node && !btAuto.isBluetoothNode(node));
+        root.setDefaultSink(node);
     }
 
     function setDefaultSource(node: var) {

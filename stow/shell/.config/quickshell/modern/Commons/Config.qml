@@ -230,6 +230,7 @@ Singleton {
                 property string fallbackSource: ""
                 property string lastSink: ""
                 property string lastSource: ""
+                property bool pinOutput: false
                 property var perAppVolume: ({})
                 property int masterVolume: -1
                 property int masterVolumeLimit: 100

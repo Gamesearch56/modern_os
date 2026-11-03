@@ -45,7 +45,7 @@ QtObject {
     }
     readonly property bool parked: hold.isHold(hold.audio ? hold.audio.sink : null)
     readonly property bool active: !!(hold.headset && hold.node && hold.audio
-        && hold.audio.autoBluetooth && Bluetooth.powered)
+        && hold.audio.autoBluetooth && !hold.audio.outputPinned && Bluetooth.powered)
 
     onConnectedChanged: {
         if (hold.connected)
