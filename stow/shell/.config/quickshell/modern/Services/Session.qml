@@ -1,6 +1,12 @@
 // Lock / greeter / shutdown overlay state. `locked` drives
 // WlSessionLock (ext_session_lock_v1) in Modules/Session. `password`
 // is shared across every lock surface so typing stays in sync.
+//
+// A shell reload (updates run reload-ui.sh) or crash while locked would
+// start the new shell unlocked, leaving Hyprland's lock without a live
+// surface. A marker in XDG_RUNTIME_DIR (gone at logout/reboot) is read
+// synchronously before WlSessionLock binds, so the new shell starts
+// locked; Hyprland's misc:allow_session_lock_restore lets it take over.
 pragma Singleton
 
 import Quickshell
@@ -11,7 +17,20 @@ import "../Commons"
 Singleton {
     id: root
 
-    property bool locked: false
+    readonly property string _runtime: Quickshell.env("XDG_RUNTIME_DIR") || ""
+
+    FileView {
+        id: marker
+        path: root._runtime.length ? `${root._runtime}/modern-session-locked` : ""
+        blockLoading: true
+        printErrors: false
+    }
+
+    property bool locked: marker.path.length > 0 && marker.text().trim() === "1"
+    onLockedChanged: {
+        if (marker.path.length)
+            marker.setText(root.locked ? "1" : "");
+    }
     property string mode: "lock"
     property string pendingAction: ""
     property string lastError: ""

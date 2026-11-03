@@ -88,6 +88,15 @@ else
     err "idleSuspend/powerMenu.suspend: en=$idle_en/$menu_en de=$idle_de/$menu_de"
 fi
 
+SESSION="$ROOT/stow/shell/.config/quickshell/modern/Services/Session.qml"
+if grep -Fq 'modern-session-locked' "$SESSION" \
+    && grep -Fq 'blockLoading: true' "$SESSION" \
+    && grep -Fq 'allow_session_lock_restore = true' "$ROOT/stow/hypr/.config/hypr/modules/general.lua"; then
+    ok "a shell reload or crash while locked comes back locked"
+else
+    err "lock must survive a shell reload (runtime marker + allow_session_lock_restore)"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi
