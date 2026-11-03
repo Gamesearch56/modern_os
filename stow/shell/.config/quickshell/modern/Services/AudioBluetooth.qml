@@ -1,8 +1,9 @@
-// When audio.autoSwitchBluetooth is on, a newly appeared BlueZ *sink*
-// becomes the PipeWire default (A2DP). The BlueZ source is never made
-// default automatically — that forces HFP and blocks phone multipoint.
-// On disconnect, an explicit fallback wins; otherwise the last
-// non-Bluetooth endpoint is restored. Startup endpoints are left alone.
+// When audio.autoSwitchBluetooth is on, a Bluetooth *sink* that appears
+// (the headset connected) becomes the PipeWire default (A2DP); when it
+// goes away, an explicit fallback wins, otherwise the last
+// non-Bluetooth speaker is restored. The BlueZ source is never made
+// default automatically — that forces HFP. Endpoints already present
+// at startup are left alone, and nothing here connects a headset.
 import Quickshell
 import QtQuick
 import "../Commons"
@@ -33,10 +34,6 @@ QtObject {
     property string btSourceId: ""
     property bool _applying: false
     property int _settle: 0
-    // Set while sound is actually playing. A new BlueZ sink must not
-    // become the speaker just because a browser opened a silent stream.
-    property bool wantSink: false
-    readonly property AudioBluetoothHold hold: AudioBluetoothHold { audio: bt.audio; bt: bt }
 
     // USB mics (FOX) often expose a playback node on the same card.
     // WirePlumber follows the source onto that sink after BT drops;
@@ -85,7 +82,7 @@ QtObject {
     }
 
     function remember(n: var, isSink: bool) {
-        if (!n || bt.hold.isHold(n))
+        if (!n)
             return;
         const id = (isSink ? "k" : "c") + n.id;
         if (bt.isBluetoothNode(n)) {
@@ -143,7 +140,7 @@ QtObject {
 
     function applyFallback(isSink: bool) {
         const a = bt.audio;
-        if (!a || (isSink && bt.hold.parked && bt.hold.active))
+        if (!a)
             return;
         const want = bt._want(isSink);
         if (!want.length)
@@ -206,7 +203,6 @@ QtObject {
             return;
         const now = {};
         const freshSinks = [];
-        const freshSources = [];
         const sinks = a.sinks;
         for (let i = 0; i < sinks.length; i++) {
             const id = "k" + sinks[i].id;
@@ -215,12 +211,8 @@ QtObject {
                 freshSinks.push(sinks[i]);
         }
         const sources = a.sources;
-        for (let j = 0; j < sources.length; j++) {
-            const id = "c" + sources[j].id;
-            now[id] = { bt: bt.isBluetoothNode(sources[j]), sink: false };
-            if (!bt.seen[id])
-                freshSources.push(sources[j]);
-        }
+        for (let j = 0; j < sources.length; j++)
+            now["c" + sources[j].id] = { bt: bt.isBluetoothNode(sources[j]), sink: false };
         if (!bt.primed) {
             if (Object.keys(now).length === 0)
                 return;
@@ -231,10 +223,8 @@ QtObject {
             return;
         }
         const prev = bt.seen;
-        const goneBtSink = bt._goneBluetooth(prev, now, true);
-        const goneBtSource = bt._goneBluetooth(prev, now, false);
         let tookBt = false;
-        if (bt.enabled && (bt.wantSink || Bluetooth.userSink)) {
+        if (bt.enabled) {
             for (let s = 0; s < freshSinks.length; s++) {
                 if (bt.isBluetoothNode(freshSinks[s])) {
                     bt._stopSettle();
@@ -244,8 +234,8 @@ QtObject {
                 }
             }
         }
-        const dropSink = goneBtSink && bt.btSinkId.length && !now[bt.btSinkId];
-        const dropSource = goneBtSource && bt.btSourceId.length && !now[bt.btSourceId];
+        const dropSink = bt._goneBluetooth(prev, now, true) && bt.btSinkId.length && !now[bt.btSinkId];
+        const dropSource = bt._goneBluetooth(prev, now, false) && bt.btSourceId.length && !now[bt.btSourceId];
         if (!tookBt && (dropSink || dropSource))
             bt._armSettle();
         bt.seen = now;

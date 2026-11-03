@@ -1,35 +1,29 @@
 #!/usr/bin/env bash
-# Headphones follow audible playback, not an open browser media player.
+# Auto-switch follows the headset's connection: its sink appearing makes
+# it the speaker, its sink going away restores the previous one. Nothing
+# connects a headset or moves the output while it is not connected.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-MP="$ROOT/stow/shell/.config/quickshell/modern/Services/AudioBluetoothMultipoint.qml"
-BT="$ROOT/stow/shell/.config/quickshell/modern/Services/AudioBluetooth.qml"
-WP="$ROOT/stow/pipewire/.config/wireplumber/wireplumber.conf.d/51-bluetooth.conf"
-HOLD="$ROOT/stow/shell/.config/quickshell/modern/Services/AudioBluetoothHold.qml"
-HOLD_CONF="$ROOT/stow/pipewire/.config/pipewire/pipewire.conf.d/60-modern-headset-hold.conf"
-AUDIO="$ROOT/stow/shell/.config/quickshell/modern/Services/Audio.qml"
+SVC="$ROOT/stow/shell/.config/quickshell/modern/Services"
+BT="$SVC/AudioBluetooth.qml"
 FAIL=0
 err() { printf 'test-audio-bluetooth: FAIL %s\n' "$*" >&2; FAIL=1; }
 
-grep -q 'PwNodePeakMonitor' "$MP" || err "peak monitor missing"
-grep -q 'soundFloor' "$MP" || err "silence floor missing"
-grep -q 'wantSink' "$BT" || err "sink grab is not gated on audible playback"
-grep -q 'userSink' "$BT" || err "manual connect is not distinguished"
-grep -q 'bluez5.dummy-avrcp-player = true' "$WP" || err "AVRCP playback player missing"
-grep -q 'session.suspend-timeout-seconds = 5' "$WP" || err "idle A2DP must suspend"
-if grep -q 'disconnectDevice' "$MP"; then
-    err "idle must route away, not drop the multipoint connection"
+grep -q 'freshSinks' "$BT" || err "a newly connected headset does not become the speaker"
+grep -q '_armSettle' "$BT" || err "a disconnect does not restore the previous speaker"
+grep -q 'audio.lastSink' "$BT" || err "the previous speaker is not remembered"
+if grep -q 'connectDevice' "$BT"; then
+    err "auto-switch must not connect a headset itself"
 fi
-grep -q '_hasSink' "$MP" || err "a link without a sink is not reconnected"
-grep -q '_btSinkVolume' "$MP" || err "a headset restored at 0 volume stays silent"
-grep -q 'hold.park()' "$MP" || err "idle routes to the speakers instead of the headset hold"
-grep -q 'node.name = "modern.headset-hold"' "$HOLD_CONF" || err "headset hold sink missing"
-grep -q "nodeName: \"modern.headset-hold\"" "$HOLD" || err "hold service does not match the sink name"
-grep -q 'hold.isHold(n)' "$AUDIO" || err "hold sink is listed as a device"
-grep -q 'bt.hold.isHold(n)' "$BT" || err "hold sink is remembered as the last speaker"
-if grep -q 'session.suspend-timeout-seconds = 0' "$WP"; then
-    err "idle A2DP transport is pinned"
+for gone in AudioBluetoothMultipoint.qml AudioBluetoothHold.qml; do
+    [ ! -e "$SVC/$gone" ] || err "$gone still routes audio without a connected headset"
+    if grep -q "${gone%.qml}" "$SVC/qmldir" "$SVC/Audio.qml"; then
+        err "${gone%.qml} is still registered"
+    fi
+done
+if grep -rq 'connectDevice(.*, ' "$ROOT/stow/shell/.config/quickshell/modern"; then
+    err "connectDevice callers still pass the removed fromUser flag"
 fi
 for lang in en de; do
     jq -e '.settings.hints.autoSwitchBluetooth | length > 0' \
