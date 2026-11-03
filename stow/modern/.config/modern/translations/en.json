@@ -1107,7 +1107,7 @@
       "initrd": "Initrd",
       "userspace": "Userspace",
       "osNameVersion": "ModernOS {version} (Arch Linux)",
-      "osNameDev": "ModernOS development build {commit} (Arch Linux)"
+      "osNameDev": "ModernOS {version}, development build {commit} (Arch Linux)"
     },
     "bar": {
       "available": "Available widgets",

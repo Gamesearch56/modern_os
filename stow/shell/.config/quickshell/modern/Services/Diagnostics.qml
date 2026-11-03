@@ -15,14 +15,16 @@ Singleton {
     property string memory: ""
     property string board: ""
     property string disk: ""
-    // Release tag the desktop checkout sits on (updates check out tags);
-    // a clone between tags shows its commit instead.
+    // Release tag the desktop checkout sits on (updates check out tags).
+    // A clone between tags shows the last release before it plus its
+    // commit; release tags sit on main's merges, so describe misses them.
     property string version: ""
+    property string base: ""
     property string commit: ""
     readonly property string os: root.version.length
         ? I18n.t("settings.overview.osNameVersion", { version: root.version })
-        : (root.commit.length
-            ? I18n.t("settings.overview.osNameDev", { commit: root.commit })
+        : (root.base.length && root.commit.length
+            ? I18n.t("settings.overview.osNameDev", { version: root.base, commit: root.commit })
             : I18n.t("settings.overview.osName"))
     property string kernel: ""
     property string wm: ""
@@ -106,6 +108,7 @@ Singleton {
         root.kernel = m.kernel || "";
         root.wm = m.wm || "";
         root.version = m.version || "";
+        root.base = m.base || "";
         root.commit = m.commit || "";
         const shell = (m.shell || "").trim();
         root.shell = (shell.length > 0 && shell.length <= 80) ? shell : "Quickshell";
@@ -160,7 +163,7 @@ Singleton {
     Process {
         id: swProc
         environment: ({ MODERN_REPO: Paths.repo })
-        command: ["sh", "-c", "printf 'version\\t%s\\n' \"$(git -C \"$MODERN_REPO\" describe --tags --exact-match 2>/dev/null)\"; printf 'commit\\t%s\\n' \"$(git -C \"$MODERN_REPO\" rev-parse --short HEAD 2>/dev/null)\"; printf 'kernel\\t%s\\n' \"$(uname -r)\"; printf 'wm\\t%s\\n' \"$(hyprland --version 2>/dev/null | head -1 | sed 's/ built from.*//')\"; shell=$(qs --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=$(quickshell --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=Quickshell; printf 'shell\\t%s\\n' \"$shell\""]
+        command: ["sh", "-c", "printf 'version\\t%s\\n' \"$(git -C \"$MODERN_REPO\" describe --tags --exact-match 2>/dev/null)\"; printf 'base\\t%s\\n' \"$(git -C \"$MODERN_REPO\" tag -l 'v*' --sort=-v:refname --no-contains HEAD 2>/dev/null | head -1)\"; printf 'commit\\t%s\\n' \"$(git -C \"$MODERN_REPO\" rev-parse --short HEAD 2>/dev/null)\"; printf 'kernel\\t%s\\n' \"$(uname -r)\"; printf 'wm\\t%s\\n' \"$(hyprland --version 2>/dev/null | head -1 | sed 's/ built from.*//')\"; shell=$(qs --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=$(quickshell --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=Quickshell; printf 'shell\\t%s\\n' \"$shell\""]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parseSw(this.text)
