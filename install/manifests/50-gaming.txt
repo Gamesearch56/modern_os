@@ -4,4 +4,3 @@ protontricks               # winetricks helpers scoped to individual Proton pref
 proton-vpn-gtk-app         # Proton VPN GUI client (Services/Vpn talks to its NM connection)
 mangohud                   # in-game performance overlay, used by game profiles (docs/GAMING.md)
 lib32-gamemode             # 32-bit GameMode hook for older titles
-umu-launcher               # Proton outside Steam (Battle.net umu-run / GE-Proton via umu)
