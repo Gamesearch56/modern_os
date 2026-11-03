@@ -46,6 +46,21 @@ ensure_patched_phylax() {
     bash "$script"
 }
 
+# True unless the running agent was started for another logind session
+# than this caller's. Unknown on either side counts as a match.
+polkit_agent_in_session() {
+    local want pid have
+    want="${XDG_SESSION_ID:-}"
+    if [ -z "$want" ] && command -v loginctl >/dev/null 2>&1; then
+        want="$(loginctl show-user "$(id -un)" -p Display --value 2>/dev/null || true)"
+    fi
+    pid="$(systemctl --user show -p MainPID --value "$POLKIT_AGENT_UNIT" 2>/dev/null || true)"
+    [ -n "$want" ] && [ -n "$pid" ] && [ "$pid" != 0 ] || return 0
+    have="$(tr '\0' '\n' <"${POLKIT_AGENT_PROC:-/proc}/$pid/environ" 2>/dev/null \
+        | sed -n 's/^XDG_SESSION_ID=//p' | head -n1 || true)"
+    [ -z "$have" ] || [ "$have" = "$want" ]
+}
+
 ensure_polkit_agent() {
     command -v systemctl >/dev/null 2>&1 || return 1
     ensure_patched_phylax || true
@@ -55,7 +70,11 @@ ensure_polkit_agent() {
     fi
     systemctl --user reset-failed "$POLKIT_AGENT_UNIT" >/dev/null 2>&1 || true
     if systemctl --user is-active "$POLKIT_AGENT_UNIT" >/dev/null 2>&1; then
-        return 0
+        polkit_agent_in_session && return 0
+        # Registered for a session that has ended (Restart= after a
+        # compositor crash runs before the new login exists): polkit
+        # finds no agent for this one and pkexec falls back to /dev/tty.
+        systemctl --user restart "$POLKIT_AGENT_UNIT" >/dev/null 2>&1 || true
     fi
     systemctl --user start "$POLKIT_AGENT_UNIT" >/dev/null 2>&1 || true
     if ! systemctl --user is-active "$POLKIT_AGENT_UNIT" >/dev/null 2>&1; then

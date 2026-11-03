@@ -33,6 +33,8 @@ hl.on("hyprland.start", function()
         .. "i=0; while ! awww img \"$img\" --transition-type none; do i=$((i+1)); [ \"$i\" -gt 20 ] && exit 0; sleep 0.15; done'")
 
     -- Background: import/dbus/polkit overlap; phylax waits on them.
+    -- restart, not start: after a compositor crash Restart= has already
+    -- brought phylax up for the old session, and start would keep it.
     hl.exec_cmd("sh -lc '("
         .. "if systemctl --user is-enabled --quiet modern-shell.service 2>/dev/null "
         .. "|| systemctl --user is-active --quiet modern-shell.service; then "
@@ -43,7 +45,7 @@ hl.on("hyprland.start", function()
         .. "wait; "
         .. "timeout 1 systemctl --user daemon-reload || true; "
         .. "timeout 1 systemctl --user reset-failed phylax.service || true; "
-        .. "timeout 1 systemctl --user start phylax || true) &'")
+        .. "timeout 3 systemctl --user restart phylax || true) &'")
 
     hl.exec_cmd("sh -lc '" .. paths.scripts .. "/hypridle-apply.sh'")
     -- logind HandleLidSwitch/HandlePowerKey would steal Energy actions.

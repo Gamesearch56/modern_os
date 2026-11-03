@@ -30,7 +30,7 @@ for pkg in steam gamemode gamescope spotify-launcher btop lutris docker; do
     else ok "$pkg is removable in Store"; fi
 done
 apps="$ROOT/install/manifests/30-apps.txt"
-for pkg in steam gamemode gamescope; do
+for pkg in steam gamemode gamescope umu-launcher; do
     if grep -qE "^${pkg}([[:space:]]|#|$)" "$apps"; then
         ok "$pkg is a default app in 30-apps"
     else

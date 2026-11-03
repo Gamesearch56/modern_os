@@ -240,6 +240,13 @@ local function consider(w)
         done[addr] = true
         return
     end
+    -- A second window of a fullscreen game (login, launcher, dialog)
+    -- must not take fullscreen away from the game itself.
+    local ws = w.workspace
+    if ws and ws.has_fullscreen == true then
+        done[addr] = true
+        return
+    end
     if armed[addr] then
         return
     end
@@ -272,12 +279,24 @@ local function consider(w)
     end, { timeout = 500, type = "oneshot" })
 end
 
+-- window.open fires inside Hyprland's mapWindow, before its own
+-- fullscreen handover for a window opening over a fullscreen one. A
+-- fullscreen dispatch from there crashes 0.57 in setFullscreenMode, so
+-- every event only schedules the check for after the map.
+local function later(w)
+    if not hl.timer then
+        return
+    end
+    hl.timer(function()
+        pcall(consider, w)
+    end, { timeout = 50, type = "oneshot" })
+end
+
 if hl.on then
-    hl.on("window.open_early", consider)
-    hl.on("window.open", consider)
-    hl.on("window.class", consider)
-    hl.on("window.title", consider)
-    hl.on("window.fullscreen", consider)
+    hl.on("window.open", later)
+    hl.on("window.class", later)
+    hl.on("window.title", later)
+    hl.on("window.fullscreen", later)
     hl.on("window.close", function(w)
         local a = addr_of(w)
         if a ~= "" then

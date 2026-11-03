@@ -201,7 +201,7 @@ shortcut go through `modern vivaldi`.
 
 ## Battle.net / World of Warcraft (no Lutris)
 
-Preferred stack: **Steam non-Steam game + Proton Experimental (launcher) +
+Preferred stack: **Proton Experimental (launcher) +
 XWayland**, with a stowed `.desktop` so Super+Space lists Battle.net.
 GE-Proton is fine for *games* launched from the client; the Battle.net
 CEF UI itself often dies on GE 11.x (see below). Lutris stays in the
@@ -210,8 +210,8 @@ Wayland often white-screens on Hyprland.
 
 ### Packages
 
-- `steam`, `gamemode`, `gamescope` (`30-apps.txt`, every profile)
-- `lib32-gamemode`, `umu-launcher` (`50-gaming.txt`)
+- `steam`, `gamemode`, `gamescope`, `umu-launcher` (`30-apps.txt`, every profile)
+- `lib32-gamemode` (`50-gaming.txt`)
 - `protonup-qt`, `wowup-cf-bin` (AUR)
 - AMD: `vulkan-radeon` + `lib32-vulkan-radeon` (RADV). Prefer RADV over
   `amdvlk` if both are installed (`AMD_VULKAN_ICD=RADV`).
@@ -228,41 +228,35 @@ sudo sysctl --system
 Raises `vm.max_map_count` and optionally disables split-lock mitigation
 (see sections above). Raise `nofile` if Wine hits EMFILE.
 
-### Steam install
+### Install and launch
 
-1. Add the Battle.net installer as a **Non-Steam game**.
-2. Compatibility: **Proton Experimental** for the launcher (GE-Proton 11.x
-   has been aborting the CEF UI — see below). Use GE on individual games
-   in Steam if needed.
-3. Launch options:
+Select **Battle.net** in the launcher (`modern battlenet`). No setup file
+is needed:
 
-   ```
-   PROTON_ENABLE_WAYLAND=0 WINE_SIMULATE_WRITECOPY=1 AMD_VULKAN_ICD=RADV gamemoderun %command%
-   ```
+1. `scripts/battlenet` looks for `Battle.net Launcher.exe` in this
+   desktop's prefix (`~/.local/share/modern/battlenet/pfx`), in any Steam
+   `compatdata/<id>/pfx`, and in a Lutris `~/Games/battlenet` prefix.
+2. With none found, the first start downloads Blizzard's
+   `Battle.net-Setup.exe` into `~/.cache/modern/` and runs it in this
+   desktop's prefix; the next start finds the installed client.
+3. The client runs via `umu-run` (Steam's Proton Experimental/Hotfix when
+   present, otherwise umu downloads its own Proton on the first start),
+   else via Steam's `proton waitforexitandrun`, under GameMode + RADV +
+   XWayland. No gamescope or MangoHud by default.
 
-4. After install, retarget the shortcut to `Battle.net Launcher.exe`.
-5. Install **World of Warcraft on NVMe/SSD** (HDD streaming hitching is
-   common).
-6. Copy the env example and point it at the **Launcher EXE** inside
-   `compatdata/<id>/pfx` (not `STEAM_APPID` — Non-Steam
-   `-applaunch` / `steam://rungameid/` often fails with “game
-   configuration is not available” on Linux):
+Started from the app list there is no terminal, so every failure (no
+runner, download failed, client died within 30 s) is a notification. The
+runner's output is in `~/.local/state/modern/battlenet.log`.
 
-   ```bash
-   cp stow/modern/.config/modern/battlenet.env.example \
-      ~/.config/modern/battlenet.env
-   # set BATTLENET_EXE=…/Battle.net Launcher.exe
-   # set WINEPREFIX=…/compatdata/<id>/pfx
-   # PROTONPATH defaults to Proton Experimental if unset
-   ```
+Install **World of Warcraft on NVMe/SSD** (HDD streaming hitching is
+common).
 
-`scripts/battlenet` / `modern battlenet` runs that EXE with Proton
-(Experimental preferred; GE if you set `PROTONPATH`) via `umu-run` when
-installed, otherwise Steam’s `proton waitforexitandrun`, under GameMode +
-RADV + XWayland. No gamescope or MangoHud by default.
-
-Optional: `STEAM_APPID` still tries `steam://rungameid/` without wrapping
-the Steam client in GameMode — use only if the EXE path is unavailable.
+`~/.config/modern/battlenet.env` (gitignored, see
+`stow/modern/.config/modern/battlenet.env.example`) is optional: it pins
+`BATTLENET_EXE`, `WINEPREFIX` or `PROTONPATH` when several installs
+exist. `STEAM_APPID` (`steam://rungameid/`) is only used when no
+`Battle.net Launcher.exe` is found — Non-Steam AppIDs often fail with
+“game configuration is not available” on Linux.
 
 **Battle.net UI vs Warcraft III:** do not put GE-Proton 11.x in
 `compatibilitytools.d` just for WC3 — Steam will GPU-probe every tool on

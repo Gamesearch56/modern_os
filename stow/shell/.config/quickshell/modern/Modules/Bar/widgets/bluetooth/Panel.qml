@@ -36,7 +36,7 @@ ColumnLayout {
                 if (modelData.connected)
                     Bluetooth.disconnectDevice(modelData);
                 else
-                    Bluetooth.connectDevice(modelData, true);
+                    Bluetooth.connectDevice(modelData);
             }
         }
     }

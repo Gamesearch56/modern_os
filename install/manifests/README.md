@@ -19,7 +19,7 @@ Layers, applied in order by `install.sh --profile <name>`:
 | `00-hw-gpu-*` | auto or `--hw` | GPU stack for every profile (RADV, Intel, NVIDIA DKMS) |
 | `10-desktop` | all profiles | Hyprland, Quickshell, portals, audio/network/bluetooth stack, clipboard/screenshot tools, kitty, Nautilus, Vivaldi, gedit, mpv, imv. AUR: `phylax-git` (`10-desktop.aur.txt`) |
 | `20-theming` | all profiles | fonts, matugen, GTK/Qt theming support |
-| `30-apps` | `m0`+ | codecs, Spotify, Steam, GameMode, gamescope |
+| `30-apps` | `m0`+ | codecs, Spotify, Steam, GameMode, gamescope, umu-launcher (Battle.net) |
 | `30-hw-gpu-*` | with `30-apps`, auto or `--hw` | Steam's 32-bit Vulkan driver for this GPU (else pacman picks `lib32-vulkan-radeon`) |
 | `50-gaming` | `gaming`, `full` | 32-bit Mesa and GameMode, launchers, MangoHud |
 | `50-hw-*` | gaming/full + `--hw` | 32-bit GPU libraries (`lib32-*`) |

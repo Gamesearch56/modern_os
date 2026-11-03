@@ -1,11 +1,16 @@
 .pragma library
 
+const DAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+// Upper bound on generated occurrences per event and range; COUNT and
+// the fast-forward below keep real calendars far under it.
+const CAP = 1000;
+
 function unfold(raw) {
     return String(raw || "").replace(/\r\n/g, "\n").replace(/\n[ \t]/g, "");
 }
 
 function unescape(s) {
-    return String(s || "").replace(/\\n/g, "\n").replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\\\/g, "\\");
+    return String(s || "").replace(/\\n/gi, "\n").replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\\\/g, "\\");
 }
 
 function ymd(d) {
@@ -31,8 +36,9 @@ function parseStamp(val, allDay) {
     return { date: date, allDay: false };
 }
 
+// Last value per property, except EXDATE which may repeat.
 function parseProps(block) {
-    const out = {};
+    const out = { EXDATE: [] };
     const lines = block.split("\n");
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -42,7 +48,10 @@ function parseProps(block) {
         const head = line.slice(0, c);
         const val = line.slice(c + 1);
         const name = head.split(";")[0].toUpperCase();
-        out[name] = { value: val, head: head };
+        if (name === "EXDATE")
+            val.split(",").forEach(v => out.EXDATE.push(v));
+        else
+            out[name] = { value: val, head: head };
     }
     return out;
 }
@@ -57,20 +66,70 @@ function rruleMap(s) {
     return m;
 }
 
-function addFreq(d, freq, interval) {
-    const n = new Date(d.getTime());
-    const k = Math.max(1, interval);
-    if (freq === "DAILY")
-        n.setDate(n.getDate() + k);
-    else if (freq === "WEEKLY")
-        n.setDate(n.getDate() + 7 * k);
-    else if (freq === "MONTHLY")
-        n.setMonth(n.getMonth() + k);
-    else if (freq === "YEARLY")
-        n.setFullYear(n.getFullYear() + k);
+function stampMs(v) {
+    const d = parseStamp(v, false).date;
+    return d ? d.getTime() : NaN;
+}
+
+function shifted(d, unit, n) {
+    const x = new Date(d.getTime());
+    if (unit === "DAILY")
+        x.setDate(x.getDate() + n);
+    else if (unit === "WEEKLY")
+        x.setDate(x.getDate() + 7 * n);
+    else if (unit === "MONTHLY")
+        x.setMonth(x.getMonth() + n);
     else
-        n.setDate(n.getDate() + k);
-    return n;
+        x.setFullYear(x.getFullYear() + n);
+    return x;
+}
+
+// BYDAY entries such as "MO" or "-1FR" (last Friday of the month).
+function byDays(s) {
+    return String(s || "").split(",").map(p => {
+        const m = p.trim().toUpperCase().match(/^([+-]?\d+)?(SU|MO|TU|WE|TH|FR|SA)$/);
+        return m ? { nth: m[1] ? Number(m[1]) : 0, day: DAYS.indexOf(m[2]) } : null;
+    }).filter(x => x !== null);
+}
+
+function withTime(day, from) {
+    return new Date(day.getFullYear(), day.getMonth(), day.getDate(),
+        from.getHours(), from.getMinutes(), from.getSeconds());
+}
+
+// Candidate starts for one period of the rule, in order.
+function periodStarts(base, freq, rule, start) {
+    const days = byDays(rule.BYDAY);
+    if (freq === "WEEKLY" && days.length) {
+        const monday = new Date(base.getFullYear(), base.getMonth(), base.getDate() - ((base.getDay() + 6) % 7));
+        return days.map(b => withTime(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + ((b.day + 6) % 7)), start))
+            .sort((a, b) => a - b);
+    }
+    if (freq === "MONTHLY" && days.length) {
+        const y = base.getFullYear(), mo = base.getMonth();
+        const last = new Date(y, mo + 1, 0).getDate();
+        const out = [];
+        for (let d = 1; d <= last; d++) {
+            const dayDate = new Date(y, mo, d);
+            for (const b of days) {
+                if (dayDate.getDay() !== b.day)
+                    continue;
+                const nth = Math.ceil(d / 7), fromEnd = -Math.ceil((last - d + 1) / 7);
+                if (b.nth === 0 || b.nth === nth || b.nth === fromEnd)
+                    out.push(withTime(dayDate, start));
+            }
+        }
+        return out;
+    }
+    if (freq === "MONTHLY" || freq === "YEARLY") {
+        const y = base.getFullYear();
+        const mo = freq === "YEARLY" ? start.getMonth() : base.getMonth();
+        // The 31st or Feb 29 only exists in some periods; RFC 5545 skips the rest.
+        if (start.getDate() > new Date(y, mo + 1, 0).getDate())
+            return [];
+        return [withTime(new Date(y, mo, start.getDate()), start)];
+    }
+    return [base];
 }
 
 function expand(ev, rangeStart, rangeEnd) {
@@ -80,27 +139,41 @@ function expand(ev, rangeStart, rangeEnd) {
     const dur = ev.end ? (ev.end.getTime() - ev.start.getTime()) : 0;
     const rule = rruleMap(ev.rrule);
     const freq = rule.FREQ || "";
-    const interval = Number(rule.INTERVAL || 1);
-    let until = null;
-    if (rule.UNTIL) {
-        const u = parseStamp(rule.UNTIL, false).date;
-        if (u)
-            until = u;
-    }
+    const interval = Math.max(1, Number(rule.INTERVAL || 1));
+    const until = rule.UNTIL ? parseStamp(rule.UNTIL, false).date : null;
     const count = rule.COUNT ? Number(rule.COUNT) : 0;
-    let cur = new Date(ev.start.getTime());
+    const skip = ev.skip || ({});
+    const emit = (s) => {
+        const e = dur > 0 ? new Date(s.getTime() + dur) : null;
+        const hit = e ? e.getTime() > rangeStart.getTime() : s.getTime() >= rangeStart.getTime() - 86400000;
+        if (hit && s.getTime() <= rangeEnd.getTime() && !skip[s.getTime()])
+            out.push(instance(ev, s, e));
+    };
+    if (!freq) {
+        emit(ev.start);
+        return out;
+    }
+    let base = freq === "MONTHLY" || freq === "YEARLY"
+        ? new Date(ev.start.getFullYear(), ev.start.getMonth(), 1)
+        : new Date(ev.start.getTime());
+    // Without COUNT nothing before the range matters: jump straight to it.
+    if (!count && (freq === "DAILY" || freq === "WEEKLY")) {
+        const span = (freq === "DAILY" ? 1 : 7) * interval * 86400000;
+        const behind = Math.floor((rangeStart.getTime() - dur - base.getTime()) / span) - 1;
+        if (behind > 0)
+            base = shifted(base, freq, behind * interval);
+    }
     let n = 0;
-    const cap = count > 0 ? count : 400;
-    while (n < cap && cur.getTime() <= rangeEnd.getTime()) {
-        if (until && cur.getTime() > until.getTime())
-            break;
-        const end = dur > 0 ? new Date(cur.getTime() + dur) : null;
-        if (end ? end.getTime() >= rangeStart.getTime() : cur.getTime() >= rangeStart.getTime() - 86400000)
-            out.push(instance(ev, cur, end));
-        n++;
-        if (!freq)
-            break;
-        cur = addFreq(cur, freq, interval);
+    for (let guard = 0; guard < CAP && base.getTime() <= rangeEnd.getTime() + 7 * 86400000; guard++) {
+        for (const s of periodStarts(base, freq, rule, ev.start)) {
+            if (s.getTime() < ev.start.getTime())
+                continue;
+            if ((until && s.getTime() > until.getTime()) || (count && n >= count))
+                return out;
+            n++;
+            emit(s);
+        }
+        base = shifted(base, freq, interval);
     }
     return out;
 }
@@ -121,21 +194,44 @@ function instance(ev, start, end) {
 function parse(raw) {
     const text = unfold(raw);
     const events = [];
+    const moved = {};
     const chunks = text.split("BEGIN:VEVENT");
     for (let i = 1; i < chunks.length; i++) {
-        const block = chunks[i].split("END:VEVENT")[0];
-        const p = parseProps(block);
+        const p = parseProps(chunks[i].split("END:VEVENT")[0]);
+        const uid = unescape(p.UID ? p.UID.value : "");
+        // A RECURRENCE-ID event replaces (or cancels) one occurrence of
+        // the series with the same UID.
+        if (p["RECURRENCE-ID"]) {
+            const at = stampMs(p["RECURRENCE-ID"].value);
+            if (!isNaN(at))
+                (moved[uid] = moved[uid] || {})[at] = true;
+        }
+        if (p.STATUS && p.STATUS.value.trim().toUpperCase() === "CANCELLED")
+            continue;
         const startRaw = p.DTSTART ? parseStamp(p.DTSTART.value, /VALUE=DATE/i.test(p.DTSTART.head)) : { date: null, allDay: false };
         const endRaw = p.DTEND ? parseStamp(p.DTEND.value, startRaw.allDay) : { date: null, allDay: startRaw.allDay };
+        const skip = {};
+        p.EXDATE.forEach(v => {
+            const at = stampMs(v);
+            if (!isNaN(at))
+                skip[at] = true;
+        });
         events.push({
-            uid: unescape(p.UID ? p.UID.value : ""),
+            uid: uid,
             summary: unescape(p.SUMMARY ? p.SUMMARY.value : ""),
             description: unescape(p.DESCRIPTION ? p.DESCRIPTION.value : ""),
             start: startRaw.date,
             end: endRaw.date,
             allDay: startRaw.allDay,
-            rrule: p.RRULE ? p.RRULE.value : ""
+            rrule: p["RECURRENCE-ID"] ? "" : (p.RRULE ? p.RRULE.value : ""),
+            skip: skip
         });
+    }
+    for (const ev of events) {
+        const m = moved[ev.uid];
+        if (ev.rrule && m)
+            for (const at in m)
+                ev.skip[at] = true;
     }
     return events;
 }
