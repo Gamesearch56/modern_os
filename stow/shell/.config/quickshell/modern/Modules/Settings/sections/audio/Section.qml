@@ -71,7 +71,7 @@ ColumnLayout {
                 value: Audio.outputSink ? String(Audio.outputSink.id) : ""
                 model: root._sinkModel()
                 placeholderKey: "audio.noOutputs"
-                onSelected: (v) => Audio.chooseSink(root._find(v))
+                onSelected: (v) => Audio.setDefaultSink(root._find(v))
             }
             MSlider {
                 Layout.fillWidth: true

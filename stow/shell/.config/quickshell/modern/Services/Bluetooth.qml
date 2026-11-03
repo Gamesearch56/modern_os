@@ -111,10 +111,8 @@ Singleton {
     function connectDevice(device: var, fromUser: bool) {
         if (!device)
             return;
-        if (fromUser && root.isAudioDevice(device)) {
+        if (fromUser)
             root.userSink = true;
-            ConfigWrite.set("audio.pinOutput", false);
-        }
         try {
             if (!device.trusted)
                 device.trusted = true;

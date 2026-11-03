@@ -28,13 +28,6 @@ grep -q 'node.name = "modern.headset-hold"' "$HOLD_CONF" || err "headset hold si
 grep -q "nodeName: \"modern.headset-hold\"" "$HOLD" || err "hold service does not match the sink name"
 grep -q 'hold.isHold(n)' "$AUDIO" || err "hold sink is listed as a device"
 grep -q 'bt.hold.isHold(n)' "$BT" || err "hold sink is remembered as the last speaker"
-SECTION="$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/audio/Section.qml"
-BLUEZ="$ROOT/stow/shell/.config/quickshell/modern/Services/Bluetooth.qml"
-grep -q 'Audio.chooseSink' "$SECTION" || err "a speaker picked in Settings is not pinned"
-for f in "$MP" "$BT" "$HOLD"; do
-    grep -q 'outputPinned' "$f" || err "$(basename "$f") routes to Bluetooth over a pinned speaker"
-done
-grep -q '"audio.pinOutput", false' "$BLUEZ" || err "connecting a headset by hand does not unpin"
 if grep -q 'session.suspend-timeout-seconds = 0' "$WP"; then
     err "idle A2DP transport is pinned"
 fi

@@ -810,7 +810,7 @@
       "repeatDelay": "Wait before a held key starts repeating.",
       "numlockOnBoot": "Turns Num Lock on when Hyprland starts.",
       "mouseWindow": "Drag a window edge to resize it. Super+left moves a window, Super+right resizes it. Right-click a window in Applications to float, fullscreen, split, or close. Super+K lists these under Mouse.",
-      "autoSwitchBluetooth": "Paired headphones stay connected and become the speaker while this computer is playing sound. When it stops, they are free for your other device, and the speakers stay quiet until the headphones are back. If you pick another speaker here, it stays until you pick or connect headphones yourself.",
+      "autoSwitchBluetooth": "Paired headphones stay connected and become the speaker while this computer is playing sound. When it stops, they are free for your other device, and the speakers stay quiet until the headphones are back.",
       "restoreGated": "Restores the system disk to this snapshot. Your home folder stays. A restart is required.",
       "preUpdateSnapshot": "Creates a Snapper snapshot of / before a system update so you can roll back.",
       "backupPrune": "When more than {n} snapshots exist, the oldest are deleted.",

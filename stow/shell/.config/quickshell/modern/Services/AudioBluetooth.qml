@@ -11,7 +11,7 @@ QtObject {
     id: bt
 
     property var audio: null
-    readonly property bool enabled: (audio && audio.autoBluetooth && !audio.outputPinned) || false
+    readonly property bool enabled: (audio && audio.autoBluetooth) || false
 
     readonly property string endpointSig: {
         const a = bt.audio;
