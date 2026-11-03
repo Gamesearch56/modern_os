@@ -93,6 +93,8 @@ Singleton {
         readonly property real settingsHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
+        readonly property real reportWidth: root.spacing.xxl * 24 + root.spacing.lg
+        readonly property real reportHeight: root.spacing.xxl * 24 + root.spacing.lg + root.spacing.xs
         readonly property real overviewWidth: root.spacing.xxl * 30
         readonly property real overviewHeight: root.spacing.xxl * 20
         readonly property real overlayWidth: root.spacing.xxl * 24
@@ -127,6 +129,13 @@ Singleton {
     readonly property QtObject slider: QtObject {
         readonly property real trackHeight: 8
         readonly property real thumb: 20
+    }
+
+    // Horizontal step indicator. The node is the MD3 24dp target; the
+    // track is the 2dp stroke so it stays visible between the circles.
+    readonly property QtObject stepper: QtObject {
+        readonly property real node: root.icon.md
+        readonly property real track: root.stroke.focus
     }
 
     readonly property QtObject session: QtObject {

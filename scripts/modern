@@ -34,6 +34,7 @@ $(t cli.usage)
   modern window close
   modern config set motion.scale 1.2
   modern config restore design typography
+  modern report [sound|display|...]
   modern battlenet
   modern vivaldi
 EOF
@@ -229,6 +230,13 @@ case "$TARGET" in
         ;;
     settings)
         ipc settings "${1:-open}"
+        ;;
+    report)
+        # The window when the shell answers; otherwise a quick report
+        # straight from the script, so a dead shell can still be reported.
+        if ! timeout 3 qs -c modern ipc call bugReport open "${1:-}" >/dev/null 2>&1; then
+            exec "$SCRIPT_DIR/bug-report.sh" quick "${1:-}"
+        fi
         ;;
     config)
         SUB="${1:-}"

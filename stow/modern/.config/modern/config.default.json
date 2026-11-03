@@ -238,6 +238,11 @@
       "geminiModel": ""
     }
   },
+  "bugReport": {
+    "_comment": "Problem reports (scripts/bug-report.sh). The access token lives in secrets.json as bugReport.githubToken, never here. See docs/BUGREPORT.md.",
+    "repo": "Gamesearch56/modern-reports",
+    "screenshotsDefault": true
+  },
   "backup": {
     "snapperEnabled": false,
     "resticEnabled": false,
@@ -300,7 +305,8 @@
     "screenshotWindow": "SHIFT + PRINT",
     "screenshotFull": "SUPER + PRINT",
     "colorPicker": "SUPER + SHIFT + C",
-    "filePreview": "SPACE"
+    "filePreview": "SPACE",
+    "bugReport": "SUPER + #"
   },
   "apps": {
     "defaults": {

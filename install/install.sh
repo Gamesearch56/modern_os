@@ -408,6 +408,13 @@ else
     log_info "skipping greetd (target '$TARGET' is not a login home)"
 fi
 
+# The bug-report token is sealed to the update deploy key and rides in
+# the repo. Fill it in only when this account does not have one yet.
+if [ "$DRY_RUN" -eq 0 ]; then
+    python3 "$REPO_ROOT/scripts/lib/report-token.py" install "$TARGET" \
+        || log_warn "bug-report token was not installed"
+fi
+
 log_ok "Install complete for profile '$PROFILE'."
 log_info "Reboot to the login screen, then start-hyprland is launched by greetd — see README.md."
 log_info "Log: $LOG_FILE"

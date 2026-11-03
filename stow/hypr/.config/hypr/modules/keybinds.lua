@@ -150,6 +150,8 @@ local bindings = {
     screenshotFull = hl.dsp.exec_cmd(modern .. " screenshot full"),
     colorPicker = hl.dsp.exec_cmd("hyprpicker -a"),
     filePreview = hl.dsp.exec_cmd(modern .. " filepreview"),
+    -- Through the CLI so the shortcut still files a report when the shell is down.
+    bugReport = hl.dsp.exec_cmd(modern .. " report"),
 }
 
 -- SPACE is a typing key. Non-consuming so fields still receive it.
@@ -171,6 +173,7 @@ local overlay_actions = {
     settings = true,
     fullscreen = true,
     closeWindow = true,
+    bugReport = true,
 }
 
 local function bind_opts(action)

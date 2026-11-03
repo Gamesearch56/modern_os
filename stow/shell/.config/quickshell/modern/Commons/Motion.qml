@@ -47,6 +47,8 @@ Singleton {
     readonly property int durationUpdateSettle: 2500
     // Re-read of a file another process is still rewriting — never scaled.
     readonly property int durationFileSettle: 400
+    // Overlays fade out before a problem report's screenshots — wall clock.
+    readonly property int durationReportCapture: 350
     // External process watchdog (ddcutil / hyprctl / theme-apply) — wall clock.
     readonly property int durationProcessWatch: 20000
     readonly property int durationFollowWatch: 30000
@@ -68,6 +70,7 @@ Singleton {
     readonly property int updateSettleMs: root.durationUpdateSettle
     readonly property int fileSettleMs: root.durationFileSettle
     readonly property int processWatchMs: root.durationProcessWatch
+    readonly property int reportCaptureMs: root.durationReportCapture
     readonly property int followWatchMs: root.durationFollowWatch
     readonly property bool overlaysFade: root.scale !== 0 && root.overlay !== "zoom"
     readonly property bool overlaysZoom: root.scale !== 0 && root.overlay !== "fade"

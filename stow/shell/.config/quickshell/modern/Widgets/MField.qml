@@ -9,7 +9,9 @@ ColumnLayout {
     property string labelKey: ""
     property string hintKey: ""
     property string hintValue: ""
+    property alias labelExtra: labelSlot.data
     property alias headerExtra: headerSlot.data
+    property int _labelExtras: 0
 
     default property alias extra: controlSlot.data
 
@@ -18,7 +20,7 @@ ColumnLayout {
     clip: false
 
     RowLayout {
-        visible: root.labelKey.length > 0 || headerSlot.children.length > 0
+        visible: root.labelKey.length > 0 || root._labelExtras > 0 || headerSlot.children.length > 0
         Layout.fillWidth: true
         spacing: Tokens.spacing.sm
 
@@ -26,7 +28,22 @@ ColumnLayout {
             visible: root.labelKey.length > 0
             key: root.labelKey
             styleName: "titleSmall"
-            Layout.fillWidth: true
+            Layout.fillWidth: root._labelExtras === 0
+        }
+
+        // Sits against the label. headerExtra stays at the far end.
+        Row {
+            id: labelSlot
+            spacing: Tokens.spacing.xs
+            Layout.alignment: Qt.AlignVCenter
+            visible: root._labelExtras > 0
+            onChildrenChanged: root._labelExtras = children.length
+            Component.onCompleted: root._labelExtras = children.length
+        }
+
+        Item {
+            Layout.fillWidth: root._labelExtras > 0
+            visible: root._labelExtras > 0
         }
 
         Row {

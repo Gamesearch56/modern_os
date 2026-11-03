@@ -20,6 +20,7 @@ import "Modules/Session" as SessionMod
 import "Modules/Wallpaper" as WallpaperMod
 import "Modules/Screenshot" as ScreenshotMod
 import "Modules/FilePreview" as FilePreviewMod
+import "Modules/BugReport" as BugReportMod
 
 ShellRoot {
     Bar.Module {}
@@ -36,6 +37,7 @@ ShellRoot {
     WallpaperMod.Module {}
     ScreenshotMod.Module {}
     FilePreviewMod.Module {}
+    BugReportMod.Module {}
 
     Shortcut {
         sequence: "Escape"

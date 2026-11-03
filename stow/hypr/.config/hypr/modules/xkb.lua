@@ -22,6 +22,8 @@ end
 M.named = {
     aiChat = { combo = "SUPER + A", bind = "SUPER + code:38" },
     taskbar = { combo = "SUPER + DELETE", bind = "SUPER + code:119" },
+    -- "#" on the German layout; the same key is backslash on US.
+    bugReport = { combo = "SUPER + #", bind = "SUPER + code:51" },
 }
 
 return M
