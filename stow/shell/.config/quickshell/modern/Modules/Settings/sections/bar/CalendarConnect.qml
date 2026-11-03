@@ -3,37 +3,32 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "."
 
+// Pick a provider, follow its steps, Connect. Nothing is saved until the
+// calendar has actually loaded (Calendar.check).
 ColumnLayout {
     id: root
 
-    spacing: Tokens.spacing.sm
+    spacing: Tokens.spacing.md
     Layout.fillWidth: true
 
+    // "" | proton | google | apple (Apple ID) | appleLink (shared link)
     property string draft: ""
 
     readonly property bool connected: CalendarAccount.connected
-    readonly property string setup: root.connected ? "" : root.draft
 
-    function _connectIcs(provider: string) {
-        const u = String(linkField.text || "").trim();
-        if (!u.length)
-            return;
-        ConfigWrite.set("widgets.clock.calendarProvider", provider);
-        Calendar.commitUrl(u);
-        root.draft = "";
-    }
+    onDraftChanged: Calendar.clearError()
 
-    function _connectApple() {
-        const user = String(appleUser.text || "").trim();
-        const pwd = String(applePass.text || "").trim();
-        if (!user.length || !pwd.length)
-            return;
-        CalendarAccount.saveApple(user, pwd);
-        ConfigWrite.set("widgets.clock.calendarProvider", "apple");
-        Calendar.connectNow();
-        root.draft = "";
-        applePass.text = "";
+    readonly property string _connectedKey: {
+        const p = CalendarAccount.provider;
+        if (p === "google")
+            return "calendar.connectedGoogle";
+        if (p === "apple")
+            return "calendar.connectedApple";
+        if (p === "proton")
+            return "calendar.connectedProton";
+        return "calendar.connectedIcs";
     }
 
     MText {
@@ -43,150 +38,97 @@ ColumnLayout {
     }
 
     ColumnLayout {
-        visible: !root.connected && root.setup.length === 0
+        visible: !root.connected && root.draft.length === 0
         Layout.fillWidth: true
         spacing: Tokens.spacing.xs
-        MButton {
-            kind: "tonal"
-            key: "calendar.providerProton"
-            fillWidth: true
-            onClicked: root.draft = "proton"
+        MHint {
+            key: "calendar.chooseProvider"
+            Layout.fillWidth: true
+            Layout.bottomMargin: Tokens.spacing.xs
         }
-        MButton {
-            kind: "tonal"
-            key: "calendar.providerGoogle"
-            fillWidth: true
-            onClicked: root.draft = "google"
+        Repeater {
+            model: [
+                { id: "proton", key: "calendar.providerProton" },
+                { id: "google", key: "calendar.providerGoogle" },
+                { id: "apple", key: "calendar.providerApple" }
+            ]
+            MButton {
+                required property var modelData
+                kind: "tonal"
+                iconName: "x-office-calendar-symbolic"
+                key: modelData.key
+                fillWidth: true
+                onClicked: root.draft = modelData.id
+            }
         }
-        MButton {
-            kind: "tonal"
-            key: "calendar.providerApple"
-            fillWidth: true
-            onClicked: root.draft = "apple"
-        }
+    }
+
+    CalendarLinkForm {
+        id: linkForm
+        visible: !root.connected && (root.draft === "proton" || root.draft === "google" || root.draft === "appleLink")
+        provider: root.draft === "appleLink" ? "apple" : root.draft
+        onBack: root.draft = ""
+        onUseAppleId: root.draft = "apple"
+    }
+
+    CalendarAppleForm {
+        id: appleForm
+        visible: !root.connected && root.draft === "apple"
+        onBack: root.draft = ""
+        onUseLink: root.draft = "appleLink"
     }
 
     ColumnLayout {
-        visible: !root.connected && (root.setup === "proton" || root.setup === "google")
-        Layout.fillWidth: true
-        spacing: Tokens.spacing.sm
-        MHint {
-            key: root.setup === "google" ? "calendar.googleHint" : "calendar.protonHint"
-            Layout.fillWidth: true
-        }
-        MButton {
-            kind: "outlined"
-            key: root.setup === "google" ? "calendar.openGoogle" : "calendar.openProton"
-            fillWidth: true
-            onClicked: root.setup === "google" ? CalendarAccount.openGoogle() : CalendarAccount.openProton()
-        }
-        MField {
-            labelKey: "calendar.privateLink"
-            MTextField {
-                id: linkField
-                placeholderKey: "calendar.linkPlaceholder"
-            }
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Tokens.spacing.sm
-            MButton {
-                kind: "text"
-                key: "calendar.chooseAnother"
-                onClicked: root.draft = ""
-            }
-            Item { Layout.fillWidth: true }
-            MButton {
-                kind: "filled"
-                key: "calendar.connect"
-                onClicked: root._connectIcs(root.setup)
-            }
-        }
-    }
-
-    ColumnLayout {
-        visible: !root.connected && root.setup === "apple"
-        Layout.fillWidth: true
-        spacing: Tokens.spacing.sm
-        MHint {
-            key: "calendar.appleHint"
-            Layout.fillWidth: true
-        }
-        MButton {
-            kind: "outlined"
-            key: "calendar.openApple"
-            fillWidth: true
-            onClicked: CalendarAccount.openAppleId()
-        }
-        MField {
-            labelKey: "calendar.appleId"
-            MTextField {
-                id: appleUser
-                text: CalendarAccount.account
-                placeholderKey: "calendar.appleIdPlaceholder"
-            }
-        }
-        MField {
-            labelKey: "calendar.appPassword"
-            MTextField {
-                id: applePass
-                echoMode: TextInput.Password
-                placeholderKey: "calendar.appPasswordPlaceholder"
-            }
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Tokens.spacing.sm
-            MButton {
-                kind: "text"
-                key: "calendar.chooseAnother"
-                onClicked: root.draft = ""
-            }
-            Item { Layout.fillWidth: true }
-            MButton {
-                kind: "filled"
-                key: "calendar.connect"
-                onClicked: root._connectApple()
-            }
-        }
-    }
-
-    RowLayout {
         visible: root.connected
         Layout.fillWidth: true
-        spacing: Tokens.spacing.sm
-        MText {
-            value: {
-                const p = CalendarAccount.provider;
-                if (p === "google")
-                    return I18n.t("calendar.connectedGoogle");
-                if (p === "apple")
-                    return I18n.t("calendar.connectedApple");
-                if (p === "proton")
-                    return I18n.t("calendar.connectedProton");
-                return I18n.t("calendar.connectedIcs");
-            }
-            styleName: "bodyMedium"
-            color: Colors.color.onSurfaceVariant
+        spacing: Tokens.spacing.xs
+
+        RowLayout {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
-        }
-        MButton {
-            kind: "text"
-            key: "calendar.disconnect"
-            Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-            onClicked: {
-                CalendarAccount.disconnect();
-                Calendar.refresh();
-                root.draft = "";
+            spacing: Tokens.spacing.sm
+            MText {
+                key: root._connectedKey
+                styleName: "bodyMedium"
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
             }
+            MButton {
+                kind: "text"
+                iconName: "view-refresh-symbolic"
+                key: "calendar.refresh"
+                busy: Calendar.busy
+                onClicked: Calendar.refresh()
+            }
+            MButton {
+                kind: "text"
+                key: "calendar.disconnect"
+                onClicked: {
+                    CalendarAccount.disconnect();
+                    Calendar.refresh();
+                    root.draft = "";
+                }
+            }
+        }
+        MHint {
+            visible: CalendarAccount.usesAppleId && CalendarAccount.account.length > 0
+            value: CalendarAccount.account
+            Layout.fillWidth: true
+        }
+        MHint {
+            key: Calendar.errorKey.length > 0 ? Calendar.errorKey : "calendar.connectedHint"
+            color: Calendar.errorKey.length > 0 ? Colors.color.error : Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
         }
     }
 
     Connections {
         target: Calendar
-        function onLoadFailed() {
-            Notifications.toast(I18n.t("calendar.icsFailed"), "");
+        function onChecked(ok) {
+            if (!ok)
+                return;
+            linkForm.clear();
+            appleForm.clear();
+            root.draft = "";
         }
     }
 }

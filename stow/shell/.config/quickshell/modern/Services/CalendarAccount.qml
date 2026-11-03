@@ -20,8 +20,9 @@ Singleton {
         return root.inferProvider(root.icsUrl);
     }
     readonly property string account: String(Config.widgets?.clock?.calendarAccount || "").trim()
-    readonly property bool connected: root.provider === "apple"
-        ? (root.account.length > 0 && root.hasApplePassword)
+    readonly property bool usesAppleId: root.provider === "apple" && root.hasApplePassword
+    readonly property bool connected: root.usesAppleId
+        ? root.account.length > 0
         : root.icsUrl.length > 0
 
     FileView {
@@ -58,7 +59,31 @@ Singleton {
     }
 
     function openAppleId() {
-        Quickshell.execDetached(["xdg-open", "https://appleid.apple.com/account/manage"]);
+        Quickshell.execDetached(["xdg-open", "https://account.apple.com/account/manage"]);
+    }
+
+    // Translation key for a link that cannot be this provider's calendar
+    // feed, "" when it looks right. Catches the common paste of the
+    // calendar's web page instead of its iCal link.
+    function linkProblem(provider: string, url: string): string {
+        const u = String(url || "").trim().toLowerCase();
+        if (!u.length)
+            return "";
+        if (!/^(https?|webcals?):\/\//.test(u))
+            return "calendar.linkNotUrl";
+        if (provider === "google" && u.indexOf("calendar.google.com") !== -1 && u.indexOf("/ical/") === -1)
+            return "calendar.linkGoogleWrong";
+        if (provider === "proton" && u.indexOf("proton.me") !== -1 && u.indexOf("/url/") === -1)
+            return "calendar.linkProtonWrong";
+        if (provider === "apple" && u.indexOf("icloud.com") !== -1 && u.indexOf("/published/") === -1)
+            return "calendar.linkAppleWrong";
+        return "";
+    }
+
+    // Apple shows app passwords as abcd-efgh-ijkl-mnop; the fetch helper
+    // accepts spaces or missing dashes, so only the letters are checked.
+    function appPasswordLooksRight(pwd: string): bool {
+        return /^[a-z]{16}$/i.test(String(pwd || "").replace(/[\s-]/g, ""));
     }
 
     function saveIcs(url: string) {
@@ -70,8 +95,11 @@ Singleton {
             obj.calendar.icsUrl = u;
         else
             delete obj.calendar.icsUrl;
+        delete obj.calendar.applePassword;
+        delete obj.calendar.appleAccount;
         root._writeSecrets(obj);
         root.icsUrl = u;
+        root.hasApplePassword = false;
         if (u.length)
             ConfigWrite.set("accounts.calendarIcsUrl", "");
     }
@@ -90,7 +118,9 @@ Singleton {
             obj.calendar.appleAccount = who;
         else
             delete obj.calendar.appleAccount;
+        delete obj.calendar.icsUrl;
         root._writeSecrets(obj);
+        root.icsUrl = "";
         root.hasApplePassword = pwd.length > 0;
         ConfigWrite.set("widgets.clock.calendarAccount", String(user || "").trim());
         ConfigWrite.set("accounts.calendarIcsUrl", "");

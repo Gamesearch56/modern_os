@@ -58,11 +58,63 @@ else
 fi
 unset MODERN_TEST_FIXTURE MODERN_CALENDAR_ICS
 
-if python3 -m py_compile "$ROOT/scripts/lib/calendar-caldav.py"; then
-    ok "caldav helper compiles"
+rc_of() { local rc=0; "$@" >"$TMP/out" 2>/dev/null || rc=$?; printf '%s' "$rc"; }
+
+printf '%s\n' '<html><body>Google Calendar</body></html>' >"$TMP/page.html"
+printf '%s\n' '{"calendar":{"icsUrl":"'"$TMP"'/page.html"}}' >"$MODERN_SECRETS_JSON"
+rc="$(rc_of "$SCRIPT")"
+if [ "$rc" = 11 ]; then
+    ok "a calendar web page instead of its iCal link is reported as not a calendar"
 else
-    err "calendar-caldav.py"
+    err "web page link exit $rc, want 11"
 fi
+
+rc="$(rc_of env MODERN_CAL_CHECK=1 MODERN_CAL_PROVIDER=google MODERN_CAL_URL="$TMP/secret.ics" "$SCRIPT")"
+if [ "$rc" = 0 ] && grep -Fq 'PRODID:secret' "$TMP/out"; then
+    ok "check mode reads an unsaved link from the environment"
+else
+    err "check mode link exit $rc"
+fi
+
+if grep -Fq -- '--password' "$SCRIPT" || grep -Fq -- '"--password"' "$ROOT/scripts/lib/calendar-caldav.py"; then
+    err "the Apple password must not travel on argv"
+else
+    ok "the Apple password stays off argv"
+fi
+
+port_file="$TMP/port"
+python3 "$ROOT/scripts/lib/fake-caldav.py" me@icloud.com abcd-efgh-ijkl-mnop >"$port_file" &
+srv=$!
+trap 'kill "$srv" 2>/dev/null || true; cleanup' EXIT
+for _ in $(seq 1 50); do
+    [ -s "$port_file" ] && break
+    sleep 0.05
+done
+MODERN_CALDAV_URL="http://127.0.0.1:$(cat "$port_file")/"
+export MODERN_CALDAV_URL
+apple() { rc_of env MODERN_CAL_CHECK=1 MODERN_CAL_PROVIDER=apple MODERN_CAL_USER=me@icloud.com MODERN_CAL_PASSWORD="$1" "$SCRIPT"; }
+
+rc="$(apple 'abcd efgh ijkl mnop')"
+if [ "$rc" = 0 ] && grep -Fq 'SUMMARY:Dentist' "$TMP/out"; then
+    ok "iCloud: redirect, double challenge and a refusing Reminders list still load events"
+else
+    err "iCloud fetch exit $rc: $(cat "$TMP/out")"
+fi
+rc="$(apple wrong-password)"
+if [ "$rc" = 10 ]; then
+    ok "iCloud: a refused app password exits 10"
+else
+    err "iCloud wrong password exit $rc, want 10"
+fi
+kill "$srv" 2>/dev/null || true
+wait "$srv" 2>/dev/null || true
+rc="$(apple abcd-efgh-ijkl-mnop)"
+if [ "$rc" = 12 ]; then
+    ok "iCloud: an unreachable server exits 12"
+else
+    err "iCloud offline exit $rc, want 12"
+fi
+unset MODERN_CALDAV_URL
 
 if grep -F 'Paths.script("calendar-fetch.sh")' \
     "$ROOT/stow/shell/.config/quickshell/modern/Services/Calendar.qml" >/dev/null \
@@ -75,6 +127,15 @@ if grep -F 'Paths.script("calendar-fetch.sh")' \
     ok "Date and time owns calendar connect; Privacy does not"
 else
     err "calendar UI wiring"
+fi
+
+svc="$ROOT/stow/shell/.config/quickshell/modern/Services/Calendar.qml"
+if grep -Fq 'MODERN_CAL_PASSWORD' "$svc" \
+    && grep -Fq 'CalendarAccount.saveApple' "$svc" \
+    && ! grep -Fq 'loadFailed' "$svc"; then
+    ok "connect checks the calendar before saving it"
+else
+    err "Calendar.check must load before saving"
 fi
 
 if grep -Fq '"clock": "Date and time"' \

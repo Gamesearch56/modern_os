@@ -96,7 +96,7 @@ Update have no Restore control.
 
 Click a widget on Settings → Bar. Overlay fields (when the widget has
 them): weather units plus current location (default on) or an
-Open-Meteo city search (`lat,lon`; forecasts fall back to MET Norway via `weather-metno.py` when Open-Meteo is down), Date and time seconds/weekday plus calendar connect (Proton/Google private iCal, Apple CalDAV), audio/media
+Open-Meteo city search (`lat,lon`; forecasts fall back to MET Norway via `weather-metno.py` when Open-Meteo is down), Date and time seconds/weekday plus calendar connect (Proton/Google private iCal, Apple CalDAV with an app-specific password or one shared iCloud link; `Calendar.check` runs `calendar-fetch.sh` with `MODERN_CAL_CHECK=1` and saves only once the calendar loads, exit codes 10/11/12 map to specific errors), audio/media
 scroll steps (Shift+wheel uses the fine step). Customizable widgets
 (clock, weather, volume, media) use a hover outline instead of a gear. Drag rows
 across the three-column Left / Middle / Right table; enable/disable
