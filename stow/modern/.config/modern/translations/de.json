@@ -1103,7 +1103,9 @@
       "firmware": "Firmware",
       "loader": "Bootloader",
       "initrd": "Initrd",
-      "userspace": "Userspace"
+      "userspace": "Userspace",
+      "osNameVersion": "ModernOS {version} (Arch Linux)",
+      "osNameDev": "ModernOS Entwicklungsstand {commit} (Arch Linux)"
     },
     "bar": {
       "available": "Verfügbare Widgets",

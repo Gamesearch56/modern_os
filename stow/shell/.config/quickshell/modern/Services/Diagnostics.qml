@@ -15,7 +15,15 @@ Singleton {
     property string memory: ""
     property string board: ""
     property string disk: ""
-    readonly property string os: I18n.t("settings.overview.osName")
+    // Release tag the desktop checkout sits on (updates check out tags);
+    // a clone between tags shows its commit instead.
+    property string version: ""
+    property string commit: ""
+    readonly property string os: root.version.length
+        ? I18n.t("settings.overview.osNameVersion", { version: root.version })
+        : (root.commit.length
+            ? I18n.t("settings.overview.osNameDev", { commit: root.commit })
+            : I18n.t("settings.overview.osName"))
     property string kernel: ""
     property string wm: ""
     property string shell: ""
@@ -97,6 +105,8 @@ Singleton {
         const m = root._facts(text);
         root.kernel = m.kernel || "";
         root.wm = m.wm || "";
+        root.version = m.version || "";
+        root.commit = m.commit || "";
         const shell = (m.shell || "").trim();
         root.shell = (shell.length > 0 && shell.length <= 80) ? shell : "Quickshell";
     }
@@ -149,7 +159,8 @@ Singleton {
 
     Process {
         id: swProc
-        command: ["sh", "-c", "printf 'kernel\\t%s\\n' \"$(uname -r)\"; printf 'wm\\t%s\\n' \"$(hyprland --version 2>/dev/null | head -1 | sed 's/ built from.*//')\"; shell=$(qs --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=$(quickshell --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=Quickshell; printf 'shell\\t%s\\n' \"$shell\""]
+        environment: ({ MODERN_REPO: Paths.repo })
+        command: ["sh", "-c", "printf 'version\\t%s\\n' \"$(git -C \"$MODERN_REPO\" describe --tags --exact-match 2>/dev/null)\"; printf 'commit\\t%s\\n' \"$(git -C \"$MODERN_REPO\" rev-parse --short HEAD 2>/dev/null)\"; printf 'kernel\\t%s\\n' \"$(uname -r)\"; printf 'wm\\t%s\\n' \"$(hyprland --version 2>/dev/null | head -1 | sed 's/ built from.*//')\"; shell=$(qs --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=$(quickshell --version 2>/dev/null | head -1 | sed 's/ (.*//'); [ -n \"$shell\" ] || shell=Quickshell; printf 'shell\\t%s\\n' \"$shell\""]
         running: false
         stdout: StdioCollector {
             onStreamFinished: root._parseSw(this.text)
