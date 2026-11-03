@@ -1433,5 +1433,13 @@
       "eza": "Modern ls",
       "tmux": "Terminal multiplexer"
     }
+  },
+  "battlenet": {
+    "title": "Battle.net",
+    "installing": "Battle.net is not installed yet. Downloading Blizzard's installer — follow it, and Battle.net opens when it is done.",
+    "preparing": "Preparing Proton for the first start. This can take a few minutes.",
+    "downloadFailed": "Could not download the Battle.net installer. Check your internet connection and try again.",
+    "noRunner": "Battle.net needs the umu-launcher package or Steam's Proton. Install umu-launcher, then try again.",
+    "crashed": "Battle.net closed right after starting. Details are in %s."
   }
 }
