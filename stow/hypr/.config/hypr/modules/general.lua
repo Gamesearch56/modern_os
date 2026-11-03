@@ -166,6 +166,9 @@ hl.config({
         -- Greeter PATH is often too thin to see hyprland-dialog; this
         -- overlay stays for 15s and reads as a stuck login.
         disable_hyprland_guiutils_check = true,
+        -- An update reloads the shell; a reload or crash while locked
+        -- must let the new shell take the lock back (Services/Session).
+        allow_session_lock_restore = true,
     },
     -- A system update that ships a newer Hyprland otherwise opens
     -- hyprland-update-screen ("Hyprland has been updated").

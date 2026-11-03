@@ -249,6 +249,11 @@ Singleton {
                 ai: { provider: "none", ollamaModel: "llama3", geminiModel: "" }
             })
 
+            property JsonObject bugReport: JsonObject {
+                property string repo: "Gamesearch56/modern-reports"
+                property bool screenshotsDefault: true
+            }
+
             property JsonObject backup: JsonObject {
                 property bool snapperEnabled: false
                 property bool resticEnabled: false
@@ -304,7 +309,8 @@ Singleton {
                 screenshotWindow: "SHIFT + PRINT",
                 screenshotFull: "SUPER + PRINT",
                 colorPicker: "SUPER + SHIFT + C",
-                filePreview: "SPACE"
+                filePreview: "SPACE",
+                bugReport: "SUPER + #"
             })
         }
     }
@@ -331,4 +337,5 @@ Singleton {
     readonly property alias accounts: adapter.accounts
     readonly property alias backup: adapter.backup
     readonly property alias keybinds: adapter.keybinds
+    readonly property alias bugReport: adapter.bugReport
 }

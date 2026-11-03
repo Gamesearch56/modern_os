@@ -2,8 +2,9 @@
 # `modern update`: desktop release + system packages. Source from
 # scripts/modern (needs SCRIPT_DIR, cfg, t, ensure_polkit_agent).
 #
-# Order matters: desktop release, then one privileged step for pacman
-# and the release's root needs, then the UI reload. Reloading earlier
+# Order matters: the password prompt first, then the desktop release,
+# then one privileged step for pacman and the release's root needs,
+# then the UI reload. Reloading earlier
 # restarts the shell — and with it Settings' update process — before
 # packages the new release depends on exist.
 #
@@ -20,45 +21,52 @@ _update_progress() {
 
 modern_update() {
     local state="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
-    local plan="$state/root-plan" desk_json desk_to="" pkgs=0 snap_flag rc=0
+    local plan="$state/root-plan" desk_json desk_to="" desk_new=0 pkgs=0 rc=0
     mkdir -p "$state"
 
     if [ -x "$SCRIPT_DIR/desktop-sync.sh" ]; then
         desk_json="$("$SCRIPT_DIR/desktop-sync.sh" status 2>/dev/null || true)"
         desk_to="$(printf '%s' "$desk_json" | _update_json_field pending to)"
         if [ -n "$desk_to" ]; then
-            _update_progress desktop
-            if [ -t 0 ]; then
-                "$SCRIPT_DIR/desktop-sync.sh" apply || return 1
-            else
-                MODERN_ROOT_PLAN="$plan" "$SCRIPT_DIR/desktop-sync.sh" apply || return 1
-            fi
+            desk_new=1
         elif [ -s "$plan" ]; then
             desk_to="$(printf '%s' "$desk_json" | _update_json_field "" from)"
         fi
     fi
-
     if command -v checkupdates >/dev/null 2>&1; then
         pkgs="$(checkupdates 2>/dev/null | grep -c . || true)"
+    fi
+
+    # Ask for the password before the desktop release, not after it.
+    # A release-only update asks only if it turns out to need root.
+    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ]; then
+        if [ -t 0 ]; then
+            sudo -v || return 1
+        else
+            _update_gate_open "$plan" || return 1
+        fi
+    fi
+
+    if [ "$desk_new" -eq 1 ]; then
+        _update_progress desktop
+        if [ -t 0 ]; then
+            "$SCRIPT_DIR/desktop-sync.sh" apply || return 1
+        else
+            if ! MODERN_ROOT_PLAN="$plan" "$SCRIPT_DIR/desktop-sync.sh" apply; then
+                _update_gate_send skip || true
+                return 1
+            fi
+        fi
     fi
 
     if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ]; then
         if [ -t 0 ]; then
             _update_tty "$plan" || return 1
         else
-            snap_flag=--no-snapshot
-            if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
-                snap_flag=--snapshot
-                t cli.snapshotting
-            fi
-            ensure_polkit_agent || true
-            local extra=()
-            [ -s "$plan" ] && extra=(--root-plan "$plan")
-            if [ -n "${MODERN_UPDATE_PROGRESS:-}" ]; then
-                extra+=(--progress)
-                _update_progress system "${pkgs:-0}"
-            fi
-            "${MODERN_PKEXEC:-pkexec}" "$SCRIPT_DIR/update-apply.sh" "$snap_flag" "${extra[@]}" || rc=$?
+            [ -n "${_UPDATE_GATE_FD:-}" ] || _update_gate_open "$plan" || return 1
+            [ "$(cfg backup.preUpdateSnapshot true)" != "true" ] || t cli.snapshotting
+            _update_progress system "${pkgs:-0}"
+            _update_gate_send go || rc=$?
             [ "$rc" -eq 0 ] || return "$rc"
         fi
         rm -f "$plan"
@@ -82,6 +90,36 @@ modern_update() {
         # runs us, and must not cut reload-ui.sh off halfway.
         setsid -f "$reload" </dev/null >/dev/null 2>&1 || true
     fi
+}
+
+# Starts `pkexec update-apply.sh --wait` (the password prompt) with its
+# stdin on a FIFO; _update_gate_send releases it. The root plan path is
+# fixed now; its contents are read only after "go".
+_update_gate_open() {
+    local plan="$1" fifo snap_flag=--no-snapshot
+    local extra=(--wait --root-plan "$plan")
+    [ "$(cfg backup.preUpdateSnapshot true)" != "true" ] || snap_flag=--snapshot
+    [ -z "${MODERN_UPDATE_PROGRESS:-}" ] || extra+=(--progress)
+    ensure_polkit_agent || true
+    fifo="$(mktemp -u "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/modern-update-gate.XXXXXX")"
+    mkfifo -m 0600 "$fifo" || return 1
+    "${MODERN_PKEXEC:-pkexec}" "$SCRIPT_DIR/update-apply.sh" "$snap_flag" "${extra[@]}" <"$fifo" &
+    _UPDATE_GATE_PID=$!
+    exec {_UPDATE_GATE_FD}>"$fifo"
+    rm -f "$fifo"
+}
+
+# Sends "go" or "skip" and returns the root step's exit status. A prompt
+# cancelled earlier has closed the FIFO; the write fails in a subshell
+# so SIGPIPE cannot take this shell down with it.
+_update_gate_send() {
+    local rc=0
+    [ -n "${_UPDATE_GATE_FD:-}" ] || return 0
+    (printf '%s\n' "$1" >&"$_UPDATE_GATE_FD") 2>/dev/null || true
+    exec {_UPDATE_GATE_FD}>&-
+    _UPDATE_GATE_FD=""
+    wait "$_UPDATE_GATE_PID" || rc=$?
+    return "$rc"
 }
 
 modern_update_notice() {

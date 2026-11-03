@@ -35,7 +35,7 @@ Singleton {
         moveToWorkspace9: "workspaces", moveToWorkspace10: "workspaces",
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
         screenshotFull: "screenshots",
-        colorPicker: "system",
+        colorPicker: "system", bugReport: "system",
         cheatsheet: "system", powerMenu: "system", controlCenter: "system",
         lockScreen: "system", exitSession: "system"
         // filePreview / clipboardHistory: omitted (former utilities category)

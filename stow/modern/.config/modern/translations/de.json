@@ -399,7 +399,8 @@
       "mouseResizeSuper": "Fenstergröße ändern",
       "mouseWorkspaceScroll": "Nächster oder vorheriger Arbeitsbereich",
       "mouseResizeBorder": "Fenster am Rand skalieren",
-      "mouseToggleSplit": "Teilung umschalten"
+      "mouseToggleSplit": "Teilung umschalten",
+      "bugReport": "Problem melden"
     },
     "category": {
       "applications": "Anwendungen",
@@ -1079,7 +1080,9 @@
       "desktopUnavailable": "Desktop-Update konnte nicht geprüft werden",
       "changelog": "Änderungen",
       "desktopApplied": "ModernOS auf {v} aktualisiert",
-      "desktopAppliedBody": "Der Desktop wurde mit der neuen Version neu geladen."
+      "desktopAppliedBody": "Der Desktop wurde mit der neuen Version neu geladen.",
+      "packagesDone": "{n} Pakete aktualisiert",
+      "packageDone": "1 Paket aktualisiert"
     },
     "overview": {
       "stats": "Live-Werte",
@@ -1103,7 +1106,9 @@
       "firmware": "Firmware",
       "loader": "Bootloader",
       "initrd": "Initrd",
-      "userspace": "Userspace"
+      "userspace": "Userspace",
+      "osNameVersion": "ModernOS {version} (Arch Linux)",
+      "osNameDev": "ModernOS {version}, Entwicklungsstand {commit} (Arch Linux)"
     },
     "bar": {
       "available": "Verfügbare Widgets",
@@ -1441,5 +1446,103 @@
     "downloadFailed": "Das Battle.net-Installationsprogramm konnte nicht geladen werden. Prüfe deine Internetverbindung und versuche es erneut.",
     "noRunner": "Battle.net braucht das Paket umu-launcher oder Steams Proton. Installiere umu-launcher und versuche es erneut.",
     "crashed": "Battle.net wurde direkt nach dem Start beendet. Details stehen in %s."
+  },
+  "bugReport": {
+    "title": "Problem melden",
+    "stepDescribe": "Was ist passiert?",
+    "stepShots": "Bildschirmfotos",
+    "stepReview": "Was gesendet wird",
+    "stepSend": "Senden",
+    "summary": "Kurze Zusammenfassung",
+    "summaryHelp": "Hilfe zur kurzen Zusammenfassung",
+    "summaryHelpBody": "Ein Satz, der das Problem benennt. Zum Beispiel: Ton fällt nach dem Aufwachen aus.",
+    "steps": "Schritte zum Wiederholen",
+    "stepsHelp": "Hilfe zu diesen Schritten",
+    "stepsHelpBody": "Schreib die Schritte so, dass dasselbe auf diesem Computer noch einmal passiert.\n\nBeginne damit, was du gerade getan hast.\nJede Aktion in eine eigene Zeile, in der Reihenfolge.\nSchreib dazu, was du erwartet hast und was stattdessen passiert ist.\nSag, ob es jedes Mal, nur manchmal oder nur einmal passiert.",
+    "area": "Was ist betroffen?",
+    "areas": {
+      "display": "Bildschirm",
+      "hyprland": "Hyprland",
+      "shell": "Shell",
+      "sound": "Ton",
+      "bluetooth": "Bluetooth",
+      "network": "Internet",
+      "games": "Spiele",
+      "updates": "Updates",
+      "lock": "Sperrbildschirm & Anmeldung",
+      "apps": "Apps",
+      "other": "Etwas anderes"
+    },
+    "when": "Wann ist es passiert?",
+    "repeat": "Passiert es wieder?",
+    "shotsHint": "Aufgenommen kurz bevor dieses Fenster aufging. Entferne den Haken bei allem, was Privates zeigt.",
+    "retake": "Neu aufnehmen",
+    "noShots": "Keine Bildschirmfotos",
+    "reviewHint": "Namen, Mailadressen, IP-Adressen und Netzwerknamen werden automatisch entfernt. Passwörter, Schlüssel und Browserdaten sind nie enthalten.",
+    "collecting": "Systeminformationen werden gesammelt…",
+    "view": "Öffnen",
+    "files": {
+      "system": "System und Version",
+      "hyprland": "Fenster und Bildschirme",
+      "hyprland-log": "Fenstermanager-Protokoll",
+      "journal-user": "Desktop-Protokoll",
+      "journal-system": "Systemprotokoll",
+      "journal-previous-boot": "Fehler vom letzten Start",
+      "quickshell-log": "Shell-Protokoll",
+      "update-log": "Update-Protokoll",
+      "pacman-log": "Paketverlauf",
+      "hardware": "Hardware",
+      "audio": "Audiogeräte",
+      "bluetooth": "Bluetooth-Geräte",
+      "network": "Netzwerkstatus",
+      "games": "Spiele",
+      "session": "Sperrbildschirm und Anmeldung",
+      "config": "Einstellungen",
+      "doctor": "Systemprüfung",
+      "failed-units": "Fehlgeschlagene Dienste",
+      "coredumps": "Abgestürzte Programme"
+    },
+    "send": "Bericht senden",
+    "sending": "Wird gesendet…",
+    "export": "Als Datei speichern",
+    "exported": "Gespeichert unter {path}",
+    "sent": "Bericht #{n} gesendet. Danke!",
+    "sentQuick": "Bericht gesendet. Danke!",
+    "queued": "Keine Verbindung. Der Bericht ist gespeichert und wird automatisch gesendet.",
+    "queuedSent": "Ein gespeicherter Problembericht wurde gesendet",
+    "notSetUp": "Das Melden ist auf diesem Computer nicht eingerichtet. Der Bericht wurde gespeichert unter:",
+    "notSetUpHint": "Das Melden ist auf diesem Computer nicht eingerichtet. Speichere den Bericht als Datei und sende ihn selbst.",
+    "refused": "Der Bericht konnte nicht gesendet werden, weil der Zugriff verweigert wurde. Speichere ihn stattdessen als Datei.",
+    "failed": "Der Bericht konnte nicht gesendet werden. Speichere ihn stattdessen als Datei.",
+    "quickTitle": "Schnellbericht (Tastenkürzel)",
+    "next": "Weiter",
+    "back": "Zurück",
+    "close": "Schließen",
+    "needSummary": "Gib zuerst eine kurze Zusammenfassung ein",
+    "reportThis": "Dieses Problem melden",
+    "settingsTitle": "Problemberichte",
+    "screenshotsDefault": "Bildschirmfotos standardmäßig mitsenden",
+    "ready": "Das Melden ist eingerichtet",
+    "missing": "Das Melden ist noch nicht eingerichtet: kein Zugangstoken auf diesem Computer",
+    "waiting": "{n} Berichte warten auf den Versand",
+    "whenOptions": {
+      "now": "Gerade eben",
+      "today": "Heute",
+      "earlier": "In den letzten Tagen"
+    },
+    "repeatOptions": {
+      "always": "Jedes Mal",
+      "sometimes": "Manchmal",
+      "once": "Nur einmal"
+    },
+    "resultTitle": {
+      "sent": "Bericht gesendet",
+      "queued": "Für später gespeichert",
+      "notSetUp": "Nicht eingerichtet",
+      "refused": "Zugriff verweigert",
+      "failed": "Senden fehlgeschlagen",
+      "exported": "Als Datei gespeichert",
+      "sending": "Bericht wird gesendet"
+    }
   }
 }

@@ -30,6 +30,7 @@ Singleton {
     property bool _desktopDone: false
     property bool _queued: false
     property var _omit: ({})
+    property var _ran: []
     property int _gen: 0
     property int _hold: 0
     property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, reason: "", iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
@@ -162,6 +163,7 @@ Singleton {
         if (root.running || root.pending.length === 0)
             return;
         root.open = true;
+        root._ran = root.pending;
         root.log = "";
         root.step = I18n.t("settings.updateStep");
         meter.reset();
@@ -204,6 +206,7 @@ Singleton {
         if (!root.running) {
             root.open = true;
             root.running = true;
+            root._ran = root.pending;
         }
         const marker = meter.feed(t);
         root.progress = meter.value;
@@ -225,8 +228,8 @@ Singleton {
         root.progress = ok ? 1 : -1;
         if (code === 3)
             root.notify(I18n.t("settings.update.rolledBack"), I18n.t("settings.update.rolledBackBody"));
-        else
-            root.notify(ok ? I18n.t("settings.update.success") : I18n.t("settings.update.failed"), root.step);
+        else if (!ok || classify.doneSummary(root._ran).length)
+            root.notify(ok ? classify.doneSummary(root._ran) : I18n.t("settings.update.failed"), ok ? "" : root.step);
         if (ok) {
             closeTimer.restart();
             root.refresh();

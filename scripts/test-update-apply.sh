@@ -43,11 +43,23 @@ export HOME="$TMP/home" XDG_STATE_HOME="$TMP/state" XDG_CONFIG_HOME="$TMP/cfg" X
 printf '#!/bin/sh\nexit 0\n' >"$HOME/.local/bin/phylax"
 printf '#!/bin/sh\nexit 0\n' >"$BIN/systemctl"
 printf '#!/bin/sh\n[ -f "%s/pkgs" ] && cat "%s/pkgs"\nexit 0\n' "$TMP" "$TMP" >"$BIN/checkupdates"
+# Like update-apply.sh --wait: a cancelled prompt exits at once; an
+# accepted one waits for "go" before it reads the root plan.
 cat >"$BIN/pkexec" <<EOF
 #!/bin/sh
 printf '%s\n' "\$*" >>"$TMP/pkexec.log"
-for a in "\$@"; do [ -f "\$a" ] && cp "\$a" "$TMP/seen-plan"; done
-exit "\$(cat "$TMP/pkexec-rc" 2>/dev/null || echo 0)"
+[ -f "$TMP/desk-at-prompt" ] || git -C "$CLONE" describe --tags --exact-match >"$TMP/desk-at-prompt" 2>/dev/null
+rc="\$(cat "$TMP/pkexec-rc" 2>/dev/null || echo 0)"
+[ "\$rc" -eq 0 ] || exit "\$rc"
+read -r go || go=""
+echo "\$go" >"$TMP/gate"
+[ "\$go" = go ] || exit 0
+prev=""
+for a in "\$@"; do
+    [ "\$prev" = --root-plan ] && [ -s "\$a" ] && cp "\$a" "$TMP/seen-plan"
+    prev="\$a"
+done
+exit 0
 EOF
 cat >"$BIN/reload" <<EOF
 #!/bin/sh
@@ -59,7 +71,7 @@ export MODERN_TEST_FIXTURE=1 MODERN_TEST_RUN_INSTALL=1 MODERN_DESKTOP_REPO="$CLO
 
 PLAN="$XDG_STATE_HOME/modern/root-plan"
 MARKER="$XDG_STATE_HOME/modern/update-applied"
-reset() { rm -f "$TMP/pkexec.log" "$TMP/seen-plan" "$TMP/reloaded" "$TMP/pkexec-rc" "$TMP/pkgs"; }
+reset() { rm -f "$TMP/pkexec.log" "$TMP/seen-plan" "$TMP/reloaded" "$TMP/pkexec-rc" "$TMP/pkgs" "$TMP/gate" "$TMP/desk-at-prompt"; }
 update() { "$MODERN" update </dev/null >"$TMP/out" 2>&1; }
 wait_reload() {
     local _
@@ -68,7 +80,7 @@ wait_reload() {
 }
 
 reset
-if update && grep -q -- '--snapshot --root-plan' "$TMP/pkexec.log" \
+if update && grep -q -- '--snapshot --wait --root-plan' "$TMP/pkexec.log" \
     && grep -qx 'pkg newpkg' "$TMP/seen-plan" && grep -qx greetd "$TMP/seen-plan"; then
     ok "release root needs reach one pkexec (snapshot + root plan)"
 else
@@ -107,12 +119,25 @@ fi
 "$MODERN" update-notice >/dev/null
 
 reset
+release v0.4.0 thirdpkg
+git_cfg -C "$CLONE" checkout -q --detach v0.3.0
 echo 'mesa 1 -> 2' >"$TMP/pkgs"
-if update && grep -q -- '--snapshot' "$TMP/pkexec.log" && ! grep -q -- '--root-plan' "$TMP/pkexec.log" \
+if update && [ "$(cat "$TMP/desk-at-prompt")" = v0.3.0 ] && [ "$(cat "$TMP/gate")" = go ] \
+    && grep -qx 'pkg thirdpkg' "$TMP/seen-plan" && [ "$(grep -c . "$TMP/pkexec.log")" -eq 1 ] \
+    && wait_reload && [ "$(cat "$MARKER")" = v0.4.0 ]; then
+    ok "packages pending: the one prompt comes before the release, which then hands over its plan"
+else
+    err "prompt not first: at=$(cat "$TMP/desk-at-prompt" 2>/dev/null) gate=$(cat "$TMP/gate" 2>/dev/null) $(cat "$TMP/out")"
+fi
+"$MODERN" update-notice >/dev/null
+
+reset
+echo 'mesa 1 -> 2' >"$TMP/pkgs"
+if update && grep -q -- '--snapshot' "$TMP/pkexec.log" && [ ! -e "$TMP/seen-plan" ] \
     && ! wait_reload && [ ! -e "$MARKER" ]; then
     ok "package-only update: pkexec without plan, no reload"
 else
-    err "package-only update wrong: $(cat "$TMP/pkexec.log" 2>/dev/null)"
+    err "package-only update wrong: plan=$([ -e "$TMP/seen-plan" ] && echo seen) reload=$(cat "$TMP/reloaded" 2>/dev/null) marker=$(cat "$MARKER" 2>/dev/null) $(cat "$TMP/out")"
 fi
 
 reset

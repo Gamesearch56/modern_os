@@ -92,3 +92,4 @@ StoreMutate 1.0 StoreMutate.qml
 StoreBrowse 1.0 StoreBrowse.qml
 StoreDetail 1.0 StoreDetail.qml
 StoreFetch 1.0 StoreFetch.qml
+singleton BugReport 1.0 BugReport.qml

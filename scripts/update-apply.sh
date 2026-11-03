@@ -5,6 +5,10 @@
 # The work itself runs in the modern-system-update service (see
 # lib/update-guard.sh); this process only streams its log. Exit 3: a
 # half-applied update was rolled back to the pre-update snapshot.
+#
+# --wait: `modern update` starts this (and with it the password prompt)
+# before the desktop release, which writes the root plan. One line on
+# stdin then says "go"; anything else, or EOF, means no root work.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -12,9 +16,10 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SNAPSHOT=0
 PLAN=""
 PROGRESS=0
+WAIT=0
 ARGS=("$@")
 usage() {
-    printf 'usage: update-apply.sh [--snapshot|--no-snapshot] [--root-plan FILE] [--progress]\n' >&2
+    printf 'usage: update-apply.sh [--snapshot|--no-snapshot] [--root-plan FILE] [--progress] [--wait]\n' >&2
 }
 # Stage markers for Services/UpdateProgress.qml. pacman's own messages
 # are translated, so the stages cannot be read from them.
@@ -28,6 +33,9 @@ while [ $# -gt 0 ]; do
             ;;
         --progress)
             PROGRESS=1
+            ;;
+        --wait)
+            WAIT=1
             ;;
         --no-snapshot)
             SNAPSHOT=0
@@ -52,6 +60,12 @@ done
 if [ "$(id -u)" -ne 0 ]; then
     printf 'update-apply: must run as root (pkexec)\n' >&2
     exit 1
+fi
+
+if [ "$WAIT" -eq 1 ] && [ -z "${MODERN_UPDATE_UNIT:-}" ]; then
+    go=""
+    read -r go || true
+    [ "$go" = go ] || exit 0
 fi
 
 # shellcheck source=lib/update-guard.sh

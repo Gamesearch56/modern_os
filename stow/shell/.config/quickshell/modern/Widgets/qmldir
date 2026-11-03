@@ -14,6 +14,7 @@ MPopup 1.0 MPopup.qml
 MDialog 1.0 MDialog.qml
 MOverlay 1.0 MOverlay.qml
 MStatusCard 1.0 MStatusCard.qml
+MStepper 1.0 MStepper.qml
 MWindowShell 1.0 MWindowShell.qml
 MSectionHeader 1.0 MSectionHeader.qml
 MHint 1.0 MHint.qml
