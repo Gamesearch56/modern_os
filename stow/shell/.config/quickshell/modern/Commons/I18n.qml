@@ -11,6 +11,11 @@
 // collides with QtObject's inherited `tr()` (Qt Linguist). It doesn't,
 // in practice (verified), but `t()` is one character shorter and settles
 // the question for good. See docs/DECISIONS.md #18.
+//
+// A desktop update rewrites these files in place (git checkout/merge in
+// desktop-sync.sh), so the watcher can fire on a missing or half-written
+// copy. The last good table stays in use and the file is read again;
+// only a file still broken after `_maxTries` reads is reported.
 pragma Singleton
 
 import Quickshell
@@ -23,6 +28,7 @@ Singleton {
     readonly property string home: Quickshell.env("HOME")
     readonly property string activeLang: Config.language.ui ?? "en"
     readonly property string fallbackLang: Config.language.fallback ?? "en"
+    readonly property int _maxTries: 8
 
     property var _active: ({})
     property var _fallback: ({})
@@ -32,20 +38,21 @@ Singleton {
         id: activeFile
         path: `${root.home}/.config/modern/translations/${root.activeLang}.json`
         watchChanges: true
-        printErrors: true
+        printErrors: false
         onFileChanged: reload()
         onLoaded: {
-            try {
-                root._active = JSON.parse(text());
-            } catch (e) {
-                Logger.error("I18n", `parse failed for "${root.activeLang}.json": ${e}`);
-                root._active = ({});
+            const table = root._parse(text(), activeRetry, root.activeLang);
+            if (table !== null) {
+                root._active = table;
+                root._gen++;
             }
-            root._gen++;
         }
         onLoadFailed: (error) => {
+            if (root._again(activeRetry))
+                return;
             Logger.warn("I18n", `failed to load "${root.activeLang}.json" (${error}) — falling back to "${root.fallbackLang}" only`);
             root._active = ({});
+            root._gen++;
         }
     }
 
@@ -56,20 +63,59 @@ Singleton {
         id: fallbackFile
         path: `${root.home}/.config/modern/translations/${root.fallbackLang}.json`
         watchChanges: true
-        printErrors: true
+        printErrors: false
         onFileChanged: reload()
         onLoaded: {
-            try {
-                root._fallback = JSON.parse(text());
-            } catch (e) {
-                Logger.error("I18n", `parse failed for fallback "${root.fallbackLang}.json": ${e}`);
-                root._fallback = ({});
+            const table = root._parse(text(), fallbackRetry, root.fallbackLang);
+            if (table !== null) {
+                root._fallback = table;
+                root._gen++;
             }
-            root._gen++;
         }
         onLoadFailed: (error) => {
+            if (root._again(fallbackRetry))
+                return;
             Logger.warn("I18n", `failed to load fallback "${root.fallbackLang}.json" (${error})`);
             root._fallback = ({});
+            root._gen++;
+        }
+    }
+
+    Timer {
+        id: activeRetry
+        property int tries: 0
+        interval: Math.max(Motion.fileSettleMs, 1)
+        onTriggered: activeFile.reload()
+    }
+
+    Timer {
+        id: fallbackRetry
+        property int tries: 0
+        interval: Math.max(Motion.fileSettleMs, 1)
+        onTriggered: fallbackFile.reload()
+    }
+
+    // Schedules another read; false once the retries are used up.
+    function _again(retry: var): bool {
+        if (retry.tries >= root._maxTries) {
+            retry.tries = 0;
+            return false;
+        }
+        retry.tries++;
+        retry.restart();
+        return true;
+    }
+
+    // The parsed table, or null while the file is still being rewritten.
+    function _parse(raw: string, retry: var, lang: string): var {
+        try {
+            const table = JSON.parse(raw);
+            retry.tries = 0;
+            return table;
+        } catch (e) {
+            if (!root._again(retry))
+                Logger.error("I18n", `parse failed for "${lang}.json": ${e}`);
+            return null;
         }
     }
 

@@ -45,6 +45,8 @@ Singleton {
     readonly property int durationBluetoothScan: 8000
     // Finished update stays on screen at 100% before the shell restarts.
     readonly property int durationUpdateSettle: 2500
+    // Re-read of a file another process is still rewriting — never scaled.
+    readonly property int durationFileSettle: 400
     // External process watchdog (ddcutil / hyprctl / theme-apply) — wall clock.
     readonly property int durationProcessWatch: 20000
     readonly property int durationFollowWatch: 30000
@@ -64,6 +66,7 @@ Singleton {
     readonly property int wifiScanMs: root.durationWifiScan
     readonly property int bluetoothScanMs: root.durationBluetoothScan
     readonly property int updateSettleMs: root.durationUpdateSettle
+    readonly property int fileSettleMs: root.durationFileSettle
     readonly property int processWatchMs: root.durationProcessWatch
     readonly property int followWatchMs: root.durationFollowWatch
     readonly property bool overlaysFade: root.scale !== 0 && root.overlay !== "zoom"
