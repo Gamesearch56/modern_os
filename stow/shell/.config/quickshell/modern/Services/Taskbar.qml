@@ -134,12 +134,26 @@ Singleton {
                     break;
                 }
             }
-            // Autostart apps park on special:background — never SIGKILL.
-            if (anyAutostart) {
+            // A visible autostart app parks. One already on the background
+            // workspace must close, or the row stays and nothing happens.
+            if (anyAutostart && !entry.background) {
                 for (let j = 0; j < addrs.length; j++) {
                     const a = String(addrs[j] || "");
                     if (a.length)
                         Hypr.closeWindow(a);
+                }
+                Hypr.refreshToplevels();
+                return;
+            }
+            if (anyAutostart) {
+                for (let j = 0; j < addrs.length; j++) {
+                    const a = String(addrs[j] || "");
+                    if (!a.length)
+                        continue;
+                    const id = Hypr.autostartIdOf(Hypr.toplevelByAddress(a));
+                    if (id.length)
+                        Hypr.suppressAutostartRespawn(id);
+                    Hypr.dismissWindow(a);
                 }
                 Hypr.refreshToplevels();
                 return;
@@ -151,24 +165,8 @@ Singleton {
                     Hypr.killWindow(a);
             }
         } else {
-            // Headless process/tray: park matching autostart toplevels.
-            const list = Hypr.toplevelList || [];
-            let parked = false;
-            for (let p = 0; p < list.length; p++) {
-                const t = list[p];
-                if (!t || !Hypr.isAutostartWindow(t))
-                    continue;
-                const addr = String(t.address || "");
-                if (!addr.length)
-                    continue;
-                Hypr.closeWindow(addr);
-                parked = true;
-            }
-            if (parked) {
-                Hypr.refreshToplevels();
-                RunningApps.refresh();
-                return;
-            }
+            // A headless row is its own process. Parking every login app
+            // here used to return before that process was killed.
             RunningApps.killEntry(entry);
             if (entry.kind === "tray")
                 Tray.dismiss(entry.item);

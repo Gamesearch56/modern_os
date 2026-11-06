@@ -162,9 +162,12 @@ QtObject {
         return "false";
     }
 
-    function closeWindow(address: string) {
-        if (root.hideAutostart(address))
-            return;
+    function autostartIdOf(toplevel: var): string {
+        return autostart.idOf(toplevel);
+    }
+
+    // Close the toplevel. Skips the autostart park used by a first close.
+    function dismissWindow(address: string) {
         const addr = root._addrHypr(address);
         if (!addr.length)
             return;
@@ -177,6 +180,12 @@ QtObject {
             root.host.dispatch("hl.dsp.window.close({ window = 'address:" + addr + "' })");
         else
             root.host.dispatch("closewindow address:" + addr);
+    }
+
+    function closeWindow(address: string) {
+        if (root.hideAutostart(address))
+            return;
+        root.dismissWindow(address);
     }
 
     function killWindow(address: string) {

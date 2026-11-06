@@ -209,6 +209,8 @@ Singleton {
     }
     function toplevelByAddress(address: string): var { return wins.toplevelByAddress(address); }
     function closeWindow(address: string) { wins.closeWindow(address); }
+    function dismissWindow(address: string) { wins.dismissWindow(address); }
+    function autostartIdOf(toplevel: var): string { return wins.autostartIdOf(toplevel); }
     function closeFocused(): string { return wins.closeFocused(); }
     function killWindow(address: string) { wins.killWindow(address); }
     function forceKillAutostart(desktopId: string): int {

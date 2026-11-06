@@ -81,6 +81,17 @@ QtObject {
         return false;
     }
 
+    function idOf(toplevel: var): string {
+        const list = Config.general.autostart || [];
+        if (!toplevel)
+            return "";
+        for (let j = 0; j < list.length; j++) {
+            if (root.matchesDesktop(toplevel, list[j]))
+                return root._stem(list[j]);
+        }
+        return "";
+    }
+
     function isAutostartWindow(toplevel: var): bool {
         const list = Config.general.autostart || [];
         if (!toplevel || list.length === 0)
