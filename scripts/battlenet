@@ -12,6 +12,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=../install/lib/i18n.sh
 source "$REPO_ROOT/install/lib/i18n.sh"
+# shellcheck source=../install/lib/ge-proton.sh
+source "$REPO_ROOT/install/lib/ge-proton.sh"
 
 MODERN_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/modern"
 ENV_FILE="${MODERN_DIR}/battlenet.env"
@@ -116,6 +118,14 @@ find_proton() {
             printf '%s\n' "$PROTONPATH/proton"
             return 0
         fi
+    fi
+    # Install places this outside Steam so a new account does not need
+    # battlenet.env. An explicit PROTONPATH above still wins.
+    local private
+    private="$(ge_proton_dir "$HOME")/proton"
+    if [ -x "$private" ]; then
+        printf '%s\n' "$private"
+        return 0
     fi
     local c
     for c in \
