@@ -135,6 +135,23 @@ local function excluded(w)
     if c == "agent.exe" or c:find("agent%.exe", 1, false) then
         return true
     end
+    -- Wine's own shell matches .*\\.exe. Fullscreen makes it a white
+    -- sheet behind the Battle.net window. The games are other classes.
+    local shell = {
+        ["explorer.exe"] = true, ["wineboot.exe"] = true, ["winedevice.exe"] = true,
+        ["plugplay.exe"] = true, ["rpcss.exe"] = true, ["svchost.exe"] = true,
+        ["services.exe"] = true, ["conhost.exe"] = true, ["rundll32.exe"] = true,
+    }
+    if shell[c] then
+        return true
+    end
+    -- Proton stamps every window in the prefix with steam_app_<id>,
+    -- including explorer.exe /desktop. That host has an empty title.
+    -- Fullscreening it paints a white monitor behind the launcher.
+    -- A game window in the same prefix gets a real title first.
+    if t == "" and c:find("^steam_app_%d+$") then
+        return true
+    end
     local hay = c .. "\n" .. t
     if hay:find("battle%.net", 1, false) or hay:find("battlenet", 1, true)
         or hay:find("blizzard battle", 1, true) then
@@ -283,11 +300,55 @@ end
 -- fullscreen handover for a window opening over a fullscreen one. A
 -- fullscreen dispatch from there crashes 0.57 in setFullscreenMode, so
 -- every event only schedules the check for after the map.
+-- Do not unset fullscreen from window.fullscreen: SUPER+F is that event,
+-- and pulling the launcher back out of it makes the shortcut one-way.
+local function workspace_name(w)
+    local ws = w and w.workspace
+    if type(ws) ~= "table" and type(ws) ~= "userdata" then
+        return ""
+    end
+    local ok, name = pcall(function()
+        return ws.name
+    end)
+    if ok and type(name) == "string" then
+        return name
+    end
+    return ""
+end
+
+-- The host is parked at map time. If that same window later turns out
+-- to be a game (title arrives after map), bring it back and let
+-- consider() fullscreen it. The empty desktop never gets a title.
+local function release_wine_host(w)
+    if not workspace_name(w):find("special:wine", 1, true) then
+        return
+    end
+    if excluded(w) or not is_game(w) then
+        return
+    end
+    local mon = hl.get_active_monitor and hl.get_active_monitor()
+    local aw = mon and (mon.activeWorkspace or mon.active_workspace)
+    local id = 0
+    if type(aw) == "table" then
+        id = tonumber(aw.id) or 0
+    elseif type(aw) == "number" then
+        id = aw
+    end
+    if id < 1 or not (hl.dispatch and hl.dsp and hl.dsp.window and hl.dsp.window.move) then
+        return
+    end
+    local spec = { workspace = tostring(id), follow = true, window = w }
+    pcall(function()
+        hl.dispatch(hl.dsp.window.move(spec))
+    end)
+end
+
 local function later(w)
     if not hl.timer then
         return
     end
     hl.timer(function()
+        pcall(release_wine_host, w)
         pcall(consider, w)
     end, { timeout = 50, type = "oneshot" })
 end

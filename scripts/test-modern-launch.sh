@@ -232,6 +232,18 @@ else
     err "primaryDescription + ProfileForm + no games snap_primary required"
 fi
 
+if grep -Fq 'explorer.exe' "$GAMES" \
+    && grep -Fq 'steam_app_%d+' "$GAMES" \
+    && grep -Fq 'proton-desktop-silent' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && ! grep -Fq 'keep_windowed' "$GAMES" \
+    && grep -Fq 'wine-shell-silent' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && grep -Fq 'battlenet-no-client-fullscreen' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && grep -Fq 'suppress_event = "fullscreen maximize"' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua"; then
+    ok "Battle.net ignores its own fullscreen request; SUPER+F still toggles"
+else
+    err "launcher must suppress client fullscreen without trapping SUPER+F"
+fi
+
 if grep -Fq 'nautilus' "$GAMES" \
     && grep -Fq 'MAX_ID' "$GAMES" \
     && grep -Fq 'window.fullscreen' "$GAMES" \
