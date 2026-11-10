@@ -167,6 +167,9 @@ if [[ -x "$RAISE" ]] \
     && grep -Fq 'bind the needle' "$RAISE" \
     && grep -Fq 'raiseDesktopOrLaunch' "$HYPR_WIN" \
     && grep -Fq 'raiseDesktopOrLaunch' "$LAUNCHER" \
+    && grep -Fq 'windowParked' "$HYPR_WIN" \
+    && grep -Fq 'windowParked' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq 'special:' "$ROOT/stow/shell/.config/quickshell/modern/Services/taskbarEntries.js" \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprAutostart.qml" \
     && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \

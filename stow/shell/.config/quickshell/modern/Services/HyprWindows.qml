@@ -40,25 +40,50 @@ QtObject {
             root.host.dispatch("focuswindow address:" + addr);
     }
 
+    // special:background has no numeric id. Focusing a window there opens
+    // the whole workspace, so mail, calendar, and WhatsApp appear together.
+    function windowParked(toplevel: var): bool {
+        if (!toplevel)
+            return false;
+        const ipc = toplevel.lastIpcObject || null;
+        if (ipc && (ipc.hidden === true || ipc.mapped === false))
+            return true;
+        const spots = [toplevel.workspace, ipc && ipc.workspace];
+        for (let i = 0; i < spots.length; i++) {
+            const ws = spots[i];
+            if (!ws || (typeof ws !== "object"))
+                continue;
+            const id = Number(ws.id);
+            if (!Number.isNaN(id) && id < 0)
+                return true;
+            const name = String(ws.name || ws.address || "");
+            if (name.indexOf("special:") === 0 || ws.type === "special")
+                return true;
+        }
+        return false;
+    }
+
     function activateWindow(address: string) {
         const addr = root._addrHypr(address);
         if (!addr.length)
             return;
         const t = root.toplevelByAddress(addr);
-        const wsId = t && t.workspace ? Number(t.workspace.id) : 0;
-        const ipc = t ? t.lastIpcObject : null;
-        const hidden = !!(ipc && (ipc.hidden === true || ipc.mapped === false));
+        const parked = root.windowParked(t);
         // The script fades in place. A plain move slides the window in
         // from its tile on the background workspace.
-        if ((wsId < 0 || hidden) && root.host._lua) {
+        if (parked && root.host._lua) {
             const fw = root.host.focusedWorkspace;
             const id = (fw && Number(fw.id) > 0) ? Number(fw.id) : 1;
             Quickshell.execDetached([Paths.script("background-raise.sh"), addr, String(id)]);
             return;
         }
-        if (wsId < 0 || hidden)
+        if (parked) {
             root.moveToCurrentWorkspace(addr);
-        else if (wsId > 0)
+            root.focusWindow(addr);
+            return;
+        }
+        const wsId = t && t.workspace ? Number(t.workspace.id) : 0;
+        if (wsId > 0)
             root.host.focusWorkspace(wsId);
         root.focusWindow(addr);
     }
