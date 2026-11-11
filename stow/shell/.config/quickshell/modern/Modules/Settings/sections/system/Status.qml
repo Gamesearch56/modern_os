@@ -15,6 +15,8 @@ MStatusCard {
             return "settings.update.checking";
         if (Update.desktop && Update.desktop.pending === true && String(Update.desktop.to || "").length)
             return "settings.update.desktopAvailable";
+        if (Update.pending.length === 1)
+            return "settings.update.availableOne";
         if (Update.pending.length > 0)
             return "settings.update.available";
         return "settings.update.upToDate";

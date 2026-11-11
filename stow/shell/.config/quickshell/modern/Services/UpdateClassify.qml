@@ -48,6 +48,8 @@ QtObject {
             if (String(p && p.kind || "") === "desktop" && String(p && p.to || "").length)
                 return I18n.t("settings.update.desktopAvailable", ({ v: String(p.to) }));
         }
+        if (list.length === 1)
+            return I18n.t("settings.update.availableOne");
         return I18n.t("settings.update.available", ({ n: String(list.length) }));
     }
 
