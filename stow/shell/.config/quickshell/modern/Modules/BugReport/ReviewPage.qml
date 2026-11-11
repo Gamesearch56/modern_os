@@ -10,6 +10,8 @@ ColumnLayout {
 
     spacing: Tokens.spacing.xl
 
+    readonly property alias scroll: files
+
     function _size(n: real): string {
         if (n >= 1e6)
             return I18n.t("units.mb", { n: (n / 1e6).toFixed(1) });
@@ -35,10 +37,12 @@ ColumnLayout {
     }
 
     ListView {
+        id: files
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
         visible: !BugReport.collecting
+        keyNavigationEnabled: false
         model: BugReport.files
         spacing: Tokens.spacing.xxs
 

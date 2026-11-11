@@ -24,17 +24,31 @@ QtObject {
         return n === "vivaldi" ? "web-browser" : "package-x-generic-symbolic";
     }
 
-    // A desktop release announces itself after the reload ("ModernOS
-    // updated to …"), so a run that carried one stays quiet here.
+    // A desktop release already showed its own progress overlay, so a
+    // run that carried one stays quiet here.
     function doneSummary(ran): string {
         const list = ran || [];
         if (list.some(p => String(p && p.kind || "") === "desktop"))
             return "";
+        if (list.length === 1 && String(list[0] && list[0].kind || "") === "boot")
+            return I18n.t("settings.update.bootRepaired");
         if (list.length === 1)
             return I18n.t("settings.update.packageDone");
         return list.length > 1
             ? I18n.t("settings.update.packagesDone", ({ n: String(list.length) }))
             : I18n.t("settings.update.success");
+    }
+
+    // A desktop release replaces the package count. The version is the
+    // pending card's `to` field from desktop-sync.
+    function availableNotice(pending): string {
+        const list = pending || [];
+        for (let i = 0; i < list.length; i++) {
+            const p = list[i];
+            if (String(p && p.kind || "") === "desktop" && String(p && p.to || "").length)
+                return I18n.t("settings.update.desktopAvailable", ({ v: String(p.to) }));
+        }
+        return I18n.t("settings.update.available", ({ n: String(list.length) }));
     }
 
     function stem(id: string): string {
@@ -109,7 +123,8 @@ QtObject {
             reason: reason,
             iconName: "",
             iconSource: Paths.brandLogo,
-            subtitle: subtitle
+            subtitle: subtitle,
+            bootRepair: data.bootRepair === true
         };
     }
 
@@ -123,14 +138,23 @@ QtObject {
             reason: String(desk.reason || ""),
             iconName: desk.iconName || "",
             iconSource: desk.iconSource || Paths.brandLogo,
-            subtitle: desk.subtitle || I18n.t("settings.update.desktopCurrent")
+            subtitle: desk.subtitle || I18n.t("settings.update.desktopCurrent"),
+            bootRepair: desk.bootRepair === true
         };
-        const all = [];
+        const boot = card.bootRepair ? [{
+            kind: "boot",
+            name: I18n.t("settings.update.bootRepair"),
+            from: "",
+            to: "",
+            iconName: "cpu",
+            subtitle: I18n.t("settings.update.bootRepairBody")
+        }] : [];
+        const all = boot.slice();
         if (card.pending)
             all.push(card);
         for (let i = 0; i < pacmanAll.length; i++)
             all.push(pacmanAll[i]);
-        const sys = card.pending ? [card].concat(pacmanSys) : pacmanSys;
+        const sys = boot.concat(card.pending ? [card].concat(pacmanSys) : pacmanSys);
         return { systemPkgs: sys, otherPkgs: pacmanOther, pending: all };
     }
 }

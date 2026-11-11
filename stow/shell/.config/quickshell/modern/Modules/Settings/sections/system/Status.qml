@@ -13,11 +13,13 @@ MStatusCard {
     titleKey: {
         if (Update.checking && Update.pending.length === 0)
             return "settings.update.checking";
+        if (Update.desktop && Update.desktop.pending === true && String(Update.desktop.to || "").length)
+            return "settings.update.desktopAvailable";
         if (Update.pending.length > 0)
             return "settings.update.available";
         return "settings.update.upToDate";
     }
-    titleParams: ({ n: String(Update.pending.length) })
+    titleParams: ({ n: String(Update.pending.length), v: String((Update.desktop && Update.desktop.to) || "") })
 
     trailing: MButton {
         kind: "tonal"

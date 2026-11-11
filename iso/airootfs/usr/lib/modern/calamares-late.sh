@@ -591,7 +591,11 @@ strip_live() {
     install -d -m 0755 "$(dirname "$dest")"
     cat >"$dest" <<'EOF'
 # Restored after the live archiso preset is stripped.
+# ALL_kver is where the kernel package copies the new vmlinuz. Without
+# it, mkinitcpio skips the image and the next boot loads the previous
+# kernel after its modules have been removed.
 ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux-zen"
 PRESETS=('default' 'fallback')
 default_image="/boot/initramfs-linux-zen.img"
 fallback_image="/boot/initramfs-linux-zen-fallback.img"
@@ -669,8 +673,8 @@ phase_biosboot() {
     [ -n "$kver" ] || die "no linux-zen kernel under /usr/lib/modules"
     log "BIOS firmware — installing linux-zen $kver to /boot for GRUB"
     install -D -m 0644 "$root/usr/lib/modules/$kver/vmlinuz" "$root/boot/vmlinuz-linux-zen"
-    # Kernel updates run `mkinitcpio -p linux-zen`; without ALL_kver that
-    # builds against the running kernel instead of the one just installed.
+    # Kernel updates run `mkinitcpio -p linux-zen`. With no ALL_kver the
+    # image is skipped and the previous kernel boots without its modules.
     local preset="$root/etc/mkinitcpio.d/linux-zen.preset"
     if [ -f "$preset" ] && ! grep -q '^ALL_kver=' "$preset"; then
         printf 'ALL_kver="/boot/vmlinuz-linux-zen"\n' >>"$preset"

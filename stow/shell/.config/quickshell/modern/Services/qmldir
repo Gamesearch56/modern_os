@@ -77,6 +77,7 @@ StorageParse 1.0 StorageParse.qml
 singleton StorageUsage 1.0 StorageUsage.qml
 singleton StorageClean 1.0 StorageClean.qml
 singleton Update 1.0 Update.qml
+singleton UpdateBoot 1.0 UpdateBoot.qml
 UpdateClassify 1.0 UpdateClassify.qml
 UpdateMirrors 1.0 UpdateMirrors.qml
 UpdateProgress 1.0 UpdateProgress.qml

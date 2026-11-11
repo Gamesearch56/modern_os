@@ -1059,6 +1059,7 @@
     },
     "update": {
       "available": "{n} updates available",
+      "desktopAvailable": "There is a new ModernOS version {v} available",
       "upToDate": "Up to date",
       "checking": "Checking for updates…",
       "packages": "System packages",
@@ -1079,10 +1080,11 @@
       "desktopUnknown": "Unknown version",
       "desktopUnavailable": "Could not check for a desktop update",
       "changelog": "Changelog",
-      "desktopApplied": "ModernOS updated to {v}",
-      "desktopAppliedBody": "The desktop was reloaded with the new release.",
       "packagesDone": "{n} packages updated",
-      "packageDone": "1 package updated"
+      "packageDone": "1 package updated",
+      "bootRepair": "Boot repair",
+      "bootRepairBody": "The installed kernel is not the one the computer will start. This update corrects that first.",
+      "bootRepaired": "Boot repaired"
     },
     "overview": {
       "stats": "Live stats",

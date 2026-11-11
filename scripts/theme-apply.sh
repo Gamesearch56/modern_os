@@ -687,6 +687,9 @@ finish_live() {
     merge_vivaldi_theme || true
     if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
         hyprctl reload >/dev/null 2>&1 || true
+        # shellcheck source=lib/hypr-watch.sh
+        source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hypr-watch.sh"
+        clear_hypr_reload_banner
     fi
     # Phylax loads style.css once at start — bounce so wallpaper palettes
     # land on the next pkexec. Debounced inside reload_polkit_theme.

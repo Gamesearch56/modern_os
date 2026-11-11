@@ -1059,6 +1059,7 @@
     },
     "update": {
       "available": "{n} Updates verfügbar",
+      "desktopAvailable": "Eine neue ModernOS-Version {v} ist verfügbar",
       "upToDate": "Auf dem neuesten Stand",
       "checking": "Suche nach Updates…",
       "packages": "Systempakete",
@@ -1079,10 +1080,11 @@
       "desktopUnknown": "Unbekannte Version",
       "desktopUnavailable": "Desktop-Update konnte nicht geprüft werden",
       "changelog": "Änderungen",
-      "desktopApplied": "ModernOS auf {v} aktualisiert",
-      "desktopAppliedBody": "Der Desktop wurde mit der neuen Version neu geladen.",
       "packagesDone": "{n} Pakete aktualisiert",
-      "packageDone": "1 Paket aktualisiert"
+      "packageDone": "1 Paket aktualisiert",
+      "bootRepair": "Startreparatur",
+      "bootRepairBody": "Der installierte Kernel ist nicht der, mit dem der Rechner startet. Dieses Update korrigiert das zuerst.",
+      "bootRepaired": "Start repariert"
     },
     "overview": {
       "stats": "Live-Werte",

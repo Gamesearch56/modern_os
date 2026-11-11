@@ -32,26 +32,84 @@ Scope {
             }
 
             MWindowShell {
+                id: shell
                 anchors.fill: parent
                 titleKey: "bugReport.title"
                 busy: BugReport.collecting || BugReport.sending
                 onClosed: BugReport.hide()
 
                 ColumnLayout {
+                    id: form
                     spacing: Tokens.spacing.xl
+
+                    // The editors are not tab stops, so Tab and the arrow
+                    // keys walk the steps, choices, and footer from here.
+                    readonly property Flickable scroll: {
+                        if (BugReport.step === 0)
+                            return describe;
+                        if (BugReport.step === 1)
+                            return shotsPage.scroll;
+                        if (BugReport.step === 2)
+                            return reviewPage.scroll;
+                        return null;
+                    }
+
+                    MFocusWalk {
+                        id: walk
+                        scope: shell
+                        flick: form.scroll
+                    }
+
+                    MFocusWalk {
+                        id: pageWalk
+                        scope: pages
+                        flick: form.scroll
+                    }
+
+                    function arrowMove(dx: int, dy: int): bool {
+                        return walk.move(dx, dy);
+                    }
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Down)
+                            event.accepted = form.arrowMove(0, 1);
+                        else if (event.key === Qt.Key_Up)
+                            event.accepted = form.arrowMove(0, -1);
+                        else if (event.key === Qt.Key_Right)
+                            event.accepted = form.arrowMove(1, 0);
+                        else if (event.key === Qt.Key_Left)
+                            event.accepted = form.arrowMove(-1, 0);
+                        else if (event.key === Qt.Key_Home)
+                            event.accepted = walk.focusFirst(true);
+                        else if (event.key === Qt.Key_End)
+                            event.accepted = walk.focusLast(true);
+                    }
+
+                    Connections {
+                        target: BugReport
+                        function onStepChanged() {
+                            Qt.callLater(() => {
+                                if (walk.ownsFocus())
+                                    return;
+                                if (!pageWalk.focusFirst(true))
+                                    walk.focusLast(true);
+                            });
+                        }
+                    }
 
                     StepBar {
                         Layout.fillWidth: true
                     }
 
                     StackLayout {
+                        id: pages
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         currentIndex: BugReport.step
 
-                        DescribePage {}
-                        ShotsPage {}
-                        ReviewPage {}
+                        DescribePage { id: describe }
+                        ShotsPage { id: shotsPage }
+                        ReviewPage { id: reviewPage }
                         DonePage {}
                     }
 

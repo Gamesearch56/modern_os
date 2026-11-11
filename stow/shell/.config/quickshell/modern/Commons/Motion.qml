@@ -45,6 +45,8 @@ Singleton {
     readonly property int durationBluetoothScan: 8000
     // Finished update stays on screen at 100% before the shell restarts.
     readonly property int durationUpdateSettle: 2500
+    // After the link is up, before the one login update check. Wall clock.
+    readonly property int durationBootSettle: 12000
     // Re-read of a file another process is still rewriting — never scaled.
     readonly property int durationFileSettle: 400
     // Overlays fade out before a problem report's screenshots — wall clock.
@@ -68,6 +70,7 @@ Singleton {
     readonly property int wifiScanMs: root.durationWifiScan
     readonly property int bluetoothScanMs: root.durationBluetoothScan
     readonly property int updateSettleMs: root.durationUpdateSettle
+    readonly property int bootSettleMs: root.durationBootSettle
     readonly property int fileSettleMs: root.durationFileSettle
     readonly property int processWatchMs: root.durationProcessWatch
     readonly property int reportCaptureMs: root.durationReportCapture

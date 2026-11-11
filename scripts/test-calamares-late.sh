@@ -644,7 +644,9 @@ if out="$(MODERN_LATE_STRIP_ROOT="$STRIPROOT" run_late strip 2>&1)"; then
     done
     if [ ${#left[@]} -eq 0 ] && [ ${#gone[@]} -eq 0 ] \
         && grep -F "PRESETS=('default' 'fallback')" \
-            "$STRIPROOT/etc/mkinitcpio.d/linux-zen.preset" >/dev/null; then
+            "$STRIPROOT/etc/mkinitcpio.d/linux-zen.preset" >/dev/null \
+        && grep -qx 'ALL_kver="/boot/vmlinuz-linux-zen"' \
+            "$STRIPROOT/etc/mkinitcpio.d/linux-zen.preset"; then
         ok "strip phase clears live-only files and keeps the installed ones"
     else
         err "strip left ${left[*]:-nothing} and wrongly removed ${gone[*]:-nothing}"
