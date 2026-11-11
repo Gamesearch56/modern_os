@@ -124,7 +124,8 @@ Item {
                         imageSource: Notifications.displayImage(modelData)
                         imageSize: Tokens.icon.lg
                         imageFillMode: Image.PreserveAspectFit
-                        subtitleLines: 2
+                        titleLines: 3
+                        subtitleLines: 3
                         titleValue: modelData.summary || modelData.appName || ""
                         subtitleValue: modelData.body || ""
                         onClicked: Notifications.activate(modelData)

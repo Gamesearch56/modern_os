@@ -29,6 +29,7 @@ Item {
     property bool compact: false
     property bool preferSymbolic: !root._nav
     property bool tabFocus: true
+    property int titleLines: 1
     property int subtitleLines: 1
     property int imageFillMode: Image.PreserveAspectCrop
 
@@ -205,8 +206,9 @@ Item {
                     value: root.titleValue
                     styleName: root.compact ? "bodyMedium" : "bodyLarge"
                     color: root._fg
+                    wrapMode: root.titleLines > 1 ? Text.WordWrap : Text.NoWrap
                     elide: Text.ElideRight
-                    maximumLineCount: 1
+                    maximumLineCount: Math.max(1, root.titleLines)
                 }
                 MIcon {
                     id: titleBadge

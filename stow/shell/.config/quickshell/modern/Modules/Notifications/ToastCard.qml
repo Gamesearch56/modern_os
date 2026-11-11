@@ -159,18 +159,24 @@ MouseArea {
 
             MText {
                 Layout.fillWidth: true
+                Layout.preferredWidth: 0
                 value: root.summary
                 styleName: "titleSmall"
+                wrapMode: Text.WordWrap
+                maximumLineCount: 3
+                elide: Text.ElideRight
             }
 
             MText {
                 Layout.fillWidth: true
+                Layout.preferredWidth: 0
                 visible: root.body.length > 0
                 value: root.body
                 styleName: "bodySmall"
                 color: Colors.color.onSurfaceVariant
                 wrapMode: Text.WordWrap
                 maximumLineCount: 3
+                elide: Text.ElideRight
             }
         }
 

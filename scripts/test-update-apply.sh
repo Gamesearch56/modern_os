@@ -317,14 +317,23 @@ if ! grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/
     || ! grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/de.json"; then
     err "desktopAvailable must exist in both translations"
 fi
+if ! grep -Fq '"desktopBanner": "A new ModernOS version is available"' "$ROOT/stow/modern/.config/modern/translations/en.json" \
+    || ! grep -Fq '"desktopBanner": "Eine neue ModernOS-Version ist verfügbar"' "$ROOT/stow/modern/.config/modern/translations/de.json" \
+    || ! grep -Fq 'settings.update.desktopBanner' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/system/Status.qml"; then
+    err "the update status line must only name a waiting ModernOS release"
+fi
 if ! grep -Fq 'availableOne' "$ROOT/stow/modern/.config/modern/translations/en.json" \
     || ! grep -Fq '"availableOne": "1 Update verfügbar"' "$ROOT/stow/modern/.config/modern/translations/de.json" \
     || ! grep -Fq 'settings.update.availableOne' "$ROOT/stow/shell/.config/quickshell/modern/Services/UpdateClassify.qml"; then
     err "one pending update must use the singular notice"
 fi
-if grep -Fq 'desktopApplied' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml"; then
-    err "a finished update must not toast that the desktop reloaded"
+if ! grep -Fq 'settings.update.desktopApplied' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml" \
+    || ! grep -Fq 'desktopAppliedBody' "$ROOT/stow/modern/.config/modern/translations/en.json" \
+    || ! grep -Fq 'desktopAppliedBody' "$ROOT/stow/modern/.config/modern/translations/de.json"; then
+    err "a finished ModernOS update must toast the new version after reload"
 fi
+grep -Fq 'inhibitReloadPopup' "$ROOT/stow/shell/.config/quickshell/modern/shell.qml" \
+    || err "Quickshell's own reload popup must stay hidden"
 grep -Fq 'clear_hypr_reload_banner' "$ROOT/scripts/reload-ui.sh" \
     || err "reload-ui must dismiss Hyprland's error bar after a clean reload"
 grep -Fq 'vfat?' "$ROOT/iso/airootfs/etc/mkinitcpio.conf.d/50-modern-esp.conf" \

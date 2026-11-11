@@ -10,18 +10,30 @@ MStatusCard {
     iconName: "system-software-update"
     preferSymbolic: false
     iconColor: Colors.color.primary
+    // The release card below already shows the version. This line sits
+    // beside the search button, so it only names that a release is waiting.
+    function _desktopShown(): bool {
+        const list = Update.pending || [];
+        for (let i = 0; i < list.length; i++) {
+            const p = list[i];
+            if (String(p && p.kind || "") === "desktop" && String(p && p.to || "").length > 0)
+                return true;
+        }
+        return false;
+    }
+
     titleKey: {
         if (Update.checking && Update.pending.length === 0)
             return "settings.update.checking";
-        if (Update.desktop && Update.desktop.pending === true && String(Update.desktop.to || "").length)
-            return "settings.update.desktopAvailable";
+        if (root._desktopShown())
+            return "settings.update.desktopBanner";
         if (Update.pending.length === 1)
             return "settings.update.availableOne";
         if (Update.pending.length > 0)
             return "settings.update.available";
         return "settings.update.upToDate";
     }
-    titleParams: ({ n: String(Update.pending.length), v: String((Update.desktop && Update.desktop.to) || "") })
+    titleParams: ({ n: String(Update.pending.length) })
 
     trailing: MButton {
         kind: "tonal"
