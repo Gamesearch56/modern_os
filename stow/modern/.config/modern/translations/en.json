@@ -1059,6 +1059,7 @@
     },
     "update": {
       "available": "{n} updates available",
+      "availableOne": "1 update available",
       "desktopAvailable": "There is a new ModernOS version {v} available",
       "upToDate": "Up to date",
       "checking": "Checking for updates…",
