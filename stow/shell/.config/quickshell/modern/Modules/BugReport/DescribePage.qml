@@ -32,6 +32,7 @@ Flickable {
                 maximumLength: 120
                 text: BugReport.title
                 onTextEdited: BugReport.title = summary.text
+                onAccepted: steps.forceActiveFocus()
                 Component.onCompleted: summary.editor.forceActiveFocus()
             }
         }
@@ -47,6 +48,7 @@ Flickable {
             }
 
             MTextArea {
+                id: steps
                 text: BugReport.description
                 onTextEdited: BugReport.description = text
             }

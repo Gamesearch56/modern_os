@@ -18,6 +18,11 @@ Item {
     implicitWidth: Tokens.spacing.xxl * 12
     activeFocusOnTab: true
 
+    HoverHandler {
+        enabled: true
+        cursorShape: Qt.IBeamCursor
+    }
+
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.medium
@@ -41,8 +46,10 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         flickableDirection: Flickable.VerticalFlick
         contentWidth: width
-        contentHeight: Math.max(height, input.implicitHeight)
-        interactive: contentHeight > height
+        // The editor is at least the viewport tall, so a click in the
+        // empty part of the box still lands in the text, not the scroller.
+        contentHeight: input.height
+        interactive: input.implicitHeight > height
 
         onMovementStarted: root._lockParent(true)
         onMovementEnded: root._lockParent(false)
@@ -66,6 +73,7 @@ Item {
         TextEdit {
             id: input
             width: flick.width
+            height: Math.max(implicitHeight, flick.height)
             wrapMode: TextEdit.Wrap
             color: Colors.color.onSurface
             selectionColor: Colors.color.primary
@@ -75,18 +83,33 @@ Item {
             font.hintingPreference: Font.PreferNoHinting
             renderType: TextEdit.QtRendering
             selectByMouse: true
+            activeFocusOnPress: true
             activeFocusOnTab: false
             onTextChanged: root.textEdited()
             onCursorRectangleChanged: flick.ensureVisible(cursorRectangle)
             Keys.priority: Keys.BeforeItem
             Keys.onPressed: (event) => {
+                if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+                    event.accepted = root._arrowMove(0, event.key === Qt.Key_Backtab ? -1 : 1);
+                    return;
+                }
+                const editing = input.selectionStart !== input.selectionEnd;
+                if (!editing && event.key === Qt.Key_Left && input.cursorPosition === 0) {
+                    event.accepted = root._arrowMove(-1, 0);
+                    return;
+                }
+                if (!editing && event.key === Qt.Key_Right && input.cursorPosition === input.length) {
+                    event.accepted = root._arrowMove(1, 0);
+                    return;
+                }
                 if (event.key === Qt.Key_Up && input.cursorRectangle.y <= 1) {
                     event.accepted = root._arrowMove(0, -1);
                     return;
                 }
                 if (event.key === Qt.Key_Down) {
                     const bottom = input.cursorRectangle.y + input.cursorRectangle.height;
-                    if (bottom >= input.contentHeight - 1)
+                    const doc = Math.min(input.contentHeight, input.implicitHeight);
+                    if (bottom >= doc - 1)
                         event.accepted = root._arrowMove(0, 1);
                 }
             }
@@ -95,6 +118,7 @@ Item {
 
     MText {
         visible: input.text.length === 0 && !input.activeFocus
+        enabled: false
         anchors.fill: flick
         key: root.placeholderKey
         styleName: "bodyMedium"
@@ -105,8 +129,12 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         grabPermissions: PointerHandler.TakeOverForbidden
         onPressedChanged: {
-            if (pressed)
-                root._pointer = true;
+            if (!pressed)
+                return;
+            root._pointer = true;
+            const local = input.mapFromItem(root, point.position.x, point.position.y);
+            input.forceActiveFocus();
+            input.cursorPosition = input.positionAt(local.x, local.y);
         }
     }
 

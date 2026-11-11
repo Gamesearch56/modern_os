@@ -122,6 +122,19 @@ Item {
                 event.accepted = true;
                 return;
             }
+            if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+                event.accepted = root._arrowMove(0, event.key === Qt.Key_Backtab ? -1 : 1);
+                return;
+            }
+            const editing = input.selectionStart !== input.selectionEnd;
+            if (!editing && event.key === Qt.Key_Left && input.cursorPosition === 0) {
+                event.accepted = root._arrowMove(-1, 0);
+                return;
+            }
+            if (!editing && event.key === Qt.Key_Right && input.cursorPosition === input.length) {
+                event.accepted = root._arrowMove(1, 0);
+                return;
+            }
             if (event.key === Qt.Key_Down) {
                 root.downPressed();
                 event.accepted = root.captureArrows || root._arrowMove(0, 1);

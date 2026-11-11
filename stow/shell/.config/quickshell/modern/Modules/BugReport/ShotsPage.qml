@@ -8,6 +8,8 @@ import "../../Services"
 ColumnLayout {
     spacing: Tokens.spacing.xl
 
+    readonly property alias scroll: shotScroll
+
     MHint {
         Layout.fillWidth: true
         key: "bugReport.shotsHint"
@@ -22,6 +24,7 @@ ColumnLayout {
     }
 
     Flickable {
+        id: shotScroll
         Layout.fillWidth: true
         Layout.fillHeight: true
         visible: BugReport.shots.length > 0
@@ -50,6 +53,8 @@ ColumnLayout {
                         source: "file://" + modelData.path
                         selected: modelData.include
                         dimRest: false
+                        tabFocus: true
+                        activateSelected: true
                         onClicked: BugReport.toggleShot(modelData.name)
                     }
 

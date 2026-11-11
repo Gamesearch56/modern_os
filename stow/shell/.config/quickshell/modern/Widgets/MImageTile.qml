@@ -18,6 +18,9 @@ Item {
     property bool removable: false
 
     property bool tabFocus: false
+    // Gallery tiles ignore a second press on the current image.
+    // A toggle tile (a screenshot include) sets this so Enter flips it.
+    property bool activateSelected: false
     readonly property bool _ring: root.current || root.activeFocus || (root.hoverRing && !root.selected && ma.containsMouse)
     readonly property real _radius: Tokens.radius.small
     readonly property bool _removeHot: removeMa.containsMouse || removeMa.pressed
@@ -55,13 +58,13 @@ Item {
     activeFocusOnTab: root.tabFocus
     Accessible.role: Accessible.Button
     Accessible.onPressAction: {
-        if (!root.selected)
+        if (root.activateSelected || !root.selected)
             root.clicked();
     }
     Keys.onPressed: (event) => {
         if (event.key !== Qt.Key_Return && event.key !== Qt.Key_Enter && event.key !== Qt.Key_Space)
             return;
-        if (!root.selected)
+        if (root.activateSelected || !root.selected)
             root.clicked();
         event.accepted = true;
     }
