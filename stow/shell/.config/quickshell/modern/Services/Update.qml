@@ -280,7 +280,7 @@ Singleton {
         const key = pending.map(p => p.name).join(" ");
         if (pending.length > 0 && key !== root._notified) {
             root._notified = key;
-            root.notify(I18n.t("settings.update.available", ({ n: String(pending.length) })), "");
+            root.notify(classify.availableNotice(pending), "");
         }
         if (pending.length === 0)
             root._notified = "";

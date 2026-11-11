@@ -39,6 +39,18 @@ QtObject {
             : I18n.t("settings.update.success");
     }
 
+    // A desktop release replaces the package count. The version is the
+    // pending card's `to` field from desktop-sync.
+    function availableNotice(pending): string {
+        const list = pending || [];
+        for (let i = 0; i < list.length; i++) {
+            const p = list[i];
+            if (String(p && p.kind || "") === "desktop" && String(p && p.to || "").length)
+                return I18n.t("settings.update.desktopAvailable", ({ v: String(p.to) }));
+        }
+        return I18n.t("settings.update.available", ({ n: String(list.length) }));
+    }
+
     function stem(id: string): string {
         return String(id || "").replace(/\.desktop$/i, "").replace(/^org\.kde\./, "").replace(/^org\.gnome\./, "").replace(/-stable$/, "").toLowerCase();
     }

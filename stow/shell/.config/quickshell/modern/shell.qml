@@ -220,5 +220,6 @@ ShellRoot {
     Component.onCompleted: {
         Logger.info("shell", "session started");
         Brightness.refresh();
+        UpdateBoot.arm();
     }
 }

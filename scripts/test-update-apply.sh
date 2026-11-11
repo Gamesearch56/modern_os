@@ -309,6 +309,13 @@ for want in update_guard_detach update_guard_esp_backup snapper-restore.sh 'exit
 done
 grep -Fq 'update-run.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml" \
     || err "Settings must run the update through update-run.sh"
+grep -Fq 'UpdateBoot.arm' "$ROOT/stow/shell/.config/quickshell/modern/shell.qml" \
+    || err "the shell must check for updates once the session is up"
+grep -Fq 'availableNotice' "$ROOT/stow/shell/.config/quickshell/modern/Services/UpdateClassify.qml" \
+    || err "an available ModernOS version needs its own notice"
+grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/en.json" \
+    && grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/de.json" \
+    || err "desktopAvailable must exist in both translations"
 grep -Fq 'vfat?' "$ROOT/iso/airootfs/etc/mkinitcpio.conf.d/50-modern-esp.conf" \
     || err "initramfs must carry the ESP driver"
 
