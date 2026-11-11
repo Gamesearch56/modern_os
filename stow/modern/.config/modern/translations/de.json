@@ -1061,6 +1061,7 @@
       "available": "{n} Updates verfügbar",
       "availableOne": "1 Update verfügbar",
       "desktopAvailable": "Eine neue ModernOS-Version {v} ist verfügbar",
+      "desktopBanner": "Eine neue ModernOS-Version ist verfügbar",
       "upToDate": "Auf dem neuesten Stand",
       "checking": "Suche nach Updates…",
       "packages": "Systempakete",

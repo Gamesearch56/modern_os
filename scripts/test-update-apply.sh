@@ -317,6 +317,11 @@ if ! grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/
     || ! grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/de.json"; then
     err "desktopAvailable must exist in both translations"
 fi
+if ! grep -Fq '"desktopBanner": "A new ModernOS version is available"' "$ROOT/stow/modern/.config/modern/translations/en.json" \
+    || ! grep -Fq '"desktopBanner": "Eine neue ModernOS-Version ist verfügbar"' "$ROOT/stow/modern/.config/modern/translations/de.json" \
+    || ! grep -Fq 'settings.update.desktopBanner' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/system/Status.qml"; then
+    err "the update status line must only name a waiting ModernOS release"
+fi
 if ! grep -Fq 'availableOne' "$ROOT/stow/modern/.config/modern/translations/en.json" \
     || ! grep -Fq '"availableOne": "1 Update verfügbar"' "$ROOT/stow/modern/.config/modern/translations/de.json" \
     || ! grep -Fq 'settings.update.availableOne' "$ROOT/stow/shell/.config/quickshell/modern/Services/UpdateClassify.qml"; then
