@@ -1082,7 +1082,10 @@
       "desktopApplied": "ModernOS auf {v} aktualisiert",
       "desktopAppliedBody": "Der Desktop wurde mit der neuen Version neu geladen.",
       "packagesDone": "{n} Pakete aktualisiert",
-      "packageDone": "1 Paket aktualisiert"
+      "packageDone": "1 Paket aktualisiert",
+      "bootRepair": "Startreparatur",
+      "bootRepairBody": "Der installierte Kernel ist nicht der, mit dem der Rechner startet. Dieses Update korrigiert das zuerst.",
+      "bootRepaired": "Start repariert"
     },
     "overview": {
       "stats": "Live-Werte",

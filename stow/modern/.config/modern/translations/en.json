@@ -1082,7 +1082,10 @@
       "desktopApplied": "ModernOS updated to {v}",
       "desktopAppliedBody": "The desktop was reloaded with the new release.",
       "packagesDone": "{n} packages updated",
-      "packageDone": "1 package updated"
+      "packageDone": "1 package updated",
+      "bootRepair": "Boot repair",
+      "bootRepairBody": "The installed kernel is not the one the computer will start. This update corrects that first.",
+      "bootRepaired": "Boot repaired"
     },
     "overview": {
       "stats": "Live stats",

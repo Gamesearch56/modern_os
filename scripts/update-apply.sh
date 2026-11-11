@@ -17,9 +17,10 @@ SNAPSHOT=0
 PLAN=""
 PROGRESS=0
 WAIT=0
+BOOT_REPAIR=0
 ARGS=("$@")
 usage() {
-    printf 'usage: update-apply.sh [--snapshot|--no-snapshot] [--root-plan FILE] [--progress] [--wait]\n' >&2
+    printf 'usage: update-apply.sh [--snapshot|--no-snapshot] [--root-plan FILE] [--progress] [--wait] [--boot-repair]\n' >&2
 }
 # Stage markers for Services/UpdateProgress.qml. pacman's own messages
 # are translated, so the stages cannot be read from them.
@@ -36,6 +37,9 @@ while [ $# -gt 0 ]; do
             ;;
         --wait)
             WAIT=1
+            ;;
+        --boot-repair)
+            BOOT_REPAIR=1
             ;;
         --no-snapshot)
             SNAPSHOT=0
@@ -83,6 +87,45 @@ else
 fi
 
 snap=""
+# shellcheck source=lib/pacman-conf.sh
+source "$SCRIPT_DIR/lib/pacman-conf.sh"
+pacman_conf_repair "${MODERN_PACMAN_CONF:-/etc/pacman.conf}" \
+    || printf 'update-apply: WARN could not tidy pacman.conf\n' >&2
+
+# Pin ALL_kver and the boot hooks before pacman. The kernel hook in this
+# same transaction is what copies the new vmlinuz and rebuilds the
+# initramfs; a preset without that path skips both. Shelter the kernel
+# that is running now first: the remove hook deletes the preset's images
+# before the new ones exist.
+# shellcheck source=../install/lib/kernel-boot.sh
+source "$REPO_ROOT/install/lib/kernel-boot.sh"
+kernel_boot_prepare
+
+# A cut-off upgrade can leave the new modules installed and the menu on
+# the previous kernel. Reinstall that kernel from the local cache before
+# asking the network, then point the menu at it. --boot-repair is the
+# same heal with no package sync, so it works with no network.
+if [ "$REPAIR" -eq 1 ]; then
+    mapfile -t kernels < <("$PACMAN" -Qqo /usr/lib/modules/*/vmlinuz 2>/dev/null | sort -u)
+    if [ ${#kernels[@]} -gt 0 ]; then
+        # Cache miss must not skip the menu heal below.
+        "$PACMAN" -S --noconfirm "${kernels[@]}" || true
+    fi
+fi
+if [ "$BOOT_REPAIR" -eq 1 ] || [ "$REPAIR" -eq 1 ] || kernel_boot_needs_repair; then
+    kernel_boot_reconcile
+fi
+# A plan written while this process waited means packages or greetd
+# still have to run. Do not stop after the boot heal in that case.
+if [ "$BOOT_REPAIR" -eq 1 ] && [ "$REPAIR" -eq 0 ] \
+    && { [ -z "$PLAN" ] || [ ! -s "$PLAN" ]; }; then
+    rm -f "$UPDATE_MARK"
+    progress finish
+    exit 0
+fi
+
+# Snapshot after the heal. A restore must bring back a kernel that
+# matches the modules, including the recovery copy just taken.
 progress snapshot
 if [ "$SNAPSHOT" -eq 1 ] && [ "$REPAIR" -eq 0 ]; then
     if command -v snapper >/dev/null 2>&1 \
@@ -106,14 +149,13 @@ fi
 
 mkdir -p "$(dirname "$UPDATE_MARK")"
 [ "$REPAIR" -eq 1 ] || printf '%s\n' "${snap:-none}" >"$UPDATE_MARK"
-# shellcheck source=lib/pacman-conf.sh
-source "$SCRIPT_DIR/lib/pacman-conf.sh"
-pacman_conf_repair "${MODERN_PACMAN_CONF:-/etc/pacman.conf}" \
-    || printf 'update-apply: WARN could not tidy pacman.conf\n' >&2
 
 mark="$(update_guard_log_mark)"
 progress pacman
-if ! "$PACMAN" -Syu --noconfirm; then
+pacman_ok=0
+if "$PACMAN" -Syu --noconfirm; then
+    pacman_ok=1
+else
     if update_guard_partial "$mark" && [ -n "$snap" ]; then
         printf 'update-apply: packages failed halfway; restoring snapshot %s\n' "$snap" >&2
         if "$SCRIPT_DIR/snapper-restore.sh" "$snap"; then
@@ -122,14 +164,15 @@ if ! "$PACMAN" -Syu --noconfirm; then
             exit 3
         fi
     fi
+fi
+# The package upgrade removes the previous modules even when the boot
+# menu still points at that kernel. Reconcile whether or not the sync
+# finished, so a reboot loads the kernel that is actually installed.
+kernel_boot_reconcile
+if [ "$pacman_ok" -ne 1 ]; then
     # The mark stays only when packages changed, so the next run repairs.
     update_guard_partial "$mark" || rm -f "$UPDATE_MARK"
     exit 1
-fi
-if [ "$REPAIR" -eq 1 ]; then
-    # Hooks of the cut-off run may never have put the kernel on the ESP.
-    mapfile -t kernels < <("$PACMAN" -Qqo /usr/lib/modules/*/vmlinuz 2>/dev/null | sort -u)
-    [ ${#kernels[@]} -eq 0 ] || "$PACMAN" -S --noconfirm "${kernels[@]}"
 fi
 rm -f "$UPDATE_MARK"
 progress finish

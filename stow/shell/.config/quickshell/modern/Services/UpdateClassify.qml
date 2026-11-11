@@ -30,6 +30,8 @@ QtObject {
         const list = ran || [];
         if (list.some(p => String(p && p.kind || "") === "desktop"))
             return "";
+        if (list.length === 1 && String(list[0] && list[0].kind || "") === "boot")
+            return I18n.t("settings.update.bootRepaired");
         if (list.length === 1)
             return I18n.t("settings.update.packageDone");
         return list.length > 1
@@ -109,7 +111,8 @@ QtObject {
             reason: reason,
             iconName: "",
             iconSource: Paths.brandLogo,
-            subtitle: subtitle
+            subtitle: subtitle,
+            bootRepair: data.bootRepair === true
         };
     }
 
@@ -123,14 +126,23 @@ QtObject {
             reason: String(desk.reason || ""),
             iconName: desk.iconName || "",
             iconSource: desk.iconSource || Paths.brandLogo,
-            subtitle: desk.subtitle || I18n.t("settings.update.desktopCurrent")
+            subtitle: desk.subtitle || I18n.t("settings.update.desktopCurrent"),
+            bootRepair: desk.bootRepair === true
         };
-        const all = [];
+        const boot = card.bootRepair ? [{
+            kind: "boot",
+            name: I18n.t("settings.update.bootRepair"),
+            from: "",
+            to: "",
+            iconName: "cpu",
+            subtitle: I18n.t("settings.update.bootRepairBody")
+        }] : [];
+        const all = boot.slice();
         if (card.pending)
             all.push(card);
         for (let i = 0; i < pacmanAll.length; i++)
             all.push(pacmanAll[i]);
-        const sys = card.pending ? [card].concat(pacmanSys) : pacmanSys;
+        const sys = boot.concat(card.pending ? [card].concat(pacmanSys) : pacmanSys);
         return { systemPkgs: sys, otherPkgs: pacmanOther, pending: all };
     }
 }

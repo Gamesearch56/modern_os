@@ -100,6 +100,8 @@ source "$REPO_ROOT/install/lib/preflight.sh"
 source "$REPO_ROOT/install/lib/greetd.sh"
 # shellcheck source=lib/ge-proton.sh
 source "$REPO_ROOT/install/lib/ge-proton.sh"
+# shellcheck source=lib/kernel-boot.sh
+source "$REPO_ROOT/install/lib/kernel-boot.sh"
 
 : > "$LOG_FILE"
 _err_trap() {
@@ -400,6 +402,24 @@ fi
 
 # kitty.conf globincludes colors.conf; fallbacks in kitty.conf keep
 # SUPER+T working until theme-apply writes the live file.
+
+# A kernel upgrade deletes the previous modules. The preset must name
+# /boot/vmlinuz-linux-zen or mkinitcpio skips the initramfs and the
+# machine comes back on the old kernel with no Wi-Fi, touchpad, or zram.
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "skipping kernel-boot (dotfiles-only)"
+elif [ "$DRY_RUN" -eq 1 ]; then
+    log_info "kernel-boot: would pin the preset and boot the installed kernel"
+elif [ -n "${MODERN_ROOT_PLAN:-}" ]; then
+    log_info "kernel-boot deferred to the update's root step"
+elif greetd_target_is_live_user "$TARGET"; then
+    kernel_boot_apply || {
+        log_error "kernel-boot: the installed kernel has no bootable initramfs"
+        exit 1
+    }
+else
+    log_info "skipping kernel-boot (target '$TARGET' is not a login home)"
+fi
 
 if [ "$DOTFILES_ONLY" -eq 1 ]; then
     log_info "skipping greetd (dotfiles-only)"

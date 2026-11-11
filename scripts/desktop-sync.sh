@@ -16,6 +16,8 @@ source "$SCRIPT_DIR/lib/repo-path.sh"
 source "$SCRIPT_DIR/lib/deploy-key.sh"
 # shellcheck source=lib/hypr-watch.sh
 source "$SCRIPT_DIR/lib/hypr-watch.sh"
+# shellcheck source=../install/lib/kernel-boot.sh
+source "$SCRIPT_DIR/../install/lib/kernel-boot.sh"
 REPO="${MODERN_DESKTOP_REPO:-$(modern_repo_path)}"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/modern-desktop-sync.lock"
 
@@ -66,9 +68,9 @@ json_escape() {
 }
 
 emit() {
-    local pending="$1" from="$2" to="$3" reason="$4"
-    printf '{"kind":"desktop","pending":%s,"from":%s,"to":%s,"reason":%s}\n' \
-        "$pending" "$(json_escape "$from")" "$(json_escape "$to")" "$(json_escape "$reason")"
+    local pending="$1" from="$2" to="$3" reason="$4" boot="${5:-false}"
+    printf '{"kind":"desktop","pending":%s,"from":%s,"to":%s,"reason":%s,"bootRepair":%s}\n' \
+        "$pending" "$(json_escape "$from")" "$(json_escape "$to")" "$(json_escape "$reason")" "$boot"
 }
 
 repo_ok() {
@@ -116,8 +118,12 @@ highest_tag() {
 }
 
 cmd_status() {
+    local boot=false
+    if kernel_boot_needs_repair; then
+        boot=true
+    fi
     if ! repo_ok; then
-        emit false "" "" "unavailable"
+        emit false "" "" "unavailable" "$boot"
         return 0
     fi
     # Local edits must not hide the GitHub result. Apply still refuses a
@@ -126,18 +132,18 @@ cmd_status() {
     cur="$(installed_tag)"
     latest="$(highest_tag)"
     if [ -z "$latest" ]; then
-        emit false "${cur}" "" "offline"
+        emit false "${cur}" "" "offline" "$boot"
         return 0
     fi
     if [ -n "$cur" ] && [ "$(printf '%s\n%s\n' "$cur" "$latest" | sort -V | tail -1)" = "$cur" ]; then
-        emit false "$cur" "$latest" "current"
+        emit false "$cur" "$latest" "current" "$boot"
         return 0
     fi
     if [ -z "$cur" ]; then
-        emit false "HEAD" "$latest" "notag"
+        emit false "HEAD" "$latest" "notag" "$boot"
         return 0
     fi
-    emit true "$cur" "$latest" "behind"
+    emit true "$cur" "$latest" "behind" "$boot"
 }
 
 # Installer chmod/overlay on the home release clone is not a user edit.

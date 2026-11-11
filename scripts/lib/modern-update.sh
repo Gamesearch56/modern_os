@@ -13,6 +13,9 @@
 # succeeds: a cancelled auth prompt is retried by the next update even
 # though the desktop release no longer shows as pending.
 
+# shellcheck source=../../install/lib/kernel-boot.sh
+source "$SCRIPT_DIR/../install/lib/kernel-boot.sh"
+
 # Stage markers for Settings (Services/UpdateProgress.qml); update-run.sh
 # asks for them. A terminal update prints none.
 _update_progress() {
@@ -36,14 +39,25 @@ modern_update() {
     if command -v checkupdates >/dev/null 2>&1; then
         pkgs="$(checkupdates 2>/dev/null | grep -c . || true)"
     fi
+    local boot_repair=0 boot_only=0
+    if kernel_boot_needs_repair; then
+        boot_repair=1
+        # Packages still go through pacman. This shortcut is only the
+        # case with nothing to download: fix the menu and stop.
+        if [ "${pkgs:-0}" -eq 0 ] && [ ! -s "$plan" ]; then
+            boot_only=1
+        fi
+    fi
 
     # Ask for the password before the desktop release, not after it.
     # A release-only update asks only if it turns out to need root.
-    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ]; then
+    # A boot repair asks even when no package is pending: the menu can
+    # be fixed from the kernel already on disk, with no network.
+    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ]; then
         if [ -t 0 ]; then
             sudo -v || return 1
         else
-            _update_gate_open "$plan" || return 1
+            _update_gate_open "$plan" "$boot_only" || return 1
         fi
     fi
 
@@ -59,12 +73,16 @@ modern_update() {
         fi
     fi
 
-    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ]; then
+    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ]; then
         if [ -t 0 ]; then
-            _update_tty "$plan" || return 1
+            _update_tty "$plan" "$boot_only" || return 1
         else
-            [ -n "${_UPDATE_GATE_FD:-}" ] || _update_gate_open "$plan" || return 1
-            [ "$(cfg backup.preUpdateSnapshot true)" != "true" ] || t cli.snapshotting
+            [ -n "${_UPDATE_GATE_FD:-}" ] || _update_gate_open "$plan" "$boot_only" || return 1
+            if [ "$boot_repair" -eq 1 ] && [ "${pkgs:-0}" -eq 0 ] && [ ! -s "$plan" ]; then
+                _update_progress boot
+            elif [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
+                t cli.snapshotting
+            fi
             _update_progress system "${pkgs:-0}"
             _update_gate_send go || rc=$?
             [ "$rc" -eq 0 ] || return "$rc"
@@ -96,8 +114,11 @@ modern_update() {
 # stdin on a FIFO; _update_gate_send releases it. The root plan path is
 # fixed now; its contents are read only after "go".
 _update_gate_open() {
-    local plan="$1" fifo snap_flag=--no-snapshot
+    local plan="$1" boot_repair="${2:-0}" fifo snap_flag=--no-snapshot
     local extra=(--wait --root-plan "$plan")
+    if [ "$boot_repair" -eq 1 ] && [ ! -s "$plan" ]; then
+        extra+=(--boot-repair)
+    fi
     [ "$(cfg backup.preUpdateSnapshot true)" != "true" ] || snap_flag=--snapshot
     [ -z "${MODERN_UPDATE_PROGRESS:-}" ] || extra+=(--progress)
     ensure_polkit_agent || true
@@ -137,8 +158,13 @@ print(d.get(sys.argv[2]) or "" if not sys.argv[1] or d.get(sys.argv[1]) else "")
 }
 
 _update_tty() {
-    local plan="$1"
-    if [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
+    local plan="$1" boot_only="${2:-0}"
+    local args=(--no-snapshot)
+    # Boot-only has nothing to roll back. Every other update goes through
+    # update-apply so the kernel preset is pinned before yay touches it.
+    if [ "$boot_only" -eq 1 ]; then
+        args+=(--boot-repair)
+    elif [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
         if command -v snapper >/dev/null 2>&1 && snapper list-configs >/dev/null 2>&1 \
             && snapper list-configs 2>/dev/null | grep -q root; then
             t cli.snapshotting
@@ -151,8 +177,7 @@ _update_tty() {
             t cli.snapperUnconfigured >&2 || true
         fi
     fi
-    if [ -s "$plan" ]; then
-        sudo "$SCRIPT_DIR/update-apply.sh" --no-snapshot --root-plan "$plan" || return 1
-    fi
-    yay -Syu
+    [ ! -s "$plan" ] || args+=(--root-plan "$plan")
+    sudo "$SCRIPT_DIR/update-apply.sh" "${args[@]}" || return 1
+    [ "$boot_only" -eq 1 ] || yay -Syu
 }
