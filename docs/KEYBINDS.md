@@ -17,6 +17,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + L` | Lock screen | `qs -c modern ipc call session lock` |
 | `SUPER + SHIFT + M` | Exit compositor | `hyprctl dispatch "hl.dsp.exit()"` |
 | `SUPER + K` | Cheatsheet | `qs -c modern ipc call cheatsheet toggle` |
+| `SUPER + #` | Report a problem | `modern report` |
 | `SUPER + I` | System Settings (Hyprland window) | `qs -c modern ipc call settings toggle` |
 | `SUPER + W` | Wallpaper picker | `qs -c modern ipc call wallpaper toggle` |
 | `SUPER + DELETE` | Applications (taskbar) | `qs -c modern ipc call taskbar toggle` |

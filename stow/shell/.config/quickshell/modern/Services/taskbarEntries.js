@@ -30,6 +30,26 @@ function groupKey(cls, desktopId) {
     return "";
 }
 
+// special:background has no numeric id. A missing id is not "on screen".
+function parkedWindow(t, ipc) {
+    if (ipc && (ipc.hidden === true || ipc.mapped === false))
+        return true;
+    var spots = [t && t.workspace, ipc && ipc.workspace];
+    var i;
+    for (i = 0; i < spots.length; i++) {
+        var ws = spots[i];
+        if (!ws || typeof ws !== "object")
+            continue;
+        var id = Number(ws.id);
+        if (!isNaN(id) && id < 0)
+            return true;
+        var name = String(ws.name || ws.address || "");
+        if (name.indexOf("special:") === 0 || ws.type === "special")
+            return true;
+    }
+    return false;
+}
+
 function skipWindowClass(cls) {
     var c = normClass(cls);
     if (!c.length || c.indexOf("quickshell") !== -1)
@@ -92,7 +112,7 @@ function build(wins, trayOrphans, trayPidsOf, procs, resolveIcon) {
             g.address = addr;
         var title = String(t.title || ipc.class || cls);
         var wsId = t.workspace ? Number(t.workspace.id) : 0;
-        var hidden = !!(ipc.hidden === true || ipc.mapped === false);
+        var hidden = parkedWindow(t, ipc);
         var activated = t.activated === true;
         if (activated || !g.title.length)
             g.title = title;

@@ -167,6 +167,9 @@ if [[ -x "$RAISE" ]] \
     && grep -Fq 'bind the needle' "$RAISE" \
     && grep -Fq 'raiseDesktopOrLaunch' "$HYPR_WIN" \
     && grep -Fq 'raiseDesktopOrLaunch' "$LAUNCHER" \
+    && grep -Fq 'windowParked' "$HYPR_WIN" \
+    && grep -Fq 'windowParked' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq 'special:' "$ROOT/stow/shell/.config/quickshell/modern/Services/taskbarEntries.js" \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprAutostart.qml" \
     && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
@@ -230,6 +233,18 @@ if grep -Fq 'primaryDescription' "$DEFAULTS" \
     ok "primary display config/UI/boot focus; games no longer snap to primary"
 else
     err "primaryDescription + ProfileForm + no games snap_primary required"
+fi
+
+if grep -Fq 'explorer.exe' "$GAMES" \
+    && grep -Fq 'steam_app_%d+' "$GAMES" \
+    && grep -Fq 'proton-desktop-silent' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && ! grep -Fq 'keep_windowed' "$GAMES" \
+    && grep -Fq 'wine-shell-silent' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && grep -Fq 'battlenet-no-client-fullscreen' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
+    && grep -Fq 'suppress_event = "fullscreen maximize"' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua"; then
+    ok "Battle.net ignores its own fullscreen request; SUPER+F still toggles"
+else
+    err "launcher must suppress client fullscreen without trapping SUPER+F"
 fi
 
 if grep -Fq 'nautilus' "$GAMES" \

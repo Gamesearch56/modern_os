@@ -135,6 +135,23 @@ local function excluded(w)
     if c == "agent.exe" or c:find("agent%.exe", 1, false) then
         return true
     end
+    -- Wine's own shell matches .*\\.exe. Fullscreen makes it a white
+    -- sheet behind the Battle.net window. The games are other classes.
+    local shell = {
+        ["explorer.exe"] = true, ["wineboot.exe"] = true, ["winedevice.exe"] = true,
+        ["plugplay.exe"] = true, ["rpcss.exe"] = true, ["svchost.exe"] = true,
+        ["services.exe"] = true, ["conhost.exe"] = true, ["rundll32.exe"] = true,
+    }
+    if shell[c] then
+        return true
+    end
+    -- Proton stamps every window in the prefix with steam_app_<id>,
+    -- including explorer.exe /desktop. That host has an empty title.
+    -- Fullscreening it paints a white monitor behind the launcher.
+    -- A game window in the same prefix gets a real title first.
+    if t == "" and c:find("^steam_app_%d+$") then
+        return true
+    end
     local hay = c .. "\n" .. t
     if hay:find("battle%.net", 1, false) or hay:find("battlenet", 1, true)
         or hay:find("blizzard battle", 1, true) then
@@ -199,6 +216,7 @@ end
 
 local done = {}
 local armed = {}
+local yielded = {}
 
 local function addr_of(w)
     if not w then
@@ -207,8 +225,24 @@ local function addr_of(w)
     return tostring(w.address or "")
 end
 
+-- Mode 2 is exclusive fullscreen. Mode 1 is maximized: WoW Forever asks
+-- for that (GxMaximize), and the bar stays up. w.fullscreen is the
+-- internal mode; fullscreen_client is what the client requested.
 local function fs_of(w)
-    return tonumber(w and w.fullscreen) or 0
+    if not w then
+        return 0
+    end
+    local v = tonumber(w.fullscreen)
+    if not v then
+        v = tonumber(w.fullscreen_client)
+    end
+    if v then
+        return v
+    end
+    if w.fullscreen == true or w.fullscreen_client == true then
+        return 2
+    end
+    return 0
 end
 
 local function dispatch_fs(w)
@@ -228,6 +262,23 @@ local function dispatch_fs(w)
     end
 end
 
+-- Declared below. consider() runs only from timers, after this is set.
+local workspace_name
+
+-- Another exclusive game already owns the workspace (its login or a
+-- dialog). A maximized game is not that owner: mode 1 still shows the bar.
+local function other_game_holds(w)
+    local ws = w.workspace
+    if not (ws and ws.has_fullscreen == true) or fs_of(w) >= 1 then
+        return false
+    end
+    local holder = ws.fullscreen_window
+    if not holder or addr_of(holder) == "" or addr_of(holder) == addr_of(w) then
+        return false
+    end
+    return is_game(holder) and fs_of(holder) >= 2
+end
+
 local function consider(w)
     if not w or excluded(w) or not auto_fs_on() or not is_game(w) then
         return
@@ -236,15 +287,25 @@ local function consider(w)
     if addr == "" or done[addr] then
         return
     end
-    if fs_of(w) >= 1 then
-        done[addr] = true
+    -- Fullscreen on special:wine is dropped when the window is moved
+    -- back. Wait until it is on a real workspace.
+    if workspace_name(w):find("special:wine", 1, true) then
+        if not armed[addr .. ":park"] and hl.timer then
+            armed[addr .. ":park"] = true
+            hl.timer(function()
+                armed[addr .. ":park"] = nil
+                pcall(consider, w)
+            end, { timeout = 300, type = "oneshot" })
+        end
         return
     end
-    -- A second window of a fullscreen game (login, launcher, dialog)
-    -- must not take fullscreen away from the game itself.
-    local ws = w.workspace
-    if ws and ws.has_fullscreen == true then
+    if fs_of(w) >= 2 then
         done[addr] = true
+        yielded[addr] = nil
+        return
+    end
+    if other_game_holds(w) then
+        yielded[addr] = true
         return
     end
     if armed[addr] then
@@ -264,18 +325,29 @@ local function consider(w)
         pcall(function()
             fs = fs_of(w)
         end)
-        if fs >= 1 then
+        if fs >= 2 then
             done[addr] = true
+            yielded[addr] = nil
             return
         end
+        local hold = false
         pcall(function()
+            if workspace_name(w):find("special:wine", 1, true)
+                or other_game_holds(w) then
+                armed[addr] = nil
+                hold = true
+                return
+            end
             if excluded(w) or not is_game(w) or not auto_fs_on() then
                 done[addr] = true
+                hold = true
                 return
             end
             dispatch_fs(w)
         end)
-        done[addr] = true
+        if not hold then
+            done[addr] = true
+        end
     end, { timeout = 500, type = "oneshot" })
 end
 
@@ -283,11 +355,67 @@ end
 -- fullscreen handover for a window opening over a fullscreen one. A
 -- fullscreen dispatch from there crashes 0.57 in setFullscreenMode, so
 -- every event only schedules the check for after the map.
+-- Do not unset fullscreen from window.fullscreen: SUPER+F is that event,
+-- and pulling the launcher back out of it makes the shortcut one-way.
+function workspace_name(w)
+    local ws = w and w.workspace
+    if type(ws) ~= "table" and type(ws) ~= "userdata" then
+        return ""
+    end
+    local ok, name = pcall(function()
+        return ws.name
+    end)
+    if ok and type(name) == "string" then
+        return name
+    end
+    return ""
+end
+
+-- The host is parked at map time. If that same window later turns out
+-- to be a game (title arrives after map), bring it back and let
+-- consider() fullscreen it. The empty desktop never gets a title.
+local function release_wine_host(w)
+    if not workspace_name(w):find("special:wine", 1, true) then
+        return
+    end
+    if excluded(w) or not is_game(w) then
+        return
+    end
+    local mon = hl.get_active_monitor and hl.get_active_monitor()
+    local aw = mon and (mon.activeWorkspace or mon.active_workspace)
+    local id = 0
+    if type(aw) == "table" then
+        id = tonumber(aw.id) or 0
+    elseif type(aw) == "number" then
+        id = aw
+    end
+    if id < 1 or not (hl.dispatch and hl.dsp and hl.dsp.window and hl.dsp.window.move) then
+        return
+    end
+    local spec = { workspace = tostring(id), follow = true, window = w }
+    local moved = false
+    local ok = pcall(function()
+        hl.dispatch(hl.dsp.window.move(spec))
+        moved = true
+    end)
+    return ok and moved
+end
+
 local function later(w)
     if not hl.timer then
         return
     end
     hl.timer(function()
+        local moved = false
+        local ok, res = pcall(release_wine_host, w)
+        moved = ok and res == true
+        -- The move is async. Fullscreening before it lands is discarded.
+        if moved then
+            hl.timer(function()
+                pcall(consider, w)
+            end, { timeout = 50, type = "oneshot" })
+            return
+        end
         pcall(consider, w)
     end, { timeout = 50, type = "oneshot" })
 end
@@ -302,6 +430,25 @@ if hl.on then
         if a ~= "" then
             done[a] = nil
             armed[a] = nil
+            armed[a .. ":park"] = nil
+            yielded[a] = nil
         end
+        -- A login window had the workspace. The game behind it can
+        -- take exclusive fullscreen once that window is gone.
+        if not hl.timer or not hl.get_windows then
+            return
+        end
+        hl.timer(function()
+            local wins = hl.get_windows()
+            if type(wins) ~= "table" then
+                return
+            end
+            for i = 1, #wins do
+                local o = wins[i]
+                if (type(o) == "table" or type(o) == "userdata") and yielded[addr_of(o)] then
+                    pcall(consider, o)
+                end
+            end
+        end, { timeout = 50, type = "oneshot" })
     end)
 end

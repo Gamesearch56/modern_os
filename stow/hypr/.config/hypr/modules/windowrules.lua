@@ -84,6 +84,68 @@ apply({
     suppress_event = "maximize",
 })
 
+-- Wine's desktop shell is an .exe, so the game matcher would fullscreen
+-- it. That sheet is white and sits behind the Battle.net client. Park
+-- it at map time. Wow.exe and the other games are different classes.
+-- Proton does not keep the explorer.exe class: the virtual desktop is
+-- steam_app_<prefix> with an empty title. A game in that prefix sets
+-- a title, and games.lua moves that window back.
+apply({
+    name = "wine-shell-silent",
+    match = {
+        class = "^([Ee]xplorer|[Ww]ineboot|[Ww]inedevice|[Pp]lugplay|[Rr]pcss|[Ss]vchost|[Ss]ervices|[Cc]onhost|[Rr]undll32)\\.exe$",
+    },
+    workspace = "special:wine silent",
+    no_focus = true,
+    float = true,
+})
+apply({
+    name = "proton-desktop-silent",
+    match = { class = "^steam_app_[0-9]+$", title = "^$" },
+    workspace = "special:wine silent",
+    no_focus = true,
+    float = true,
+})
+apply({
+    name = "wine-shell-silent-initial",
+    match = {
+        initial_class = "^([Ee]xplorer|[Ww]ineboot|[Ww]inedevice|[Pp]lugplay|[Rr]pcss|[Ss]vchost|[Ss]ervices|[Cc]onhost|[Rr]undll32)\\.exe$",
+    },
+    workspace = "special:wine silent",
+    no_focus = true,
+    float = true,
+})
+
+-- The launcher stays a window even when its class is Battle.net.exe and
+-- the title rule in config.json does not match. The client requests
+-- fullscreen after map; honoring that paints the monitor white.
+-- suppress_event blocks that request only. SUPER+F is a compositor
+-- toggle and still works. Games do not use this class.
+apply({
+    name = "battlenet-class-window",
+    match = { class = ".*([Bb]attle\\.net|[Bb]attlenet).*" },
+    float = true,
+    center = true,
+    size = { 1280, 800 },
+})
+apply({
+    name = "battlenet-initial-class-window",
+    match = { initial_class = ".*([Bb]attle\\.net|[Bb]attlenet).*" },
+    float = true,
+    center = true,
+    size = { 1280, 800 },
+})
+apply({
+    name = "battlenet-no-client-fullscreen",
+    match = { class = ".*([Bb]attle\\.net|[Bb]attlenet).*" },
+    suppress_event = "fullscreen maximize",
+})
+apply({
+    name = "battlenet-initial-no-client-fullscreen",
+    match = { initial_class = ".*([Bb]attle\\.net|[Bb]attlenet).*" },
+    suppress_event = "fullscreen maximize",
+})
+
 -- imv fills its tile. On a virtual GPU the acrylic pass replaces that
 -- tile with black, so the picture never shows. A real GPU is unchanged
 -- because the viewer background is already opaque.

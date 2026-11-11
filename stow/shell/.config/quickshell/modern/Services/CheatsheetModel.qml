@@ -41,6 +41,13 @@ Singleton {
         // filePreview / clipboardHistory: omitted (former utilities category)
     })
 
+    // Binds added after a config.json was first written. The live keybinds
+    // object replaces the defaults wholesale, so a missing key would
+    // otherwise never appear on the sheet. A saved combo still wins.
+    readonly property var shipped: ({
+        bugReport: "SUPER + #"
+    })
+
     // Chrome / Super+mouse gestures — not remappable, not in keybinds.
     readonly property var mouseGestures: [
         { action: "mouseMoveSuper", combo: "SUPER + LMB" },
@@ -75,8 +82,22 @@ Singleton {
         return items;
     }
 
+    function _binds(): var {
+        const live = Config.keybinds || ({});
+        const out = {};
+        const extra = root.shipped;
+        for (const action in extra)
+            out[action] = extra[action];
+        for (const action in live) {
+            const combo = live[action];
+            if (typeof combo === "string" && combo.length)
+                out[action] = combo;
+        }
+        return out;
+    }
+
     function rows(filter: string): var {
-        const binds = Config.keybinds || ({});
+        const binds = root._binds();
         const needle = (filter || "").trim().toLowerCase();
         const out = [];
         for (const action in binds) {

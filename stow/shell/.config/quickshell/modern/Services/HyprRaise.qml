@@ -43,6 +43,13 @@ Item {
             const addr = String(t.address || "");
             if (!addr.length)
                 continue;
+            // No numeric id on special:background. Treating that as "on
+            // screen" focuses the workspace and shows every parked app.
+            if (win.windowParked && win.windowParked(t)) {
+                if (!parked.length)
+                    parked = addr;
+                continue;
+            }
             const wsId = t.workspace ? Number(t.workspace.id) : 0;
             if (wsId > 0) {
                 win.activateWindow(addr);

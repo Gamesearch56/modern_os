@@ -38,7 +38,7 @@ reset() {
     local s
     for s in $1; do
         case "$s" in
-            umu) stub umu-run 'printf "%s|%s\n" "$WINEPREFIX" "$*" >>"'"$tmp"'/calls/umu"' ;;
+            umu) stub umu-run 'printf "%s\n" "${PROTONPATH-}" >>"'"$tmp"'/calls/protonpath"; printf "%s|%s\n" "$WINEPREFIX" "$*" >>"'"$tmp"'/calls/umu"' ;;
             umu-crash) stub umu-run 'exit 3' ;;
             curl) stub curl 'while [ $# -gt 0 ]; do [ "$1" = -o ] && { printf MZ >"$2"; }; shift; done; touch "'"$tmp"'/calls/curl"' ;;
             curl-fail) stub curl 'exit 6' ;;
@@ -52,6 +52,22 @@ run() {
         XDG_CONFIG_HOME="$tmp/home/.config" "$ROOT/scripts/battlenet" >/dev/null 2>&1 || rc=$?
     printf '%s\n' "$rc"
 }
+
+reset "umu"
+steam_pfx="$tmp/home/.local/share/Steam/steamapps/compatdata/4242/pfx"
+mkdir -p "$(dirname "$steam_pfx/$EXE_REL")" && : >"$steam_pfx/$EXE_REL"
+private="$tmp/home/.local/share/modern/proton/GE-Proton11-12-x86_64"
+steam_proton="$tmp/home/.local/share/Steam/steamapps/common/Proton - Experimental"
+mkdir -p "$private" "$steam_proton"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$private/proton"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$steam_proton/proton"
+chmod +x "$private/proton" "$steam_proton/proton"
+rc="$(run)"
+if [ "$rc" = 0 ] && [ "$(head -n 1 "$tmp/calls/protonpath")" = "$private" ]; then
+    ok "the private GE-Proton runner wins over Steam Experimental"
+else
+    err "private GE-Proton preference (rc $rc)"
+fi
 
 reset "umu"
 steam_pfx="$tmp/home/.local/share/Steam/steamapps/compatdata/4242/pfx"
