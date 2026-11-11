@@ -21,6 +21,9 @@ start_quickshell() {
 
 if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
     hyprctl reload >/dev/null 2>&1 || echo "reload-ui: hyprctl reload failed" >&2
+    # shellcheck source=lib/hypr-watch.sh
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hypr-watch.sh"
+    clear_hypr_reload_banner
     if [ -d "/var/cache/hyprpm/${USER_NAME}" ] && command -v hyprpm >/dev/null 2>&1; then
         hyprpm reload -n >/dev/null 2>&1 || true
     fi

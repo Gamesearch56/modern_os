@@ -313,9 +313,15 @@ grep -Fq 'UpdateBoot.arm' "$ROOT/stow/shell/.config/quickshell/modern/shell.qml"
     || err "the shell must check for updates once the session is up"
 grep -Fq 'availableNotice' "$ROOT/stow/shell/.config/quickshell/modern/Services/UpdateClassify.qml" \
     || err "an available ModernOS version needs its own notice"
-grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/en.json" \
-    && grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/de.json" \
-    || err "desktopAvailable must exist in both translations"
+if ! grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/en.json" \
+    || ! grep -Fq 'desktopAvailable' "$ROOT/stow/modern/.config/modern/translations/de.json"; then
+    err "desktopAvailable must exist in both translations"
+fi
+if grep -Fq 'desktopApplied' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml"; then
+    err "a finished update must not toast that the desktop reloaded"
+fi
+grep -Fq 'clear_hypr_reload_banner' "$ROOT/scripts/reload-ui.sh" \
+    || err "reload-ui must dismiss Hyprland's error bar after a clean reload"
 grep -Fq 'vfat?' "$ROOT/iso/airootfs/etc/mkinitcpio.conf.d/50-modern-esp.conf" \
     || err "initramfs must carry the ESP driver"
 

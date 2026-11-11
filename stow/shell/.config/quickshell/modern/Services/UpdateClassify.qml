@@ -24,8 +24,8 @@ QtObject {
         return n === "vivaldi" ? "web-browser" : "package-x-generic-symbolic";
     }
 
-    // A desktop release announces itself after the reload ("ModernOS
-    // updated to …"), so a run that carried one stays quiet here.
+    // A desktop release already showed its own progress overlay, so a
+    // run that carried one stays quiet here.
     function doneSummary(ran): string {
         const list = ran || [];
         if (list.some(p => String(p && p.kind || "") === "desktop"))
