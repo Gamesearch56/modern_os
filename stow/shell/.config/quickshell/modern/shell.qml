@@ -217,6 +217,15 @@ ShellRoot {
         }
     }
 
+    // Quickshell draws its own "reloaded" popup after this signal, and that
+    // bar stays up. The update notice is the confirmation the session shows.
+    Connections {
+        target: Quickshell
+        function onReloadCompleted() {
+            Quickshell.inhibitReloadPopup();
+        }
+    }
+
     Component.onCompleted: {
         Logger.info("shell", "session started");
         Brightness.refresh();

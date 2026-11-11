@@ -94,13 +94,19 @@ Singleton {
         }
     }
 
-    // A desktop release ends with a shell reload that kills `proc`.
-    // Drain the marker that reload left behind. The update overlay
-    // already closed on success; do not toast that the desktop reloaded.
+    // A desktop release ends with a shell reload that kills `proc`, so
+    // its outcome arrives as a marker read once the reloaded shell starts.
     Process {
         id: noticeProc
         command: [Paths.modern, "update-notice"]
         running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const v = String(this.text || "").trim();
+                if (v.length)
+                    root.notify(I18n.t("settings.update.desktopApplied", ({ v: v })), I18n.t("settings.update.desktopAppliedBody"));
+            }
+        }
     }
 
     Timer {
