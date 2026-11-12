@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# TradeSkillMaster's Linux client. The AppImage lives next to the desktop
+# files; this wrapper is what the launcher and a background start both run,
+# so neither one hardcodes a home path or the app's hidden-start flag.
+set -euo pipefail
+
+data="${XDG_DATA_HOME:-$HOME/.local/share}"
+# .bin is the real client when this machine's AppImage path is a wrapper
+# that drops the hidden-start flag. A plain AppImage is used as-is.
+app="$data/applications/TradeSkillMaster.AppImage.bin"
+if [[ ! -x "$app" ]]; then
+    app="$data/applications/TradeSkillMaster.AppImage"
+fi
+if [[ ! -x "$app" ]]; then
+    printf 'modern tsm: %s is missing or not executable\n' "$data/applications/TradeSkillMaster.AppImage" >&2
+    exit 1
+fi
+# The client's own login item passes --hidden, which maps no window, so
+# the desktop has nothing to park or raise. Drop it and let the session
+# put a real window on the background workspace.
+args=()
+for arg in "$@"; do
+    if [[ "$arg" == "--hidden" ]]; then
+        continue
+    fi
+    args+=("$arg")
+done
+if ((${#args[@]})); then
+    exec "$app" "${args[@]}"
+fi
+exec "$app"

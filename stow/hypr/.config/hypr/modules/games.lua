@@ -153,6 +153,9 @@ local function excluded(w)
         return true
     end
     local hay = c .. "\n" .. t
+    if hay:find("tradeskillmaster", 1, true) then
+        return true
+    end
     if hay:find("battle%.net", 1, false) or hay:find("battlenet", 1, true)
         or hay:find("blizzard battle", 1, true) then
         if not hay:find("warcraft", 1, true) then
