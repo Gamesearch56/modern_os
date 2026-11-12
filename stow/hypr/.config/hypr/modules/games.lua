@@ -153,6 +153,9 @@ local function excluded(w)
         return true
     end
     local hay = c .. "\n" .. t
+    if hay:find("tradeskillmaster", 1, true) then
+        return true
+    end
     if hay:find("battle%.net", 1, false) or hay:find("battlenet", 1, true)
         or hay:find("blizzard battle", 1, true) then
         if not hay:find("warcraft", 1, true) then
@@ -217,6 +220,8 @@ end
 local done = {}
 local armed = {}
 local yielded = {}
+local covered = {}
+local tries = {}
 
 local function addr_of(w)
     if not w then
@@ -225,32 +230,43 @@ local function addr_of(w)
     return tostring(w.address or "")
 end
 
--- Mode 2 is exclusive fullscreen. Mode 1 is maximized: WoW Forever asks
--- for that (GxMaximize), and the bar stays up. w.fullscreen is the
--- internal mode; fullscreen_client is what the client requested.
-local function fs_of(w)
-    if not w then
-        return 0
+-- Mode 2 covers the screen. Mode 1 is maximized: a windowed-fullscreen
+-- game (WoW Forever's GxMaximize) asks for that, and the bar stays up.
+-- w.fullscreen is Hyprland's mode; fullscreen_client is the game's.
+local function mode_num(v)
+    local n = tonumber(v)
+    if n then
+        return n
     end
-    local v = tonumber(w.fullscreen)
-    if not v then
-        v = tonumber(w.fullscreen_client)
-    end
-    if v then
-        return v
-    end
-    if w.fullscreen == true or w.fullscreen_client == true then
+    if v == true then
         return 2
     end
     return 0
 end
 
+local function fs_of(w)
+    if not w then
+        return 0
+    end
+    local v = mode_num(w.fullscreen)
+    if v == 0 and w.fullscreen == nil then
+        v = mode_num(w.fullscreen_client)
+    end
+    return v
+end
+
+-- Borderless games stay at client mode 1. Telling them they are
+-- exclusive makes them drop back to a tile. Cover the screen instead.
 local function dispatch_fs(w)
     if not (hl.dispatch and hl.dsp and hl.dsp.window and hl.dsp.window.fullscreen_state) then
         return
     end
     local addr = addr_of(w)
-    local spec = { internal = 2, client = 2, action = "set", window = w }
+    local client = mode_num(w.fullscreen_client)
+    if client < 1 then
+        client = 2
+    end
+    local spec = { internal = 2, client = client, action = "set", window = w }
     local ok = pcall(function()
         hl.dispatch(hl.dsp.window.fullscreen_state(spec))
     end)
@@ -299,9 +315,20 @@ local function consider(w)
         end
         return
     end
-    if fs_of(w) >= 2 then
-        done[addr] = true
+    local fs = fs_of(w)
+    -- Already covering the screen. A later drop to maximized is the
+    -- game restating windowed fullscreen; a drop to 0 is SUPER+F.
+    if fs >= 2 then
+        covered[addr] = true
         yielded[addr] = nil
+        return
+    end
+    if covered[addr] and fs == 0 then
+        done[addr] = true
+        return
+    end
+    if (tries[addr] or 0) >= 4 then
+        done[addr] = true
         return
     end
     if other_game_holds(w) then
@@ -311,42 +338,31 @@ local function consider(w)
     if armed[addr] then
         return
     end
+    tries[addr] = (tries[addr] or 0) + 1
     armed[addr] = true
     dispatch_fs(w)
     if not hl.timer then
-        done[addr] = true
         return
     end
     hl.timer(function()
+        armed[addr] = nil
         if done[addr] then
-            return
-        end
-        local fs = 0
-        pcall(function()
-            fs = fs_of(w)
-        end)
-        if fs >= 2 then
-            done[addr] = true
-            yielded[addr] = nil
             return
         end
         local hold = false
         pcall(function()
             if workspace_name(w):find("special:wine", 1, true)
                 or other_game_holds(w) then
-                armed[addr] = nil
                 hold = true
                 return
             end
             if excluded(w) or not is_game(w) or not auto_fs_on() then
                 done[addr] = true
                 hold = true
-                return
             end
-            dispatch_fs(w)
         end)
         if not hold then
-            done[addr] = true
+            pcall(consider, w)
         end
     end, { timeout = 500, type = "oneshot" })
 end
@@ -420,6 +436,19 @@ local function later(w)
     end, { timeout = 50, type = "oneshot" })
 end
 
+-- A game already mapped (reload while it is open) never gets window.open.
+if hl.get_windows and hl.timer then
+    hl.timer(function()
+        local wins = hl.get_windows()
+        if type(wins) ~= "table" then
+            return
+        end
+        for i = 1, #wins do
+            pcall(later, wins[i])
+        end
+    end, { timeout = 50, type = "oneshot" })
+end
+
 if hl.on then
     hl.on("window.open", later)
     hl.on("window.class", later)
@@ -432,6 +461,8 @@ if hl.on then
             armed[a] = nil
             armed[a .. ":park"] = nil
             yielded[a] = nil
+            covered[a] = nil
+            tries[a] = nil
         end
         -- A login window had the workspace. The game behind it can
         -- take exclusive fullscreen once that window is gone.

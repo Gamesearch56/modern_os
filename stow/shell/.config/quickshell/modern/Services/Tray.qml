@@ -6,6 +6,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Services.SystemTray
 import QtQuick
+import "../Commons"
 
 Singleton {
     id: root
@@ -148,8 +149,43 @@ Singleton {
         return out;
     }
 
+    // Activate can map the window onto the hidden workspace. Raise it
+    // once it exists, and try again if the map is still in flight.
+    property string _raiseId: ""
+    property int _raiseTries: 0
+
+    function _raiseHint(item: var): string {
+        const tip = String(item?.tooltipTitle || item?.title || "").trim();
+        if (tip.length >= 3)
+            return tip;
+        return String(item?.id || "").replace(/_status_icon.*$/i, "");
+    }
+
     function activate(item: var) {
         if (item && item.activate)
             item.activate();
+        const hint = root._raiseHint(item);
+        if (hint.length < 3)
+            return;
+        root._raiseId = hint;
+        root._raiseTries = 0;
+        raiseTimer.restart();
+    }
+
+    Timer {
+        id: raiseTimer
+        interval: Motion.extraLongMs
+        onTriggered: {
+            const id = root._raiseId;
+            if (!id.length)
+                return;
+            if (Hypr.raiseDesktop(id) || root._raiseTries >= 1) {
+                root._raiseId = "";
+                root._raiseTries = 0;
+                return;
+            }
+            root._raiseTries++;
+            raiseTimer.restart();
+        }
     }
 }

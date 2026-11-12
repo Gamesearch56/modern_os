@@ -49,6 +49,18 @@ kernel_boot_running() {
     uname -r
 }
 
+# Stable for one boot. A test root does not read the host's id.
+kernel_boot_boot_id() {
+    if [ -n "${KERNEL_BOOT_BOOT_ID+x}" ]; then
+        printf '%s\n' "$KERNEL_BOOT_BOOT_ID"
+        return 0
+    fi
+    [ -z "$(kernel_boot_root)" ] || return 0
+    [ -r /proc/sys/kernel/random/boot_id ] || return 0
+    tr -d '[:space:]' </proc/sys/kernel/random/boot_id
+    printf '\n'
+}
+
 # Newest installed linux-zen, or nothing.
 kernel_boot_kver() {
     local root="$1" d name best=""
@@ -402,8 +414,88 @@ kernel_boot_reconcile() {
     # GRUB reads the stable filenames itself. systemd-boot needs an
     # entry, and it must be the default or the old versioned one wins.
     if [ -d "$boot/loader" ] || { [ -z "$root" ] && [ -d /sys/firmware/efi ]; }; then
-        kernel_boot_write_entry "$root"
+        kernel_boot_write_entry "$root" || return 1
     fi
+    # The package update removes the running kernel's modules before
+    # the next reboot. Record that the menu already loads this kernel
+    # so that gap is not offered as another repair.
+    kernel_boot_mark_ready
+}
+
+kernel_boot_write_ready() {
+    local dest="$1" kver="$2" id="$3"
+    install -d -m 0755 "$(dirname "$dest")"
+    printf '%s\n%s\n' "$kver" "$id" >"$dest"
+    chmod 0644 "$dest"
+}
+
+kernel_boot_mark_ready() {
+    local root kver id uid home
+    root="$(kernel_boot_root)"
+    kver="$(kernel_boot_kver "$root" 2>/dev/null || true)"
+    [ -n "$kver" ] || return 0
+    id="$(kernel_boot_boot_id)"
+    kernel_boot_write_ready "$root/var/lib/modern/boot-ready" "$kver" "$id"
+    # The settings check runs as the session user. A root-only stamp
+    # would leave the repair card up on an account that cannot read it.
+    [ -z "$root" ] || return 0
+    uid="${PKEXEC_UID:-${SUDO_UID:-}}"
+    [ -n "$uid" ] && [ "$uid" != 0 ] || return 0
+    home="$(getent passwd "$uid" | cut -d: -f6 || true)"
+    [ -n "$home" ] || return 0
+    kernel_boot_write_ready "$home/.local/state/modern/boot-ready" "$kver" "$id"
+    chown "$uid:$uid" "$home/.local/state/modern/boot-ready" 2>/dev/null || true
+}
+
+# The default entry already loads the installed kernel. systemd-boot on
+# a laptop keeps that as a versioned entry under the machine id, not
+# only as modern.conf.
+kernel_boot_menu_matches_installed() {
+    local root kver dest def entry linux rel img
+    root="$(kernel_boot_root)"
+    kver="$(kernel_boot_kver "$root" 2>/dev/null || true)"
+    [ -n "$kver" ] || return 1
+    [ -r "$root/usr/lib/modules/$kver/vmlinuz" ] || return 1
+    [ -r "$root/boot/loader/loader.conf" ] || return 1
+    dest="$root/boot/vmlinuz-linux-zen"
+    def="$(kernel_boot_field default "$root/boot/loader/loader.conf")"
+    def="${def%% *}"
+    case "$def" in
+        modern.conf | modern-fallback.conf | modern-keep.conf)
+            [ -r "$dest" ] && cmp -s "$root/usr/lib/modules/$kver/vmlinuz" "$dest"
+            return
+            ;;
+    esac
+    entry="$root/boot/loader/entries/$def"
+    [ -r "$entry" ] || return 1
+    linux="$(kernel_boot_field linux "$entry")"
+    [ -n "$linux" ] || return 1
+    rel="${linux#/}"
+    img="$root/boot/$rel"
+    [ -r "$img" ] && cmp -s "$root/usr/lib/modules/$kver/vmlinuz" "$img"
+}
+
+# True when this boot already pointed the menu at the installed kernel.
+kernel_boot_ready_for_this_boot() {
+    local root kver id file ready_kver ready_id
+    root="$(kernel_boot_root)"
+    kver="$(kernel_boot_kver "$root" 2>/dev/null || true)"
+    [ -n "$kver" ] || return 1
+    id="$(kernel_boot_boot_id)"
+    [ -n "$id" ] || return 1
+    local files=("$root/var/lib/modern/boot-ready")
+    if [ -z "$root" ]; then
+        files+=("${XDG_STATE_HOME:-$HOME/.local/state}/modern/boot-ready")
+    fi
+    for file in "${files[@]}"; do
+        [ -r "$file" ] || continue
+        ready_kver="$(sed -n '1p' "$file" | tr -d '[:space:]')"
+        ready_id="$(sed -n '2p' "$file" | tr -d '[:space:]')"
+        if [ "$ready_kver" = "$kver" ] && [ "$ready_id" = "$id" ]; then
+            return 0
+        fi
+    done
+    return 1
 }
 
 kernel_boot_copy() {
@@ -530,8 +622,13 @@ kernel_boot_needs_repair() {
         return 0
     fi
     run="$(kernel_boot_running 2>/dev/null || true)"
+    # A finished kernel upgrade deletes the modules of the kernel this
+    # session booted. That is not a broken menu when this same boot
+    # already wrote the installed kernel into it.
     if [ -n "$run" ] && [ ! -e "$root/usr/lib/modules/$run" ]; then
-        return 0
+        if ! kernel_boot_ready_for_this_boot && ! kernel_boot_menu_matches_installed; then
+            return 0
+        fi
     fi
     preset="$root/etc/mkinitcpio.d/linux-zen.preset"
     if [ -f "$preset" ] && [ -r "$preset" ] \
@@ -553,7 +650,7 @@ kernel_boot_needs_repair() {
         def="$(kernel_boot_field default "$root/boot/loader/loader.conf")"
         def="${def%% *}"
         case "$def" in
-            "" | modern.conf | modern-fallback.conf) ;;
+            "" | modern.conf | modern-fallback.conf | modern-keep.conf) ;;
             *)
                 if [ -r "$root/boot/loader/entries/$def" ]; then
                     ver="$(kernel_boot_field version "$root/boot/loader/entries/$def")"

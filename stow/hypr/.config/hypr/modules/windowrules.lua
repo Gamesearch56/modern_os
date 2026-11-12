@@ -299,3 +299,36 @@ for id, cmd in pairs(direct_apps) do
         })
     end
 end
+
+-- Auction companion. Only when it is a background app, so a launcher
+-- start stays on the current workspace. The class rule has to win at
+-- map time; a later move loses to the first placement on a cold boot.
+local function norm_id(id)
+    return tostring(id or ""):lower():gsub("%.desktop$", ""):gsub("[%s._%-]+", "")
+end
+
+local function autostart_has(needle)
+    local list = config.value("general.autostart", {})
+    if type(list) ~= "table" then
+        return false
+    end
+    for _, id in ipairs(list) do
+        if norm_id(id) == needle then
+            return true
+        end
+    end
+    return false
+end
+
+if autostart_has("tradeskillmaster") then
+    apply({
+        name = "modern-bg-tradeskillmaster",
+        match = { class = "^TradeSkillMaster$" },
+        workspace = "special:background silent",
+    })
+    apply({
+        name = "modern-bg-tradeskillmaster-initial",
+        match = { initial_class = "^TradeSkillMaster$" },
+        workspace = "special:background silent",
+    })
+end

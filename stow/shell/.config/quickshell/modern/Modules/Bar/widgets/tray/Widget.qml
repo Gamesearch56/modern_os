@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import "../../../../Commons"
+import "../../../../Services"
 
 Row {
     spacing: Tokens.spacing.xs
@@ -26,7 +27,7 @@ Row {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.LeftButton)
-                        modelData.activate();
+                        Tray.activate(modelData);
                     else if (mouse.button === Qt.MiddleButton)
                         modelData.secondaryActivate();
                     else

@@ -229,10 +229,58 @@ fi
 rm -f "$TMP/var/lib/modern/update-snapshot"
 export KERNEL_BOOT_RUNNING="9.9.9-zen1-1-zen"
 if kernel_boot_needs_repair; then
-    ok "a running kernel with no modules asks for a boot repair"
+    err "a menu that already loads the installed kernel still asks for a boot repair"
 else
-    err "missing modules did not ask for a boot repair"
+    ok "a matching boot menu does not ask for repair after the running modules are removed"
 fi
+# Versioned systemd-boot entry, as written by kernel-install.
+mkdir -p "$TMP/boot/machine/7.2.14-zen1-1-zen" "$TMP/boot/machine/7.2.15-zen1-1-zen"
+printf 'old-kernel\n' >"$TMP/boot/machine/7.2.14-zen1-1-zen/linux"
+cp -a "$TMP/usr/lib/modules/7.2.15-zen1-1-zen/vmlinuz" "$TMP/boot/machine/7.2.15-zen1-1-zen/linux"
+cat >"$TMP/boot/loader/entries/machine-7.2.14-zen1-1-zen.conf" <<'EOF'
+title   Old
+version 7.2.14-zen1-1-zen
+linux   /machine/7.2.14-zen1-1-zen/linux
+options quiet splash
+EOF
+cat >"$TMP/boot/loader/entries/machine-7.2.15-zen1-1-zen.conf" <<'EOF'
+title   Installed
+version 7.2.15-zen1-1-zen
+linux   /machine/7.2.15-zen1-1-zen/linux
+options quiet splash
+EOF
+printf 'default machine-7.2.14-zen1-1-zen.conf\n' >"$TMP/boot/loader/loader.conf"
+if kernel_boot_needs_repair; then
+    ok "a versioned entry for a removed kernel still asks for a boot repair"
+else
+    err "the old versioned boot entry was treated as the installed kernel"
+fi
+printf 'default machine-7.2.15-zen1-1-zen.conf\n' >"$TMP/boot/loader/loader.conf"
+if kernel_boot_needs_repair; then
+    err "a versioned entry that loads the installed kernel still asks for a boot repair"
+else
+    ok "a versioned entry for the installed kernel does not ask for a boot repair"
+fi
+printf 'default modern.conf\ntimeout 5\n' >"$TMP/boot/loader/loader.conf"
+# /boot is not readable to the session user on these machines, so the
+# menu match cannot run. The stamp from the update is what clears the card.
+chmod a-r "$TMP/boot/loader/loader.conf"
+export KERNEL_BOOT_BOOT_ID="boot-just-updated"
+printf '%s\n%s\n' "7.2.15-zen1-1-zen" "$KERNEL_BOOT_BOOT_ID" >"$TMP/var/lib/modern/boot-ready"
+if kernel_boot_needs_repair; then
+    err "a kernel upgrade that already rewrote the menu still asks for a boot repair"
+else
+    ok "the boot that installed the kernel does not keep the repair card"
+fi
+export KERNEL_BOOT_BOOT_ID="boot-after-reboot"
+if kernel_boot_needs_repair; then
+    ok "a later boot that is not the installed kernel asks for a repair again"
+else
+    err "a new boot on a kernel with no modules was treated as already repaired"
+fi
+unset KERNEL_BOOT_BOOT_ID
+rm -f "$TMP/var/lib/modern/boot-ready"
+chmod u+r "$TMP/boot/loader/loader.conf"
 unset KERNEL_BOOT_RUNNING
 
 cat >"$TMP/bootctl" <<'EOF'

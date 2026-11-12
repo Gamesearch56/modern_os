@@ -146,11 +146,13 @@ native titles such as Project Zomboid (`ProjectZomboid*`, window title
 `config.json`. Launchers stay windowed. Those game windows get:
 
 - **Fullscreen once it can be identified.** A game that already
-  covers the screen (borderless or exclusive) is left alone — pushing
-  exclusive on top of borderless makes the title drop back to a tile.
-  A game that is still tiled gets exclusive fullscreen, then once more
-  half a second later, because Proton and native launchers often set
-  the video mode after the window maps. Static `fullscreen` rules stay
+  covers the screen (exclusive) is left alone. A windowed-fullscreen
+  game only asks to be maximized, so the bar stays up; that one is
+  covered without telling the client it entered exclusive mode, which
+  would drop it back to a tile. A game that is still tiled gets
+  exclusive fullscreen. The check repeats for a few seconds, because
+  Proton and native launchers often set the video mode after the
+  window maps. Static `fullscreen` rules stay
   off so `SUPER+F` can leave it. Client maximize is honored for games;
   browsers still ignore the maximize echo that stuck them fullscreen
   (`windowrules.lua`). Java/LWJGL titles (Project Zomboid) often map
