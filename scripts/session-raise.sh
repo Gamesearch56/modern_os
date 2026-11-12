@@ -48,8 +48,8 @@ unset IFS
 
 needles=("$stem")
 case "$stem" in
-    *mail*) needles+=("mailproton" "mail.proton" "mailprotonme" "vivaldi-mail.proton") ;;
-    *calendar*) needles+=("calendarproton" "calendar.proton" "calendarprotonme" "vivaldi-calendar.proton") ;;
+    *protonmail*) needles+=("mailproton" "mail.proton" "mailprotonme" "vivaldi-mail.proton") ;;
+    *protoncalendar*) needles+=("calendarproton" "calendar.proton" "calendarprotonme" "vivaldi-calendar.proton") ;;
     *whatsapp*) needles+=("web.whatsapp" "webwhatsapp" "vivaldi-web.whatsapp") ;;
 esac
 

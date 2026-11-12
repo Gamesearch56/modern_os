@@ -16,11 +16,13 @@ function M.url_tokens(needle, fieldn)
     if needle == "" or fieldn == "" then
         return false
     end
-    if needle:find("mail", 1, true)
+    -- "protonmail", not "mail": tradeskillmaster contains those four letters
+    -- and was raised as the Proton Mail window.
+    if needle:find("protonmail", 1, true)
         and (fieldn:find("mailproton", 1, true) or fieldn:find("mailprotonme", 1, true)) then
         return true
     end
-    if needle:find("calendar", 1, true)
+    if needle:find("protoncalendar", 1, true)
         and (fieldn:find("calendarproton", 1, true) or fieldn:find("calendarprotonme", 1, true)) then
         return true
     end

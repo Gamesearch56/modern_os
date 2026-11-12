@@ -21,10 +21,12 @@ QtObject {
     function _urlTokens(needle: string, fieldn: string): bool {
         if (!needle.length || !fieldn.length)
             return false;
-        if (needle.indexOf("mail") !== -1
+        // protonmail, not mail: tradeskillmaster contains "mail" and was
+        // raised as the Proton Mail window.
+        if (needle.indexOf("protonmail") !== -1
                 && (fieldn.indexOf("mailproton") !== -1 || fieldn.indexOf("mailprotonme") !== -1))
             return true;
-        if (needle.indexOf("calendar") !== -1
+        if (needle.indexOf("protoncalendar") !== -1
                 && (fieldn.indexOf("calendarproton") !== -1 || fieldn.indexOf("calendarprotonme") !== -1))
             return true;
         if (needle.indexOf("whatsapp") !== -1

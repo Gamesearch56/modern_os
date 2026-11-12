@@ -94,6 +94,30 @@ else
     err "session-raise spotify-launcher should be 0xmusic, got ${got:-empty}"
 fi
 
+mail_home="$(mktemp -d)"
+printf '%s\n' '[{"class":"vivaldi-mail.proton.me__-Default","address":"0xmail"},{"class":"TradeSkillMaster","address":"0xtsm"}]' >"$mail_home/clients.json"
+got_mail="$(MODERN_RAISE_DRY=1 MODERN_RAISE_CLIENTS="$mail_home/clients.json" "$RAISE" proton-mail || true)"
+got_tsm="$(MODERN_RAISE_DRY=1 MODERN_RAISE_CLIENTS="$mail_home/clients.json" "$RAISE" tradeskillmaster || true)"
+rm -rf "$mail_home"
+if [[ "$got_mail" == "0xmail" && "$got_tsm" == "0xtsm" ]]; then
+    ok "TradeSkillMaster raise does not steal the Proton Mail window"
+else
+    err "tradeskillmaster must not raise vivaldi mail (mail=${got_mail:-empty} tsm=${got_tsm:-empty})"
+fi
+if command -v lua >/dev/null 2>&1; then
+    if lua -e '
+        package.path = "'"$ROOT"'/stow/hypr/.config/hypr/?.lua;" .. package.path
+        local m = require("modules.session_match")
+        assert(m.field_matches("vivaldi-mail.proton.me__-Default", "proton-mail.desktop"))
+        assert(not m.field_matches("vivaldi-mail.proton.me__-Default", "tradeskillmaster.desktop"))
+        assert(m.field_matches("TradeSkillMaster", "tradeskillmaster.desktop"))
+    '; then
+        ok "session_match keeps TradeSkillMaster off the Proton Mail rule"
+    else
+        err "session_match still treats tradeskillmaster as proton mail"
+    fi
+fi
+
 if grep -Fq 'hl.dsp.exec_cmd' "$LAUNCH" \
     && ! grep -E '^[[:space:]]*exec hyprctl dispatch exec' "$LAUNCH" >/dev/null; then
     ok "--background uses Lua exec_cmd"

@@ -46,10 +46,10 @@ field_ok() {
     fieldn="$(norm "$1")"
     needle="$(norm "$2")"
     [[ -z "$fieldn" || -z "$needle" ]] && return 1
-    if [[ "$needle" == *mail* && ( "$fieldn" == *mailproton* || "$fieldn" == *mailprotonme* ) ]]; then
+    if [[ "$needle" == *protonmail* && ( "$fieldn" == *mailproton* || "$fieldn" == *mailprotonme* ) ]]; then
         return 0
     fi
-    if [[ "$needle" == *calendar* && ( "$fieldn" == *calendarproton* || "$fieldn" == *calendarprotonme* ) ]]; then
+    if [[ "$needle" == *protoncalendar* && ( "$fieldn" == *calendarproton* || "$fieldn" == *calendarprotonme* ) ]]; then
         return 0
     fi
     if [[ "$needle" == *whatsapp* && ( "$fieldn" == *whatsapp* || "$fieldn" == *webwhatsapp* ) ]]; then
