@@ -22,6 +22,10 @@ MCard {
     default property alias extra: extraSlot.data
     property alias detail: detailSlot.data
     property alias trailing: trailingSlot.data
+    // Child visible is not a binding dependency. A button that appears
+    // after the first probe would stay clipped until the page is rebuilt.
+    property int _slots: 0
+    property var _watched: []
 
     Layout.fillWidth: true
     level: 0
@@ -37,6 +41,26 @@ MCard {
                 return true;
         }
         return false;
+    }
+
+    function _bumpSlots() {
+        root._slots++;
+    }
+
+    function _armSlot(item) {
+        if (!item)
+            return;
+        const kids = item.children;
+        let seen = root._watched;
+        for (let i = 0; i < kids.length; i++) {
+            const kid = kids[i];
+            if (seen.indexOf(kid) !== -1)
+                continue;
+            seen = seen.concat([kid]);
+            kid.visibleChanged.connect(root._bumpSlots);
+        }
+        root._watched = seen;
+        root._bumpSlots();
     }
 
     ColumnLayout {
@@ -86,25 +110,40 @@ MCard {
                 }
                 ColumnLayout {
                     id: detailSlot
-                    visible: root._slotOpen(detailSlot)
+                    visible: {
+                        void root._slots;
+                        return root._slotOpen(detailSlot);
+                    }
                     Layout.fillWidth: true
                     Layout.topMargin: Tokens.spacing.sm
                     spacing: Tokens.spacing.xs
+                    Component.onCompleted: root._armSlot(detailSlot)
+                    onChildrenChanged: root._armSlot(detailSlot)
                 }
             }
 
             ColumnLayout {
                 id: trailingSlot
-                visible: root._slotOpen(trailingSlot)
+                visible: {
+                    void root._slots;
+                    return root._slotOpen(trailingSlot);
+                }
                 Layout.alignment: Qt.AlignVCenter
+                Component.onCompleted: root._armSlot(trailingSlot)
+                onChildrenChanged: root._armSlot(trailingSlot)
             }
         }
 
         ColumnLayout {
             id: extraSlot
-            visible: root._slotOpen(extraSlot)
+            visible: {
+                void root._slots;
+                return root._slotOpen(extraSlot);
+            }
             Layout.fillWidth: true
             spacing: Tokens.spacing.sm
+            Component.onCompleted: root._armSlot(extraSlot)
+            onChildrenChanged: root._armSlot(extraSlot)
         }
     }
 }

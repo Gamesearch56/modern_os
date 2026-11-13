@@ -129,5 +129,7 @@ log "kitty open"
 "$ROOT/scripts/test-kitty-open.sh"
 log "ufw comment"
 "$ROOT/scripts/test-ufw-comment.sh"
+log "ufw apply"
+"$ROOT/scripts/test-ufw-apply.sh"
 
 log "ok"
