@@ -174,11 +174,14 @@ linux   /deadbeef/7.2.12-zen1-1-zen/linux
 options quiet splash
 EOF
 kernel_boot_drop_stale "$TMP"
-if [ -f "$TMP/boot/loader/entries/deadbeef-7.2.14-zen1-1-zen.conf" ] \
+kept="$TMP/boot/loader/entries/deadbeef-7.2.14-zen1-1-zen.conf"
+if [ -f "$kept" ] \
     && [ -f "$TMP/boot/deadbeef/7.2.14-zen1-1-zen/linux" ] \
+    && grep -q 'title   ModernOS (recovery)' "$kept" \
+    && ! grep -q '^version[[:space:]]' "$kept" \
     && [ ! -e "$TMP/boot/loader/entries/deadbeef-7.2.12-zen1-1-zen.conf" ] \
     && [ ! -d "$TMP/boot/deadbeef/7.2.12-zen1-1-zen" ]; then
-    ok "the running kernel stays selectable and an older entry is removed"
+    ok "the running kernel stays selectable as recovery and an older entry is removed"
 else
     err "drop_stale kept or removed the wrong kernel entries"
 fi
@@ -262,6 +265,26 @@ else
     ok "a versioned entry for the installed kernel does not ask for a boot repair"
 fi
 printf 'default modern.conf\ntimeout 5\n' >"$TMP/boot/loader/loader.conf"
+# kernel-install titles this "Arch Linux" and systemd-boot appends the
+# zen version. It is the same kernel ModernOS already boots.
+mkdir -p "$TMP/boot/machine/7.2.15-zen1-1-zen"
+cp -a "$TMP/usr/lib/modules/7.2.15-zen1-1-zen/vmlinuz" "$TMP/boot/machine/7.2.15-zen1-1-zen/linux"
+printf 'default-initrd\n' >"$TMP/boot/machine/7.2.15-zen1-1-zen/initrd"
+cat >"$TMP/boot/loader/entries/machine-7.2.15-zen1-1-zen.conf" <<'EOF'
+title   Arch Linux
+version 7.2.15-zen1-1-zen
+linux   /machine/7.2.15-zen1-1-zen/linux
+initrd  /machine/7.2.15-zen1-1-zen/initrd
+options quiet splash
+EOF
+kernel_boot_drop_stale "$TMP"
+if [ ! -e "$TMP/boot/loader/entries/machine-7.2.15-zen1-1-zen.conf" ] \
+    && [ ! -d "$TMP/boot/machine/7.2.15-zen1-1-zen" ] \
+    && grep -q 'title   ModernOS (fallback)' "$TMP/boot/loader/entries/modern-fallback.conf"; then
+    ok "the zen Arch Linux entry is the installed kernel, so ModernOS already covers it"
+else
+    err "the installed kernel's Arch Linux entry was left on the menu"
+fi
 # /boot is not readable to the session user on these machines, so the
 # menu match cannot run. The stamp from the update is what clears the card.
 chmod a-r "$TMP/boot/loader/loader.conf"
