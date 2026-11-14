@@ -202,50 +202,140 @@ kernel_boot_field() {
     printf '%s\n' "${line#"${key}"}" | sed 's/^[[:space:]]*//'
 }
 
+# The version field is what systemd-boot appends to the title. After
+# that field is removed, the kernel version still sits in the linux path.
+kernel_boot_entry_version() {
+    local conf="$1" ver linux rel
+    ver="$(kernel_boot_field version "$conf")"
+    if [ -z "$ver" ]; then
+        linux="$(kernel_boot_field linux "$conf")"
+        rel="${linux%/*}"
+        ver="${rel##*/}"
+    fi
+    printf '%s\n' "$ver"
+}
+
+kernel_boot_same_file() {
+    [ -n "$1" ] && [ -n "$2" ] && [ -f "$1" ] && [ -f "$2" ] && cmp -s "$1" "$2"
+}
+
+kernel_boot_boot_file() {
+    local root="$1" rel="$2"
+    rel="${rel#/}"
+    [ -n "$rel" ] || return 0
+    printf '%s\n' "$root/boot/$rel"
+}
+
+# systemd-boot prints title plus the version field, so a kernel-install
+# entry shows up as "Arch Linux (7.x-zen…)". Drop that version and use
+# the ModernOS name for the image the entry actually loads.
+kernel_boot_set_title() {
+    local conf="$1" title="$2" line wrote=0
+    [ -f "$conf" ] || return 0
+    : >"$conf.new"
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            title[[:space:]]*)
+                if [ "$wrote" -eq 0 ]; then
+                    printf 'title   %s\n' "$title" >>"$conf.new"
+                    wrote=1
+                fi
+                ;;
+            version[[:space:]]*) ;;
+            *) printf '%s\n' "$line" >>"$conf.new" ;;
+        esac
+    done <"$conf"
+    if [ "$wrote" -eq 0 ]; then
+        printf 'title   %s\n' "$title" >>"$conf.new"
+    fi
+    mv -f "$conf.new" "$conf"
+}
+
+kernel_boot_remove_entry() {
+    local root="$1" conf="$2" linux="$3" rel dir
+    rm -f -- "$conf"
+    case "$linux" in
+        /*/*/*) ;;
+        *) return 0 ;;
+    esac
+    rel="${linux#/}"
+    dir="$root/boot/${rel%/linux}"
+    case "$dir" in
+        "$root/boot"/*/*) ;;
+        *) return 0 ;;
+    esac
+    case "$dir" in
+        */loader | */loader/* | */EFI | */EFI/* | */grub | */grub/* | */modern-keep | */modern-keep/*) return 0 ;;
+    esac
+    [ -d "$dir" ] && rm -rf -- "$dir"
+}
+
 # Versioned systemd-boot entries stay on the ESP after the package
-# deletes that kernel's modules. Drop those so the menu cannot boot them.
+# deletes that kernel's modules. Drop those so the menu cannot boot
+# them. An entry the package titled "Arch Linux" is the same kernel as
+# one of the ModernOS lines, or an older kernel kept so this boot can
+# still start: name that one recovery, and name a fallback initramfs
+# fallback. The version field is what appends the zen string.
 kernel_boot_drop_stale() {
-    local root="$1" entries conf base ver linux rel dir running
+    local root="$1" entries conf base ver linux initrd kimg ifile keepimg kinit
+    local running kver installed fallback title
     running="$(kernel_boot_running 2>/dev/null || true)"
     entries="$root/boot/loader/entries"
     [ -d "$entries" ] || return 0
+    kver="$(kernel_boot_kver "$root" 2>/dev/null || true)"
+    installed=""
+    if [ -n "$kver" ] && [ -f "$root/usr/lib/modules/$kver/vmlinuz" ]; then
+        installed="$root/usr/lib/modules/$kver/vmlinuz"
+    fi
+    fallback="$root/boot/initramfs-linux-zen-fallback.img"
+    keepimg="$root/boot/modern-keep/vmlinuz"
+    kinit="$root/boot/modern-keep/initramfs.img"
     shopt -s nullglob
     for conf in "$entries"/*.conf; do
         base="$(basename "$conf")"
         case "$base" in
             modern.conf | modern-fallback.conf | modern-keep.conf) continue ;;
         esac
-        ver="$(kernel_boot_field version "$conf")"
+        ver="$(kernel_boot_entry_version "$conf")"
         linux="$(kernel_boot_field linux "$conf")"
-        if [ -z "$ver" ] && [ -n "$linux" ]; then
-            rel="${linux%/*}"
-            ver="${rel##*/}"
-        fi
         [ -n "$ver" ] || continue
-        # The kernel this session booted must stay selectable until a
-        # later boot has actually run the one we just installed.
-        if [ -n "${running:-}" ] && [ "$ver" = "$running" ]; then
-            continue
-        fi
         case "$ver" in
             *..* | */*) continue ;;
         esac
-        [ -d "$root/usr/lib/modules/$ver" ] && continue
-        rm -f -- "$conf"
-        case "$linux" in
-            /*/*/*) ;;
-            *) continue ;;
-        esac
-        rel="${linux#/}"
-        dir="$root/boot/${rel%/linux}"
-        case "$dir" in
-            "$root/boot"/*/*) ;;
-            *) continue ;;
-        esac
-        case "$dir" in
-            */loader | */loader/* | */EFI | */EFI/* | */grub | */grub/* | */modern-keep | */modern-keep/*) continue ;;
-        esac
-        [ -d "$dir" ] && rm -rf -- "$dir"
+        initrd="$(kernel_boot_last_initrd "$conf")"
+        kimg="$(kernel_boot_boot_file "$root" "$linux")"
+        ifile="$(kernel_boot_boot_file "$root" "$initrd")"
+        title=""
+        if kernel_boot_same_file "$ifile" "$fallback"; then
+            if [ -f "$entries/modern-fallback.conf" ]; then
+                kernel_boot_remove_entry "$root" "$conf" "$linux"
+                continue
+            fi
+            title="ModernOS (fallback)"
+        elif kernel_boot_same_file "$kimg" "$keepimg" && kernel_boot_same_file "$ifile" "$kinit"; then
+            if [ -f "$entries/modern-keep.conf" ]; then
+                kernel_boot_remove_entry "$root" "$conf" "$linux"
+                continue
+            fi
+            title="ModernOS (recovery)"
+        elif { kernel_boot_same_file "$kimg" "$installed" || kernel_boot_same_file "$kimg" "$root/boot/vmlinuz-linux-zen"; } \
+            && [ -f "$entries/modern.conf" ]; then
+            kernel_boot_remove_entry "$root" "$conf" "$linux"
+            continue
+        fi
+        # The kernel this session booted must stay selectable until a
+        # later boot has actually run the one we just installed.
+        if [ -z "$title" ]; then
+            if [ -n "${running:-}" ] && [ "$ver" = "$running" ]; then
+                title="ModernOS (recovery)"
+            elif [ -d "$root/usr/lib/modules/$ver" ]; then
+                title="ModernOS (recovery)"
+            else
+                kernel_boot_remove_entry "$root" "$conf" "$linux"
+                continue
+            fi
+        fi
+        [ -n "$title" ] && kernel_boot_set_title "$conf" "$title"
     done
     shopt -u nullglob
 }
@@ -537,7 +627,7 @@ kernel_boot_booted_files() {
         case "$(basename "$conf")" in
             modern-keep.conf) continue ;;
         esac
-        ver="$(kernel_boot_field version "$conf")"
+        ver="$(kernel_boot_entry_version "$conf")"
         [ "$ver" = "$run" ] || continue
         linux="$(kernel_boot_field linux "$conf")"
         [ -n "$linux" ] || continue

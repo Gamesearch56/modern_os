@@ -21,7 +21,8 @@ Singleton {
     property var allow: []
     property var deny: []
     property var _queue: []
-    property string _stderr: ""
+    property bool _closingMut: false
+    property bool _listLive: false
 
     readonly property bool active: root.status === "active"
     readonly property bool present: root.status === "active" || root.status === "inactive"
@@ -33,13 +34,15 @@ Singleton {
         command: [Paths.script("ufw-status.sh")]
         running: false
         stdout: StdioCollector {
-            onStreamFinished: root._applyList(this.text)
+            id: listOut
+            onStreamFinished: root._applyList(listOut.text)
         }
         onExited: (code) => {
+            if (!root._listLive)
+                return;
+            root._listLive = false;
             if (code !== 0 && root.error.length === 0)
                 root.error = I18n.t("settings.firewall.failed");
-            if (code === 0)
-                root.error = "";
         }
     }
 
@@ -47,21 +50,17 @@ Singleton {
         id: mutProc
         running: false
         stderr: StdioCollector {
-            onStreamFinished: root._stderr = String(this.text || "").trim()
+            id: mutErr
         }
         onExited: (code) => {
-            mutProc.running = false;
-            if (code !== 0) {
-                root._queue = [];
-                root.running = false;
-                root.mutating = "";
-                root.error = root._stderr.length ? root._stderr : I18n.t("settings.firewall.failed");
-                if (root.watching)
-                    root.refresh();
+            // running=false inside exited re-enters this handler and
+            // treats a finished enable as a failure.
+            if (root._closingMut)
                 return;
-            }
-            root.error = "";
-            Qt.callLater(root._kick);
+            root._closingMut = true;
+            mutProc.running = false;
+            root._closingMut = false;
+            root._mutDone(code);
         }
     }
 
@@ -73,14 +72,39 @@ Singleton {
     }
 
     function refresh() {
+        root._reload(true);
+    }
+
+    // clearError is false after a failed enable so the ufw message
+    // stays up. The status read exits 0 even when the firewall is off,
+    // and that used to wipe the failure.
+    function _reload(clearError: bool) {
         if (!root.watching)
             return;
-        root.error = "";
+        if (clearError)
+            root.error = "";
+        root._listLive = false;
         listProc.running = false;
         Qt.callLater(() => {
-            if (root.watching)
-                listProc.running = true;
+            if (!root.watching)
+                return;
+            root._listLive = true;
+            listProc.running = true;
         });
+    }
+
+    function _mutDone(code: int) {
+        const err = String(mutErr.text || "").trim();
+        if (code !== 0) {
+            root._queue = [];
+            root.running = false;
+            root.mutating = "";
+            root.error = err.length ? err : I18n.t("settings.firewall.failed");
+            root._reload(false);
+            return;
+        }
+        root.error = "";
+        Qt.callLater(root._kick);
     }
 
     function setEnabled(on) {
@@ -137,7 +161,6 @@ Singleton {
         root.running = true;
         root.mutating = kind;
         root.error = "";
-        root._stderr = "";
         root._queue = cmds;
         root._kick();
     }
