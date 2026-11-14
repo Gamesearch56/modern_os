@@ -32,6 +32,9 @@ Singleton {
     property string exportPath: ""
     property bool ready: false
     property int queued: 0
+    // Bumped when a tick flips in place. Replacing the array would make
+    // the review list treat it as a new model and jump to the top.
+    property int _pickRev: 0
     property bool _reopen: false
     property string _collectedFor: ""
     property bool _drainOnStatus: true
@@ -104,7 +107,16 @@ Singleton {
         return list.map(f => f.name === name ? Object.assign({}, f, { include: !f.include }) : f);
     }
     function toggleShot(name: string) { root.shots = root._toggle(root.shots, name); }
-    function toggleFile(name: string) { root.files = root._toggle(root.files, name); }
+    function toggleFile(name: string) {
+        const rows = root.files || [];
+        for (let i = 0; i < rows.length; i++) {
+            if (!rows[i] || rows[i].name !== name)
+                continue;
+            rows[i].include = !rows[i].include;
+            root._pickRev++;
+            return;
+        }
+    }
 
     function goTo(n: int) {
         root.step = Math.max(0, Math.min(3, n));

@@ -43,6 +43,7 @@ ColumnLayout {
         clip: true
         visible: !BugReport.collecting
         keyNavigationEnabled: false
+        highlightFollowsCurrentItem: false
         model: BugReport.files
         spacing: Tokens.spacing.xxs
 
@@ -62,7 +63,7 @@ ColumnLayout {
 
             MSwitch {
                 nameKey: "bugReport.files." + String(modelData.name).replace(/\.(txt|json)$/, "")
-                checked: modelData.include
+                checked: { void BugReport._pickRev; return !!modelData.include; }
                 onToggled: BugReport.toggleFile(modelData.name)
             }
         }
