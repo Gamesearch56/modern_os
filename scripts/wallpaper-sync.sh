@@ -111,14 +111,21 @@ case "$session_user" in
 esac
 if [ -n "$session_user" ]; then
     mkdir -p "$SHARED/wallpapers"
-    chmod a+rx "$SHARED/wallpapers" 2>/dev/null || true
-    copy_as_jpeg "$IMAGE" "$SHARED/wallpapers/${session_user}.jpg" || warn "per-user wallpaper copy skipped"
-    if [ -f "$SHARED/wallpaper-blur.jpg" ]; then
-        tmp="$(stage_tmp "$SHARED/wallpapers/${session_user}-blur.jpg")"
-        if cp "$SHARED/wallpaper-blur.jpg" "$tmp"; then
-            commit_tmp "$tmp" "$SHARED/wallpapers/${session_user}-blur.jpg"
-        else
-            rm -f "$tmp"
+    # A 2775 parent passes setgid to a new directory but not group write,
+    # so a root sync leaves wallpapers at 2755. mktemp then fails for the
+    # logged-in user (EACCES) even though they are in group modern.
+    chmod 2775 "$SHARED/wallpapers" 2>/dev/null || true
+    if [ ! -w "$SHARED/wallpapers" ]; then
+        warn "per-user wallpaper copy skipped ($SHARED/wallpapers is not writable)"
+    else
+        copy_as_jpeg "$IMAGE" "$SHARED/wallpapers/${session_user}.jpg" || warn "per-user wallpaper copy skipped"
+        if [ -f "$SHARED/wallpaper-blur.jpg" ]; then
+            tmp="$(stage_tmp "$SHARED/wallpapers/${session_user}-blur.jpg")"
+            if cp "$SHARED/wallpaper-blur.jpg" "$tmp"; then
+                commit_tmp "$tmp" "$SHARED/wallpapers/${session_user}-blur.jpg"
+            else
+                rm -f "$tmp"
+            fi
         fi
     fi
 fi

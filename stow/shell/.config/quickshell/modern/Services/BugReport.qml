@@ -32,6 +32,9 @@ Singleton {
     property string exportPath: ""
     property bool ready: false
     property int queued: 0
+    // Ticks stay off the files array. Replacing it jumps the review list,
+    // and editing a row in place never reaches the switch.
+    property var fileIncluded: ({})
     property bool _reopen: false
     property string _collectedFor: ""
     property bool _drainOnStatus: true
@@ -63,6 +66,7 @@ Singleton {
         root.step = 0;
         root.shots = [];
         root.files = [];
+        root.fileIncluded = ({});
         root.title = "";
         root.description = "";
         root.categories = root.areas.indexOf(category) >= 0 ? [category] : [];
@@ -104,7 +108,27 @@ Singleton {
         return list.map(f => f.name === name ? Object.assign({}, f, { include: !f.include }) : f);
     }
     function toggleShot(name: string) { root.shots = root._toggle(root.shots, name); }
-    function toggleFile(name: string) { root.files = root._toggle(root.files, name); }
+    function _syncIncluded(rows) {
+        const map = {};
+        for (let i = 0; i < (rows || []).length; i++) {
+            const name = rows[i] && String(rows[i].name || "");
+            if (name.length)
+                map[name] = rows[i].include !== false;
+        }
+        root.fileIncluded = map;
+    }
+    function toggleFile(name: string) {
+        const key = String(name || "");
+        if (!key.length)
+            return;
+        const map = Object.assign({}, root.fileIncluded || {});
+        map[key] = map[key] === false;
+        root.fileIncluded = map;
+    }
+    function _pickedFiles(): var {
+        const map = root.fileIncluded || {};
+        return (root.files || []).filter(f => f && map[String(f.name || "")] !== false).map(f => f.name);
+    }
 
     function goTo(n: int) {
         root.step = Math.max(0, Math.min(3, n));
@@ -135,7 +159,7 @@ Singleton {
             categories: root.categories.length ? root.categories : ["other"],
             when: root.when,
             repeat: root.repeat,
-            files: root._picked(root.files),
+            files: root._pickedFiles(),
             shots: root._picked(root.shots)
         };
         root.sending = true;
@@ -192,7 +216,9 @@ Singleton {
         id: collectProc
         stdout: StdioCollector {
             onStreamFinished: {
-                root.files = root._list(this.text, true);
+                const rows = root._list(this.text, true);
+                root.files = rows;
+                root._syncIncluded(rows);
                 root.collecting = false;
             }
         }

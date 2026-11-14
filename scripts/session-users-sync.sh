@@ -43,6 +43,10 @@ import shutil
 shared = os.environ.get("MODERN_SESSION_DIR", "/var/lib/modern/session")
 faces = os.path.join(shared, "faces")
 os.makedirs(faces, exist_ok=True)
+try:
+    os.chmod(faces, 0o2775)
+except OSError:
+    pass
 path = os.path.join(shared, "users.json")
 try:
     with open(path, encoding="utf-8") as f:

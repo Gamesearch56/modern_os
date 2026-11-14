@@ -8,8 +8,16 @@ import "../../Services"
 MDialog {
     id: root
 
-    parent: Window.window ? Window.window.contentItem : root
     anchors.fill: parent
+    // Binding parent to this item while the window is still null makes
+    // the dialog a child of itself.
+    Binding {
+        when: Window.window !== null
+        target: root
+        property: "parent"
+        value: Window.window.contentItem
+        restoreMode: Binding.RestoreNone
+    }
     open: StorageClean.open
     wide: true
     titleKey: StorageClean.phase === "done"

@@ -18,7 +18,7 @@ Scope {
 
             onVisibleChanged: {
                 if (visible)
-                    win.requestActivate();
+                    shell.forceActiveFocus();
                 else
                     Overview.hide();
             }

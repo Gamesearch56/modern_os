@@ -141,6 +141,18 @@ else
 fi
 
 reset
+printf '#!/bin/sh\nexit 1\n' >"$BIN/snapper"
+chmod +x "$BIN/snapper"
+echo 'mesa 1 -> 2' >"$TMP/pkgs"
+if update && ! grep -F 'Creating snapper snapshot' "$TMP/out" \
+    && ! grep -F 'Erstelle Snapper-Snapshot' "$TMP/out"; then
+    ok "no snapshot line when snapper cannot take one"
+else
+    err "update log claimed a snapper snapshot: $(cat "$TMP/out")"
+fi
+rm -f "$BIN/snapper"
+
+reset
 if update && [ ! -e "$TMP/pkexec.log" ] && ! wait_reload; then
     ok "nothing pending: no prompt, no reload"
 else

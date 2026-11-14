@@ -197,8 +197,16 @@ greetd_apply() {
             grp="$(id -gn "$username" 2>/dev/null || printf '%s' "$username")"
             greetd_as_root chown -hR "$username:$grp" "$cache" || true
         fi
-        # setgid 2775 root:modern already tags new files; greeter only needs read.
+        # a+rX makes the greeter able to read. It does not add group write,
+        # and the root sync above creates wallpapers as 2755.
         greetd_as_root chmod -R a+rX /var/lib/modern/session 2>/dev/null || true
+        greetd_as_root chmod 2775 /var/lib/modern/session || true
+        for sub in wallpapers faces; do
+            if [ -d "/var/lib/modern/session/$sub" ]; then
+                greetd_as_root chown "root:modern" "/var/lib/modern/session/$sub" || true
+                greetd_as_root chmod 2775 "/var/lib/modern/session/$sub" || true
+            fi
+        done
     fi
     if [ "${DRY_RUN:-0}" = "1" ]; then
         greetd_log "would write /var/lib/modern/session/default-user -> $username"

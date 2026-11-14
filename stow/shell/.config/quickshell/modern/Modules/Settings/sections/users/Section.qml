@@ -42,7 +42,7 @@ Item {
             color: Colors.color.error
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
-            Accessible.role: Accessible.Alert
+            Accessible.role: Accessible.AlertMessage
             Accessible.name: Passwd.lastError
         }
         MHint {

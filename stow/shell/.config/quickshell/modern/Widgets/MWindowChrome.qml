@@ -76,7 +76,7 @@ Item {
         implicitWidth: Tokens.icon.md
         implicitHeight: Tokens.icon.md
         Layout.alignment: Qt.AlignVCenter
-        Accessible.role: Accessible.Status
+        Accessible.role: Accessible.Indicator
         Accessible.name: I18n.t("settings.saving")
 
         MIcon {

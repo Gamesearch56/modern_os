@@ -189,7 +189,7 @@ fi
 install -d -m 2775 /var/lib/modern/session
 printf '%s\n' "$USERNAME" >/var/lib/modern/session/default-user
 chown root:modern /var/lib/modern/session/default-user || true
-chmod 0644 /var/lib/modern/session/default-user
+chmod 0664 /var/lib/modern/session/default-user
 
 for g in wheel video input audio render seat i2c; do
     if getent group "$g" >/dev/null 2>&1; then

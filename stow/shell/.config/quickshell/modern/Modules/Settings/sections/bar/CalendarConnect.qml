@@ -55,7 +55,9 @@ ColumnLayout {
             MButton {
                 required property var modelData
                 kind: "tonal"
-                iconName: "x-office-calendar-symbolic"
+                iconName: modelData.id === "google" ? "google-agenda" : (modelData.id === "apple" ? "icloud" : "")
+                iconSource: modelData.id === "proton" ? Qt.resolvedUrl("proton-calendar.svg") : ""
+                iconTint: false
                 key: modelData.key
                 fillWidth: true
                 onClicked: root.draft = modelData.id
