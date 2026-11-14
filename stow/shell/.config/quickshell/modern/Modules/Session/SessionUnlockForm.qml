@@ -56,7 +56,7 @@ Item {
             key: "session.capsLock"
             styleName: "bodySmall"
             color: Colors.color.onSurfaceVariant
-            Accessible.role: Accessible.Alert
+            Accessible.role: Accessible.AlertMessage
             Accessible.name: I18n.t("session.capsLock")
         }
 
@@ -66,7 +66,7 @@ Item {
             key: "session.authFailed"
             styleName: "bodySmall"
             color: Colors.color.error
-            Accessible.role: Accessible.Alert
+            Accessible.role: Accessible.AlertMessage
             Accessible.name: I18n.t("session.authFailed")
         }
 

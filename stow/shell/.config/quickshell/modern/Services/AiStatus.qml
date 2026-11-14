@@ -81,11 +81,21 @@ Item {
 
     Process {
         id: whichProc
-        command: ["ollama", "--version"]
+        // A missing ollama binary makes Quickshell warn if it is the command.
+        command: ["sh", "-c", "command -v ollama >/dev/null"]
         running: false
         onExited: (code) => {
+            const installed = code === 0;
             if (root.ai)
-                root.ai.installed = code === 0;
+                root.ai.installed = installed;
+            if (!installed) {
+                if (root.ai) {
+                    root.ai.running = false;
+                    root.ai.models = [];
+                    root.ai.probed = true;
+                }
+                return;
+            }
             tagsProc.running = false;
             Qt.callLater(() => {
                 tagsProc.running = true;

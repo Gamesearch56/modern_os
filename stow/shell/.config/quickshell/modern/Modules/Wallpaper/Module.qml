@@ -102,7 +102,7 @@ Scope {
 
             onVisibleChanged: {
                 if (visible)
-                    win.requestActivate();
+                    overlay.forceActiveFocus();
                 else
                     Wallpaper.hide();
             }

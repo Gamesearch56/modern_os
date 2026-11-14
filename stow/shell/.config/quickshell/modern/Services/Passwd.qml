@@ -40,14 +40,14 @@ Singleton {
     function groupProtected(grp): bool { return rules.groupProtected(grp); }
     function canRenameGroup(grp): bool { return root.canManage && rules.canRenameGroup(grp, root.users); }
     function canDeleteGroup(grp): bool { return root.canManage && rules.canDeleteGroup(grp, root.users); }
-    function userByLogin(login: string) {
+    function userByLogin(login: string): var {
         return rules.findUser(root.users, login);
     }
 
     function canDemote(person): bool {
         return rules.canDemote(person, root.users, root.loginName);
     }
-    function assignableGroups(login: string) {
+    function assignableGroups(login: string): var {
         return rules.assignableGroups(root.users, root.localGroups, login);
     }
     function canToggleMember(groupName: string, login: string): bool {

@@ -98,9 +98,12 @@ Item {
                     visible: cell.index > 0
                     height: Tokens.stepper.track
                     color: root._trackColor(cell.index - 1)
-                    anchors.verticalCenter: node.verticalCenter
+                    // node sits in the column, not beside this track.
+                    anchors.top: parent.top
+                    anchors.topMargin: (Tokens.stepper.node - height) / 2
                     anchors.left: parent.left
-                    anchors.right: node.left
+                    anchors.right: parent.horizontalCenter
+                    anchors.rightMargin: Tokens.stepper.node / 2
                     antialiasing: true
 
                     Behavior on color {
@@ -115,8 +118,10 @@ Item {
                     visible: cell.index < (root.steps || []).length - 1
                     height: Tokens.stepper.track
                     color: root._trackColor(cell.index)
-                    anchors.verticalCenter: node.verticalCenter
-                    anchors.left: node.right
+                    anchors.top: parent.top
+                    anchors.topMargin: (Tokens.stepper.node - height) / 2
+                    anchors.left: parent.horizontalCenter
+                    anchors.leftMargin: Tokens.stepper.node / 2
                     anchors.right: parent.right
                     antialiasing: true
 

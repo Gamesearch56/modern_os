@@ -7,7 +7,7 @@ import "../../Commons"
 import "../../Widgets"
 import "../../Services"
 
-RowLayout {
+Item {
     id: root
 
     property var catalog
@@ -22,8 +22,14 @@ RowLayout {
     }
     readonly property string _name: I18n.t("settings.sections." + Settings.sectionId)
 
-    spacing: Tokens.spacing.md
+    implicitWidth: row.implicitWidth
+    implicitHeight: row.implicitHeight
     Layout.fillWidth: true
+
+    RowLayout {
+        id: row
+        anchors.fill: parent
+        spacing: Tokens.spacing.md
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -59,10 +65,20 @@ RowLayout {
         Layout.alignment: Qt.AlignVCenter
         onClicked: root.restoreOpen = true
     }
+    }
 
     MDialog {
-        parent: Window.window ? Window.window.contentItem : root
+        id: restoreDialog
         anchors.fill: parent
+        // The header row is a layout. Anchors on one of its children are
+        // rejected, and parenting the dialog to itself loops the tree.
+        Binding {
+            when: Window.window !== null
+            target: restoreDialog
+            property: "parent"
+            value: Window.window.contentItem
+            restoreMode: Binding.RestoreNone
+        }
         open: root.restoreOpen
         titleKey: "settings.restoreTitle"
         titleParams: ({ name: root._name })

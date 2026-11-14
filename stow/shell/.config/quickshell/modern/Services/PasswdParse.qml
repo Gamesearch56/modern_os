@@ -58,7 +58,7 @@ QtObject {
         return I18n.t("settings.users.failed");
     }
 
-    function findUser(people, login: string) {
+    function findUser(people, login: string): var {
         const rows = people || [];
         for (let i = 0; i < rows.length; i++) {
             if (rows[i].login === login)
@@ -112,7 +112,7 @@ QtObject {
         return root.adminCount(people) > 1;
     }
 
-    function assignableGroups(people, groups, login: string) {
+    function assignableGroups(people, groups, login: string): var {
         const person = root.findUser(people, login);
         const prim = root.primaryName(person) || login;
         const out = [];

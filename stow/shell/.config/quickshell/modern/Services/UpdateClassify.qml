@@ -79,7 +79,7 @@ QtObject {
         return "pipewire wireplumber systemd greetd grim slurp matugen matugen-bin cliphist pacman reflector bluez networkmanager polkit stow qt6-base qt6-declarative kitty nautilus vivaldi mpv imv neovim".split(" ").indexOf(n) !== -1;
     }
 
-    function parseCheck(text: string, shipped) {
+    function parseCheck(text: string, shipped): var {
         const all = [];
         const sys = [];
         const other = [];
@@ -98,7 +98,7 @@ QtObject {
         return { all: all, sys: sys, other: other };
     }
 
-    function parseDesktop(text: string) {
+    function parseDesktop(text: string): var {
         let data = {};
         try {
             data = JSON.parse(String(text || "").trim() || "{}");

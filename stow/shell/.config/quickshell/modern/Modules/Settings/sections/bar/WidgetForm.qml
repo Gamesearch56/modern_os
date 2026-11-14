@@ -9,7 +9,8 @@ MOverlay {
     id: root
     property string widgetId: ""
     open: widgetId.length > 0
-    titleKey: root.widgetId === "ai" ? "ai.title" : ("bar." + root.widgetId)
+    titleKey: !root.widgetId.length ? ""
+        : (root.widgetId === "ai" ? "ai.title" : ("bar." + root.widgetId))
     elevation: 0
     cardColor: Colors.color.surface
     chromeHover: false

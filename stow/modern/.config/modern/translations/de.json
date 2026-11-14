@@ -1291,7 +1291,8 @@
       "utilities": "Werkzeuge",
       "installed": "Installiert",
       "communication": "Kommunikation",
-      "education": "Lernen"
+      "education": "Lernen",
+      "popular": "Beliebt"
     },
     "apps": {
       "firefox": "Schneller, privater Webbrowser",
@@ -1494,7 +1495,9 @@
       "journal-user": "Desktop-Protokoll",
       "journal-system": "Systemprotokoll",
       "journal-previous-boot": "Fehler vom letzten Start",
+      "quickshell": "Shell-Version",
       "quickshell-log": "Shell-Protokoll",
+      "quickshell-journal": "Shell-Journal",
       "update-log": "Update-Protokoll",
       "pacman-log": "Paketverlauf",
       "hardware": "Hardware",

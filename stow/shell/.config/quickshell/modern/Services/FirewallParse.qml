@@ -36,7 +36,7 @@ QtObject {
         return root._v4(t);
     }
 
-    function parseStatus(text: string) {
+    function parseStatus(text: string): var {
         const t = String(text || "");
         const low = t.toLowerCase();
         let status = "";
@@ -61,7 +61,7 @@ QtObject {
         return { status: status, allow: allow, deny: deny };
     }
 
-    function parseRow(line: string) {
+    function parseRow(line: string): var {
         const m = String(line || "").match(/^\[\s*(\d+)\]\s+(.+?)\s+(ALLOW|DENY|REJECT)\s+(IN|OUT)\s+(\S.*)$/);
         if (!m)
             return null;

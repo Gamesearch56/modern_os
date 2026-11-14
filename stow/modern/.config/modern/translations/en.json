@@ -1291,7 +1291,8 @@
       "utilities": "Utilities",
       "installed": "Installed",
       "communication": "Communication",
-      "education": "Learning"
+      "education": "Learning",
+      "popular": "Popular"
     },
     "apps": {
       "firefox": "Fast, private web browser",
@@ -1494,7 +1495,9 @@
       "journal-user": "Desktop log",
       "journal-system": "System log",
       "journal-previous-boot": "Errors from the last start",
+      "quickshell": "Shell version",
       "quickshell-log": "Shell log",
+      "quickshell-journal": "Shell journal",
       "update-log": "Update log",
       "pacman-log": "Package history",
       "hardware": "Hardware",

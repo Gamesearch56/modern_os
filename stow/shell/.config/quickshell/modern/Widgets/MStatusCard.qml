@@ -22,61 +22,32 @@ MCard {
     default property alias extra: extraSlot.data
     property alias detail: detailSlot.data
     property alias trailing: trailingSlot.data
-    // Child visible is not a binding dependency. A button that appears
-    // after the first probe would stay clipped until the page is rebuilt.
-    property int _slots: 0
-    property var _watched: []
 
     Layout.fillWidth: true
     level: 0
     implicitHeight: body.implicitHeight + Tokens.spacing.md * 2
     Layout.preferredHeight: implicitHeight
 
-    function _slotOpen(item: var): bool {
-        if (!item)
-            return false;
-        const kids = item.children;
-        for (let i = 0; i < kids.length; i++) {
-            if (kids[i].visible)
-                return true;
-        }
-        return false;
-    }
-
-    function _bumpSlots() {
-        root._slots++;
-    }
-
-    function _armSlot(item) {
-        if (!item)
-            return;
-        const kids = item.children;
-        let seen = root._watched;
-        for (let i = 0; i < kids.length; i++) {
-            const kid = kids[i];
-            if (seen.indexOf(kid) !== -1)
-                continue;
-            seen = seen.concat([kid]);
-            kid.visibleChanged.connect(root._bumpSlots);
-        }
-        root._watched = seen;
-        root._bumpSlots();
-    }
-
     ColumnLayout {
         id: body
         width: parent.width
-        spacing: Tokens.spacing.md
+        // Empty slots stay in the tree. Hiding one makes a child that
+        // appears later (the store button after the first probe) stay
+        // invisible: Qt does not notify visibleChanged while the parent
+        // column is hidden.
+        spacing: 0
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: Tokens.spacing.lg
+            Layout.bottomMargin: extraSlot.implicitHeight > 0 ? Tokens.spacing.md : 0
+            spacing: 0
 
             MAvatar {
                 visible: String(root.avatarSource).length > 0
                 size: root.avatarSize
                 source: root.avatarSource
                 Layout.alignment: Qt.AlignVCenter
+                Layout.rightMargin: visible ? Tokens.spacing.lg : 0
             }
             MIcon {
                 visible: String(root.avatarSource).length === 0 && root.iconName.length > 0
@@ -86,6 +57,7 @@ MCard {
                 tint: root.iconTint
                 preferSymbolic: root.preferSymbolic
                 Layout.alignment: Qt.AlignVCenter
+                Layout.rightMargin: visible ? Tokens.spacing.lg : 0
             }
 
             ColumnLayout {
@@ -110,40 +82,23 @@ MCard {
                 }
                 ColumnLayout {
                     id: detailSlot
-                    visible: {
-                        void root._slots;
-                        return root._slotOpen(detailSlot);
-                    }
                     Layout.fillWidth: true
-                    Layout.topMargin: Tokens.spacing.sm
+                    Layout.topMargin: implicitHeight > 0 ? Tokens.spacing.sm : 0
                     spacing: Tokens.spacing.xs
-                    Component.onCompleted: root._armSlot(detailSlot)
-                    onChildrenChanged: root._armSlot(detailSlot)
                 }
             }
 
             ColumnLayout {
                 id: trailingSlot
-                visible: {
-                    void root._slots;
-                    return root._slotOpen(trailingSlot);
-                }
                 Layout.alignment: Qt.AlignVCenter
-                Component.onCompleted: root._armSlot(trailingSlot)
-                onChildrenChanged: root._armSlot(trailingSlot)
+                Layout.leftMargin: implicitWidth > 0 ? Tokens.spacing.lg : 0
             }
         }
 
         ColumnLayout {
             id: extraSlot
-            visible: {
-                void root._slots;
-                return root._slotOpen(extraSlot);
-            }
             Layout.fillWidth: true
             spacing: Tokens.spacing.sm
-            Component.onCompleted: root._armSlot(extraSlot)
-            onChildrenChanged: root._armSlot(extraSlot)
         }
     }
 }

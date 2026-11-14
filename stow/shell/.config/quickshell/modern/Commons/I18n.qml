@@ -32,6 +32,8 @@ Singleton {
 
     property var _active: ({})
     property var _fallback: ({})
+    property bool _activeSettled: false
+    property bool _fallbackSettled: false
     property int _gen: 0
 
     FileView {
@@ -44,6 +46,10 @@ Singleton {
             const table = root._parse(text(), activeRetry, root.activeLang);
             if (table !== null) {
                 root._active = table;
+                root._activeSettled = true;
+                root._gen++;
+            } else if (activeRetry.tries >= root._maxTries) {
+                root._activeSettled = true;
                 root._gen++;
             }
         }
@@ -52,6 +58,7 @@ Singleton {
                 return;
             Logger.warn("I18n", `failed to load "${root.activeLang}.json" (${error}) — falling back to "${root.fallbackLang}" only`);
             root._active = ({});
+            root._activeSettled = true;
             root._gen++;
         }
     }
@@ -69,6 +76,10 @@ Singleton {
             const table = root._parse(text(), fallbackRetry, root.fallbackLang);
             if (table !== null) {
                 root._fallback = table;
+                root._fallbackSettled = true;
+                root._gen++;
+            } else if (fallbackRetry.tries >= root._maxTries) {
+                root._fallbackSettled = true;
                 root._gen++;
             }
         }
@@ -77,6 +88,7 @@ Singleton {
                 return;
             Logger.warn("I18n", `failed to load fallback "${root.fallbackLang}.json" (${error})`);
             root._fallback = ({});
+            root._fallbackSettled = true;
             root._gen++;
         }
     }
@@ -140,11 +152,16 @@ Singleton {
 
     function t(path: string, params: var): string {
         void root._gen;
+        if (!path || !path.length)
+            return "";
         let value = root._lookup(root._active, path);
         if (value === undefined)
             value = root._lookup(root._fallback, path);
         if (value === undefined) {
-            Logger.warn("I18n", `missing key "${path}"`);
+            // Widgets bind t() before the JSON files have been read.
+            // Those lookups are not missing keys.
+            if (root._activeSettled && root._fallbackSettled)
+                Logger.warn("I18n", `missing key "${path}"`);
             return path;
         }
         return root._interpolate(value, params);
