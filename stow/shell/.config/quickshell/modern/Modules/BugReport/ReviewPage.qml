@@ -63,7 +63,7 @@ ColumnLayout {
 
             MSwitch {
                 nameKey: "bugReport.files." + String(modelData.name).replace(/\.(txt|json)$/, "")
-                checked: { void BugReport._pickRev; return !!modelData.include; }
+                checked: (BugReport.fileIncluded || {})[String(modelData.name)] !== false
                 onToggled: BugReport.toggleFile(modelData.name)
             }
         }
