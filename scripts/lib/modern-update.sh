@@ -80,7 +80,7 @@ modern_update() {
             [ -n "${_UPDATE_GATE_FD:-}" ] || _update_gate_open "$plan" "$boot_only" || return 1
             if [ "$boot_repair" -eq 1 ] && [ "${pkgs:-0}" -eq 0 ] && [ ! -s "$plan" ]; then
                 _update_progress boot
-            elif [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
+            elif [ "$(cfg backup.preUpdateSnapshot true)" = "true" ] && _update_snapper_ready; then
                 t cli.snapshotting
             fi
             _update_progress system "${pkgs:-0}"
@@ -150,6 +150,14 @@ modern_update_notice() {
     rm -f "$marker"
 }
 
+# A missing snapper must not look like a snapshot step. list-configs
+# failing (no root config) is the same: there is nothing to create.
+_update_snapper_ready() {
+    command -v snapper >/dev/null 2>&1 \
+        && snapper list-configs >/dev/null 2>&1 \
+        && snapper list-configs 2>/dev/null | grep -q root
+}
+
 # Prints field $2 of the JSON on stdin; empty unless key $1 is truthy.
 _update_json_field() {
     python3 -c 'import json,sys
@@ -164,18 +172,15 @@ _update_tty() {
     # update-apply so the kernel preset is pinned before yay touches it.
     if [ "$boot_only" -eq 1 ]; then
         args+=(--boot-repair)
-    elif [ "$(cfg backup.preUpdateSnapshot true)" = "true" ]; then
-        if command -v snapper >/dev/null 2>&1 && snapper list-configs >/dev/null 2>&1 \
-            && snapper list-configs 2>/dev/null | grep -q root; then
-            t cli.snapshotting
-            sudo /usr/bin/snapper -c root create --description "ModernOS Update" || {
-                t cli.snapshotFailed >&2
-                return 1
-            }
-            sudo "$SCRIPT_DIR/snapper-gc.sh" prune-from-config "$CFG" || true
-        else
-            t cli.snapperUnconfigured >&2 || true
-        fi
+    elif [ "$(cfg backup.preUpdateSnapshot true)" = "true" ] && _update_snapper_ready; then
+        t cli.snapshotting
+        sudo /usr/bin/snapper -c root create --description "ModernOS Update" || {
+            t cli.snapshotFailed >&2
+            return 1
+        }
+        sudo "$SCRIPT_DIR/snapper-gc.sh" prune-from-config "$CFG" || true
+    elif [ "$(cfg backup.preUpdateSnapshot true)" = "true" ] && command -v snapper >/dev/null 2>&1; then
+        t cli.snapperUnconfigured >&2 || true
     fi
     [ ! -s "$plan" ] || args+=(--root-plan "$plan")
     sudo "$SCRIPT_DIR/update-apply.sh" "${args[@]}" || return 1
