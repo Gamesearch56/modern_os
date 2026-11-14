@@ -38,7 +38,8 @@ ColumnLayout {
 
     MButton {
         kind: "outlined"
-        iconName: "open-in-new"
+        iconName: "icloud"
+        iconTint: false
         key: "calendar.openApple"
         fillWidth: true
         onClicked: CalendarAccount.openAppleId()

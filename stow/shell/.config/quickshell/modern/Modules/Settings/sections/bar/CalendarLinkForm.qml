@@ -40,7 +40,9 @@ ColumnLayout {
     MButton {
         visible: root.provider !== "apple"
         kind: "outlined"
-        iconName: "open-in-new"
+        iconName: root.provider === "google" ? "google-agenda" : ""
+        iconSource: root.provider === "google" ? "" : Qt.resolvedUrl("proton-calendar.svg")
+        iconTint: false
         key: root.provider === "google" ? "calendar.openGoogle" : "calendar.openProton"
         fillWidth: true
         onClicked: root.provider === "google" ? CalendarAccount.openGoogle() : CalendarAccount.openProton()

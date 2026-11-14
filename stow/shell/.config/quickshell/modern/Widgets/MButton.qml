@@ -11,6 +11,10 @@ Item {
     property string key: ""
     property var params: ({})
     property string iconName: ""
+    property url iconSource: ""
+    // Brand marks stay in their own colors. A tinted full-color badge
+    // collapses to a dark square on these buttons.
+    property bool iconTint: true
     property bool enabled: true
     property bool fillWidth: false
     property bool highlighted: false
@@ -119,10 +123,14 @@ Item {
         layoutDirection: root.iconAfter ? Qt.RightToLeft : Qt.LeftToRight
 
         MIcon {
-            visible: root.iconName.length > 0 || root.busy
-            name: root.busy ? (root.iconName.length > 0 ? root.iconName : "view-refresh") : root.iconName
+            visible: root.iconName.length > 0 || root.iconSource.toString().length > 0 || root.busy
+            name: root.iconSource.toString().length > 0
+                ? ""
+                : (root.busy ? (root.iconName.length > 0 ? root.iconName : "view-refresh") : root.iconName)
+            source: root.iconSource
             size: Tokens.icon.md
             color: root._iconColor
+            tint: root.iconTint && root.iconSource.toString().length === 0
             preferSymbolic: false
             RotationAnimation on rotation {
                 running: root.busy
