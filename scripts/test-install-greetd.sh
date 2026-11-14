@@ -295,4 +295,36 @@ else
     err "greetd wallpaper sync must not leave ~/.cache owned by root"
 fi
 
+if grep -F 'chmod 2775' "$ROOT/scripts/wallpaper-sync.sh" | grep -F 'wallpapers' >/dev/null \
+    && grep -F 'for sub in wallpapers faces' "$LIB" >/dev/null \
+    && grep -F 'd /var/lib/modern/session/wallpapers 2775 root modern -' \
+        "$ROOT/install/system/tmpfiles.d/modern-session.conf" >/dev/null \
+    && grep -F '0o2775' "$ROOT/scripts/session-users-sync.sh" >/dev/null \
+    && grep -F 'd /var/lib/modern/session/faces 2775 root modern -' \
+        "$ROOT/install/system/tmpfiles.d/modern-session.conf" >/dev/null \
+    && grep -F 'chmod 0664 /var/lib/modern/session/default-user' \
+        "$ROOT/install/system/provision-iso.sh" >/dev/null; then
+    ok "per-account wallpaper dir stays group-writable"
+else
+    err "session subdirs must be 2775 and default-user 0664"
+fi
+
+if command -v magick >/dev/null 2>&1; then
+    magick -size 1x1 xc:red "$TMP/one.jpg"
+elif command -v convert >/dev/null 2>&1; then
+    convert -size 1x1 xc:red "$TMP/one.jpg"
+else
+    printf 'x' >"$TMP/one.jpg"
+fi
+mkdir -p "$TMP/session/wallpapers"
+chmod 0755 "$TMP/session/wallpapers"
+if MODERN_SESSION_DIR="$TMP/session" HOME="$TMP" USER="sessionuser" \
+    XDG_CONFIG_HOME="$TMP/config" XDG_STATE_HOME="$TMP/state" \
+    bash "$ROOT/scripts/wallpaper-sync.sh" "$TMP/one.jpg" \
+    && [ "$(stat -c '%a' "$TMP/session/wallpapers")" = "2775" ]; then
+    ok "wallpaper-sync makes the per-account dir group-writable"
+else
+    err "wallpaper-sync left wallpapers mode $(stat -c '%a' "$TMP/session/wallpapers" 2>/dev/null || printf missing)"
+fi
+
 [ "$FAIL" -eq 0 ]
