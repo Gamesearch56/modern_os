@@ -1454,6 +1454,13 @@
     "noRunner": "Battle.net braucht das Paket umu-launcher oder Steams Proton. Installiere umu-launcher und versuche es erneut.",
     "crashed": "Battle.net wurde direkt nach dem Start beendet. Details stehen in %s."
   },
+  "wow": {
+    "title": "WoW Forever",
+    "missing": "WoW Forever ist nicht installiert. Installiere es über Battle.net und versuche es erneut.",
+    "noRunner": "WoW Forever braucht das Paket umu-launcher oder Steams Proton.",
+    "noGamescope": "HDR für WoW Forever braucht das Paket gamescope.",
+    "crashed": "WoW Forever wurde direkt nach dem Start beendet. Details stehen in %s."
+  },
   "bugReport": {
     "title": "Problem melden",
     "stepDescribe": "Was ist passiert?",

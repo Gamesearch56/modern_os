@@ -36,6 +36,7 @@ $(t cli.usage)
   modern config restore design typography
   modern report [sound|display|...]
   modern battlenet
+  modern wow
   modern tsm
   modern vivaldi
 EOF
@@ -355,6 +356,9 @@ case "$TARGET" in
         ;;
     battlenet)
         exec "$SCRIPT_DIR/battlenet"
+        ;;
+    wow)
+        exec "$SCRIPT_DIR/wow-forever"
         ;;
     tsm)
         exec "$SCRIPT_DIR/tsm" "$@"

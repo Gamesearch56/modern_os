@@ -14,6 +14,8 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$REPO_ROOT/install/lib/i18n.sh"
 # shellcheck source=../install/lib/ge-proton.sh
 source "$REPO_ROOT/install/lib/ge-proton.sh"
+# shellcheck source=lib/wow-hdr.sh
+source "$SCRIPT_DIR/lib/wow-hdr.sh"
 
 MODERN_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/modern"
 ENV_FILE="${MODERN_DIR}/battlenet.env"
@@ -36,6 +38,11 @@ STEAM_ROOT="${STEAM_ROOT:-$HOME/.local/share/Steam}"
 if [ ! -d "$STEAM_ROOT/steamapps" ] && [ -d "$HOME/.steam/steam/steamapps" ]; then
     STEAM_ROOT="$HOME/.steam/steam"
 fi
+
+# Play starts WoW Forever later, from the agent. Turn HDR output off
+# before that, unless a game is already running or the HDR launcher
+# holds the lock.
+wow_hdr_off_if_idle
 
 export PROTON_ENABLE_WAYLAND="${PROTON_ENABLE_WAYLAND:-0}"
 export WINE_SIMULATE_WRITECOPY="${WINE_SIMULATE_WRITECOPY:-1}"
