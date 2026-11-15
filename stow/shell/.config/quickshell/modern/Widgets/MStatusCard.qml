@@ -60,31 +60,42 @@ MCard {
                 Layout.rightMargin: visible ? Tokens.spacing.lg : 0
             }
 
-            ColumnLayout {
+            Item {
+                // A ColumnLayout in this row stretches to the icon and
+                // keeps its first line at the top. Center the block in
+                // the row instead, so a title-only card lines up with
+                // the icon and the trailing action.
                 Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-                spacing: Tokens.spacing.xs
+                Layout.fillHeight: true
+                implicitHeight: titleCol.implicitHeight
 
-                MText {
-                    key: root.titleKey
-                    params: root.titleParams
-                    value: root.titleValue
-                    styleName: "titleLarge"
-                    Layout.fillWidth: true
-                }
-                MText {
-                    visible: root.subtitleKey.length > 0 || root.subtitleValue.length > 0
-                    key: root.subtitleKey
-                    value: root.subtitleValue
-                    styleName: "bodyMedium"
-                    color: Colors.color.onSurfaceVariant
-                    Layout.fillWidth: true
-                }
                 ColumnLayout {
-                    id: detailSlot
-                    Layout.fillWidth: true
-                    Layout.topMargin: implicitHeight > 0 ? Tokens.spacing.sm : 0
+                    id: titleCol
+                    width: parent.width
+                    anchors.verticalCenter: parent.verticalCenter
                     spacing: Tokens.spacing.xs
+
+                    MText {
+                        key: root.titleKey
+                        params: root.titleParams
+                        value: root.titleValue
+                        styleName: "titleLarge"
+                        Layout.fillWidth: true
+                    }
+                    MText {
+                        visible: root.subtitleKey.length > 0 || root.subtitleValue.length > 0
+                        key: root.subtitleKey
+                        value: root.subtitleValue
+                        styleName: "bodyMedium"
+                        color: Colors.color.onSurfaceVariant
+                        Layout.fillWidth: true
+                    }
+                    ColumnLayout {
+                        id: detailSlot
+                        Layout.fillWidth: true
+                        Layout.topMargin: implicitHeight > 0 ? Tokens.spacing.sm : 0
+                        spacing: Tokens.spacing.xs
+                    }
                 }
             }
 

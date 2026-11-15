@@ -1,0 +1,18 @@
+[Unit]
+Description=Stop leftover Wine services on session exit
+# Default Before=shutdown.target would stop this unit after app scopes.
+# After=app.slice reverses that: ExecStop runs, then the scopes stop,
+# so a winedevice.exe that ignores SIGTERM is already gone.
+DefaultDependencies=no
+After=app.slice
+PartOf=default.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/true
+ExecStop=/bin/sh -c 'r=$(head -n 1 "$$HOME/.config/modern/repo" 2>/dev/null || true); s="$$r/scripts/wine-reap.sh"; if [ ! -x "$$s" ]; then s="$$HOME/modern_dotfile/scripts/wine-reap.sh"; fi; if [ -x "$$s" ]; then exec "$$s"; fi; exit 0'
+RemainAfterExit=yes
+TimeoutStopSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=WoW Forever
+Name[de]=WoW Forever
+Comment=World of Warcraft Forever in an HDR window
+Comment[de]=World of Warcraft Forever in einem HDR-Fenster
+Exec=modern wow
+TryExec=modern
+Icon=battlenet
+Terminal=false
+StartupNotify=true
+Categories=Game;
+Keywords=blizzard;wow;warcraft;hdr;
+StartupWMClass=gamescope

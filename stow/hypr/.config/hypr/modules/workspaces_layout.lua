@@ -93,9 +93,6 @@ end
 
 -- Saved monitors.primaryDescription, else first connected.
 function M.primary()
-    if config.invalidate then
-        config.invalidate()
-    end
     local desc = config.value("monitors.primaryDescription", "")
     if type(desc) == "string" and desc ~= "" then
         local raw = hl.get_monitors and hl.get_monitors()

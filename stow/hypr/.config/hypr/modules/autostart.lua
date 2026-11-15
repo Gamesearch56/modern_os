@@ -44,6 +44,7 @@ hl.on("hyprland.start", function()
         .. "timeout 1 systemctl --user stop hyprpolkitagent.service || true & "
         .. "wait; "
         .. "timeout 1 systemctl --user daemon-reload || true; "
+        .. "timeout 3 systemctl --user enable --now modern-wine-reap.service || true; "
         .. "timeout 1 systemctl --user reset-failed phylax.service || true; "
         .. "timeout 3 systemctl --user restart phylax || true) &'")
 
