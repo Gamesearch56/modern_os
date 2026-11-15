@@ -332,9 +332,6 @@ local function apply_fixed(boot)
 end
 
 function M.focus(n)
-    if config.invalidate then
-        config.invalidate()
-    end
     apply_fixed()
     if layout.fixed() then
         pin(n)
@@ -345,9 +342,6 @@ function M.focus(n)
 end
 
 function M.move_window(n)
-    if config.invalidate then
-        config.invalidate()
-    end
     apply_fixed()
     if layout.fixed() then
         pin(n)

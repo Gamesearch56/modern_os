@@ -210,9 +210,6 @@ local function auto_fs_on()
         return fs_on
     end
     fs_sec = now
-    if config.invalidate then
-        config.invalidate()
-    end
     fs_on = config.value("gaming.autoFullscreen", true) ~= false
     return fs_on
 end

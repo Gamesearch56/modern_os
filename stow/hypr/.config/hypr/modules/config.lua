@@ -46,28 +46,39 @@ local function deep_merge(base, override)
 end
 
 local cache = nil
+local seen_default = nil
+local seen_live = nil
+-- os.time() second of the last disk read. Timer callbacks share that
+-- result: Hyprland kills a timer after 50ms, and decoding both JSON
+-- files inside one is what trips "[Lua] execution timed out".
+local checked_at = nil
 
 function M.invalidate()
-    cache = nil
+    checked_at = nil
 end
 
 -- config.get() returns the fully merged config table (default <- live).
--- Cached per Hyprland config reload (ConfigWatcher re-requires this
--- module, resetting the cache).
+-- The parsed table is kept until the file bytes change. A reload of
+-- this module (ConfigWatcher) still starts from an empty cache.
 function M.get()
-    if cache then
+    local now = os.time()
+    if cache and checked_at == now then
         return cache
     end
 
     local default_path = home() .. "/.config/modern/config.default.json"
     local live_path = home() .. "/.config/modern/config.json"
+    local default_raw = read_file(default_path) or ""
+    local live_raw = read_file(live_path) or ""
+    checked_at = now
+    if cache and default_raw == seen_default and live_raw == seen_live then
+        return cache
+    end
 
-    local default_raw = read_file(default_path)
-    local live_raw = read_file(live_path)
-
-    local default_tbl = default_raw and json.decode(default_raw) or {}
-    local live_tbl = live_raw and json.decode(live_raw) or {}
-
+    local default_tbl = default_raw ~= "" and json.decode(default_raw) or {}
+    local live_tbl = live_raw ~= "" and json.decode(live_raw) or {}
+    seen_default = default_raw
+    seen_live = live_raw
     cache = deep_merge(default_tbl, live_tbl)
     return cache
 end

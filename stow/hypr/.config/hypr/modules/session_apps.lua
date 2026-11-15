@@ -32,9 +32,6 @@ local function addrs()
 end
 
 local function autostart_ids()
-    if config.invalidate then
-        config.invalidate()
-    end
     local list = config.value("general.autostart", {})
     return type(list) == "table" and list or {}
 end
