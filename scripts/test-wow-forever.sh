@@ -123,7 +123,7 @@ else
 fi
 wait || true
 
-if command -v gcc >/dev/null 2>&1; then
+if command -v gcc >/dev/null 2>&1 && [ -f /usr/include/X11/Xatom.h ]; then
     clipbin="$tmp/xclipboard"
     if gcc -O2 -o "$clipbin" "$ROOT/scripts/lib/xclipboard.c" -lX11 -lXfixes; then
         if env DISPLAY= "$clipbin" get >/dev/null 2>&1; then
@@ -134,6 +134,8 @@ if command -v gcc >/dev/null 2>&1; then
     else
         err 'clipboard helper builds'
     fi
+elif command -v gcc >/dev/null 2>&1; then
+    printf 'test-wow-forever: skip clipboard helper (no X11 headers)\n'
 fi
 
 if [ "$FAIL" -ne 0 ]; then
