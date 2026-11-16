@@ -138,6 +138,19 @@ elif command -v gcc >/dev/null 2>&1; then
     printf 'test-wow-forever: skip clipboard helper (no X11 headers)\n'
 fi
 
+# shellcheck disable=SC1091
+. "$ROOT/scripts/lib/wow-clipboard.sh"
+printf 'Shield Emoji meaning' >"$tmp/clip-ok"
+printf '\377\376binary' >"$tmp/clip-bad"
+if wow_clipboard_text "$tmp/clip-ok" && ! wow_clipboard_text "$tmp/clip-bad" \
+    && grep -Fq -- '-t text/plain' "$ROOT/scripts/lib/wow-clipboard.sh" \
+    && grep -Fq 'XCLIPBOARD_OWNER_FILE' "$ROOT/scripts/lib/wow-clipboard.sh" \
+    && grep -Fq 'owner_is_ours' "$ROOT/scripts/lib/xclipboard.c"; then
+    ok 'clipboard bridge keeps binary off the desktop'
+else
+    err 'clipboard bridge keeps binary off the desktop'
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     printf '%s\n' "$out" >&2
     exit 1

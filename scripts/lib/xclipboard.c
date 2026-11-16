@@ -1,6 +1,9 @@
 /* CLIPBOARD on an X display. Gamescope's nested server does not share
    the desktop clipboard, so the launcher bridges the two.
-   get | set | watch. watch writes each new value followed by NUL. */
+   get | set [owner-file] | watch.
+   set writes this window id to owner-file before taking the selection.
+   watch writes each new value followed by NUL, and skips events whose
+   owner is that window so a host copy is not echoed back. */
 #define _POSIX_C_SOURCE 200809L
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
@@ -32,6 +35,32 @@ static int open_display(void) {
     prop = XInternAtom(dpy, "XCLIPBOARD_PROP", False);
     text_atom = XInternAtom(dpy, "TEXT", False);
     return 1;
+}
+
+static void write_owner(const char *path, Window window) {
+    FILE *f;
+    if (!path || !path[0])
+        return;
+    f = fopen(path, "w");
+    if (!f)
+        return;
+    fprintf(f, "%lu\n", (unsigned long)window);
+    fclose(f);
+}
+
+static int owner_is_ours(Window owner) {
+    const char *path = getenv("XCLIPBOARD_OWNER_FILE");
+    FILE *f;
+    unsigned long id = 0;
+    if (!path || !path[0])
+        return 0;
+    f = fopen(path, "r");
+    if (!f)
+        return 0;
+    if (fscanf(f, "%lu", &id) != 1)
+        id = 0;
+    fclose(f);
+    return owner == (Window)id;
 }
 
 static char *read_all(unsigned long *n) {
@@ -132,6 +161,8 @@ int main(int argc, char **argv) {
             return 1;
         if (!open_display())
             return 1;
+        /* Record the window before the selection notify is delivered. */
+        write_owner(argc > 2 ? argv[2] : NULL, win);
         XSetSelectionOwner(dpy, clip, win, CurrentTime);
         XFlush(dpy);
         for (;;) {
@@ -162,6 +193,8 @@ int main(int argc, char **argv) {
     for (;;) {
         XNextEvent(dpy, &ev);
         if (ev.type != evbase + XFixesSelectionNotify)
+            continue;
+        if (owner_is_ours(((XFixesSelectionNotifyEvent *)&ev)->owner))
             continue;
         if (!fetch(&data, &n))
             continue;
