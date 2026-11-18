@@ -35,9 +35,23 @@ case "$MODE" in
     *) MODE="dark" ;;
 esac
 
-json="$(matugen image "$WALLPAPER" --prefer saturation --dry-run -q -j hex \
-    -t scheme-tonal-spot -m "$MODE" --include-image-in-json false 2>/dev/null || true)"
-seed="$(printf '%s' "$json" | jq -r '.colors.source_color.default.color // empty')"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
+# shellcheck source=lib/theme-seed.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/theme-seed.sh"
+
+# Same scored color theme-apply.sh keeps. Light and dark only change
+# the scheme built from that color, so a mode switch must not decode
+# the wallpaper again.
+seed="$(theme_cached_seed "$WALLPAPER" || true)"
+if [ -n "$seed" ]; then
+    json="$(matugen color hex "$seed" --dry-run -q -j hex \
+        -t scheme-tonal-spot -m "$MODE" --include-image-in-json false 2>/dev/null || true)"
+else
+    json="$(matugen image "$WALLPAPER" --prefer saturation --dry-run -q -j hex \
+        -t scheme-tonal-spot -m "$MODE" --include-image-in-json false 2>/dev/null || true)"
+    seed="$(printf '%s' "$json" | jq -r '.colors.source_color.default.color // empty')"
+    [ -n "$seed" ] && theme_store_seed "$WALLPAPER" "$seed" || true
+fi
 [ -n "$seed" ] || { printf '[]\n'; exit 0; }
 
 pick() {

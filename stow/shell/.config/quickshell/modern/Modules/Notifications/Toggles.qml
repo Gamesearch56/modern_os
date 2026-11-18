@@ -24,23 +24,19 @@ ColumnLayout {
 
         MQuickTile {
             Layout.fillWidth: true
-            iconName: "network-wireless-symbolic"
+            iconName: Network.wifiEnabled ? "network-wireless-symbolic" : "network-offline-symbolic"
             titleKey: "bar.network"
-            checked: Network.connected
-            onClicked: {
-                Notifications.hide();
-                Settings.openAt("network", "");
-            }
+            checked: Network.wifiEnabled
+            enabled: Network.wifiHardwareEnabled
+            onClicked: Network.setWifiEnabled(!Network.wifiEnabled)
         }
         MQuickTile {
             Layout.fillWidth: true
-            iconName: "bluetooth-symbolic"
+            iconName: Bluetooth.powered ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
             titleKey: "bar.bluetooth"
             checked: Bluetooth.powered
-            onClicked: {
-                Notifications.hide();
-                Settings.openAt("bluetooth", "");
-            }
+            enabled: Bluetooth.adapterReady
+            onClicked: Bluetooth.setPowered(!Bluetooth.powered)
         }
         MQuickTile {
             Layout.fillWidth: true

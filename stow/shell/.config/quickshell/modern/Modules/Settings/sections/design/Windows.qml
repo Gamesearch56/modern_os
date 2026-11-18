@@ -17,6 +17,8 @@ ColumnLayout {
         MSlider {
             from: 0.4
             to: 1
+            decimals: 2
+            showValue: true
             value: Config.design.transparency
             onCommitted: (v) => ConfigWrite.set("design.transparency", Math.round(v * 100) / 100)
         }
@@ -26,6 +28,8 @@ ColumnLayout {
         MSlider {
             from: 0.5
             to: 1.5
+            decimals: 2
+            showValue: true
             value: Config.design.cornerRounding
             onMoved: (v) => {
                 const n = Math.round(v * 100) / 100;

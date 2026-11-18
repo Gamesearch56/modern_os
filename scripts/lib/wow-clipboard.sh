@@ -26,42 +26,63 @@ wow_clipboard_stop() {
     [ -f "$pidfile" ] || return 0
     pid="$(cat "$pidfile" 2>/dev/null || true)"
     if [ -n "$pid" ]; then
-        kill "$pid" 2>/dev/null || true
+        # setsid makes this pid the process group, so the wl-paste watch
+        # and the X watcher die with it instead of keeping a stale paste.
+        kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
     fi
     rm -f "$pidfile"
 }
 
+# Wine republishes the X selection as a binary Windows clipboard blob.
+# Echoing that with wl-copy replaces the desktop paste with those bytes.
+wow_clipboard_text() {
+    local file="$1"
+    [ -s "$file" ] || return 1
+    iconv -f UTF-8 -t UTF-8 <"$file" >/dev/null 2>&1
+}
+
 wow_clipboard_run() {
-    local host="$1" xdisp="$2" bin stamp pidfile to_game to_host
+    local host="$1" xdisp="$2" bin stamp owner pidfile to_game to_host
     set -euo pipefail
     set -m
     bin="$(wow_clipboard_bin)" || return 0
     stamp="${XDG_RUNTIME_DIR:-/tmp}/modern/wow-clipboard.txt"
+    owner="${XDG_RUNTIME_DIR:-/tmp}/modern/wow-clipboard.owner"
     pidfile="$(wow_clipboard_pidfile)"
     mkdir -p "$(dirname "$stamp")"
     printf '%s\n' "$$" >"$pidfile"
     trap 'kill $(jobs -p) 2>/dev/null || true; exit 0' TERM INT
     # shellcheck disable=SC2016
-    WAYLAND_DISPLAY="$host" wl-paste --watch sh -c '
+    WAYLAND_DISPLAY="$host" wl-paste -n -t text/plain --watch sh -c '
         incoming=$(mktemp)
         cat >"$incoming"
-        stamp=$1 bin=$2 xdisp=$3
+        stamp=$1 bin=$2 xdisp=$3 owner=$4
+        if ! iconv -f UTF-8 -t UTF-8 <"$incoming" >/dev/null 2>&1; then
+            rm -f "$incoming"
+            exit 0
+        fi
         if cmp -s "$incoming" "$stamp"; then
             rm -f "$incoming"
             exit 0
         fi
         cp "$incoming" "$stamp"
-        DISPLAY=$xdisp "$bin" set <"$incoming"
+        DISPLAY=$xdisp "$bin" set "$owner" <"$incoming"
         rm -f "$incoming"
-    ' sh "$stamp" "$bin" "$xdisp" >/dev/null 2>&1 &
+    ' sh "$stamp" "$bin" "$xdisp" "$owner" >/dev/null 2>&1 &
     to_game=$!
     (
-        DISPLAY="$xdisp" "$bin" watch 2>/dev/null | while IFS= read -r -d '' data; do
-            prev=$(cat "$stamp" 2>/dev/null || true)
-            [ "$data" = "$prev" ] && continue
-            printf '%s' "$data" >"$stamp"
-            printf '%s' "$data" | WAYLAND_DISPLAY="$host" wl-copy
-        done
+        DISPLAY="$xdisp" XCLIPBOARD_OWNER_FILE="$owner" "$bin" watch 2>/dev/null \
+            | while IFS= read -r -d '' data || [ -n "$data" ]; do
+                incoming=$(mktemp)
+                printf '%s' "$data" >"$incoming"
+                if ! wow_clipboard_text "$incoming" || cmp -s "$incoming" "$stamp"; then
+                    rm -f "$incoming"
+                    continue
+                fi
+                cp "$incoming" "$stamp"
+                WAYLAND_DISPLAY="$host" wl-copy -t text/plain <"$incoming"
+                rm -f "$incoming"
+            done
     ) >/dev/null 2>&1 &
     to_host=$!
     trap 'kill -- -"$to_game" -"$to_host" 2>/dev/null || true; exit 0' TERM INT

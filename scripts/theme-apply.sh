@@ -50,6 +50,8 @@ THEMES_DIR="$MODERN_DIR/themes"
 # $XDG_STATE_HOME/modern-dotfile, which tracks this repo's *development*
 # isolation, not the live system's state.
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
+# shellcheck source=lib/theme-seed.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/theme-seed.sh"
 WALLPAPER_STATE="$STATE_DIR/current-wallpaper"
 LAST_APPLIED_STATE="$STATE_DIR/theme-last-applied.json"
 MATUGEN_CONFIG="$HOME/.config/matugen/config.toml"
@@ -473,6 +475,8 @@ RELOAD=1
 CHROME_ONLY=0
 SKIP_WALLPAPER=0
 WALLPAPER_EXPLICIT=0
+EXTRACTED_IMAGE=0
+SYNC_WALLPAPER=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -565,8 +569,10 @@ esac
 if [ -z "$SURFACE_TINT" ]; then
     SURFACE_TINT="$(merged_config | jq -r '.design.surfaceTint // 0.7')"
 fi
+# One point of matugen contrast per slider step washed every color
+# brighter. Keep about a third of that swing.
 MATUGEN_CONTRAST="$(awk -v pc="$CONTRAST_NUM" -v st="$SURFACE_TINT" 'BEGIN {
-    c = pc + (st + 0) - 1
+    c = pc + ((st + 0) - 1) * 0.35
     if (c < -1) c = -1
     if (c > 1) c = 1
     printf "%.3f", c
@@ -607,10 +613,17 @@ case "$SOURCE_MODE" in
         if [ "$EXTRACT" -eq 0 ] && [ -z "$SEED" ] && [ -f "$MODERN_DIR/tokens.json" ]; then
             SEED="$(jq -r '.sourceColor // empty' "$MODERN_DIR/tokens.json")"
         fi
+        # Same pixels matugen would score (full image, its own 112px
+        # resize). The cache only skips that decode when this exact file
+        # was scored before, so a repeat pick matches the first one.
+        if [ -z "$SEED" ]; then
+            SEED="$(theme_cached_seed "$WALLPAPER" || true)"
+        fi
         if [ -n "$SEED" ]; then
             MATUGEN_ARGS+=(color hex "$SEED")
         else
             MATUGEN_ARGS+=(image "$WALLPAPER" --prefer saturation)
+            EXTRACTED_IMAGE=1
         fi
         ;;
     *)
@@ -639,6 +652,9 @@ ensure_writable_dir "$cfg/vivaldi/custom_css"
 log "running matugen (${MATUGEN_ARGS[*]})"
 mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places"
 matugen "${MATUGEN_ARGS[@]}"
+if [ "$EXTRACTED_IMAGE" -eq 1 ] && [ -n "$WALLPAPER" ] && [ -f "$MODERN_DIR/tokens.json" ]; then
+    theme_store_seed "$WALLPAPER" "$(jq -r '.sourceColor // empty' "$MODERN_DIR/tokens.json")" || true
+fi
 log "regenerated tokens.json, kitty/fastfetch/GTK/Qt/KDE/Vivaldi color files"
 
 kitty_colors="${XDG_CONFIG_HOME:-$HOME/.config}/kitty/colors.conf"
@@ -656,10 +672,15 @@ selection_foreground #E8DEF8
 EOF
 fi
 
+sync_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-sync.sh"
 if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ] \
     && { [ "$SKIP_WALLPAPER" -eq 0 ] || [ "$WALLPAPER_EXPLICIT" -eq 1 ]; }; then
-    sync_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-sync.sh"
-    if [ -f "$sync_script" ]; then
+    # Login copies re-encode and blur the full image. That is not the
+    # shell palette (tokens.json is already written). On a slow machine
+    # it kept the UI from painting the new colors for seconds. A live
+    # session does this after the palette reload; install still waits.
+    SYNC_WALLPAPER=1
+    if [ "$RELOAD" -eq 0 ] && [ -f "$sync_script" ]; then
         bash "$sync_script" "$WALLPAPER" || warn "wallpaper-sync.sh failed — lock/login may miss the new image"
     fi
 elif [ -f "$MODERN_DIR/tokens.json" ]; then
@@ -696,6 +717,15 @@ finish_live() {
     # shellcheck source=lib/polkit-agent.sh
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/polkit-agent.sh"
     reload_polkit_theme || true
+    if [ "$SYNC_WALLPAPER" -eq 1 ] && [ -f "$sync_script" ]; then
+        if command -v nice >/dev/null 2>&1; then
+            nice -n 19 bash "$sync_script" "$WALLPAPER" \
+                || warn "wallpaper-sync.sh failed — lock/login may miss the new image"
+        else
+            bash "$sync_script" "$WALLPAPER" \
+                || warn "wallpaper-sync.sh failed — lock/login may miss the new image"
+        fi
+    fi
 }
 
 if [ "$RELOAD" -eq 0 ]; then
