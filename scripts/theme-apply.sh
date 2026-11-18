@@ -449,6 +449,43 @@ EOF
     fi
 }
 
+# Wallpaper path + size + mtime, scoped to this matugen build. A new
+# file still goes through image scoring; a file already scored does not.
+theme_seed_cache() {
+    printf '%s\n' "$STATE_DIR/theme-image-seeds.json"
+}
+
+theme_cached_seed() {
+    local path="$1" sig ver cache
+    cache="$(theme_seed_cache)"
+    [ -f "$cache" ] || return 1
+    sig="$(stat -c '%s:%Y' "$path")"
+    ver="$(matugen --version 2>/dev/null | awk '{print $2}')"
+    [ -n "$ver" ] || return 1
+    jq -er --arg p "$path" --arg s "$sig" --arg v "$ver" \
+        'select(.matugen == $v) | .images[$p] | select(.sig == $s) | .seed' \
+        "$cache"
+}
+
+theme_store_seed() {
+    local path="$1" seed="$2" sig ver cache tmp
+    cache="$(theme_seed_cache)"
+    sig="$(stat -c '%s:%Y' "$path")"
+    ver="$(matugen --version 2>/dev/null | awk '{print $2}')"
+    [ -n "$ver" ] && [ -n "$seed" ] || return 0
+    tmp="$(mktemp "${STATE_DIR}/theme-image-seeds.XXXXXX")"
+    if [ -f "$cache" ]; then
+        jq --arg p "$path" --arg s "$sig" --arg c "$seed" --arg v "$ver" \
+            '.matugen = $v | .images[$p] = {sig:$s, seed:$c}' \
+            "$cache" >"$tmp" || { rm -f "$tmp"; return 0; }
+    else
+        jq -n --arg p "$path" --arg s "$sig" --arg c "$seed" --arg v "$ver" \
+            '{matugen:$v, images:{($p): {sig:$s, seed:$c}}}' >"$tmp" \
+            || { rm -f "$tmp"; return 0; }
+    fi
+    mv -f "$tmp" "$cache"
+}
+
 scheme_is_dark() {
     local m
     m="$(jq -r '.mode // empty' "$MODERN_DIR/tokens.json" 2>/dev/null || true)"
@@ -473,6 +510,8 @@ RELOAD=1
 CHROME_ONLY=0
 SKIP_WALLPAPER=0
 WALLPAPER_EXPLICIT=0
+EXTRACTED_IMAGE=0
+SYNC_WALLPAPER=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -607,10 +646,17 @@ case "$SOURCE_MODE" in
         if [ "$EXTRACT" -eq 0 ] && [ -z "$SEED" ] && [ -f "$MODERN_DIR/tokens.json" ]; then
             SEED="$(jq -r '.sourceColor // empty' "$MODERN_DIR/tokens.json")"
         fi
+        # Same pixels matugen would score (full image, its own 112px
+        # resize). The cache only skips that decode when this exact file
+        # was scored before, so a repeat pick matches the first one.
+        if [ -z "$SEED" ]; then
+            SEED="$(theme_cached_seed "$WALLPAPER" || true)"
+        fi
         if [ -n "$SEED" ]; then
             MATUGEN_ARGS+=(color hex "$SEED")
         else
             MATUGEN_ARGS+=(image "$WALLPAPER" --prefer saturation)
+            EXTRACTED_IMAGE=1
         fi
         ;;
     *)
@@ -639,6 +685,9 @@ ensure_writable_dir "$cfg/vivaldi/custom_css"
 log "running matugen (${MATUGEN_ARGS[*]})"
 mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places"
 matugen "${MATUGEN_ARGS[@]}"
+if [ "$EXTRACTED_IMAGE" -eq 1 ] && [ -n "$WALLPAPER" ] && [ -f "$MODERN_DIR/tokens.json" ]; then
+    theme_store_seed "$WALLPAPER" "$(jq -r '.sourceColor // empty' "$MODERN_DIR/tokens.json")" || true
+fi
 log "regenerated tokens.json, kitty/fastfetch/GTK/Qt/KDE/Vivaldi color files"
 
 kitty_colors="${XDG_CONFIG_HOME:-$HOME/.config}/kitty/colors.conf"
@@ -656,10 +705,15 @@ selection_foreground #E8DEF8
 EOF
 fi
 
+sync_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-sync.sh"
 if [ "$SOURCE_MODE" = "wallpaper" ] && [ -n "$WALLPAPER" ] \
     && { [ "$SKIP_WALLPAPER" -eq 0 ] || [ "$WALLPAPER_EXPLICIT" -eq 1 ]; }; then
-    sync_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper-sync.sh"
-    if [ -f "$sync_script" ]; then
+    # Login copies re-encode and blur the full image. That is not the
+    # shell palette (tokens.json is already written). On a slow machine
+    # it kept the UI from painting the new colors for seconds. A live
+    # session does this after the palette reload; install still waits.
+    SYNC_WALLPAPER=1
+    if [ "$RELOAD" -eq 0 ] && [ -f "$sync_script" ]; then
         bash "$sync_script" "$WALLPAPER" || warn "wallpaper-sync.sh failed — lock/login may miss the new image"
     fi
 elif [ -f "$MODERN_DIR/tokens.json" ]; then
@@ -696,6 +750,15 @@ finish_live() {
     # shellcheck source=lib/polkit-agent.sh
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/polkit-agent.sh"
     reload_polkit_theme || true
+    if [ "$SYNC_WALLPAPER" -eq 1 ] && [ -f "$sync_script" ]; then
+        if command -v nice >/dev/null 2>&1; then
+            nice -n 19 bash "$sync_script" "$WALLPAPER" \
+                || warn "wallpaper-sync.sh failed — lock/login may miss the new image"
+        else
+            bash "$sync_script" "$WALLPAPER" \
+                || warn "wallpaper-sync.sh failed — lock/login may miss the new image"
+        fi
+    fi
 }
 
 if [ "$RELOAD" -eq 0 ]; then
