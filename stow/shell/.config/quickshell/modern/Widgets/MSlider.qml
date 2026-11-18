@@ -11,6 +11,7 @@ Item {
     property real value: 0
     property bool enabled: true
     property bool showValue: false
+    property int decimals: 0
     property bool wheel: false
     property real wheelStep: 0
     property real wheelFineStep: 0
@@ -27,7 +28,7 @@ Item {
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
     Accessible.role: Accessible.Slider
-    Accessible.description: String(Math.round(root._shown))
+    Accessible.description: root._format(root._shown) + root.suffix
     Accessible.onIncreaseAction: root._emit(Math.min(root.to, root._shown + root._span / 20), true)
     Accessible.onDecreaseAction: root._emit(Math.max(root.from, root._shown - root._span / 20), true)
 
@@ -144,10 +145,12 @@ Item {
 
         MText {
             visible: root.showValue
-            value: Math.round(root._shown) + root.suffix
+            value: root._format(root._shown) + root.suffix
             styleName: "labelMedium"
             color: Colors.color.onSurfaceVariant
-            Layout.preferredWidth: Tokens.spacing.xxl + Tokens.spacing.sm
+            Layout.preferredWidth: root.decimals > 0
+                ? Tokens.spacing.xxl + Tokens.spacing.lg
+                : Tokens.spacing.xxl + Tokens.spacing.sm
         }
     }
 
@@ -160,6 +163,13 @@ Item {
             }
             p = p.parent;
         }
+    }
+
+    function _format(n: real): string {
+        const d = Math.max(0, root.decimals);
+        const f = Math.pow(10, d);
+        const r = Math.round(Number(n) * f) / f;
+        return d === 0 ? String(Math.round(r)) : r.toFixed(d);
     }
 
     function _emit(v: real, commit: bool) {

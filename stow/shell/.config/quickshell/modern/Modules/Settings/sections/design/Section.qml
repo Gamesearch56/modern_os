@@ -41,9 +41,12 @@ ColumnLayout {
     }
     MField {
         labelKey: "settings.fields.wallpaperColor"
+        hintKey: "settings.hints.wallpaperColor"
         MSlider {
             from: 0.5
             to: 2
+            decimals: 1
+            showValue: true
             value: Config.design.surfaceTint ?? 1
             onCommitted: (v) => {
                 const t = Math.round(v * 10) / 10;
@@ -103,6 +106,7 @@ ColumnLayout {
         Layout.fillWidth: true
         from: 0.8
         to: 1.4
+        decimals: 2
         value: Config.typography.scale
         showValue: true
         onCommitted: (v) => ConfigWrite.set("typography.scale", Math.round(v * 100) / 100)

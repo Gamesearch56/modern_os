@@ -604,8 +604,10 @@ esac
 if [ -z "$SURFACE_TINT" ]; then
     SURFACE_TINT="$(merged_config | jq -r '.design.surfaceTint // 0.7')"
 fi
+# One point of matugen contrast per slider step washed every color
+# brighter. Keep about a third of that swing.
 MATUGEN_CONTRAST="$(awk -v pc="$CONTRAST_NUM" -v st="$SURFACE_TINT" 'BEGIN {
-    c = pc + (st + 0) - 1
+    c = pc + ((st + 0) - 1) * 0.35
     if (c < -1) c = -1
     if (c > 1) c = 1
     printf "%.3f", c
