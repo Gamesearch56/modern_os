@@ -137,5 +137,7 @@ log "ufw apply"
 "$ROOT/scripts/test-ufw-apply.sh"
 log "ollama setup"
 "$ROOT/scripts/test-ollama-setup.sh"
+log "theme seed"
+"$ROOT/scripts/test-theme-seed.sh"
 
 log "ok"

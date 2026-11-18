@@ -67,18 +67,19 @@ Item {
     }
     }
 
+    Item {
+        id: dialogHost
+        visible: false
+        width: 0
+        height: 0
+    }
+
     MDialog {
         id: restoreDialog
+        // Window.window on a Binding is not an Item, so the old parent
+        // binding never ran and the card stayed in the header row.
+        parent: Window.window ? Window.window.contentItem : dialogHost
         anchors.fill: parent
-        // The header row is a layout. Anchors on one of its children are
-        // rejected, and parenting the dialog to itself loops the tree.
-        Binding {
-            when: Window.window !== null
-            target: restoreDialog
-            property: "parent"
-            value: Window.window.contentItem
-            restoreMode: Binding.RestoreNone
-        }
         open: root.restoreOpen
         titleKey: "settings.restoreTitle"
         titleParams: ({ name: root._name })

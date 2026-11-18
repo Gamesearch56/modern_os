@@ -50,6 +50,8 @@ THEMES_DIR="$MODERN_DIR/themes"
 # $XDG_STATE_HOME/modern-dotfile, which tracks this repo's *development*
 # isolation, not the live system's state.
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
+# shellcheck source=lib/theme-seed.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/theme-seed.sh"
 WALLPAPER_STATE="$STATE_DIR/current-wallpaper"
 LAST_APPLIED_STATE="$STATE_DIR/theme-last-applied.json"
 MATUGEN_CONFIG="$HOME/.config/matugen/config.toml"
@@ -447,43 +449,6 @@ EOF
         gsettings set org.gnome.desktop.interface cursor-size "$cursor_size" >/dev/null 2>&1 || true
         gsettings set org.gnome.desktop.interface icon-theme "$gtk_icon" >/dev/null 2>&1 || true
     fi
-}
-
-# Wallpaper path + size + mtime, scoped to this matugen build. A new
-# file still goes through image scoring; a file already scored does not.
-theme_seed_cache() {
-    printf '%s\n' "$STATE_DIR/theme-image-seeds.json"
-}
-
-theme_cached_seed() {
-    local path="$1" sig ver cache
-    cache="$(theme_seed_cache)"
-    [ -f "$cache" ] || return 1
-    sig="$(stat -c '%s:%Y' "$path")"
-    ver="$(matugen --version 2>/dev/null | awk '{print $2}')"
-    [ -n "$ver" ] || return 1
-    jq -er --arg p "$path" --arg s "$sig" --arg v "$ver" \
-        'select(.matugen == $v) | .images[$p] | select(.sig == $s) | .seed' \
-        "$cache"
-}
-
-theme_store_seed() {
-    local path="$1" seed="$2" sig ver cache tmp
-    cache="$(theme_seed_cache)"
-    sig="$(stat -c '%s:%Y' "$path")"
-    ver="$(matugen --version 2>/dev/null | awk '{print $2}')"
-    [ -n "$ver" ] && [ -n "$seed" ] || return 0
-    tmp="$(mktemp "${STATE_DIR}/theme-image-seeds.XXXXXX")"
-    if [ -f "$cache" ]; then
-        jq --arg p "$path" --arg s "$sig" --arg c "$seed" --arg v "$ver" \
-            '.matugen = $v | .images[$p] = {sig:$s, seed:$c}' \
-            "$cache" >"$tmp" || { rm -f "$tmp"; return 0; }
-    else
-        jq -n --arg p "$path" --arg s "$sig" --arg c "$seed" --arg v "$ver" \
-            '{matugen:$v, images:{($p): {sig:$s, seed:$c}}}' >"$tmp" \
-            || { rm -f "$tmp"; return 0; }
-    fi
-    mv -f "$tmp" "$cache"
 }
 
 scheme_is_dark() {
