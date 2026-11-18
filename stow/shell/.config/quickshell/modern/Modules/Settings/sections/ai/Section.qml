@@ -91,7 +91,8 @@ ColumnLayout {
     }
 
     Install {
-        visible: root.ollamaOn && !Ai.ready
+        id: ollamaSetup
+        visible: root.ollamaOn && (!Ai.ready || ollamaSetup.setupBusy || (Ai.models || []).length === 0)
         Layout.fillWidth: true
     }
 }

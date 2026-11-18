@@ -9,6 +9,8 @@ ColumnLayout {
     spacing: Tokens.spacing.md
     Layout.fillWidth: true
 
+    readonly property bool setupBusy: setup.setupBusy
+
     readonly property int focusStep: {
         if (!Ai.installed)
             return 0;
@@ -26,14 +28,28 @@ ColumnLayout {
         { titleKey: "settings.ollama.step4Title", bodyKey: "settings.ollama.step4", cmdKey: "" }
     ]
 
+    AiStatus {
+        id: setup
+        visible: false
+        ai: Ai
+        onSetupFinished: (ok, model) => {
+            if (ok && String(model || "").length)
+                ConfigWrite.set("accounts.ai.ollamaModel", model);
+        }
+    }
+
     MSectionHeader {
         key: "settings.ollama.install"
         topMargin: Tokens.spacing.sm
     }
 
     MText {
-        visible: !Ai.running
-        key: Ai.installed ? "settings.ollama.statusStopped" : "settings.ollama.statusMissing"
+        visible: !Ai.running || root.setupBusy
+        key: {
+            if (root.setupBusy)
+                return "settings.ollama.setupWorking";
+            return Ai.installed ? "settings.ollama.statusStopped" : "settings.ollama.statusMissing";
+        }
         styleName: "titleSmall"
         color: Colors.color.primary
         wrapMode: Text.WordWrap
@@ -107,6 +123,24 @@ ColumnLayout {
                         color: Colors.color.onSurfaceVariant
                         wrapMode: Text.WordWrap
                         elide: Text.ElideNone
+                        Layout.fillWidth: true
+                    }
+                    MButton {
+                        visible: step.index === 0 && !Ai.installed
+                        kind: "filled"
+                        key: "settings.ollama.openStore"
+                        onClicked: Store.showPackage("ollama")
+                    }
+                    MButton {
+                        visible: step.index === 1 && Ai.installed
+                        kind: "filled"
+                        busy: root.setupBusy
+                        key: "settings.ollama.setup"
+                        onClicked: setup.startSetup()
+                    }
+                    MHint {
+                        visible: step.index === 1 && setup.setupFailed && !root.setupBusy
+                        key: "settings.ollama.setupFailed"
                         Layout.fillWidth: true
                     }
                 }

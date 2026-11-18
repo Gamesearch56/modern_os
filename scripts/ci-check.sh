@@ -135,5 +135,7 @@ log "ufw comment"
 "$ROOT/scripts/test-ufw-comment.sh"
 log "ufw apply"
 "$ROOT/scripts/test-ufw-apply.sh"
+log "ollama setup"
+"$ROOT/scripts/test-ollama-setup.sh"
 
 log "ok"

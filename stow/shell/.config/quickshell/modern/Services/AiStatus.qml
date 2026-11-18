@@ -115,4 +115,67 @@ Item {
                 root._parseStatus("");
         }
     }
+
+    // Same name ollama-pull.sh downloads. The assistant uses it after.
+    readonly property string setupModel: "qwen3:4b"
+    property bool setupBusy: false
+    property bool setupFailed: false
+    signal setupFinished(bool ok, string model)
+
+    function startSetup() {
+        if (root.setupBusy)
+            return;
+        root.setupFailed = false;
+        root.setupBusy = true;
+        if (root.ai && root.ai.running)
+            root._pull();
+        else
+            root._enable();
+    }
+
+    function _enable() {
+        enableProc.command = ["pkexec", Paths.script("ollama-enable.sh")];
+        enableProc.running = true;
+    }
+
+    function _pull() {
+        pullProc.command = [Paths.script("ollama-pull.sh")];
+        pullProc.running = true;
+    }
+
+    function _setupFail() {
+        root.setupBusy = false;
+        root.setupFailed = true;
+        root.setupFinished(false, "");
+    }
+
+    Process {
+        id: enableProc
+        running: false
+        onExited: (code) => {
+            if (code !== 0) {
+                root._setupFail();
+                return;
+            }
+            if (root.ai)
+                root.ai.refreshStatus();
+            root._pull();
+        }
+    }
+
+    Process {
+        id: pullProc
+        running: false
+        onExited: (code) => {
+            if (root.ai)
+                root.ai.refreshStatus();
+            if (code !== 0) {
+                root._setupFail();
+                return;
+            }
+            root.setupBusy = false;
+            root.setupFailed = false;
+            root.setupFinished(true, root.setupModel);
+        }
+    }
 }
