@@ -15,6 +15,15 @@ Scope {
     }
 
     Connections {
+        target: Snapshots
+        function onReverted(entries) {
+            const list = entries || [];
+            for (let i = 0; i < list.length; i++)
+                ConfigWrite.set(list[i].path, list[i].value);
+        }
+    }
+
+    Connections {
         target: FilePick
         function onDirectoryPicked(path, key) {
             if (key === "screenshots.videoDirectory")
