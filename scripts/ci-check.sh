@@ -143,6 +143,8 @@ log "ollama library"
 "$ROOT/scripts/test-ollama-library.sh"
 log "ollama fit"
 "$ROOT/scripts/test-ollama-fit.sh"
+log "brave search"
+"$ROOT/scripts/test-brave-search.sh"
 log "theme seed"
 "$ROOT/scripts/test-theme-seed.sh"
 

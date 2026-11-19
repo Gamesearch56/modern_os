@@ -15,7 +15,6 @@ Item {
     readonly property int maxLine: 4096
     readonly property int maxMsgs: 12
     readonly property int maxPredict: 768
-    readonly property int curlMaxSec: 180
 
     property bool running: false
     property string thinking: ""
@@ -137,13 +136,7 @@ Item {
         Qt.callLater(() => {
             if (!root.running)
                 return;
-            proc.command = [
-                "curl", "-sS", "-N", "--noproxy", "*",
-                "--connect-timeout", "5", "--max-time", String(root.curlMaxSec),
-                "-H", "Content-Type: application/json",
-                "--data-binary", "@" + req.path,
-                "http://127.0.0.1:11434/api/chat"
-            ];
+            proc.command = [Paths.script("ollama-chat.sh"), req.path];
             proc.running = true;
         });
     }

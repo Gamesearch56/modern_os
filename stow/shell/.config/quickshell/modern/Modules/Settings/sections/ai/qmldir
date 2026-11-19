@@ -3,6 +3,7 @@ Install 1.0 Install.qml
 Gemini 1.0 Gemini.qml
 Library 1.0 Library.qml
 Tune 1.0 Tune.qml
+BraveKey 1.0 BraveKey.qml
 FitMark 1.0 FitMark.qml
 ModelGroup 1.0 ModelGroup.qml
 Grouper 1.0 Grouper.qml

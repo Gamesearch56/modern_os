@@ -67,6 +67,11 @@ ColumnLayout {
         }
     }
 
+    BraveKey {
+        visible: root.ollamaOn
+        Layout.fillWidth: true
+    }
+
     Tune {
         visible: root.ollamaOn
         Layout.fillWidth: true

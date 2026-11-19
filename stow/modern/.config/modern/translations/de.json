@@ -208,8 +208,8 @@
     "errorNoModel": "Unter Einstellungen → KI ein Modell wählen.",
     "stop": "Stopp",
     "stopped": "Abgebrochen.",
-    "systemBrief": "Antworte in der Sprache der Frage. Behalte den freundlichen Karten-Stil: Emoji in kurzen Überschriften, nummerierte Liste für die Schritte, Leerzeile zwischen den Abschnitten. Bleib kurz: nur ein paar Listenpunkte, kein Aufsatz, keine Einleitung.",
-    "systemRoom": "Antworte in der Sprache der Frage. Behalte den freundlichen Karten-Stil: Emoji in kurzen Überschriften, nummerierte Liste für die Schritte, Leerzeile zwischen den Abschnitten."
+    "systemBrief": "Antworte in der Sprache der Frage. Behalte den freundlichen Karten-Stil: Emoji in kurzen Überschriften, nummerierte Liste für die Schritte, Leerzeile zwischen den Abschnitten. Bleib kurz: nur ein paar Listenpunkte, kein Aufsatz, keine Einleitung. Wenn eine Angabe sich geändert haben kann oder du unsicher bist, rufe web_search auf, bevor du antwortest.",
+    "systemRoom": "Antworte in der Sprache der Frage. Behalte den freundlichen Karten-Stil: Emoji in kurzen Überschriften, nummerierte Liste für die Schritte, Leerzeile zwischen den Abschnitten. Wenn eine Angabe sich geändert haben kann oder du unsicher bist, rufe web_search auf, bevor du antwortest."
   },
   "session": {
     "unlock": "Entsperren",
@@ -593,6 +593,7 @@
       "aiModel": "KI-Modell",
       "aiThinking": "Nachdenken",
       "aiBrief": "Kurze Antworten",
+      "braveKey": "Brave-API-Schlüssel",
       "aiLibrary": "Modelle laden",
       "ollamaModel": "Ollama-Modell",
       "chrome": "Chrome",
@@ -725,6 +726,12 @@
       "openStudio": "API-Schlüssel holen",
       "noModels": "Noch keine Gemini-Modelle"
     },
+    "brave": {
+      "keyPlaceholder": "Schlüssel hier einfügen",
+      "save": "Speichern",
+      "remove": "Entfernen",
+      "saved": "Ein Schlüssel ist gespeichert."
+    },
     "ollama": {
       "install": "Ollama einrichten",
       "statusMissing": "Ollama mit der Schaltfläche in Schritt 1 installieren.",
@@ -841,6 +848,7 @@
       "ollamaModel": "Lokal mit ollama pull. Nutzt der Leisten-Assistent.",
       "aiThinking": "Das Modell denkt die Frage durch, bevor es antwortet. Das dauert länger.",
       "aiBrief": "Hält Antworten auf ein paar Zeilen. Aus erlaubt eine längere Antwort.",
+      "braveKey": "Brave-Search-Schlüssel einfügen. Der Assistent nutzt ihn, wenn eine Antwort das Web braucht.",
       "aiLibrary": "Bibliothek durchsuchen, dann ein Modell installieren oder eines löschen, das nicht mehr gebraucht wird.",
       "geminiAccount": "In Google AI Studio mit dem Google-Konto anmelden, das Gemini hat, dann einen API-Schlüssel einfügen. Das Gemini-Pro-Kontingent folgt diesem Konto.",
       "geminiModel": "Nutzt der Leisten-Assistent, wenn Gemini gewählt ist.",
