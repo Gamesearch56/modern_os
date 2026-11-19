@@ -68,7 +68,10 @@ QtObject {
         if (!addr.length)
             return;
         const t = root.toplevelByAddress(addr);
-        const parked = root.windowParked(t);
+        const wsId = t && t.workspace ? Number(t.workspace.id) : 0;
+        // A special workspace often has no numeric id. Focusing it opens
+        // every parked app, and a plain focus leaves the window there.
+        const parked = !t || root.windowParked(t) || !(wsId > 0);
         // The script fades in place. A plain move slides the window in
         // from its tile on the background workspace.
         if (parked && root.host._lua) {
@@ -82,7 +85,6 @@ QtObject {
             root.focusWindow(addr);
             return;
         }
-        const wsId = t && t.workspace ? Number(t.workspace.id) : 0;
         if (wsId > 0)
             root.host.focusWorkspace(wsId);
         root.focusWindow(addr);
@@ -147,8 +149,8 @@ QtObject {
         return root.raise.raiseDesktop(desktopId);
     }
 
-    function raiseApp(desktopId: string, appName: string): bool {
-        return root.raise.raiseApp(desktopId, appName);
+    function raiseApp(desktopId: string, appName: string, onMiss): bool {
+        return root.raise.raiseApp(desktopId, appName, onMiss);
     }
 
     function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {

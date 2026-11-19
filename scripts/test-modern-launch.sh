@@ -340,6 +340,8 @@ activate="$(awk '/function activate\(item\)/,/^    }$/' \
 invoke_at="$(grep -n 'invokeDefault(live)' <<<"$activate" | head -n1 | cut -d: -f1)"
 raise_at="$(grep -n 'Hypr.raiseApp' <<<"$activate" | head -n1 | cut -d: -f1)"
 if grep -Fq 'Apps.openInFileManager(file)' <<<"$activate" \
+    && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq '!(wsId > 0)' "$HYPR_WIN" \
     && [ -n "$invoke_at" ] && [ -n "$raise_at" ] && [ "$invoke_at" -lt "$raise_at" ]; then
     ok "a screenshot toast reveals its file; an app notification runs its action before raising"
 else

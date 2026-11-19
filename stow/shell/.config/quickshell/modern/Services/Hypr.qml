@@ -201,8 +201,8 @@ Singleton {
     function moveToCurrentWorkspace(address: string) { wins.moveToCurrentWorkspace(address); }
     function moveToBackground(address: string) { wins.moveToBackground(address); }
     function raiseDesktop(desktopId: string): bool { return wins.raiseDesktop(desktopId); }
-    function raiseApp(desktopId: string, appName: string): bool {
-        return wins.raiseApp(desktopId, appName);
+    function raiseApp(desktopId: string, appName: string, onMiss): bool {
+        return wins.raiseApp(desktopId, appName, onMiss);
     }
     function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
         return wins.raiseDesktopOrLaunch(desktopId, entry);
