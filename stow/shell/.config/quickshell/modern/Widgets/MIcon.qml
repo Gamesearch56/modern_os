@@ -1,7 +1,10 @@
 // Freedesktop icon by name, sized from Tokens. `tint` recolors onto a
-// role. Symbolic glyphs are lifted (brightness 1). Full-color Papirus
-// keeps luminance (brightness 0) so inner shapes stay visible. Callers
-// that change `color` on hover will flatten that look — freeze the role.
+// role. Symbolic glyphs are used as an alpha mask: Papirus status
+// icons (bluetooth, volume, battery) are already light, and lifting
+// them with brightness pushes them past the role color in a light
+// theme. Full-color Papirus keeps luminance so inner shapes stay
+// visible. Callers that change `color` on hover will flatten that
+// look — freeze the role.
 import QtQuick
 import QtQuick.Effects
 import Quickshell
@@ -95,13 +98,29 @@ Item {
         layer.enabled: root._colorize
     }
 
+    // Solid role color. Symbolic icons mask this, so a light status
+    // glyph and a dark action glyph land on the same color.
+    Rectangle {
+        id: dye
+        anchors.fill: parent
+        color: root.color
+        opacity: 0
+        layer.enabled: root._colorize && root._symbolicFile
+    }
+
     MultiEffect {
         anchors.fill: root._file ? fileImg : img
         visible: root._colorize && (root._file ? fileImg.visible : img.visible)
-        source: root._file ? fileImg : img
-        colorization: 1
+        source: root._symbolicFile ? dye : (root._file ? fileImg : img)
+        colorization: root._symbolicFile ? 0 : 1
         colorizationColor: root.color
-        brightness: root._symbolicFile ? 1 : 0
+        brightness: 0
         saturation: 0
+        maskEnabled: root._symbolicFile
+        maskSource: root._file ? fileImg : img
+        // Wide ramp so the icon's antialiased edge stays, instead of a
+        // hard cut at the first non-zero alpha.
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1
     }
 }
