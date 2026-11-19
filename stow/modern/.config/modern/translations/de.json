@@ -743,6 +743,7 @@
       "keyPlaceholder": "Schlüssel hier einfügen",
       "save": "Speichern",
       "remove": "Entfernen",
+      "getKey": "API-Schlüssel holen",
       "saved": "Ein Schlüssel ist gespeichert."
     },
     "ollama": {

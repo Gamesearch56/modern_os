@@ -53,5 +53,13 @@ ColumnLayout {
                 keyField.text = "";
             }
         }
+        MButton {
+            kind: "text"
+            key: "settings.brave.getKey"
+            onClicked: {
+                AiSearch.openKeys();
+                Settings.close();
+            }
+        }
     }
 }

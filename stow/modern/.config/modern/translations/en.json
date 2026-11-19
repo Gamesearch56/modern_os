@@ -743,6 +743,7 @@
       "keyPlaceholder": "Paste the key here",
       "save": "Save",
       "remove": "Remove",
+      "getKey": "Get API key",
       "saved": "A key is saved."
     },
     "ollama": {

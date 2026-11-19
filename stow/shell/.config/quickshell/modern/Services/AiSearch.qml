@@ -44,6 +44,10 @@ Singleton {
         root.hasKey = k.length > 0;
     }
 
+    function openKeys() {
+        Quickshell.execDetached(["xdg-open", "https://api-dashboard.search.brave.com/app/keys"]);
+    }
+
     function _ingest(raw: string) {
         let on = false;
         try {
