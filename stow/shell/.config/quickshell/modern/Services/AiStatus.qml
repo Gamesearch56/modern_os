@@ -127,14 +127,21 @@ Item {
             return;
         root.setupFailed = false;
         root.setupBusy = true;
-        if (root.ai && root.ai.running)
-            root._pull();
-        else
+        if (!root.ai || !root.ai.installed)
+            root._install();
+        else if (!root.ai.running)
             root._enable();
+        else
+            root._pull();
+    }
+
+    function _install() {
+        installProc.command = [Paths.script("ollama-install.sh")];
+        installProc.running = true;
     }
 
     function _enable() {
-        enableProc.command = ["pkexec", Paths.script("ollama-enable.sh")];
+        enableProc.command = [Paths.script("ollama-activate.sh")];
         enableProc.running = true;
     }
 
@@ -150,8 +157,28 @@ Item {
     }
 
     Process {
+        id: installProc
+        running: false
+        stdout: StdioCollector { id: installOut }
+        stderr: StdioCollector { id: installErr }
+        onExited: (code) => {
+            if (code !== 0) {
+                root._setupFail();
+                return;
+            }
+            if (root.ai) {
+                root.ai.installed = true;
+                root.ai.refreshStatus();
+            }
+            root._enable();
+        }
+    }
+
+    Process {
         id: enableProc
         running: false
+        stdout: StdioCollector { id: enableOut }
+        stderr: StdioCollector { id: enableErr }
         onExited: (code) => {
             if (code !== 0) {
                 root._setupFail();
@@ -166,6 +193,8 @@ Item {
     Process {
         id: pullProc
         running: false
+        stdout: StdioCollector { id: pullOut }
+        stderr: StdioCollector { id: pullErr }
         onExited: (code) => {
             if (root.ai)
                 root.ai.refreshStatus();

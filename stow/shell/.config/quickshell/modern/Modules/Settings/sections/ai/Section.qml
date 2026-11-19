@@ -67,6 +67,12 @@ ColumnLayout {
         }
     }
 
+    Library {
+        visible: root.ollamaOn
+        Layout.fillWidth: true
+        Layout.topMargin: Tokens.spacing.xxl
+    }
+
     Gemini {
         visible: root.geminiOn
         Layout.fillWidth: true

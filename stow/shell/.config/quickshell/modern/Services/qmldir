@@ -41,6 +41,7 @@ singleton CalendarAccount 1.0 CalendarAccount.qml
 singleton Calendar 1.0 Calendar.qml
 singleton Ai 1.0 Ai.qml
 AiStatus 1.0 AiStatus.qml
+AiLibrary 1.0 AiLibrary.qml
 AiChat 1.0 AiChat.qml
 AiStore 1.0 AiStore.qml
 AiGemini 1.0 AiGemini.qml
