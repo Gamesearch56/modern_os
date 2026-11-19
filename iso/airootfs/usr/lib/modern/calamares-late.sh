@@ -421,6 +421,69 @@ PY
     fi
 }
 
+# v0.6.22 parks the menu on recovery whenever that entry exists.
+# A first install has not booted yet, so the default must be ModernOS.
+overlay_pin_kernel_boot() {
+    local f="$REPO/install/lib/kernel-boot.sh"
+    [ -f "$f" ] || return 0
+    grep -qF 'kernel_boot_has_confirmed' "$f" && return 0
+    grep -qF 'kernel_boot_arm()' "$f" || return 0
+    python3 - "$f" <<'PY'
+import pathlib, sys
+path = pathlib.Path(sys.argv[1])
+end = "}\n"
+old = """kernel_boot_arm() {
+    local root="$1" boot
+    boot="$root/boot"
+    if [ -f "$boot/loader/entries/modern-keep.conf" ] && kernel_boot_oneshot "$root" modern.conf; then
+        kernel_boot_set_default "$boot" modern-keep.conf
+        kernel_boot_note "next boot tries the new kernel once"
+        return 0
+    fi
+    kernel_boot_set_default "$boot" modern.conf
+""" + end
+new = """kernel_boot_confirmed_file() {
+    printf '%s/var/lib/modern/boot-confirmed\\n' "$(kernel_boot_root)"
+    """ + end + """
+kernel_boot_has_confirmed() {
+    [ -s "$(kernel_boot_confirmed_file)" ]
+    """ + end + """
+kernel_boot_mark_confirmed() {
+    local dest
+    dest="$(kernel_boot_confirmed_file)"
+    install -d -m 0755 "$(dirname "$dest")"
+    printf '%s\\n' "$(kernel_boot_boot_id)" >"$dest"
+    chmod 0644 "$dest"
+    """ + end + """
+kernel_boot_arm() {
+    local root="$1" boot
+    boot="$root/boot"
+    if kernel_boot_has_confirmed \\
+        && [ -f "$boot/loader/entries/modern-keep.conf" ] \\
+        && kernel_boot_oneshot "$root" modern.conf; then
+        kernel_boot_set_default "$boot" modern-keep.conf
+        kernel_boot_note "next boot tries the new kernel once"
+        return 0
+    fi
+    kernel_boot_set_default "$boot" modern.conf
+""" + end
+text = path.read_text()
+if old not in text:
+    sys.exit(0)
+text = text.replace(old, new, 1)
+needle = '    kernel_boot_set_default "$root/boot" modern.conf\n    kernel_boot_note "boot menu keeps /vmlinuz-linux-zen"'
+insert = '    kernel_boot_set_default "$root/boot" modern.conf\n    kernel_boot_mark_confirmed\n    kernel_boot_note "boot menu keeps /vmlinuz-linux-zen"'
+if needle in text:
+    text = text.replace(needle, insert, 1)
+path.write_text(text)
+PY
+    if grep -qF 'kernel_boot_has_confirmed' "$f"; then
+        log "boot menu defaults to ModernOS until a kernel has booted"
+    else
+        log "boot menu default patch did not apply"
+    fi
+}
+
 overlay_pin_install_native() {
     local pkg="$REPO/install/lib/pkg.sh"
     [ -f "$pkg" ] || return 0
@@ -480,7 +543,7 @@ EOF
 restore_installer_edits() {
     [ -d "$REPO/.git" ] || return 0
     local path paths=()
-    for path in install/lib/pkg.sh install/manifests/20-theming.aur.txt; do
+    for path in install/lib/pkg.sh install/lib/kernel-boot.sh install/manifests/20-theming.aur.txt; do
         if GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
             git -C "$REPO" -c "safe.directory=$REPO" -c core.hooksPath=/dev/null \
             cat-file -e "HEAD:$path" 2>/dev/null; then
@@ -813,6 +876,7 @@ phase_desktop() {
     # ISO pin's pkg.sh may not pass --disable-sandbox; install.sh itself
     # is the tagged copy, not this working tree.
     overlay_pin_ge_proton
+    overlay_pin_kernel_boot
     overlay_pin_install_native
     overlay_pin_aur_names
     pin_resolver
