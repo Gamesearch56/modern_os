@@ -843,9 +843,9 @@
     "hints": {
       "animations": "Wie lange Menüs, die Leiste und Fenster brauchen. Aus ist sofort.",
       "overlayMotion": "Ein-/Ausblenden, Zoom beim Öffnen/Schließen, oder beides.",
-      "wallpaperProvider": "Hauptseite für Hintergründe.",
+      "wallpaperProvider": "Die Seite, die aus der Hintergrundauswahl zum Holen neuer Bilder geöffnet wird. Heruntergeladene Bilder landen bei den eigenen Hintergründen.",
       "wallpaperColor": "Hellt Flächen, Schaltflächen und Symbole mit der Farbe des Hintergrunds auf. Höher ist heller.",
-      "wallpaperTransition": "Wie das neue Hintergrundbild erscheint. Wachsen, Wischen und Welle laufen über den Bildschirm.",
+      "wallpaperTransition": "Wie der Desktop zu einem neuen Hintergrundbild wechselt. Die Auswahl spielt diese Animation einmal auf dem aktuellen Bild ab.",
       "activeProfile": "Jede Karte ist eine andere Palette, die matugen aus dem aktuellen Hintergrundbild gezogen hat.",
       "themeVariant": "Wie stark Tapetenfarben auftauchen. Jede Karte entsteht aus dem aktuellen Hintergrundbild im gewählten Hell- oder Dunkelmodus.",
       "workspaceMode": "Dynamisch öffnet einen Workspace auf dem Bildschirm unter dem Zeiger; jede Leiste zeigt nur dessen Workspaces. Fixiert hält 1–5, 6–10, 11–15, … von links nach rechts.",

@@ -843,9 +843,9 @@
     "hints": {
       "animations": "How long menus, the bar, and windows take to move. Off is instant.",
       "overlayMotion": "Fade in/out, zoom in on open / zoom out on close, or both.",
-      "wallpaperProvider": "Main website to get wallpapers.",
+      "wallpaperProvider": "The site opened from the wallpaper picker to fetch new pictures. Downloads from that site are added to your wallpapers.",
       "wallpaperColor": "Lightens surfaces, buttons, and icons with the wallpaper color. Higher is brighter.",
-      "wallpaperTransition": "How the new wallpaper appears. Grow, wipe, and wave animate across the screen.",
+      "wallpaperTransition": "How the desktop switches to a new wallpaper. The choice plays that animation once on the picture showing now.",
       "activeProfile": "Each card is a different palette matugen pulled from the current wallpaper.",
       "themeVariant": "How strongly wallpaper hues show. Each card is generated from the current wallpaper in the light or dark mode you picked.",
       "workspaceMode": "Dynamic opens a workspace on the display under the cursor; each bar shows only that display’s workspaces. Fixed keeps 1–5, 6–10, 11–15, … from left to right.",

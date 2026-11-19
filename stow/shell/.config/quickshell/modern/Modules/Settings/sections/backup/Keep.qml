@@ -76,4 +76,13 @@ ColumnLayout {
         params: ({ n: root.keepCount })
         Layout.fillWidth: true
     }
+
+    Connections {
+        target: Snapshots
+        function onReverted(entries) {
+            const list = entries || [];
+            for (let i = 0; i < list.length; i++)
+                ConfigWrite.set(list[i].path, list[i].value);
+        }
+    }
 }
