@@ -1,5 +1,5 @@
 // FloatingWindow chrome: rounded surface + title bar + fill body.
-// Settings, Store, Overview, wallpaper, and cheatsheet share this.
+// Settings, Store, wallpaper, and cheatsheet share this.
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"

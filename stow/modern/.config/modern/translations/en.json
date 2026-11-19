@@ -311,7 +311,7 @@
     "title": "Overview",
     "workspace": "Workspace {id}",
     "empty": "No open windows",
-    "emptyHint": "Apps you open show up here. Super+Tab cycles them."
+    "emptyHint": "Apps you open show up here. Choose one with the trackpad or the arrow keys."
   },
   "plugin": {
     "title": "Plugins"

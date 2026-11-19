@@ -311,7 +311,7 @@
     "title": "Übersicht",
     "workspace": "Arbeitsbereich {id}",
     "empty": "Keine offenen Fenster",
-    "emptyHint": "Geöffnete Apps erscheinen hier. Super+Tab wechselt zwischen ihnen."
+    "emptyHint": "Geöffnete Apps erscheinen hier. Mit dem Trackpad oder den Pfeiltasten auswählen."
   },
   "plugin": {
     "title": "Erweiterungen"

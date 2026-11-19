@@ -225,20 +225,23 @@ else
     err "close must hide; Autostart.qml must forceKillAutostart"
 fi
 
-OV_GRID="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/WindowGrid.qml"
-OV_TILE="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/Tile.qml"
+OV_STAGE="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/Stage.qml"
+OV_CARD="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/WindowCard.qml"
 OV_MOD="$ROOT/stow/shell/.config/quickshell/modern/Modules/Overview/Module.qml"
+OV_INPUT="$ROOT/stow/hypr/.config/hypr/modules/input.lua"
 if grep -Fq 'modern.overview' "$HYPR_WIN" \
     && grep -Fq 'modern.settings' "$HYPR_WIN" \
     && grep -Fq '_overlayTitle' "$HYPR_WIN" \
-    && grep -Fq 'GridLayout' "$OV_GRID" \
-    && ! grep -Fq 'PathView' "$OV_GRID" \
-    && grep -Fq 'ScreencopyView' "$OV_TILE" \
-    && grep -Fq 'displayNameForHint' "$OV_TILE" \
-    && grep -Fq 'sequence: "Tab"' "$OV_MOD"; then
-    ok "overview grid shows every window with live tiles"
+    && grep -Fq 'ScreencopyView' "$OV_CARD" \
+    && grep -Fq 'displayNameForHint' "$OV_CARD" \
+    && grep -Fq 'sequence: "Tab"' "$OV_MOD" \
+    && grep -Fq 'PanelWindow' "$OV_MOD" \
+    && grep -Fq 'WheelHandler' "$OV_STAGE" \
+    && grep -Fq 'modernoverview,' "$OV_INPUT" \
+    && ! grep -Fq 'overview open' "$OV_INPUT"; then
+    ok "overview follows the swipe and shows live tiles"
 else
-    err "overview must filter overlays, grid all windows, Tab cycle"
+    err "overview must follow the swipe, filter overlays, and keep Tab"
 fi
 
 if grep -Fq 'primaryDescription' "$DEFAULTS" \

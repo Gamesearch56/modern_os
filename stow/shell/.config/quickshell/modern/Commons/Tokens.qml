@@ -95,8 +95,6 @@ Singleton {
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real reportWidth: root.spacing.xxl * 24 + root.spacing.lg
         readonly property real reportHeight: root.spacing.xxl * 24 + root.spacing.lg + root.spacing.xs
-        readonly property real overviewWidth: root.spacing.xxl * 30
-        readonly property real overviewHeight: root.spacing.xxl * 20
         readonly property real overlayWidth: root.spacing.xxl * 24
         readonly property real overlayHeight: root.spacing.xxl * 20
         readonly property real chatWidth: root.spacing.xxl * 14
@@ -115,6 +113,23 @@ Singleton {
         // Toasts drop below a typical app header bar so they don't hide
         // the window's own buttons in its top row.
         readonly property real toastTopClearance: root.spacing.xxl
+    }
+
+    // Workspace overview. swipeTravel is how far three fingers must
+    // move to go from hidden to fully open; the reveal tracks that
+    // distance instead of a timer. The frost itself is the compositor
+    // blur on the quickshell layer, plus the surface wash.
+    readonly property QtObject overview: QtObject {
+        readonly property real swipeTravel: root.spacing.xxl * 9
+        readonly property real labelGap: root.spacing.sm
+        // Two caption lines (name, workspace) under the preview.
+        readonly property real caption: root.spacing.xl + root.spacing.md
+        // Tiles stay a preview, centered, instead of stretching to the
+        // monitor. The cap is a maximum; a crowded grid still shrinks.
+        readonly property real gap: root.spacing.xxl + root.spacing.lg
+        readonly property real inset: root.spacing.xxl
+        readonly property real maxWidth: root.spacing.xxl * 16
+        readonly property real maxHeight: root.spacing.xxl * 10
     }
 
     readonly property QtObject recents: QtObject {

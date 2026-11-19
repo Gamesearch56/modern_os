@@ -274,6 +274,8 @@ wonder about the inherited `tr()` again) but is not fixing a real bug.
 
 **Rejected:** keeping Settings as an `MOverlay` PanelWindow (no compositor focus border, Super+Q had to special-case it), or faking a Hyprland highlight ring on layers.
 
+Overview is a full-screen layer-shell surface. A floating window capped at a fixed size cannot fade and spread with a three-finger swipe.
+
 ## 22. Calamares sidebar is QML, not the widget ProgressTreeView
 
 **Decision:** the live installer uses `sidebar: qml` plus `calamares-sidebar.qml` (Settings-like nav pills, padded About) and keeps `navigation: widget` for Back/Next/Install. `stylesheet.qss` still colors QWidget pages. The product mark is a committed `logo.png` (charcoal squircle, lavender M), not a wallpaper-tinted procedural PNG.
