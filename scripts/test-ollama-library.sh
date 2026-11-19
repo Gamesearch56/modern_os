@@ -152,6 +152,8 @@ if grep -Fq 'ollama-library.sh' "$SVC" \
     && grep -Fq 'settings.ollama.installModel' "$GROUP" \
     && grep -Fq 'settings.ollama.deleteModel' "$GROUP" \
     && grep -Fq 'settings.ollama.inUse' "$GROUP" \
+    && grep -Fq 'settings.ollama.hasSize' "$GROUP" \
+    && grep -Fq 'Colors.fitGood' "$GROUP" \
     && grep -Fq 'n === cur' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiLibrary.qml" \
     && grep -Fq 'ModelGroup {' "$QML" \
     && grep -Fq 'Library {' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/ai/Section.qml"; then

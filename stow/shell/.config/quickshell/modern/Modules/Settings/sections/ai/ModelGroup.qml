@@ -66,6 +66,14 @@ ColumnLayout {
     }
 
     readonly property bool hasModels: (root.tags || []).length > 0
+    readonly property bool _anyInstalled: {
+        const list = root.tags || [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i] && list[i].installed)
+                return true;
+        }
+        return false;
+    }
 
     Item {
         id: head
@@ -122,6 +130,16 @@ ColumnLayout {
                 }
             }
 
+            Rectangle {
+                visible: root._anyInstalled
+                Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: Tokens.spacing.md
+                Layout.preferredHeight: Tokens.spacing.md
+                radius: Tokens.radius.full
+                color: Colors.fitGood
+                Accessible.role: Accessible.StaticText
+                Accessible.name: I18n.t("settings.ollama.hasSize")
+            }
             Item {
                 visible: root.hasModels
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter

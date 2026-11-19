@@ -753,6 +753,7 @@
       "installModel": "Install",
       "deleteModel": "Delete",
       "inUse": "In use",
+      "hasSize": "A size of this model is installed.",
       "deleteTitle": "Delete {name}?",
       "deleteBody": "{name} is removed from this computer. You can download it again later.",
       "actionFailed": "That did not work. Try again.",
