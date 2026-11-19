@@ -1,86 +1,95 @@
 import Quickshell
+import Quickshell.Hyprland
+import Quickshell.Wayland
 import QtQuick
 import "../../Commons"
-import "../../Widgets"
 import "../../Services"
 
+// Full-screen layer, not the old floating card: the swipe has to fade
+// the desktop itself, and a sized Hyprland window cannot track a finger.
 Scope {
     LazyLoader {
         active: Overview.open
 
-        FloatingWindow {
+        PanelWindow {
             id: win
-            visible: Overview.open
-            title: "modern.overview"
+            screen: Overview.screen
             color: "transparent"
-            implicitWidth: Tokens.window.overviewWidth
-            implicitHeight: Math.min(Tokens.window.overviewHeight, shell.implicitHeight)
+            anchors.top: true
+            anchors.left: true
+            anchors.right: true
+            anchors.bottom: true
+            exclusionMode: ExclusionMode.Ignore
+            focusable: true
+            aboveWindows: true
+            // Default namespace is quickshell, which is the layer the
+            // compositor already blurs. A separate name would skip that frost.
+            WlrLayershell.layer: WlrLayer.Overlay
 
-            onVisibleChanged: {
-                if (visible)
-                    shell.forceActiveFocus();
-                else
-                    Overview.hide();
+            Stage {
+                id: stage
+                anchors.fill: parent
             }
 
-            MWindowShell {
-                id: shell
-                anchors.fill: parent
-                titleKey: "overview.title"
-                focus: true
-                Keys.priority: Keys.BeforeItem
-                Keys.onPressed: (event) => {
-                    if (event.key === Qt.Key_Tab) {
-                        grid.moveBy(1);
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_Backtab) {
-                        grid.moveBy(-1);
-                        event.accepted = true;
-                    }
-                }
-                onClosed: Overview.hide()
-
-                WindowGrid {
-                    id: grid
+            HyprlandFocusGrab {
+                id: keyGrab
+                windows: Popups.grabWindows(win, win.screen)
+                active: !Overview.tracking && Overview.progress > 0.5
+                // Turning the grab off to follow a swipe also clears it.
+                // That is not the user leaving the overview.
+                onCleared: {
+                    if (Overview.tracking || Overview.progress <= 0.5)
+                        return;
+                    Overview.dismiss();
                 }
             }
 
             Shortcut {
                 sequence: "Escape"
-                onActivated: Overview.hide()
+                context: Qt.ApplicationShortcut
+                onActivated: Overview.dismiss()
             }
             Shortcut {
                 sequence: "Left"
-                onActivated: grid.moveBy(-1)
+                context: Qt.ApplicationShortcut
+                onActivated: stage.moveBy(-1)
             }
             Shortcut {
                 sequence: "Right"
-                onActivated: grid.moveBy(1)
+                context: Qt.ApplicationShortcut
+                onActivated: stage.moveBy(1)
             }
             Shortcut {
                 sequence: "Up"
-                onActivated: grid.moveBy(-grid.columns)
+                context: Qt.ApplicationShortcut
+                onActivated: stage.moveBy(-stage.columns)
             }
             Shortcut {
                 sequence: "Down"
-                onActivated: grid.moveBy(grid.columns)
+                context: Qt.ApplicationShortcut
+                onActivated: stage.moveBy(stage.columns)
             }
             Shortcut {
                 sequence: "Tab"
-                onActivated: grid.moveBy(1)
+                context: Qt.ApplicationShortcut
+                onActivated: stage.moveBy(1)
             }
             Shortcut {
                 sequences: ["Shift+Tab", "Backtab"]
-                onActivated: grid.moveBy(-1)
+                context: Qt.ApplicationShortcut
+                onActivated: stage.moveBy(-1)
             }
             Shortcut {
                 sequence: "Return"
-                onActivated: grid.activate()
+                context: Qt.ApplicationShortcut
+                onActivated: stage.activate()
             }
             Shortcut {
                 sequence: "Enter"
-                onActivated: grid.activate()
+                context: Qt.ApplicationShortcut
+                onActivated: stage.activate()
             }
+
         }
     }
 }

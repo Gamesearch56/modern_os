@@ -44,7 +44,10 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + SHIFT + C` | Color picker | |
 
 Workspace `SUPER + 1`…`0` and `SUPER + SHIFT + 1`…`0` (move window to
-that workspace) match the cheatsheet categories.
+that workspace) match the cheatsheet categories. Three fingers up or
+down on the trackpad fade the overview with the swipe; two fingers
+then move between the windows. Three fingers sideways still change
+workspace.
 
 Live list: press `SUPER + K` (Mouse category lists chrome and Super+mouse
 gestures). CLI: `scripts/modern <target> <function>`
