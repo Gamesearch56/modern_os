@@ -35,6 +35,56 @@ if grep -F 'DisableSandbox' "$LATE" >/dev/null \
 else
     err "desktop phase must init the target keyring, IgnorePkg jack2, overlay pin install_native, and pacman -Sy before install.sh"
 fi
+# shellcheck disable=SC2016
+proton_curl='curl -fL --retry 3 -o "$tar.part" "$GE_PROTON_URL"'
+if grep -F 'overlay_pin_ge_proton' "$LATE" >/dev/null \
+    && grep -F 'continuing without it' "$LATE" >/dev/null \
+    && grep -F "$proton_curl" "$LATE" >/dev/null; then
+    ok "a failed GE-Proton download is patched out of an older install pin"
+else
+    err "desktop phase must patch an older GE-Proton download so a DNS failure does not abort install.sh"
+fi
+pin_fix="$(mktemp -d)"
+mkdir -p "$pin_fix/install/lib"
+cat >"$pin_fix/install/lib/ge-proton.sh" <<'EOF'
+ge_proton_ensure() {
+    local home="$1" tar
+    tar="$home/archive.tar.gz"
+    mkdir -p "$home"
+        log_info "downloading GE-Proton${GE_PROTON_VERSION}"
+        curl -fL --retry 3 -o "$tar.part" "$GE_PROTON_URL"
+        mv -f "$tar.part" "$tar"
+}
+EOF
+# shellcheck disable=SC2329
+log() { :; }
+# shellcheck disable=SC2034
+REPO="$pin_fix"
+eval "$(sed -n '/^overlay_pin_ge_proton() {$/,/^}$/p' "$LATE")"
+overlay_pin_ge_proton
+curl() { printf 'Could not resolve host github.com\n' >&2; return 6; }
+log_info() { :; }
+log_warn() { printf '%s\n' "$*"; }
+GE_PROTON_VERSION=11-12
+GE_PROTON_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton11-12/GE-Proton11-12-x86_64.tar.gz"
+# shellcheck disable=SC1091
+source "$pin_fix/install/lib/ge-proton.sh"
+set +e
+(
+    set -euo pipefail
+    ge_proton_ensure "$pin_fix/home"
+)
+pin_rc=$?
+set -euo pipefail
+if [ "$pin_rc" -ne 0 ]; then
+    err "patched pin still aborts when the GE-Proton download fails (rc $pin_rc)"
+elif ! grep -Fq 'continuing without it' "$pin_fix/install/lib/ge-proton.sh"; then
+    err "older pin was not patched"
+else
+    ok "patched pin continues when github.com does not resolve"
+fi
+rm -rf "$pin_fix"
+unset -f log curl log_info log_warn ge_proton_ensure overlay_pin_ge_proton
 
 PROVISION="$ROOT/install/system/provision-iso.sh"
 GREETD_LIB="$ROOT/install/lib/greetd.sh"

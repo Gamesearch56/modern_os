@@ -39,7 +39,15 @@ ge_proton_ensure() {
         printf '%s  %s\n' "$GE_PROTON_SHA512" "$(basename "$tar")" | sha512sum -c -
     ) >/dev/null 2>&1; then
         log_info "downloading GE-Proton${GE_PROTON_VERSION}"
-        curl -fL --retry 3 -o "$tar.part" "$GE_PROTON_URL"
+        # Live Calamares often has no resolver yet (or no network). Battle.net
+        # falls back to Steam's Proton, so a failed fetch must not abort the
+        # desktop install. Checksum and extract failures below stay fatal.
+        if ! curl -fL --retry 2 --retry-max-time 20 --connect-timeout 10 \
+            -o "$tar.part" "$GE_PROTON_URL"; then
+            rm -f "$tar.part"
+            log_warn "could not download GE-Proton${GE_PROTON_VERSION} from ${GE_PROTON_URL}; continuing without it"
+            return 0
+        fi
         mv -f "$tar.part" "$tar"
         (
             cd "$cache" || exit 1
