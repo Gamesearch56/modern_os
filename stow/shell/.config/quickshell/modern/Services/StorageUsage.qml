@@ -1,5 +1,5 @@
-// Category disk use for Settings → Storage. Unprivileged du/pacman
-// via storage-usage.sh; runs while the page is visible, not on a 5s poll.
+// Category disk use for Settings → Storage. Nothing runs until the
+// user asks; leaving the page stops a scan that is still walking disks.
 pragma Singleton
 
 import Quickshell
@@ -12,11 +12,13 @@ Singleton {
 
     property bool watching: false
     property bool running: false
+    property bool measured: false
     property real games: 0
     property real files: 0
     property real apps: 0
     property real cache: 0
     property real backups: 0
+    property real models: 0
 
     Process {
         id: proc
@@ -32,21 +34,17 @@ Singleton {
         onExited: root.running = false
     }
 
-    Timer {
-        interval: 120000
-        running: root.watching
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.refresh()
-    }
-
     onWatchingChanged: {
-        if (!root.watching)
+        if (!root.watching && proc.running)
             proc.running = false;
     }
 
+    function start() {
+        root.refresh();
+    }
+
     function refresh() {
-        if (!root.watching)
+        if (proc.running)
             return;
         proc.running = true;
     }
@@ -59,6 +57,8 @@ Singleton {
             root.apps = Number(j.apps) || 0;
             root.cache = Number(j.cache) || 0;
             root.backups = Number(j.backups) || 0;
+            root.models = Number(j.models) || 0;
+            root.measured = true;
         } catch (e) {
             Logger.warn("StorageUsage", String(e));
         }

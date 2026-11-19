@@ -52,6 +52,11 @@ Singleton {
         scrim: "#000000"
     })
 
+    // Fit marks stay green, orange, and red when the wallpaper changes.
+    readonly property color fitGood: "#3DDC84"
+    readonly property color fitMaybe: "#F5A524"
+    readonly property color fitPoor: "#E5484D"
+
     FileView {
         id: file
         path: root.home + "/.config/modern/tokens.json"

@@ -22,10 +22,10 @@ ColumnLayout {
     }
 
     readonly property var steps: [
-        { titleKey: "settings.ollama.step1Title", bodyKey: "settings.ollama.step1", cmdKey: "settings.ollama.step1Cmd" },
-        { titleKey: "settings.ollama.step2Title", bodyKey: "settings.ollama.step2", cmdKey: "settings.ollama.step2Cmd" },
-        { titleKey: "settings.ollama.step3Title", bodyKey: "settings.ollama.step3", cmdKey: "settings.ollama.step3Cmd" },
-        { titleKey: "settings.ollama.step4Title", bodyKey: "settings.ollama.step4", cmdKey: "" }
+        { titleKey: "settings.ollama.step1Title", bodyKey: "settings.ollama.step1" },
+        { titleKey: "settings.ollama.step2Title", bodyKey: "settings.ollama.step2" },
+        { titleKey: "settings.ollama.step3Title", bodyKey: "settings.ollama.step3" },
+        { titleKey: "settings.ollama.step4Title", bodyKey: "settings.ollama.step4" }
     ]
 
     AiStatus {
@@ -115,25 +115,18 @@ ColumnLayout {
                         key: step.modelData.bodyKey
                         Layout.fillWidth: true
                     }
-                    MText {
-                        visible: (step.modelData.cmdKey || "").length > 0
-                        key: step.modelData.cmdKey
-                        styleName: "bodySmall"
-                        familyRole: "monospace"
-                        color: Colors.color.onSurfaceVariant
-                        wrapMode: Text.WordWrap
-                        elide: Text.ElideNone
-                        Layout.fillWidth: true
-                    }
                     MButton {
                         visible: step.index === 0 && !Ai.installed
                         kind: "filled"
-                        key: "settings.ollama.openStore"
-                        onClicked: Store.showPackage("ollama")
+                        key: "settings.ollama.installPackage"
+                        Layout.topMargin: Tokens.spacing.sm
+                        busy: root.setupBusy
+                        onClicked: setup.startSetup()
                     }
                     MButton {
                         visible: step.index === 1 && Ai.installed
                         kind: "filled"
+                        Layout.topMargin: Tokens.spacing.sm
                         busy: root.setupBusy
                         key: "settings.ollama.setup"
                         onClicked: setup.startSetup()

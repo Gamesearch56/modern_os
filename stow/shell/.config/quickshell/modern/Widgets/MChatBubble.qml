@@ -12,7 +12,12 @@ Item {
     property string thinking: ""
     property bool pending: false
 
-    readonly property real _max: Math.min(width * 0.82, Tokens.spacing.xxl * 12)
+    readonly property bool _table: !root.mine && md.hasTable(root.text)
+    readonly property real _max: {
+        if (!root._table)
+            return Math.min(width * 0.82, Tokens.spacing.xxl * 12);
+        return Math.max(1, width - Tokens.icon.md - Tokens.spacing.sm);
+    }
     readonly property real _pad: Tokens.spacing.sm * 2
     readonly property real _inner: Math.max(1, root._max - root._pad)
     readonly property var _bodyStyle: {
@@ -119,15 +124,14 @@ Item {
                 }
                 TextEdit {
                     id: body
-                    visible: root.text.length > 0
+                    visible: root.mine && root.text.length > 0
                     readOnly: true
                     selectByMouse: false
                     cursorVisible: false
                     persistentSelection: true
-                    text: root.mine ? root.text : md.toHtml(root.text)
-                    // Assistant turns: HTML with real block margins (MarkdownText collapses gaps).
-                    textFormat: root.mine ? TextEdit.PlainText : TextEdit.RichText
-                    color: root.mine ? Chrome.tonal.fg : Colors.color.onSurface
+                    text: root.text
+                    textFormat: TextEdit.PlainText
+                    color: Chrome.tonal.fg
                     selectionColor: Colors.color.primary
                     selectedTextColor: Colors.color.onPrimary
                     wrapMode: TextEdit.Wrap
@@ -137,7 +141,6 @@ Item {
                     font.letterSpacing: root._bodyStyle.letterSpacing
                     font.hintingPreference: Font.PreferNoHinting
                     renderType: TextEdit.QtRendering
-                    Layout.fillWidth: !root.mine
                     Layout.maximumWidth: root._inner
 
                     MouseArea {
@@ -157,6 +160,61 @@ Item {
                                 body.select(_anchor, body.positionAt(mouse.x, mouse.y));
                         }
                         onDoubleClicked: body.selectWord()
+                    }
+                }
+                Repeater {
+                    model: !root.mine && root.text.length > 0 ? md.blocks(root.text) : []
+                    delegate: ColumnLayout {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: modelData.kind === "table" ? Tokens.spacing.md : 0
+                        spacing: Tokens.spacing.xs
+
+                        TextEdit {
+                            visible: modelData.kind !== "table"
+                            readOnly: true
+                            selectByMouse: false
+                            cursorVisible: false
+                            persistentSelection: true
+                            text: modelData.html || ""
+                            textFormat: TextEdit.RichText
+                            color: Colors.color.onSurface
+                            selectionColor: Colors.color.primary
+                            selectedTextColor: Colors.color.onPrimary
+                            wrapMode: TextEdit.Wrap
+                            font.family: Typography.family.ui
+                            font.pixelSize: root._bodyStyle.pixelSize
+                            font.weight: root._bodyStyle.weight
+                            font.letterSpacing: root._bodyStyle.letterSpacing
+                            font.hintingPreference: Font.PreferNoHinting
+                            renderType: TextEdit.QtRendering
+                            Layout.fillWidth: true
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.ArrowCursor
+                                preventStealing: true
+                                property int _anchor: 0
+                                onPressed: (mouse) => {
+                                    parent.forceActiveFocus();
+                                    _anchor = parent.positionAt(mouse.x, mouse.y);
+                                    parent.cursorPosition = _anchor;
+                                    parent.deselect();
+                                }
+                                onPositionChanged: (mouse) => {
+                                    if (pressed)
+                                        parent.select(_anchor, parent.positionAt(mouse.x, mouse.y));
+                                }
+                                onDoubleClicked: parent.selectWord()
+                            }
+                        }
+                        MChatTable {
+                            visible: modelData.kind === "table"
+                            rows: modelData.rows || []
+                            align: modelData.align || []
+                            Layout.fillWidth: true
+                        }
                     }
                 }
             }

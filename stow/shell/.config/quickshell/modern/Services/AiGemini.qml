@@ -46,6 +46,8 @@ Item {
     function openStudio() { account.openStudio(); }
     function modelChoices(): var { return account.modelChoices(); }
     function resolveModel(want: string): string { return account.resolveModel(want); }
+    function selectedModel(): string { return String(Config.accounts?.ai?.geminiModel || "").trim(); }
+    function modelError(): string { return I18n.t("ai.errorGeminiModel"); }
 
     function start(model: string, messages: var) {
         const safe = root._safeModel(model);
@@ -64,7 +66,7 @@ Item {
         try {
             root._body = JSON.stringify({
                 contents: root._contents(messages),
-                systemInstruction: { parts: [{ text: I18n.t("ai.systemBrief") }] },
+                systemInstruction: { parts: [{ text: I18n.t(Config.accounts?.ai?.brief !== false ? "ai.systemBrief" : "ai.systemRoom") }] },
                 generationConfig: root._genConfig(safe)
             });
         } catch (e) {
@@ -103,22 +105,41 @@ Item {
     }
 
     function _genConfig(model: string): var {
-        const cfg = { maxOutputTokens: 4096 };
+        const think = Config.accounts?.ai?.thinking === true;
+        const brief = Config.accounts?.ai?.brief !== false;
+        const cfg = { maxOutputTokens: brief ? 4096 : 8192 };
         const n = String(model || "").toLowerCase();
+        if (!think) {
+            if (n.indexOf("gemini-3.7") === 0)
+                cfg.thinkingConfig = { thinkingLevel: "LOW" };
+            else if (n.indexOf("gemini-3") === 0)
+                cfg.thinkingConfig = { thinkingLevel: "low" };
+            else if (n.indexOf("gemini-2.5") === 0)
+                cfg.thinkingConfig = { thinkingBudget: 0 };
+            return cfg;
+        }
         if (n.indexOf("gemini-3.7") === 0)
-            cfg.thinkingConfig = { thinkingLevel: "LOW" };
+            cfg.thinkingConfig = { thinkingLevel: "MEDIUM" };
         else if (n.indexOf("gemini-3") === 0)
-            cfg.thinkingConfig = { thinkingLevel: "low" };
+            cfg.thinkingConfig = { thinkingLevel: "medium" };
         else if (n.indexOf("gemini-2.5") === 0)
-            cfg.thinkingConfig = { thinkingBudget: 0 };
+            cfg.thinkingConfig = { thinkingBudget: 2048 };
         return cfg;
     }
 
     function _tidy(s: string): string {
         let t = String(s || "").replace(/\r/g, "");
-        // One blank line between adjacent blocks (including list items) for readable markdown.
+        const saved = [];
+        // A pipe table must stay on consecutive lines. Spacing every row
+        // turns it into separate paragraphs and the pipes stay visible.
+        t = t.replace(/(?:^[ \t]*\|[^\n]*\|[ \t]*(?:\n|$)){2,}/gm, (block) => {
+            saved.push(block.replace(/\s+$/, ""));
+            return "@@T" + (saved.length - 1) + "@@";
+        });
         t = t.replace(/([^\n])\n(?!\n)([^\n])/g, "$1\n\n$2");
-        return t.replace(/\n{3,}/g, "\n\n");
+        t = t.replace(/\n{3,}/g, "\n\n");
+        t = t.replace(/@@T(\d+)@@/g, (all, n) => saved[Number(n)] || all);
+        return t;
     }
 
     function _contents(messages: var): var {

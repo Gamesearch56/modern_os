@@ -54,14 +54,47 @@ else
     err "pull dry printed: $got"
 fi
 
-if grep -Fq 'pkexec' "$SETUP" \
-    && grep -Fq 'ollama-enable.sh' "$SETUP" \
+INSTALL_SH="$ROOT/scripts/ollama-install.sh"
+ACTIVATE="$ROOT/scripts/ollama-activate.sh"
+
+if "$INSTALL_SH" extra >/dev/null 2>&1; then
+    err "install accepted an argument"
+else
+    ok "install rejects arguments"
+fi
+
+got="$(OLLAMA_INSTALL_DRY=1 "$INSTALL_SH")"
+if [ "$got" = "pacman -S --noconfirm --needed -- ollama" ]; then
+    ok "install is fixed to the ollama package"
+else
+    err "install dry printed: $got"
+fi
+
+if "$ACTIVATE" extra >/dev/null 2>&1; then
+    err "activate accepted an argument"
+else
+    ok "activate rejects arguments"
+fi
+
+got="$(OLLAMA_ACTIVATE_DRY=1 "$ACTIVATE")"
+if [ "$got" = "pkexec ollama-enable.sh" ]; then
+    ok "activate asks for the password dialog then starts the service"
+else
+    err "activate dry printed: $got"
+fi
+
+if grep -Fq 'ensure_polkit_agent' "$INSTALL_SH" \
+    && grep -Fq 'ensure_polkit_agent' "$ACTIVATE" \
+    && grep -Fq 'ollama-install.sh' "$SETUP" \
+    && grep -Fq 'ollama-activate.sh' "$SETUP" \
     && grep -Fq 'ollama-pull.sh' "$SETUP" \
     && grep -Fq 'qwen3:4b' "$SETUP" \
-    && grep -Fq 'Store.showPackage("ollama")' "$INSTALL"; then
-    ok "settings opens the store and runs both scripts"
+    && grep -Fq 'settings.ollama.installPackage' "$INSTALL" \
+    && ! grep -Fq 'Store.showPackage' "$INSTALL" \
+    && ! grep -Fq 'step1Cmd' "$INSTALL"; then
+    ok "settings installs, starts, and downloads without a terminal command"
 else
-    err "settings path does not open the store or run both scripts"
+    err "settings path still leaves install or startup to a terminal"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

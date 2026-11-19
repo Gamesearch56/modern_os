@@ -66,8 +66,14 @@ Item {
 
     readonly property bool _blocked: (Config.accounts?.ai?.provider ?? "none") === "none" || !Ai.ready
     readonly property bool _empty: root._blocked || Ai.history.length === 0
-    readonly property string _hintKey: (Config.accounts?.ai?.provider ?? "none") === "gemini"
-        ? "ai.hintGemini" : "ai.hint"
+    readonly property string _hintKey: {
+        const provider = Config.accounts?.ai?.provider ?? "none";
+        if (provider === "gemini")
+            return "ai.hintGemini";
+        if (provider === "chatgpt")
+            return "ai.hintChatGpt";
+        return "ai.hint";
+    }
 
     MEmptyState {
         visible: root._empty

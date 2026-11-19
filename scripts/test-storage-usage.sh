@@ -26,12 +26,14 @@ mkdir -p \
     "$HOME_FAKE/.local/share/Steam/steamapps" \
     "$HOME_FAKE/Downloads" \
     "$HOME_FAKE/.cache/thumb" \
+    "$HOME_FAKE/.ollama/models" \
     "$ROOT_FAKE/usr/bin" \
     "$ROOT_FAKE/var/cache/pacman" \
     "$ROOT_FAKE/snapshots/1"
 printf 'game' >"$HOME_FAKE/.local/share/Steam/steamapps/app"
 printf 'filefile' >"$HOME_FAKE/Downloads/a.bin"
 printf 'cc' >"$HOME_FAKE/.cache/thumb/x"
+printf 'model' >"$HOME_FAKE/.ollama/models/blob"
 printf 'appappapp' >"$ROOT_FAKE/usr/bin/x"
 printf 'snap' >"$ROOT_FAKE/snapshots/1/info"
 
@@ -45,7 +47,7 @@ out="$("$SCRIPT")"
 if python3 - "$out" <<'PY'
 import json, sys
 d = json.loads(sys.argv[1])
-need = ("games", "files", "apps", "cache", "backups")
+need = ("games", "files", "apps", "cache", "backups", "models")
 missing = [k for k in need if k not in d]
 if missing:
     raise SystemExit("missing " + ",".join(missing))
@@ -59,6 +61,8 @@ if d["cache"] < 2:
     raise SystemExit(f"cache {d['cache']}")
 if d["backups"] < 4:
     raise SystemExit(f"backups {d['backups']}")
+if d["models"] < 5:
+    raise SystemExit(f"models {d['models']}")
 PY
 then
     ok "reports category sizes from the fixture tree"
@@ -98,10 +102,14 @@ else
 fi
 
 if grep -F 'Paths.script("storage-usage.sh")' \
-    "$ROOT/stow/shell/.config/quickshell/modern/Services/StorageUsage.qml" >/dev/null; then
-    ok "Settings usage is this script"
+    "$ROOT/stow/shell/.config/quickshell/modern/Services/StorageUsage.qml" >/dev/null \
+    && ! grep -F 'triggeredOnStart' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Services/StorageUsage.qml" >/dev/null \
+    && grep -F 'settings.storage.measure' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/storage/SystemCard.qml" >/dev/null; then
+    ok "Settings usage waits for the calculate button"
 else
-    err "StorageUsage.qml must call storage-usage.sh"
+    err "StorageUsage.qml must call storage-usage.sh only after the button"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

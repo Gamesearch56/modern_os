@@ -1,8 +1,7 @@
 // Localhost Ollama /api/chat only. Body is a temp file (never argv).
 // Caps, a 4-thread ceiling, and a UI throttle so a stream cannot stall
-// qs/Hyprland. think:false so Qwen3 cannot spend num_predict on hidden
-// chain-of-thought and return an empty bubble. A short predict cap plus
-// the shared brief instruction keeps bar replies light.
+// qs/Hyprland. Thinking is off unless Settings turns it on, and then the
+// reply cap grows so the thought does not consume the whole answer.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -16,7 +15,6 @@ Item {
     readonly property int maxLine: 4096
     readonly property int maxMsgs: 12
     readonly property int maxPredict: 768
-    readonly property int curlMaxSec: 180
 
     property bool running: false
     property string thinking: ""
@@ -59,16 +57,18 @@ Item {
         root.content = "";
         root.lastError = "";
         root._dirty = false;
+        const think = Config.accounts?.ai?.thinking === true;
+        const brief = Config.accounts?.ai?.brief !== false;
         try {
             root._body = JSON.stringify({
                 model: safe,
                 messages: root._clipMessages(messages),
                 stream: true,
-                think: false,
+                think: think,
                 options: {
                     num_thread: 4,
-                    num_ctx: 2048,
-                    num_predict: root.maxPredict
+                    num_ctx: think ? 4096 : 2048,
+                    num_predict: brief ? (think ? root.maxPredict * 2 : root.maxPredict) : root.maxPredict * 3
                 }
             });
         } catch (e) {
@@ -107,7 +107,8 @@ Item {
 
     function _clipMessages(messages: var): var {
         const src = messages || [];
-        const out = [{ role: "system", content: I18n.t("ai.systemBrief") }];
+        const brief = Config.accounts?.ai?.brief !== false;
+        const out = [{ role: "system", content: I18n.t(brief ? "ai.systemBrief" : "ai.systemRoom") }];
         const start = Math.max(0, src.length - root.maxMsgs);
         for (let i = start; i < src.length; i++) {
             const r = src[i];
@@ -135,13 +136,7 @@ Item {
         Qt.callLater(() => {
             if (!root.running)
                 return;
-            proc.command = [
-                "curl", "-sS", "-N", "--noproxy", "*",
-                "--connect-timeout", "5", "--max-time", String(root.curlMaxSec),
-                "-H", "Content-Type: application/json",
-                "--data-binary", "@" + req.path,
-                "http://127.0.0.1:11434/api/chat"
-            ];
+            proc.command = [Paths.script("ollama-chat.sh"), req.path];
             proc.running = true;
         });
     }

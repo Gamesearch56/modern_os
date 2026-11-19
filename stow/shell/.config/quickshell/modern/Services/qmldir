@@ -40,11 +40,16 @@ singleton WeatherGeocode 1.0 WeatherGeocode.qml
 singleton CalendarAccount 1.0 CalendarAccount.qml
 singleton Calendar 1.0 Calendar.qml
 singleton Ai 1.0 Ai.qml
+singleton AiSearch 1.0 AiSearch.qml
 AiStatus 1.0 AiStatus.qml
+AiLibrary 1.0 AiLibrary.qml
 AiChat 1.0 AiChat.qml
 AiStore 1.0 AiStore.qml
 AiGemini 1.0 AiGemini.qml
 AiGeminiAccount 1.0 AiGeminiAccount.qml
+AiChatGpt 1.0 AiChatGpt.qml
+AiChatGptAccount 1.0 AiChatGptAccount.qml
+AiFocus 1.0 AiFocus.qml
 singleton Wallpaper 1.0 Wallpaper.qml
 WallpaperThumbs 1.0 WallpaperThumbs.qml
 singleton FilePreview 1.0 FilePreview.qml

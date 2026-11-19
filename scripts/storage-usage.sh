@@ -42,6 +42,7 @@ import os
 import re
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 HOME = os.environ["MODERN_USAGE_HOME_DIR"]
 ROOT = os.environ.get("MODERN_USAGE_ROOT_DIR") or ""
@@ -123,7 +124,7 @@ def du(paths):
         return 0
     try:
         proc = subprocess.run(
-            ["du", "-sb", "--"] + dirs,
+            ["du", "-sbx", "--"] + dirs,
             check=False,
             capture_output=True,
             text=True,
@@ -171,47 +172,98 @@ def pacman_apps():
     return total if found else None
 
 
+def pacman_db_size(db):
+    # The local database already stores each installed size. Reading it
+    # skips `pacman -Qi`, which formats every package field.
+    if not db or not os.path.isdir(db):
+        return None
+    total = 0
+    found = False
+    try:
+        names = os.listdir(db)
+    except OSError:
+        return None
+    for name in names:
+        desc = os.path.join(db, name, "desc")
+        try:
+            with open(desc, encoding="utf-8", errors="replace") as handle:
+                lines = handle.read().splitlines()
+        except OSError:
+            continue
+        for index, line in enumerate(lines):
+            if line != "%SIZE%" or index + 1 >= len(lines):
+                continue
+            try:
+                total += int(lines[index + 1])
+                found = True
+            except ValueError:
+                pass
+            break
+    return total if found else None
+
+
 usr = under(ROOT, "usr") if ROOT else "/usr"
 var_cache = under(ROOT, "var", "cache") if ROOT else "/var/cache"
 snapshots = under(ROOT, "snapshots") if ROOT else "/.snapshots"
 flatpak = under(ROOT, "var", "lib", "flatpak") if ROOT else "/var/lib/flatpak"
 
-games = du([
-    under(HOME, ".local", "share", "Steam"),
-    under(HOME, ".steam", "steam"),
-    under(HOME, ".var", "app", "com.valvesoftware.Steam"),
-    under(HOME, ".local", "share", "lutris"),
-    under(HOME, "Games"),
-    under(HOME, ".local", "share", "bottles"),
-    under(HOME, ".config", "heroic"),
-    under(HOME, ".local", "share", "heroic"),
-    under(HOME, ".wine"),
-])
-files = du([
-    os.environ.get("MODERN_USAGE_DOCUMENTS", ""),
-    os.environ.get("MODERN_USAGE_DOWNLOAD", ""),
-    os.environ.get("MODERN_USAGE_PICTURES", ""),
-    os.environ.get("MODERN_USAGE_VIDEOS", ""),
-    os.environ.get("MODERN_USAGE_MUSIC", ""),
-    os.environ.get("MODERN_USAGE_DESKTOP", ""),
-])
-if ROOT:
-    apps = du([usr, flatpak, under(HOME, ".local", "share", "flatpak")])
-else:
-    apps = pacman_apps()
-    if apps is None:
-        apps = du([usr, flatpak, under(HOME, ".local", "share", "flatpak")])
-cache = du([under(HOME, ".cache"), var_cache])
-backups = btrfs_exclusive(snapshots)
-if backups is None:
-    backups = du([snapshots])
+def apps_size():
+    db = under(ROOT, "var", "lib", "pacman", "local") if ROOT else "/var/lib/pacman/local"
+    sized = pacman_db_size(db)
+    if sized is not None:
+        return sized
+    trees = [usr, flatpak, under(HOME, ".local", "share", "flatpak")]
+    if ROOT:
+        return du(trees)
+    sized = pacman_apps()
+    if sized is None:
+        sized = du(trees)
+    return sized
 
-json.dump({
-    "games": games,
-    "files": files,
-    "apps": int(apps),
-    "cache": cache,
-    "backups": backups,
-}, sys.stdout, separators=(",", ":"))
+
+def backups_size():
+    exclusive = btrfs_exclusive(snapshots)
+    if exclusive is None:
+        return du([snapshots])
+    return exclusive
+
+
+jobs = {
+    "games": lambda: du([
+        under(HOME, ".local", "share", "Steam"),
+        under(HOME, ".steam", "steam"),
+        under(HOME, ".var", "app", "com.valvesoftware.Steam"),
+        under(HOME, ".local", "share", "lutris"),
+        under(HOME, "Games"),
+        under(HOME, ".local", "share", "bottles"),
+        under(HOME, ".config", "heroic"),
+        under(HOME, ".local", "share", "heroic"),
+        under(HOME, ".wine"),
+    ]),
+    "files": lambda: du([
+        os.environ.get("MODERN_USAGE_DOCUMENTS", ""),
+        os.environ.get("MODERN_USAGE_DOWNLOAD", ""),
+        os.environ.get("MODERN_USAGE_PICTURES", ""),
+        os.environ.get("MODERN_USAGE_VIDEOS", ""),
+        os.environ.get("MODERN_USAGE_MUSIC", ""),
+        os.environ.get("MODERN_USAGE_DESKTOP", ""),
+    ]),
+    "apps": apps_size,
+    "cache": lambda: du([under(HOME, ".cache"), var_cache]),
+    "backups": backups_size,
+    "models": lambda: du([
+        under(HOME, ".ollama"),
+        os.environ.get("OLLAMA_MODELS", ""),
+        under(ROOT, "usr", "share", "ollama") if ROOT else "/usr/share/ollama",
+        under(ROOT, "var", "lib", "ollama") if ROOT else "/var/lib/ollama",
+    ]),
+}
+out = {}
+with ThreadPoolExecutor(max_workers=3) as pool:
+    running = {key: pool.submit(fn) for key, fn in jobs.items()}
+    for key, fut in running.items():
+        out[key] = int(fut.result() or 0)
+
+json.dump(out, sys.stdout, separators=(",", ":"))
 print()
 PY

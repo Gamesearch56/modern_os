@@ -21,11 +21,17 @@ Singleton {
     property bool watching: false
     property var models: []
     readonly property string _provider: String(Config.accounts?.ai?.provider ?? "none")
-    readonly property bool ready: root._provider === "gemini"
-        ? gemini.ready
-        : (root._provider === "ollama" && root.installed && root.running)
+    readonly property bool ready: {
+        if (root._provider === "gemini")
+            return gemini.ready;
+        if (root._provider === "chatgpt")
+            return chatgpt.ready;
+        return root._provider === "ollama" && root.installed && root.running;
+    }
     readonly property bool geminiHasKey: gemini.hasKey
     readonly property var geminiModels: gemini.models
+    readonly property bool chatgptHasKey: chatgpt.hasKey
+    readonly property var chatgptModels: chatgpt.models
     signal cancelled(string text)
 
     IpcHandler {
@@ -46,10 +52,18 @@ Singleton {
         onFinished: (ok, err) => root._end(ok, err, stream.content)
     }
 
+    AiFocus { id: focus }
+
     AiGemini {
         id: gemini
         onChunk: (content, thinking) => root._patchTail(content, thinking, true)
         onFinished: (ok, err) => root._end(ok, err, gemini.content)
+    }
+
+    AiChatGpt {
+        id: chatgpt
+        onChunk: (content, thinking) => root._patchTail(content, thinking, true)
+        onFinished: (ok, err) => root._end(ok, err, chatgpt.content)
     }
 
     AiStore {
@@ -72,17 +86,30 @@ Singleton {
 
     function refreshStatus() {
         status.refresh();
-        if (root._provider === "gemini" && gemini.hasKey && !gemini.ready)
-            gemini.probe();
+        const cloud = root._cloud();
+        if (cloud && cloud.hasKey && !cloud.ready)
+            cloud.probe();
+    }
+
+    function _cloud(): var {
+        if (root._provider === "gemini")
+            return gemini;
+        if (root._provider === "chatgpt")
+            return chatgpt;
+        return null;
     }
 
     function setGeminiKey(raw: string) { gemini.setKey(raw); }
     function clearGeminiKey() { gemini.setKey(""); }
     function openGeminiStudio() { gemini.openStudio(); }
     function geminiModelChoices(): var { return gemini.modelChoices(); }
+    function setChatGptKey(raw: string) { chatgpt.setKey(raw); }
+    function clearChatGptKey() { chatgpt.setKey(""); }
+    function openChatGptKeys() { chatgpt.openKeys(); }
+    function chatgptModelChoices(): var { return chatgpt.modelChoices(); }
 
     function toggle(screen: var) {
-        const name = root._nameOf(screen);
+        const name = focus.nameOf(screen);
         if (root.panelOpen && root.hostScreenName === name) {
             root.hide();
             return;
@@ -90,8 +117,8 @@ Singleton {
         root._openOn(name);
     }
 
-    function toggleFocused() { root.toggle({ name: root._focusedScreenName() }); }
-    function showFocused() { root._openOn(root._focusedScreenName()); }
+    function toggleFocused() { root.toggle({ name: focus.focused() }); }
+    function showFocused() { root._openOn(focus.focused()); }
 
     function _openOn(name: string) {
         root.hostScreenName = name;
@@ -111,42 +138,7 @@ Singleton {
     }
 
     function openOn(screen: var): bool {
-        if (!root.panelOpen)
-            return false;
-        if (!root.hostScreenName)
-            return true;
-        const name = root._nameOf(screen);
-        if (name && name === root.hostScreenName)
-            return true;
-        const mon = Hypr.monitorForScreen(screen);
-        if (mon && String(mon.name) === root.hostScreenName)
-            return true;
-        return false;
-    }
-
-    function _nameOf(screen: var): string {
-        if (screen && screen.name)
-            return String(screen.name);
-        return "";
-    }
-    function _focusedScreenName(): string {
-        const hyprName = Hypr.focusedMonitorName();
-        const screens = Quickshell.screens;
-        for (let i = 0; i < screens.length; i++) {
-            const s = screens[i];
-            if (!s)
-                continue;
-            if (hyprName && s.name && String(s.name) === hyprName)
-                return String(s.name);
-            const mon = Hypr.monitorForScreen(s);
-            if (hyprName && mon && String(mon.name) === hyprName)
-                return String(s.name || mon.name);
-        }
-        if (hyprName)
-            return hyprName;
-        if (screens.length > 0 && screens[0] && screens[0].name)
-            return String(screens[0].name);
-        return "";
+        return focus.covers(screen, root.panelOpen, root.hostScreenName);
     }
 
     function chat(text: string) {
@@ -159,11 +151,11 @@ Singleton {
         }
         if (root._provider === "none" || !root.ready)
             return;
-        const geminiOn = root._provider === "gemini";
-        const want = geminiOn
-            ? String(Config.accounts?.ai?.geminiModel || "").trim()
+        const cloud = root._cloud();
+        const want = cloud
+            ? cloud.selectedModel()
             : String(Config.accounts?.ai?.ollamaModel || "").trim();
-        if (geminiOn && !want.length) {
+        if (cloud && !want.length) {
             root.history = root.history.concat([
                 { role: "user", text: q },
                 { role: "assistant", text: I18n.t("ai.errorNoModel"), thinking: "", streaming: false }
@@ -172,10 +164,8 @@ Singleton {
             store.save(root.history);
             return;
         }
-        const model = geminiOn
-            ? gemini.resolveModel(want)
-            : status.resolveModel(want);
-        const modelErr = geminiOn ? I18n.t("ai.errorGeminiModel") : I18n.t("ai.errorModel");
+        const model = cloud ? cloud.resolveModel(want) : status.resolveModel(want);
+        const modelErr = cloud ? cloud.modelError() : I18n.t("ai.errorModel");
         if (!model.length) {
             root.history = root.history.concat([
                 { role: "user", text: q },
@@ -195,8 +185,8 @@ Singleton {
             root.busy = true;
             root.lastError = "";
             store.save(root.history);
-            if (geminiOn)
-                gemini.start(model, prior);
+            if (cloud)
+                cloud.start(model, prior);
             else
                 stream.start(model, prior);
         } catch (e) {
@@ -208,6 +198,7 @@ Singleton {
     function cancel() {
         stream.stop();
         gemini.stop();
+        chatgpt.stop();
         const live = !!(root.history.length && root.history[root.history.length - 1]
             && root.history[root.history.length - 1].streaming);
         if (!root.busy && !live)
@@ -230,6 +221,7 @@ Singleton {
     function clear() {
         stream.stop();
         gemini.stop();
+        chatgpt.stop();
         root.busy = false;
         root.history = [];
         root.lastError = "";

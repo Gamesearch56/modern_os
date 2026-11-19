@@ -14,8 +14,10 @@ ColumnLayout {
     readonly property string provider: Config.accounts?.ai?.provider ?? "none"
     readonly property bool ollamaOn: root.provider === "ollama"
     readonly property bool geminiOn: root.provider === "gemini"
+    readonly property bool chatgptOn: root.provider === "chatgpt"
     readonly property string modelId: String(Config.accounts?.ai?.ollamaModel || "").replace(/:latest$/, "")
     readonly property string geminiModel: String(Config.accounts?.ai?.geminiModel || "")
+    readonly property string chatgptModel: String(Config.accounts?.ai?.chatgptModel || "")
 
     function _defaultOff() {
         if (root._didDefault || !Ai.probed || Ai.ready)
@@ -45,6 +47,7 @@ ColumnLayout {
             model: [
                 { value: "ollama", titleKey: "settings.aiOllama" },
                 { value: "gemini", titleKey: "settings.aiGemini" },
+                { value: "chatgpt", titleKey: "settings.aiChatGpt" },
                 { value: "none", titleKey: "settings.aiNone" }
             ]
             onSelected: (v) => ConfigWrite.set("accounts.ai.provider", v)
@@ -65,6 +68,22 @@ ColumnLayout {
             value: root.modelId
             onSelected: (v) => ConfigWrite.set("accounts.ai.ollamaModel", v)
         }
+    }
+
+    BraveKey {
+        visible: root.ollamaOn
+        Layout.fillWidth: true
+    }
+
+    Tune {
+        visible: root.ollamaOn
+        Layout.fillWidth: true
+    }
+
+    Library {
+        visible: root.ollamaOn
+        Layout.fillWidth: true
+        Layout.topMargin: Tokens.spacing.xxl
     }
 
     Gemini {
@@ -88,6 +107,39 @@ ColumnLayout {
             value: root.geminiModel
             onSelected: (v) => ConfigWrite.set("accounts.ai.geminiModel", v)
         }
+    }
+
+    Tune {
+        visible: root.geminiOn
+        Layout.fillWidth: true
+    }
+
+    ChatGpt {
+        visible: root.chatgptOn
+        Layout.fillWidth: true
+    }
+
+    MField {
+        visible: root.chatgptOn
+        labelKey: "settings.fields.aiModel"
+        hintKey: "settings.hints.chatgptModel"
+        Layout.topMargin: Tokens.spacing.xxl
+        MSelect {
+            enabled: Ai.chatgptHasKey
+            placeholderKey: "settings.chatgpt.noModels"
+            model: {
+                void Ai.chatgptModels;
+                void Config.accounts?.ai?.chatgptModel;
+                return Ai.chatgptModelChoices();
+            }
+            value: root.chatgptModel
+            onSelected: (v) => ConfigWrite.set("accounts.ai.chatgptModel", v)
+        }
+    }
+
+    Tune {
+        visible: root.chatgptOn
+        Layout.fillWidth: true
     }
 
     Install {
