@@ -25,7 +25,9 @@ so Calamares has a 16 GiB+ target. --disk is accepted and ignored.
 Boots OVMF (edk2-ovmf) so the guest is UEFI; BIOS QEMU makes
 Calamares take the GRUB path and the systemd-boot job raises.
 Guest serial is iso/out/vm-serial.log. Never writes outside iso/out/.
---headless uses -display none (no GTK/GL).
+--headless uses -display none (no GTK window).
+The window uses GTK without OpenGL. gtk,gl=on aborts in epoxy when
+the host has no DMABUF GL context.
 
 UEFI ignores -boot order=d. The CD gets bootindex 1 so a leftover
 install on vm-disk.qcow2 cannot steal boot (empty root= initramfs).
@@ -134,7 +136,10 @@ args+=(
 if [ "$HEADLESS" -eq 1 ]; then
     args+=(-vga virtio -display none)
 else
-    args+=(-device virtio-vga-gl -display "gtk,gl=on")
+    # gl=on asks GtkGLArea for a DMABUF context and aborts when the
+    # host has none (Wayland session, no EGL). The guest only needs a
+    # framebuffer.
+    args+=(-device virtio-vga -display "gtk,gl=off")
 fi
 if [ "$UNATTENDED" -eq 1 ]; then
     args+=(-fw_cfg "name=opt/org.modernos/unattended,string=1")

@@ -386,6 +386,41 @@ carry_rtw88_quirk() {
     log "rtw88 Wi-Fi keeps PCIe ASPM and MSI off"
 }
 
+# The installed tree is the release tag, not this script. v0.6.21's
+# ge_proton_ensure aborts install.sh when curl cannot resolve github.com.
+overlay_pin_ge_proton() {
+    local f="$REPO/install/lib/ge-proton.sh"
+    [ -f "$f" ] || return 0
+    grep -qF 'continuing without it' "$f" && return 0
+    # shellcheck disable=SC2016
+    grep -qF 'curl -fL --retry 3 -o "$tar.part" "$GE_PROTON_URL"' "$f" || return 0
+    python3 - "$f" <<'PY'
+import pathlib, sys
+path = pathlib.Path(sys.argv[1])
+old = """        log_info "downloading GE-Proton${GE_PROTON_VERSION}"
+        curl -fL --retry 3 -o "$tar.part" "$GE_PROTON_URL"
+        mv -f "$tar.part" "$tar"
+"""
+new = """        log_info "downloading GE-Proton${GE_PROTON_VERSION}"
+        if ! curl -fL --retry 2 --retry-max-time 20 --connect-timeout 10 -o "$tar.part" "$GE_PROTON_URL"; then
+            rm -f "$tar.part"
+            log_warn "could not download GE-Proton${GE_PROTON_VERSION} from ${GE_PROTON_URL}; continuing without it"
+            return 0
+        fi
+        mv -f "$tar.part" "$tar"
+"""
+text = path.read_text()
+if old not in text:
+    sys.exit(0)
+path.write_text(text.replace(old, new, 1))
+PY
+    if grep -qF 'continuing without it' "$f"; then
+        log "GE-Proton download no longer aborts the install"
+    else
+        log "GE-Proton download patch did not apply"
+    fi
+}
+
 overlay_pin_install_native() {
     local pkg="$REPO/install/lib/pkg.sh"
     [ -f "$pkg" ] || return 0
@@ -777,6 +812,7 @@ phase_desktop() {
     fi
     # ISO pin's pkg.sh may not pass --disable-sandbox; install.sh itself
     # is the tagged copy, not this working tree.
+    overlay_pin_ge_proton
     overlay_pin_install_native
     overlay_pin_aur_names
     pin_resolver
