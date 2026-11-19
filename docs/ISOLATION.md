@@ -48,7 +48,7 @@ These affect the whole machine and can brick a boot, so they stay
 
 | Change | Why it's gated | Rollback |
 |---|---|---|
-| Plymouth theme + `mkinitcpio` hooks | Rewrites the initramfs. A bad rebuild can leave the machine unable to boot. | `sudo mkinitcpio -P` after reverting `/etc/mkinitcpio.conf`; the previous initramfs stays as a fallback boot entry — never delete it. |
+| Plymouth theme + `mkinitcpio` hooks | Rewrites the initramfs. A bad rebuild can leave the machine unable to boot. Applied by `provision-iso.sh`, or once by `sudo install/system/plymouth/apply.sh`. Not by `install.sh` or a wallpaper/palette change. | `sudo mkinitcpio -P` after reverting `/etc/mkinitcpio.conf`; the previous initramfs stays as a fallback boot entry — never delete it. |
 | ISO late extras (`nvidia_apply`, keyboard/locale seed) | NVIDIA modeset/initramfs; Calamares keyboard/locale into `config.json`. Greetd itself is already applied by `install.sh`. | Revert the drop-ins; `provision-iso.sh` still refuses when `MODERN_PROTECT_HOME` is set. |
 | `sysctl.d`, `polkit` actions, udev rules, gaming perf sysctls | System-wide kernel/session policy. | Remove the dropped-in file under `/etc/{sysctl.d,polkit-1,udev/rules.d}/modern-*` and reload. |
 | zram config, `99-modern-zram.conf`, rotational bfq | Compressed swap (half of RAM, max 4 GiB) and fair IO on spinning disks. Next boot. SSDs are unchanged. | Delete `/etc/systemd/zram-generator.conf`, `/etc/sysctl.d/99-modern-zram.conf`, and `/etc/udev/rules.d/60-modern-rotational-bfq.rules`, then reboot. |

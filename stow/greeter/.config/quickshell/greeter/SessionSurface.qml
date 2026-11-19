@@ -16,6 +16,7 @@ Item {
     property bool _animate: false
 
     readonly property bool _shown: root._entered
+    readonly property bool _launching: !!(root.auth && root.auth.launching)
     readonly property var _c: root.chrome
 
     SystemClock {
@@ -38,7 +39,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        enabled: !power.menuOpen && root.interactive
+        enabled: !power.menuOpen && root.interactive && !root._launching
         onPressed: {
             if (!form.item)
                 return;
@@ -53,6 +54,7 @@ Item {
     // root, and a child id would steal t()/formatTime from every label.
     Item {
         id: overlay
+        visible: !root._launching
         anchors.fill: parent
         opacity: {
             const c = root._c;
@@ -123,6 +125,62 @@ Item {
             anchors.bottom: parent.bottom
             anchors.right: parent.right
             anchors.margins: root._c ? root._c.spaceLg : 16
+        }
+    }
+
+    Column {
+        visible: root._launching
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: root._c ? root._c.spaceXxl * 3 : 96
+        spacing: root._c ? root._c.spaceMd : 12
+        width: root._c ? root._c.formWidth : 352
+
+        Text {
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            color: root._c ? root._c.color.onSurface : "#E6E0E9"
+            font.family: root._c ? root._c.fontFamily : "sans-serif"
+            font.pixelSize: root._c ? root._c.typePx("bodySmall") : 12
+            text: root._c ? root._c.t("session.signingIn") : ""
+        }
+
+        Item {
+            id: track
+            width: parent.width
+            height: root._c ? root._c.spaceSm : 8
+
+            Rectangle {
+                anchors.fill: parent
+                radius: height / 2
+                color: root._c ? root._c.color.primary : "#D0BCFF"
+                opacity: 0.24
+            }
+
+            Rectangle {
+                id: thumb
+                width: parent.width * 0.35
+                height: parent.height
+                radius: height / 2
+                color: root._c ? root._c.color.primary : "#D0BCFF"
+
+                SequentialAnimation on x {
+                    running: root._launching && (!root._c || root._c.motionScale !== 0)
+                    loops: Animation.Infinite
+                    NumberAnimation {
+                        from: 0
+                        to: track.width - thumb.width
+                        duration: root._c ? root._c.extraLongMs : 600
+                        easing.bezierCurve: root._c ? root._c.easingDecel : [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+                    }
+                    NumberAnimation {
+                        from: track.width - thumb.width
+                        to: 0
+                        duration: root._c ? root._c.extraLongMs : 600
+                        easing.bezierCurve: root._c ? root._c.easingAccel : [0.3, 0.0, 0.8, 0.15, 1.0, 1.0]
+                    }
+                }
+            }
         }
     }
 

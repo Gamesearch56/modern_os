@@ -25,12 +25,14 @@ hl.on("hyprland.start", function()
         .. "shared=/var/lib/modern/session/wallpaper.jpg; "
         .. "img=\"\"; cand=\"\"; "
         .. "if [ -f \"$state\" ]; then cand=$(head -n 1 \"$state\"); fi; "
+        .. "splash_quit() { command -v plymouth >/dev/null 2>&1 && plymouth quit || true; }; "
         .. "if [ -n \"$cand\" ] && [ -r \"$cand\" ]; then img=\"$cand\"; "
         .. "elif [ -r \"$default\" ]; then img=\"$default\"; "
         .. "elif [ -r \"$shared\" ]; then img=\"$shared\"; "
-        .. "else exit 0; fi; "
-        .. "i=0; while ! pgrep -x awww-daemon >/dev/null; do i=$((i+1)); [ \"$i\" -gt 30 ] && exit 0; sleep 0.1; done; "
-        .. "i=0; while ! awww img \"$img\" --transition-type none; do i=$((i+1)); [ \"$i\" -gt 20 ] && exit 0; sleep 0.15; done'")
+        .. "else splash_quit; exit 0; fi; "
+        .. "i=0; while ! pgrep -x awww-daemon >/dev/null; do i=$((i+1)); [ \"$i\" -gt 30 ] && { splash_quit; exit 0; }; sleep 0.1; done; "
+        .. "i=0; while ! awww img \"$img\" --transition-type none; do i=$((i+1)); [ \"$i\" -gt 20 ] && break; sleep 0.15; done; "
+        .. "splash_quit'")
 
     -- Background: import/dbus/polkit overlap; phylax waits on them.
     -- restart, not start: after a compositor crash Restart= has already

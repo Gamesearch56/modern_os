@@ -27,6 +27,8 @@ fi
 
 # shellcheck source=nvidia/apply.sh
 source "$PROVISION_ROOT/install/system/nvidia/apply.sh"
+# shellcheck source=plymouth/apply.sh
+source "$PROVISION_ROOT/install/system/plymouth/apply.sh"
 # shellcheck source=../lib/greetd.sh
 source "$PROVISION_ROOT/install/lib/greetd.sh"
 
@@ -212,6 +214,9 @@ install -D -m 0644 "$PROVISION_ROOT/install/system/udev/60-modern-rotational-bfq
     /etc/udev/rules.d/60-modern-rotational-bfq.rules
 log "zram swap and hard-disk scheduler staged for next boot"
 
+log "boot splash — theme and kernel line, initramfs rebuild follows"
+plymouth_apply /
+
 gpu="$(lspci 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /VGA compatible controller|3D controller/{print; exit}')"
 # Pre-Turing cards run nouveau (00-hw-gpu-nvidia-legacy): putting nvidia
 # modules in MODULES there fails mkinitcpio and this whole provision.
@@ -222,6 +227,11 @@ elif printf '%s' "$gpu" | grep -qi nvidia; then
     log "NVIDIA GPU on nouveau — skipping NVIDIA drop-ins"
 else
     log "non-NVIDIA GPU — skipping NVIDIA drop-ins"
+fi
+
+if command -v mkinitcpio >/dev/null 2>&1; then
+    log "rebuilding initramfs once"
+    mkinitcpio -P
 fi
 
 rm -f /etc/sudoers.d/99-modern-calamares

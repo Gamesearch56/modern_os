@@ -1,15 +1,15 @@
-# Default splash. RGB values match the MD3 dark baseline in Commons/Colors.qml
-# so the theme paints before the first plymouth-sync.sh run. That script
-# rewrites these three assignments from tokens.json — never edit the
-# numbers here to "theme" a machine; run plymouth-sync.sh and copy the
-# generated files (docs/DECISIONS.md #13).
+# Installer colors, baked into the initramfs. #141218 surface, #D0BCFF bar.
+# A palette or wallpaper change must not rewrite this file: the image
+# would have to be rebuilt, and a missing picture would break boot.
 Window.SetBackgroundTopColor(0.0784, 0.0706, 0.0941);
 Window.SetBackgroundBottomColor(0.0784, 0.0706, 0.0941);
 
+progress_box = Image.Box(0.8157, 0.7373, 1.0000);
+progress_box.SetPosition(Window.GetWidth() * 0.2, Window.GetHeight() * 0.82, 0);
+progress_box.SetSize(1, 8);
+
 fun progress_callback(duration, progress) {
-    # progress is 0.0–1.0; a later generated script draws a primary-colored
-    # bar. The stock script keeps the splash a solid surface so a missing
-    # wallpaper-boot.jpg cannot leave a broken initramfs.
+    progress_box.SetSize(Window.GetWidth() * 0.6 * progress, 8);
 }
 
 Plymouth.SetBootProgressFunction(progress_callback);

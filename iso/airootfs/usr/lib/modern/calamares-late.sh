@@ -269,7 +269,7 @@ ensure_provision_units() {
     local out
     out="$(mktemp)" || die "mktemp provision units log failed"
     if ! pacman --disable-sandbox -S --needed --noconfirm \
-        bluez bluez-utils networkmanager greetd >"$out" 2>&1; then
+        bluez bluez-utils networkmanager greetd plymouth >"$out" 2>&1; then
         die "units for provision-iso.sh failed to install: $(tr '\n' ' ' <"$out")"
     fi
     rm -f "$out"

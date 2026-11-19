@@ -310,7 +310,7 @@ rm -rf "$syncdir"
 # bluez-utils is bluetoothctl only; bluetooth.service and org.bluez are bluez.
 if grep -E '^[[:space:]]*bluez([[:space:]]|#|$)' "$ROOT/install/manifests/10-desktop.txt" >/dev/null \
     && grep -F 'ensure_provision_units' "$LATE" >/dev/null \
-    && grep -F 'bluez bluez-utils networkmanager greetd' "$LATE" >/dev/null; then
+    && grep -F 'bluez bluez-utils networkmanager greetd plymouth' "$LATE" >/dev/null; then
     ok "bluez is in the desktop manifest and installed before provision"
 else
     err "bluetooth.service needs bluez in 10-desktop.txt and in ensure_provision_units"
