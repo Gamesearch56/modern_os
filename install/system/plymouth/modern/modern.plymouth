@@ -1,6 +1,6 @@
 [Plymouth Theme]
 Name=modern
-Description=Material Design 3 boot splash. Solid installer colors and the word ModernOS. Copied into the initramfs by the plymouth hook.
+Description=Material Design 3 boot splash. Solid installer colors, a large ModernOS word, and a spinner. Copied into the initramfs by the plymouth hook.
 ModuleName=script
 
 [script]

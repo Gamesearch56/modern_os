@@ -19,11 +19,13 @@ WALL="$ROOT/scripts/wallpaper-sync.sh"
 GREETER="$ROOT/stow/greeter/.config/quickshell/greeter/SessionSurface.qml"
 START="$ROOT/stow/hypr/.config/hypr/modules/autostart.lua"
 
-if grep -Fq 'Image.Text("ModernOS", 0.8157, 0.7373, 1.0, 1.0, "Sans", "center")' "$THEME" \
+if grep -Fq 'Image.Text("ModernOS", 0.8157, 0.7373, 1.0, 1.0, "Sans 120", "center")' "$THEME" \
     && grep -Fq 'SetBackgroundTopColor(0.0784, 0.0706, 0.0941)' "$THEME" \
+    && grep -Fq 'Math.Cos' "$THEME" \
+    && grep -Fq 'SetOpacity' "$THEME" \
     && ! grep -Fq 'Image.Box' "$THEME" \
     && ! grep -Eq '\.jpg|\.png' "$THEME"; then
-    ok "splash is a solid surface and a title, with no image"
+    ok "splash is a solid surface, a large title, and a spinner, with no image"
 else
     err "modern.script must stay a solid splash with no wallpaper file"
 fi
@@ -68,6 +70,9 @@ printf '%s\n' 'title   ModernOS' 'linux   /vmlinuz-linux-zen' \
     >"$TMP/boot/loader/entries/modern.conf"
 printf '%s\n' 'quiet root=UUID=abc rw' >"$TMP/etc/kernel/cmdline"
 
+# Declared here: the apply script assigns it, and shellcheck does not
+# follow a sourced path it was told to skip.
+plymouth_rebuild=0
 # shellcheck disable=SC1090
 source "$APPLY"
 plymouth_apply "$TMP"

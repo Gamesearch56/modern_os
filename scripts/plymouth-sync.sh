@@ -62,13 +62,34 @@ cat > "$DEST/modern.script" <<EOF
 Window.SetBackgroundTopColor(${SURFACE_RGB});
 Window.SetBackgroundBottomColor(${SURFACE_RGB});
 
-title.image = Image.Text("ModernOS", ${PRIMARY_RGB}, 1.0, "Sans", "center");
+title.image = Image.Text("ModernOS", ${PRIMARY_RGB}, 1.0, "Sans 120", "center");
 title.sprite = Sprite(title.image);
+
+spin_count = 12;
+spin_radius = 42;
+spin_gap = 56;
+spin_phase = 0;
+for (i = 0; i < spin_count; i++)
+  {
+    dots[i].image = Image.Text("●", ${PRIMARY_RGB}, 1.0, "Sans 22", "center");
+    dots[i].sprite = Sprite(dots[i].image);
+  }
 
 fun refresh_callback()
   {
-    title.sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - title.image.GetWidth() / 2);
-    title.sprite.SetY(Window.GetY() + Window.GetHeight() / 2 - title.image.GetHeight() / 2);
+    spin_phase = spin_phase + 0.09;
+    cx = Window.GetX() + Window.GetWidth() / 2;
+    top = Window.GetY() + Window.GetHeight() / 2 - (title.image.GetHeight() + spin_gap + spin_radius * 2) / 2;
+    title.sprite.SetX(cx - title.image.GetWidth() / 2);
+    title.sprite.SetY(top);
+    sy = top + title.image.GetHeight() + spin_gap + spin_radius;
+    for (i = 0; i < spin_count; i++)
+      {
+        ang = spin_phase + i * (2 * Math.Pi / spin_count);
+        dots[i].sprite.SetX(cx + Math.Cos(ang) * spin_radius - dots[i].image.GetWidth() / 2);
+        dots[i].sprite.SetY(sy + Math.Sin(ang) * spin_radius - dots[i].image.GetHeight() / 2);
+        dots[i].sprite.SetOpacity(0.2 + 0.8 * i / (spin_count - 1));
+      }
   }
 
 Plymouth.SetRefreshFunction(refresh_callback);
