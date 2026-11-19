@@ -2,6 +2,8 @@
 # Hold the boot splash across the gaps where a laptop redraws the seat
 # terminal: greeter to desktop, desktop back to greeter, and power off.
 # Hyprland's own banner is not a kernel message, so quiet does not hide it.
+# The power menu calls this directly. The splash service is optional: a
+# missing unit must not block logout, reboot, or shutdown.
 set -euo pipefail
 
 splash_show() {
@@ -14,6 +16,10 @@ splash_show() {
     plymouth show-splash || true
 }
 
+ask_splash() {
+    timeout 2 systemctl start modern-splash.service || true
+}
+
 case "${1:-show}" in
     show)
         splash_show
@@ -21,11 +27,11 @@ case "${1:-show}" in
     logout)
         # Plymouth has to be waiting before this compositor dies, or the
         # laptop paints the terminal in the gap.
-        timeout 2 systemctl start modern-splash.service || true
+        ask_splash
         exec hyprctl dispatch 'hl.dsp.exit()'
         ;;
     reboot|poweroff)
-        timeout 2 systemctl start modern-splash.service || true
+        ask_splash
         exec systemctl "$1"
         ;;
     *)

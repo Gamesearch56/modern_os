@@ -4,6 +4,7 @@ pragma Singleton
 
 import Quickshell
 import QtQuick
+import "../Commons"
 
 Singleton {
     id: root
@@ -15,7 +16,7 @@ Singleton {
     function logout() {
         // Lua configs reject `dispatch exit` (Hyprland 0.55+). The helper
         // puts the splash up first so the seat terminal stays hidden.
-        Quickshell.execDetached(["/usr/lib/modern/splash-hold.sh", "logout"]);
+        Quickshell.execDetached([Paths.script("splash-hold.sh"), "logout"]);
     }
 
     function suspend() {
@@ -28,10 +29,10 @@ Singleton {
     }
 
     function reboot() {
-        Quickshell.execDetached(["/usr/lib/modern/splash-hold.sh", "reboot"]);
+        Quickshell.execDetached([Paths.script("splash-hold.sh"), "reboot"]);
     }
 
     function poweroff() {
-        Quickshell.execDetached(["/usr/lib/modern/splash-hold.sh", "poweroff"]);
+        Quickshell.execDetached([Paths.script("splash-hold.sh"), "poweroff"]);
     }
 }

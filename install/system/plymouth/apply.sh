@@ -135,7 +135,7 @@ plymouth_apply() {
         "$root/etc/systemd/system/plymouth-quit.service.d/retain.conf"
     install -m 0644 "$repo/install/system/plymouth/modern-splash.service" \
         "$root/etc/systemd/system/modern-splash.service"
-    install -m 0755 "$repo/install/system/plymouth/splash-hold.sh" \
+    install -m 0755 "$repo/scripts/splash-hold.sh" \
         "$root/usr/lib/modern/splash-hold.sh"
     install -m 0644 "$repo/install/system/plymouth/50-modern-splash.rules" \
         "$root/etc/polkit-1/rules.d/50-modern-splash.rules"

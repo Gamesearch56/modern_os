@@ -173,7 +173,8 @@ if grep -F 'kiosk.sh' "$LIB" >/dev/null \
     && grep -Fq 'hl.dsp.cursor.move' "$ROOT/install/system/greetd/hyprland.lua" \
     && ! grep -F 'movecursor' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
     && grep -F 'splash-hold.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
-    && grep -F 'hl.dsp.exit()' "$ROOT/install/system/plymouth/splash-hold.sh" >/dev/null \
+    && grep -F 'hl.dsp.exit()' "$ROOT/scripts/splash-hold.sh" >/dev/null \
+    && grep -F 'Paths.script("splash-hold.sh")' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
     && ! grep -F '"exit"' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
     && ! grep -F 'awww-daemon' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
     && grep -Fq 'transition-type none' "$ROOT/stow/hypr/.config/hypr/modules/autostart.lua" \

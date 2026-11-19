@@ -118,6 +118,7 @@ fi
 if [ -f "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" ] \
     && grep -Fq 'quit --retain-splash' "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" \
     && [ -x "$TMP/usr/lib/modern/splash-hold.sh" ] \
+    && grep -Fq 'modern-splash.service' "$ROOT/scripts/splash-hold.sh" \
     && [ -f "$TMP/etc/systemd/system/modern-splash.service" ]; then
     ok "quit keeps the splash frame, and a handoff can show it again"
 else
