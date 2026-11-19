@@ -105,7 +105,6 @@ ColumnLayout {
 
     MField {
         labelKey: "settings.fields.recordAudio"
-        hintKey: "settings.hints.recordAudio"
         headerExtra: MSwitch {
             checked: !!(Config.screenshots.recordAudio)
             onToggled: (v) => ConfigWrite.set("screenshots.recordAudio", v)

@@ -437,8 +437,7 @@
     "done": "Done",
     "applications": {
       "web": "Web and accounts",
-      "files": "Files and system",
-      "hint": "Each row opens apps that fit that job."
+      "files": "Files and system"
     },
     "themeCreate": "New theme",
     "themeName": "Name (letters, numbers, dashes)",
@@ -889,8 +888,7 @@
       "autologin": "After the next restart this account opens the desktop without a login prompt. Turning it off asks for a password again at boot.",
       "firewallActive": "Incoming connections are denied except the allow rules below. Outgoing traffic is allowed.",
       "firewallInactive": "UFW is installed but not filtering. Turning it on sets deny incoming, allow outgoing, deny routed.",
-      "firewallMissing": "UFW is not installed. The firewall package is in the base manifest and is not applied from Settings.",
-      "recordAudio": "Uses the default Pulse microphone (not sink monitors). If none is available, the recording is video-only."
+      "firewallMissing": "UFW is not installed. The firewall package is in the base manifest and is not applied from Settings."
     },
     "hub": {
       "title": "Shortcuts",

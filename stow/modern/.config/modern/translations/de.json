@@ -437,8 +437,7 @@
     "done": "Fertig",
     "applications": {
       "web": "Web und Konten",
-      "files": "Dateien und System",
-      "hint": "Jede Zeile öffnet Apps, die zu dieser Aufgabe passen."
+      "files": "Dateien und System"
     },
     "themeCreate": "Neues Thema",
     "themeName": "Name (Buchstaben, Zahlen, Bindestriche)",
@@ -889,8 +888,7 @@
       "autologin": "Nach dem nächsten Neustart öffnet sich der Desktop für dieses Konto ohne Anmeldebildschirm. Ausschalten fragt beim Start wieder nach dem Passwort.",
       "firewallActive": "Eingehende Verbindungen sind außer den Allow-Regeln unten gesperrt. Ausgehender Verkehr ist erlaubt.",
       "firewallInactive": "UFW ist installiert, filtert aber nicht. Einschalten setzt deny incoming, allow outgoing, deny routed.",
-      "firewallMissing": "UFW ist nicht installiert. Das Firewall-Paket steht im Basis-Manifest und wird nicht aus den Einstellungen gesetzt.",
-      "recordAudio": "Nutzt das Standard-Pulse-Mikrofon (keine Sink-Monitore). Ohne Mikrofon wird nur Video aufgenommen."
+      "firewallMissing": "UFW ist nicht installiert. Das Firewall-Paket steht im Basis-Manifest und wird nicht aus den Einstellungen gesetzt."
     },
     "hub": {
       "title": "Kurzbefehle",

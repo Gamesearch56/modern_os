@@ -63,7 +63,6 @@ ColumnLayout {
 
     MSectionHeader {
         key: "settings.applications.web"
-        hintKey: "settings.applications.hint"
         topMargin: 0
     }
     RoleRow { role: "browser"; onPick: picker.openRole(role, false) }
