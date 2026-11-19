@@ -46,7 +46,7 @@ Item {
     }
 
     function _launchSession() {
-        Greetd.launch(["/usr/bin/start-hyprland", "--no-nixgl"], ["XDG_SESSION_TYPE=wayland"], true);
+        Greetd.launch(["/usr/lib/modern/desktop-session.sh"], ["XDG_SESSION_TYPE=wayland"], true);
     }
 
     function _fail() {
@@ -124,7 +124,7 @@ Item {
 
         function onLaunched() {
             root._trace({ event: "launched" });
-            Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exit()"]);
+            Quickshell.execDetached(["/usr/lib/modern/splash-hold.sh", "logout"]);
         }
 
         function onError(err) {

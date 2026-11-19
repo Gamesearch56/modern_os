@@ -51,7 +51,7 @@ fi
 if grep -Fq 'root._launching' "$GREETER" \
     && grep -Fq 'session.signingIn' "$GREETER" \
     && grep -Fq 'splash_quit' "$START" \
-    && grep -Fq 'plymouth quit' "$START" \
+    && grep -Fq 'plymouth quit --retain-splash' "$START" \
     && ! grep -Fq 'plymouth show-splash' "$START"; then
     ok "sign-in keeps the wallpaper, then the desktop quits the splash"
 else
@@ -113,6 +113,15 @@ if printf '%s\n' "$cmd" | grep -q 'root=UUID=abc' \
     ok "kernel cmdline keeps the root device"
 else
     err "kernel cmdline: $cmd"
+fi
+
+if [ -f "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" ] \
+    && grep -Fq 'quit --retain-splash' "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" \
+    && [ -x "$TMP/usr/lib/modern/splash-hold.sh" ] \
+    && [ -f "$TMP/etc/systemd/system/modern-splash.service" ]; then
+    ok "quit keeps the splash frame, and a handoff can show it again"
+else
+    err "plymouth apply must install the retain drop-in and the splash handoff"
 fi
 
 if [ -f "$TMP/usr/share/plymouth/themes/modern/modern.script" ] \

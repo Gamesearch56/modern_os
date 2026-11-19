@@ -25,7 +25,7 @@ Item {
     function _run(kind: string) {
         root.menuOpen = false;
         const verb = kind === "reboot" ? "reboot" : "poweroff";
-        Quickshell.execDetached(["/usr/bin/systemctl", verb]);
+        Quickshell.execDetached(["/usr/lib/modern/splash-hold.sh", verb]);
     }
 
     activeFocusOnTab: root.tabFocus

@@ -115,6 +115,10 @@ greetd_apply() {
     fi
     greetd_as_root install -m 0644 "$repo/install/system/greetd/hyprland.lua" /etc/greetd/hyprland.lua
     greetd_as_root install -m 0755 "$repo/install/system/greetd/kiosk.sh" /etc/greetd/kiosk.sh
+    greetd_as_root install -d -m 0755 /usr/lib/modern
+    greetd_as_root install -m 0755 \
+        "$repo/install/system/greetd/desktop-session.sh" \
+        /usr/lib/modern/desktop-session.sh
     greetd_as_root install -m 0755 "$repo/install/system/greetd/list-users.py" /etc/greetd/list-users.py
     if [ -f "$repo/stow/hypr/.config/hypr/lib/json.lua" ]; then
         greetd_as_root install -m 0644 "$repo/stow/hypr/.config/hypr/lib/json.lua" /etc/greetd/json.lua

@@ -128,7 +128,20 @@ plymouth_apply() {
     dest="$root/usr/share/plymouth/themes/modern"
     plymouth_rebuild=0
     [ -f "$theme/modern.script" ] || return 1
-    install -d -m 0755 "$dest" "$root/etc/plymouth" "$root/usr/share/plymouth/themes"
+    install -d -m 0755 "$dest" "$root/etc/plymouth" "$root/usr/share/plymouth/themes" \
+        "$root/etc/systemd/system/plymouth-quit.service.d" \
+        "$root/usr/lib/modern" "$root/etc/polkit-1/rules.d"
+    install -m 0644 "$repo/install/system/plymouth/retain.conf" \
+        "$root/etc/systemd/system/plymouth-quit.service.d/retain.conf"
+    install -m 0644 "$repo/install/system/plymouth/modern-splash.service" \
+        "$root/etc/systemd/system/modern-splash.service"
+    install -m 0755 "$repo/install/system/plymouth/splash-hold.sh" \
+        "$root/usr/lib/modern/splash-hold.sh"
+    install -m 0644 "$repo/install/system/plymouth/50-modern-splash.rules" \
+        "$root/etc/polkit-1/rules.d/50-modern-splash.rules"
+    if [ "$root" = "/" ] && command -v systemctl >/dev/null 2>&1; then
+        systemctl daemon-reload || true
+    fi
     if ! cmp -s "$theme/modern.plymouth" "$dest/modern.plymouth" \
         || ! cmp -s "$theme/modern.script" "$dest/modern.script"; then
         install -m 0644 "$theme/modern.plymouth" "$theme/modern.script" "$dest/"

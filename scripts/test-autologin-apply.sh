@@ -34,7 +34,7 @@ if grep -q '\[initial_session\]' "$MODERN_AUTOLOGIN_GREETD" \
     && grep -q 'user = "testdev"' "$MODERN_AUTOLOGIN_GREETD" \
     && grep -q 'user = "greeter"' "$MODERN_AUTOLOGIN_GREETD" \
     && grep -Fq 'source_profile = false' "$MODERN_AUTOLOGIN_GREETD" \
-    && grep -Fq -- 'command = "start-hyprland --no-nixgl"' "$MODERN_AUTOLOGIN_GREETD"; then
+    && grep -Fq -- 'command = "/usr/lib/modern/desktop-session.sh"' "$MODERN_AUTOLOGIN_GREETD"; then
     ok "greetd enable writes initial_session"
 else
     err "greetd enable: $(cat "$MODERN_AUTOLOGIN_GREETD")"

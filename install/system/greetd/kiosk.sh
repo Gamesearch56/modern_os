@@ -46,4 +46,8 @@ ulimit -c 0
 
 export GREETD_SOCK="$sock"
 # Arch Hyprland is not a Nix install; --no-nixgl skips the nixGL probe.
-exec /usr/bin/env GREETD_SOCK="$sock" /usr/bin/start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua
+# The banner belongs in a log. On a laptop it would otherwise be the
+# picture between the splash and the login screen.
+log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
+mkdir -p "$log_dir"
+exec /usr/bin/env GREETD_SOCK="$sock" /usr/bin/start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua >>"$log_dir/hyprland.log" 2>&1

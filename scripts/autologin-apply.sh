@@ -79,7 +79,7 @@ write_greetd() {
         if [ "$with_initial" = 1 ]; then
             printf '\n'
             printf '%s\n' '[initial_session]'
-            printf '%s\n' 'command = "start-hyprland --no-nixgl"'
+            printf '%s\n' 'command = "/usr/lib/modern/desktop-session.sh"'
             printf 'user = "%s"\n' "$user"
         fi
     } >"$tmp"

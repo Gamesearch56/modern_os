@@ -165,13 +165,15 @@ if grep -F 'kiosk.sh' "$LIB" >/dev/null \
     && ! grep -F 'SessionHandoff' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionSurface.qml" >/dev/null \
     && ! grep -F 'property bool slow' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
     && grep -Fq 'ulimit -c 0' "$ROOT/install/system/greetd/kiosk.sh" \
-    && grep -Fq -- '--no-nixgl' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" \
+    && grep -Fq 'desktop-session.sh' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" \
+    && grep -Fq -- '--no-nixgl' "$ROOT/install/system/greetd/desktop-session.sh" \
     && grep -F 'onLaunched' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
-    && grep -F '/usr/bin/systemctl' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionPower.qml" >/dev/null \
-    && grep -F 'hl.dsp.exit()' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
+    && grep -F 'splash-hold.sh' "$ROOT/stow/greeter/.config/quickshell/greeter/SessionPower.qml" >/dev/null \
+    && grep -F 'splash-hold.sh' "$ROOT/stow/greeter/.config/quickshell/greeter/GreetdAuth.qml" >/dev/null \
     && grep -Fq 'hl.dsp.cursor.move' "$ROOT/install/system/greetd/hyprland.lua" \
     && ! grep -F 'movecursor' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
-    && grep -F 'hl.dsp.exit()' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
+    && grep -F 'splash-hold.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
+    && grep -F 'hl.dsp.exit()' "$ROOT/install/system/plymouth/splash-hold.sh" >/dev/null \
     && ! grep -F '"exit"' "$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml" >/dev/null \
     && ! grep -F 'awww-daemon' "$ROOT/install/system/greetd/hyprland.lua" >/dev/null \
     && grep -Fq 'transition-type none' "$ROOT/stow/hypr/.config/hypr/modules/autostart.lua" \

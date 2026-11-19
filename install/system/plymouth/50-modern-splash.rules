@@ -1,0 +1,12 @@
+// The greeter and the signed-in seat may ask for the splash. Nothing
+// else: manage-units is otherwise a root action.
+polkit.addRule(function (action, subject) {
+    if (action.id !== "org.freedesktop.systemd1.manage-units")
+        return;
+    if (action.lookup("unit") !== "modern-splash.service")
+        return;
+    if (action.lookup("verb") !== "start")
+        return;
+    if (subject.user === "greeter" || (subject.local && subject.active))
+        return polkit.Result.YES;
+});
