@@ -437,8 +437,7 @@
     "done": "Fertig",
     "applications": {
       "web": "Web und Konten",
-      "files": "Dateien und System",
-      "hint": "Jede Zeile öffnet Apps, die zu dieser Aufgabe passen."
+      "files": "Dateien und System"
     },
     "themeCreate": "Neues Thema",
     "themeName": "Name (Buchstaben, Zahlen, Bindestriche)",
@@ -844,9 +843,9 @@
     "hints": {
       "animations": "Wie lange Menüs, die Leiste und Fenster brauchen. Aus ist sofort.",
       "overlayMotion": "Ein-/Ausblenden, Zoom beim Öffnen/Schließen, oder beides.",
-      "wallpaperProvider": "Hauptseite für Hintergründe.",
+      "wallpaperProvider": "Die Seite, die aus der Hintergrundauswahl zum Holen neuer Bilder geöffnet wird. Heruntergeladene Bilder landen bei den eigenen Hintergründen.",
       "wallpaperColor": "Hellt Flächen, Schaltflächen und Symbole mit der Farbe des Hintergrunds auf. Höher ist heller.",
-      "wallpaperTransition": "Wie das neue Hintergrundbild erscheint. Wachsen, Wischen und Welle laufen über den Bildschirm.",
+      "wallpaperTransition": "Wie der Desktop zu einem neuen Hintergrundbild wechselt. Die Auswahl spielt diese Animation einmal auf dem aktuellen Bild ab.",
       "activeProfile": "Jede Karte ist eine andere Palette, die matugen aus dem aktuellen Hintergrundbild gezogen hat.",
       "themeVariant": "Wie stark Tapetenfarben auftauchen. Jede Karte entsteht aus dem aktuellen Hintergrundbild im gewählten Hell- oder Dunkelmodus.",
       "workspaceMode": "Dynamisch öffnet einen Workspace auf dem Bildschirm unter dem Zeiger; jede Leiste zeigt nur dessen Workspaces. Fixiert hält 1–5, 6–10, 11–15, … von links nach rechts.",
@@ -871,10 +870,9 @@
       "gameOptimize": "Schaltet zusätzliche Fenstereffekte am Spiel aus, damit es flüssiger läuft. Andere Fenster behalten ihr gewohntes Aussehen.",
       "gameHdr": "Setzt DXVK_HDR, ENABLE_HDR_WSI und PROTON_ENABLE_HDR nur für Battle.net/Proton-Spiele über modern battlenet — nicht für die ganze Sitzung (sonst laggt Steam und Video). HDR unter Anzeigen einschalten. Für Steam-Titel dieselben Variablen in den Startoptionen. Battle.net bleibt bei XWayland.",
       "browserLight": "Vivaldi startet ohne eigenen Grafikprozess, und die Fenster lassen Weichzeichner und Schatten weg. Einschalten, wenn der Browser auf einem langsamen Prozessor mehrere Sekunden braucht. Gilt beim nächsten Start von Vivaldi.",
-      "repeatRate": "Wie schnell eine gehaltene Taste wiederholt.",
+      "repeatRate": "Wie oft pro Sekunde eine gehaltene Taste wiederholt wird, sobald die Verzögerung vorbei ist. Ein höherer Wert tippt schneller.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
-      "numlockOnBoot": "Schaltet Num-Lock ein, wenn Hyprland startet.",
-      "mouseWindow": "Am Fensterrand ziehen, um die Größe zu ändern. Super+Links verschiebt ein Fenster, Super+Rechts ändert die Größe. Rechtsklick auf ein Fenster in Anwendungen zum Schweben, Vollbild, Teilen oder Schließen. Super+K listet das unter Maus.",
+      "numlockOnBoot": "Schaltet Num-Lock ein, wenn das System startet.",
       "autoSwitchBluetooth": "Verbinden sich Kopfhörer oder ein Lautsprecher per Bluetooth, wechselt der Ton dorthin. Trennen sie sich, kehrt er zum vorherigen Lautsprecher zurück.",
       "restoreGated": "Stellt die Systemplatte auf diesen Snapshot zurück. Dein Home-Ordner bleibt. Ein Neustart ist nötig.",
       "preUpdateSnapshot": "Legt vor einem Systemupdate einen Snapper-Snapshot von / an, damit du zurückrollen kannst.",
@@ -890,8 +888,7 @@
       "autologin": "Nach dem nächsten Neustart öffnet sich der Desktop für dieses Konto ohne Anmeldebildschirm. Ausschalten fragt beim Start wieder nach dem Passwort.",
       "firewallActive": "Eingehende Verbindungen sind außer den Allow-Regeln unten gesperrt. Ausgehender Verkehr ist erlaubt.",
       "firewallInactive": "UFW ist installiert, filtert aber nicht. Einschalten setzt deny incoming, allow outgoing, deny routed.",
-      "firewallMissing": "UFW ist nicht installiert. Das Firewall-Paket steht im Basis-Manifest und wird nicht aus den Einstellungen gesetzt.",
-      "recordAudio": "Nutzt das Standard-Pulse-Mikrofon (keine Sink-Monitore). Ohne Mikrofon wird nur Video aufgenommen."
+      "firewallMissing": "UFW ist nicht installiert. Das Firewall-Paket steht im Basis-Manifest und wird nicht aus den Einstellungen gesetzt."
     },
     "hub": {
       "title": "Kurzbefehle",

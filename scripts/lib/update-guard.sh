@@ -40,6 +40,7 @@ update_guard_detach() {
         --unit="$UPDATE_UNIT" --description="ModernOS system update" \
         --property=StandardOutput="append:$out" --property=StandardError="append:$out" \
         --setenv=MODERN_UPDATE_UNIT=1 \
+        --setenv=MODERN_SNAPSHOT_ID="${MODERN_SNAPSHOT_ID:-}" \
         --setenv=PKEXEC_UID="${PKEXEC_UID:-}" --setenv=SUDO_UID="${SUDO_UID:-}" \
         -- systemd-inhibit --what=shutdown:sleep:idle --mode=block \
         --who=ModernOS --why="System update" "$@" &

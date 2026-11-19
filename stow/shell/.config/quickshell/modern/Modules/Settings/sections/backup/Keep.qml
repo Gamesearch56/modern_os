@@ -36,9 +36,13 @@ ColumnLayout {
         MSwitch {
             checked: root.pruneOn
             onToggled: (v) => {
-                ConfigWrite.set("backup.pruneEnabled", v);
+                const prev = root.pruneOn;
                 if (v)
-                    Snapshots.prune(root.keepCount);
+                    Snapshots.prune(root.keepCount, [{
+                        path: "backup.pruneEnabled",
+                        value: prev
+                    }], true);
+                ConfigWrite.set("backup.pruneEnabled", v);
             }
         }
     }
@@ -59,8 +63,11 @@ ColumnLayout {
             value: root.keepCount
             onSelected: (v) => {
                 const n = Number(v);
+                const prev = root.keepCount;
+                if (!(n >= 3 && n <= 20) || n === prev)
+                    return;
+                Snapshots.prune(n, [{ path: "backup.keepCount", value: prev }]);
                 ConfigWrite.set("backup.keepCount", n);
-                Snapshots.prune(n);
             }
         }
     }
@@ -68,5 +75,14 @@ ColumnLayout {
         key: "settings.hints.backupPrune"
         params: ({ n: root.keepCount })
         Layout.fillWidth: true
+    }
+
+    Connections {
+        target: Snapshots
+        function onReverted(entries) {
+            const list = entries || [];
+            for (let i = 0; i < list.length; i++)
+                ConfigWrite.set(list[i].path, list[i].value);
+        }
     }
 }

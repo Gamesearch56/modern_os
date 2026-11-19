@@ -19,10 +19,14 @@ Singleton {
     property string error: ""
     property var _queue: []
     property string _stderr: ""
+    // The module writes the new preference before pkexec. Hold the previous
+    // values so a cancelled password puts the control back.
+    property var _revert: []
 
     readonly property bool ready: root.status === "ready"
 
     signal restoreFinished()
+    signal reverted(var entries)
 
     Process {
         id: probeProc
@@ -68,11 +72,15 @@ Singleton {
         }
         onExited: (code) => {
             if (code !== 0) {
+                const rev = (root._revert || []).slice();
+                root._revert = [];
                 root._queue = [];
                 root.running = false;
                 root.mutating = "";
                 root.step = "";
                 root.error = root._stderr.length ? root._stderr : I18n.t("cli.snapshotFailed");
+                if (rev.length > 0)
+                    root.reverted(rev);
                 if (root.watching)
                     root.refresh();
                 return;
@@ -125,17 +133,22 @@ Singleton {
         root._start("create", [cmd], I18n.t("settings.backup.creating"));
     }
 
-    function prune(keep: var) {
-        if (!root.ready || root.running || !root.pruneOn())
-            return;
+    // force is for the switch turning on: config still says off until the
+    // write lands, but the prune is the privileged action that must succeed.
+    function prune(keep: var, revert: var, force: bool): bool {
+        if (!root.ready || root.running)
+            return false;
+        if (!force && !root.pruneOn())
+            return false;
         let n = Number(keep);
         if (!(n >= 3 && n <= 20))
             n = root.keepLimit();
-        if (root.items.length <= n)
-            return;
+        if ((root.items || []).length <= n)
+            return false;
         root._start("prune", [[
             "pkexec", Paths.script("snapper-gc.sh"), "prune", String(n)
-        ]], I18n.t("settings.backup.pruning"));
+        ]], I18n.t("settings.backup.pruning"), revert);
+        return true;
     }
 
     function clearAll() {
@@ -162,7 +175,7 @@ Singleton {
         root._start(n, [["pkexec", "/usr/bin/snapper", "-c", "root", "delete", n]], I18n.t("settings.snapshotDelete"));
     }
 
-    function _start(kind: string, cmds: var, step: string) {
+    function _start(kind: string, cmds: var, step: string, revert: var) {
         if (root.running || !Array.isArray(cmds) || cmds.length === 0)
             return;
         root.running = true;
@@ -170,12 +183,14 @@ Singleton {
         root.error = "";
         root._stderr = "";
         root.step = step || "";
+        root._revert = Array.isArray(revert) ? revert.slice() : [];
         root._queue = cmds;
         root._kick();
     }
 
     function _kick() {
         if (root._queue.length === 0) {
+            root._revert = [];
             const kind = root.mutating;
             root.running = false;
             root.mutating = "";

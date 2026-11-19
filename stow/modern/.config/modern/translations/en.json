@@ -437,8 +437,7 @@
     "done": "Done",
     "applications": {
       "web": "Web and accounts",
-      "files": "Files and system",
-      "hint": "Each row opens apps that fit that job."
+      "files": "Files and system"
     },
     "themeCreate": "New theme",
     "themeName": "Name (letters, numbers, dashes)",
@@ -844,9 +843,9 @@
     "hints": {
       "animations": "How long menus, the bar, and windows take to move. Off is instant.",
       "overlayMotion": "Fade in/out, zoom in on open / zoom out on close, or both.",
-      "wallpaperProvider": "Main website to get wallpapers.",
+      "wallpaperProvider": "The site opened from the wallpaper picker to fetch new pictures. Downloads from that site are added to your wallpapers.",
       "wallpaperColor": "Lightens surfaces, buttons, and icons with the wallpaper color. Higher is brighter.",
-      "wallpaperTransition": "How the new wallpaper appears. Grow, wipe, and wave animate across the screen.",
+      "wallpaperTransition": "How the desktop switches to a new wallpaper. The choice plays that animation once on the picture showing now.",
       "activeProfile": "Each card is a different palette matugen pulled from the current wallpaper.",
       "themeVariant": "How strongly wallpaper hues show. Each card is generated from the current wallpaper in the light or dark mode you picked.",
       "workspaceMode": "Dynamic opens a workspace on the display under the cursor; each bar shows only that display’s workspaces. Fixed keeps 1–5, 6–10, 11–15, … from left to right.",
@@ -871,10 +870,9 @@
       "gameOptimize": "Turns off extra window effects on the game so it can run smoother. Other windows keep their usual look.",
       "gameHdr": "Exports DXVK_HDR, ENABLE_HDR_WSI, and PROTON_ENABLE_HDR only for Battle.net/Proton games started via modern battlenet — not the whole desktop (that lags Steam and video). Turn HDR on under Displays. For Steam titles, add the same vars to launch options. Battle.net stays on XWayland.",
       "browserLight": "Vivaldi starts without a separate graphics process, and its windows skip blur and shadows. Turn this on when the browser takes several seconds to open on a slow processor. It applies the next time Vivaldi starts.",
-      "repeatRate": "How fast a held key types again.",
+      "repeatRate": "How many times a second a held key types again, once the delay has passed. A higher number types faster.",
       "repeatDelay": "Wait before a held key starts repeating.",
-      "numlockOnBoot": "Turns Num Lock on when Hyprland starts.",
-      "mouseWindow": "Drag a window edge to resize it. Super+left moves a window, Super+right resizes it. Right-click a window in Applications to float, fullscreen, split, or close. Super+K lists these under Mouse.",
+      "numlockOnBoot": "Turns Num Lock on when the system starts.",
       "autoSwitchBluetooth": "When headphones or a speaker connect over Bluetooth, sound switches to them. When they disconnect, it returns to the previous speaker.",
       "restoreGated": "Restores the system disk to this snapshot. Your home folder stays. A restart is required.",
       "preUpdateSnapshot": "Creates a Snapper snapshot of / before a system update so you can roll back.",
@@ -890,8 +888,7 @@
       "autologin": "After the next restart this account opens the desktop without a login prompt. Turning it off asks for a password again at boot.",
       "firewallActive": "Incoming connections are denied except the allow rules below. Outgoing traffic is allowed.",
       "firewallInactive": "UFW is installed but not filtering. Turning it on sets deny incoming, allow outgoing, deny routed.",
-      "firewallMissing": "UFW is not installed. The firewall package is in the base manifest and is not applied from Settings.",
-      "recordAudio": "Uses the default Pulse microphone (not sink monitors). If none is available, the recording is video-only."
+      "firewallMissing": "UFW is not installed. The firewall package is in the base manifest and is not applied from Settings."
     },
     "hub": {
       "title": "Shortcuts",

@@ -49,15 +49,20 @@ modern_update() {
         fi
     fi
 
-    # Ask for the password before the desktop release, not after it.
-    # A release-only update asks only if it turns out to need root.
-    # A boot repair asks even when no package is pending: the menu can
-    # be fixed from the kernel already on disk, with no network.
-    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ]; then
+    # Ask for the password before anything is logged. When snapper is
+    # installed, that same process takes the snapshot and only then
+    # says ready — a failure stops the update before the log moves.
+    # A boot repair asks even when no package is pending.
+    local snap_first=0
+    if [ "$boot_only" -eq 0 ] && _update_snap_wanted; then
+        snap_first=1
+    fi
+    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ] || [ "$snap_first" -eq 1 ]; then
         if [ -t 0 ]; then
             sudo -v || return 1
         else
             _update_gate_open "$plan" "$boot_only" || return 1
+            _update_gate_ensure_ready || return 1
         fi
     fi
 
@@ -73,19 +78,25 @@ modern_update() {
         fi
     fi
 
-    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ]; then
+    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ] \
+        || [ -n "${_UPDATE_GATE_FD:-}" ]; then
         if [ -t 0 ]; then
             _update_tty "$plan" "$boot_only" || return 1
         else
             [ -n "${_UPDATE_GATE_FD:-}" ] || _update_gate_open "$plan" "$boot_only" || return 1
-            if [ "$boot_repair" -eq 1 ] && [ "${pkgs:-0}" -eq 0 ] && [ ! -s "$plan" ]; then
-                _update_progress boot
-            elif [ "$(cfg backup.preUpdateSnapshot true)" = "true" ] && _update_snapper_ready; then
-                t cli.snapshotting
+            _update_gate_ensure_ready || return 1
+            if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ]; then
+                if [ "$boot_repair" -eq 1 ] && [ "${pkgs:-0}" -eq 0 ] && [ ! -s "$plan" ]; then
+                    _update_progress boot
+                fi
+                _update_progress system "${pkgs:-0}"
+                _update_gate_send go || rc=$?
+                [ "$rc" -eq 0 ] || return "$rc"
+            else
+                # Snapshot already finished and nothing else needs root.
+                _update_gate_send skip || rc=$?
+                [ "$rc" -eq 0 ] || return "$rc"
             fi
-            _update_progress system "${pkgs:-0}"
-            _update_gate_send go || rc=$?
-            [ "$rc" -eq 0 ] || return "$rc"
         fi
         rm -f "$plan"
     fi
@@ -123,11 +134,51 @@ _update_gate_open() {
     [ -z "${MODERN_UPDATE_PROGRESS:-}" ] || extra+=(--progress)
     ensure_polkit_agent || true
     fifo="$(mktemp -u "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/modern-update-gate.XXXXXX")"
+    local status
+    status="$(mktemp -u "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/modern-update-status.XXXXXX")"
+    _UPDATE_STATUS_FILE="$(mktemp "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/modern-update-ready.XXXXXX")"
+    _UPDATE_STATUS_FIFO="$status"
     mkfifo -m 0600 "$fifo" || return 1
+    mkfifo -m 0600 "$status" || return 1
+    extra+=(--status-fifo "$status")
+    # The reader blocks in open until the child writes "ready", which is
+    # after the password and, when snapper is installed, after the snapshot.
+    # Leave the fifo in place until that read finishes: unlinking it early
+    # makes the child create an ordinary file and the reader waits forever.
+    (
+        line=""
+        IFS= read -r line <"$status" || exit 1
+        printf '%s\n' "$line" >"$_UPDATE_STATUS_FILE"
+    ) &
+    _UPDATE_STATUS_READER=$!
     "${MODERN_PKEXEC:-pkexec}" "$SCRIPT_DIR/update-apply.sh" "$snap_flag" "${extra[@]}" <"$fifo" &
     _UPDATE_GATE_PID=$!
+    _UPDATE_READY=""
     exec {_UPDATE_GATE_FD}>"$fifo"
     rm -f "$fifo"
+}
+
+# Blocks until the privileged step has accepted the password and, when
+# snapper is installed, finished the snapshot. A cancelled prompt or a
+# failed snapshot returns before any progress is logged.
+_update_gate_ensure_ready() {
+    local line="" rc=0
+    [ -n "${_UPDATE_GATE_PID:-}" ] || return 0
+    [ -z "${_UPDATE_READY:-}" ] || return 0
+    [ -n "${_UPDATE_STATUS_READER:-}" ] || return 1
+    wait -n "$_UPDATE_STATUS_READER" "$_UPDATE_GATE_PID" || rc=$?
+    if kill -0 "$_UPDATE_STATUS_READER" 2>/dev/null; then
+        kill "$_UPDATE_STATUS_READER" 2>/dev/null || true
+        wait "$_UPDATE_STATUS_READER" 2>/dev/null || true
+        rm -f "${_UPDATE_STATUS_FIFO:-}" "${_UPDATE_STATUS_FILE:-}"
+        return "$rc"
+    fi
+    wait "$_UPDATE_STATUS_READER" 2>/dev/null || true
+    line="$(cat "${_UPDATE_STATUS_FILE:-}" 2>/dev/null || true)"
+    rm -f "${_UPDATE_STATUS_FIFO:-}" "${_UPDATE_STATUS_FILE:-}"
+    [ "$line" = ready ] || return 1
+    _UPDATE_READY=1
+    return 0
 }
 
 # Sends "go" or "skip" and returns the root step's exit status. A prompt
@@ -148,6 +199,12 @@ modern_update_notice() {
     [ -f "$marker" ] || return 0
     head -n1 "$marker"
     rm -f "$marker"
+}
+
+# True when this update should refuse to continue without a snapshot.
+_update_snap_wanted() {
+    [ "$(cfg backup.preUpdateSnapshot true)" = "true" ] || return 1
+    command -v snapper >/dev/null 2>&1
 }
 
 # A missing snapper must not look like a snapshot step. list-configs
@@ -179,8 +236,10 @@ _update_tty() {
             return 1
         }
         sudo "$SCRIPT_DIR/snapper-gc.sh" prune-from-config "$CFG" || true
-    elif [ "$(cfg backup.preUpdateSnapshot true)" = "true" ] && command -v snapper >/dev/null 2>&1; then
+    elif _update_snap_wanted; then
         t cli.snapperUnconfigured >&2 || true
+        t cli.snapshotFailed >&2 || true
+        return 1
     fi
     [ ! -s "$plan" ] || args+=(--root-plan "$plan")
     sudo "$SCRIPT_DIR/update-apply.sh" "${args[@]}" || return 1

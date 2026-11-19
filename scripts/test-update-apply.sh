@@ -51,6 +51,14 @@ printf '%s\n' "\$*" >>"$TMP/pkexec.log"
 [ -f "$TMP/desk-at-prompt" ] || git -C "$CLONE" describe --tags --exact-match >"$TMP/desk-at-prompt" 2>/dev/null
 rc="\$(cat "$TMP/pkexec-rc" 2>/dev/null || echo 0)"
 [ "\$rc" -eq 0 ] || exit "\$rc"
+prev=""
+status=""
+for a in "\$@"; do
+    [ "\$prev" = --status-fifo ] && status="\$a"
+    prev="\$a"
+done
+git -C "$CLONE" describe --tags --exact-match >"$TMP/tag-at-ready" 2>/dev/null || true
+[ -z "\$status" ] || printf 'ready\n' >"\$status"
 read -r go || go=""
 echo "\$go" >"$TMP/gate"
 [ "\$go" = go ] || exit 0
@@ -66,7 +74,12 @@ cat >"$BIN/reload" <<EOF
 [ -f "$TMP/pkexec.log" ] && echo after-root >"$TMP/reloaded" || echo before-root >"$TMP/reloaded"
 EOF
 chmod +x "$BIN"/* "$HOME/.local/bin/phylax"
-export PATH="$BIN:$PATH" MODERN_PKEXEC="$BIN/pkexec" MODERN_RELOAD_UI="$BIN/reload"
+# This machine may have snapper configured. Tests opt in by writing
+# $BIN/snapper; the host binary must not count as installed.
+mkdir -p "$TMP/masked-bin"
+ln -s /usr/bin/* /bin/* "$TMP/masked-bin/" 2>/dev/null || true
+rm -f "$TMP/masked-bin/snapper"
+export PATH="$BIN:$TMP/masked-bin" MODERN_PKEXEC="$BIN/pkexec" MODERN_RELOAD_UI="$BIN/reload"
 export MODERN_TEST_FIXTURE=1 MODERN_TEST_RUN_INSTALL=1 MODERN_DESKTOP_REPO="$CLONE" MODERN_DESKTOP_REMOTE="$REMOTE"
 
 PLAN="$XDG_STATE_HOME/modern/root-plan"
@@ -151,6 +164,37 @@ else
     err "update log claimed a snapper snapshot: $(cat "$TMP/out")"
 fi
 rm -f "$BIN/snapper"
+
+reset
+release v0.5.0 fifthpkg
+git_cfg -C "$CLONE" checkout -q --detach v0.4.0
+printf '#!/bin/sh\nprintf "root\\n"\nexit 0\n' >"$BIN/snapper"
+chmod +x "$BIN/snapper"
+echo 1 >"$TMP/pkexec-rc"
+export MODERN_UPDATE_PROGRESS=1
+if ! update && [ "$(git_cfg -C "$CLONE" describe --tags --exact-match)" = v0.4.0 ] \
+    && ! grep -q '@@progress desktop' "$TMP/out"; then
+    ok "a failed privileged step stops the update before it is logged"
+else
+    err "update continued before the snapshot could finish: $(cat "$TMP/out" 2>/dev/null)"
+fi
+unset MODERN_UPDATE_PROGRESS
+rm -f "$TMP/pkexec-rc" "$BIN/snapper"
+
+reset
+printf '#!/bin/sh\nprintf "root\\n"\nexit 0\n' >"$BIN/snapper"
+chmod +x "$BIN/snapper"
+export MODERN_UPDATE_PROGRESS=1
+if update && [ "$(cat "$TMP/tag-at-ready" 2>/dev/null)" = v0.4.0 ] \
+    && [ "$(git_cfg -C "$CLONE" describe --tags --exact-match)" = v0.5.0 ] \
+    && grep -q '@@progress desktop' "$TMP/out"; then
+    ok "with snapper installed, the release is logged only after the privileged step is ready"
+else
+    err "release was logged before ready: at=$(cat "$TMP/tag-at-ready" 2>/dev/null) $(cat "$TMP/out" 2>/dev/null)"
+fi
+unset MODERN_UPDATE_PROGRESS
+rm -f "$BIN/snapper"
+"$MODERN" update-notice >/dev/null || true
 
 reset
 if update && [ ! -e "$TMP/pkexec.log" ] && ! wait_reload; then

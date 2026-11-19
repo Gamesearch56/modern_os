@@ -18,9 +18,10 @@ PLAN=""
 PROGRESS=0
 WAIT=0
 BOOT_REPAIR=0
+STATUS_FIFO=""
 ARGS=("$@")
 usage() {
-    printf 'usage: update-apply.sh [--snapshot|--no-snapshot] [--root-plan FILE] [--progress] [--wait] [--boot-repair]\n' >&2
+    printf 'usage: update-apply.sh [--snapshot|--no-snapshot] [--root-plan FILE] [--progress] [--wait] [--status-fifo FILE] [--boot-repair]\n' >&2
 }
 # Stage markers for Services/UpdateProgress.qml. pacman's own messages
 # are translated, so the stages cannot be read from them.
@@ -37,6 +38,11 @@ while [ $# -gt 0 ]; do
             ;;
         --wait)
             WAIT=1
+            ;;
+        --status-fifo)
+            [ $# -ge 2 ] || { usage; exit 2; }
+            STATUS_FIFO="$2"
+            shift
             ;;
         --boot-repair)
             BOOT_REPAIR=1
@@ -66,7 +72,33 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+# Password is already accepted: pkexec does not start this script until
+# then. Take the snapshot before telling the caller it may log progress
+# or run the rest of the update. A failed snapshot stops here.
 if [ "$WAIT" -eq 1 ] && [ -z "${MODERN_UPDATE_UNIT:-}" ]; then
+    # shellcheck source=lib/update-guard.sh
+    source "$SCRIPT_DIR/lib/update-guard.sh"
+    # shellcheck source=../install/lib/kernel-boot.sh
+    source "$REPO_ROOT/install/lib/kernel-boot.sh"
+    if [ ! -s "$UPDATE_MARK" ] && [ "$SNAPSHOT" -eq 1 ] && [ "$BOOT_REPAIR" -eq 0 ] \
+        && command -v snapper >/dev/null 2>&1; then
+        progress snapshot
+        if ! snapper list-configs >/dev/null 2>&1 \
+            || ! snapper list-configs 2>/dev/null | grep -q root; then
+            printf 'update-apply: snapper is installed but has no root config\n' >&2
+            exit 1
+        fi
+        kernel_boot_prepare
+        update_guard_esp_backup \
+            || printf 'update-apply: WARN could not copy /boot into the snapshot\n' >&2
+        snapper -c root create --description "ModernOS Update"
+        MODERN_SNAPSHOT_ID="$(update_guard_last_snapshot)"
+        [ -n "${MODERN_SNAPSHOT_ID:-}" ] || exit 1
+        export MODERN_SNAPSHOT_ID
+    fi
+    if [ -n "$STATUS_FIFO" ]; then
+        printf 'ready\n' >"$STATUS_FIFO"
+    fi
     go=""
     read -r go || true
     [ "$go" = go ] || exit 0
@@ -124,27 +156,33 @@ if [ "$BOOT_REPAIR" -eq 1 ] && [ "$REPAIR" -eq 0 ] \
     exit 0
 fi
 
-# Snapshot after the heal. A restore must bring back a kernel that
-# matches the modules, including the recovery copy just taken.
-progress snapshot
-if [ "$SNAPSHOT" -eq 1 ] && [ "$REPAIR" -eq 0 ]; then
-    if command -v snapper >/dev/null 2>&1 \
-        && snapper list-configs >/dev/null 2>&1 \
-        && snapper list-configs 2>/dev/null | grep -q root; then
-        update_guard_esp_backup || printf 'update-apply: WARN could not copy /boot into the snapshot\n' >&2
-        snapper -c root create --description "ModernOS Update"
-        snap="$(update_guard_last_snapshot)"
-        uid="${PKEXEC_UID:-${SUDO_UID:-}}"
-        home=""
-        if [ -n "$uid" ]; then
-            home="$(getent passwd "$uid" | cut -d: -f6 || true)"
-        fi
-        cfg=""
-        if [ -n "$home" ]; then
-            cfg="$home/.config/modern/config.json"
-        fi
-        "$SCRIPT_DIR/snapper-gc.sh" prune-from-config "$cfg" || true
+# The --wait process already took the snapshot before it said ready.
+# This path is the system service, and a direct run that did not wait.
+snap="${MODERN_SNAPSHOT_ID:-}"
+if [ -z "$snap" ] && [ "$SNAPSHOT" -eq 1 ] && [ "$REPAIR" -eq 0 ] && [ "$BOOT_REPAIR" -eq 0 ] \
+    && command -v snapper >/dev/null 2>&1; then
+    progress snapshot
+    if ! snapper list-configs >/dev/null 2>&1 \
+        || ! snapper list-configs 2>/dev/null | grep -q root; then
+        printf 'update-apply: snapper is installed but has no root config\n' >&2
+        exit 1
     fi
+    update_guard_esp_backup || printf 'update-apply: WARN could not copy /boot into the snapshot\n' >&2
+    snapper -c root create --description "ModernOS Update"
+    snap="$(update_guard_last_snapshot)"
+    [ -n "$snap" ] || exit 1
+fi
+if [ -n "$snap" ]; then
+    uid="${PKEXEC_UID:-${SUDO_UID:-}}"
+    home=""
+    if [ -n "$uid" ]; then
+        home="$(getent passwd "$uid" | cut -d: -f6 || true)"
+    fi
+    cfg=""
+    if [ -n "$home" ]; then
+        cfg="$home/.config/modern/config.json"
+    fi
+    "$SCRIPT_DIR/snapper-gc.sh" prune-from-config "$cfg" || true
 fi
 
 mkdir -p "$(dirname "$UPDATE_MARK")"
