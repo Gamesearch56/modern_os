@@ -431,10 +431,34 @@ kernel_boot_oneshot() {
     "$bin" set-oneshot "$entry"
 }
 
+# Written only after the installed kernel has reached userspace.
+# The installer must not create this: the first menu would then
+# highlight "ModernOS (recovery)".
+kernel_boot_confirmed_file() {
+    printf '%s/var/lib/modern/boot-confirmed\n' "$(kernel_boot_root)"
+}
+
+kernel_boot_has_confirmed() {
+    [ -s "$(kernel_boot_confirmed_file)" ]
+}
+
+kernel_boot_mark_confirmed() {
+    local dest
+    dest="$(kernel_boot_confirmed_file)"
+    install -d -m 0755 "$(dirname "$dest")"
+    printf '%s\n' "$(kernel_boot_boot_id)" >"$dest"
+    chmod 0644 "$dest"
+}
+
+# After a proven boot, try a new kernel once and leave recovery selected
+# if that boot never reaches userspace. A fresh install has no proven
+# boot, so the menu starts on ModernOS.
 kernel_boot_arm() {
     local root="$1" boot
     boot="$root/boot"
-    if [ -f "$boot/loader/entries/modern-keep.conf" ] && kernel_boot_oneshot "$root" modern.conf; then
+    if kernel_boot_has_confirmed \
+        && [ -f "$boot/loader/entries/modern-keep.conf" ] \
+        && kernel_boot_oneshot "$root" modern.conf; then
         kernel_boot_set_default "$boot" modern-keep.conf
         kernel_boot_note "next boot tries the new kernel once"
         return 0
@@ -453,6 +477,7 @@ kernel_boot_confirm() {
     [ -f "$root/boot/loader/entries/modern.conf" ] || return 0
     [ -f "$root/boot/loader/loader.conf" ] || return 0
     kernel_boot_set_default "$root/boot" modern.conf
+    kernel_boot_mark_confirmed
     kernel_boot_note "boot menu keeps /vmlinuz-linux-zen"
 }
 

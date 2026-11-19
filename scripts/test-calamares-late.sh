@@ -86,6 +86,72 @@ fi
 rm -rf "$pin_fix"
 unset -f log curl log_info log_warn ge_proton_ensure overlay_pin_ge_proton
 
+if grep -F 'overlay_pin_kernel_boot' "$LATE" >/dev/null \
+    && grep -F 'kernel_boot_has_confirmed' "$LATE" >/dev/null \
+    && grep -F 'install/lib/kernel-boot.sh' "$LATE" >/dev/null; then
+    ok "an older install pin is patched so ModernOS is the boot default"
+else
+    err "desktop phase must patch an older kernel-boot so recovery is not the default"
+fi
+pin_boot="$(mktemp -d)"
+mkdir -p "$pin_boot/install/lib" "$pin_boot/boot/loader/entries" "$pin_boot/var/lib/modern"
+cat >"$pin_boot/install/lib/kernel-boot.sh" <<'EOF'
+kernel_boot_root() { printf '%s\n' "${KERNEL_BOOT_ROOT:-}"; }
+kernel_boot_boot_id() { printf '%s\n' "test-boot"; }
+kernel_boot_note() { :; }
+kernel_boot_set_default() {
+    local boot="$1" entry="$2" conf
+    conf="$boot/loader/loader.conf"
+    printf 'default %s\n' "$entry" >"$conf"
+}
+kernel_boot_oneshot() { printf '%s\n' "oneshot $2" >>"${KERNEL_BOOT_ONESHOT_LOG:?}"; }
+kernel_boot_arm() {
+    local root="$1" boot
+    boot="$root/boot"
+    if [ -f "$boot/loader/entries/modern-keep.conf" ] && kernel_boot_oneshot "$root" modern.conf; then
+        kernel_boot_set_default "$boot" modern-keep.conf
+        kernel_boot_note "next boot tries the new kernel once"
+        return 0
+    fi
+    kernel_boot_set_default "$boot" modern.conf
+}
+kernel_boot_confirm() {
+    kernel_boot_set_default "$root/boot" modern.conf
+    kernel_boot_note "boot menu keeps /vmlinuz-linux-zen"
+}
+EOF
+# shellcheck disable=SC2329
+log() { :; }
+# shellcheck disable=SC2034
+REPO="$pin_boot"
+eval "$(sed -n '/^overlay_pin_kernel_boot() {$/,/^}$/p' "$LATE")"
+overlay_pin_kernel_boot
+# shellcheck disable=SC1091
+source "$pin_boot/install/lib/kernel-boot.sh"
+: >"$pin_boot/boot/loader/entries/modern-keep.conf"
+printf 'timeout 5\n' >"$pin_boot/boot/loader/loader.conf"
+export KERNEL_BOOT_ROOT="$pin_boot" KERNEL_BOOT_ONESHOT_LOG="$pin_boot/oneshot.log"
+: >"$KERNEL_BOOT_ONESHOT_LOG"
+kernel_boot_arm "$pin_boot"
+if grep -qx 'default modern.conf' "$pin_boot/boot/loader/loader.conf" \
+    && [ ! -s "$KERNEL_BOOT_ONESHOT_LOG" ]; then
+    ok "patched pin selects ModernOS on a first install"
+else
+    err "patched pin still defaults to recovery: $(cat "$pin_boot/boot/loader/loader.conf")"
+fi
+printf 'proven\n' >"$pin_boot/var/lib/modern/boot-confirmed"
+kernel_boot_arm "$pin_boot"
+if grep -qx 'default modern-keep.conf' "$pin_boot/boot/loader/loader.conf" \
+    && grep -qx 'oneshot modern.conf' "$KERNEL_BOOT_ONESHOT_LOG" \
+    && grep -qF 'kernel_boot_mark_confirmed' "$pin_boot/install/lib/kernel-boot.sh"; then
+    ok "patched pin still falls back to recovery after a proven boot"
+else
+    err "patched pin lost the recovery fallback"
+fi
+rm -rf "$pin_boot"
+unset -f log kernel_boot_root kernel_boot_boot_id kernel_boot_note kernel_boot_set_default kernel_boot_oneshot kernel_boot_arm kernel_boot_confirm kernel_boot_confirmed_file kernel_boot_has_confirmed kernel_boot_mark_confirmed overlay_pin_kernel_boot
+unset KERNEL_BOOT_ROOT KERNEL_BOOT_ONESHOT_LOG
+
 PROVISION="$ROOT/install/system/provision-iso.sh"
 GREETD_LIB="$ROOT/install/lib/greetd.sh"
 if grep -F 'zram-generator.conf' "$PROVISION" >/dev/null \

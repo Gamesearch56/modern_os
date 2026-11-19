@@ -315,6 +315,16 @@ chmod +x "$TMP/bootctl"
 export KERNEL_BOOT_BOOTCTL="$TMP/bootctl" KERNEL_BOOT_BOOTCTL_LOG="$TMP/bootctl.log"
 : >"$KERNEL_BOOT_BOOTCTL_LOG"
 kernel_boot_reconcile
+if [ ! -s "$KERNEL_BOOT_BOOTCTL_LOG" ] \
+    && grep -qx 'default modern.conf' "$TMP/boot/loader/loader.conf" \
+    && grep -q 'timeout 5' "$TMP/boot/loader/loader.conf"; then
+    ok "a fresh install selects ModernOS, not the recovery entry"
+else
+    err "install left the recovery entry selected: $(cat "$TMP/boot/loader/loader.conf" "$KERNEL_BOOT_BOOTCTL_LOG")"
+fi
+printf '%s\n' "proven-boot" >"$TMP/var/lib/modern/boot-confirmed"
+: >"$KERNEL_BOOT_BOOTCTL_LOG"
+kernel_boot_reconcile
 if [ "$(cat "$KERNEL_BOOT_BOOTCTL_LOG")" = "set-oneshot modern.conf" ] \
     && grep -qx 'default modern-keep.conf' "$TMP/boot/loader/loader.conf" \
     && grep -q 'timeout 5' "$TMP/boot/loader/loader.conf"; then
