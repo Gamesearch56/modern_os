@@ -1,6 +1,7 @@
 Model 1.0 Model.qml
 Install 1.0 Install.qml
 Gemini 1.0 Gemini.qml
+ChatGpt 1.0 ChatGpt.qml
 Library 1.0 Library.qml
 Tune 1.0 Tune.qml
 BraveKey 1.0 BraveKey.qml

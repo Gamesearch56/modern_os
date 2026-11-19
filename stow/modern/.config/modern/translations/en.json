@@ -188,6 +188,7 @@
     "empty": "No messages yet",
     "hint": "Ask a question. Replies come from the local Ollama model.",
     "hintGemini": "Ask a question. Replies come from Gemini.",
+    "hintChatGpt": "Ask a question. Replies come from ChatGPT.",
     "needSetup": "The assistant has to be set up",
     "setup": "Set up assistant",
     "settings": "Assistant settings",
@@ -205,6 +206,8 @@
     "errorTooLong": "That message is too long.",
     "errorGeminiAuth": "That Google AI key was rejected. Create a new key in Google AI Studio.",
     "errorGeminiModel": "That Gemini model is not available. Pick another in Settings → AI.",
+    "errorChatGptAuth": "That ChatGPT key was rejected. Create a new key on the OpenAI platform.",
+    "errorChatGptModel": "That ChatGPT model is not available. Pick another in Settings → AI.",
     "errorNoModel": "Pick a model in Settings → AI.",
     "stop": "Stop",
     "stopped": "Stopped.",
@@ -716,6 +719,7 @@
     "btOff": "Off",
     "aiOllama": "Ollama",
     "aiGemini": "Gemini",
+    "aiChatGpt": "ChatGPT",
     "aiNone": "Off",
     "gemini": {
       "connected": "Google AI is connected.",
@@ -725,6 +729,15 @@
       "signOut": "Sign out",
       "openStudio": "Get API key",
       "noModels": "No Gemini models yet"
+    },
+    "chatgpt": {
+      "connected": "ChatGPT is connected.",
+      "needKey": "Paste an API key from the ChatGPT account.",
+      "keyPlaceholder": "API key",
+      "connect": "Connect",
+      "signOut": "Sign out",
+      "openKeys": "Get API key",
+      "noModels": "No ChatGPT models yet"
     },
     "brave": {
       "keyPlaceholder": "Paste the key here",
@@ -853,6 +866,8 @@
       "aiLibrary": "Search the library, then install a model or delete one you no longer use.",
       "geminiAccount": "Sign in at Google AI Studio with the Google account that has Gemini, then paste an API key. Gemini Pro quota follows that account.",
       "geminiModel": "Used by the bar assistant when Gemini is selected.",
+      "chatgptAccount": "Sign in at the OpenAI platform with the ChatGPT account, then paste an API key. The assistant uses that key.",
+      "chatgptModel": "Used by the bar assistant when ChatGPT is selected.",
       "audioDevices": "The highlighted device is the default. Click another to send sound there.",
       "windowRulesJson": "JSON array of Hyprland window rules. Save validates before writing.",
       "gameFullscreen": "Forces exclusive fullscreen as soon as the game window appears, instead of waiting for the engine to request it.",

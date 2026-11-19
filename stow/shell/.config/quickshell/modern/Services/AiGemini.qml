@@ -46,6 +46,8 @@ Item {
     function openStudio() { account.openStudio(); }
     function modelChoices(): var { return account.modelChoices(); }
     function resolveModel(want: string): string { return account.resolveModel(want); }
+    function selectedModel(): string { return String(Config.accounts?.ai?.geminiModel || "").trim(); }
+    function modelError(): string { return I18n.t("ai.errorGeminiModel"); }
 
     function start(model: string, messages: var) {
         const safe = root._safeModel(model);

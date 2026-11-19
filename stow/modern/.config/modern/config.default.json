@@ -236,6 +236,7 @@
       "provider": "none",
       "ollamaModel": "llama3",
       "geminiModel": "",
+      "chatgptModel": "",
       "thinking": false,
       "brief": true
     }

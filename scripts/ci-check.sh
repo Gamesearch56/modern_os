@@ -145,6 +145,8 @@ log "ollama fit"
 "$ROOT/scripts/test-ollama-fit.sh"
 log "brave search"
 "$ROOT/scripts/test-brave-search.sh"
+log "chatgpt api"
+"$ROOT/scripts/test-chatgpt-api.sh"
 log "theme seed"
 "$ROOT/scripts/test-theme-seed.sh"
 

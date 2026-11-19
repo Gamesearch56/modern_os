@@ -188,6 +188,7 @@
     "empty": "Noch keine Nachrichten",
     "hint": "Stell eine Frage. Antworten kommen vom lokalen Ollama-Modell.",
     "hintGemini": "Stell eine Frage. Antworten kommen von Gemini.",
+    "hintChatGpt": "Stell eine Frage. Antworten kommen von ChatGPT.",
     "needSetup": "Der Assistent muss eingerichtet werden",
     "setup": "Assistent einrichten",
     "settings": "Assistent-Einstellungen",
@@ -205,6 +206,8 @@
     "errorTooLong": "Die Nachricht ist zu lang.",
     "errorGeminiAuth": "Dieser Google-AI-Schlüssel wurde abgelehnt. In Google AI Studio einen neuen Schlüssel erzeugen.",
     "errorGeminiModel": "Dieses Gemini-Modell ist nicht verfügbar. Unter Einstellungen → KI ein anderes wählen.",
+    "errorChatGptAuth": "Dieser ChatGPT-Schlüssel wurde abgelehnt. Auf der OpenAI-Plattform einen neuen Schlüssel erzeugen.",
+    "errorChatGptModel": "Dieses ChatGPT-Modell ist nicht verfügbar. Unter Einstellungen → KI ein anderes wählen.",
     "errorNoModel": "Unter Einstellungen → KI ein Modell wählen.",
     "stop": "Stopp",
     "stopped": "Abgebrochen.",
@@ -716,6 +719,7 @@
     "btOff": "Aus",
     "aiOllama": "Ollama",
     "aiGemini": "Gemini",
+    "aiChatGpt": "ChatGPT",
     "aiNone": "Aus",
     "gemini": {
       "connected": "Google AI ist verbunden.",
@@ -725,6 +729,15 @@
       "signOut": "Abmelden",
       "openStudio": "API-Schlüssel holen",
       "noModels": "Noch keine Gemini-Modelle"
+    },
+    "chatgpt": {
+      "connected": "ChatGPT ist verbunden.",
+      "needKey": "API-Schlüssel des ChatGPT-Kontos einfügen.",
+      "keyPlaceholder": "API-Schlüssel",
+      "connect": "Verbinden",
+      "signOut": "Abmelden",
+      "openKeys": "API-Schlüssel holen",
+      "noModels": "Noch keine ChatGPT-Modelle"
     },
     "brave": {
       "keyPlaceholder": "Schlüssel hier einfügen",
@@ -853,6 +866,8 @@
       "aiLibrary": "Bibliothek durchsuchen, dann ein Modell installieren oder eines löschen, das nicht mehr gebraucht wird.",
       "geminiAccount": "In Google AI Studio mit dem Google-Konto anmelden, das Gemini hat, dann einen API-Schlüssel einfügen. Das Gemini-Pro-Kontingent folgt diesem Konto.",
       "geminiModel": "Nutzt der Leisten-Assistent, wenn Gemini gewählt ist.",
+      "chatgptAccount": "Auf der OpenAI-Plattform mit dem ChatGPT-Konto anmelden, dann einen API-Schlüssel einfügen. Der Assistent nutzt diesen Schlüssel.",
+      "chatgptModel": "Nutzt der Leisten-Assistent, wenn ChatGPT gewählt ist.",
       "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken.",
       "windowRulesJson": "JSON-Array der Hyprland-Fensterregeln. Speichern prüft vor dem Schreiben.",
       "gameFullscreen": "Erzwingt exklusives Vollbild, sobald das Spielfenster erscheint, statt auf die Anfrage der Engine zu warten.",

@@ -47,6 +47,9 @@ AiChat 1.0 AiChat.qml
 AiStore 1.0 AiStore.qml
 AiGemini 1.0 AiGemini.qml
 AiGeminiAccount 1.0 AiGeminiAccount.qml
+AiChatGpt 1.0 AiChatGpt.qml
+AiChatGptAccount 1.0 AiChatGptAccount.qml
+AiFocus 1.0 AiFocus.qml
 singleton Wallpaper 1.0 Wallpaper.qml
 WallpaperThumbs 1.0 WallpaperThumbs.qml
 singleton FilePreview 1.0 FilePreview.qml
