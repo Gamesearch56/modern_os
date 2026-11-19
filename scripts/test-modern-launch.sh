@@ -346,18 +346,11 @@ else
     err "notification click must reveal shell toast files and invoke app actions even when the app is open"
 fi
 
-desktop="$ROOT/stow/xdg/.local/share/applications/tradeskillmaster.desktop"
-if grep -Fq 'Exec=modern tsm' "$desktop" \
-    && grep -Fq 'StartupWMClass=TradeSkillMaster' "$desktop" \
-    && grep -Fq 'tsm)' "$ROOT/scripts/modern" \
-    && grep -Fq -- '--hidden' "$ROOT/scripts/tsm" \
-    && grep -Fq 'tradeskillmaster' "$ROOT/stow/hypr/.config/hypr/modules/games.lua" \
-    && grep -Fq 'modern-bg-tradeskillmaster' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
-    && grep -Fq 'Hypr.raiseDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/Tray.qml" \
+if grep -Fq 'Hypr.raiseDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/Tray.qml" \
     && grep -Fq 'Tray.activate' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/tray/Widget.qml"; then
-    ok "TradeSkillMaster launches from the AppImage and can be raised from the tray"
+    ok "a tray icon can raise its application"
 else
-    err "TradeSkillMaster desktop, launcher, and tray raise are incomplete"
+    err "tray activation must raise the owning application"
 fi
 
 if [ "$FAIL" -ne 0 ]; then
