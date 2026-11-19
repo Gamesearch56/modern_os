@@ -113,12 +113,13 @@ Per-user state stays in `$XDG_STATE_HOME/modern/` and
 
 | Surface | Owner | Notes |
 |---------|--------|------|
-| Plymouth splash | gated theme + mkinitcpio hook | `plymouth-sync.sh`; never rewrite initramfs from `install.sh` |
+| Plymouth splash | gated theme + mkinitcpio hook | Solid installer colors, a large ModernOS word, and a spinner under it. A system update and `provision-iso.sh` enable it. The initramfs is rebuilt only when the theme or the hook changed. Palette generation and wallpaper changes do not. |
 | greetd greeter | `stow/greeter` + `install/system/greetd/` | Applied by `install.sh` on a real user home (`install/lib/greetd.sh`). tty1 `.bash_profile` is the fallback if greetd is down. |
 | lock screen | `Modules/Session` + `WlSessionLock` | Power menu, idle, and lid run `qs -c modern ipc call session lock`. One `WlSessionLockSurface` per output; `Session.password` is shared. Unlock is PAM (`system-auth`) for the session user, then `loginctl unlock-session`. Backdrop is the synced blur plus `design.transparency`. |
 
 `config.json` → `design.bootScreen` chooses whether the current wallpaper
-is shown on splash/lock/login.
+is shown on the lock screen and the login screen. The boot splash stays
+the solid installer colors.
 
 ## Portals
 

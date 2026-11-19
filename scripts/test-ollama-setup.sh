@@ -85,16 +85,18 @@ fi
 
 if grep -Fq 'ensure_polkit_agent' "$INSTALL_SH" \
     && grep -Fq 'ensure_polkit_agent' "$ACTIVATE" \
-    && grep -Fq 'ollama-install.sh' "$SETUP" \
+    && ! grep -Fq 'ollama-install.sh' "$SETUP" \
     && grep -Fq 'ollama-activate.sh' "$SETUP" \
     && grep -Fq 'ollama-pull.sh' "$SETUP" \
     && grep -Fq 'qwen3:4b' "$SETUP" \
+    && grep -Fq 'JobOverlay' "$INSTALL" \
     && grep -Fq 'settings.ollama.installPackage' "$INSTALL" \
-    && ! grep -Fq 'Store.showPackage' "$INSTALL" \
+    && grep -Fq 'Store.showPackage("ollama")' "$INSTALL" \
+    && ! grep -Fq 'step3Title' "$INSTALL" \
     && ! grep -Fq 'step1Cmd' "$INSTALL"; then
-    ok "settings installs, starts, and downloads without a terminal command"
+    ok "settings opens the store, then starts and downloads in a dialog"
 else
-    err "settings path still leaves install or startup to a terminal"
+    err "settings path still installs from the page or hides the download"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

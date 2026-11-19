@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../../../../Commons"
 import "../../../../Widgets"
 import "../../../../Services"
+import "."
 
 ColumnLayout {
     id: root
@@ -11,21 +12,11 @@ ColumnLayout {
 
     readonly property bool setupBusy: setup.setupBusy
 
-    readonly property int focusStep: {
-        if (!Ai.installed)
-            return 0;
-        if (!Ai.running)
-            return 1;
-        if ((Ai.models || []).length === 0)
-            return 2;
-        return 3;
-    }
+    readonly property int focusStep: Ai.installed ? 1 : 0
 
     readonly property var steps: [
         { titleKey: "settings.ollama.step1Title", bodyKey: "settings.ollama.step1" },
-        { titleKey: "settings.ollama.step2Title", bodyKey: "settings.ollama.step2" },
-        { titleKey: "settings.ollama.step3Title", bodyKey: "settings.ollama.step3" },
-        { titleKey: "settings.ollama.step4Title", bodyKey: "settings.ollama.step4" }
+        { titleKey: "settings.ollama.step2Title", bodyKey: "settings.ollama.step2" }
     ]
 
     AiStatus {
@@ -120,8 +111,7 @@ ColumnLayout {
                         kind: "filled"
                         key: "settings.ollama.installPackage"
                         Layout.topMargin: Tokens.spacing.sm
-                        busy: root.setupBusy
-                        onClicked: setup.startSetup()
+                        onClicked: Store.showPackage("ollama")
                     }
                     MButton {
                         visible: step.index === 1 && Ai.installed
@@ -139,5 +129,15 @@ ColumnLayout {
                 }
             }
         }
+    }
+
+    JobOverlay {
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        action: setup.jobAction
+        name: setup.jobName
+        log: setup.jobLog
+        state: setup.jobState
+        onDismiss: setup.dismissJob()
     }
 }

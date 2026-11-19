@@ -743,25 +743,22 @@
       "keyPlaceholder": "Paste the key here",
       "save": "Save",
       "remove": "Remove",
+      "getKey": "Get API key",
       "saved": "A key is saved."
     },
     "ollama": {
       "install": "Set up Ollama",
-      "statusMissing": "Install Ollama with the button on step 1.",
+      "statusMissing": "Install Ollama from the App Store with the button on step 1.",
       "statusStopped": "Ollama is installed. Start it with the button on step 2.",
       "noModels": "No models yet",
       "step1Title": "Install Ollama",
       "installPackage": "Install Ollama",
       "setup": "Start and download model",
-      "setupWorking": "Installing, starting, and downloading the model. This can take a few minutes.",
+      "setupWorking": "Starting Ollama and downloading the model. This can take a few minutes.",
       "setupFailed": "That did not finish. Try the button again.",
-      "step1": "Installs Ollama on this computer. The password prompt confirms it.",
+      "step1": "Opens Ollama in the App Store.",
       "step2Title": "Start the service",
       "step2": "Starts Ollama and downloads a small model for everyday chat.",
-      "step3Title": "Download a model",
-      "step3": "Other models can be added or removed in the list above.",
-      "step4Title": "Turn the assistant on",
-      "step4": "Choose a model above, then open Assistant on the bar.",
       "search": "Search models",
       "installModel": "Install",
       "deleteModel": "Delete",
@@ -1522,13 +1519,6 @@
     "downloadFailed": "Could not download the Battle.net installer. Check your internet connection and try again.",
     "noRunner": "Battle.net needs the umu-launcher package or Steam's Proton. Install umu-launcher, then try again.",
     "crashed": "Battle.net closed right after starting. Details are in %s."
-  },
-  "wow": {
-    "title": "WoW Forever",
-    "missing": "WoW Forever is not installed. Install it from Battle.net, then try again.",
-    "noRunner": "WoW Forever needs the umu-launcher package or Steam's Proton.",
-    "noGamescope": "WoW Forever HDR needs the gamescope package.",
-    "crashed": "WoW Forever closed right after starting. Details are in %s."
   },
   "bugReport": {
     "title": "Report a problem",

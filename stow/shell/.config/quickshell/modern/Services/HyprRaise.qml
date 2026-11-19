@@ -10,15 +10,21 @@ Item {
 
     property var windows: null
     property var _raiseEntry: null
+    property var _onMiss: null
 
     Process {
         id: raiseProc
         running: false
         command: ["true"]
         onExited: (exitCode) => {
-            if (exitCode !== 0 && root._raiseEntry && root._raiseEntry.execute)
-                root._raiseEntry.execute();
+            if (exitCode !== 0) {
+                if (root._raiseEntry && root._raiseEntry.execute)
+                    root._raiseEntry.execute();
+                else if (root._onMiss)
+                    root._onMiss();
+            }
             root._raiseEntry = null;
+            root._onMiss = null;
         }
     }
 
@@ -65,7 +71,7 @@ Item {
         return false;
     }
 
-    function raiseApp(desktopId: string, appName: string): bool {
+    function raiseApp(desktopId: string, appName: string, onMiss): bool {
         const hints = [desktopId, appName];
         const lookup = String(desktopId || appName || "").replace(/\.desktop$/i, "");
         if (lookup.length) {
@@ -84,7 +90,21 @@ Item {
             if (root.raiseDesktop(n))
                 return true;
         }
-        return false;
+        // Quickshell's toplevel list misses clients on special:background.
+        // Hyprland still has them; the script moves that one window here.
+        const stem = String(desktopId || appName || "").replace(/\.desktop$/i, "").trim();
+        if (!stem.length) {
+            if (onMiss)
+                onMiss();
+            return false;
+        }
+        if (raiseProc.running)
+            return true;
+        root._raiseEntry = null;
+        root._onMiss = onMiss || null;
+        raiseProc.command = [Paths.script("session-raise.sh"), stem];
+        raiseProc.running = true;
+        return true;
     }
 
     // Raise/park lifecycle is only for general.autostart (mail/calendar/

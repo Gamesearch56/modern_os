@@ -2,10 +2,11 @@
 # Parses the root plan install.sh writes for a terminal-less update
 # (see install/lib/pkg.sh defer_native). Source; needs pkg-name.sh.
 #
-# Sets ROOT_PLAN_PKGS (array) and ROOT_PLAN_GREETD (0/1). The plan sits
-# in the user's state dir and is read by root, so anything that is not a
-# plain package name is dropped rather than handed to pacman.
-# Callers read ROOT_PLAN_PKGS and ROOT_PLAN_GREETD; this file only writes them.
+# Sets ROOT_PLAN_PKGS (array), ROOT_PLAN_GREETD (0/1), and
+# ROOT_PLAN_SPLASH (0/1). The plan sits in the user's state dir and is
+# read by root, so anything that is not a plain package name or one of
+# those two steps is dropped rather than handed to pacman.
+# Callers read those variables; this file only writes them.
 # shellcheck disable=SC2034
 
 # Root (pkexec) must only read a plan the calling user owns, under that
@@ -42,6 +43,7 @@ read_root_plan() {
     local file="$1" kind name
     ROOT_PLAN_PKGS=()
     ROOT_PLAN_GREETD=0
+    ROOT_PLAN_SPLASH=0
     [ -s "$file" ] || return 0
     while read -r kind name _; do
         case "$kind" in
@@ -53,6 +55,7 @@ read_root_plan() {
                 fi
                 ;;
             greetd) ROOT_PLAN_GREETD=1 ;;
+            splash) ROOT_PLAN_SPLASH=1 ;;
         esac
     done <"$file"
 }

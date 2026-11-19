@@ -214,8 +214,8 @@ Wayland often white-screens on Hyprland, so the launcher keeps Wayland off.
 
 - `steam`, `gamemode`, `gamescope`, `umu-launcher` (`30-apps.txt`, every profile)
 - `lib32-gamemode` (`50-gaming.txt`)
-- `protonup-qt`, `wowup-cf-bin` (AUR). `protonup-qt` is for other titles;
-  do not register the private GE-Proton tree with Steam.
+- `protonup-qt` (AUR), for other titles. Do not register the private
+  GE-Proton tree with Steam.
 - AMD: `vulkan-radeon` + `lib32-vulkan-radeon` (RADV). Prefer RADV over
   `amdvlk` if both are installed (`AMD_VULKAN_ICD=RADV`).
 
@@ -297,20 +297,6 @@ differs; tighten the rule. WoW’s title must not match Battle.net.
   passes `--in-process-gpu` by default.
 - WoW: DirectX 12, exclusive fullscreen, match monitor refresh.
 - Optional stutter experiment only: `RADV_PERFTEST=gpl` (not default).
-
-### WowUp CF addons
-
-1. Launch WowUp CF (`wowup-cf-bin`).
-2. Point it at the retail AddOns folder, typically under the Steam Proton
-   prefix:
-
-   ```
-   …/compatdata/<id>/pfx/drive_c/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns
-   ```
-
-   Or the path you chose when installing WoW on SSD. Create
-   `Interface/AddOns` if missing.
-3. Install/update addons there; start WoW from Battle.net as usual.
 
 ### App manager
 

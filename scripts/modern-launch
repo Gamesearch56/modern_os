@@ -33,6 +33,10 @@ scheme_for_desktop() {
     for t in "${parts[@]}"; do
         t="${t// /}"
         case "$t" in
+            # http, https, and mailto are real navigations. Opening
+            # http://-/ is how a browser raise showed a blank page.
+            x-scheme-handler/http|x-scheme-handler/https|x-scheme-handler/mailto)
+                ;;
             x-scheme-handler/*)
                 printf '%s\n' "${t#x-scheme-handler/}"
                 return 0

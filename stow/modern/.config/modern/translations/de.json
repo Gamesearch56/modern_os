@@ -743,25 +743,22 @@
       "keyPlaceholder": "Schlüssel hier einfügen",
       "save": "Speichern",
       "remove": "Entfernen",
+      "getKey": "API-Schlüssel holen",
       "saved": "Ein Schlüssel ist gespeichert."
     },
     "ollama": {
       "install": "Ollama einrichten",
-      "statusMissing": "Ollama mit der Schaltfläche in Schritt 1 installieren.",
+      "statusMissing": "Ollama mit der Schaltfläche in Schritt 1 im App Store installieren.",
       "statusStopped": "Ollama ist installiert. Mit der Schaltfläche in Schritt 2 starten.",
       "noModels": "Noch keine Modelle",
       "step1Title": "Ollama installieren",
       "installPackage": "Ollama installieren",
       "setup": "Starten und Modell laden",
-      "setupWorking": "Ollama wird installiert, gestartet und das Modell geladen. Das kann ein paar Minuten dauern.",
+      "setupWorking": "Ollama wird gestartet und das Modell geladen. Das kann ein paar Minuten dauern.",
       "setupFailed": "Das wurde nicht fertig. Die Schaltfläche noch einmal versuchen.",
-      "step1": "Installiert Ollama auf diesem Computer. Die Passwortabfrage bestätigt das.",
+      "step1": "Öffnet Ollama im App Store.",
       "step2Title": "Dienst starten",
       "step2": "Startet Ollama und lädt ein kleines Modell für den täglichen Chat.",
-      "step3Title": "Modell herunterladen",
-      "step3": "Weitere Modelle lassen sich in der Liste oben hinzufügen oder entfernen.",
-      "step4Title": "Assistent einschalten",
-      "step4": "Oben ein Modell wählen, dann den Assistenten in der Leiste öffnen.",
       "search": "Modelle suchen",
       "installModel": "Installieren",
       "deleteModel": "Löschen",
@@ -1522,13 +1519,6 @@
     "downloadFailed": "Das Battle.net-Installationsprogramm konnte nicht geladen werden. Prüfe deine Internetverbindung und versuche es erneut.",
     "noRunner": "Battle.net braucht das Paket umu-launcher oder Steams Proton. Installiere umu-launcher und versuche es erneut.",
     "crashed": "Battle.net wurde direkt nach dem Start beendet. Details stehen in %s."
-  },
-  "wow": {
-    "title": "WoW Forever",
-    "missing": "WoW Forever ist nicht installiert. Installiere es über Battle.net und versuche es erneut.",
-    "noRunner": "WoW Forever braucht das Paket umu-launcher oder Steams Proton.",
-    "noGamescope": "HDR für WoW Forever braucht das Paket gamescope.",
-    "crashed": "WoW Forever wurde direkt nach dem Start beendet. Details stehen in %s."
   },
   "bugReport": {
     "title": "Problem melden",

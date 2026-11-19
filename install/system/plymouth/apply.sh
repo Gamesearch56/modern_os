@@ -1,0 +1,175 @@
+#!/usr/bin/env bash
+# Solid boot/shutdown splash. Sourced by provision-iso.sh, which rebuilds
+# the initramfs once after NVIDIA modules are staged. Run this file
+# directly to enable the splash on an already installed machine:
+#   sudo install/system/plymouth/apply.sh
+# Settings → Update runs the same function from the root plan.
+# theme-apply.sh and wallpaper-sync.sh must not call it. The initramfs
+# is rebuilt only when the theme or the hook actually changed.
+set -euo pipefail
+
+plymouth_repo() {
+    if [ -n "${PROVISION_ROOT:-}" ]; then
+        printf '%s\n' "$PROVISION_ROOT"
+        return 0
+    fi
+    cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd
+}
+
+# Drop a replaced flag, keep everything else (root=, NVIDIA modeset).
+plymouth_merge_options() {
+    local line="$1" word
+    local -a words=() keep=()
+    line="${line#options}"
+    read -ra words <<<"$line"
+    for word in "${words[@]+"${words[@]}"}"; do
+        case "$word" in
+            ""|loglevel=*|systemd.show_status=*|rd.udev.log_priority=*|vt.global_cursor_default=*)
+                continue ;;
+        esac
+        keep+=("$word")
+    done
+    local has_quiet=0 has_splash=0
+    for word in "${keep[@]+"${keep[@]}"}"; do
+        [ "$word" = quiet ] && has_quiet=1
+        [ "$word" = splash ] && has_splash=1
+    done
+    [ "$has_quiet" -eq 1 ] || keep=(quiet ${keep[@]+"${keep[@]}"})
+    [ "$has_splash" -eq 1 ] || keep+=(splash)
+    keep+=(loglevel=3 systemd.show_status=auto rd.udev.log_priority=3 vt.global_cursor_default=0)
+    printf '%s\n' "${keep[*]}"
+}
+
+plymouth_write_options_file() {
+    local file="$1" prefix="$2" current merged
+    [ -f "$file" ] || return 0
+    if [ -n "$prefix" ]; then
+        current="$(grep -E "^${prefix}" "$file" | head -n 1 || true)"
+    else
+        current="$(head -n 1 "$file" || true)"
+    fi
+    [ -n "$current" ] || return 0
+    merged="$(plymouth_merge_options "$current")"
+    local tmp
+    tmp="$(mktemp)"
+    if [ -n "$prefix" ]; then
+        awk -v repl="options ${merged}" '
+            BEGIN { done = 0 }
+            /^options[[:space:]]/ && !done { print repl; done = 1; next }
+            { print }
+        ' "$file" >"$tmp"
+    else
+        printf '%s\n' "$merged" >"$tmp"
+    fi
+    cat "$tmp" >"$file"
+    rm -f "$tmp"
+}
+
+plymouth_insert_hook() {
+    local file="$1" tmp
+    [ -f "$file" ] || return 1
+    grep -q '^HOOKS=(' "$file" || return 1
+    tmp="$(mktemp)"
+    awk '
+        function emit(parts, n, out, i) {
+            n = split(parts, a, /[[:space:]]+/)
+            out = ""
+            for (i = 1; i <= n; i++) {
+                if (a[i] == "" || a[i] == "plymouth")
+                    continue
+                out = out (out == "" ? "" : " ") a[i]
+                if (a[i] == "kms")
+                    out = out " plymouth"
+            }
+            if (out !~ /(^| )plymouth( |$)/) {
+                if (out ~ /(^| )block( |$)/)
+                    sub(/block/, "kms plymouth block", out)
+                else
+                    out = out (out == "" ? "" : " ") "plymouth"
+            }
+            return out
+        }
+        /^HOOKS=\(/ && !done {
+            line = $0
+            sub(/^HOOKS=\(/, "", line)
+            sub(/\).*/, "", line)
+            print "HOOKS=(" emit(line) ")"
+            done = 1
+            next
+        }
+        { print }
+    ' "$file" >"$tmp"
+    cat "$tmp" >"$file"
+    rm -f "$tmp"
+}
+
+plymouth_hooks_file() {
+    local root="$1" f last=""
+    if [ -d "${root%/}/etc/mkinitcpio.conf.d" ]; then
+        for f in "${root%/}/etc/mkinitcpio.conf.d"/*.conf; do
+            [ -f "$f" ] || continue
+            grep -q '^HOOKS=(' "$f" && last="$f"
+        done
+    fi
+    if [ -n "$last" ]; then
+        printf '%s\n' "$last"
+        return 0
+    fi
+    printf '%s\n' "${root%/}/etc/mkinitcpio.conf"
+}
+
+plymouth_apply() {
+    local root="${1:-/}"
+    local repo theme dest conf hooks entries ent
+    root="${root%/}"
+    [ -n "$root" ] || root="/"
+    repo="$(plymouth_repo)"
+    theme="$repo/install/system/plymouth/modern"
+    dest="$root/usr/share/plymouth/themes/modern"
+    plymouth_rebuild=0
+    [ -f "$theme/modern.script" ] || return 1
+    install -d -m 0755 "$dest" "$root/etc/plymouth" "$root/usr/share/plymouth/themes"
+    if ! cmp -s "$theme/modern.plymouth" "$dest/modern.plymouth" \
+        || ! cmp -s "$theme/modern.script" "$dest/modern.script"; then
+        install -m 0644 "$theme/modern.plymouth" "$theme/modern.script" "$dest/"
+        plymouth_rebuild=1
+    fi
+    ln -sfn modern/modern.plymouth "$root/usr/share/plymouth/themes/default.plymouth"
+    conf="$root/etc/plymouth/plymouthd.conf"
+    if [ -f "$conf" ] && grep -q '^Theme=' "$conf"; then
+        sed -i 's/^Theme=.*/Theme=modern/' "$conf"
+    elif [ -f "$conf" ] && grep -q '^\[Daemon\]' "$conf"; then
+        sed -i '/^\[Daemon\]/a Theme=modern' "$conf"
+    else
+        printf '[Daemon]\nTheme=modern\n' >"$conf"
+    fi
+    hooks="$(plymouth_hooks_file "$root")"
+    if ! grep -q 'kms plymouth' "$hooks"; then
+        plymouth_insert_hook "$hooks"
+        plymouth_rebuild=1
+    fi
+    if [ -f "$root/etc/kernel/cmdline" ]; then
+        plymouth_write_options_file "$root/etc/kernel/cmdline" ""
+    fi
+    entries="$root/boot/loader/entries"
+    if [ -d "$entries" ]; then
+        for ent in "$entries"/*.conf; do
+            [ -f "$ent" ] || continue
+            plymouth_write_options_file "$ent" "options"
+        done
+    fi
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+    [ "$(id -u)" -eq 0 ] || {
+        printf 'plymouth-apply: run as root\n' >&2
+        exit 1
+    }
+    if ! command -v plymouth >/dev/null 2>&1; then
+        pacman -S --needed --noconfirm plymouth
+    fi
+    plymouth_apply /
+    if [ "$plymouth_rebuild" -eq 1 ]; then
+        mkinitcpio -P
+    fi
+fi

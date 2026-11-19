@@ -1,24 +1,16 @@
-# Plymouth theme `modern` — staged only
+# Plymouth theme `modern`
 
-This directory is copied to `/usr/share/plymouth/themes/modern/` by an
-explicit operator step, never by `install.sh`. See `docs/ISOLATION.md`.
+Boot and shutdown use this solid surface, a large ModernOS word, and a
+ring of dots under it. The colors are the installer palette (`#141218`,
+`#D0BCFF`). There is no wallpaper in the theme, so a missing picture
+cannot break the initramfs. The script only calls functions the Plymouth
+script module actually has (`Image.Text`, `Sprite`, `Math`). `Image.Box`
+is not one of them, and a call it does not know leaves the screen black.
 
-Colors in `modern.script` are placeholders. `scripts/plymouth-sync.sh`
-reads `~/.config/modern/tokens.json` and writes a generated script using
-the current `surface` / `primary` tokens. Regenerating the splash is a
-theme-*profile* change (or Settings → Design "Sync boot screen"), not a
-wallpaper pick — the theme lives in the initramfs, so a live rewrite
-would mean `mkinitcpio -P` on every wallpaper change (docs/DECISIONS.md
-#13).
+`install/system/plymouth/apply.sh` copies these two files into place,
+adds the `plymouth` hook after `kms`, and appends the splash kernel
+line. `provision-iso.sh` and a system update source it. The initramfs
+is rebuilt only when the theme or the hook changed.
 
-`plymouth-sync.sh` never runs `mkinitcpio`. After copying the generated
-files into `/usr/share/plymouth/themes/modern/`, rebuild the initramfs
-yourself:
-
-```
-sudo cp -r install/system/plymouth/modern /usr/share/plymouth/themes/
-sudo plymouth-set-default-theme -R modern   # this *does* run mkinitcpio
-```
-
-Or copy the generated script from `$XDG_STATE_HOME/modern/plymouth/` over
-the staged `modern.script` and run `mkinitcpio -P` separately.
+`scripts/theme-apply.sh` and `scripts/wallpaper-sync.sh` do not call
+it. A palette or wallpaper change must stay a file write.

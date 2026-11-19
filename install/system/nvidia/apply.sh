@@ -25,7 +25,5 @@ nvidia_apply() {
     if [ -f "$mk" ] && ! grep -q 'nvidia_drm' "$mk"; then
         sed -i -E 's/^MODULES=\((.*)\)/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' "$mk"
     fi
-    if command -v mkinitcpio >/dev/null 2>&1; then
-        mkinitcpio -P
-    fi
+    # provision-iso.sh rebuilds the initramfs once, after the splash hook.
 }

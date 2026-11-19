@@ -228,7 +228,7 @@ local function addr_of(w)
 end
 
 -- Mode 2 covers the screen. Mode 1 is maximized: a windowed-fullscreen
--- game (WoW Forever's GxMaximize) asks for that, and the bar stays up.
+-- game (GxMaximize) asks for that, and the bar stays up.
 -- w.fullscreen is Hyprland's mode; fullscreen_client is the game's.
 local function mode_num(v)
     local n = tonumber(v)

@@ -403,24 +403,84 @@ Singleton {
         return String(s || "").toLowerCase().replace(/\.desktop$/i, "").replace(/[\s._-]+/g, "");
     }
 
-    function _appDesktopId(live): string {
-        const d = root._str(live.desktopEntry).replace(/\.desktop$/i, "");
-        if (d.length)
-            return d;
-        const name = root._str(live.appName);
+    function _browserId(id: string): bool {
+        const n = root._normApp(id);
+        return n === "vivaldi" || n === "vivaldistable" || n === "chromium"
+            || n === "brave" || n === "bravebrowser" || n.indexOf("googlechrome") !== -1;
+    }
+
+    function _desktopByName(name: string): string {
         const want = root._normApp(name);
-        if (!want.length || want === "modern")
+        if (!want.length || want === "modern" || root._browserId(want))
             return "";
         const heur = DesktopEntries.heuristicLookup(name);
-        if (heur)
-            return String(heur.id || heur.name || "").replace(/\.desktop$/i, "");
+        if (heur) {
+            const stem = String(heur.id || "").replace(/\.desktop$/i, "");
+            if (stem.length && !root._browserId(stem))
+                return stem;
+        }
         const entries = DesktopEntries.applications.values;
         for (let i = 0; i < entries.length; i++) {
             const e = entries[i];
             const stem = String(e.id || e.name || "").replace(/\.desktop$/i, "");
+            if (root._browserId(stem))
+                continue;
             if (root._normApp(e.name) === want || root._normApp(stem) === want)
                 return stem;
         }
+        return "";
+    }
+
+    function _hostOf(url: string): string {
+        const m = String(url || "").match(/^https?:\/\/([^\/"'<>\s]+)/i);
+        if (!m)
+            return "";
+        return m[1].toLowerCase().replace(/:\d+$/, "");
+    }
+
+    // Chromium puts the site on the first line, or in a class-shaped
+    // desktop entry (vivaldi-mail.proton.me__-Default). The browser's
+    // own desktop id is the http handler, and raising that opens http://-.
+    function _originHost(live): string {
+        const body = root._str(live.body);
+        const linked = body.match(/https?:\/\/[^\/"'<>\s]+/i);
+        if (linked)
+            return root._hostOf(linked[0]);
+        const d = root._str(live.desktopEntry);
+        const cls = d.match(/^(?:vivaldi|chrome|chromium|brave)-(.+?)__-/i);
+        return cls ? cls[1].toLowerCase() : "";
+    }
+
+    function _desktopForHost(host: string): string {
+        if (!host.length)
+            return "";
+        const entries = DesktopEntries.applications.values;
+        for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            const exec = String(e.execString || "");
+            const m = exec.match(/--app=https?:\/\/([^\/\s]+)/i);
+            if (!m || m[1].toLowerCase().replace(/:\d+$/, "") !== host)
+                continue;
+            const stem = String(e.id || "").replace(/\.desktop$/i, "");
+            if (stem.length && !root._browserId(stem))
+                return stem;
+        }
+        return "";
+    }
+
+    function _appDesktopId(live): string {
+        const byHost = root._desktopForHost(root._originHost(live));
+        if (byHost.length)
+            return byHost;
+        const byName = root._desktopByName(root._str(live.appName));
+        if (byName.length)
+            return byName;
+        const d = root._str(live.desktopEntry).replace(/\.desktop$/i, "");
+        if (d.length && !root._browserId(d))
+            return d;
+        const bySummary = root._desktopByName(root._str(live.summary));
+        if (bySummary.length)
+            return bySummary;
         return "";
     }
 
@@ -442,7 +502,14 @@ Singleton {
         // raising alone never opens the chat or mail the banner was about.
         const id = root._appDesktopId(live);
         const invoked = root.invokeDefault(live);
-        if (!Hypr.raiseApp(id, live.appName)) {
+        // A browser-named notification must not focus the browser window.
+        // The site's installed app is `id`.
+        const raiseName = root._browserId(live.appName) ? "" : root._str(live.appName);
+        // Raise after the action so the opened mail is on the window
+        // that then comes to this workspace. A miss starts the app only
+        // once Hyprland confirms it has no window, including one parked
+        // on the background workspace.
+        Hypr.raiseApp(id, raiseName, () => {
             if (id.length)
                 Apps.launchId(id);
             else if (!invoked) {
@@ -450,7 +517,7 @@ Singleton {
                 if (path.length)
                     Apps.openPath(path);
             }
-        }
+        });
         root.hide();
         root.dismiss(live);
         return true;

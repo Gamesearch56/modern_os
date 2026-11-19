@@ -1,6 +1,6 @@
 [Plymouth Theme]
 Name=modern
-Description=Material Design 3 boot splash for modern_dotfile. Colors come from tokens.json via scripts/plymouth-sync.sh — this file is the staged default, not applied until copied under /usr/share/plymouth/themes/.
+Description=Material Design 3 boot splash. Solid installer colors, a large ModernOS word, and a spinner. Copied into the initramfs by the plymouth hook.
 ModuleName=script
 
 [script]
