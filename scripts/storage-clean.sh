@@ -51,31 +51,58 @@ dir_bytes() {
     printf '%s\n' "$n"
 }
 
-# $1 = absolute directory that must already be a realpath under HOME/.cache/
-wipe_cache_dir() {
-    local dir="$1" before
-    [ -n "$dir" ] || return 0
-    [ -d "$dir" ] || return 0
-    [ ! -L "$dir" ] || return 0
-    case "$dir" in
-        "$HOME_DIR"/.cache/*) ;;
-        *) return 0 ;;
+# Resolved path of a real directory under this home's .cache, or empty.
+# A symlink anywhere in the path (including .cache itself) is refused,
+# so cleanup cannot follow a link out of the home directory.
+cache_real() {
+    local dir="$1" resolved cache_root
+    [ -n "$dir" ] || return 1
+    [ -d "$dir" ] || return 1
+    [ ! -L "$dir" ] || return 1
+    resolved="$(realpath -e "$dir" 2>/dev/null || true)"
+    cache_root="$(realpath -e "$HOME_DIR/.cache" 2>/dev/null || true)"
+    [ -n "$resolved" ] && [ -n "$cache_root" ] || return 1
+    [ "$cache_root" = "$HOME_DIR/.cache" ] || return 1
+    [ "$resolved" != "$cache_root" ] && [ "$resolved" != "$HOME_DIR" ] && [ "$resolved" != / ] || return 1
+    case "$resolved" in
+        "$cache_root"/*) printf '%s\n' "$resolved" ;;
+        *) return 1 ;;
     esac
-    before="$(dir_bytes "$dir")"
-    find "$dir" -xdev -mindepth 1 -delete 2>/dev/null || true
-    add_saved "$before"
+}
+
+# $1 = a cache directory. Only its contents go. The saved count is the
+# bytes that were actually removed.
+wipe_cache_dir() {
+    local resolved before after
+    resolved="$(cache_real "$1" 2>/dev/null || true)"
+    [ -n "$resolved" ] || return 0
+    before="$(dir_bytes "$resolved")"
+    find "$resolved" -xdev -mindepth 1 -delete 2>/dev/null || true
+    after="$(dir_bytes "$resolved")"
+    if [ "$after" -le "$before" ]; then
+        add_saved "$((before - after))"
+    fi
 }
 
 step() { printf 'step %s\n' "$1"; }
 
 step thumbnails
 wipe_cache_dir "$HOME_DIR/.cache/thumbnails"
+wipe_cache_dir "$HOME_DIR/.cache/modern/wallpaper-thumbs"
 
 step gpu
 wipe_cache_dir "$HOME_DIR/.cache/mesa_shader_cache"
 wipe_cache_dir "$HOME_DIR/.cache/mesa_shader_cache_db"
 wipe_cache_dir "$HOME_DIR/.cache/nvidia/GLCache"
 wipe_cache_dir "$HOME_DIR/.cache/nvidia/ComputeCache"
+wipe_cache_dir "$HOME_DIR/.cache/radv_builtin_shaders"
+if [ -d "$HOME_DIR/.cache" ] && [ ! -L "$HOME_DIR/.cache" ]; then
+    for _qt in "$HOME_DIR/.cache"/qtshadercache-*; do
+        [ -d "$_qt" ] || continue
+        wipe_cache_dir "$_qt"
+    done
+fi
+unset _qt
 
 step fonts
 wipe_cache_dir "$HOME_DIR/.cache/fontconfig"
@@ -100,7 +127,7 @@ fi
 
 step journal
 if [ "$FIXTURE" -eq 0 ] && command -v journalctl >/dev/null 2>&1; then
-    freed="$(journalctl --vacuum-time=14d 2>&1 | python3 -c 'import re,sys
+    freed="$(LC_ALL=C journalctl --vacuum-time=14d 2>&1 | python3 -c 'import re,sys
 t=sys.stdin.read()
 m=re.search(r"freed ([0-9]+(\.[0-9]+)?)([BKMGT])", t)
 if not m:

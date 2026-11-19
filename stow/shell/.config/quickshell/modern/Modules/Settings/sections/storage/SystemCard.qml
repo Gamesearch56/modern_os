@@ -139,19 +139,16 @@ MCard {
             Layout.fillWidth: true
             indeterminate: true
         }
-        Item {
+        MButton {
             visible: !StorageUsage.measured
-            Layout.fillWidth: true
-            implicitHeight: Tokens.spacing.xxl * 4
-
-            MButton {
-                anchors.centerIn: parent
-                kind: "filled"
-                key: "settings.storage.measure"
-                busy: StorageUsage.running
-                enabled: !StorageUsage.running
-                onClicked: StorageUsage.start()
-            }
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: Tokens.spacing.xs
+            Layout.bottomMargin: Tokens.spacing.xs
+            kind: "filled"
+            key: "settings.storage.measure"
+            busy: StorageUsage.running
+            enabled: !StorageUsage.running
+            onClicked: StorageUsage.start()
         }
         Repeater {
             model: StorageUsage.measured ? root.rows : []

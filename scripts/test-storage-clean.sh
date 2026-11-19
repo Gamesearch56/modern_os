@@ -24,11 +24,21 @@ HOME_FAKE="$TMP/home"
 PKG_FAKE="$TMP/pkg"
 mkdir -p \
     "$HOME_FAKE/.cache/thumbnails/large" \
+    "$HOME_FAKE/.cache/modern/wallpaper-thumbs" \
+    "$HOME_FAKE/.cache/modern/phylax-src" \
     "$HOME_FAKE/.cache/fontconfig" \
+    "$HOME_FAKE/.cache/radv_builtin_shaders" \
+    "$HOME_FAKE/.cache/qtshadercache-test" \
+    "$HOME_FAKE/.cache/spotify" \
     "$HOME_FAKE/Documents" \
     "$PKG_FAKE"
 printf 'thumb' >"$HOME_FAKE/.cache/thumbnails/large/a.png"
+printf 'wall' >"$HOME_FAKE/.cache/modern/wallpaper-thumbs/a.jpg"
+printf 'src' >"$HOME_FAKE/.cache/modern/phylax-src/keep.c"
 printf 'font' >"$HOME_FAKE/.cache/fontconfig/x"
+printf 'radv' >"$HOME_FAKE/.cache/radv_builtin_shaders/a"
+printf 'qt' >"$HOME_FAKE/.cache/qtshadercache-test/a"
+printf 'music' >"$HOME_FAKE/.cache/spotify/a"
 printf 'keep' >"$HOME_FAKE/Documents/keep.txt"
 printf 'oldpkg' >"$PKG_FAKE/foo-1-1-x86_64.pkg.tar.zst"
 
@@ -45,9 +55,14 @@ fi
 out="$("$SCRIPT")"
 if printf '%s\n' "$out" | grep -Eq '^done [0-9]+$' \
     && [ ! -e "$HOME_FAKE/.cache/thumbnails/large/a.png" ] \
+    && [ ! -e "$HOME_FAKE/.cache/modern/wallpaper-thumbs/a.jpg" ] \
+    && [ ! -e "$HOME_FAKE/.cache/radv_builtin_shaders/a" ] \
+    && [ ! -e "$HOME_FAKE/.cache/qtshadercache-test/a" ] \
     && [ ! -e "$HOME_FAKE/.cache/fontconfig/x" ] \
     && [ ! -e "$PKG_FAKE/foo-1-1-x86_64.pkg.tar.zst" ] \
-    && [ "$(cat "$HOME_FAKE/Documents/keep.txt")" = keep ]; then
+    && [ "$(cat "$HOME_FAKE/Documents/keep.txt")" = keep ] \
+    && [ "$(cat "$HOME_FAKE/.cache/modern/phylax-src/keep.c")" = src ] \
+    && [ "$(cat "$HOME_FAKE/.cache/spotify/a")" = music ]; then
     ok "wipes allowlisted caches and leaves documents"
 else
     err "clean: out=$out docs=$(cat "$HOME_FAKE/Documents/keep.txt" 2>/dev/null)"
@@ -61,6 +76,19 @@ if [ -f "$TMP/evil/x" ]; then
     ok "skips a cache dir that is a symlink"
 else
     err "followed symlink"
+fi
+
+rm -rf "$HOME_FAKE/.cache"
+mkdir -p "$TMP/linked/thumbnails" "$TMP/linked/modern/phylax-src"
+printf 'secret' >"$TMP/linked/thumbnails/a.png"
+printf 'src' >"$TMP/linked/modern/phylax-src/keep.c"
+ln -s "$TMP/linked" "$HOME_FAKE/.cache"
+out="$("$SCRIPT" || true)"
+if [ -f "$TMP/linked/thumbnails/a.png" ] \
+    && [ "$(cat "$TMP/linked/modern/phylax-src/keep.c")" = src ]; then
+    ok "refuses a .cache directory that is a symlink"
+else
+    err "followed a symlinked .cache"
 fi
 
 if grep -F 'Paths.script("storage-clean.sh")' \
