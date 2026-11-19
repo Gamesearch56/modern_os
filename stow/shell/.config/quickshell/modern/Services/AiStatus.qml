@@ -122,22 +122,46 @@ Item {
     property bool setupFailed: false
     signal setupFinished(bool ok, string model)
 
+    property string jobLog: ""
+    property string jobState: ""
+    property string jobName: ""
+    readonly property string jobAction: "pull"
+
+    function dismissJob() {
+        if (root.jobState === "run")
+            return;
+        root.jobState = "";
+        root.jobLog = "";
+        root.jobName = "";
+    }
+
+    // Pull prints a progress line until something reads it.
+    function _append(chunk: string) {
+        const bits = String(chunk || "").replace(/\u001b\[[0-9;?]*[A-Za-z]/g, "").split(/\r|\n/);
+        let next = root.jobLog;
+        for (let i = 0; i < bits.length; i++) {
+            const line = bits[i].trim();
+            if (!line.length)
+                continue;
+            next += line + "\n";
+        }
+        if (next.length > 32768)
+            next = next.substring(next.length - 32768);
+        root.jobLog = next;
+    }
+
     function startSetup() {
-        if (root.setupBusy)
+        if (root.setupBusy || !root.ai || !root.ai.installed)
             return;
         root.setupFailed = false;
         root.setupBusy = true;
-        if (!root.ai || !root.ai.installed)
-            root._install();
-        else if (!root.ai.running)
+        root.jobName = root.setupModel;
+        root.jobLog = "";
+        root.jobState = "run";
+        if (!root.ai.running)
             root._enable();
         else
             root._pull();
-    }
-
-    function _install() {
-        installProc.command = [Paths.script("ollama-install.sh")];
-        installProc.running = true;
     }
 
     function _enable() {
@@ -153,32 +177,15 @@ Item {
     function _setupFail() {
         root.setupBusy = false;
         root.setupFailed = true;
+        root.jobState = "fail";
         root.setupFinished(false, "");
-    }
-
-    Process {
-        id: installProc
-        running: false
-        stdout: StdioCollector { id: installOut }
-        stderr: StdioCollector { id: installErr }
-        onExited: (code) => {
-            if (code !== 0) {
-                root._setupFail();
-                return;
-            }
-            if (root.ai) {
-                root.ai.installed = true;
-                root.ai.refreshStatus();
-            }
-            root._enable();
-        }
     }
 
     Process {
         id: enableProc
         running: false
-        stdout: StdioCollector { id: enableOut }
-        stderr: StdioCollector { id: enableErr }
+        stdout: SplitParser { onRead: line => root._append(line) }
+        stderr: SplitParser { onRead: line => root._append(line) }
         onExited: (code) => {
             if (code !== 0) {
                 root._setupFail();
@@ -193,8 +200,8 @@ Item {
     Process {
         id: pullProc
         running: false
-        stdout: StdioCollector { id: pullOut }
-        stderr: StdioCollector { id: pullErr }
+        stdout: SplitParser { onRead: line => root._append(line) }
+        stderr: SplitParser { onRead: line => root._append(line) }
         onExited: (code) => {
             if (root.ai)
                 root.ai.refreshStatus();
@@ -204,6 +211,7 @@ Item {
             }
             root.setupBusy = false;
             root.setupFailed = false;
+            root.jobState = "ok";
             root.setupFinished(true, root.setupModel);
         }
     }

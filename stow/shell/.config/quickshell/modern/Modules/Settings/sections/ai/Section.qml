@@ -54,6 +54,12 @@ ColumnLayout {
         }
     }
 
+    Install {
+        id: ollamaSetup
+        visible: root.ollamaOn && (!Ai.ready || ollamaSetup.setupBusy || (Ai.models || []).length === 0)
+        Layout.fillWidth: true
+    }
+
     MField {
         visible: root.ollamaOn
         labelKey: "settings.fields.aiModel"
@@ -81,7 +87,7 @@ ColumnLayout {
     }
 
     Library {
-        visible: root.ollamaOn
+        visible: root.ollamaOn && Ai.installed
         Layout.fillWidth: true
         Layout.topMargin: Tokens.spacing.xxl
     }
@@ -142,9 +148,4 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
-    Install {
-        id: ollamaSetup
-        visible: root.ollamaOn && (!Ai.ready || ollamaSetup.setupBusy || (Ai.models || []).length === 0)
-        Layout.fillWidth: true
-    }
 }
