@@ -71,7 +71,7 @@ spin_gap = 56;
 spin_phase = 0;
 for (i = 0; i < spin_count; i++)
   {
-    dots[i].image = Image.Text("●", ${PRIMARY_RGB}, 1.0, "Sans 22", "center");
+    dots[i].image = Image.Text("o", ${PRIMARY_RGB}, 1.0, "Sans 22", "center");
     dots[i].sprite = Sprite(dots[i].image);
   }
 

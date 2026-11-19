@@ -11,14 +11,15 @@ title.image = Image.Text("ModernOS", 0.8157, 0.7373, 1.0, 1.0, "Sans 120", "cent
 title.sprite = Sprite(title.image);
 
 # Dots orbit under the word. Opacity is fixed per dot, so the bright
-# one travels with the ring. New images each frame would leak for a long boot.
+# one travels with the ring. The boot font has no bullet glyph, so a
+# Latin "o" is the dot. New images each frame would leak for a long boot.
 spin_count = 12;
 spin_radius = 42;
 spin_gap = 56;
 spin_phase = 0;
 for (i = 0; i < spin_count; i++)
   {
-    dots[i].image = Image.Text("●", 0.8157, 0.7373, 1.0, 1.0, "Sans 22", "center");
+    dots[i].image = Image.Text("o", 0.8157, 0.7373, 1.0, 1.0, "Sans 22", "center");
     dots[i].sprite = Sprite(dots[i].image);
   }
 
