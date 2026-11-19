@@ -39,7 +39,10 @@ mkdir -p "$TMP/tags"
 cat >"$TMP/tags/qwen3.html" <<'EOF'
 <a href="/library/qwen3:latest"></a>
 <a href="/library/qwen3:0.6b"></a>
-<a href="/library/qwen3:4b"></a>
+<a href="/library/qwen3:4b" class="group-hover:underline">qwen3:4b</a>
+<p class="col-span-2 text-neutral-500 text-[13px]">2.5GB</p>
+<a href="/library/qwen3:0.6b">qwen3:0.6b</a>
+<span>7df6b6e09427</span> • 523MB • 40K
 <a href="/library/qwen3:8b"></a>
 <a href="/library/qwen3:14b"></a>
 <a href="/library/qwen3:32b"></a>
@@ -95,6 +98,13 @@ if [ "$sizes" = $'qwen3:0.6b\nqwen3:4b\nqwen3:8b\nqwen3:14b\nqwen3:32b' ]; then
     ok "a family lists every plain size"
 else
     err "sizes: $(printf '%s' "$sizes" | tr '\n' ' ')"
+fi
+
+disk="$(OLLAMA_LIBRARY_TAGS_DIR="$TMP/tags" "$LIB" tags qwen3 | python3 -c 'import json,sys; rows={r["name"]: r.get("bytes", 0) for r in json.load(sys.stdin)}; print(rows.get("qwen3:4b", 0), rows.get("qwen3:0.6b", 0), rows.get("qwen3:8b", 0))')"
+if [ "$disk" = "$((250 * 1024 * 1024 * 1024 / 100)) $((523 * 1024 * 1024)) 0" ]; then
+    ok "a size carries its download bytes"
+else
+    err "disk: $disk"
 fi
 
 exact="$(OLLAMA_LIBRARY_SEARCH_HTML="$TMP/search.html" "$LIB" search 'qwen3:32b' | names)"

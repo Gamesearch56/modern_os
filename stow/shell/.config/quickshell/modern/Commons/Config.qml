@@ -246,7 +246,7 @@ Singleton {
             property var accounts: ({
                 protonDrive: { enabled: false },
                 calendarIcsUrl: "",
-                ai: { provider: "none", ollamaModel: "llama3", geminiModel: "" }
+                ai: { provider: "none", ollamaModel: "llama3", geminiModel: "", thinking: false, brief: true }
             })
 
             property JsonObject bugReport: JsonObject {

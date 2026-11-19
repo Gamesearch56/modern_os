@@ -158,17 +158,48 @@ def parse_search(page):
     return rows
 
 
-def parse_tags(html, family):
+def parse_tags(page, family):
     tags = []
     seen = set()
     pattern = r'href="/library/' + re.escape(family) + r':([^"#?]+)"'
-    for match in re.finditer(pattern, str(html or "")):
+    for match in re.finditer(pattern, str(page or "")):
         tag = match.group(1)
         if tag in seen or not _TAG.match(tag):
             continue
         seen.add(tag)
         tags.append(tag)
     return tags
+
+
+def _to_bytes(number, unit):
+    mult = {"MB": 1024 ** 2, "GB": 1024 ** 3, "TB": 1024 ** 4}
+    return int(round(float(number) * mult[unit]))
+
+
+def tag_bytes(page, family):
+    """Download size printed beside each tag on the tags page."""
+    text = str(page or "")
+    token = 'href="/library/' + family + ":"
+    sizes = {}
+    start = 0
+    while True:
+        at = text.find(token, start)
+        if at < 0:
+            break
+        name_at = at + len(token)
+        end = text.find('"', name_at)
+        if end < 0:
+            break
+        tag = text[name_at:end]
+        nxt = text.find(token, end + 1)
+        window = text[end:nxt if nxt > 0 else end + 4000]
+        match = re.search(r">([0-9]+(?:\.[0-9]+)?)\s*(GB|MB|TB)</p>", window, re.I)
+        if not match:
+            match = re.search(r"[•·]\s*([0-9]+(?:\.[0-9]+)?)\s*(GB|MB|TB)\b", window, re.I)
+        if match and _TAG.match(tag) and tag not in sizes:
+            sizes[tag] = _to_bytes(match.group(1), match.group(2).upper())
+        start = end + 1
+    return sizes
 
 
 def pick_tags(tags, query_tag):
@@ -204,10 +235,15 @@ def tag_rows(family, page):
     if not _FAMILY.match(family) or ".." in family:
         return []
     rows = []
+    sizes = tag_bytes(page, family)
     for tag in pick_tags(parse_tags(page, family), ""):
         name = family if not tag else family + ":" + tag
-        if valid_name(name):
-            rows.append({"name": name})
+        if not valid_name(name):
+            continue
+        row = {"name": name}
+        if tag in sizes:
+            row["bytes"] = sizes[tag]
+        rows.append(row)
     return rows
 
 

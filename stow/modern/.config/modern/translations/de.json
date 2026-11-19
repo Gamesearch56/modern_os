@@ -208,7 +208,8 @@
     "errorNoModel": "Unter Einstellungen → KI ein Modell wählen.",
     "stop": "Stopp",
     "stopped": "Abgebrochen.",
-    "systemBrief": "Antworte in der Sprache der Frage. Behalte den freundlichen Karten-Stil: Emoji in kurzen Überschriften, nummerierte Liste für die Schritte, Leerzeile zwischen den Abschnitten. Bleib kurz: nur ein paar Listenpunkte, kein Aufsatz, keine Einleitung."
+    "systemBrief": "Antworte in der Sprache der Frage. Behalte den freundlichen Karten-Stil: Emoji in kurzen Überschriften, nummerierte Liste für die Schritte, Leerzeile zwischen den Abschnitten. Bleib kurz: nur ein paar Listenpunkte, kein Aufsatz, keine Einleitung.",
+    "systemRoom": "Antworte in der Sprache der Frage. Behalte den freundlichen Karten-Stil: Emoji in kurzen Überschriften, nummerierte Liste für die Schritte, Leerzeile zwischen den Abschnitten."
   },
   "session": {
     "unlock": "Entsperren",
@@ -590,6 +591,8 @@
       "protonDrive": "Proton Drive",
       "aiProvider": "Assistent",
       "aiModel": "KI-Modell",
+      "aiThinking": "Nachdenken",
+      "aiBrief": "Kurze Antworten",
       "aiLibrary": "Modelle laden",
       "ollamaModel": "Ollama-Modell",
       "chrome": "Chrome",
@@ -836,6 +839,8 @@
       "weatherLocation": "Wenn aktiv, nutzt Wetter diesen Standort. Wenn nicht, eine Stadt wählen.",
       "frecency": "Sortiert Apps danach, wie oft und wie kürzlich sie gestartet wurden.",
       "ollamaModel": "Lokal mit ollama pull. Nutzt der Leisten-Assistent.",
+      "aiThinking": "Das Modell denkt die Frage durch, bevor es antwortet. Das dauert länger.",
+      "aiBrief": "Hält Antworten auf ein paar Zeilen. Aus erlaubt eine längere Antwort.",
       "aiLibrary": "Bibliothek durchsuchen, dann ein Modell installieren oder eines löschen, das nicht mehr gebraucht wird.",
       "geminiAccount": "In Google AI Studio mit dem Google-Konto anmelden, das Gemini hat, dann einen API-Schlüssel einfügen. Das Gemini-Pro-Kontingent folgt diesem Konto.",
       "geminiModel": "Nutzt der Leisten-Assistent, wenn Gemini gewählt ist.",

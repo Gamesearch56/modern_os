@@ -29,7 +29,7 @@ QtObject {
             }
             return by[family];
         }
-        function addFull(full, isInstalled, desc) {
+        function addFull(full, isInstalled, desc, bytes) {
             const raw = String(full || "");
             if (!raw.length)
                 return;
@@ -37,14 +37,18 @@ QtObject {
             const family = cut < 0 ? raw : raw.slice(0, cut);
             const label = cut < 0 ? "" : raw.slice(cut + 1);
             const g = ensure(family, cut < 0 ? desc : "", "", []);
+            const size = Number(bytes || 0);
             if (!label.length) {
                 if (!isInstalled)
                     return;
                 for (let n = 0; n < g.tags.length; n++) {
-                    if (g.tags[n].name === family)
+                    if (g.tags[n].name === family) {
+                        if (size > 0)
+                            g.tags[n].bytes = size;
                         return;
+                    }
                 }
-                g.tags.push({ name: family, label: family, installed: true, inUse: inUse(family) });
+                g.tags.push({ name: family, label: family, installed: true, inUse: inUse(family), bytes: size });
                 return;
             }
             const name = family + ":" + label;
@@ -53,10 +57,12 @@ QtObject {
                     if (isInstalled)
                         g.tags[i].installed = true;
                     g.tags[i].inUse = inUse(name);
+                    if (size > 0)
+                        g.tags[i].bytes = size;
                     return;
                 }
             }
-            g.tags.push({ name: name, label: label, installed: isInstalled, inUse: inUse(name) });
+            g.tags.push({ name: name, label: label, installed: isInstalled, inUse: inUse(name), bytes: size });
         }
         const have = {};
         const local = installed || [];
@@ -93,7 +99,7 @@ QtObject {
             const list = extra[family] || [];
             for (let t = 0; t < list.length; t++) {
                 const tagName = String(list[t] && list[t].name || "");
-                addFull(tagName, !!have[tagName.replace(/:latest$/, "")], "");
+                addFull(tagName, !!have[tagName.replace(/:latest$/, "")], "", Number(list[t] && list[t].bytes || 0));
             }
         }
         const out = [];

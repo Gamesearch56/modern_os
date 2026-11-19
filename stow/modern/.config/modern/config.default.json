@@ -235,7 +235,9 @@
     "ai": {
       "provider": "none",
       "ollamaModel": "llama3",
-      "geminiModel": ""
+      "geminiModel": "",
+      "thinking": false,
+      "brief": true
     }
   },
   "bugReport": {

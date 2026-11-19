@@ -64,7 +64,7 @@ Item {
         try {
             root._body = JSON.stringify({
                 contents: root._contents(messages),
-                systemInstruction: { parts: [{ text: I18n.t("ai.systemBrief") }] },
+                systemInstruction: { parts: [{ text: I18n.t(Config.accounts?.ai?.brief !== false ? "ai.systemBrief" : "ai.systemRoom") }] },
                 generationConfig: root._genConfig(safe)
             });
         } catch (e) {
@@ -103,14 +103,25 @@ Item {
     }
 
     function _genConfig(model: string): var {
-        const cfg = { maxOutputTokens: 4096 };
+        const think = Config.accounts?.ai?.thinking === true;
+        const brief = Config.accounts?.ai?.brief !== false;
+        const cfg = { maxOutputTokens: brief ? 4096 : 8192 };
         const n = String(model || "").toLowerCase();
+        if (!think) {
+            if (n.indexOf("gemini-3.7") === 0)
+                cfg.thinkingConfig = { thinkingLevel: "LOW" };
+            else if (n.indexOf("gemini-3") === 0)
+                cfg.thinkingConfig = { thinkingLevel: "low" };
+            else if (n.indexOf("gemini-2.5") === 0)
+                cfg.thinkingConfig = { thinkingBudget: 0 };
+            return cfg;
+        }
         if (n.indexOf("gemini-3.7") === 0)
-            cfg.thinkingConfig = { thinkingLevel: "LOW" };
+            cfg.thinkingConfig = { thinkingLevel: "MEDIUM" };
         else if (n.indexOf("gemini-3") === 0)
-            cfg.thinkingConfig = { thinkingLevel: "low" };
+            cfg.thinkingConfig = { thinkingLevel: "medium" };
         else if (n.indexOf("gemini-2.5") === 0)
-            cfg.thinkingConfig = { thinkingBudget: 0 };
+            cfg.thinkingConfig = { thinkingBudget: 2048 };
         return cfg;
     }
 

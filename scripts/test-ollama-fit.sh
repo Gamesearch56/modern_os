@@ -77,7 +77,7 @@ if grep -Fq 'Colors.fitGood' "$MARK" \
     && grep -Fq 'Colors.fitMaybe' "$MARK" \
     && grep -Fq 'Colors.fitPoor' "$MARK" \
     && grep -Fq 'settings.ollama.fitPoor' "$MARK" \
-    && grep -Fq 'FitMark {' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/ai/Library.qml"; then
+    && grep -Fq 'FitMark {' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/ai/ModelGroup.qml"; then
     ok "each model row has a fit mark and a reason"
 else
     err "fit mark is not wired"

@@ -50,12 +50,26 @@ Item {
         }
     }
 
+    MText {
+        id: titleMeasure
+        key: root.titleKey
+        params: ({ name: root.name })
+        styleName: "headlineSmall"
+        visible: false
+    }
+
     MCard {
         level: 0
         color: Colors.color.surface
         borderWidth: Tokens.stroke.hairline
         borderColor: Colors.color.outlineVariant
-        width: Math.min(parent.width - Tokens.spacing.xxl, root.showLog ? Tokens.spacing.xxl * 14 : Tokens.spacing.xxl * 10)
+        width: {
+            const cap = parent.width - Tokens.spacing.xxl;
+            if (root.showLog)
+                return Math.min(cap, Tokens.spacing.xxl * 14);
+            const need = titleMeasure.implicitWidth + Tokens.spacing.lg * 2;
+            return Math.min(cap, Math.max(Tokens.spacing.xxl * 11, Math.min(need, Tokens.spacing.xxl * 16)));
+        }
         implicitHeight: col.implicitHeight + padding * 2
         anchors.centerIn: parent
         scale: Motion.overlayScale(root.open)
@@ -85,7 +99,8 @@ Item {
                 key: root.titleKey
                 params: ({ name: root.name })
                 styleName: "headlineSmall"
-                elide: Text.ElideRight
+                wrapMode: Text.WordWrap
+                elide: Text.ElideNone
                 Layout.fillWidth: true
             }
 

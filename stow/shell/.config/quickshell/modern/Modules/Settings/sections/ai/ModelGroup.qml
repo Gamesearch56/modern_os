@@ -24,6 +24,18 @@ ColumnLayout {
     spacing: Tokens.spacing.md
     Layout.fillWidth: true
 
+    function _disk(bytes): string {
+        const n = Number(bytes || 0);
+        if (!(n > 0))
+            return "";
+        const gb = n / (1024 * 1024 * 1024);
+        if (gb >= 1) {
+            const label = gb >= 10 ? String(Math.round(gb)) : String(Math.round(gb * 10) / 10);
+            return I18n.t("units.gb", { n: label });
+        }
+        return I18n.t("units.mb", { n: String(Math.max(1, Math.round(n / (1024 * 1024)))) });
+    }
+
     function _familyUse(): string {
         const kind = root.use || "chat";
         let text = I18n.t("settings.ollama.use.chat");
@@ -154,6 +166,13 @@ ColumnLayout {
                 color: Colors.color.onSurface
                 elide: Text.ElideRight
                 Layout.fillWidth: true
+            }
+            MText {
+                visible: root._disk(modelData.bytes).length > 0
+                value: root._disk(modelData.bytes)
+                styleName: "bodyMedium"
+                color: Colors.color.onSurfaceVariant
+                Layout.alignment: Qt.AlignVCenter
             }
             Item {
                 // Same box for the label and the button, so selecting a model does not shift the row.

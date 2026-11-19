@@ -67,6 +67,11 @@ ColumnLayout {
         }
     }
 
+    Tune {
+        visible: root.ollamaOn
+        Layout.fillWidth: true
+    }
+
     Library {
         visible: root.ollamaOn
         Layout.fillWidth: true
@@ -94,6 +99,11 @@ ColumnLayout {
             value: root.geminiModel
             onSelected: (v) => ConfigWrite.set("accounts.ai.geminiModel", v)
         }
+    }
+
+    Tune {
+        visible: root.geminiOn
+        Layout.fillWidth: true
     }
 
     Install {
