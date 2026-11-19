@@ -25,7 +25,7 @@ hl.on("hyprland.start", function()
         .. "shared=/var/lib/modern/session/wallpaper.jpg; "
         .. "img=\"\"; cand=\"\"; "
         .. "if [ -f \"$state\" ]; then cand=$(head -n 1 \"$state\"); fi; "
-        .. "splash_quit() { command -v plymouth >/dev/null 2>&1 && plymouth quit || true; }; "
+        .. "splash_quit() { command -v plymouth >/dev/null 2>&1 && plymouth quit --retain-splash || true; }; "
         .. "if [ -n \"$cand\" ] && [ -r \"$cand\" ]; then img=\"$cand\"; "
         .. "elif [ -r \"$default\" ]; then img=\"$default\"; "
         .. "elif [ -r \"$shared\" ]; then img=\"$shared\"; "
