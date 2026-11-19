@@ -17,7 +17,9 @@ splash_show() {
 }
 
 ask_splash() {
-    timeout 2 systemctl start modern-splash.service || true
+    # --no-ask-password: a missing polkit grant must fail quietly. An
+    # interactive prompt races the reboot and flashes a password window.
+    timeout 2 systemctl start --no-ask-password modern-splash.service || true
 }
 
 case "${1:-show}" in
