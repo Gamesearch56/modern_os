@@ -127,9 +127,17 @@ Item {
 
     function _tidy(s: string): string {
         let t = String(s || "").replace(/\r/g, "");
-        // One blank line between adjacent blocks (including list items) for readable markdown.
+        const saved = [];
+        // A pipe table must stay on consecutive lines. Spacing every row
+        // turns it into separate paragraphs and the pipes stay visible.
+        t = t.replace(/(?:^[ \t]*\|[^\n]*\|[ \t]*(?:\n|$)){2,}/gm, (block) => {
+            saved.push(block.replace(/\s+$/, ""));
+            return "@@T" + (saved.length - 1) + "@@";
+        });
         t = t.replace(/([^\n])\n(?!\n)([^\n])/g, "$1\n\n$2");
-        return t.replace(/\n{3,}/g, "\n\n");
+        t = t.replace(/\n{3,}/g, "\n\n");
+        t = t.replace(/@@T(\d+)@@/g, (all, n) => saved[Number(n)] || all);
+        return t;
     }
 
     function _contents(messages: var): var {
