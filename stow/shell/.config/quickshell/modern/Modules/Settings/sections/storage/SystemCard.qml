@@ -117,7 +117,7 @@ MCard {
             Layout.fillWidth: true
         }
         MStackedBar {
-            visible: StorageUsage.measured
+            visible: root._total > 0
             Layout.fillWidth: true
             implicitHeight: Tokens.spacing.lg
             activeId: root._hot
