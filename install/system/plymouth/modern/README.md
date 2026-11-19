@@ -1,13 +1,16 @@
 # Plymouth theme `modern`
 
-Boot and shutdown use this solid surface and progress bar. The colors
-are the installer palette (`#141218`, `#D0BCFF`). There is no wallpaper
-in the theme, so a missing picture cannot break the initramfs.
+Boot and shutdown use this solid surface and the word ModernOS. The
+colors are the installer palette (`#141218`, `#D0BCFF`). There is no
+wallpaper in the theme, so a missing picture cannot break the initramfs.
+The script only calls functions the Plymouth script module actually
+has (`Image.Text`, `Sprite`). `Image.Box` is not one of them, and a
+call it does not know leaves the screen black.
 
 `install/system/plymouth/apply.sh` copies these two files into place,
 adds the `plymouth` hook after `kms`, and appends the splash kernel
-line. `provision-iso.sh` sources it and rebuilds the initramfs once.
-Running the script itself does that rebuild on an installed machine.
+line. `provision-iso.sh` and a system update source it. The initramfs
+is rebuilt only when the theme or the hook changed.
 
-`install.sh`, `scripts/theme-apply.sh`, and `scripts/wallpaper-sync.sh`
-do not call it. A palette or wallpaper change must stay a file write.
+`scripts/theme-apply.sh` and `scripts/wallpaper-sync.sh` do not call
+it. A palette or wallpaper change must stay a file write.

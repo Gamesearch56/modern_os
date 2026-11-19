@@ -3,7 +3,9 @@
 # the initramfs once after NVIDIA modules are staged. Run this file
 # directly to enable the splash on an already installed machine:
 #   sudo install/system/plymouth/apply.sh
-# install.sh, theme-apply.sh, and wallpaper-sync.sh must not call it.
+# Settings → Update runs the same function from the root plan.
+# theme-apply.sh and wallpaper-sync.sh must not call it. The initramfs
+# is rebuilt only when the theme or the hook actually changed.
 set -euo pipefail
 
 plymouth_repo() {
@@ -124,9 +126,14 @@ plymouth_apply() {
     repo="$(plymouth_repo)"
     theme="$repo/install/system/plymouth/modern"
     dest="$root/usr/share/plymouth/themes/modern"
+    plymouth_rebuild=0
     [ -f "$theme/modern.script" ] || return 1
     install -d -m 0755 "$dest" "$root/etc/plymouth" "$root/usr/share/plymouth/themes"
-    install -m 0644 "$theme/modern.plymouth" "$theme/modern.script" "$dest/"
+    if ! cmp -s "$theme/modern.plymouth" "$dest/modern.plymouth" \
+        || ! cmp -s "$theme/modern.script" "$dest/modern.script"; then
+        install -m 0644 "$theme/modern.plymouth" "$theme/modern.script" "$dest/"
+        plymouth_rebuild=1
+    fi
     ln -sfn modern/modern.plymouth "$root/usr/share/plymouth/themes/default.plymouth"
     conf="$root/etc/plymouth/plymouthd.conf"
     if [ -f "$conf" ] && grep -q '^Theme=' "$conf"; then
@@ -137,7 +144,10 @@ plymouth_apply() {
         printf '[Daemon]\nTheme=modern\n' >"$conf"
     fi
     hooks="$(plymouth_hooks_file "$root")"
-    plymouth_insert_hook "$hooks"
+    if ! grep -q 'kms plymouth' "$hooks"; then
+        plymouth_insert_hook "$hooks"
+        plymouth_rebuild=1
+    fi
     if [ -f "$root/etc/kernel/cmdline" ]; then
         plymouth_write_options_file "$root/etc/kernel/cmdline" ""
     fi
@@ -159,5 +169,7 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
         pacman -S --needed --noconfirm plymouth
     fi
     plymouth_apply /
-    mkinitcpio -P
+    if [ "$plymouth_rebuild" -eq 1 ]; then
+        mkinitcpio -P
+    fi
 fi

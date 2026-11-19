@@ -1,15 +1,19 @@
-# Installer colors, baked into the initramfs. #141218 surface, #D0BCFF bar.
+# Installer colors, baked into the initramfs. #141218 surface, #D0BCFF word.
+# Plymouth's script module has Image.Text and Sprite. A call it does
+# not know aborts the theme, and the cleared framebuffer stays black
+# for the whole boot and shutdown.
 # A palette or wallpaper change must not rewrite this file: the image
 # would have to be rebuilt, and a missing picture would break boot.
 Window.SetBackgroundTopColor(0.0784, 0.0706, 0.0941);
 Window.SetBackgroundBottomColor(0.0784, 0.0706, 0.0941);
 
-progress_box = Image.Box(0.8157, 0.7373, 1.0000);
-progress_box.SetPosition(Window.GetWidth() * 0.2, Window.GetHeight() * 0.82, 0);
-progress_box.SetSize(1, 8);
+title.image = Image.Text("ModernOS", 0.8157, 0.7373, 1.0, 1.0, "Sans", "center");
+title.sprite = Sprite(title.image);
 
-fun progress_callback(duration, progress) {
-    progress_box.SetSize(Window.GetWidth() * 0.6 * progress, 8);
-}
+fun refresh_callback()
+  {
+    title.sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - title.image.GetWidth() / 2);
+    title.sprite.SetY(Window.GetY() + Window.GetHeight() / 2 - title.image.GetHeight() / 2);
+  }
 
-Plymouth.SetBootProgressFunction(progress_callback);
+Plymouth.SetRefreshFunction(refresh_callback);

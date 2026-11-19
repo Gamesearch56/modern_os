@@ -213,3 +213,12 @@ if [ "$ROOT_PLAN_GREETD" -eq 1 ]; then
     source "$REPO_ROOT/install/lib/greetd.sh"
     greetd_apply "$user"
 fi
+
+if [ "${ROOT_PLAN_SPLASH:-0}" -eq 1 ]; then
+    # shellcheck source=../install/system/plymouth/apply.sh
+    source "$REPO_ROOT/install/system/plymouth/apply.sh"
+    plymouth_apply /
+    if [ "$plymouth_rebuild" -eq 1 ]; then
+        mkinitcpio -P
+    fi
+fi

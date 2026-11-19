@@ -432,6 +432,20 @@ else
     log_info "skipping greetd (target '$TARGET' is not a login home)"
 fi
 
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "skipping boot splash (dotfiles-only)"
+elif [ "$DRY_RUN" -eq 1 ]; then
+    log_info "boot splash: would enable the solid loader"
+elif greetd_target_is_live_user "$TARGET" && [ -n "${MODERN_ROOT_PLAN:-}" ]; then
+    printf 'splash\n' >>"$MODERN_ROOT_PLAN"
+    log_info "boot splash deferred to the update's root step"
+elif greetd_target_is_live_user "$TARGET"; then
+    sudo -- "$REPO_ROOT/install/system/plymouth/apply.sh" \
+        || log_warn "boot splash was not enabled"
+else
+    log_info "skipping boot splash (target '$TARGET' is not a login home)"
+fi
+
 # The bug-report token is sealed to the update deploy key and rides in
 # the repo. Fill it in only when this account does not have one yet.
 if [ "$DRY_RUN" -eq 0 ]; then

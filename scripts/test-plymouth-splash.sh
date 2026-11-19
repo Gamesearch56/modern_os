@@ -19,15 +19,20 @@ WALL="$ROOT/scripts/wallpaper-sync.sh"
 GREETER="$ROOT/stow/greeter/.config/quickshell/greeter/SessionSurface.qml"
 START="$ROOT/stow/hypr/.config/hypr/modules/autostart.lua"
 
-if grep -Fq 'Image.Box(0.8157, 0.7373, 1.0000)' "$THEME" \
+if grep -Fq 'Image.Text("ModernOS", 0.8157, 0.7373, 1.0, 1.0, "Sans", "center")' "$THEME" \
     && grep -Fq 'SetBackgroundTopColor(0.0784, 0.0706, 0.0941)' "$THEME" \
+    && ! grep -Fq 'Image.Box' "$THEME" \
     && ! grep -Eq '\.jpg|\.png' "$THEME"; then
-    ok "splash is a solid surface and bar, with no image"
+    ok "splash is a solid surface and a title, with no image"
 else
     err "modern.script must stay a solid splash with no wallpaper file"
 fi
 
+UPDATE="$ROOT/scripts/update-apply.sh"
 if ! grep -Fq 'plymouth_apply' "$INSTALL" \
+    && grep -Fq "printf 'splash\\n'" "$INSTALL" \
+    && grep -Fq 'plymouth_apply /' "$UPDATE" \
+    && grep -Fq 'plymouth_rebuild' "$UPDATE" \
     && ! grep -Fq 'mkinitcpio -P' "$THEME_APPLY" \
     && ! grep -Fq 'mkinitcpio -P' "$WALL" \
     && grep -Fq 'plymouth_apply /' "$PROVISION" \
@@ -36,9 +41,9 @@ if ! grep -Fq 'plymouth_apply' "$INSTALL" \
     && grep -Fq 'splash' "$BOOT" \
     && grep -Fq 'loglevel=3' "$BOOT" \
     && grep -Fq 'plymouth' "$ROOT/install/manifests/10-desktop.txt"; then
-    ok "only provision rebuilds, and the ISO kernel line hides the console"
+    ok "a system update enables the splash; palette and wallpaper do not rebuild"
 else
-    err "splash must be provisioned once, not from install or a theme/wallpaper change"
+    err "splash must be enabled by the update plan, not by a theme or wallpaper change"
 fi
 
 if grep -Fq 'root._launching' "$GREETER" \
@@ -66,7 +71,17 @@ printf '%s\n' 'quiet root=UUID=abc rw' >"$TMP/etc/kernel/cmdline"
 # shellcheck disable=SC1090
 source "$APPLY"
 plymouth_apply "$TMP"
+if [ "$plymouth_rebuild" -eq 1 ]; then
+    ok "a new theme asks for one initramfs rebuild"
+else
+    err "first apply must set plymouth_rebuild"
+fi
 plymouth_apply "$TMP"
+if [ "$plymouth_rebuild" -eq 0 ]; then
+    ok "an unchanged splash does not rebuild again"
+else
+    err "second apply must leave plymouth_rebuild at 0"
+fi
 
 hooks="$(grep '^HOOKS=' "$TMP/etc/mkinitcpio.conf")"
 if [ "$hooks" = "HOOKS=(base udev autodetect microcode kms plymouth keyboard keymap consolefont block filesystems fsck)" ]; then

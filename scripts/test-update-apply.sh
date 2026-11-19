@@ -163,9 +163,10 @@ fi
 source "$ROOT/scripts/lib/pkg-name.sh"
 # shellcheck source=lib/root-plan.sh
 source "$ROOT/scripts/lib/root-plan.sh"
-printf 'pkg good-pkg\npkg -Rdd\npkg ../x\nrm -rf /\ngreetd\n' >"$TMP/evil"
+printf 'pkg good-pkg\npkg -Rdd\npkg ../x\nrm -rf /\ngreetd\nsplash\n' >"$TMP/evil"
 read_root_plan "$TMP/evil" 2>/dev/null
-if [ "${ROOT_PLAN_PKGS[*]}" = good-pkg ] && [ "$ROOT_PLAN_GREETD" -eq 1 ]; then
+if [ "${ROOT_PLAN_PKGS[*]}" = good-pkg ] && [ "$ROOT_PLAN_GREETD" -eq 1 ] \
+    && [ "$ROOT_PLAN_SPLASH" -eq 1 ]; then
     ok "root plan keeps only valid package names"
 else
     err "root plan parsed: ${ROOT_PLAN_PKGS[*]}"

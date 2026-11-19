@@ -28,7 +28,8 @@ collect_packages() {
 # Settings → Update runs install.sh without a terminal, where every sudo
 # would fail. MODERN_ROOT_PLAN names a file the update's single pkexec
 # (scripts/update-apply.sh --root-plan) executes as root afterwards:
-# `pkg NAME` per missing package, `greetd` for the login screen.
+# `pkg NAME` per missing package, `greetd` for the login screen,
+# `splash` for the boot loader.
 defer_native() {
     local missing=() p
     mapfile -t missing < <(pacman -T "$@" 2>/dev/null || true)
