@@ -125,7 +125,7 @@ Item {
     function _readyMore(mode: string) {
         const h = root.host;
         if (mode === "search")
-            root.browse.reset(h.query.trim());
+            root.browse.reset(h.query.trim(), true);
         else if (mode === "info" && h.query.trim().length === 0)
             root.browse.reset(root.catalog.browseQuery(h.categoryId));
         else

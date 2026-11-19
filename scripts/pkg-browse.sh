@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
 # Next page of official-repo search hits. JSON array.
-# Usage: pkg-browse.sh QUERY LIMIT [SEEN_NAME...]
+# Usage: pkg-browse.sh [--strict] QUERY LIMIT [SEEN_NAME...]
 # QUERY is one pacman -Ss needle (category keyword or user search).
-# SEEN names are skipped so category curated rows and earlier pages
-# do not repeat. No -Sy — refresh stays with Settings → System.
+# --strict is the user-search page: the query must sit in the package
+# name, or as a whole word in the description. Category pages omit it
+# and keep the broader keyword match. SEEN names are skipped so curated
+# rows and earlier pages do not repeat. No -Sy — refresh stays with
+# Settings → System.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/pkg-name.sh
 source "$ROOT/lib/pkg-name.sh"
+
+strict=0
+if [ "${1:-}" = "--strict" ]; then
+    strict=1
+    shift
+fi
 
 query="$(printf '%s' "${1:-}" | tr -d '\n' | head -c 80)"
 limit="${2:-24}"
@@ -22,6 +31,13 @@ shift 2
 
 mapfile -t seen_names < <(filter_pkg_names "$@")
 PACMAN="/usr/bin/pacman"
+if [ "$strict" -eq 1 ]; then
+    needle="$(python3 -c 'import re,sys; print(re.escape(sys.argv[1]))' "$query")"
+    SEEN="$(printf '%s\n' "${seen_names[@]+"${seen_names[@]}"}")" \
+        python3 "$ROOT/lib/pkg_search.py" --query "$query" --limit "$limit" --seen-env \
+        < <(LC_ALL=C "$PACMAN" -Ss -- "$needle" 2>/dev/null || true)
+    exit 0
+fi
 LIMIT="$limit" SEEN="$(printf '%s\n' "${seen_names[@]+"${seen_names[@]}"}")" python3 -c '
 import json, os, re, sys
 limit = int(os.environ.get("LIMIT") or "24")

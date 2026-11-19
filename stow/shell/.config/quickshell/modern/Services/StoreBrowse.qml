@@ -14,6 +14,7 @@ Item {
     property bool listEnd: false
     property bool loading: false
     property string _query: ""
+    property bool _strict: false
     property int _limit: 24
     property var _pendingRows: []
     property bool _pendingDone: false
@@ -38,10 +39,11 @@ Item {
         }
     }
 
-    function reset(query: string) {
+    function reset(query: string, strict) {
         hold.stop();
         proc.running = false;
         root._query = String(query || "").trim();
+        root._strict = strict === true;
         root.loading = false;
         root.listEnd = false;
         root._havePage = false;
@@ -55,7 +57,10 @@ Item {
         const q = root._query;
         if (!q.length || q.indexOf("-") === 0)
             return;
-        const argv = [Paths.script("pkg-browse.sh"), q, String(root._limit)];
+        const argv = [Paths.script("pkg-browse.sh")];
+        if (root._strict)
+            argv.push("--strict");
+        argv.push(q, String(root._limit));
         const names = seen || [];
         for (let i = 0; i < names.length && argv.length < 180; i++) {
             const n = String(names[i] || "");
