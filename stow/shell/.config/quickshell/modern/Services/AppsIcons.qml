@@ -43,6 +43,65 @@ QtObject {
         return n;
     }
 
+    function _norm(s: string): string {
+        return String(s || "").replace(/\.desktop$/i, "").toLowerCase()
+            .replace(/[-_]?url[-_]?handler$/i, "").replace(/[\s._-]+/g, "");
+    }
+
+    // Vivaldi --app= class is the site, not StartupWMClass. Keep this in
+    // step with HyprAutostart so the task list and the launcher share an icon.
+    function _urlTokens(needle: string, fieldn: string): bool {
+        if (!needle.length || !fieldn.length)
+            return false;
+        if (needle.indexOf("protonmail") !== -1
+                && (fieldn.indexOf("mailproton") !== -1 || fieldn.indexOf("mailprotonme") !== -1))
+            return true;
+        if (needle.indexOf("protoncalendar") !== -1
+                && (fieldn.indexOf("calendarproton") !== -1 || fieldn.indexOf("calendarprotonme") !== -1))
+            return true;
+        if (needle.indexOf("whatsapp") !== -1
+                && (fieldn.indexOf("whatsapp") !== -1 || fieldn.indexOf("webwhatsapp") !== -1))
+            return true;
+        return false;
+    }
+
+    function _scoreField(raw: string, desktopId: string): int {
+        const needle = root._norm(desktopId);
+        const fieldn = root._norm(raw);
+        if (!needle.length || !fieldn.length)
+            return 0;
+        if (root._urlTokens(needle, fieldn))
+            return 1000 + needle.length;
+        if (fieldn === needle)
+            return 500 + needle.length;
+        if (needle.length >= 5 && fieldn.indexOf(needle) !== -1)
+            return needle.length;
+        return 0;
+    }
+
+    function _bestDesktop(hint: string): var {
+        const entries = DesktopEntries.applications.values;
+        let best = null;
+        let bestScore = 0;
+        for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            if (!e || e.noDisplay)
+                continue;
+            const needles = [e.id, e.startupClass, e.icon];
+            let score = 0;
+            for (let n = 0; n < needles.length; n++) {
+                const sc = root._scoreField(hint, String(needles[n] || ""));
+                if (sc > score)
+                    score = sc;
+            }
+            if (score > bestScore) {
+                best = e;
+                bestScore = score;
+            }
+        }
+        return best;
+    }
+
     function _fromDesktop(hint: string): var {
         const h = String(hint || "").trim();
         if (!h.length)
@@ -50,9 +109,6 @@ QtObject {
         const byId = DesktopEntries.byId(h) || DesktopEntries.byId(h.replace(/\.desktop$/i, ""));
         if (byId)
             return byId;
-        const heur = DesktopEntries.heuristicLookup(h);
-        if (heur)
-            return heur;
         const needle = h.replace(/\.desktop$/i, "").toLowerCase();
         const entries = DesktopEntries.applications.values;
         for (let i = 0; i < entries.length; i++) {
@@ -63,7 +119,11 @@ QtObject {
             if (wm === needle || id === needle || ic === needle)
                 return e;
         }
-        return null;
+        // Heuristic lookup stops at the browser for a vivaldi-web.* class.
+        const specific = root._bestDesktop(h);
+        if (specific)
+            return specific;
+        return DesktopEntries.heuristicLookup(h);
     }
 
     function nameForHint(hint: string): string {
