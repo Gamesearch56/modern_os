@@ -199,7 +199,11 @@ if [[ -x "$RAISE" ]] \
     && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'hl.dsp.window.float' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'hl.dsp.window.fullscreen' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
-    && grep -Fq 'session-hide.sh' "$MODERN"; then
+    && grep -Fq 'session-hide.sh' "$MODERN" \
+    && grep -Fq 'x-scheme-handler/http' "$LAUNCH" \
+    && grep -Fq 'x-scheme-handler/mailto' "$LAUNCH" \
+    && grep -Fq 'execString' "$ROOT/stow/shell/.config/quickshell/modern/Services/Notifications.qml" \
+    && grep -Fq -- '--app=https?' "$ROOT/stow/shell/.config/quickshell/modern/Services/Notifications.qml"; then
     ok "launcher raises via session-raise; Super+Q parks via session-hide"
 else
     err "raiseDesktopOrLaunch + session-raise/hide required"

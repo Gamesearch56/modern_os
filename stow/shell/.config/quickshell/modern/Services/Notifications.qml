@@ -431,7 +431,47 @@ Singleton {
         return "";
     }
 
+    function _hostOf(url: string): string {
+        const m = String(url || "").match(/^https?:\/\/([^\/"'<>\s]+)/i);
+        if (!m)
+            return "";
+        return m[1].toLowerCase().replace(/:\d+$/, "");
+    }
+
+    // Chromium puts the site on the first line, or in a class-shaped
+    // desktop entry (vivaldi-mail.proton.me__-Default). The browser's
+    // own desktop id is the http handler, and raising that opens http://-.
+    function _originHost(live): string {
+        const body = root._str(live.body);
+        const linked = body.match(/https?:\/\/[^\/"'<>\s]+/i);
+        if (linked)
+            return root._hostOf(linked[0]);
+        const d = root._str(live.desktopEntry);
+        const cls = d.match(/^(?:vivaldi|chrome|chromium|brave)-(.+?)__-/i);
+        return cls ? cls[1].toLowerCase() : "";
+    }
+
+    function _desktopForHost(host: string): string {
+        if (!host.length)
+            return "";
+        const entries = DesktopEntries.applications.values;
+        for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            const exec = String(e.execString || "");
+            const m = exec.match(/--app=https?:\/\/([^\/\s]+)/i);
+            if (!m || m[1].toLowerCase().replace(/:\d+$/, "") !== host)
+                continue;
+            const stem = String(e.id || "").replace(/\.desktop$/i, "");
+            if (stem.length && !root._browserId(stem))
+                return stem;
+        }
+        return "";
+    }
+
     function _appDesktopId(live): string {
+        const byHost = root._desktopForHost(root._originHost(live));
+        if (byHost.length)
+            return byHost;
         const byName = root._desktopByName(root._str(live.appName));
         if (byName.length)
             return byName;
@@ -441,7 +481,7 @@ Singleton {
         const bySummary = root._desktopByName(root._str(live.summary));
         if (bySummary.length)
             return bySummary;
-        return d;
+        return "";
     }
 
     function activate(item): bool {
@@ -462,11 +502,14 @@ Singleton {
         // raising alone never opens the chat or mail the banner was about.
         const id = root._appDesktopId(live);
         const invoked = root.invokeDefault(live);
+        // A browser-named notification must not focus the browser window.
+        // The site's installed app is `id`.
+        const raiseName = root._browserId(live.appName) ? "" : root._str(live.appName);
         // Raise after the action so the opened mail is on the window
         // that then comes to this workspace. A miss starts the app only
         // once Hyprland confirms it has no window, including one parked
         // on the background workspace.
-        Hypr.raiseApp(id, live.appName, () => {
+        Hypr.raiseApp(id, raiseName, () => {
             if (id.length)
                 Apps.launchId(id);
             else if (!invoked) {
