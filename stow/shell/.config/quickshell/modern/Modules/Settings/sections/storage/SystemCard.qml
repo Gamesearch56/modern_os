@@ -25,11 +25,13 @@ MCard {
         void StorageUsage.apps;
         void StorageUsage.cache;
         void StorageUsage.backups;
+        void StorageUsage.models;
         void Colors.color.primary;
         const cats = [
             { id: "games", bytes: StorageUsage.games, color: Colors.color.primary, key: "settings.storage.catGames" },
             { id: "files", bytes: StorageUsage.files, color: Colors.color.secondary, key: "settings.storage.catFiles" },
             { id: "apps", bytes: StorageUsage.apps, color: Colors.color.tertiary, key: "settings.storage.catApps" },
+            { id: "models", bytes: StorageUsage.models, color: Colors.color.tertiaryContainer, key: "settings.storage.catModels" },
             { id: "cache", bytes: StorageUsage.cache, color: Colors.color.primaryContainer, key: "settings.storage.catCache" },
             { id: "backups", bytes: StorageUsage.backups, color: Colors.color.secondaryContainer, key: "settings.storage.catBackups" }
         ];
@@ -83,6 +85,7 @@ MCard {
                 Layout.fillWidth: true
             }
             MIconButton {
+                visible: StorageUsage.measured
                 iconName: "view-refresh"
                 key: "settings.refresh"
                 iconSize: Tokens.icon.sm
@@ -114,6 +117,7 @@ MCard {
             Layout.fillWidth: true
         }
         MStackedBar {
+            visible: StorageUsage.measured
             Layout.fillWidth: true
             implicitHeight: Tokens.spacing.lg
             activeId: root._hot
@@ -135,8 +139,22 @@ MCard {
             Layout.fillWidth: true
             indeterminate: true
         }
+        Item {
+            visible: !StorageUsage.measured
+            Layout.fillWidth: true
+            implicitHeight: Tokens.spacing.xxl * 4
+
+            MButton {
+                anchors.centerIn: parent
+                kind: "filled"
+                key: "settings.storage.measure"
+                busy: StorageUsage.running
+                enabled: !StorageUsage.running
+                onClicked: StorageUsage.start()
+            }
+        }
         Repeater {
-            model: root.rows
+            model: StorageUsage.measured ? root.rows : []
             Item {
                 required property var modelData
                 Layout.fillWidth: true
