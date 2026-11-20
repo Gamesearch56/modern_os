@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import "../../../../Commons"
 import "../../../../Widgets"
 
@@ -72,11 +73,20 @@ Item {
         return w + "x" + h + "+" + x + "+" + y;
     }
 
-    Rectangle {
+    Item {
+        id: frame
         anchors.fill: parent
-        radius: Tokens.radius.full
-        color: Colors.color.surfaceContainer
-        clip: true
+        layer.enabled: true
+        layer.smooth: true
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskSource: cropMask
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: Colors.color.surfaceContainer
+        }
 
         Image {
             id: pic
@@ -90,6 +100,18 @@ Item {
             height: Math.max(1, root.fit.natH * root.fit.scale)
             x: root.side / 2 + root.fit.panX - width / 2
             y: root.side / 2 + root.fit.panY - height / 2
+        }
+    }
+
+    Item {
+        id: cropMask
+        visible: false
+        anchors.fill: parent
+        layer.enabled: true
+
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
         }
     }
 

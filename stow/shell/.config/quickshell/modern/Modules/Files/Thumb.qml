@@ -79,14 +79,14 @@ Item {
     Rectangle {
         anchors.fill: parent
         visible: root.frame && root._share && pic.status !== Image.Ready
-        radius: Tokens.radius.medium
-        color: Colors.color.tertiaryContainer
+        radius: Tokens.radius.small
+        color: Colors.color.surfaceContainerHigh
 
         MIcon {
             anchors.centerIn: parent
             name: "network-server"
             size: Tokens.icon.lg
-            color: Colors.color.onTertiaryContainer
+            color: Colors.color.onSurfaceVariant
         }
     }
 
@@ -95,7 +95,7 @@ Item {
         visible: pic.status !== Image.Ready && (!root.frame || (!root._dir && !root._share))
         name: root._share ? "network-server" : (root._dir ? "folder" : FilesThumbs.glyph(root.entry))
         size: root.frame ? Tokens.icon.lg : root.size
-        color: root._share ? Colors.color.tertiary : (root._dir ? Colors.color.primary : Colors.color.onSurface)
+        color: root._share ? Colors.color.onSurfaceVariant : (root._dir ? Colors.color.primary : Colors.color.onSurface)
     }
 
     Rectangle {

@@ -111,6 +111,7 @@ Item {
                 Layout.bottomMargin: Tokens.spacing.sm
                 size: Tokens.session.avatar
                 source: User.faceUrl
+                ring: true
                 Accessible.ignored: true
             }
 

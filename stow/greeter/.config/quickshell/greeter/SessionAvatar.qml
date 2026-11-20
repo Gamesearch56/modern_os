@@ -1,6 +1,7 @@
 // Circular face for the selected login. Mirrors Widgets/MAvatar without
 // Commons. Prefers the session snapshot so the greeter need not read $HOME.
 import QtQuick
+import QtQuick.Effects
 
 Item {
     id: root
@@ -50,11 +51,21 @@ Item {
         return "";
     }
 
-    Rectangle {
+    Item {
+        id: disc
         anchors.fill: parent
-        radius: root._c ? root._c.radiusFull : 9999
-        color: root._c ? root._c.color.primaryContainer : "#4F378B"
-        clip: true
+        anchors.margins: root._c ? root._c.strokeFocus : 2
+        layer.enabled: true
+        layer.smooth: true
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskSource: discMask
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: root._c ? root._c.color.primaryContainer : "#4F378B"
+        }
 
         Image {
             id: face
@@ -107,6 +118,27 @@ Item {
                 anchors.bottom: parent.bottom
                 color: root._c ? root._c.color.onPrimaryContainer : "#EADDFF"
             }
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: width / 2
+        color: "transparent"
+        border.width: root._c ? root._c.strokeFocus : 2
+        border.color: root._c ? root._c.color.outline : "#938F99"
+        antialiasing: true
+    }
+
+    Item {
+        id: discMask
+        visible: false
+        anchors.fill: disc
+        layer.enabled: true
+
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
         }
     }
 }

@@ -35,7 +35,11 @@ MDialog {
         root._saving = true;
         User.applyFace(root._draft, String(crop.turn * 90), spec);
     }
-    onCancelled: root.open = false
+    onCancelled: {
+        if (root._saving)
+            return;
+        root.open = false;
+    }
     onDestructiveClicked: {
         User.clearFace();
         root.open = false;
@@ -58,7 +62,7 @@ MDialog {
             if (User.faceBusy || !root._saving)
                 return;
             root._saving = false;
-            if (User.faceError.length === 0)
+            if (User.faceError.length === 0 && User.hasFace)
                 root.open = false;
         }
     }
@@ -173,8 +177,20 @@ MDialog {
             key: "settings.users.faceHint"
             Layout.fillWidth: true
         }
+        MLinearProgress {
+            visible: root._saving
+            Layout.fillWidth: true
+            indeterminate: true
+        }
         MText {
-            visible: User.faceError.length > 0
+            visible: root._saving
+            key: "settings.users.faceSaving"
+            styleName: "bodySmall"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MText {
+            visible: User.faceError.length > 0 && !root._saving
             key: User.faceError.length > 0 ? User.faceError : "settings.users.faceFailed"
             styleName: "bodySmall"
             color: Colors.color.error

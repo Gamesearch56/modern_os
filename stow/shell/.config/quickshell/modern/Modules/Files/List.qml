@@ -81,7 +81,7 @@ Flickable {
                 Layout.fillWidth: true
             }
             MText {
-                visible: Files.showSize
+                visible: Files.showSize && (Files.place !== "network" || FilesSearch.active)
                 key: "files.details.size"
                 styleName: "labelSmall"
                 color: Colors.color.onSurfaceVariant
@@ -89,7 +89,7 @@ Flickable {
                 Layout.preferredWidth: facts.colSize
             }
             MText {
-                visible: Files.showCreated
+                visible: Files.showCreated && (Files.place !== "network" || FilesSearch.active)
                 key: "files.details.created"
                 styleName: "labelSmall"
                 color: Colors.color.onSurfaceVariant
@@ -97,7 +97,7 @@ Flickable {
                 Layout.preferredWidth: facts.colDate
             }
             MText {
-                visible: Files.showModified
+                visible: Files.showModified && (Files.place !== "network" || FilesSearch.active)
                 key: "files.details.updated"
                 styleName: "labelSmall"
                 color: Colors.color.onSurfaceVariant
@@ -105,7 +105,7 @@ Flickable {
                 Layout.preferredWidth: facts.colDate
             }
             MText {
-                visible: Files.showType
+                visible: Files.showType && (Files.place !== "network" || FilesSearch.active)
                 key: "files.details.type"
                 styleName: "labelSmall"
                 color: Colors.color.onSurfaceVariant
@@ -179,7 +179,7 @@ Flickable {
                         onActiveFocusChanged: Files.typing = focused
                     }
                     MText {
-                        visible: Files.showSize
+                        visible: Files.showSize && (Files.place !== "network" || FilesSearch.active)
                         Layout.preferredWidth: facts.colSize
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
@@ -188,7 +188,7 @@ Flickable {
                         text: facts.sizeText(row.modelData)
                     }
                     MText {
-                        visible: Files.showCreated
+                        visible: Files.showCreated && (Files.place !== "network" || FilesSearch.active)
                         Layout.preferredWidth: facts.colDate
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
@@ -197,7 +197,7 @@ Flickable {
                         text: facts.whenText(row.modelData.created)
                     }
                     MText {
-                        visible: Files.showModified
+                        visible: Files.showModified && (Files.place !== "network" || FilesSearch.active)
                         Layout.preferredWidth: facts.colDate
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
@@ -206,7 +206,7 @@ Flickable {
                         text: facts.whenText(row.modelData.mtime)
                     }
                     MText {
-                        visible: Files.showType
+                        visible: Files.showType && (Files.place !== "network" || FilesSearch.active)
                         Layout.preferredWidth: facts.colType
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"

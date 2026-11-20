@@ -1,6 +1,7 @@
 // Circular face. Source URL is passed in (Services/User owns ~/.face);
 // Widgets never touch the filesystem. Missing image → fallback icon.
 import QtQuick
+import QtQuick.Effects
 import "../Commons"
 
 Item {
@@ -11,18 +12,30 @@ Item {
     property string hoverIcon: ""
     property string hoverKey: ""
     property int size: Tokens.spacing.xxl * 2
+    property bool ring: false
 
     signal clicked()
 
     implicitWidth: root.size
     implicitHeight: root.size
 
-    Rectangle {
-        id: clip
+    // Qt clips to the bounding rectangle, so a radius alone leaves the
+    // photo square. The mask is what makes the picture a circle.
+    Item {
+        id: disc
         anchors.fill: parent
-        radius: Tokens.radius.full
-        color: Colors.color.primaryContainer
-        clip: true
+        anchors.margins: root.ring ? Tokens.stroke.focus : 0
+        layer.enabled: true
+        layer.smooth: true
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskSource: discMask
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: Colors.color.primaryContainer
+        }
 
         Image {
             id: face
@@ -45,7 +58,6 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: Tokens.radius.full
             color: Colors.color.scrim
             opacity: hoverMa.containsMouse ? Tokens.overlay.scrim : 0
             visible: root.hoverIcon.length > 0
@@ -66,6 +78,28 @@ Item {
             color: Colors.color.primary
             tint: true
         }
+    }
+
+    Item {
+        id: discMask
+        visible: false
+        anchors.fill: disc
+        layer.enabled: true
+
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
+        }
+    }
+
+    Rectangle {
+        visible: root.ring
+        anchors.fill: parent
+        radius: width / 2
+        color: "transparent"
+        border.width: Tokens.stroke.focus
+        border.color: Colors.color.outline
+        antialiasing: true
     }
 
     MouseArea {
