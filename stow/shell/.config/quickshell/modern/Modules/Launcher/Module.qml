@@ -25,6 +25,7 @@ Scope {
         void Config.launcher.mostUsedGridSize;
         return root.resultsFor(root.query);
     }
+    readonly property var catalog: Launcher.catalog(root.query)
     readonly property var current: {
         if (root.currentIndex < 0 || root.currentIndex >= root.results.length)
             return null;
@@ -108,6 +109,7 @@ Scope {
                 anchors.fill: parent
                 query: root.query
                 results: root.results
+                catalog: root.catalog
                 currentIndex: root.currentIndex
                 onQueryEdited: (t) => {
                     root.query = t;
@@ -117,6 +119,11 @@ Scope {
                 onActivated: (i) => {
                     root.currentIndex = i;
                     root.activate(root.results[i]);
+                }
+                onActivatedApp: (i) => {
+                    const item = root.catalog[i];
+                    if (item)
+                        root.activate(item);
                 }
                 onClosed: Launcher.hide()
             }
@@ -133,7 +140,10 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 context: Qt.ApplicationShortcut
-                onActivated: Launcher.hide()
+                onActivated: {
+                    if (!overlay.takeEscape())
+                        Launcher.hide();
+                }
             }
 
             Component.onCompleted: {

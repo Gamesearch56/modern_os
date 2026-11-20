@@ -160,5 +160,7 @@ log "theme seed"
 "$ROOT/scripts/test-theme-seed.sh"
 log "os label"
 "$ROOT/scripts/test-os-label.sh"
+log "launcher apps"
+"$ROOT/scripts/test-launcher-apps.sh"
 
 log "ok"
