@@ -8,8 +8,8 @@ Item {
     id: root
 
     property string monitorDesc: ""
-    readonly property bool _barBottom: Config.bar.position === "bottom"
-    readonly property bool _barLeft: Config.bar.position === "left"
+    readonly property bool _barBottom: BarLayout.position === "bottom"
+    readonly property bool _barLeft: BarLayout.position === "left"
 
     Binding {
         target: SystemStats
@@ -49,8 +49,8 @@ Item {
         height: Math.min(implicitHeight, parent.height - Tokens.spacing.xl)
         anchors.right: !root._barLeft ? parent.right : undefined
         anchors.left: root._barLeft ? parent.left : undefined
-        anchors.rightMargin: Config.bar.endGap ?? Tokens.spacing.md
-        anchors.leftMargin: Config.bar.endGap ?? Tokens.spacing.md
+        anchors.rightMargin: BarLayout.endGap ?? Tokens.spacing.md
+        anchors.leftMargin: BarLayout.endGap ?? Tokens.spacing.md
         y: root._barBottom ? (parent.height - height) : 0
         scale: Motion.overlayScale(Notifications.panelOpen)
 

@@ -92,4 +92,11 @@ else
     err "00-wallust.css must not stay in custom_css"
 fi
 
+if grep -Fq -- '--md-font-scale' "$ROOT/scripts/theme-apply.sh" \
+    && grep -Fq 'zoom: var(--md-font-scale)' "$ROOT/scripts/theme-apply.sh"; then
+    ok "browser interface follows the font size"
+else
+    err "Vivaldi chrome must scale with typography.scale"
+fi
+
 [ "$FAIL" -eq 0 ]

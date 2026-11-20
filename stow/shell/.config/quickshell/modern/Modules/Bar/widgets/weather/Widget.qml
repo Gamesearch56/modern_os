@@ -8,8 +8,8 @@ import "../../"
 Item {
     id: root
     property var barScreen: null
-    implicitWidth: BarLayout.vertical ? Config.bar.height : (row.implicitWidth + Tokens.spacing.md * 2)
-    implicitHeight: Config.bar.height
+    implicitWidth: BarLayout.vertical ? BarLayout.height : (row.implicitWidth + Tokens.spacing.md * 2)
+    implicitHeight: BarLayout.height
     Component.onCompleted: Weather.watch()
     Component.onDestruction: Weather.unwatch()
 

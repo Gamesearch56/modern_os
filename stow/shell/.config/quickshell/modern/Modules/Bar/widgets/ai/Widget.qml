@@ -7,8 +7,8 @@ import "../../"
 Item {
     id: root
     property var barScreen: null
-    implicitWidth: BarLayout.vertical ? Config.bar.height : (icon.implicitWidth + Tokens.spacing.md * 2)
-    implicitHeight: Config.bar.height
+    implicitWidth: BarLayout.vertical ? BarLayout.height : (icon.implicitWidth + Tokens.spacing.md * 2)
+    implicitHeight: BarLayout.height
 
     readonly property bool _mine: {
         void Ai.panelOpen;
@@ -41,7 +41,7 @@ Item {
         elevation: 0
         panelWidth: Tokens.window.chatWidth
         panelHeight: Tokens.window.chatHeight
-        hAlign: Config.bar.position === "right" ? Qt.AlignRight : Qt.AlignLeft
+        hAlign: BarLayout.position === "right" ? Qt.AlignRight : Qt.AlignLeft
         onOpenChanged: {
             if (!popup.open && root._barPopup)
                 Ai.hide();

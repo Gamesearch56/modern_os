@@ -7,7 +7,7 @@ import "../../"
 Item {
     id: root
     implicitWidth: chip.implicitWidth
-    implicitHeight: Config.bar.height
+    implicitHeight: BarLayout.height
 
     readonly property string _device: {
         const list = Bluetooth.devices?.values ?? [];

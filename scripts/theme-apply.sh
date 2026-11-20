@@ -273,8 +273,12 @@ patch_toolkit_chrome() {
   --md-blur: ${blur}px;
   --md-transparency: $(awk -v t="$trans" 'BEGIN { printf "%.0f", t*100 }')%;
   --md-wallpaper: ${wp_url};
+  --md-font-scale: ${scale};
 }
-body, #browser { font-family: var(--md-font-ui), sans-serif !important; }
+body, #browser {
+  font-family: var(--md-font-ui), sans-serif !important;
+  zoom: var(--md-font-scale);
+}
 EOF
     local qss="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qss/modern.qss"
     if [ -f "$qss" ]; then

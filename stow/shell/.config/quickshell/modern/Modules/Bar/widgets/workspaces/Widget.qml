@@ -6,14 +6,14 @@ import "../../../../Services"
 Item {
     id: root
     property var barScreen: null
-    implicitWidth: BarLayout.vertical ? Config.bar.height : (root._content + root._inset * 2)
-    implicitHeight: BarLayout.vertical ? (root._content + root._inset * 2) : Config.bar.height
+    implicitWidth: BarLayout.vertical ? BarLayout.height : (root._content + root._inset * 2)
+    implicitHeight: BarLayout.vertical ? (root._content + root._inset * 2) : BarLayout.height
     width: implicitWidth
     height: implicitHeight
     clip: true
 
     readonly property real _inset: Tokens.spacing.xs
-    readonly property real _chip: Config.bar.height - root._inset * 2
+    readonly property real _chip: BarLayout.height - root._inset * 2
     readonly property real _addSize: Tokens.spacing.xl
     readonly property int _n: (root.ids || []).length
     readonly property real _content: {

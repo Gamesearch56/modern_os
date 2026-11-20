@@ -4,8 +4,8 @@ import "../../../../Services"
 import "../../../../Commons"
 
 Item {
-    implicitWidth: Config.bar.height
-    implicitHeight: Config.bar.height
+    implicitWidth: BarLayout.height
+    implicitHeight: BarLayout.height
 
     MIconButton {
         tabFocus: false

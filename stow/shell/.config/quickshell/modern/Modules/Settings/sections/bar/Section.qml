@@ -117,7 +117,10 @@ ColumnLayout {
             { value: "left", titleKey: "settings.barLeft" },
             { value: "right", titleKey: "settings.barRight" }
         ]
-        onSelected: (v) => ConfigWrite.set("bar.position", v)
+        onSelected: (v) => {
+            BarLayout.livePosition = v;
+            ConfigWrite.set("bar.position", v);
+        }
     }
 
     MSectionHeader {
@@ -131,7 +134,10 @@ ColumnLayout {
             { value: "floating", titleKey: "settings.barFloating" },
             { value: "attached", titleKey: "settings.barAttached" }
         ]
-        onSelected: (v) => ConfigWrite.set("bar.style", v)
+        onSelected: (v) => {
+            BarLayout.liveStyle = v;
+            ConfigWrite.set("bar.style", v);
+        }
     }
 
     MField {
@@ -141,7 +147,20 @@ ColumnLayout {
             to: 56
             value: Config.bar.height
             showValue: true
+            onMoved: (v) => { BarLayout.liveHeight = Math.round(v); }
             onCommitted: (v) => ConfigWrite.set("bar.height", Math.round(v))
+        }
+    }
+    MField {
+        labelKey: "settings.fields.typeScale"
+        MSlider {
+            from: 0.8
+            to: 1.4
+            decimals: 2
+            value: Config.typography.scale
+            showValue: true
+            onMoved: (v) => { Config.typography.scale = Math.round(v * 100) / 100; }
+            onCommitted: (v) => ConfigWrite.set("typography.scale", Math.round(v * 100) / 100)
         }
     }
     MField {
@@ -151,6 +170,7 @@ ColumnLayout {
             to: 24
             value: Config.bar.edgeGap ?? 8
             showValue: true
+            onMoved: (v) => { BarLayout.liveEdge = Math.round(v); }
             onCommitted: (v) => ConfigWrite.set("bar.edgeGap", Math.round(v))
         }
     }
@@ -161,6 +181,7 @@ ColumnLayout {
             to: 24
             value: Config.bar.endGap ?? 8
             showValue: true
+            onMoved: (v) => { BarLayout.liveEnd = Math.round(v); }
             onCommitted: (v) => ConfigWrite.set("bar.endGap", Math.round(v))
         }
     }
@@ -175,7 +196,10 @@ ColumnLayout {
         }
         MSwitch {
             checked: !!(Config.bar.autoHide)
-            onToggled: (v) => ConfigWrite.set("bar.autoHide", v)
+            onToggled: (v) => {
+                BarLayout.liveAutoHide = v ? 1 : 0;
+                ConfigWrite.set("bar.autoHide", v);
+            }
         }
     }
 

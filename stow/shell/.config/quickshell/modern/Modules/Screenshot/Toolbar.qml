@@ -10,7 +10,7 @@ import "../../Services"
 Item {
     id: root
 
-    readonly property real _barReserve: Config.bar.position !== "top"
+    readonly property real _barReserve: BarLayout.position !== "top"
         ? Tokens.spacing.xl : BarLayout.windowInset
 
     implicitWidth: card.width

@@ -14,7 +14,7 @@ Scope {
 
     required property var screen
 
-    readonly property real _barReserve: Config.bar.position !== "top"
+    readonly property real _barReserve: BarLayout.position !== "top"
         ? Tokens.spacing.xl : BarLayout.windowInset
     readonly property real _hot: Tokens.spacing.xl
     property bool chromeOpen: true
