@@ -104,6 +104,8 @@ source "$REPO_ROOT/install/lib/greetd.sh"
 source "$REPO_ROOT/install/lib/ge-proton.sh"
 # shellcheck source=lib/kernel-boot.sh
 source "$REPO_ROOT/install/lib/kernel-boot.sh"
+# shellcheck source=lib/mirrors.sh
+source "$REPO_ROOT/install/lib/mirrors.sh"
 
 : > "$LOG_FILE"
 _err_trap() {
@@ -441,6 +443,19 @@ elif greetd_target_is_live_user "$TARGET"; then
     greetd_apply "$(greetd_user_for_home "$TARGET")"
 else
     log_info "skipping greetd (target '$TARGET' is not a login home)"
+fi
+
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "skipping mirror refresh (dotfiles-only)"
+elif [ "$DRY_RUN" -eq 1 ]; then
+    log_info "mirrors: would enable the two-week mirror refresh"
+elif greetd_target_is_live_user "$TARGET" && [ -n "${MODERN_ROOT_PLAN:-}" ]; then
+    printf 'mirrors\n' >>"$MODERN_ROOT_PLAN"
+    log_info "mirror refresh deferred to the update's root step"
+elif greetd_target_is_live_user "$TARGET"; then
+    mirrors_apply || log_warn "mirror refresh was not enabled"
+else
+    log_info "skipping mirror refresh (target '$TARGET' is not a login home)"
 fi
 
 if [ "$DOTFILES_ONLY" -eq 1 ]; then

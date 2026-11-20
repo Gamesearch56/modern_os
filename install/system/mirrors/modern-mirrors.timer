@@ -1,0 +1,13 @@
+[Unit]
+Description=Refresh pacman mirrors every two weeks
+
+[Timer]
+# The 1st and the 15th. A monotonic timer restarts on every reboot, so
+# a desktop that restarts more often than every two weeks would never run.
+OnCalendar=*-*-1,15 05:00:00
+Persistent=true
+RandomizedDelaySec=1h
+AccuracySec=1h
+
+[Install]
+WantedBy=timers.target
