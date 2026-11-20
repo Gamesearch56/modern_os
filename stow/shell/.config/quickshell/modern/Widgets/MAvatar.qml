@@ -12,7 +12,6 @@ Item {
     property string hoverIcon: ""
     property string hoverKey: ""
     property int size: Tokens.spacing.xxl * 2
-    property bool ring: false
 
     signal clicked()
 
@@ -24,7 +23,6 @@ Item {
     Item {
         id: disc
         anchors.fill: parent
-        anchors.margins: root.ring ? Tokens.stroke.focus : 0
         layer.enabled: true
         layer.smooth: true
         layer.effect: MultiEffect {
@@ -90,16 +88,6 @@ Item {
             anchors.fill: parent
             radius: width / 2
         }
-    }
-
-    Rectangle {
-        visible: root.ring
-        anchors.fill: parent
-        radius: width / 2
-        color: "transparent"
-        border.width: Tokens.stroke.focus
-        border.color: Colors.color.primary
-        antialiasing: true
     }
 
     MouseArea {

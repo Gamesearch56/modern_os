@@ -22,7 +22,6 @@ ColumnLayout {
         avatarSize: Tokens.spacing.xxl * 2
         avatarHoverIcon: "camera-photo-symbolic"
         avatarHoverKey: "settings.users.faceHover"
-        avatarRing: true
         onAvatarClicked: root.faceClicked()
         titleValue: User.displayName
         subtitleValue: User.loginName

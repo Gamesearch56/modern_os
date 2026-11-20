@@ -13,7 +13,6 @@ MCard {
     property bool showAvatar: false
     property string avatarHoverIcon: ""
     property string avatarHoverKey: ""
-    property bool avatarRing: false
     property int avatarSize: Tokens.spacing.xxl * 3
 
     signal avatarClicked()
@@ -55,7 +54,6 @@ MCard {
                 source: root.avatarSource
                 hoverIcon: root.avatarHoverIcon
                 hoverKey: root.avatarHoverKey
-                ring: root.avatarRing
                 Layout.alignment: Qt.AlignVCenter
                 Layout.rightMargin: visible ? Tokens.spacing.lg : 0
                 onClicked: root.avatarClicked()

@@ -54,7 +54,6 @@ Item {
     Item {
         id: disc
         anchors.fill: parent
-        anchors.margins: root._c ? root._c.strokeFocus : 2
         layer.enabled: true
         layer.smooth: true
         layer.effect: MultiEffect {
@@ -119,15 +118,6 @@ Item {
                 color: root._c ? root._c.color.onPrimaryContainer : "#EADDFF"
             }
         }
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        radius: width / 2
-        color: "transparent"
-        border.width: root._c ? root._c.strokeFocus : 2
-        border.color: (root._c && root._c.color && root._c.color.primary) ? root._c.color.primary : (root._c ? root._c._fallbackColor.primary : "#D0BCFF")
-        antialiasing: true
     }
 
     Item {
