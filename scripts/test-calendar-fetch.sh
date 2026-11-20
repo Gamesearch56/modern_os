@@ -144,8 +144,10 @@ if grep -Fq '"clock": "Date and time"' \
     "$ROOT/stow/modern/.config/modern/translations/de.json" \
     && grep -Fq 'function reopenAt' \
     "$ROOT/stow/shell/.config/quickshell/modern/Services/Settings.qml" \
-    && grep -Fq 'Settings.reopenAt("bar", "clock")' \
-    "$ROOT/stow/shell/.config/quickshell/modern/Services/CalendarAccount.qml"; then
+    && grep -Fq 'Settings.reopenAt("bar", "clock", draft)' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Services/CalendarAccount.qml" \
+    && grep -Fq 'Settings.restoreDetail' \
+    "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/bar/CalendarConnect.qml"; then
     ok "Date and time labels"
 else
     err "bar.clock labels"
