@@ -44,4 +44,25 @@ PY
 if [[ "$fail" -eq 0 ]]; then
     ok "library totals skip redistributables and sum playtime"
 fi
+
+# A Battle.net game can be newer than the Steam install record.
+pfx="$TMP/.local/share/Steam/steamapps/compatdata/9/pfx/drive_c"
+mkdir -p "$pfx/users/steamuser/AppData/Roaming/Battle.net"
+mkdir -p "$pfx/Program Files (x86)/World of Warcraft/_forever_/Logs"
+cat >"$pfx/users/steamuser/AppData/Roaming/Battle.net/Battle.net.config" <<'EOF'
+{"Games":{"wowf":{"LastPlayed":"1710000000"}}}
+EOF
+log="$pfx/Program Files (x86)/World of Warcraft/_forever_/Logs/Connection.log"
+printf 'connected\n' >"$log"
+touch -d @1720000000 "$log"
+got="$(HOME="$TMP" python3 "$PY")"
+python3 - "$got" <<'PY' || err "battlenet last played"
+import json, sys
+row = json.loads(sys.argv[1])
+assert row["last"] == 1720000000, row
+assert row["lastName"] == "WoW Forever", row
+PY
+if [[ "$fail" -eq 0 ]]; then
+    ok "a newer battle.net session replaces the steam install record"
+fi
 exit "$fail"

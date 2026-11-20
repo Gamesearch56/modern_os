@@ -8,6 +8,8 @@ Rectangle {
 
     property string titleKey: ""
     property string valueText: ""
+    // A name that does not fit beside the label. It wraps on its own line.
+    property string detailText: ""
     property real percent: 0
     property bool showTrack: true
 
@@ -36,6 +38,15 @@ Rectangle {
                 styleName: "labelLarge"
                 familyRole: "monospace"
             }
+        }
+
+        MText {
+            visible: root.detailText.length > 0
+            Layout.fillWidth: true
+            value: root.detailText
+            styleName: "bodyMedium"
+            wrapMode: Text.WordWrap
+            elide: Text.ElideNone
         }
 
         Rectangle {

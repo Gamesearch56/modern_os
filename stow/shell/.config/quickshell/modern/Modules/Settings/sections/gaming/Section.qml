@@ -34,11 +34,18 @@ ColumnLayout {
         columnSpacing: Tokens.spacing.xs
         rowSpacing: Tokens.spacing.xs
 
+        MPercentTile {
+            Layout.fillWidth: true
+            Layout.columnSpan: 2
+            showTrack: false
+            titleKey: "settings.gaming.last"
+            valueText: root._lastWhen()
+            detailText: root._lastName()
+        }
         MPercentTile { Layout.fillWidth: true; showTrack: false; titleKey: "settings.gaming.hours"; valueText: root._hours() }
         MPercentTile { Layout.fillWidth: true; showTrack: false; titleKey: "settings.gaming.installed"; valueText: root._count(GamesLibrary.installed) }
-        MPercentTile { Layout.fillWidth: true; showTrack: false; titleKey: "settings.gaming.last"; valueText: root._last() }
         MPercentTile { Layout.fillWidth: true; showTrack: false; titleKey: "settings.gaming.disk"; valueText: root._disk() }
-        MPercentTile { Layout.fillWidth: true; Layout.columnSpan: 2; showTrack: false; titleKey: "settings.gaming.running"; valueText: root._play() }
+        MPercentTile { Layout.fillWidth: true; showTrack: false; titleKey: "settings.gaming.running"; valueText: root._play() }
     }
 
     RowLayout {
@@ -118,10 +125,13 @@ ColumnLayout {
         const n = gb >= 10 ? Math.round(gb) : Math.round(gb * 10) / 10;
         return I18n.t("settings.gaming.diskValue", ({ n: n }));
     }
-    function _last(): string {
+    function _lastWhen(): string {
         if (!GamesLibrary.ready || !GamesLibrary.last) return root._none();
-        const when = Qt.formatDateTime(new Date(GamesLibrary.last * 1000), "d MMM yyyy");
-        return GamesLibrary.lastName.length ? I18n.t("settings.gaming.lastBoth", ({ name: GamesLibrary.lastName, when: when })) : when;
+        return Qt.formatDateTime(new Date(GamesLibrary.last * 1000), "d MMM yyyy");
+    }
+    function _lastName(): string {
+        if (!GamesLibrary.ready || !GamesLibrary.last) return "";
+        return GamesLibrary.lastName || "";
     }
     function _play(): string {
         return GamesLibrary.playing.length ? GamesLibrary.playing : root._none();

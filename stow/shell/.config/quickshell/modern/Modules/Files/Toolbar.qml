@@ -145,7 +145,7 @@ RowLayout {
     property int _index: -1
     readonly property int _limit: 8
     readonly property var suggestions: {
-        void [search.text, search.focused, root._hold, FilesSearch.results, Files.entries, Files.foldersFirst, Files.place, Files.selected];
+        void [search.text, search.focused, root._hold, FilesSearch.results, Files.entries, Files.foldersFirst, Files.place, Files.selected, FilesLocate.gen];
         return root._collect();
     }
 
@@ -159,10 +159,8 @@ RowLayout {
 
     function locationText(): string {
         const hover = String(Files.hoverPath || "");
-        if (hover.length)
-            return hover;
-        if (Files.selected.length === 1)
-            return String(Files.selected[0] || "");
+        if (hover.length) return hover;
+        if (Files.selected.length === 1) return String(Files.selected[0] || "");
         const place = Files.place;
         if (place === "recent" || place === "favorites" || place === "network" || place === "trash")
             return I18n.t("files.places." + place);
@@ -182,7 +180,9 @@ RowLayout {
         if (!search.focused || root._hold)
             return "";
         const text = String(search.text || "").trim();
-        if (text.length < 3 || text === root.locationText())
+        if (!text.length || text === root.locationText())
+            return "";
+        if (text.length < 3 && text.charAt(0) !== "/" && text.charAt(0) !== "~")
             return "";
         return text;
     }
@@ -192,11 +192,10 @@ RowLayout {
             return;
         root._quiet = false;
         root._index = -1;
+        const text = String(search.text || "").trim();
+        FilesLocate.ask(text === root.locationText() ? "" : text);
         if (!root._query().length) {
-            hunt.stop();
-            FilesSearch.stop();
-            root._index = -1;
-            root._sync();
+            hunt.stop(); FilesSearch.stop(); root._sync();
             return;
         }
         hunt.restart();
@@ -230,9 +229,10 @@ RowLayout {
         FilesSearch.stop();
         root._index = -1;
         const path = String(row.path);
-        const slash = path.lastIndexOf("/");
-        const parent = slash > 0 ? path.slice(0, slash) : "/";
-        Files.go(parent, true, [path]);
+        if (!(FilesLocate.same(path) && FilesLocate.open(path))) {
+            const slash = path.lastIndexOf("/");
+            Files.go(slash > 0 ? path.slice(0, slash) : "/", true, [path]);
+        }
         root.showLocation();
         root._sync();
     }
@@ -241,35 +241,31 @@ RowLayout {
         const picked = (suggest.open || FilesSearch.popup) && root._index >= 0;
         const text = String(search.text || "").trim();
         const here = text !== root.locationText();
-        const keep = !picked && here && text === FilesSearch.query;
+        const opened = !picked && here && FilesLocate.open(text);
         if (picked) root._accept();
         else hunt.stop();
         root._closeQuick();
-        if (keep) FilesSearch.openPage();
-        else if (!picked && here && text.length)
-            FilesSearch.start(Files.path, text, Files.showHidden, true);
+        if (opened && FilesLocate.found) root.showLocation();
+        else if (!opened && !picked && here && text.length) {
+            if (text === FilesSearch.query) FilesSearch.openPage();
+            else FilesSearch.start(Files.path, text, Files.showHidden, true);
+        }
         root._dropField();
     }
 
     function _dropField() {
-        root._leaveField = true;
-        search.editor.deselect(); root.forceActiveFocus();
+        root._leaveField = true; search.editor.deselect(); root.forceActiveFocus();
     }
 
     function _leaveSearch() {
-        hunt.stop();
-        FilesSearch.stop();
+        hunt.stop(); FilesSearch.stop();
         root._quiet = true; root._index = -1; Files.searchOpen = false;
-        root.showLocation();
-        root._sync();
+        root.showLocation(); root._sync();
     }
 
     function _closeQuick() {
-        reveal.stop();
-        root._quiet = true;
-        root._index = -1;
-        suggest.open = false;
-        FilesSearch.popup = false;
+        reveal.stop(); root._quiet = true; root._index = -1;
+        suggest.open = false; FilesSearch.popup = false;
     }
 
     function _sync() {

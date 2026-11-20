@@ -8,6 +8,27 @@ from pathlib import Path
 
 HOME = Path(os.environ.get("HOME", "")).expanduser()
 SKIP = {"steamworks common redistributables", "proton", "steam linux runtime"}
+# Battle.net product ids. WoW Forever is a separate install from retail.
+BATTLENET_NAMES = {
+    "wowf": "WoW Forever",
+    "wow": "World of Warcraft",
+    "wow_classic": "WoW Classic",
+    "wow_classic_era": "WoW Classic",
+    "wow_classic_beta": "WoW Classic",
+    "w3": "Warcraft III",
+    "d3": "Diablo III",
+    "fenris": "Diablo IV",
+    "pro": "Overwatch",
+    "prometheus": "Overwatch 2",
+    "s2": "StarCraft II",
+}
+WOW_LOGS = {
+    "_forever_": "WoW Forever",
+    "_retail_": "World of Warcraft",
+    "_classic_": "WoW Classic",
+    "_classic_era_": "WoW Classic",
+    "_classic_beta_": "WoW Classic",
+}
 
 
 def _steam_roots():
@@ -41,6 +62,17 @@ def _library_dirs(root):
     return dirs
 
 
+def _note(totals, stamp, name):
+    try:
+        stamp = int(stamp or 0)
+    except (TypeError, ValueError):
+        return
+    title = str(name or "").strip()
+    if stamp > totals["last"] and title:
+        totals["last"] = stamp
+        totals["lastName"] = title
+
+
 def _steam(totals):
     seen = set()
     for root in _steam_roots():
@@ -59,16 +91,24 @@ def _steam(totals):
                     totals["bytes"] += int(_quoted(text, "SizeOnDisk") or "0")
                 except ValueError:
                     pass
-                try:
-                    played = int(_quoted(text, "LastPlayed") or "0")
-                except ValueError:
-                    played = 0
-                if played > totals["last"]:
-                    totals["last"] = played
-                    totals["lastName"] = name
+                _note(totals, _quoted(text, "LastPlayed"), name)
+        names = {}
+        for apps in _library_dirs(root):
+            for acf in apps.glob("appmanifest_*.acf"):
+                text = acf.read_text(errors="replace")
+                appid = _quoted(text, "appid")
+                title = _quoted(text, "name")
+                if appid and title and title.casefold() not in SKIP and not title.casefold().startswith("proton "):
+                    names[appid] = title
         for cfg in (root / "userdata").glob("*/config/localconfig.vdf"):
-            for minutes in re.findall(r'"Playtime"\s+"(\d+)"', cfg.read_text(errors="replace")):
+            text = cfg.read_text(errors="replace")
+            for minutes in re.findall(r'"Playtime"\s+"(\d+)"', text):
                 totals["minutes"] += int(minutes)
+            # The install record lags games that were launched later.
+            for appid, body in re.findall(r'"(\d+)"\s*\{([^{}]*)\}', text):
+                played = _quoted(body, "LastPlayed")
+                if played and appid in names:
+                    _note(totals, played, names[appid])
 
 
 def _lutris(totals):
@@ -92,17 +132,56 @@ def _lutris(totals):
                 continue
             totals["installed"] += 1
             totals["minutes"] += float(hours or 0) * 60
-            try:
-                stamp = int(played or 0)
-            except (TypeError, ValueError):
-                stamp = 0
-            if stamp > totals["last"]:
-                totals["last"] = stamp
-                totals["lastName"] = str(name)
+            _note(totals, played, name)
     except sqlite3.Error:
         return
     finally:
         con.close()
+
+
+def _prefixes():
+    found = []
+    seen = set()
+    candidates = [
+        HOME / ".local/share/modern/battlenet/pfx",
+        HOME / "Games/battlenet",
+    ]
+    for root in _steam_roots():
+        base = root / "steamapps/compatdata"
+        if base.is_dir():
+            candidates.extend(base.glob("*/pfx"))
+    for path in candidates:
+        if not path.is_dir():
+            continue
+        resolved = path.resolve()
+        if resolved not in seen:
+            seen.add(resolved)
+            found.append(resolved)
+    return found
+
+
+def _battlenet(totals):
+    for prefix in _prefixes():
+        configs = (prefix / "drive_c/users").glob("*/AppData/Roaming/Battle.net/Battle.net.config")
+        for cfg in configs:
+            try:
+                data = json.loads(cfg.read_text(errors="replace"))
+            except json.JSONDecodeError:
+                continue
+            games = data.get("Games") if isinstance(data, dict) else None
+            if not isinstance(games, dict):
+                continue
+            for uid, row in games.items():
+                if isinstance(row, dict) and uid in BATTLENET_NAMES:
+                    _note(totals, row.get("LastPlayed"), BATTLENET_NAMES[uid])
+        wow = prefix / "drive_c/Program Files (x86)/World of Warcraft"
+        if not wow.is_dir():
+            continue
+        # A direct start updates the client log without the launcher stamp.
+        for folder, title in WOW_LOGS.items():
+            log = wow / folder / "Logs/Connection.log"
+            if log.is_file():
+                _note(totals, int(log.stat().st_mtime), title)
 
 
 def _heroic(totals):
@@ -149,6 +228,7 @@ def main():
     if HOME.is_dir():
         _steam(totals)
         _lutris(totals)
+        _battlenet(totals)
         _heroic(totals)
     print(json.dumps({
         "hours": round(totals["minutes"] / 60, 1),
