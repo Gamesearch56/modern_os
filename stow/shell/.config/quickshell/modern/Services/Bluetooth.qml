@@ -232,27 +232,39 @@ Singleton {
                 continue;
             if (!want && BluetoothLink.shadowed(d))
                 continue;
-            if (!want && !(d.paired || d.bonded || d.trusted || root.isNamed(d)))
+            if (!want && !root.isRemembered(d) && !root.isNamed(d))
                 continue;
             out.push(d);
         }
-        if (!want) {
-            const seen = root._seenAt;
-            out.sort((a, b) => {
-                const ak = !!(a && (a.paired || a.bonded));
-                const bk = !!(b && (b.paired || b.bonded));
-                if (ak !== bk)
-                    return ak ? -1 : 1;
-                return (seen[String(b?.address || "")] || 0) - (seen[String(a?.address || "")] || 0);
-            });
-        }
+        const seen = root._seenAt;
+        out.sort((a, b) => root._order(a, b, seen));
         return out;
+    }
+
+    // Connected, then a saved device, then everything else. A new scan
+    // must not lift an unknown device above one this machine remembers.
+    function _order(a: var, b: var, seen: var): int {
+        const ar = a && a.connected ? 0 : (root.isRemembered(a) ? 1 : 2);
+        const br = b && b.connected ? 0 : (root.isRemembered(b) ? 1 : 2);
+        if (ar !== br)
+            return ar - br;
+        return (seen[String(b?.address || "")] || 0) - (seen[String(a?.address || "")] || 0);
     }
 
     readonly property var connectedDevices: { void root._devSig; return root._byConnected(true); }
     readonly property var availableDevices: {
         void root._devSig;
         void root._seenSeq;
+        void BluetoothLink.savedGen;
         return root._byConnected(false);
+    }
+    readonly property var sortedDevices: {
+        void root._devSig;
+        void root._seenSeq;
+        void BluetoothLink.savedGen;
+        const list = root._list(root.devices).slice();
+        const seen = root._seenAt;
+        list.sort((a, b) => root._order(a, b, seen));
+        return list;
     }
 }

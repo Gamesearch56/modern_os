@@ -63,8 +63,9 @@ Singleton {
             void n?.ssid;
             void n?.connected;
             void n?.known;
+            void n?.nmSettings;
             void n?.signalStrength;
-            s += root._wifiKey(n) + ":" + (n && n.connected ? "1" : "0") + (n && n.known ? "k" : "") + ":" + (Number(n?.signalStrength) || 0) + ",";
+            s += root._wifiKey(n) + ":" + (n && n.connected ? "1" : "0") + (n && (n.known || (n.nmSettings && n.nmSettings.length)) ? "k" : "") + ":" + (Number(n?.signalStrength) || 0) + ",";
         }
         return s;
     }
@@ -139,8 +140,8 @@ Singleton {
         for (let i = 0; i < raw.length; i++)
             list.push(raw[i]);
         list.sort((a, b) => {
-            const ar = a?.connected ? 0 : (a?.known ? 1 : 2);
-            const br = b?.connected ? 0 : (b?.known ? 1 : 2);
+            const ar = a?.connected ? 0 : (a && (a.known || (a.nmSettings && a.nmSettings.length)) ? 1 : 2);
+            const br = b?.connected ? 0 : (b && (b.known || (b.nmSettings && b.nmSettings.length)) ? 1 : 2);
             if (ar !== br)
                 return ar - br;
             const ds = (Number(b?.signalStrength) || 0) - (Number(a?.signalStrength) || 0);

@@ -25,7 +25,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
-        model: Bluetooth.devices?.values ?? []
+        model: Bluetooth.sortedDevices
         delegate: MListItem {
             required property var modelData
             width: ListView.view.width
