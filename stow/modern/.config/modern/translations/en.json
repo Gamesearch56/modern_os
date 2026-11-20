@@ -1627,6 +1627,12 @@
     "refused": "That change is not allowed",
     "noAccess": "You don't have access.",
     "networkEmpty": "No network locations",
+    "network": {
+      "connect": "Connect to server",
+      "connectDo": "Connect",
+      "address": "Server address",
+      "refused": "Could not connect to that server"
+    },
     "favoritesEmpty": "No favorites",
     "recentEmpty": "No recent items",
     "launcherName": "Filemanager",
@@ -1643,6 +1649,19 @@
     "confirmEmptyBody": "Everything in the trash is removed.",
     "confirmEject": "Eject this device?",
     "confirmEjectBody": "Eject {name}? Save anything still open on it first.",
+    "zip": {
+      "title": "Name the archive",
+      "create": "Create",
+      "placeholder": "Archive name",
+      "taken": "That name is already used in this folder."
+    },
+    "exists": {
+      "title": "Name already exists",
+      "file": "A file named {name} is already in this folder. Overwrite moves the existing file to the trash. Rename keeps both.",
+      "folder": "A folder named {name} is already in this folder. Overwrite moves the existing folder to the trash. Rename keeps both.",
+      "overwrite": "Overwrite",
+      "rename": "Rename"
+    },
     "places": {
       "home": "Home",
       "recent": "Recent",
@@ -1732,7 +1751,9 @@
       "properties": "Properties",
       "eject": "Eject",
       "restore": "Restore",
-      "empty": "Empty trash"
+      "empty": "Empty trash",
+    "zip": "Compress to zip",
+    "extract": "Extract"
     },
     "tabs": {
       "close": "Close tab"

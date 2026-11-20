@@ -365,6 +365,32 @@ def _as_dir(dest):
     return dest
 
 
+def landing_dir(dest):
+    return _as_dir(dest)
+
+
+def copy_named(src, dest_dir, leaf):
+    # The name was chosen in the dialog. Do not invent another "(2)".
+    src = clean(src)
+    dest_dir = _as_dir(dest_dir)
+    leaf = leaf_name(leaf)
+    if _inside(dest_dir, src):
+        raise Refuse("refused")
+    if not os.path.lexists(src):
+        raise FileNotFoundError(src)
+    target = os.path.join(dest_dir, leaf)
+    if os.path.lexists(target):
+        raise FileExistsError(target)
+    src_dir, src_name = open_parent(src, write=False)
+    dst_dir, dst_name = open_parent(target)
+    try:
+        _copy_name(src_dir, src_name, dst_dir, dst_name)
+    finally:
+        os.close(src_dir)
+        os.close(dst_dir)
+    return target
+
+
 def copy_into(src, dest_dir):
     src = clean(src)
     dest_dir = _as_dir(dest_dir)
@@ -410,6 +436,46 @@ def remove_path(path):
             os.unlink(name, dir_fd=dfd)
     finally:
         os.close(dfd)
+
+
+def move_exact(src, dest):
+    # Undo puts the file back at its old path. A free-name move would
+    # invent "(2)" and the next redo would not find the original.
+    src = clean(src)
+    dest = ensure_mutable(clean(dest))
+    if not os.path.lexists(src):
+        raise FileNotFoundError(src)
+    try:
+        if os.path.realpath(src) == os.path.realpath(dest):
+            return dest
+    except OSError:
+        pass
+    if os.path.lexists(dest):
+        raise FileExistsError(dest)
+    parent = parent_of(dest)
+    if _inside(parent, src):
+        raise Refuse("refused")
+    src_dir, src_name = open_parent(src)
+    dst_dir, dst_name = open_parent(dest)
+    try:
+        try:
+            rename_noreplace(src_dir, src_name, dst_dir, dst_name)
+            return dest
+        except OSError as exc:
+            if exc.errno != errno.EXDEV:
+                raise
+    finally:
+        os.close(src_dir)
+        os.close(dst_dir)
+    src_dir, src_name = open_parent(src, write=False)
+    dst_dir, dst_name = open_parent(dest)
+    try:
+        _copy_name(src_dir, src_name, dst_dir, dst_name)
+    finally:
+        os.close(src_dir)
+        os.close(dst_dir)
+    remove_path(src)
+    return dest
 
 
 def move_into(src, dest_dir):

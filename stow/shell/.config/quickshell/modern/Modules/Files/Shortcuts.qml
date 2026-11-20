@@ -5,7 +5,8 @@ import "../../Services"
 Item {
     id: root
 
-    readonly property bool modal: Files.propertiesOpen || Files.confirming || Files.naming
+    property var places: null
+    readonly property bool modal: Files.propertiesOpen || Files.confirming || Files.naming || FilesConflict.open
             || Files.menuOpen || Storage.confirmWhere === "files"
     // Editing the path must not swallow Back and Forward.
     readonly property bool nav: Files.open && Files.renaming.length === 0 && !root.modal
@@ -14,6 +15,9 @@ Item {
     Shortcut { sequence: "Ctrl+C"; enabled: root.armed; context: Qt.WindowShortcut; onActivated: Files.copy() }
     Shortcut { sequence: "Ctrl+X"; enabled: root.armed; context: Qt.WindowShortcut; onActivated: Files.cut() }
     Shortcut { sequence: "Ctrl+V"; enabled: root.armed; context: Qt.WindowShortcut; onActivated: Files.paste("") }
+    Shortcut { sequence: "Ctrl+Z"; enabled: root.armed; context: Qt.WindowShortcut; onActivated: FilesUndo.undo() }
+    Shortcut { sequence: "Ctrl+Y"; enabled: root.armed; context: Qt.WindowShortcut; onActivated: FilesUndo.redo() }
+    Shortcut { sequence: "Ctrl+Shift+Z"; enabled: root.armed; context: Qt.WindowShortcut; onActivated: FilesUndo.redo() }
     Shortcut { sequence: "Ctrl+A"; enabled: root.armed; onActivated: Files.selectAll() }
     Shortcut { sequence: "Ctrl+Shift+N"; enabled: root.armed; onActivated: Files.askName("dir") }
     Shortcut { sequence: "F2"; enabled: root.armed && Files.selected.length === 1; onActivated: Files.renaming = Files.selected[0] }
@@ -32,7 +36,18 @@ Item {
     Shortcut { sequence: "Ctrl+PgUp"; enabled: root.nav; onActivated: root.stepTab(-1) }
     Shortcut { sequence: "Alt+Return"; enabled: root.armed && Files.selected.length === 1; onActivated: root.properties(Files.selected[0]) }
     Shortcut { sequence: "Ctrl+L"; enabled: root.armed; onActivated: Files.locationOpen = true }
-    Shortcut { sequence: "Ctrl+F"; enabled: root.armed; onActivated: Files.searchOpen = true }
+    Shortcut {
+        sequence: "Ctrl+F"
+        enabled: root.nav
+        context: Qt.WindowShortcut
+        onActivated: {
+            // Already open does not signal again, so the field would stay unselected.
+            Files.searchOpen = false;
+            Files.searchOpen = true;
+        }
+    }
+    Shortcut { sequence: "Tab"; enabled: root.armed && !FilesSearch.popup && root.places; context: Qt.WindowShortcut; onActivated: root.places.cycle(1) }
+    Shortcut { sequence: "Backtab"; enabled: root.armed && !FilesSearch.popup && root.places; context: Qt.WindowShortcut; onActivated: root.places.cycle(-1) }
     Shortcut { sequence: "Ctrl+H"; enabled: root.armed; onActivated: Files.toggleHidden() }
     Shortcut { sequence: "F5"; enabled: root.armed; onActivated: Files.refresh() }
     Shortcut { sequence: "Return"; enabled: root.armed && !FilesSearch.popup && Files.selected.length === 1; onActivated: Files.show(Files.selected[0]) }
@@ -54,6 +69,8 @@ Item {
                 Files.menuOpen = false;
             else if (FilesSearch.popup) {
                 FilesSearch.requestDismiss();
+            } else if (Files.typing && Files.renaming.length === 0 && !Files.propertiesOpen && !Files.locationOpen) {
+                FilesSearch.requestRelease();
             } else if (Files.searchOpen || FilesSearch.query.length > 0) {
                 Files.searchOpen = false;
                 FilesSearch.requestClear();

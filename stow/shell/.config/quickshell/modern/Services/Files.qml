@@ -34,6 +34,7 @@ Singleton {
     property bool naming: false
     property string namingKind: ""
     property bool propertiesOpen: false
+    property bool _holdSelect: false
     property bool searchOpen: false
     property bool locationOpen: false
     property bool typing: false
@@ -162,11 +163,11 @@ Singleton {
         root.selected = cur;
     }
     function selectAll() {
-        root.selected = (root.entries || []).map(row => row.path);
+        root.selected = (root.entries || []).filter(row => row.readable !== false && row.canRead !== false).map(row => row.path);
     }
     function clearSelection() { root.selected = []; }
-    function copy() { root.clipboardMode = "copy"; root.clipboard = root.selected.slice(); }
-    function cut() { root.clipboardMode = "cut"; root.clipboard = root.selected.slice(); }
+    function copy() { FilesUndo.noteClip("copy"); }
+    function cut() { FilesUndo.noteClip("cut"); }
     function paste(into: string) {
         let dest = String(into || "");
         if (dest.charAt(0) !== "/")
@@ -179,8 +180,7 @@ Singleton {
         const moving = root.clipboardMode === "cut";
         if (dest !== root.path || root.place !== "folder")
             root.go(dest, true);
-        if (moving) { root.clipboard = []; root.clipboardMode = ""; }
-        root._enqueue([moving ? "move" : "copy", dest].concat(clip), "mutate");
+        FilesConflict.place(moving ? "move" : "copy", dest, clip);
     }
     function askName(kind: string) {
         if (!root.path.length || root.place !== "folder")
@@ -242,7 +242,7 @@ Singleton {
                 placeFile.setText(root.path + "\n");
         } else if (kind === "open")
             root._opened(out);
-        else if (kind === "mutate") { FilesPlaces.retarget(root._cmd, out); root._pick(out); root.refresh(); }
+        else if (kind === "mutate") { FilesPlaces.retarget(root._cmd, out); root._pick(out); FilesUndo.note(root._cmd, out); FilesConflict.done(root._cmd, out); root.refresh(); }
     }
     function _opened(text: string) {
         let info = null;

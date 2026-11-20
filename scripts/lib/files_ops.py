@@ -351,6 +351,133 @@ def cmd_move(args):
     _all(args[1:], lambda src: safe.move_into(src, dest), lambda src, landed: places.shift_move([src], [landed]) if landed else None)
 
 
+def cmd_apply(args):
+    if len(args) != 1:
+        fail("usage")
+    try:
+        payload = json.loads(args[0])
+    except json.JSONDecodeError:
+        fail("usage")
+    if not isinstance(payload, dict):
+        fail("usage")
+    # Imported here so trash can keep importing this module.
+    import files_undo
+    emit(files_undo.apply(payload))
+
+
+def _same_file(src, dest):
+    try:
+        return os.path.samestat(os.lstat(src), os.lstat(dest))
+    except OSError:
+        return False
+
+
+def _leaf(src):
+    return safe.leaf_name(os.path.basename(safe.clean(src)))
+
+
+def cmd_conflicts(args):
+    if len(args) < 2 or args[0] not in ("copy", "move"):
+        fail("usage")
+    dest = safe.landing_dir(args[1])
+    seen = {}
+    used = set()
+    hits = []
+    for src in args[2:]:
+        try:
+            name = _leaf(src)
+        except safe.Refuse:
+            fail("bad-path")
+        target = os.path.join(dest, name)
+        if os.path.lexists(target):
+            is_dir = os.path.isdir(target) and not os.path.islink(target)
+            hits.append({"src": safe.clean(src), "name": name, "dir": is_dir, "suggest": _suggest(dest, name, used)})
+            seen[name] = is_dir
+        elif name in seen:
+            hits.append({"src": safe.clean(src), "name": name, "dir": seen[name], "suggest": _suggest(dest, name, used)})
+        else:
+            cleaned = safe.clean(src)
+            seen[name] = os.path.isdir(cleaned) and not os.path.islink(cleaned)
+    emit(hits)
+
+
+def _suggest(dest, name, reserved):
+    for n in range(2, 1000):
+        cand = f"({n}) {name}"
+        if cand in reserved or os.path.lexists(os.path.join(dest, cand)):
+            continue
+        try:
+            safe.leaf_name(cand)
+        except safe.Refuse:
+            continue
+        reserved.add(cand)
+        return cand
+    fail("exists")
+
+
+def _replace_name(src, dest):
+    name = _leaf(src)
+    target = os.path.join(dest, name)
+    if not os.path.lexists(target) or _same_file(src, target):
+        return ""
+    import files_trash
+    stored = files_trash.trash_one(target)
+    places.shift_drop([target])
+    return {"path": target, "name": stored}
+
+
+def cmd_place(args):
+    if len(args) != 1:
+        fail("usage")
+    try:
+        plan = json.loads(args[0])
+    except json.JSONDecodeError:
+        fail("usage")
+    if not isinstance(plan, dict) or plan.get("op") not in ("copy", "move"):
+        fail("usage")
+    items = plan.get("items")
+    if not isinstance(items, list) or not items:
+        fail("usage")
+    dest = safe.landing_dir(plan.get("dest") or "")
+    sources = []
+    for item in items:
+        if not isinstance(item, dict) or item.get("mode") not in ("keep", "replace", "name"):
+            fail("usage")
+        src = item.get("src")
+        if not isinstance(src, str) or not src:
+            fail("usage")
+        sources.append(src)
+    _drop_sizes([dest] + sources)
+    made = []
+    replaced = []
+    covered = []
+    moving = plan["op"] == "move"
+    for item in items:
+        src = item.get("src")
+        if item["mode"] == "replace":
+            target = os.path.join(dest, _leaf(src))
+            if os.path.lexists(target) and _same_file(src, target):
+                made.append(target)
+                continue
+            gone = _replace_name(src, dest)
+            if isinstance(gone, dict):
+                replaced.append(gone["path"])
+                covered.append(gone)
+            landed = safe.move_exact(src, target) if moving else safe.copy_named(src, dest, _leaf(src))
+        elif item["mode"] == "name":
+            leaf = item.get("name")
+            if not isinstance(leaf, str) or not leaf:
+                fail("usage")
+            landed = safe.move_exact(src, os.path.join(dest, safe.leaf_name(leaf))) if moving else safe.copy_named(src, dest, leaf)
+        else:
+            landed = safe.move_into(src, dest) if moving else safe.copy_into(src, dest)
+        if moving and landed:
+            places.shift_move([src], [landed])
+        if landed:
+            made.append(landed)
+    emit({"ok": True, "paths": made, "replaced": replaced, "covered": covered})
+
+
 def cmd_delete(args):
     _drop_sizes(args)
     _all(args, safe.remove_path, lambda src, _landed: places.shift_drop([src]))
@@ -370,6 +497,9 @@ COMMANDS = {
     "copy": cmd_copy,
     "move": cmd_move,
     "delete": cmd_delete,
+    "apply": cmd_apply,
+    "conflicts": cmd_conflicts,
+    "place": cmd_place,
 }
 
 

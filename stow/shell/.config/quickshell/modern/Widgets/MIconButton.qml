@@ -22,6 +22,7 @@ Item {
     property bool highlighted: false
     property bool tip: false
     property color glyphColor: Colors.color.onSurface
+    property color layerColor: Colors.color.primary
 
     signal clicked()
     signal middleClicked()
@@ -90,7 +91,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radius.full
-        color: root.close ? Colors.color.error : Colors.color.primary
+        color: root.close ? Colors.color.error : root.layerColor
         visible: root._layer > 0
         opacity: root._layer
     }

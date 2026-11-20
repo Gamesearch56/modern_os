@@ -18,6 +18,7 @@ RowLayout {
         id: search
         Layout.fillWidth: true
         placeholderKey: "files.search.placeholder"
+        captureEscape: true
         selectAllOnPress: search.text === root.locationText()
         captureReturn: true
         captureArrows: !root._quiet && root._query().length > 0
@@ -38,9 +39,7 @@ RowLayout {
                 root._closeQuick();
                 return;
             }
-            root._leaveSearch();
-            if (search.focused)
-                Qt.callLater(() => search.editor.selectAll());
+            root._dropField();
         }
 
         Suggest {
@@ -125,11 +124,9 @@ RowLayout {
     Connections {
         target: Files
         function onSearchOpenChanged() {
-            if (!Files.searchOpen)
-                return;
+            if (!Files.searchOpen) return;
             root.showLocation();
-            search.forceActiveFocus();
-            Qt.callLater(() => search.editor.selectAll());
+            Qt.callLater(() => { search.forceActiveFocus(); Qt.callLater(() => search.editor.selectAll()); });
         }
         function onPathChanged() { if (!search.focused) root.showLocation(); }
         function onSelectedChanged() { if (!search.focused) root.showLocation(); }
@@ -141,6 +138,7 @@ RowLayout {
         function onResultsChanged() { root._sync(); }
         function onDismiss() { root._closeQuick(); }
         function onCleared() { root._leaveSearch(); }
+        function onReleased() { root._dropField(); }
     }
 
     Component.onCompleted: root.showLocation()
@@ -251,7 +249,7 @@ RowLayout {
 
     function _dropField() {
         root._leaveField = true;
-        search.editor.focus = false;
+        search.editor.deselect(); root.forceActiveFocus();
     }
 
     function _leaveSearch() {

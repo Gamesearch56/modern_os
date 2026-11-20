@@ -1,6 +1,6 @@
 // Modal dialog: scrim + centered glass card (Settings wash, hairline
-// only — not a window chrome). Actions: optional error-colored text
-// on the left (Forget), Cancel then Confirm buttons on the right.
+// only — not a window chrome). Forget stays as error text on the left.
+// cancelLeading puts Cancel on the left and that error action beside Confirm.
 import QtQuick
 import QtQuick.Layouts
 import "../Commons"
@@ -18,6 +18,7 @@ FocusScope {
     property string cancelKey: "powerMenu.cancel"
     property string destructiveKey: ""
     property bool destructive: false
+    property bool cancelLeading: false
     property bool confirmEnabled: true
     property bool showCancel: true
     property bool wide: false
@@ -134,34 +135,33 @@ FocusScope {
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.sm
 
+                MButton {
+                    visible: root.showCancel && root.cancelLeading
+                    kind: "text"
+                    key: root.cancelKey
+                    onClicked: root.cancelled()
+                }
+
                 MText {
-                    visible: root.destructiveKey.length > 0
+                    visible: root.destructiveKey.length > 0 && !root.cancelLeading
                     key: root.destructiveKey
                     styleName: "labelLarge"
                     color: Colors.color.error
-                    opacity: tertiaryMa.containsMouse || tertiaryMa.pressed ? 0.72 : 1
+                    opacity: leftHover.containsMouse || leftHover.pressed ? 0.72 : 1
                     Layout.alignment: Qt.AlignVCenter
                     Accessible.role: Accessible.Button
-                    Accessible.name: root.destructiveKey.length > 0 ? I18n.t(root.destructiveKey) : ""
+                    Accessible.name: visible ? I18n.t(root.destructiveKey) : ""
                     Accessible.onPressAction: root.destructiveClicked()
                     activeFocusOnTab: visible
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: Motion.shortMs
-                            easing.bezierCurve: Motion.easingStandard
-                        }
-                    }
-
+                    Behavior on opacity { NumberAnimation { duration: Motion.shortMs; easing.bezierCurve: Motion.easingStandard } }
                     Keys.onPressed: (event) => {
                         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
                             root.destructiveClicked();
                             event.accepted = true;
                         }
                     }
-
                     MouseArea {
-                        id: tertiaryMa
+                        id: leftHover
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
@@ -169,12 +169,37 @@ FocusScope {
                     }
                 }
 
-                Item {
-                    Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+
+                MText {
+                    visible: root.destructiveKey.length > 0 && root.cancelLeading
+                    key: root.destructiveKey
+                    styleName: "labelLarge"
+                    color: Colors.color.error
+                    opacity: rightHover.containsMouse || rightHover.pressed ? 0.72 : 1
+                    Layout.alignment: Qt.AlignVCenter
+                    Accessible.role: Accessible.Button
+                    Accessible.name: visible ? I18n.t(root.destructiveKey) : ""
+                    Accessible.onPressAction: root.destructiveClicked()
+                    activeFocusOnTab: visible
+                    Behavior on opacity { NumberAnimation { duration: Motion.shortMs; easing.bezierCurve: Motion.easingStandard } }
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                            root.destructiveClicked();
+                            event.accepted = true;
+                        }
+                    }
+                    MouseArea {
+                        id: rightHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.destructiveClicked()
+                    }
                 }
 
                 MButton {
-                    visible: root.showCancel
+                    visible: root.showCancel && !root.cancelLeading
                     kind: "text"
                     key: root.cancelKey
                     onClicked: root.cancelled()

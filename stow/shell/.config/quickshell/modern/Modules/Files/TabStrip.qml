@@ -45,7 +45,11 @@ Item {
                     border.color: Colors.color.primary
                 }
 
-                HoverHandler { id: hover }
+                HoverHandler {
+                    id: hover
+                    cursorShape: Qt.PointingHandCursor
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                }
 
                 RowLayout {
                     anchors.fill: parent

@@ -108,6 +108,10 @@ Flickable {
                         key: "files.places.eject"
                         size: Tokens.spacing.xl
                         iconSize: Tokens.icon.sm
+                        // The active row is a primary pill. A primary wash on
+                        // that pill does not show, so the hover uses on-primary.
+                        glyphColor: diskRow.selected ? Chrome.navSelected.fg : Colors.color.onSurface
+                        layerColor: diskRow.selected ? Chrome.navSelected.fg : Colors.color.primary
                         enabled: Storage.ejecting !== String(modelData.name || "")
                         onClicked: Storage.askEject(String(modelData.name || ""), String(modelData.title || ""), "files")
                     }
@@ -237,27 +241,34 @@ Flickable {
 
     function _open(row) {
         root.forceActiveFocus();
-        if (row.kind === "favorites") {
-            Files.showPlace("favorites");
-            return;
-        }
-        if (row.kind === "recent") {
-            Files.showPlace("recent");
-            FilesPlaces.reloadRecent();
-            return;
-        }
-        if (row.kind === "trash") {
-            Files.showPlace("trash");
-            FilesTrash.refresh();
-            return;
-        }
-        if (row.kind === "network") {
-            Files.showPlace("network");
-            FilesPlaces.reload();
+        const kind = String(row.kind || "");
+        if (kind === "recent" || kind === "trash" || kind === "network" || kind === "favorites") {
+            Files.showPlace(kind);
+            if (kind === "recent") FilesPlaces.reloadRecent();
+            else if (kind === "trash") FilesTrash.refresh();
+            else if (kind === "network") FilesPlaces.reload();
             return;
         }
         if (row.path)
-            Files.go(row.path, true);
+            Files.go(String(row.path), true);
+    }
+
+    function cycle(step: int) {
+        const rows = (root._rows || []).slice();
+        const disks = root._disks || [];
+        for (let i = 0; i < disks.length; i++) rows.push({ kind: "disk", path: String(disks[i].mount || "") });
+        const n = rows.length;
+        if (!n) return;
+        let at = -1;
+        for (let i = 0; i < n; i++) {
+            const row = rows[i];
+            const on = row.kind === "disk" ? Files.place === "folder" && row.path === Files.path : root._current(row);
+            if (on) at = i;
+        }
+        const dir = step < 0 ? -1 : 1;
+        const next = at < 0 ? (dir < 0 ? n - 1 : 0) : (at + dir + n) % n;
+        root._open(rows[next]);
+        root.contentY = Math.max(0, Math.min(next * Tokens.spacing.xxl, Math.max(0, root.contentHeight - root.height)));
     }
 
     function _at(item, x, y) {
@@ -266,14 +277,10 @@ Flickable {
     }
 
     function _menu(row, x, y) {
-        if (row.kind === "recent")
-            Files.openMenu("recent", "", "", x, y);
-        else if (row.kind === "trash")
-            Files.openMenu("trashPlace", "", "", x, y);
-        else if (row.kind === "favorite")
-            Files.openMenu("folder", row.path, "", x, y);
-        else if (row.path)
-            Files.openMenu("folder", row.path, "", x, y);
+        const place = row.kind === "trash" ? "trashPlace" : row.kind;
+        const named = place === "recent" || place === "trashPlace" || place === "network";
+        if (named || row.path)
+            Files.openMenu(named ? place : "folder", named ? "" : row.path, "", x, y);
     }
 
     Component.onCompleted: {

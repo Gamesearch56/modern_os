@@ -17,6 +17,12 @@ Item {
 
     signal clicked()
 
+    // MouseArea.cursorShape does not win on this session. The handler does.
+    HoverHandler {
+        cursorShape: root.cursor
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+    }
+
     property real _lx: 0
     property real _ly: 0
     property bool _moved: false

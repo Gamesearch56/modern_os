@@ -19,12 +19,17 @@ Singleton {
     // otherwise the folder that is open.
     property string scope: "home"
     property string rootPath: ""
+    // A manual pick stays until the open place implies a different search.
+    property bool _pinned: false
+    property string _anchor: ""
+    property string _place: ""
     property string query: ""
     property var results: []
     readonly property bool running: proc.running
 
     signal dismiss()
     signal cleared()
+    signal released()
 
     property var _batch: []
     property bool _fresh: false
@@ -58,12 +63,95 @@ Singleton {
     }
 
     function choose(scope: string, path: string, folder: string, hidden: bool) {
+        root._apply(scope, path, folder, hidden);
+        const id = root._storageId(folder);
+        root._pinned = id.length > 0;
+        root._anchor = id;
+    }
+
+    function follow(folder: string) {
+        const place = String(Files.place || "folder");
+        const entered = root._place !== place;
+        root._place = place;
+        // Recent, trash, and network search the personal folder. Computer searches the computer.
+        if (place === "recent" || place === "trash" || place === "network") {
+            if (!entered)
+                return;
+            root._pinned = false;
+            root._anchor = "";
+            if (root.scope !== "home" || String(root.rootPath || "").length)
+                root._apply("home", "", folder, Files.showHidden);
+            return;
+        }
+        if (place !== "folder")
+            return;
+        const id = root._storageId(folder);
+        if (!id.length)
+            return;
+        if (root._pinned) {
+            if (root._anchor === id)
+                return;
+            root._pinned = false;
+            root._anchor = "";
+        }
+        const auto = root._auto(folder);
+        if (!auto || (root.scope === auto.scope && String(root.rootPath || "") === auto.path))
+            return;
+        root._apply(auto.scope, auto.path, folder, Files.showHidden);
+    }
+
+    function _apply(scope: string, path: string, folder: string, hidden: bool) {
         const next = scope === "computer" || scope === "folder" ? scope : "home";
         root.scope = next;
         root.rootPath = next === "folder" ? String(path || "") : "";
         if (!root.query.length)
             return;
         root.start(folder, root.query, hidden, root.page);
+    }
+
+    function _storageId(folder: string): string {
+        const auto = root._auto(folder);
+        return auto ? auto.scope + "\n" + auto.path : "";
+    }
+
+    function _auto(folder: string): var {
+        const path = String(folder || "");
+        if (path === "/")
+            return { scope: "computer", path: "" };
+        if (path.charAt(0) !== "/")
+            return null;
+        const home = String(Paths.home || "");
+        if (home.charAt(0) === "/" && (path === home || path.indexOf(home + "/") === 0))
+            return { scope: "home", path: "" };
+        let best = "";
+        const lists = [Storage.otherInternal, Storage.external];
+        for (let n = 0; n < lists.length; n++) {
+            const list = lists[n] || [];
+            for (let i = 0; i < list.length; i++) {
+                const mount = String(list[i].mount || "");
+                if (mount.length < 2 || mount === home)
+                    continue;
+                if (path !== mount && path.indexOf(mount + "/") !== 0)
+                    continue;
+                if (mount.length > best.length)
+                    best = mount;
+            }
+        }
+        if (!best.length)
+            return null;
+        return { scope: "folder", path: best };
+    }
+
+    Connections {
+        target: Files
+        function onPathChanged() { root.follow(Files.path); }
+        function onPlaceChanged() { root.follow(Files.path); }
+    }
+
+    Connections {
+        target: Storage
+        function onInternalChanged() { root.follow(Files.path); }
+        function onExternalChanged() { root.follow(Files.path); }
     }
 
     function _where(folder: string): string {
@@ -104,6 +192,10 @@ Singleton {
     function requestClear() {
         root.stop();
         root.cleared();
+    }
+
+    function requestRelease() {
+        root.released();
     }
 
     function _push(line: string) {

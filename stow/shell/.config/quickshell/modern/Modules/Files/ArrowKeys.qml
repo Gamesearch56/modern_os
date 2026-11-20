@@ -10,7 +10,7 @@ Item {
     property var view: null
 
     readonly property bool armed: Files.open && Files.renaming.length === 0 && !Files.typing
-            && !FilesSearch.popup && !Files.propertiesOpen && !Files.confirming && !Files.naming
+            && !FilesSearch.popup && !Files.propertiesOpen && !Files.confirming && !Files.naming && !FilesConflict.open
             && !Files.menuOpen && Storage.confirmWhere !== "files"
 
     Shortcut { sequence: "Left"; enabled: root.armed; context: Qt.WindowShortcut; onActivated: root._step(-1) }
@@ -30,12 +30,21 @@ Item {
                 break;
             }
         }
-        const next = at < 0 ? (delta > 0 ? 0 : rows.length - 1) : Math.max(0, Math.min(rows.length - 1, at + delta));
-        const path = String(rows[next].path || "");
-        if (path.charAt(0) !== "/")
+        const step = delta < 0 ? -1 : 1;
+        let next = at < 0 ? (delta > 0 ? 0 : rows.length - 1) : at + delta;
+        while (next >= 0 && next < rows.length && root._locked(rows[next]))
+            next += step;
+        if (next < 0 || next >= rows.length)
+            return;
+        const path = String(rows[next].path || rows[next].uri || "");
+        if (!path.length)
             return;
         Files.selected = [path];
         if (root.view && root.view.reveal)
             root.view.reveal(next);
+    }
+
+    function _locked(row): bool {
+        return !!(row && (row.readable === false || row.canRead === false));
     }
 }

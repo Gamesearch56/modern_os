@@ -13,8 +13,13 @@ source "$_open_root/install/lib/default-apps.sh"
 unset _open_root
 
 print_only=0
+can_only=0
 if [[ "${1:-}" == "--print" ]]; then
     print_only=1
+    shift
+elif [[ "${1:-}" == "--can" ]]; then
+    # Exit 0 when a handler exists. Do not launch, and do not record it.
+    can_only=1
     shift
 fi
 
@@ -87,6 +92,31 @@ override=()
 if [[ -n "$desktop" ]]; then
     mapfile -t override < <(default_app_exec_for_desktop "$desktop" || true)
 fi
+app_ready() {
+    local id="$1" one
+    [[ -n "$id" ]] || return 1
+    if [[ ${#override[@]} -gt 0 ]]; then
+        if [[ "${MODERN_OPEN_ASSUME_EXEC:-}" == 1 || -x "${override[0]}" ]]; then
+            return 0
+        fi
+    fi
+    for one in \
+        "${XDG_DATA_HOME:-$HOME/.local/share}/applications/${id}.desktop" \
+        /usr/local/share/applications/"${id}.desktop" \
+        /usr/share/applications/"${id}.desktop"
+    do
+        [[ -f "$one" ]] && return 0
+    done
+    return 1
+}
+
+if [[ "$can_only" -eq 1 ]]; then
+    if app_ready "$desktop"; then
+        exit 0
+    fi
+    exit 1
+fi
+
 if [[ ${#override[@]} -gt 0 ]]; then
     if [[ "${MODERN_OPEN_ASSUME_EXEC:-}" == 1 || -x "${override[0]}" ]]; then
         launch "${override[@]}" "$path"

@@ -1627,6 +1627,12 @@
     "refused": "Diese Änderung ist nicht erlaubt",
     "noAccess": "Du hast keinen Zugriff.",
     "networkEmpty": "Keine Netzwerkorte",
+    "network": {
+      "connect": "Mit Server verbinden",
+      "connectDo": "Verbinden",
+      "address": "Serveradresse",
+      "refused": "Verbindung zu diesem Server ist nicht möglich"
+    },
     "favoritesEmpty": "Keine Favoriten",
     "recentEmpty": "Keine zuletzt verwendeten",
     "launcherName": "Filemanager",
@@ -1643,6 +1649,19 @@
     "confirmEmptyBody": "Alles im Papierkorb wird entfernt.",
     "confirmEject": "Dieses Gerät auswerfen?",
     "confirmEjectBody": "{name} auswerfen? Speichere vorher, was darauf noch geöffnet ist.",
+    "zip": {
+      "title": "Archiv benennen",
+      "create": "Erstellen",
+      "placeholder": "Archivname",
+      "taken": "Dieser Name wird in diesem Ordner bereits verwendet."
+    },
+    "exists": {
+      "title": "Name bereits vorhanden",
+      "file": "Eine Datei namens {name} liegt in diesem Ordner bereits. Überschreiben verschiebt die vorhandene Datei in den Papierkorb. Umbenennen behält beide.",
+      "folder": "Ein Ordner namens {name} liegt in diesem Ordner bereits. Überschreiben verschiebt den vorhandenen Ordner in den Papierkorb. Umbenennen behält beide.",
+      "overwrite": "Überschreiben",
+      "rename": "Umbenennen"
+    },
     "places": {
       "home": "Persönlicher Ordner",
       "recent": "Zuletzt verwendet",
@@ -1732,7 +1751,9 @@
       "properties": "Eigenschaften",
       "eject": "Auswerfen",
       "restore": "Wiederherstellen",
-      "empty": "Papierkorb leeren"
+      "empty": "Papierkorb leeren",
+    "zip": "Als Zip komprimieren",
+    "extract": "Entpacken"
     },
     "tabs": {
       "close": "Tab schließen"

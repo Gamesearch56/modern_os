@@ -12,7 +12,11 @@ import xml.etree.ElementTree as ET
 sys.path.insert(0, os.path.dirname(__file__))
 import files_safe as safe  # noqa: E402
 
-NET = {"cifs", "nfs", "nfs4", "fuse.sshfs", "fuse.davfs", "davfs"}
+NET = {
+    "cifs", "smb", "smb3", "nfs", "nfs4", "9p", "afs", "ceph", "glusterfs",
+    "fuse.sshfs", "fuse.davfs", "davfs", "fuse.rclone",
+}
+SCHEMES = {"smb", "sftp", "ssh", "ftp", "ftps", "dav", "davs", "nfs", "afp"}
 
 
 def fail(reason):
@@ -183,23 +187,162 @@ def cmd_clear(_args):
     emit({"ok": True})
 
 
-def cmd_mounts(_args):
+def _walk_fs(nodes):
+    for node in nodes or []:
+        if isinstance(node, dict):
+            yield node.get("fstype") or "", node.get("target") or ""
+            yield from _walk_fs(node.get("children"))
+
+
+def _findmnt_pairs():
     proc = subprocess.run(
-        ["findmnt", "-n", "-o", "FSTYPE,TARGET"],
+        ["findmnt", "-J", "-o", "FSTYPE,TARGET"],
         check=False,
         capture_output=True,
         text=True,
     )
-    rows = []
+    try:
+        data = json.loads(proc.stdout or "")
+    except json.JSONDecodeError:
+        data = None
+    if isinstance(data, dict):
+        return list(_walk_fs(data.get("filesystems")))
+    return []
+
+
+def _norm_uri(uri):
+    parts = urllib.parse.urlsplit(uri)
+    path = (parts.path or "").rstrip("/")
+    return urllib.parse.urlunsplit((parts.scheme, parts.netloc, path, "", ""))
+
+
+def _uri(raw):
+    text = (raw or "").strip()
+    if not text or any(ch in text for ch in "\n\r\x00 "):
+        return ""
+    if "://" not in text:
+        text = "smb://" + text.lstrip("/")
+    parts = urllib.parse.urlsplit(text)
+    scheme = "sftp" if parts.scheme == "ssh" else parts.scheme
+    if scheme not in SCHEMES or not parts.hostname:
+        return ""
+    return _norm_uri(urllib.parse.urlunsplit((scheme, parts.netloc, parts.path or "", "", "")))
+
+
+def _uri_label(uri):
+    parts = urllib.parse.urlsplit(uri)
+    host = parts.hostname or parts.netloc
+    share = (parts.path or "").strip("/")
+    if parts.username and host:
+        host = parts.username + "@" + host
+    return share or host or uri
+
+
+def _gvfs_uri(name):
+    if ":" not in name:
+        return "", name
+    scheme, rest = name.split(":", 1)
+    fields = {}
+    for bit in rest.split(","):
+        if "=" in bit:
+            key, value = bit.split("=", 1)
+            fields[key] = urllib.parse.unquote(value)
+    host = fields.get("server") or fields.get("host") or ""
+    share = fields.get("share") or ""
+    user = fields.get("user") or ""
+    if not host:
+        return "", name
+    auth = (user + "@" if user else "") + host
+    if scheme == "smb-share":
+        return _norm_uri("smb://" + host + ("/" + share if share else "")), share or host
+    if scheme in {"sftp", "ftp", "nfs", "afp"}:
+        return _norm_uri(scheme + "://" + auth + "/"), auth
+    if scheme == "dav":
+        secure = "davs" if fields.get("ssl") == "true" else "dav"
+        return _norm_uri(secure + "://" + auth + "/"), auth
+    return "", name
+
+
+def _add_place(rows, seen, path, name, kind, uri):
+    key = path or uri
+    if not key or key in seen:
+        return
+    seen.add(key)
+    if path:
+        seen.add(path)
+    if uri:
+        seen.add(_norm_uri(uri))
+    rows.append({"path": path, "name": name or path or uri, "kind": kind, "uri": uri})
+
+
+def _gvfs_places(rows, seen):
+    runtime = os.environ.get("XDG_RUNTIME_DIR") or ""
+    if not runtime.startswith("/"):
+        return
+    folder = os.path.join(runtime, "gvfs")
+    try:
+        names = sorted(os.listdir(folder))
+    except OSError:
+        return
+    for name in names:
+        path = os.path.join(folder, name)
+        if not os.path.isdir(path):
+            continue
+        uri, label = _gvfs_uri(name)
+        _add_place(rows, seen, path, label, "gvfs", uri)
+
+
+def _network_places(rows, seen):
+    proc = subprocess.run(
+        ["gio", "list", "-u", "network://"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
     for line in (proc.stdout or "").splitlines():
-        parts = line.split(None, 1)
-        if len(parts) != 2:
+        uri = _uri(line.strip())
+        if not uri or _norm_uri(uri) in seen:
             continue
-        kind, target = parts
-        if kind not in NET or not target.startswith("/"):
+        _add_place(rows, seen, "", _uri_label(uri), "network", uri)
+
+
+def _places():
+    rows = []
+    seen = set()
+    for kind, target in _findmnt_pairs():
+        if kind not in NET or not str(target).startswith("/"):
             continue
-        rows.append({"path": target, "name": os.path.basename(target) or target, "kind": kind})
-    emit(rows)
+        _add_place(rows, seen, target, os.path.basename(target) or target, kind, "")
+    _gvfs_places(rows, seen)
+    _network_places(rows, seen)
+    return rows
+
+
+def cmd_mounts(_args):
+    emit(_places())
+
+
+def cmd_connect(args):
+    uri = _uri(args[0] if args else "")
+    if not uri:
+        fail("refused")
+    # No stdin, so a missing password fails instead of waiting forever.
+    result = subprocess.run(
+        ["gio", "mount", uri],
+        check=False,
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    if result.returncode != 0:
+        fail("refused")
+    path = ""
+    want = _norm_uri(uri)
+    for row in _places():
+        if row.get("uri") and _norm_uri(row["uri"]) == want and row.get("path"):
+            path = row["path"]
+            break
+    emit({"path": path, "uri": uri})
 
 
 def cmd_mount(args):
@@ -292,6 +435,7 @@ def main(argv):
         "clear": cmd_clear,
         "mounts": cmd_mounts,
         "mount": cmd_mount,
+        "connect": cmd_connect,
         "dirs": cmd_dirs,
         "present": cmd_present,
     }

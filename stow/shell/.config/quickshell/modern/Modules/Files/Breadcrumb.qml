@@ -60,7 +60,11 @@ Item {
                         width: label.implicitWidth + (modelData.root ? Tokens.icon.xs + Tokens.spacing.xs : 0) + Tokens.spacing.sm * 2
                         height: parent.height
 
-                        HoverHandler { id: hover }
+                        HoverHandler {
+                            id: hover
+                            cursorShape: segment.index === root._crumbs.length - 1 ? Qt.ArrowCursor : Qt.PointingHandCursor
+                            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        }
 
                         Rectangle {
                             anchors.fill: parent
@@ -101,6 +105,7 @@ Item {
 
                         MouseArea {
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: segment.index === root._crumbs.length - 1 ? Qt.ArrowCursor : Qt.PointingHandCursor
                             focus: true
                             onPressed: forceActiveFocus()
@@ -157,6 +162,8 @@ Item {
             return [];
         if (Files.place === "favorites")
             return [{ key: "files.places.favorites", label: "", path: "", root: false }];
+        if (Files.place === "network")
+            return [{ key: "files.places.network", label: "", path: "", root: false }];
         const path = Files.path || "/";
         const parts = path.split("/").filter(part => part.length > 0);
         const rows = [{ key: "files.path.root", label: "", path: "/", root: true }];

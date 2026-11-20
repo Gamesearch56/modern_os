@@ -150,6 +150,7 @@ def trash_one(src):
         os.close(src_dir)
         os.close(dst_dir)
         os.close(info_dir)
+    return stored
 
 
 def cmd_move(args):
@@ -157,10 +158,12 @@ def cmd_move(args):
         fail("usage")
     reason = None
     count = 0
+    items = []
     for src in args:
         try:
-            trash_one(src)
+            stored = trash_one(src)
             places.shift_drop([src])
+            items.append({"path": src, "name": stored})
             count += 1
         except safe.Refuse as exc:
             reason = reason or exc.reason
@@ -172,7 +175,7 @@ def cmd_move(args):
             reason = reason or "refused"
     if reason:
         fail(reason)
-    emit({"ok": True, "count": count})
+    emit({"ok": True, "count": count, "items": items})
 
 
 def read_info(path):
@@ -215,10 +218,9 @@ def cmd_list(_args):
     emit(rows)
 
 
-def cmd_restore(args):
-    key = args[0] if args else ""
+def restore_one(key):
     if not key or "/" in key or "\0" in key or "\n" in key or key in (".", ".."):
-        fail("bad-path")
+        raise safe.Refuse("bad-path")
     root = trash_root()
     stored = os.path.join(root, "files", key)
     info = os.path.join(root, "info", key + ".trashinfo")
@@ -243,7 +245,12 @@ def cmd_restore(args):
         os.close(src_dir)
         os.close(dst_dir)
     os.unlink(info)
-    emit({"path": dest})
+    return dest
+
+
+def cmd_restore(args):
+    key = args[0] if args else ""
+    emit({"path": restore_one(key)})
 
 
 def cmd_empty(_args):

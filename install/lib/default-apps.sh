@@ -26,79 +26,46 @@ default_apps_manifest() {
     printf '%s\n' "$root/install/manifests/default-apps.json"
 }
 
-# op is roles|packages|stow|desktop|exec. desktop and exec take the role
-# or desktop id in $2.
+# op is roles|packages|stow|desktop|exec|window-rule. desktop, exec, and
+# window-rule take the role or desktop id in $2. jq is already required
+# by the installer preflight; python is not installed yet at that point.
 _default_apps_py() {
-    local manifest=""
+    local manifest="" op="${1:-}" extra="${2:-}"
     manifest="$(default_apps_manifest)" || return 1
-    python3 - "$manifest" "$1" "${2:-}" <<'PY'
-import json
-import sys
-
-path, op = sys.argv[1], sys.argv[2]
-extra = sys.argv[3] if len(sys.argv) > 3 else ""
-with open(path, encoding="utf-8") as fh:
-    data = json.load(fh)
-if not isinstance(data, dict):
-    sys.exit(1)
-
-def stem(value):
-    value = str(value or "")
-    if value.endswith(".desktop"):
-        value = value[: -len(".desktop")]
-    return value
-
-def as_list(value):
-    if value is None:
-        return []
-    if isinstance(value, list):
-        return [str(item) for item in value if str(item)]
-    text = str(value).strip()
-    return [text] if text else []
-
-def item(name):
-    raw = data.get(name)
-    return raw if isinstance(raw, dict) else {}
-
-def ids_of(raw):
-    found = as_list(raw.get("match"))
-    desktop = str(raw.get("desktop") or "")
-    if desktop:
-        found.append(desktop)
-    return {stem(one) for one in found if stem(one)}
-
-if op == "roles":
-    for name in data:
-        print(name)
-elif op == "packages":
-    for name in data:
-        for pkg in as_list(item(name).get("packages")):
-            print(pkg)
-elif op == "stow":
-    for name in data:
-        for pkg in as_list(item(name).get("stow")):
-            print(pkg)
-elif op == "desktop":
-    desktop = str(item(extra).get("desktop") or "")
-    if desktop:
-        print(desktop)
-elif op == "exec":
-    want = stem(extra)
-    if want:
-        for name in data:
-            raw = item(name)
-            if want not in ids_of(raw):
-                continue
-            for arg in as_list(raw.get("exec")):
-                print(arg)
-            break
-elif op == "window-rule":
-    rule = str(item(extra).get("windowRule") or "")
-    if rule:
-        print(rule)
-else:
-    sys.exit(2)
-PY
+    if ! command -v jq >/dev/null 2>&1; then
+        printf 'default-apps: jq is required\n' >&2
+        return 1
+    fi
+    case "$op" in
+        roles)
+            jq -r 'to_entries[].key' "$manifest"
+            ;;
+        packages)
+            jq -r 'def strings: if type == "array" then .[] elif type == "string" and length > 0 then . else empty end; .[] | (.packages // empty) | strings' "$manifest"
+            ;;
+        stow)
+            jq -r 'def strings: if type == "array" then .[] elif type == "string" and length > 0 then . else empty end; .[] | (.stow // empty) | strings' "$manifest"
+            ;;
+        desktop)
+            jq -r --arg role "$extra" '.[$role].desktop // empty | select(type == "string" and length > 0)' "$manifest"
+            ;;
+        window-rule)
+            jq -r --arg role "$extra" '.[$role].windowRule // empty | select(type == "string" and length > 0)' "$manifest"
+            ;;
+        exec)
+            jq -r --arg want "$extra" '
+                def stem: if type != "string" then "" elif endswith(".desktop") then .[:length - 8] else . end;
+                def strings: if type == "array" then .[] elif type == "string" and length > 0 then . else empty end;
+                ([ to_entries[].value | select(type == "object") | . as $raw
+                   | select((([ ($raw.match // empty | strings), ($raw.desktop // empty | strings) ] | map(stem) | index($want | stem)) != null))
+                ] | .[0]) as $hit
+                | if $hit == null then empty else ($hit.exec // empty | strings) end
+            ' "$manifest"
+            ;;
+        *)
+            return 2
+            ;;
+    esac
 }
 
 default_app_roles() {

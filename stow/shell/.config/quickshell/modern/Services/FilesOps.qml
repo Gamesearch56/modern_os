@@ -14,6 +14,8 @@ Item {
     // Listings are dropped when the folder changes. A rename already
     // running is left alone.
     property int _epoch: 0
+    // The exit of a listing we just stopped must not finish the next one.
+    property bool _stopping: false
 
     function cancelLists() {
         root._epoch += 1;
@@ -24,8 +26,14 @@ Item {
                 kept.push(q[i]);
         }
         root._queue = kept;
-        if (root._job && root._job.kind === "list")
-            proc.running = false;
+        if (!(root._job && root._job.kind === "list"))
+            return;
+        const live = proc.running;
+        root._job = null;
+        if (!live)
+            return;
+        root._stopping = true;
+        proc.running = false;
     }
 
     function enqueue(args: var, kind: string) {
@@ -36,7 +44,7 @@ Item {
     }
 
     function _pump() {
-        if (proc.running || !root._queue.length)
+        if (proc.running || root._stopping || !root._queue.length)
             return;
         const q = root._queue.slice();
         root._job = q.shift();
@@ -59,6 +67,13 @@ Item {
         running: false
         stdout: StdioCollector { id: outBuf }
         stderr: StdioCollector { id: errBuf }
-        onExited: (code) => root._finish(code, String(outBuf.text || ""), String(errBuf.text || "").trim())
+        onExited: (code) => {
+            if (root._stopping) {
+                root._stopping = false;
+                root._pump();
+                return;
+            }
+            root._finish(code, String(outBuf.text || ""), String(errBuf.text || "").trim());
+        }
     }
 }

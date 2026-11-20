@@ -18,21 +18,47 @@ MouseArea {
     property string _plain: ""
     property string _label: ""
     readonly property string _path: String(root.entry && root.entry.path || "")
+    readonly property bool _locked: !!(root.entry && (root.entry.readable === false || root.entry.canRead === false))
+    readonly property int _open: {
+        void DefaultApps.stamp;
+        if (!root.entry)
+            return 0;
+        if (Files.place === "trash")
+            return root.entry.readable === false || root.entry.canRead === false ? 0 : 1;
+        if (FilesZip.isZip(root.entry))
+            return 1;
+        return DefaultApps.openable(root.entry);
+    }
     readonly property bool _held: FilesDrag.active && (FilesDrag.paths || []).indexOf(root._path) >= 0
     readonly property bool _land: FilesDrag.active && !root._held && root.entry && root.entry.dir && FilesDrag.drop === root._path
 
     signal menu(real x, real y)
-    signal picked(bool extra)
+    signal picked(bool extra, bool range)
     signal activated()
 
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     preventStealing: true
     hoverEnabled: true
-    cursorShape: Qt.ArrowCursor
+    cursorShape: {
+        if (root._open === 1)
+            return Qt.PointingHandCursor;
+        if (root._locked)
+            return Qt.ForbiddenCursor;
+        return Qt.ArrowCursor;
+    }
+    // The shape has to follow the handler too, or it stays stale after the
+    // openable check finishes while the pointer is already on the row.
+    HoverHandler {
+        cursorShape: root.cursorShape
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+    }
+    onEntered: root._askOpen()
     drag.axis: Drag.XAndYAxis
     drag.threshold: Tokens.spacing.md
 
     onPressed: (mouse) => {
+        if (mouse.button === Qt.LeftButton && root._locked)
+            return;
         forceActiveFocus();
         root._dragged = false;
         ghost.x = 0;
@@ -54,11 +80,21 @@ MouseArea {
             root.menu(at.x, at.y);
             return;
         }
-        root.picked((mouse.modifiers & Qt.ControlModifier) !== 0);
+        if (root._locked)
+            return;
+        root.picked((mouse.modifiers & Qt.ControlModifier) !== 0, (mouse.modifiers & Qt.ShiftModifier) !== 0);
     }
     onDoubleClicked: {
-        if (!root._dragged)
+        if (!root._dragged && !root._locked)
             root.activated();
+    }
+
+    function _askOpen() {
+        if (Files.place === "trash" || !root.entry || root.entry.dir)
+            return;
+        if (root._locked)
+            return;
+        DefaultApps.askOpen(root._path);
     }
 
     Rectangle {

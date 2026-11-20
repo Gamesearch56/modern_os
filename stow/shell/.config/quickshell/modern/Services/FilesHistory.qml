@@ -38,17 +38,22 @@ Singleton {
         if (next.charAt(0) !== "/")
             return;
         const spot = Files._spot();
-        if (push && !(spot.place === "folder" && spot.path === next))
+        const changed = !(spot.place === "folder" && spot.path === next);
+        if (push && changed)
             root._push(spot);
         Files._arrive("folder", next, pick);
+        if (push && changed)
+            FilesUndo.noteRoute(spot, Files._spot());
     }
 
     function openPlace(kind: string) {
         const next = String(kind || "");
         if (!next.length || next === "folder" || next === Files.place)
             return;
-        root._push(Files._spot());
+        const spot = Files._spot();
+        root._push(spot);
         Files._arrive(next, Files.path, []);
+        FilesUndo.noteRoute(spot, Files._spot());
     }
 
     function up() {
@@ -59,11 +64,32 @@ Singleton {
     }
 
     function travel(backward: bool) {
-        const entry = root._pop(backward, Files._spot());
+        const from = Files._spot();
+        const entry = root._pop(backward, from);
         if (!entry)
             return;
         const place = String(entry.place || "folder");
         Files._arrive(place, String(entry.path || ""), place === "folder" ? entry.pick : []);
+        FilesUndo.noteRoute(from, Files._spot());
+    }
+
+    function restore(spot: var) {
+        const target = spot || {};
+        const place = String(target.place || "folder");
+        const path = String(target.path || "");
+        const current = Files._spot();
+        if (root._same(current, target))
+            return;
+        if (root.back.length && root._same(root.back[root.back.length - 1], target)) {
+            root.travel(true);
+            return;
+        }
+        if (root.forward.length && root._same(root.forward[root.forward.length - 1], target)) {
+            root.travel(false);
+            return;
+        }
+        root.forward = root.forward.concat([current]);
+        Files._arrive(place, path, place === "folder" ? (target.pick || []) : []);
     }
 
     function reject() {
@@ -73,6 +99,10 @@ Singleton {
         const entry = stack.pop();
         root.back = stack;
         return entry;
+    }
+
+    function _same(a: var, b: var): bool {
+        return String((a || {}).place || "") === String((b || {}).place || "") && String((a || {}).path || "") === String((b || {}).path || "");
     }
 
     function _push(spot: var) {

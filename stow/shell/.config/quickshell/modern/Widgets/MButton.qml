@@ -165,6 +165,12 @@ Item {
         onCanceled: bg.scale = 1
     }
 
+    HoverHandler {
+        enabled: root.enabled && !root.busy
+        cursorShape: Qt.PointingHandCursor
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+    }
+
     MFocusRing {
         id: ring
         radius: Tokens.radius.full

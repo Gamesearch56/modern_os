@@ -27,18 +27,24 @@ else
     err "sort order was: $(printf '%s' "$names" | tr '\n' ' ')"
 fi
 created="$("$OPS" list "$TMP/box" 0 created 0 0)"
-python3 -c 'import json,sys; rows=json.load(sys.stdin); assert rows and "created" in rows[0] and "mtime" in rows[0]' <<<"$created" \
-    && ok "created and updated stamps are listed" \
-    || err "listing omitted created or updated"
+if python3 -c 'import json,sys; rows=json.load(sys.stdin); assert rows and "created" in rows[0] and "mtime" in rows[0]' <<<"$created"; then
+    ok "created and updated stamps are listed"
+else
+    err "listing omitted created or updated"
+fi
 mkdir -p "$TMP/box/c/sub"
 printf 'abcd' >"$TMP/box/c/sub/nested"
-python3 -c 'import json,sys; rows=json.load(sys.stdin); row=next(r for r in rows if r["name"]=="c"); assert row["dir"] and row["size"]==-1' <<<"$listed" \
-    && ok "a folder is listed before its contents are measured" \
-    || err "folder size was measured during the listing"
+if python3 -c 'import json,sys; rows=json.load(sys.stdin); row=next(r for r in rows if r["name"]=="c"); assert row["dir"] and row["size"]==-1' <<<"$listed"; then
+    ok "a folder is listed before its contents are measured"
+else
+    err "folder size was measured during the listing"
+fi
 sizes="$("$OPS" sizes "$TMP/box" 0)"
-python3 -c 'import json,os,sys; rows=[json.loads(line) for line in sys.stdin if line.strip()]; m={r["path"]: r["size"] for r in rows}; assert m[os.path.join(sys.argv[1], "c")]==4' "$TMP/box" <<<"$sizes" \
-    && ok "folder totals are reported after the listing" \
-    || err "folder total was wrong"
+if python3 -c 'import json,os,sys; rows=[json.loads(line) for line in sys.stdin if line.strip()]; m={r["path"]: r["size"] for r in rows}; assert m[os.path.join(sys.argv[1], "c")]==4' "$TMP/box" <<<"$sizes"; then
+    ok "folder totals are reported after the listing"
+else
+    err "folder total was wrong"
+fi
 python3 - "$TMP/box" <<'PY' || err "folder size cache was not written"
 import hashlib, json, os, pathlib, sys
 folder = os.path.join(sys.argv[1], "c")
@@ -50,14 +56,18 @@ row["size"] = 1
 path.write_text(json.dumps(row) + "\n")
 PY
 cached="$("$OPS" sizes "$TMP/box" 0)"
-python3 -c 'import json,os,sys; rows=[json.loads(line) for line in sys.stdin if line.strip()]; m={r["path"]: r["size"] for r in rows}; assert m[os.path.join(sys.argv[1], "c")]==1' "$TMP/box" <<<"$cached" \
-    && ok "a saved folder size is reused" \
-    || err "saved folder size was measured again"
+if python3 -c 'import json,os,sys; rows=[json.loads(line) for line in sys.stdin if line.strip()]; m={r["path"]: r["size"] for r in rows}; assert m[os.path.join(sys.argv[1], "c")]==1' "$TMP/box" <<<"$cached"; then
+    ok "a saved folder size is reused"
+else
+    err "saved folder size was measured again"
+fi
 "$OPS" touch "$TMP/box/c" extra >/dev/null
 changed="$("$OPS" sizes "$TMP/box" 0)"
-python3 -c 'import json,os,sys; rows=[json.loads(line) for line in sys.stdin if line.strip()]; m={r["path"]: r["size"] for r in rows}; assert m[os.path.join(sys.argv[1], "c")]==4' "$TMP/box" <<<"$changed" \
-    && ok "a changed folder is measured again" \
-    || err "a changed folder kept its saved size"
+if python3 -c 'import json,os,sys; rows=[json.loads(line) for line in sys.stdin if line.strip()]; m={r["path"]: r["size"] for r in rows}; assert m[os.path.join(sys.argv[1], "c")]==4' "$TMP/box" <<<"$changed"; then
+    ok "a changed folder is measured again"
+else
+    err "a changed folder kept its saved size"
+fi
 python3 - "$TMP/box" <<'PY' || err "folder size cache was not written again"
 import hashlib, json, os, pathlib, sys
 folder = os.path.join(sys.argv[1], "c")
@@ -70,9 +80,11 @@ path.write_text(json.dumps(row) + "\n")
 PY
 rm -rf "$HOME/.cache/modern/folder-sizes"
 fresh="$("$OPS" sizes "$TMP/box" 0)"
-python3 -c 'import json,os,sys; rows=[json.loads(line) for line in sys.stdin if line.strip()]; m={r["path"]: r["size"] for r in rows}; assert m[os.path.join(sys.argv[1], "c")]==4' "$TMP/box" <<<"$fresh" \
-    && ok "deleting the size cache measures the folder again" \
-    || err "a deleted size cache was not measured again"
+if python3 -c 'import json,os,sys; rows=[json.loads(line) for line in sys.stdin if line.strip()]; m={r["path"]: r["size"] for r in rows}; assert m[os.path.join(sys.argv[1], "c")]==4' "$TMP/box" <<<"$fresh"; then
+    ok "deleting the size cache measures the folder again"
+else
+    err "a deleted size cache was not measured again"
+fi
 
 if "$OPS" delete /etc >/dev/null 2>"$TMP/etc.err"; then
     err "delete of /etc was allowed"
@@ -129,6 +141,75 @@ elif [ "$(cat "$TMP/box/dest/a")" = "dst" ] && [ "$(cat "$TMP/box/dest/(2) a")" 
     ok "copy keeps the existing file and writes a new name"
 else
     err "copy replaced or dropped a file"
+fi
+mkdir -p "$TMP/one/folder" "$TMP/two/folder"
+printf 'new\n' >"$TMP/one/clash"
+printf 'old\n' >"$TMP/two/clash"
+printf 'in\n' >"$TMP/two/folder/inside"
+hits="$("$OPS" conflicts copy "$TMP/two" "$TMP/one/clash" "$TMP/one/folder")"
+if python3 -c 'import json,sys; rows=json.loads(sys.argv[1]); names={r["name"]: r["dir"] for r in rows}; assert names["clash"] is False and names["folder"] is True and len(rows)==2' "$hits"; then
+    ok "a taken name is reported before the copy"
+else
+    err "name clash was not reported: $hits"
+fi
+"$OPS" place "$(python3 -c 'import json,sys; print(json.dumps({"op":"copy","dest":sys.argv[1],"items":[{"src":sys.argv[2],"mode":"keep"}]}))' "$TMP/two" "$TMP/one/clash")" >/dev/null
+if [ "$(cat "$TMP/two/clash")" = "old" ] && [ "$(cat "$TMP/two/(2) clash")" = "new" ]; then
+    ok "rename keeps the existing file and writes another name"
+else
+    err "rename did not keep both files"
+fi
+printf 'newer\n' >"$TMP/one/clash"
+"$OPS" place "$(python3 -c 'import json,sys; print(json.dumps({"op":"copy","dest":sys.argv[1],"items":[{"src":sys.argv[2],"mode":"replace"}]}))' "$TMP/two" "$TMP/one/clash")" >/dev/null
+if [ "$(cat "$TMP/two/clash")" = "newer" ]; then
+    ok "overwrite replaces the file"
+else
+    err "overwrite left the old file"
+fi
+before="$(find "$TMP/two" -maxdepth 1 -name '*clash' | wc -l)"
+"$OPS" place "$(python3 -c 'import json,sys; print(json.dumps({"op":"copy","dest":sys.argv[1],"items":[{"src":sys.argv[2],"mode":"replace"}]}))' "$TMP/two" "$TMP/two/clash")" >/dev/null
+after="$(find "$TMP/two" -maxdepth 1 -name '*clash' | wc -l)"
+if [ "$before" = "$after" ] && [ "$(cat "$TMP/two/clash")" = "newer" ]; then
+    ok "overwrite of the same file does not add a numbered copy"
+else
+    err "overwrite of the same file created another copy"
+fi
+printf 'x\n' >"$TMP/two/(2) skip"
+printf 'y\n' >"$TMP/two/skip"
+printf 'z\n' >"$TMP/one/skip"
+skip="$("$OPS" conflicts copy "$TMP/two" "$TMP/one/skip")"
+if python3 -c 'import json,sys; row=json.loads(sys.argv[1])[0]; assert row["suggest"]=="(3) skip"' "$skip"; then
+    ok "the suggested name skips numbers that already exist"
+else
+    err "suggested name was wrong: $skip"
+fi
+"$OPS" place "$(python3 -c 'import json,sys; print(json.dumps({"op":"copy","dest":sys.argv[1],"items":[{"src":sys.argv[2],"mode":"name","name":"(3) skip"}]}))' "$TMP/two" "$TMP/one/skip")" >/dev/null
+if [ "$(cat "$TMP/two/(3) skip")" = "z" ] && [ "$(cat "$TMP/two/skip")" = "y" ]; then
+    ok "the chosen name is used for the new file"
+else
+    err "the chosen name was not written"
+fi
+trashed="$("$TRASH" list)"
+if python3 -c 'import json,sys; rows=json.loads(sys.argv[1]); row=next(r for r in rows if str(r.get("original","")).endswith("/two/clash")); assert open(row["path"]).read()=="old\n"' "$trashed"; then
+    ok "overwrite moves the existing file to the trash"
+else
+    err "overwrite did not keep the old file in the trash"
+fi
+printf 'safe\n' >"$TMP/link-target"
+ln -s "$TMP/link-target" "$TMP/two/linkname"
+printf 'fresh\n' >"$TMP/one/linkname"
+"$OPS" place "$(python3 -c 'import json,sys; print(json.dumps({"op":"move","dest":sys.argv[1],"items":[{"src":sys.argv[2],"mode":"replace"}]}))' "$TMP/two" "$TMP/one/linkname")" >/dev/null
+if [ "$(cat "$TMP/two/linkname")" = "fresh" ] && [ "$(cat "$TMP/link-target")" = "safe" ] && [ ! -e "$TMP/one/linkname" ]; then
+    ok "overwrite replaces a symlink and leaves its target"
+else
+    err "overwrite followed or kept the symlink"
+fi
+"$OPS" place "$(python3 -c 'import json,sys; print(json.dumps({"op":"copy","dest":sys.argv[1],"items":[{"src":sys.argv[2],"mode":"replace"}]}))' "$TMP/two" "$TMP/one/folder")" >/dev/null
+if [ -d "$TMP/two/folder" ] && [ ! -e "$TMP/two/folder/inside" ] && [ -f "$TMP/one/folder" ]; then
+    err "overwrite left the folder contents or removed the source"
+elif [ -d "$TMP/two/folder" ] && [ ! -e "$TMP/two/folder/inside" ]; then
+    ok "overwrite moves an existing folder to the trash"
+else
+    err "overwrite did not replace the folder"
 fi
 printf 'same\n' >"$TMP/box/same.txt"
 if ! "$OPS" copy "$TMP/box" "$TMP/box/same.txt" >/dev/null 2>"$TMP/same.err"; then
@@ -222,7 +303,95 @@ if [ "$(cat "$TMP/note")" = "hello" ]; then
 else
     err "restore did not return the file"
 fi
-"$TRASH" move "$TMP/note" >/dev/null
+undo_note="$("$TRASH" move "$TMP/note")"
+if [ -e "$TMP/note" ]; then
+    err "undo fixture left the file in place"
+fi
+name="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["items"][0]["name"])' "$undo_note")"
+"$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"undo","entry":{"kind":"presence","where":"trash","items":[{"path":sys.argv[1],"name":sys.argv[2]}]}}))' "$TMP/note" "$name")" >/dev/null
+if [ "$(cat "$TMP/note")" = "hello" ]; then
+    ok "undo puts a trashed file back"
+else
+    err "undo did not restore the trashed file"
+fi
+"$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"redo","entry":{"kind":"presence","where":"paths","items":[{"path":sys.argv[1],"name":sys.argv[2]}]}}))' "$TMP/note" "$name")" >/dev/null
+if [ ! -e "$TMP/note" ]; then
+    ok "redo moves the file to the trash again"
+else
+    err "redo left the restored file in place"
+fi
+"$TRASH" empty >/dev/null
+mkdir -p "$TMP/box/away"
+printf 'm\n' >"$TMP/box/moving"
+"$OPS" move "$TMP/box/away" "$TMP/box/moving" >/dev/null
+"$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"undo","entry":{"kind":"move","pairs":[{"from":sys.argv[1],"to":sys.argv[2]}]}}))' "$TMP/box/moving" "$TMP/box/away/moving")" >/dev/null
+if [ "$(cat "$TMP/box/moving")" = "m" ] && [ ! -e "$TMP/box/away/moving" ]; then
+    ok "undo puts a moved file back"
+else
+    err "undo did not return the moved file"
+fi
+"$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"redo","entry":{"kind":"move","pairs":[{"from":sys.argv[1],"to":sys.argv[2]}]}}))' "$TMP/box/moving" "$TMP/box/away/moving")" >/dev/null
+if [ "$(cat "$TMP/box/away/moving")" = "m" ]; then
+    ok "redo moves the file again"
+else
+    err "redo did not move the file"
+fi
+printf 'r\n' >"$TMP/box/old-name"
+"$OPS" rename "$TMP/box/old-name" new-name >/dev/null
+"$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"undo","entry":{"kind":"move","pairs":[{"from":sys.argv[1],"to":sys.argv[2]}]}}))' "$TMP/box/old-name" "$TMP/box/new-name")" >/dev/null
+if [ "$(cat "$TMP/box/old-name")" = "r" ]; then
+    ok "undo restores a renamed file"
+else
+    err "undo did not restore the old name"
+fi
+printf 'c\n' >"$TMP/box/source"
+"$OPS" copy "$TMP/box" "$TMP/box/source" >/dev/null
+copy="$TMP/box/(2) source"
+if [ ! -f "$copy" ]; then
+    err "copy did not land beside the original"
+fi
+copied="$("$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"undo","entry":{"kind":"presence","where":"paths","items":[{"path":sys.argv[1],"name":""}]}}))' "$copy")")"
+if [ -f "$TMP/box/source" ] && [ ! -e "$copy" ]; then
+    ok "undo removes a copy and keeps the original"
+else
+    err "undo did not remove the copy"
+fi
+"$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"redo","entry":json.loads(sys.argv[1])}))' "$copied")" >/dev/null
+if [ "$(cat "$copy")" = "c" ]; then
+    ok "redo puts the copy back"
+else
+    err "redo did not restore the copy"
+fi
+mkdir -p "$TMP/undo-src" "$TMP/undo-dest"
+printf 'kept\n' >"$TMP/undo-dest/same"
+printf 'incoming\n' >"$TMP/undo-src/same"
+placed="$("$OPS" place "$(python3 -c 'import json,sys; print(json.dumps({"op":"copy","dest":sys.argv[1],"items":[{"src":sys.argv[2],"mode":"replace"}]}))' "$TMP/undo-dest" "$TMP/undo-src/same")")"
+entry="$(python3 -c 'import json,sys; info=json.loads(sys.argv[1]); print(json.dumps({"side":"undo","entry":{"kind":"presence","where":"paths","items":[{"path":info["paths"][0],"name":""}],"covered":info["covered"]}}))' "$placed")"
+back="$("$OPS" apply "$entry")"
+if [ "$(cat "$TMP/undo-dest/same")" = "kept" ]; then
+    ok "undo puts back a file that was overwritten"
+else
+    err "undo left the overwriting file"
+fi
+"$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"redo","entry":json.loads(sys.argv[1])}))' "$back")" >/dev/null
+if [ "$(cat "$TMP/undo-dest/same")" = "incoming" ]; then
+    ok "redo overwrites the file again"
+else
+    err "redo did not overwrite again"
+fi
+"$OPS" mkdir "$TMP/box" fresh-dir >/dev/null
+made="$("$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"undo","entry":{"kind":"presence","where":"paths","items":[{"path":sys.argv[1],"name":""}]}}))' "$TMP/box/fresh-dir")")"
+if [ ! -e "$TMP/box/fresh-dir" ]; then
+    ok "undo removes a new folder"
+else
+    err "undo left the new folder"
+fi
+"$OPS" apply "$(python3 -c 'import json,sys; print(json.dumps({"side":"redo","entry":json.loads(sys.argv[1])}))' "$made")" >/dev/null
+if [ -d "$TMP/box/fresh-dir" ]; then
+    ok "redo creates the folder again"
+else
+    err "redo did not restore the folder"
+fi
 "$TRASH" empty >/dev/null
 left="$("$TRASH" list)"
 if [ "$left" = "[]" ]; then
@@ -360,6 +529,79 @@ if python3 -c 'import json,os,sys; rows=json.load(sys.stdin); hit=next(r for r i
     ok "an opened file is listed in recent"
 else
     err "recent did not list the opened file"
+fi
+
+mkdir -p "$TMP/bin" "$TMP/runtime/gvfs/smb-share:server=nas,share=media"
+cat >"$TMP/bin/findmnt" <<'EOF'
+#!/bin/sh
+printf '%s\n' '{"filesystems":[{"fstype":"cifs","target":"/mnt/share","children":[{"fstype":"ext4","target":"/mnt/local"}]}]}'
+EOF
+cat >"$TMP/bin/gio" <<'EOF'
+#!/bin/sh
+if [ "$1" = list ]; then
+    printf '%s\n' 'sftp://desk/'
+    exit 0
+fi
+if [ "$1" = mount ]; then
+    printf '%s' "$2" >"${MODERN_GIO_LOG:?}"
+    exit 0
+fi
+exit 1
+EOF
+chmod +x "$TMP/bin/findmnt" "$TMP/bin/gio"
+listed="$(PATH="$TMP/bin:$PATH" XDG_RUNTIME_DIR="$TMP/runtime" "$PLACES" mounts)"
+if python3 -c 'import json,sys; rows=json.load(sys.stdin); paths={r["path"] for r in rows}; uris={r["uri"] for r in rows}; assert "/mnt/share" in paths and "/mnt/local" not in paths and any(r["path"].endswith("/gvfs/smb-share:server=nas,share=media") and r["uri"]=="smb://nas/media" for r in rows) and "sftp://desk" in uris' <<<"$listed"; then
+    ok "network places list mounts, gvfs shares, and discovered servers"
+else
+    err "network places were incomplete"
+    printf '%s\n' "$listed" >&2
+fi
+printf '' >"$TMP/gio.log"
+if PATH="$TMP/bin:$PATH" XDG_RUNTIME_DIR="$TMP/runtime" MODERN_GIO_LOG="$TMP/gio.log" "$PLACES" connect 'nas/share' >/dev/null; then
+    if [ "$(cat "$TMP/gio.log")" = "smb://nas/share" ]; then
+        ok "a server name is mounted as smb"
+    else
+        err "connect did not ask gio to mount smb://nas/share"
+    fi
+else
+    err "connecting to a server name failed"
+fi
+if PATH="$TMP/bin:$PATH" XDG_RUNTIME_DIR="$TMP/runtime" MODERN_GIO_LOG="$TMP/gio.log" "$PLACES" connect 'file:///etc/passwd' >/dev/null 2>&1; then
+    err "a local file URI was accepted as a server"
+else
+    ok "a local file URI is not a server"
+fi
+
+ZIP="$ROOT/scripts/files-zip.sh"
+mkdir -p "$TMP/pack/sub"
+printf 'alpha\n' >"$TMP/pack/a.txt"
+printf 'beta\n' >"$TMP/pack/sub/b.txt"
+if "$ZIP" pack "$TMP/pack/bundle.zip" "$TMP/pack/a.txt" "$TMP/pack/sub" >/dev/null \
+    && "$ZIP" unpack "$TMP/pack/bundle.zip" "$TMP/pack/out" >/dev/null \
+    && [ "$(cat "$TMP/pack/out/a.txt")" = "alpha" ] && [ "$(cat "$TMP/pack/out/sub/b.txt")" = "beta" ]; then
+    ok "a zip stores the selected files and extracts them into a folder"
+else
+    err "zip round-trip failed"
+fi
+if "$ZIP" pack "$TMP/pack/bundle.zip" "$TMP/pack/a.txt" >/dev/null 2>"$TMP/zip.err"; then
+    err "a second zip was allowed to replace the first"
+elif grep -q taken "$TMP/zip.err" && [ -f "$TMP/pack/bundle.zip" ]; then
+    ok "a zip is not replaced when its name is taken"
+else
+    err "a taken zip name was not refused"
+fi
+python3 - "$TMP/pack/slip.zip" <<'PY'
+import sys, zipfile
+with zipfile.ZipFile(sys.argv[1], "w") as archive:
+    archive.writestr("../escape.txt", "pwned\n")
+    archive.writestr("ok.txt", "safe\n")
+PY
+if "$ZIP" unpack "$TMP/pack/slip.zip" "$TMP/pack/slipped" >/dev/null 2>"$TMP/slip.err"; then
+    err "a zip was allowed to write outside its folder"
+elif [ ! -e "$TMP/escape.txt" ] && [ ! -e "$TMP/pack/escape.txt" ] && [ ! -e "$TMP/pack/slipped" ]; then
+    ok "a zip cannot extract outside the new folder"
+else
+    err "a rejected zip left extracted files behind"
 fi
 
 THUMBS="$ROOT/scripts/files-thumbs.sh"

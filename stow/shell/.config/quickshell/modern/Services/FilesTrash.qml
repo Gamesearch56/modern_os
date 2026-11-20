@@ -83,6 +83,7 @@ Singleton {
             } else if (job && job.kind === "mutate") {
                 if (job.args && String(job.args[0] || "") === "move")
                     FilesPlaces.drop(job.args.slice(1));
+                FilesUndo.noteTrash(job.args, root._out);
                 root.changed();
                 root.refresh();
             }

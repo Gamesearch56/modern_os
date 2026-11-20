@@ -149,7 +149,15 @@ MDialog {
             FilesAccess.saveGroup(String(info.path), group);
         if ((name.length || bits.length || owner.length) && info.path)
             FilesAccess.save(String(info.path), name, bits, owner);
+        Files._holdSelect = true;
+        holdSel.restart();
         Files.propertiesOpen = false;
+    }
+
+    Timer {
+        id: holdSel
+        interval: Motion.shortMs
+        onTriggered: Files._holdSelect = false
     }
 
     Connections {

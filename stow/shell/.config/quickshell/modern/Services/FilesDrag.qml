@@ -95,6 +95,6 @@ Singleton {
             moving.push(item);
         }
         if (moving.length)
-            Files._enqueue(["move", dest].concat(moving), "mutate");
+            FilesConflict.place("move", dest, moving);
     }
 }

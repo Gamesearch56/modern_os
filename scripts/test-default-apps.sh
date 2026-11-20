@@ -196,4 +196,19 @@ else
     ok "override binary is not installed here; --print used MODERN_OPEN_ASSUME_EXEC"
 fi
 
+: >"$tmp/mystery.blob"
+if HOME="$tmp" XDG_CONFIG_HOME="$tmp/cfg" PATH="$tmp/bin:$PATH" \
+    MODERN_OPEN_ASSUME_EXEC=1 \
+    "$ROOT/scripts/files-open.sh" --can "$tmp/picture.png"; then
+    ok "--can accepts an image the shipped viewer handles"
+else
+    err "--can rejected an image the shipped viewer handles"
+fi
+if HOME="$tmp" XDG_CONFIG_HOME="$tmp/cfg" PATH="$tmp/bin:$PATH" \
+    "$ROOT/scripts/files-open.sh" --can "$tmp/mystery.blob"; then
+    err "--can accepted a file with no handler"
+else
+    ok "--can rejects a file with no handler"
+fi
+
 [ "$FAIL" -eq 0 ]

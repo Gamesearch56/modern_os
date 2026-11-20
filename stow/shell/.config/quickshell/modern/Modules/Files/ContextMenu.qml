@@ -72,7 +72,7 @@ MPopup {
     }
 
     function _entry() {
-        const lists = [Files.entries || [], FilesSearch.results || []];
+        const lists = [Files.entries || [], FilesSearch.results || [], FilesPlaces.recent || [], FilesPlaces.favoriteRows(Config.files.favorites)];
         for (let n = 0; n < lists.length; n++) {
             const rows = lists[n];
             for (let i = 0; i < rows.length; i++) {
@@ -81,6 +81,11 @@ MPopup {
             }
         }
         return null;
+    }
+
+    function _locked(): bool {
+        const row = root._entry();
+        return !!(row && (row.readable === false || row.canRead === false));
     }
 
     function _build() {
@@ -93,6 +98,15 @@ MPopup {
         function sep() {
             if (rows.length && !rows[rows.length - 1].sep)
                 rows.push({ sep: true, id: "", key: "", on: false, destructive: false });
+        }
+        if (kind === "selection") {
+            add("zip", "files.menu.zip", Files.place === "folder" && Files.path.charAt(0) === "/", false);
+            sep();
+            add("copy", "files.menu.copy", true, false);
+            add("cut", "files.menu.cut", true, false);
+            sep();
+            add("trash", "files.menu.trash", true, true);
+            return rows;
         }
         if (kind === "blank") {
             add("newFolder", "files.menu.newFolder", true, false);
@@ -111,6 +125,14 @@ MPopup {
             add("empty", "files.menu.empty", true, true);
             return rows;
         }
+        if (kind === "network") {
+            add("connect", "files.network.connect", true, false);
+            return rows;
+        }
+        if (kind === "net") {
+            add("open", "files.menu.open", path.length > 0 || Files.menuName.length > 0, false);
+            return rows;
+        }
         if (kind === "trash") {
             add("restore", "files.menu.restore", true, false);
             add("delete", "files.menu.delete", true, true);
@@ -125,28 +147,39 @@ MPopup {
             return rows;
         }
         const dir = root._dir || (root._entry() && root._entry().dir);
-        add("open", "files.menu.open", true, false);
+        const locked = root._locked();
+        const zip = !dir && path.toLowerCase().endsWith(".zip");
+        add("open", "files.menu.open", !locked, false);
+        if (zip)
+            add("extract", "files.menu.extract", !locked, false);
+        if (Files.place === "folder" && path.charAt(0) === "/")
+            add("zip", "files.menu.zip", !locked, false);
         if (Files.place === "favorites" || Files.place === "recent")
             add("location", "files.menu.openLocation", path.charAt(0) === "/", false);
         if (dir) {
-            add("tab", "files.menu.openTab", true, false);
-            add("window", "files.menu.openWindow", true, false);
+            add("tab", "files.menu.openTab", !locked, false);
+            add("window", "files.menu.openWindow", !locked, false);
         }
         sep();
-        add("rename", "files.menu.rename", root._edit, false);
-        add("copy", "files.menu.copy", true, false);
-        add("cut", "files.menu.cut", root._edit, false);
+        add("rename", "files.menu.rename", root._edit && !locked, false);
+        add("copy", "files.menu.copy", !locked, false);
+        add("cut", "files.menu.cut", root._edit && !locked, false);
         if (Files.clipboard.length > 0)
-            add("paste", "files.menu.paste", true, false);
+            add("paste", "files.menu.paste", !(locked && dir), false);
         sep();
         add("favorite", FilesPlaces.favorite(path) ? "files.menu.unfavorite" : "files.menu.favorite", true, false);
         add("props", "files.menu.properties", true, false);
         sep();
-        add("trash", "files.menu.trash", root._edit, true);
+        add("trash", "files.menu.trash", root._edit && !locked, true);
         return rows;
     }
 
     function _act(id: string) {
+        const items = root.rows || [];
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].id === id && items[i].on !== true)
+                return;
+        }
         const path = Files.menuPath;
         const dir = root._dir || !!(root._entry() && root._entry().dir);
         Files.menuOpen = false;
@@ -155,8 +188,15 @@ MPopup {
             Files.askName("dir");
         else if (id === "newFile")
             Files.askName("file");
-        else if (id === "open")
-            Files.show(path);
+        else if (id === "open") {
+            if (Files.menuKind === "net" && path.charAt(0) !== "/")
+                FilesNet.connect(Files.menuName);
+            else
+                Files.show(path);
+        } else if (id === "connect") {
+            Files.namingKind = "server";
+            Files.naming = true;
+        }
         else if (id === "location") {
             const slash = path.lastIndexOf("/");
             const parent = slash > 0 ? path.slice(0, slash) : "/";
@@ -172,11 +212,17 @@ MPopup {
             FilesExtra.open(path);
         else if (id === "rename")
             Files.renaming = path;
+        else if (id === "zip")
+            FilesZip.ask();
+        else if (id === "extract")
+            FilesZip.unpack(path);
         else if (id === "copy") {
-            Files.selected = [path];
+            if (Files.menuKind !== "selection")
+                Files.selected = [path];
             Files.copy();
         } else if (id === "cut") {
-            Files.selected = [path];
+            if (Files.menuKind !== "selection")
+                Files.selected = [path];
             Files.cut();
         } else if (id === "paste")
             Files.paste(dir && path.length ? path : "");
@@ -186,7 +232,7 @@ MPopup {
             Files.propertiesOpen = true;
             FilesAccess.load(path);
         } else if (id === "trash")
-            FilesTrash.move([path]);
+            FilesTrash.move(Files.menuKind === "selection" ? Files.selected : [path]);
         else if (id === "delete") {
             Files.selected = [path];
             Files.ask("delete");

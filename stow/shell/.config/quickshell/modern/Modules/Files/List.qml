@@ -28,7 +28,7 @@ Flickable {
             const nets = FilesPlaces.mounts || [];
             const out = [];
             for (let i = 0; i < nets.length; i++)
-                out.push({ name: nets[i].name || nets[i].path, path: nets[i].path, dir: true, size: -1 });
+                out.push({ name: nets[i].name || nets[i].path || nets[i].uri, path: nets[i].path || "", uri: nets[i].uri || "", dir: true, size: -1 });
             return out;
         }
         return Files.entries || [];
@@ -128,6 +128,7 @@ Flickable {
             delegate: Item {
                 id: row
                 required property var modelData
+                readonly property bool _locked: modelData.readable === false || modelData.canRead === false
                 readonly property bool _cut: Files.clipboardMode === "cut" && (Files.clipboard || []).indexOf(modelData.path) >= 0
                 readonly property bool _held: FilesDrag.active && (FilesDrag.paths || []).indexOf(modelData.path) >= 0
                 readonly property bool _land: FilesDrag.active && modelData.dir && FilesDrag.drop === modelData.path && !_held
@@ -143,8 +144,8 @@ Flickable {
                     anchors.fill: parent
                     radius: Tokens.radius.small
                     color: row._held || row._land ? Colors.color.primaryContainer
-                           : Files.selected.indexOf(row.modelData.path) >= 0 ? Colors.color.secondaryContainer
-                           : rowHover.hovered ? Colors.color.surfaceContainer : "transparent"
+                           : !row._locked && Files.selected.indexOf(row.modelData.path || row.modelData.uri) >= 0 ? Colors.color.secondaryContainer
+                           : rowHover.hovered && !row._locked ? Colors.color.surfaceContainer : "transparent"
                 }
 
                 RowLayout {
@@ -219,19 +220,9 @@ Flickable {
                     markRadius: Tokens.radius.small
                     enabled: Files.renaming !== row.modelData.path
                     entry: row.modelData
-                    onMenu: (x, y) => {
-                        Files.click(row.modelData.path, false);
-                        Files.openMenu(root._kind(row.modelData), row.modelData.path, row.modelData.name, x, y);
-                    }
-                    onPicked: (extra) => Files.click(row.modelData.path, extra)
-                    onActivated: {
-                        if (Files.place === "trash")
-                            FilesTrash.restore(row.modelData.name);
-                        else if (row.modelData.dir)
-                            Files.go(row.modelData.path, true);
-                        else
-                            Files.show(row.modelData.path);
-                    }
+                    onMenu: (x, y) => root.menu(row, x, y)
+                    onPicked: (extra, range) => FilesSelect.pick(row.modelData.path || row.modelData.uri, extra, range, root.rows)
+                    onActivated: root.openRow(row.modelData)
                 }
             }
         }
@@ -252,6 +243,8 @@ Flickable {
         z: -1
         onPressed: forceActiveFocus()
         onClicked: (mouse) => {
+            if (Files._holdSelect)
+                return;
             Files.clearSelection();
             if (mouse.button !== Qt.RightButton)
                 return;
@@ -264,23 +257,32 @@ Flickable {
     }
 
     function _at(item, x, y) {
-        const host = Window.window ? Window.window.contentItem : item;
-        return item.mapToItem(host, x, y);
+        return item.mapToItem(Window.window ? Window.window.contentItem : item, x, y);
     }
-
+    function menu(row, x: real, y: real) {
+        const id = row.modelData.path || row.modelData.uri;
+        const many = !row._locked && FilesSelect.retain(id);
+        const name = Files.place === "network" ? String(row.modelData.uri || "") : row.modelData.name;
+        Files.openMenu(many ? "selection" : root._kind(row.modelData), row.modelData.path, name, x, y);
+    }
+    function openRow(entry) {
+        if (Files.place === "network") {
+            const path = String(entry.path || "");
+            if (path.charAt(0) === "/") Files.go(path, true); else FilesNet.connect(String(entry.uri || ""));
+        } else if (Files.place === "trash") FilesTrash.restore(entry.name);
+        else if (entry.dir) Files.go(entry.path, true);
+        else if (!FilesZip.openZip(entry)) Files.show(entry.path);
+    }
     function _kind(entry) {
-        if (Files.place === "trash")
-            return "trash";
+        if (Files.place === "trash") return "trash";
+        if (Files.place === "network") return "net";
         return entry && entry.dir ? "folder" : "file";
     }
-
     function _blankKind() {
-        if (Files.place === "recent")
-            return "recent";
-        if (Files.place === "trash")
-            return "trashPlace";
-        if (Files.place !== "folder")
-            return "";
+        if (Files.place === "recent") return "recent";
+        if (Files.place === "trash") return "trashPlace";
+        if (Files.place === "network") return "network";
+        if (Files.place !== "folder") return "";
         return "blank";
     }
 }

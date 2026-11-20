@@ -16,6 +16,7 @@ Item {
     property bool escapeCloses: false
     property bool captureArrows: false
     property bool captureReturn: false
+    property bool captureEscape: false
     property bool holdFocus: false
     property bool selectAllOnPress: false
     property bool selectOnFocus: false
@@ -42,6 +43,7 @@ Item {
     HoverHandler {
         enabled: root.enabled
         cursorShape: Qt.IBeamCursor
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     }
 
     onActiveFocusChanged: {
@@ -123,7 +125,8 @@ Item {
         Keys.onShortcutOverride: (event) => {
             const ret = event.key === Qt.Key_Return || event.key === Qt.Key_Enter;
             const arrow = event.key === Qt.Key_Up || event.key === Qt.Key_Down;
-            if ((root.captureReturn && ret) || (root.captureArrows && arrow))
+            const esc = root.captureEscape && event.key === Qt.Key_Escape;
+            if ((root.captureReturn && ret) || (root.captureArrows && arrow) || esc)
                 event.accepted = true;
         }
         Keys.onPressed: (event) => {

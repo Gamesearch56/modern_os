@@ -44,6 +44,7 @@ Scope {
                         Layouts.Layout.fillHeight: true
 
                         Places {
+                            id: places
                             anchors.fill: parent
                         }
                     }
@@ -130,21 +131,21 @@ Scope {
                 }
             }
 
-            Shortcuts {}
+            Shortcuts { places: places }
             ArrowKeys {
                 rows: Files.view === "grid" ? fileGrid.rows : fileList.rows
-                columns: Files.view === "grid" ? fileGrid.columns : 1
-                view: Files.view === "grid" ? fileGrid : fileList
+                columns: Files.view === "grid" ? fileGrid.columns : 1; view: Files.view === "grid" ? fileGrid : fileList
             }
-            TapHandler {
+            MouseArea {
                 parent: win.contentItem
-                acceptedButtons: Qt.BackButton
-                onTapped: if (mod._mouseNav()) Files.back()
-            }
-            TapHandler {
-                parent: win.contentItem
-                acceptedButtons: Qt.ForwardButton
-                onTapped: if (mod._mouseNav()) Files.forward()
+                anchors.fill: parent
+                z: 80
+                acceptedButtons: Qt.BackButton | Qt.ForwardButton
+                // A tap gesture stays grabbed after a fast side-button click and then ignores the next ones.
+                onPressed: (mouse) => {
+                    if (!mod._mouseNav()) return;
+                    if (mouse.button === Qt.BackButton) Files.back(); else Files.forward();
+                }
             }
             ContextMenu {}
             Properties {}
@@ -160,7 +161,7 @@ Scope {
     }
 
     function _mouseNav(): bool {
-        return Files.open && !Files.propertiesOpen && !Files.confirming && !Files.naming
+        return Files.open && !Files.propertiesOpen && !Files.confirming && !Files.naming && !FilesConflict.open
             && !Files.menuOpen && Storage.confirmWhere !== "files";
     }
 
@@ -250,8 +251,9 @@ Scope {
         function onBusyChanged() { mod._watch(); }
         function onOpenedFile(path) { FilesPlaces.record(path); }
         function onFailed(reason) {
-            const denied = String(reason || "") === "denied";
-            Notifications.toast(I18n.t(denied ? "files.noAccess" : "files.refused"), "");
+            const why = String(reason || "");
+            const key = why === "denied" ? "files.noAccess" : why === "connect" ? "files.network.refused" : why === "taken" ? "files.zip.taken" : "files.refused";
+            Notifications.toast(I18n.t(key), "");
         }
         function onOpenChanged() {
             if (!Files.open)
