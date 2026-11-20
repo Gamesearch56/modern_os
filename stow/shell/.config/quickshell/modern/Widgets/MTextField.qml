@@ -11,6 +11,7 @@ Item {
     property alias editor: input
     property string placeholderKey: ""
     property string iconName: ""
+    property string trailingIcon: ""
     property int echoMode: TextInput.Normal
     property bool enabled: true
     property int maximumLength: 32767
@@ -101,11 +102,23 @@ Item {
         tint: true
     }
 
+    MIcon {
+        visible: root.trailingIcon.length > 0
+        z: 2
+        anchors.right: parent.right
+        anchors.rightMargin: Tokens.spacing.md
+        anchors.verticalCenter: parent.verticalCenter
+        name: root.trailingIcon
+        size: Tokens.icon.md
+        color: Colors.color.onSurfaceVariant
+        tint: true
+    }
+
     TextInput {
         id: input
         anchors.fill: parent
         anchors.leftMargin: root.iconName.length > 0 ? Tokens.spacing.xxl + Tokens.spacing.xs : Tokens.spacing.md
-        anchors.rightMargin: Tokens.spacing.md
+        anchors.rightMargin: root.trailingIcon.length > 0 ? Tokens.spacing.xxl + Tokens.spacing.xs : Tokens.spacing.md
         verticalAlignment: TextInput.AlignVCenter
         color: Colors.color.onSurface
         selectionColor: Colors.color.primary
