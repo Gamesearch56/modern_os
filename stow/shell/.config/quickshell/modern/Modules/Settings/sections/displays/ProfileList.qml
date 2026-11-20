@@ -28,6 +28,20 @@ Item {
 
     Layout.fillWidth: true
     implicitHeight: row.implicitHeight
+    // One display stays a card. Extra displays keep that width until
+    // they would leave the page, then shrink together so a drop still
+    // lands on a real slot.
+    readonly property real _cardMax: Tokens.spacing.xxl * 8
+    readonly property real _cardMin: Tokens.spacing.xxl * 4
+    readonly property real cardWidth: {
+        const n = Math.max(1, root.mons.length);
+        const gaps = Math.max(0, n - 1) * Tokens.spacing.md;
+        const room = root.width;
+        if (room <= 0)
+            return root._cardMax;
+        const fit = (room - gaps) / n;
+        return Math.max(root._cardMin, Math.min(root._cardMax, fit));
+    }
 
     function _slotAt(px: real): int {
         let n = 0;
@@ -41,12 +55,13 @@ Item {
 
     function _markX(): real {
         const gap = row.spacing / 2;
+        const origin = row.x;
         if (root._dropAt <= 0) {
             const first = rep.itemAt(0);
-            return first ? first.x - gap : 0;
+            return origin + (first ? first.x - gap : 0);
         }
         const prev = rep.itemAt(root._dropAt - 1);
-        return prev ? prev.x + prev.width + gap : 0;
+        return origin + (prev ? prev.x + prev.width + gap : 0);
     }
 
     // Lays the displays out edge to edge in the new order; each keeps its
@@ -80,9 +95,14 @@ Item {
 
     RowLayout {
         id: row
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.horizontalCenter: parent.horizontalCenter
         spacing: Tokens.spacing.md
+        width: {
+            const n = Math.max(0, rep.count);
+            if (n === 0)
+                return 0;
+            return n * root.cardWidth + Math.max(0, n - 1) * spacing;
+        }
 
         Repeater {
             id: rep
@@ -93,8 +113,10 @@ Item {
                 required property int index
                 readonly property string desc: String(modelData.description || "")
                 property bool _moved: false
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
+                Layout.fillWidth: false
+                Layout.preferredWidth: root.cardWidth
+                Layout.minimumWidth: root.cardWidth
+                Layout.maximumWidth: root.cardWidth
                 implicitHeight: card.implicitHeight
                 z: dragArea.drag.active ? 20 : 0
 
