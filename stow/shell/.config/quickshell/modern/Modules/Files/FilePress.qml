@@ -58,7 +58,7 @@ MouseArea {
     drag.threshold: Tokens.spacing.md
 
     onPressed: (mouse) => {
-        if (mouse.button === Qt.LeftButton && root._locked)
+        if (root._side(mouse) || (mouse.button === Qt.LeftButton && root._locked))
             return;
         forceActiveFocus();
         root._dragged = false;
@@ -74,7 +74,7 @@ MouseArea {
     }
     onReleased: drag.target = null
     onClicked: (mouse) => {
-        if (root._dragged)
+        if (root._side(mouse) || root._dragged)
             return;
         if (mouse.button === Qt.RightButton) {
             const at = root._at(mouse.x, mouse.y);
@@ -85,9 +85,20 @@ MouseArea {
             return;
         root.picked((mouse.modifiers & Qt.ControlModifier) !== 0, (mouse.modifiers & Qt.ShiftModifier) !== 0);
     }
-    onDoubleClicked: {
-        if (!root._dragged && !root._locked)
+    onDoubleClicked: (mouse) => {
+        if (!root._side(mouse) && !root._dragged && !root._locked)
             root.activated();
+    }
+
+    // Same physical press as history. Opening the icon would push that
+    // folder onto the route the button is trying to walk.
+    function _side(mouse): bool {
+        if (Date.now() - FilesHistory.sideAt < Motion.durationLong)
+            return true;
+        if (!mouse)
+            return false;
+        const extra = Qt.BackButton | Qt.ForwardButton;
+        return (mouse.button & extra) !== 0 || (mouse.buttons & extra) !== 0;
     }
 
     function _askOpen() {

@@ -123,10 +123,10 @@ RowLayout {
             root.showLocation();
             Qt.callLater(() => { search.forceActiveFocus(); Qt.callLater(() => search.editor.selectAll()); });
         }
-        function onPathChanged() { Files.hoverPath = ""; if (!search.focused) root.showLocation(); }
+        function onPathChanged() { FilesHistory.pinLocation(); if (!search.focused) root.showLocation(); }
         function onSelectedChanged() { if (!search.focused) root.showLocation(); }
-        function onPlaceChanged() { Files.hoverPath = ""; if (!search.focused) root.showLocation(); }
-        function onHoverPathChanged() { if (!search.focused) root.showLocation(); }
+        function onPlaceChanged() { FilesHistory.pinLocation(); if (!search.focused) root.showLocation(); }
+        function onHoverPathChanged() { if (!FilesHistory.pinHover && !search.focused) root.showLocation(); }
     }
 
     Connections {
@@ -159,7 +159,7 @@ RowLayout {
 
     function locationText(): string {
         const hover = String(Files.hoverPath || "");
-        if (hover.length) return hover;
+        if (hover.length && !FilesHistory.pinHover) return hover;
         if (Files.selected.length === 1) return String(Files.selected[0] || "");
         const place = Files.place;
         if (place === "recent" || place === "favorites" || place === "network" || place === "trash")

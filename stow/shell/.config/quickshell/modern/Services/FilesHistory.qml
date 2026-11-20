@@ -9,6 +9,13 @@ Singleton {
 
     property var back: []
     property var forward: []
+    // The side button also lands on the icon under the pointer. That press
+    // is navigation, not a click on the file, and the resting pointer is
+    // not a folder that was opened.
+    property double sideAt: 0
+    property bool pinHover: false
+    property real pinX: -1
+    property real pinY: -1
     // A reload starts at home. The saved folder is only a marker that
     // startup has finished, so a listing cannot race that decision.
     property bool placeReady: false
@@ -31,6 +38,13 @@ Singleton {
         else
             Files._openAt(home);
         return true;
+    }
+
+    function pinLocation() {
+        root.pinHover = true;
+        root.pinX = -1;
+        root.pinY = -1;
+        Files.hoverPath = "";
     }
 
     function openFolder(folder: string, push: bool, pick: var) {

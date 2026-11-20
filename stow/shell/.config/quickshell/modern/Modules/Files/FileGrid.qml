@@ -108,17 +108,35 @@ Item {
                         id: cellHover
                         enabled: !Files.covered
                         onHoveredChanged: cell._hover(hovered)
+                        onPointChanged: if (hovered && FilesHistory.pinHover) cell._hover(true)
                         onEnabledChanged: if (!enabled) cell._hover(false)
                     }
                     function _hover(on) {
                         const id = String(cell.modelData.path || cell.modelData.uri || "");
                         if (!id || (on && !cellHover.enabled))
                             return;
+                        if (on && FilesHistory.pinHover && !cell._moved())
+                            return;
                         if (on) {
                             Files.hoverPath = id;
                             return;
                         }
                         Qt.callLater(() => { if (Files.hoverPath === id && !cellHover.hovered) Files.hoverPath = ""; });
+                    }
+                    function _moved(): bool {
+                        const pt = cellHover.point.scenePosition;
+                        if (FilesHistory.pinX < 0) {
+                            FilesHistory.pinX = pt.x;
+                            FilesHistory.pinY = pt.y;
+                            return false;
+                        }
+                        const dx = pt.x - FilesHistory.pinX;
+                        const dy = pt.y - FilesHistory.pinY;
+                        if (dx * dx + dy * dy < Tokens.spacing.sm * Tokens.spacing.sm)
+                            return false;
+                        FilesHistory.pinHover = false;
+                        FilesHistory.pinX = -1;
+                        return true;
                     }
 
                     Rectangle {

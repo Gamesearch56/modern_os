@@ -140,12 +140,12 @@ Scope {
             TapHandler {
                 parent: win.contentItem
                 acceptedButtons: Qt.BackButton
-                onPressedChanged: if (pressed && mod._mouseNav()) Files.back()
+                onPressedChanged: if (pressed) { FilesHistory.sideAt = Date.now(); if (mod._mouseNav()) Files.back(); }
             }
             TapHandler {
                 parent: win.contentItem
                 acceptedButtons: Qt.ForwardButton
-                onPressedChanged: if (pressed && mod._mouseNav()) Files.forward()
+                onPressedChanged: if (pressed) { FilesHistory.sideAt = Date.now(); if (mod._mouseNav()) Files.forward(); }
             }
             ContextMenu {}
             Properties {}
