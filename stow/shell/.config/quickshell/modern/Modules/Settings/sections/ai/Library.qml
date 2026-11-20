@@ -166,7 +166,8 @@ ColumnLayout {
 
     JobOverlay {
         parent: Window.window ? Window.window.contentItem : root
-        anchors.fill: parent
+        width: parent ? parent.width : 0
+        height: parent ? parent.height : 0
         action: library.jobAction
         name: library.jobName
         log: library.jobLog
@@ -176,7 +177,8 @@ ColumnLayout {
 
     MDialog {
         parent: Window.window ? Window.window.contentItem : root
-        anchors.fill: parent
+        width: parent ? parent.width : 0
+        height: parent ? parent.height : 0
         open: root.pendingDelete.length > 0
         titleKey: "settings.ollama.deleteTitle"
         titleParams: ({ name: root.pendingDelete })

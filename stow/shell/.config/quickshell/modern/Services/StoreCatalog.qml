@@ -78,7 +78,7 @@ Item {
         return String(p || "").length > 0;
     }
 
-    function packages(id: string) {
+    function packages(id: string): var {
         const cats = root.categories;
         for (let i = 0; i < cats.length; i++) {
             if (cats[i].id === id)
@@ -174,7 +174,7 @@ Item {
         return out;
     }
 
-    function _stems(name: string) {
+    function _stems(name: string): var {
         const n = String(name || "");
         const out = [n];
         const cut = n.replace(/-git$/, "").replace(/-bin$/, "").replace(/-desktop$/, "")

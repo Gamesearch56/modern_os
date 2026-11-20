@@ -63,8 +63,9 @@ Singleton {
             void n?.ssid;
             void n?.connected;
             void n?.known;
+            void n?.nmSettings;
             void n?.signalStrength;
-            s += root._wifiKey(n) + ":" + (n && n.connected ? "1" : "0") + (n && n.known ? "k" : "") + ":" + (Number(n?.signalStrength) || 0) + ",";
+            s += root._wifiKey(n) + ":" + (n && n.connected ? "1" : "0") + (n && (n.known || (n.nmSettings && n.nmSettings.length)) ? "k" : "") + ":" + (Number(n?.signalStrength) || 0) + ",";
         }
         return s;
     }
@@ -81,7 +82,7 @@ Singleton {
     readonly property bool scanning: scanProc.running || join.waking
     readonly property bool joining: join.running
     readonly property string linkKind: root._wifiUp() ? "wifi" : (root._wiredUp() ? "ethernet" : "offline")
-    signal joinFinished(string op, string ssid, bool ok)
+    signal joinFinished(string op, string ssid, bool ok, string reason)
     readonly property bool speedTesting: speed.testing
     readonly property bool speedDone: speed.done
     readonly property bool speedFailed: speed.failed
@@ -92,7 +93,7 @@ Singleton {
     readonly property real speedConnectMs: speed.connectMs
     readonly property int speedHttp: speed.http
 
-    on_NetSigChanged: root._stampWifi()
+    on_NetSigChanged: Qt.callLater(root._stampWifi)
     onWifiChanged: root._syncScan()
     onWifiEnabledChanged: {
         root._syncScan();
@@ -139,8 +140,8 @@ Singleton {
         for (let i = 0; i < raw.length; i++)
             list.push(raw[i]);
         list.sort((a, b) => {
-            const ar = a?.connected ? 0 : (a?.known ? 1 : 2);
-            const br = b?.connected ? 0 : (b?.known ? 1 : 2);
+            const ar = a?.connected ? 0 : (a && (a.known || (a.nmSettings && a.nmSettings.length)) ? 1 : 2);
+            const br = b?.connected ? 0 : (b && (b.known || (b.nmSettings && b.nmSettings.length)) ? 1 : 2);
             if (ar !== br)
                 return ar - br;
             const ds = (Number(b?.signalStrength) || 0) - (Number(a?.signalStrength) || 0);
@@ -273,7 +274,7 @@ Singleton {
 
     NetworkJoin {
         id: join
-        onFinished: (op, ssid, ok) => root.joinFinished(op, ssid, ok)
+        onFinished: (op, ssid, ok, reason) => root.joinFinished(op, ssid, ok, reason)
     }
 
     NetworkSpeed {

@@ -49,8 +49,10 @@ stub hyprctl 'case "$1 $2" in
   *) printf "[]" ;;
 esac'
 stub grim 'for a; do out="$a"; done; printf "JPEG" >"$out"'
-stub journalctl 'printf "Nov 03 alice@example.org joined from 192.168.0.5 on devbox\n"'
-for s in systemctl coredumpctl lspci lsusb wpctl pactl bluetoothctl nmcli umu-run; do
+stub journalctl 'printf "Nov 03 alice@example.org joined from 192.168.0.5 on devbox\n"
+printf "NetworkManager: (wifi) access point '"'"'Cafe Net 5G'"'"' has security\n"
+printf "wpa_supplicant: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid=\"Home Box\" auth_failures=1\n"'
+for s in systemctl coredumpctl lspci lsusb wpctl pactl pw-metadata bluetoothctl nmcli iw rfkill umu-run; do
     stub "$s" 'printf "%s output\n" "$(basename "$0")"'
 done
 stub notify-send 'printf "%s\n" "$*" >>"'"$tmp"'/calls/notify"'
@@ -82,6 +84,7 @@ jq -e 'map(.name) | index("journal-user.txt") and index("config.json") and index
     && ok "collection lists its files" || err "collect: $files"
 if grep -rq "$SECRET" "$dir"; then err "a secret reached the report"; else ok "secrets, keyrings and battlenet.env never collected"; fi
 if grep -rqE 'alice|devbox|192\.168\.0\.5|example\.org' "$dir"; then err "identity not redacted"; else ok "user, host, mail and IP redacted"; fi
+if grep -rqE 'Cafe|Net 5G|Home Box' "$dir"; then err "a Wi-Fi name reached the report"; else ok "Wi-Fi names with spaces are redacted"; fi
 if grep -q 'Private chat' "$dir/hyprland.txt"; then err "window titles collected"; else ok "window titles left out"; fi
 
 req='{"title":"Sound drops","description":"Audio stops after resume","categories":["sound"],"when":"now","repeat":"sometimes","files":["system.txt","journal-user.txt"],"shots":["'"$(jq -r '.[] | select(.name | startswith("eDP-1")) | .name' <<<"$shots")"'"]}'

@@ -23,12 +23,15 @@ Item {
     property string variant: "row"
     property bool destructive: false
     property bool hoverHighlight: true
+    property bool pointerHover: false
     property string badgeIcon: ""
     property int badgeCount: 0
 
     property bool compact: false
     property bool preferSymbolic: !root._nav
     property bool tabFocus: true
+    // A row that is not a button can still be a keyboard stop.
+    property bool keyStop: false
     property int titleLines: 1
     property int subtitleLines: 1
     property int imageFillMode: Image.PreserveAspectCrop
@@ -73,7 +76,7 @@ Item {
     }
     implicitWidth: root.compact ? Tokens.spacing.xxl * 7 : Tokens.spacing.xxl * 10
     opacity: root.enabled ? 1 : 0.38
-    activeFocusOnTab: root.tabFocus && root.enabled && root.hoverHighlight
+    activeFocusOnTab: root.tabFocus && root.enabled && (root.hoverHighlight || root.keyStop)
     Accessible.role: root.hoverHighlight ? Accessible.Button : Accessible.StaticText
     Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
     Accessible.description: root.badgeCount > 0 ? String(root.badgeCount) : ""
@@ -112,7 +115,7 @@ Item {
         anchors.fill: parent
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
         color: Colors.color.primary
-        opacity: !root.enabled || root.selected || !root.hoverHighlight ? 0 : Chrome.stateLayer(ma.containsMouse, false)
+        opacity: !root.enabled || root.selected || !root.hoverHighlight ? 0 : Chrome.stateLayer(ma.containsMouse || root.pointerHover, false)
     }
 
     MouseArea {
@@ -266,7 +269,7 @@ Item {
         id: ring
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
         active: ring.parent && ring.parent.activeFocus && ring._shown && !ring._pointer
-            && (root._nav || (!root.compact && root.hoverHighlight))
+            && (root._nav || root.keyStop || (!root.compact && root.hoverHighlight))
         ringColor: Colors.color.primary
     }
 }

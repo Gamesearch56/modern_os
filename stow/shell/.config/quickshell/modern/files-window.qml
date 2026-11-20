@@ -15,7 +15,7 @@ ShellRoot {
     FilesMod.Module {}
     FilePreviewMod.Module {}
 
-    Component.onCompleted: Files.show(Quickshell.env("MODERN_FILE_PATH") || "")
+    Component.onCompleted: Files.show(Quickshell.env("MODERN_FILE_PATH") || "", true)
 
     Timer {
         interval: Motion.longMs

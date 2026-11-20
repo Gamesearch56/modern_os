@@ -17,6 +17,7 @@ ColumnLayout {
     property string centerTitleKey: ""
     property string rightTitleKey: ""
     property string emptyKey: "settings.bar.emptySlot"
+    property bool showLabels: true
 
     signal slotsChanged(var left, var center, var right)
     signal itemClicked(string id)
@@ -132,6 +133,7 @@ ColumnLayout {
             items: root.leftItems
             labelKey: root.labelKey
             iconName: root.iconName
+            showLabels: root.showLabels
             configurable: root.configurable
         }
         MSlotLane {
@@ -145,6 +147,7 @@ ColumnLayout {
             items: root.centerItems
             labelKey: root.labelKey
             iconName: root.iconName
+            showLabels: root.showLabels
             configurable: root.configurable
         }
         MSlotLane {
@@ -158,6 +161,7 @@ ColumnLayout {
             items: root.rightItems
             labelKey: root.labelKey
             iconName: root.iconName
+            showLabels: root.showLabels
             configurable: root.configurable
         }
     }

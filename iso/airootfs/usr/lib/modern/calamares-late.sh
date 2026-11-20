@@ -371,6 +371,31 @@ mask_iwd() {
     ln -sfn /dev/null /etc/systemd/system/iwd.service
 }
 
+# Without a country cfg80211 stays on the world domain: fewer 5 GHz
+# channels, passive scanning there, and lower transmit power. The
+# timezone from the Locale page names the country; set-wireless-regdom
+# reads this file when the radio comes up.
+set_wifi_country() {
+    local root="${MODERN_LATE_STRIP_ROOT:-}"
+    local conf="$root/etc/conf.d/wireless-regdom"
+    local tab="${MODERN_LATE_ZONE_TAB:-$root/usr/share/zoneinfo/zone.tab}"
+    local zone cc
+    zone="$(readlink "$root/etc/localtime" 2>/dev/null || true)"
+    zone="${zone#*zoneinfo/}"
+    [ -n "$zone" ] && [ -f "$tab" ] || return 0
+    cc="$(awk -v z="$zone" '$1 !~ /^#/ && $3 == z { print $1; exit }' "$tab")"
+    [[ $cc =~ ^[A-Z]{2}$ ]] || return 0
+    install -d -m 0755 "$(dirname "$conf")"
+    if [ -f "$conf" ] && grep -q "^#\\?WIRELESS_REGDOM=\"$cc\"" "$conf"; then
+        sed -i -e 's/^WIRELESS_REGDOM=/#WIRELESS_REGDOM=/' \
+            -e "s/^#WIRELESS_REGDOM=\"$cc\"/WIRELESS_REGDOM=\"$cc\"/" "$conf"
+    else
+        sed -i 's/^WIRELESS_REGDOM=/#WIRELESS_REGDOM=/' "$conf" 2>/dev/null || true
+        printf 'WIRELESS_REGDOM="%s"\n' "$cc" >>"$conf"
+    fi
+    log "Wi-Fi country set to $cc"
+}
+
 # live-wifi-up.sh writes its rtw88 option to the live overlay, which
 # unpackfs does not copy. /sys in this chroot is the live kernel's, so
 # the loaded parameters say whether the chip needed it.
@@ -670,6 +695,7 @@ LIVE_ONLY_PATHS=(
     usr/lib/modern/live-wifi-wl.sh
     usr/lib/modern/live-wifi-up.sh
     usr/lib/modern/wifi-wl.sh
+    usr/lib/modern/wifi-join.sh
     usr/local/bin/xdg-open
     etc/modern/live-hyprland.lua
     etc/modern/openbox-rc.xml
@@ -745,6 +771,7 @@ phase_strip() {
     log "removing the live-only files unpackfs copied into the target"
     strip_live
     carry_rtw88_quirk
+    set_wifi_country
     local drop="${MODERN_LATE_STRIP_ROOT:-}/etc/mkinitcpio.conf.d/archiso.conf"
     [ ! -e "$drop" ] || die "$drop survived; the target would boot to a rescue shell"
     log "live-only files removed"

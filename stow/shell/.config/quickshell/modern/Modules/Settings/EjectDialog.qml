@@ -9,10 +9,10 @@ MDialog {
     anchors.fill: parent
     // Same as the cleanup dialog: the window is not the parent yet.
     Binding {
-        when: Window.window !== null
+        when: root.Window.window !== null
         target: root
         property: "parent"
-        value: Window.window.contentItem
+        value: root.Window.window ? root.Window.window.contentItem : root.parent
         restoreMode: Binding.RestoreNone
     }
 

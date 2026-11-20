@@ -12,6 +12,7 @@ Item {
     property var pendingNet: null
     property bool forcePassword: false
     property bool joinError: false
+    property string joinReason: "failed"
     readonly property bool passwordOpen: root.pendingNet !== null
     readonly property bool _online: !!(root.pendingNet && root.pendingNet.connected)
     readonly property bool _known: !!(root.pendingNet && root.pendingNet.known)
@@ -115,7 +116,7 @@ Item {
 
     Connections {
         target: Network
-        function onJoinFinished(op, ssid, ok) {
+        function onJoinFinished(op, ssid, ok, reason) {
             if (!root.pendingNet || Network.ssidOf(root.pendingNet) !== ssid)
                 return;
             if (ok) {
@@ -123,7 +124,8 @@ Item {
                 return;
             }
             if (op === "connect") {
-                root.forcePassword = root._locked;
+                root.forcePassword = root._locked && ["notFound", "timeout", "security"].indexOf(reason) === -1;
+                root.joinReason = reason || "failed";
                 root.joinError = true;
                 if (pwd)
                     pwd.text = "";
@@ -168,7 +170,7 @@ Item {
         }
         MText {
             visible: root.joinError && !Network.joining
-            key: "settings.network.connectFailed"
+            key: "settings.network.fail." + root.joinReason
             styleName: "bodyMedium"
             color: Colors.color.error
             wrapMode: Text.WordWrap

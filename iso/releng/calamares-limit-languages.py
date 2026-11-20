@@ -852,6 +852,22 @@ MODERNNET_TS = """
       <translation>Verbinden fehlgeschlagen. Passwort prüfen.</translation>
     </message>
     <message>
+      <source>The network is out of range. Move closer or search again.</source>
+      <translation>Das Netzwerk ist außer Reichweite. Geh näher heran oder suche erneut.</translation>
+    </message>
+    <message>
+      <source>The network did not answer in time. Try again.</source>
+      <translation>Das Netzwerk hat nicht rechtzeitig geantwortet. Versuche es erneut.</translation>
+    </message>
+    <message>
+      <source>This network needs a sign-in the installer cannot enter. Choose another network.</source>
+      <translation>Dieses Netzwerk braucht eine Anmeldung, die das Installationsprogramm nicht eingeben kann. Wähle ein anderes Netzwerk.</translation>
+    </message>
+    <message>
+      <source>The password was not accepted. Type it again.</source>
+      <translation>Das Passwort wurde nicht angenommen. Gib es erneut ein.</translation>
+    </message>
+    <message>
       <source>Choose another network</source>
       <translation>Anderes Netzwerk wählen</translation>
     </message>

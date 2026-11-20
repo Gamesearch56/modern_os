@@ -9,6 +9,7 @@ namespace
 {
 const QString kWifiUp = QStringLiteral( "/usr/lib/modern/live-wifi-up.sh" );
 const QString kWifiState = QStringLiteral( "/run/modern/wifi-state" );
+const QString kWifiJoin = QStringLiteral( "/usr/lib/modern/wifi-join.sh" );
 }  // namespace
 
 ModernNetNm::ModernNetNm( QObject* parent )
@@ -369,51 +370,6 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password )
     {
         return;
     }
-    m_joinSsid = ssid;
-    m_joinPassword = password;
-    QStringList args;
-    if ( !password.isEmpty() )
-    {
-        const QStringList ids = uuidsForSsid( ssid );
-        for ( const QString& id : ids )
-        {
-            run( QStringLiteral( "nmcli" ),
-                 { QStringLiteral( "connection" ),
-                   QStringLiteral( "delete" ),
-                   QStringLiteral( "uuid" ),
-                   id } );
-        }
-        args = { QStringLiteral( "-w" ),
-                 QStringLiteral( "25" ),
-                 QStringLiteral( "device" ),
-                 QStringLiteral( "wifi" ),
-                 QStringLiteral( "connect" ),
-                 ssid,
-                 QStringLiteral( "password" ),
-                 password };
-    }
-    else
-    {
-        const QStringList ids = uuidsForSsid( ssid );
-        if ( ids.isEmpty() )
-        {
-            args = { QStringLiteral( "-w" ),
-                     QStringLiteral( "25" ),
-                     QStringLiteral( "device" ),
-                     QStringLiteral( "wifi" ),
-                     QStringLiteral( "connect" ),
-                     ssid };
-        }
-        else
-        {
-            args = { QStringLiteral( "-w" ),
-                     QStringLiteral( "25" ),
-                     QStringLiteral( "connection" ),
-                     QStringLiteral( "up" ),
-                     QStringLiteral( "uuid" ),
-                     ids.first() };
-        }
-    }
     m_connecting = true;
     emit changed();
     m_join = new QProcess( this );
@@ -427,28 +383,24 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password )
              QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ),
              this,
              [ this ]( int code, QProcess::ExitStatus status ) {
-                 const bool ok = status == QProcess::NormalExit && code == 0;
-                 const QString ssid = m_joinSsid;
-                 const QString password = m_joinPassword;
+                 const int result = status == QProcess::NormalExit ? code : 1;
                  m_join->deleteLater();
                  m_join = nullptr;
                  m_connecting = false;
-                 m_joinSsid.clear();
-                 m_joinPassword.clear();
-                 if ( !ok && !password.isEmpty() )
-                 {
-                     const QStringList ids = uuidsForSsid( ssid );
-                     for ( const QString& id : ids )
-                     {
-                         run( QStringLiteral( "nmcli" ),
-                              { QStringLiteral( "connection" ),
-                                QStringLiteral( "delete" ),
-                                QStringLiteral( "uuid" ),
-                                id } );
-                     }
-                 }
                  refresh();
-                 emit connectFinished( ok && m_wifiUp );
+                 emit connectFinished( result == 0 && m_wifiUp, result );
              } );
-    m_join->start( QStringLiteral( "nmcli" ), args );
+    // The password goes on stdin; argv is readable by every process in
+    // /proc. wifi-join.sh also drops a profile a failed password created.
+    QStringList args { QStringLiteral( "connect" ), ssid };
+    if ( !password.isEmpty() )
+    {
+        args << QStringLiteral( "-" );
+    }
+    m_join->start( kWifiJoin, args );
+    if ( !password.isEmpty() )
+    {
+        m_join->write( password.toUtf8() + '\n' );
+    }
+    m_join->closeWriteChannel();
 }

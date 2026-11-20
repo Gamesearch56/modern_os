@@ -20,6 +20,7 @@ RowLayout {
     MTextField {
         id: search
         Layout.fillWidth: true
+        trailingIcon: "edit-find-symbolic"
         placeholderKey: "files.search.placeholder"
         captureEscape: true
         selectAllOnPress: search.text === root.locationText(); terminalCopy: search.text === root.locationText()

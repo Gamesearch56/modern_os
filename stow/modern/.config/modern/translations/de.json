@@ -496,8 +496,6 @@
     "barBottom": "Unten",
     "barLeft": "Links",
     "barRight": "Rechts",
-    "barFloating": "Schwebend",
-    "barAttached": "Angehängt",
     "on": "An",
     "off": "Aus",
     "cliNote": "Änderungen laufen über ConfigWrite → modern config set (jq). Nur diese App schreibt config.json.",
@@ -632,10 +630,9 @@
       "recordAudio": "Mikrofon aufnehmen",
       "typeScale": "Schriftgröße",
       "barPosition": "Leistenposition",
-      "barStyle": "Leistenstil",
-      "barHeight": "Leistenhöhe",
-      "edgeGap": "Randabstand",
-      "endGap": "Endabstand",
+      "barHeight": "Höhe",
+      "edgeGap": "Abstand oben und unten",
+      "endGap": "Abstand links und rechts",
       "gaps": "Fensterabstände",
       "gapsIn": "Innere Abstände",
       "gapsOut": "Äußere Abstände",
@@ -651,6 +648,13 @@
       "mirrorCountry": "Mirror-Land",
       "showIcons": "Symbole anzeigen",
       "autoHide": "Leiste automatisch ausblenden",
+      "dockAutoHide": "Automatisch ausblenden",
+      "dockIconSize": "Symbolgröße",
+      "dockShowNames": "Namen anzeigen",
+      "dockPad": "Abstand oben und unten",
+      "dockGap": "Abstand zwischen Anwendungen",
+      "dockTheme": "Stil",
+      "dockHover": "Hover-Animation",
       "cursor": "Cursor",
       "cursorTheme": "Cursor-Thema",
       "cursorSize": "Cursor-Größe",
@@ -681,6 +685,23 @@
       "scrollStepFine": "Feiner Scrollschritt",
       "providerPrefix": "Präfix"
     },
+    "dock": {
+      "enable": "Dock anzeigen",
+      "beam": "Kantenstrich",
+      "inventory": "Platte",
+      "floating": "Schwebend",
+      "hoverZoom": "Zoom",
+      "hoverColor": "Farbwechsel",
+      "hoverBounce": "Federn",
+      "hoverLift": "Anheben",
+      "hoverNone": "Keine",
+      "pins": "Anwendungen im Dock",
+      "installed": "Installierte Anwendungen",
+      "search": "Name",
+      "empty": "Eine Anwendung hierher ziehen.",
+      "remove": "Vom Dock entfernen",
+      "trash": "Vom Dock entfernen"
+    },
     "sections": {
       "overview": "Übersicht",
       "general": "Übersicht",
@@ -697,6 +718,7 @@
       "network": "Netzwerk",
       "widgets": "Leiste",
       "bar": "Leiste",
+      "dock": "Dock",
       "launcher": "Launcher",
       "power": "Energie",
       "screenshots": "Aufnahme",
@@ -1052,6 +1074,7 @@
       "connecting": "Verbinden…",
       "connectFailedTitle": "Bluetooth",
       "connectFailed": "Verbindung nicht möglich. Wenn die Kopfhörer schon mit zwei Geräten verbunden sind, trenne eines und versuche es erneut.",
+      "noAudio": "Die Kopfhörer haben geantwortet, aber keinen Ton gestartet. Trenne sie an einem anderen Gerät, das sie gerade nutzt, und versuche es erneut.",
       "pairFailed": "Koppeln nicht möglich. Bestätige die Anfrage am Gerät und versuche es erneut.",
       "remembered": "Gemerkt"
     },
@@ -1249,7 +1272,6 @@
       "connectBody": "Mit diesem Netzwerk verbinden.",
       "connectSavedBody": "Mit dem gespeicherten Passwort verbinden, oder ein neues eingeben.",
       "disconnectBody": "Verbindung trennen. Das Netzwerk bleibt gespeichert, bis du es vergisst.",
-      "connectFailed": "Verbinden fehlgeschlagen. Passwort prüfen.",
       "nearby": "Netzwerke in der Nähe",
       "wifiEmpty": "Keine Netzwerke in der Nähe",
       "wifiSearching": "Suche nach Netzwerken",
@@ -1263,7 +1285,16 @@
       "mb": "{n} MB",
       "seconds": "{n} s",
       "ms": "{n} ms",
-      "httpCode": "{n}"
+      "httpCode": "{n}",
+      "connectFailedTitle": "WLAN",
+      "fail": {
+        "password": "Das Passwort wurde nicht angenommen. Gib es erneut ein.",
+        "notFound": "Das Netzwerk ist außer Reichweite. Geh näher heran oder suche erneut.",
+        "timeout": "Das Netzwerk hat nicht rechtzeitig geantwortet. Versuche es erneut.",
+        "security": "Dieses Netzwerk braucht eine Anmeldung, die dieser Desktop nicht eingeben kann, etwa ein Firmenkonto.",
+        "rejected": "Netzwerkname oder Passwort enthalten Zeichen, die nicht verwendet werden können.",
+        "failed": "Verbinden fehlgeschlagen. Versuche es erneut oder vergiss das Netzwerk und verbinde dich neu."
+      }
     }
   },
   "onboarding": {
@@ -1742,7 +1773,7 @@
       "search": "Suchen",
       "new": "Neu",
       "sort": "Sortieren",
-      "details": "Details",
+      "details": "Optionen",
       "terminal": "Terminal hier öffnen",
       "location": "Ort"
     },
@@ -1810,8 +1841,8 @@
       "eject": "Auswerfen",
       "restore": "Wiederherstellen",
       "empty": "Papierkorb leeren",
-    "zip": "Als Zip komprimieren",
-    "extract": "Entpacken"
+      "zip": "Als Zip komprimieren",
+      "extract": "Entpacken"
     },
     "tabs": {
       "close": "Tab schließen",

@@ -282,6 +282,5 @@ Singleton {
         target: "bugReport"
         function open(category: string) { root.show(category); }
         function close() { root.hide(); }
-        function zzDebug(t: string, n: int) { root.title = t; if (n === 9) { root.goTo(3); root.send(); } else if (n === 8) root.exportReport(); else root.goTo(n); }
     }
 }

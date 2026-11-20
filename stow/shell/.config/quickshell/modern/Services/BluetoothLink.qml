@@ -116,6 +116,7 @@ Singleton {
         root._clear();
         root.errorKey = "";
         root.errorAddress = "";
+        Logger.info("Bluetooth", "connected");
         root.settled(true, addr);
     }
 
@@ -125,9 +126,17 @@ Singleton {
             return;
         const key = root._failKey;
         root._clear();
+        // A link the headset holds without audio only blocks its slot
+        // for the computer or phone that is playing.
+        const dev = root._device(addr);
+        // State at failure tells a report which step stopped: bond, trust, link or audio.
+        Logger.error("Bluetooth", key + (dev ? " paired=" + !!dev.paired + " bonded=" + !!dev.bonded
+            + " trusted=" + !!dev.trusted + " link=" + !!dev.connected + " audio=" + BluetoothAudio.audioUp(dev) : ""));
+        const d = key === "settings.bluetooth.noAudio" ? dev : null;
+        if (d && d.connected && !BluetoothAudio.audioUp(d))
+            d.disconnect();
         root.errorKey = key;
         root.errorAddress = addr;
-        Logger.error("Bluetooth", key);
         root.settled(false, addr);
     }
 
@@ -137,14 +146,9 @@ Singleton {
         const d = root._device(root.pendingAddress);
         if (!d)
             return;
-        if (d.connected) {
-            root._ok();
-            return;
-        }
-        if (d.pairing || d.state === Bluez.BluetoothDeviceState.Connecting) {
-            root._saw = true;
-            return;
-        }
+        // Pairing holds a link before the bond exists. Counting that link
+        // as done skipped trust, and an untrusted headset is refused when
+        // it connects back on its own.
         if (root._pairing && (d.paired || d.bonded)) {
             root._pairing = false;
             root._failKey = "settings.bluetooth.connectFailed";
@@ -162,6 +166,26 @@ Singleton {
             }
             return;
         }
+        if (root._pairing) {
+            if (d.pairing || d.connected)
+                root._saw = true;
+            else if (root._saw)
+                root._fail();
+            return;
+        }
+        if (BluetoothAudio.linked(d)) {
+            root._ok();
+            return;
+        }
+        if (d.connected) {
+            root._saw = true;
+            root._failKey = "settings.bluetooth.noAudio";
+            return;
+        }
+        if (d.pairing || d.state === Bluez.BluetoothDeviceState.Connecting) {
+            root._saw = true;
+            return;
+        }
         if (root._saw && d.state === Bluez.BluetoothDeviceState.Disconnected)
             root._fail();
     }
@@ -173,7 +197,7 @@ Singleton {
         const addr = String(device.address || "");
         if (!addr.length)
             return;
-        if (device.connected) {
+        if (BluetoothAudio.linked(device)) {
             root._clear();
             root.errorKey = "";
             root.errorAddress = "";

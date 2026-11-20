@@ -30,11 +30,16 @@ TEXT_RULES = [
     (re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"), "<email>"),
     (re.compile(r"\b(?:[0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})\b"), r"xx:xx:xx:xx:xx:\1"),
     (re.compile(r"\bdev_(?:[0-9A-Fa-f]{2}_){5}([0-9A-Fa-f]{2})\b"), r"dev_xx_xx_xx_xx_xx_\1"),
+    # PipeWire names a Bluetooth card bluez_card.AA_BB_CC_DD_EE_FF.
+    (re.compile(r"(?<=[._])(?:[0-9A-Fa-f]{2}_){5}([0-9A-Fa-f]{2})(?![0-9A-Za-z])"), r"xx_xx_xx_xx_xx_\1"),
     (re.compile(r"\b(?!127\.)(?!0\.0\.0\.0\b)(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b"), "<ip>"),
     (re.compile(r"\b(?:[0-9A-Fa-f]{1,4}:){4,7}[0-9A-Fa-f]{1,4}\b"), "<ip6>"),
     (re.compile(r"\b[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4})*::(?:[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4})*)?\b"), "<ip6>"),
-    (re.compile(r"(?i)(ssid[\s:=]+)(['\"]?)[^'\"\s]+"), r"\1\2<network>"),
-    (re.compile(r"(connection ')[^']+(')"), r"\1<network>\2"),
+    # Quoted names first: they may contain spaces. NetworkManager says
+    # access point 'X' and connection 'X'; wpa_supplicant says ssid="X".
+    (re.compile(r"(?i)((?:ssid|access point|connection|network)\s*[=:]?\s*)(['\"])[^'\"\n]*\2"), r"\1\2<network>\2"),
+    (re.compile(r"(?im)^(\s*[\w.-]*SSID:[ \t]+)(?!['\"]).+$"), r"\1<network>"),
+    (re.compile(r"(?i)(ssid[\s:=]+)(?!['\"]<network>)(['\"]?)[^'\"\s]+"), r"\1\2<network>"),
 ]
 
 

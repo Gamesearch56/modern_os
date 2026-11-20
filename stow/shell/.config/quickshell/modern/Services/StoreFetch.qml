@@ -101,7 +101,7 @@ Item {
         }
     }
 
-    function _rows(text: string) {
+    function _rows(text: string): var {
         try {
             const parsed = JSON.parse(String(text || "").trim() || "[]");
             return Array.isArray(parsed) ? parsed : [];

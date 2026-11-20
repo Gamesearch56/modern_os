@@ -122,7 +122,7 @@ Singleton {
         root.reloadRecent();
     }
 
-    function _without(cur: var, sources: var) {
+    function _without(cur: var, sources: var): var {
         const next = [];
         const from = sources || [];
         for (let i = 0; i < cur.length; i++) {

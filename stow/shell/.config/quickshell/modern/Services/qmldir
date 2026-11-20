@@ -10,6 +10,7 @@ NetworkJoin 1.0 NetworkJoin.qml
 NetworkSpeed 1.0 NetworkSpeed.qml
 singleton Bluetooth 1.0 Bluetooth.qml
 singleton BluetoothLink 1.0 BluetoothLink.qml
+singleton BluetoothAudio 1.0 BluetoothAudio.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml
 AudioNowPlaying 1.0 AudioNowPlaying.qml
@@ -59,6 +60,7 @@ singleton Session 1.0 Session.qml
 SessionAuth 1.0 SessionAuth.qml
 singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
+singleton Dock 1.0 Dock.qml
 singleton DefaultApps 1.0 DefaultApps.qml
 AppsIcons 1.0 AppsIcons.qml
 singleton IdleInhibit 1.0 IdleInhibit.qml

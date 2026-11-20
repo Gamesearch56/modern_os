@@ -1,0 +1,7 @@
+{
+  "id": "dock",
+  "icon": "view-bottom-pane-symbolic",
+  "key": "settings.sections.dock",
+  "order": 23,
+  "keywords": ["icons", "pins", "theme", "autohide", "applications"]
+}

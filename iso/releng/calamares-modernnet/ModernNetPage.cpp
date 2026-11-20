@@ -426,7 +426,7 @@ ModernNetPage::connectWifi()
 }
 
 void
-ModernNetPage::onConnectFinished( bool ok )
+ModernNetPage::onConnectFinished( bool ok, int code )
 {
     m_connect->setEnabled( true );
     m_refresh->setEnabled( true );
@@ -435,7 +435,24 @@ ModernNetPage::onConnectFinished( bool ok )
         showPassword( false );
         return;
     }
-    m_hint->setText( tr( "Could not connect. Check the password." ) );
+    switch ( code )
+    {
+    case 4:
+        m_hint->setText( tr( "The network is out of range. Move closer or search again." ) );
+        return;
+    case 5:
+        m_hint->setText( tr( "The network did not answer in time. Try again." ) );
+        return;
+    case 6:
+        m_hint->setText( tr( "This network needs a sign-in the installer cannot enter. Choose another network." ) );
+        return;
+    case 3:
+        m_hint->setText( tr( "The password was not accepted. Type it again." ) );
+        break;
+    default:
+        m_hint->setText( tr( "Could not connect. Check the password." ) );
+        break;
+    }
     auto* item = m_list->currentItem();
     if ( item && item->data( Qt::UserRole + 1 ).toBool() )
     {

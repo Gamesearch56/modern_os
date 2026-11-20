@@ -34,7 +34,7 @@ ColumnLayout {
     function _writeBar(patch) {
         let bar = {
             position: Config.bar.position || "top",
-            style: Config.bar.style || "floating",
+            style: "floating",
             height: Config.bar.height || 36,
             edgeGap: Config.bar.edgeGap ?? 8,
             endGap: Config.bar.endGap ?? 8,
@@ -50,6 +50,7 @@ ColumnLayout {
         } catch (e) {
         }
         Object.assign(bar, patch);
+        bar.style = "floating";
         bar.perMonitor = { enabled: !!(Config.bar.perMonitor?.enabled !== false) };
         ConfigWrite.set("bar", bar);
     }
@@ -120,23 +121,6 @@ ColumnLayout {
         onSelected: (v) => {
             BarLayout.livePosition = v;
             ConfigWrite.set("bar.position", v);
-        }
-    }
-
-    MSectionHeader {
-        key: "settings.fields.barStyle"
-        topMargin: Tokens.spacing.xxl
-    }
-    MSegmented {
-        Layout.fillWidth: true
-        value: Config.bar.style
-        model: [
-            { value: "floating", titleKey: "settings.barFloating" },
-            { value: "attached", titleKey: "settings.barAttached" }
-        ]
-        onSelected: (v) => {
-            BarLayout.liveStyle = v;
-            ConfigWrite.set("bar.style", v);
         }
     }
 
@@ -216,6 +200,7 @@ ColumnLayout {
         centerTitleKey: "settings.fields.barCenter"
         rightTitleKey: "settings.fields.barRight"
         labelKey: root.widgetKey
+        showLabels: !BarLayout.vertical
         iconName: barModel.icon
         configurable: root._configurable
         onSlotsChanged: (left, center, right) => root._writeBar({ left: left, center: center, right: right })

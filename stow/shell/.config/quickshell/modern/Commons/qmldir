@@ -1,6 +1,7 @@
 module Commons
 singleton Config 1.0 Config.qml
 singleton BarLayout 1.0 BarLayout.qml
+singleton DockLayout 1.0 DockLayout.qml
 singleton Colors 1.0 Colors.qml
 singleton Motion 1.0 Motion.qml
 singleton Tokens 1.0 Tokens.qml
@@ -14,3 +15,4 @@ singleton SelectMenus 1.0 SelectMenus.qml
 singleton Paths 1.0 Paths.qml
 singleton XdgDirs 1.0 XdgDirs.qml
 singleton DesktopRoles 1.0 DesktopRoles.qml
+singleton SystemIcons 1.0 SystemIcons.qml

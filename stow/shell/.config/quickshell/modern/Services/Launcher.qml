@@ -32,7 +32,17 @@ Singleton {
         onLoadFailed: root.usage = ({})
     }
 
-    function toggle() { root.open = !root.open; }
+    property real _toggledAt: 0
+
+    function toggle() {
+        const now = Date.now();
+        // The shortcut is delivered again when the focus grab takes the
+        // still-held key. That second call would close what this one opened.
+        if (root.open && now - root._toggledAt < Motion.shortMs)
+            return;
+        root._toggledAt = now;
+        root.open = !root.open;
+    }
     function show() { root.open = true; }
     function hide() { root.open = false; }
 

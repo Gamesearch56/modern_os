@@ -14,6 +14,7 @@ Rectangle {
     property var labelKey: function (id) { return String(id); }
     property var iconName: function (id) { return ""; }
     property var configurable: function (id) { return false; }
+    property bool showLabels: true
 
     readonly property alias listBox: listBox
     readonly property real _rowH: Tokens.spacing.xxl + Tokens.spacing.sm
@@ -137,6 +138,7 @@ Rectangle {
                                         anchors.verticalCenter: parent.verticalCenter
 
                                         MText {
+                                            visible: root.showLabels
                                             key: root.labelKey(row.itemId)
                                             styleName: "bodySmall"
                                             width: {

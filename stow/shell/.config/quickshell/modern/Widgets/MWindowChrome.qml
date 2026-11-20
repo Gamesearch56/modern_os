@@ -14,6 +14,7 @@ Item {
     property string subtitleValue: ""
     property string actionKey: ""
     property string actionIcon: ""
+    property string iconName: ""
     property real titleColumnWidth: 0
     property bool busy: false
     // The files window puts its toolbar in the header and lets it use the
@@ -52,22 +53,39 @@ Item {
         id: titleCol
         Layout.preferredWidth: root.titleColumnWidth > 0 ? root.titleColumnWidth : -1
         Layout.fillWidth: root.titleColumnWidth <= 0 && !root.trailingFill
-        spacing: Tokens.spacing.xs
+        spacing: 0
 
-        MText {
-            key: root.titleKey
-            value: root.titleValue
-            styleName: "headlineSmall"
-            Layout.fillWidth: !root.trailingFill
-        }
-
-        MText {
-            visible: root._hasSubtitle
-            key: root.subtitleKey
-            value: root.subtitleValue
-            styleName: "bodySmall"
-            color: Colors.color.onSurfaceVariant
+        RowLayout {
+            spacing: Tokens.spacing.sm
             Layout.fillWidth: true
+
+            MIcon {
+                visible: root.iconName.length > 0
+                name: root.iconName
+                size: Tokens.icon.lg
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            ColumnLayout {
+                spacing: Tokens.spacing.xs
+                Layout.fillWidth: true
+
+                MText {
+                    key: root.titleKey
+                    value: root.titleValue
+                    styleName: "headlineSmall"
+                    Layout.fillWidth: !root.trailingFill
+                }
+
+                MText {
+                    visible: root._hasSubtitle
+                    key: root.subtitleKey
+                    value: root.subtitleValue
+                    styleName: "bodySmall"
+                    color: Colors.color.onSurfaceVariant
+                    Layout.fillWidth: true
+                }
+            }
         }
     }
 

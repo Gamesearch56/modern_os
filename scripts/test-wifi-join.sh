@@ -37,9 +37,28 @@ if [[ $* == *'connection delete uuid new-uuid'* ]]; then
     rm -f "${state}.left"
     exit 0
 fi
-if [[ ${FAIL_CONNECT:-0} -eq 1 && $* == *'device wifi connect'* ]]; then
+if [[ $* == '-t -e no -f SECURITY,SSID device wifi list' ]]; then
+    printf 'WPA2 WPA3:Cafe Net\nWPA2 802.1X:Office\n'
+    exit 0
+fi
+if [[ $* == 'connection add '* ]]; then
     printf 'left\n' >"${state}.left"
-    exit 1
+    printf "Connection '%s' (00000000-0000-4000-8000-00000000abcd) successfully added.\n" Cafe
+    exit 0
+fi
+if [[ $* == *'connection up uuid 00000000-0000-4000-8000-00000000abcd passwd-file '* ]]; then
+    pw=${!#}
+    stat -c '%a' "$pw" >"${state}.mode"
+    cat "$pw" >"${state}.secret"
+    if [[ ${FAIL_CONNECT:-0} -eq 1 ]]; then
+        printf 'Error: Connection activation failed: Secrets were required, but not provided.\n' >&2
+        exit 4
+    fi
+    exit 0
+fi
+if [[ ${FAIL_RANGE:-0} -eq 1 && $* == *'device wifi connect'* ]]; then
+    printf "Error: No network with SSID 'Cafe Net' found.\n" >&2
+    exit 10
 fi
 if [[ $* == '-t -f UUID,TYPE connection show' ]]; then
     cur=$(head -n1 "$state")
@@ -83,18 +102,26 @@ exit 0
 EOF
 chmod +x "$TMP/nmcli" "$JOIN"
 
-run_join() {
-    : >"$LOG"
-    LOG="$LOG" WIFI_JOIN_STATE="$STATE" MODERN_NMCLI="$TMP/nmcli" "$JOIN" "$@"
+expect_rc() {
+    if [[ $rc -eq $1 ]]; then ok "$2"; else err "$3"; fi
 }
 
-if run_join connect 'Cafe Net' 'correct pass'; then
+run_join() {
+    : >"$LOG"
+    LOG="$LOG" WIFI_JOIN_STATE="$STATE" MODERN_NMCLI="$TMP/nmcli" \
+        MODERN_WIFI_SECRETS_DIR="$TMP" "$JOIN" "$@"
+}
+
+if printf '%s\n' 'correct pass\x' | run_join connect 'Cafe Net' -; then
     if grep -F 'connection delete uuid home-uuid' "$LOG" >/dev/null \
-        && grep -F 'device wifi connect Cafe Net password correct pass' "$LOG" >/dev/null \
-        && ! grep -F 'device disconnect enp0s1' "$LOG" >/dev/null; then
-        ok "password connect replaces the saved profile and activates it"
+        && grep -F 'connection add type wifi con-name Cafe Net ssid Cafe Net wifi-sec.key-mgmt wpa-psk' "$LOG" >/dev/null \
+        && ! grep -F 'correct' "$LOG" >/dev/null \
+        && [[ $(cat "$STATE.mode") == 600 ]] \
+        && [[ $(cat "$STATE.secret") == '802-11-wireless-security.psk:correct\ pass\\x' ]] \
+        && ! compgen -G "$TMP/wifi-join.*" >/dev/null; then
+        ok "password goes through a private passwd-file, never argv, and the file is removed"
     else
-        err "password connect did not activate: $(tr '\n' ' ' <"$LOG")"
+        err "password connect leaked or did not activate: $(tr '\n' ' ' <"$LOG")"
     fi
 else
     err "password connect exited non-zero"
@@ -102,16 +129,30 @@ fi
 
 printf 'home\n' >"$STATE"
 rm -f "$STATE.left"
-if FAIL_CONNECT=1 run_join connect 'Cafe Net' 'wrong' ; then
-    err "failed password connect should exit non-zero"
+rc=0
+printf 'wrongpass\n' | FAIL_CONNECT=1 run_join connect 'Cafe Net' - 2>/dev/null || rc=$?
+deletes=$(grep -c 'connection delete uuid' "$LOG" || true)
+if [[ $rc -eq 3 && $deletes -ge 2 && ! -f $STATE.left && $(head -n1 "$STATE") == gone ]]; then
+    ok "a refused password exits 3 and drops the profile again"
 else
-    deletes=$(grep -c 'connection delete uuid' "$LOG" || true)
-    if [[ $deletes -ge 2 && ! -f $STATE.left && $(head -n1 "$STATE") == gone ]]; then
-        ok "failed password connect drops the profile again"
-    else
-        err "failed password left a profile (deletes=$deletes state=$(head -n1 "$STATE"))"
-    fi
+    err "refused password: rc=$rc deletes=$deletes state=$(head -n1 "$STATE")"
 fi
+
+rc=0
+printf 'shortpw\n' | run_join connect 'Cafe Net' - 2>/dev/null || rc=$?
+expect_rc 3 "a password WPA cannot use is refused before nmcli" "short password exited $rc"
+
+rc=0
+printf 'longenough\n' | run_join connect 'Office' - 2>/dev/null || rc=$?
+expect_rc 6 "an enterprise network reports unsupported security" "enterprise network exited $rc"
+
+rc=0
+printf 'longenough\n' | run_join connect 'Elsewhere' - 2>/dev/null || rc=$?
+expect_rc 4 "a network that is not in the scan reports out of range" "missing network exited $rc"
+
+rc=0
+run_join connect 'Cafe Net' 'argv pass' 2>/dev/null || rc=$?
+expect_rc 2 "a password on the command line is refused" "argv password exited $rc"
 
 printf 'home\n' >"$STATE"
 rm -f "$STATE.left"
@@ -127,6 +168,11 @@ else
 fi
 
 printf 'gone\n' >"$STATE"
+rm -f "$STATE.left"
+rc=0
+FAIL_RANGE=1 run_join connect 'Cafe Net' 2>/dev/null || rc=$?
+expect_rc 4 "nmcli's no-such-network maps to out of range" "open connect out of range exited $rc"
+
 if run_join connect 'Cafe Net'; then
     if grep -F 'device wifi connect Cafe Net' "$LOG" >/dev/null \
         && ! grep -F 'connection up' "$LOG" >/dev/null; then
@@ -214,6 +260,16 @@ if grep -Fq 'forgetSsid' "$NM" && grep -Fq 'Forget' "$ROW" && grep -Fq 'Choose a
     ok "installer can forget a saved network and leave a Wi-Fi session"
 else
     err "installer wifi actions were not updated"
+fi
+
+if grep -Fq '/usr/lib/modern/wifi-join.sh' "$NM" && grep -Fq 'closeWriteChannel' "$NM" \
+    && ! grep -Fq 'QStringLiteral( "password" )' "$NM" \
+    && grep -Fq 'scripts/wifi-join.sh' "$ROOT/scripts/iso-build.sh" \
+    && grep -Fq 'usr/lib/modern/wifi-join.sh' "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" \
+    && grep -Fq 'joinProc.write' "$JOIN_QML" && ! grep -Fq 'cmd.push(extra)' "$JOIN_QML"; then
+    ok "shell and installer hand the password over stdin"
+else
+    err "a Wi-Fi password still reaches nmcli argv"
 fi
 
 if [[ $FAIL -ne 0 ]]; then

@@ -121,7 +121,7 @@ Item {
                             Files.hoverPath = id;
                             return;
                         }
-                        Qt.callLater(() => { if (Files.hoverPath === id && !cellHover.hovered) Files.hoverPath = ""; });
+                        Qt.callLater(() => { if (Files.hoverPath === id && !(cellHover && cellHover.hovered)) Files.hoverPath = ""; });
                     }
                     function _moved(): bool {
                         const pt = cellHover.point.scenePosition;

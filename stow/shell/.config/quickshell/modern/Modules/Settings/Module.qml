@@ -58,13 +58,13 @@ Scope {
                     Settings.close();
                     return;
                 }
-                Qt.callLater(() => nav.focusSearch());
+                Qt.callLater(() => { nav.focusSearch(); Hypr.refreshToplevels(); });
             }
 
             MWindowShell {
                 id: card
                 anchors.fill: parent
-                titleKey: "settings.title"
+                titleKey: "settings.title"; iconName: "modern-settings-symbolic"
                 titleColumnWidth: Tokens.spacing.xxl * 9
                 busy: ConfigWrite.pending || Theme.busy
                 onClosed: Settings.close()

@@ -34,6 +34,10 @@ Singleton {
         if (home.charAt(0) !== "/")
             return true;
         Files._resume = home;
+        // A request already chose a folder. Sending Home first makes the
+        // window open there and only then step to that folder.
+        if (Files.open && Files.path !== home)
+            return true;
         if (!Files.path.length || Files.path === home)
             Files.path = home;
         else

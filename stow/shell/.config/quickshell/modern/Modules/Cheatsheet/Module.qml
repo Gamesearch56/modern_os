@@ -17,21 +17,6 @@ Scope {
         function hide() { Cheatsheet.hide(); }
     }
 
-    function _moveCategory(delta: int) {
-        const cats = CheatsheetModel.categories(root.query);
-        if (!cats || cats.length === 0)
-            return;
-        let i = 0;
-        for (; i < cats.length; i++) {
-            if (cats[i].id === root.categoryId)
-                break;
-        }
-        if (i >= cats.length)
-            i = 0;
-        const n = Math.max(0, Math.min(cats.length - 1, i + delta));
-        root.categoryId = cats[n].id;
-    }
-
     function _syncCategory() {
         const cats = CheatsheetModel.categories(root.query);
         for (let i = 0; i < cats.length; i++) {
@@ -86,14 +71,6 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 onActivated: Cheatsheet.hide()
-            }
-            Shortcut {
-                sequence: "Up"
-                onActivated: root._moveCategory(-1)
-            }
-            Shortcut {
-                sequence: "Down"
-                onActivated: root._moveCategory(1)
             }
         }
     }

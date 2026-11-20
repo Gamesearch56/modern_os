@@ -3,9 +3,18 @@
 # Quickshell's connectWithPsk can store a secret without activating the
 # profile, which leaves the network saved and inert. nmcli activates it,
 # and a failed password attempt does not keep that profile.
+#
+# A password is read from stdin (`connect SSID -`) and handed to nmcli in
+# a 0600 passwd-file: argv is world-readable in /proc. NetworkManager
+# stores a secret that arrives that way on the first connect.
+#
+# Exit codes the shell and the installer map to a message:
+#   0 ok  1 failed  2 rejected input  3 wrong password
+#   4 network not in range  5 timed out  6 unsupported security
 set -euo pipefail
 
 NMCLI="${MODERN_NMCLI:-nmcli}"
+SECRETS_DIR="${MODERN_WIFI_SECRETS_DIR:-${XDG_RUNTIME_DIR:-/tmp}}"
 
 die() { printf 'wifi-join: %s\n' "$*" >&2; exit 2; }
 
@@ -47,26 +56,94 @@ first_uuid() {
     return 1
 }
 
+# Runs an activating nmcli call and turns its failure into our exit code.
+# LC_ALL=C because the reason is only in nmcli's message text.
+nm_up() {
+    local err rc=0
+    err=$(LC_ALL=C "$NMCLI" -w 25 "$@" 2>&1 >/dev/null) || rc=$?
+    [[ $rc -ne 0 ]] || return 0
+    printf '%s\n' "$err" >&2
+    [[ $rc -ne 3 ]] || return 5
+    if [[ $rc -eq 10 || $err == *"could not be found"* || $err == *"No network with SSID"* ]]; then
+        return 4
+    fi
+    [[ $err != *[Ss]ecrets* ]] || return 3
+    return 1
+}
+
+# SECURITY never holds a colon, so with escaping off the SSID is
+# everything after the first one.
+ap_security() {
+    local want=$1 line
+    while IFS= read -r line; do
+        [[ ${line#*:} == "$want" ]] || continue
+        printf '%s\n' "${line%%:*}"
+        return 0
+    done < <("$NMCLI" -t -e no -f SECURITY,SSID device wifi list 2>/dev/null || true)
+    return 1
+}
+
+# WPA2/WPA3 transition networks take wpa-psk. Enterprise (802.1X), WEP
+# and OWE have no password field here.
+key_mgmt() {
+    case " $1 " in
+        *802.1X*) return 1 ;;
+        *" WPA1 "* | *" WPA2 "*) printf 'wpa-psk\n' ;;
+        *" WPA3 "*) printf 'sae\n' ;;
+        *) return 1 ;;
+    esac
+}
+
+# passwd-file values are backslash-unescaped and space-trimmed.
+psk_line() {
+    local s=$1
+    s=${s//\\/\\\\}
+    s=${s// /\\ }
+    s=${s//$'\t'/\\t}
+    printf '802-11-wireless-security.psk:%s\n' "$s"
+}
+
+PW_FILE=""
+trap '[[ -z $PW_FILE ]] || rm -f "$PW_FILE"' EXIT
+
+connect_psk() {
+    local ssid=$1 psk=$2 sec km out uuid rc=0
+    sec=$(ap_security "$ssid") || return 4
+    km=$(key_mgmt "$sec") || return 6
+    forget_ssid "$ssid"
+    out=$(LC_ALL=C "$NMCLI" connection add type wifi con-name "$ssid" ssid "$ssid" \
+        wifi-sec.key-mgmt "$km" 2>&1) || { printf '%s\n' "$out" >&2; return 1; }
+    uuid=$(grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' <<<"$out" | tail -n1 || true)
+    [[ -n $uuid ]] || { forget_ssid "$ssid"; return 1; }
+    PW_FILE=$(umask 077 && mktemp "$SECRETS_DIR/wifi-join.XXXXXX")
+    psk_line "$psk" >"$PW_FILE"
+    nm_up connection up uuid "$uuid" passwd-file "$PW_FILE" || rc=$?
+    rm -f "$PW_FILE"
+    PW_FILE=""
+    [[ $rc -eq 0 ]] || forget_ssid "$ssid"
+    return "$rc"
+}
+
 cmd_connect() {
     local ssid=$1
-    local psk=${2-}
-    local saved
+    local from=${2-}
+    local psk="" saved rc=0
     valid_label "$ssid" || die "rejected network name"
-    if [[ -n $psk ]]; then
-        [[ $psk != *$'\n'* && $psk != *$'\r'* ]] || die "rejected password"
-        [[ ${#psk} -le 128 ]] || die "rejected password"
-        forget_ssid "$ssid"
-        if ! "$NMCLI" -w 25 device wifi connect "$ssid" password "$psk"; then
-            forget_ssid "$ssid"
-            exit 1
-        fi
+    if [[ $from == - ]]; then
+        IFS= read -r psk || true
+        [[ -n $psk ]] || die "missing password"
+        # WPA passphrases are 8-63 characters, or 64 hex digits.
+        [[ ${#psk} -ge 8 && ${#psk} -le 64 ]] || exit 3
+        connect_psk "$ssid" "$psk" || exit $?
         return 0
     fi
+    [[ -z $from ]] || die "pass the password on stdin with -"
     if saved=$(first_uuid "$ssid"); then
-        "$NMCLI" -w 25 connection up uuid "$saved"
+        nm_up connection up uuid "$saved" || rc=$?
     else
-        "$NMCLI" -w 25 device wifi connect "$ssid"
+        nm_up device wifi connect "$ssid" || rc=$?
     fi
+    exit "$rc"
 }
 
 cmd_forget() {
@@ -144,7 +221,7 @@ cmd_disconnect() {
 }
 
 usage() {
-    die "usage: wifi-join.sh connect SSID [PASSWORD] | forget SSID | disconnect [SSID] | wake [SSID]"
+    die "usage: wifi-join.sh connect SSID [-] | forget SSID | disconnect [SSID] | wake [SSID]"
 }
 
 [[ $# -ge 1 ]] || usage

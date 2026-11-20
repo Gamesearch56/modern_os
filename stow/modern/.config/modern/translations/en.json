@@ -496,8 +496,6 @@
     "barBottom": "Bottom",
     "barLeft": "Left",
     "barRight": "Right",
-    "barFloating": "Floating",
-    "barAttached": "Attached",
     "on": "On",
     "off": "Off",
     "cliNote": "Writes go through ConfigWrite → modern config set (jq). This app is the only writer of config.json.",
@@ -632,10 +630,9 @@
       "recordAudio": "Record microphone",
       "typeScale": "Font size",
       "barPosition": "Bar position",
-      "barStyle": "Bar style",
-      "barHeight": "Bar height",
-      "edgeGap": "Edge gap",
-      "endGap": "End gap",
+      "barHeight": "Height",
+      "edgeGap": "Top and bottom padding",
+      "endGap": "Left and right padding",
       "gaps": "Window gaps",
       "gapsIn": "Inner gaps",
       "gapsOut": "Outer gaps",
@@ -651,6 +648,13 @@
       "mirrorCountry": "Mirror country",
       "showIcons": "Show icons",
       "autoHide": "Auto-hide bar",
+      "dockAutoHide": "Auto-hide",
+      "dockIconSize": "Icon size",
+      "dockShowNames": "Show names",
+      "dockPad": "Top and bottom padding",
+      "dockGap": "Spacing between applications",
+      "dockTheme": "Style",
+      "dockHover": "Hover animation",
       "cursor": "Cursor",
       "cursorTheme": "Cursor theme",
       "cursorSize": "Cursor size",
@@ -681,6 +685,23 @@
       "scrollStepFine": "Fine scroll step",
       "providerPrefix": "Prefix"
     },
+    "dock": {
+      "enable": "Show dock",
+      "beam": "Edge dash",
+      "inventory": "Plate",
+      "floating": "Floating",
+      "hoverZoom": "Zoom",
+      "hoverColor": "Color",
+      "hoverBounce": "Bounce",
+      "hoverLift": "Lift",
+      "hoverNone": "None",
+      "pins": "Applications in the dock",
+      "installed": "Installed applications",
+      "search": "Name",
+      "empty": "Drag an application here.",
+      "remove": "Remove from dock",
+      "trash": "Remove from dock"
+    },
     "sections": {
       "overview": "Overview",
       "general": "Overview",
@@ -697,6 +718,7 @@
       "network": "Network",
       "widgets": "Bar",
       "bar": "Bar",
+      "dock": "Dock",
       "launcher": "Launcher",
       "power": "Energy",
       "screenshots": "Recording",
@@ -1052,6 +1074,7 @@
       "connecting": "Connecting…",
       "connectFailedTitle": "Bluetooth",
       "connectFailed": "Could not connect. If the headphones are already linked to two devices, disconnect one and try again.",
+      "noAudio": "The headphones answered but did not start sound. Disconnect them on another device that is using them, then try again.",
       "pairFailed": "Could not pair. Confirm the request on the device and try again.",
       "remembered": "Saved"
     },
@@ -1249,7 +1272,6 @@
       "connectBody": "Connect to this network.",
       "connectSavedBody": "Connect with the saved password, or type a new one.",
       "disconnectBody": "Disconnect this network. It stays saved until you forget it.",
-      "connectFailed": "Could not connect. Check the password.",
       "nearby": "Nearby networks",
       "wifiEmpty": "No networks nearby",
       "wifiSearching": "Searching for networks",
@@ -1263,7 +1285,16 @@
       "mb": "{n} MB",
       "seconds": "{n} s",
       "ms": "{n} ms",
-      "httpCode": "{n}"
+      "httpCode": "{n}",
+      "connectFailedTitle": "Wi-Fi",
+      "fail": {
+        "password": "The password was not accepted. Type it again.",
+        "notFound": "The network is out of range. Move closer or search again.",
+        "timeout": "The network did not answer in time. Try again.",
+        "security": "This network needs a sign-in this desktop cannot enter, such as a company account.",
+        "rejected": "The network name or password contains characters that cannot be used.",
+        "failed": "Could not connect. Try again, or forget the network and connect anew."
+      }
     }
   },
   "onboarding": {
@@ -1742,7 +1773,7 @@
       "search": "Search",
       "new": "New",
       "sort": "Sort",
-      "details": "Details",
+      "details": "Options",
       "terminal": "Open terminal here",
       "location": "Location"
     },
@@ -1810,8 +1841,8 @@
       "eject": "Eject",
       "restore": "Restore",
       "empty": "Empty trash",
-    "zip": "Compress to zip",
-    "extract": "Extract"
+      "zip": "Compress to zip",
+      "extract": "Extract"
     },
     "tabs": {
       "close": "Close tab",

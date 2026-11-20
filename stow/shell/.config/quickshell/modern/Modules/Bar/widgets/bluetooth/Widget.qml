@@ -9,14 +9,7 @@ Item {
     implicitWidth: chip.implicitWidth
     implicitHeight: BarLayout.height
 
-    readonly property string _device: {
-        const list = Bluetooth.devices?.values ?? [];
-        for (let i = 0; i < list.length; i++) {
-            if (list[i].connected)
-                return list[i].name || "";
-        }
-        return "";
-    }
+    readonly property string _device: Bluetooth.deviceLabel(Bluetooth.connectedDevices[0])
 
     BarIconLabel {
         id: chip

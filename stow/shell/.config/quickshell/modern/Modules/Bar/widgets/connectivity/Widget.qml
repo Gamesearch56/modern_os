@@ -12,14 +12,7 @@ Item {
     readonly property bool _wide: !BarLayout.vertical
     readonly property string _wifiIcon: Network.linkKind === "wifi" ? "network-wireless-symbolic" : (Network.linkKind === "ethernet" ? "network-wired-symbolic" : "network-offline-symbolic")
     readonly property string _ssid: Network.ssid
-    readonly property string _btName: {
-        const list = Bluetooth.devices?.values ?? [];
-        for (let i = 0; i < list.length; i++) {
-            if (list[i].connected)
-                return list[i].name || "";
-        }
-        return "";
-    }
+    readonly property string _btName: Bluetooth.deviceLabel(Bluetooth.connectedDevices[0])
 
     function _openNet() {
         if (Settings.open && Settings.sectionId === "network")

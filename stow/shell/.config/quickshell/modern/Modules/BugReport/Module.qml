@@ -35,6 +35,7 @@ Scope {
                 id: shell
                 anchors.fill: parent
                 titleKey: "bugReport.title"
+                iconName: "modern-bugreport-symbolic"
                 busy: BugReport.collecting || BugReport.sending
                 onClosed: BugReport.hide()
 

@@ -143,14 +143,45 @@ _collect_hardware() {
 }
 
 _collect_devices() {
+    local since="$1" addr
     _grab audio.txt wpctl status
     _grab audio.txt pactl info
     _grab audio.txt pactl list sinks short
+    _grab audio.txt pactl list cards short
+    # Quantum and rate decide latency; the Bluetooth card's profile and
+    # codec decide whether a headset is on A2DP (AAC/LDAC/SBC) or the
+    # call profile.
+    _grab audio.txt pw-metadata -n settings
+    if command -v pactl >/dev/null 2>&1; then
+        {
+            printf '$ pactl list cards (Bluetooth profile and codec)\n'
+            timeout "$BUG_REPORT_TIMEOUT" pactl list cards 2>/dev/null \
+                | grep -E '^Card|Name: bluez|Active Profile|api\.bluez5\.(codec|profile|transport)' || true
+            printf '\n'
+        } >>"$OUT/audio.txt"
+    fi
     _grab bluetooth.txt bluetoothctl show
     _grab bluetooth.txt bluetoothctl devices Connected
+    # Paired, trusted, bonded and the per-transport state show whether a
+    # headset has a bare link or real audio.
+    if command -v bluetoothctl >/dev/null 2>&1; then
+        while read -r _ addr _; do
+            [ -n "$addr" ] && _grab bluetooth.txt bluetoothctl info "$addr"
+        done < <(timeout "$BUG_REPORT_TIMEOUT" bluetoothctl devices Paired 2>/dev/null || true)
+    fi
+    _grab bluetooth.txt journalctl -b -u bluetooth --since="$since" --no-pager -o short-iso -n 500
+    _grab bluetooth.txt journalctl --user -b -u wireplumber --since="$since" --no-pager -o short-iso -n 500
     _grab network.txt nmcli general
     _grab network.txt nmcli -f DEVICE,TYPE,STATE device
     _grab network.txt nmcli networking connectivity
+    _grab network.txt nmcli radio
+    _grab network.txt rfkill list
+    # The world domain "00" limits 5 GHz channels and transmit power.
+    _grab network.txt iw reg get
+    # The joined network's band, signal and rate, without its name.
+    _grab network.txt nmcli -f IN-USE,SIGNAL,FREQ,CHAN,RATE,SECURITY device wifi list
+    _grab network.txt journalctl -b -u NetworkManager --since="$since" --no-pager -o short-iso -n 500
+    _grab network.txt journalctl -b -u wpa_supplicant --since="$since" --no-pager -o short-iso -n 300
 }
 
 _collect_games() {
@@ -187,7 +218,7 @@ bug_report_collect() {
     _collect_hyprland
     _collect_logs "$since"
     _collect_hardware "$repo"
-    _collect_devices
+    _collect_devices "$since"
     _collect_games
     _collect_session "$since"
     _collect_config

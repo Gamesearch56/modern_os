@@ -33,6 +33,16 @@ Scope {
         }
     }
 
+    // The bar joins saved networks without a dialog; this is where they fail.
+    Connections {
+        target: Network
+        function onJoinFinished(op, ssid, ok, reason) {
+            if (ok || op !== "connect")
+                return;
+            Notifications.toast(I18n.t("settings.network.connectFailedTitle"), I18n.t("settings.network.fail." + (reason || "failed")));
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 

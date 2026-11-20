@@ -256,6 +256,7 @@ Item {
                 AppTile {
                     anchors.fill: parent
                     anchors.margins: Tokens.spacing.xs
+                    appId: hit.id || ""
                     iconName: hit.icon || ""
                     title: hit.name || ""
                     tint: hit.tint === true

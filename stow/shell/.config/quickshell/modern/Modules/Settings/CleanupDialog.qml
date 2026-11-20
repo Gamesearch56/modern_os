@@ -12,10 +12,10 @@ MDialog {
     // Binding parent to this item while the window is still null makes
     // the dialog a child of itself.
     Binding {
-        when: Window.window !== null
+        when: root.Window.window !== null
         target: root
         property: "parent"
-        value: Window.window.contentItem
+        value: root.Window.window ? root.Window.window.contentItem : root.parent
         restoreMode: Binding.RestoreNone
     }
     open: StorageClean.open

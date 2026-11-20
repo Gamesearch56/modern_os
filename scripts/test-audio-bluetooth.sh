@@ -54,8 +54,17 @@ if ! grep -q 'bluez5.auto-connect = \[ \]' "$WP" \
     || ! grep -q 'dummy-avrcp-player = false' "$WP"; then
     err "wireplumber still pages headsets and holds the headset profile"
 fi
+BTA="$SVC/BluetoothAudio.qml"
+grep -q 'singleton BluetoothAudio 1.0 BluetoothAudio.qml' "$SVC/qmldir" || err "BluetoothAudio is not registered"
+if ! grep -q 'BluetoothAudio.linked' "$LINK" || ! grep -q 'BluetoothAudio.linked' "$BTQML"; then
+    err "a headset with a bare link and no audio still counts as connected"
+fi
+if ! grep -q 'ConnectProfile' "$BTA" || ! grep -q '!d.connected' "$BTA"; then
+    err "a bare incoming link is not asked for A2DP, or a disconnected headset is paged"
+fi
+grep -q 'Qt.callLater(root._onDevices)' "$BTQML" || err "device changes run inside the _devSig binding"
 for lang in en de; do
-    for key in connecting connectFailed pairFailed connectFailedTitle; do
+    for key in connecting connectFailed pairFailed connectFailedTitle noAudio; do
         jq -e --arg k "$key" '.settings.bluetooth[$k] | length > 0' \
             "$ROOT/stow/modern/.config/modern/translations/${lang}.json" >/dev/null \
             || err "settings.bluetooth.${key} missing in ${lang}"

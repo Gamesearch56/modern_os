@@ -25,6 +25,7 @@ Item {
     MWindowShell {
         anchors.fill: parent
         titleKey: "wallpaper.title"
+        iconName: "modern-wallpaper-symbolic"
         subtitleKey: "wallpaper.hint"
         onClosed: root.closed()
 

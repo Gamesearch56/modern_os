@@ -37,6 +37,7 @@ Scope {
                 id: card
                 anchors.fill: parent
                 titleKey: "store.title"
+                iconName: "modern-store-symbolic"
                 actionKey: Store.detailName.length ? "store.back" : ""
                 actionIcon: Store.detailName.length ? "go-previous" : ""
                 titleColumnWidth: Tokens.spacing.xxl * 9

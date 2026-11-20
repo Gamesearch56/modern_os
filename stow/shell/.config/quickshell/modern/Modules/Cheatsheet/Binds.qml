@@ -9,6 +9,7 @@ ColumnLayout {
 
     property string query: ""
     property string categoryId: "applications"
+    property alias flick: list
     readonly property var items: CheatsheetModel.itemsFor(root.categoryId, root.query)
 
     spacing: Tokens.spacing.md
@@ -24,6 +25,7 @@ ColumnLayout {
         Layout.fillHeight: true
 
         Flickable {
+            id: list
             anchors.fill: parent
             clip: true
             contentWidth: width
@@ -43,6 +45,7 @@ ColumnLayout {
                         readonly property var bind: root.items[index] || ({})
                         Layout.fillWidth: true
                         hoverHighlight: false
+                        keyStop: true
                         titleKey: "cheatsheet.action." + bind.action
 
                         Row {
