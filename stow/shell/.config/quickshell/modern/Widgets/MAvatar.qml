@@ -26,6 +26,7 @@ Item {
             source: root.source
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
+            cache: false
             visible: status === Image.Ready
         }
 

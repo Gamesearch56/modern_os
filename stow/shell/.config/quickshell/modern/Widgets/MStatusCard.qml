@@ -9,6 +9,8 @@ MCard {
 
     property string iconName: ""
     property url avatarSource: ""
+    // Keep the round fallback when this account has no picture yet.
+    property bool showAvatar: false
     property int avatarSize: Tokens.spacing.xxl * 3
     property string titleKey: ""
     property var titleParams: ({})
@@ -43,14 +45,14 @@ MCard {
             spacing: 0
 
             MAvatar {
-                visible: String(root.avatarSource).length > 0
+                visible: root.showAvatar || String(root.avatarSource).length > 0
                 size: root.avatarSize
                 source: root.avatarSource
                 Layout.alignment: Qt.AlignVCenter
                 Layout.rightMargin: visible ? Tokens.spacing.lg : 0
             }
             MIcon {
-                visible: String(root.avatarSource).length === 0 && root.iconName.length > 0
+                visible: !root.showAvatar && String(root.avatarSource).length === 0 && root.iconName.length > 0
                 name: root.iconName
                 size: Tokens.spacing.xxl * 2
                 color: root.iconColor
