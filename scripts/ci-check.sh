@@ -162,5 +162,7 @@ log "os label"
 "$ROOT/scripts/test-os-label.sh"
 log "launcher apps"
 "$ROOT/scripts/test-launcher-apps.sh"
+log "wallpaper color sync"
+"$ROOT/scripts/test-wallpaper-color-sync.sh"
 
 log "ok"

@@ -504,6 +504,14 @@ done
 command -v jq >/dev/null 2>&1 || die "jq not on PATH — see install/manifests/00-base.txt"
 
 mkdir -p "$STATE_DIR"
+# Picker generates the palette in parallel with the crop. Remember the
+# transition file's time so a later reload can wait for this run's mark
+# instead of the previous wallpaper's.
+WALLPAPER_MARK="$STATE_DIR/wallpaper-transition"
+WALLPAPER_MARK_BODY=""
+if [ -f "$WALLPAPER_MARK" ]; then
+    WALLPAPER_MARK_BODY="$(head -n 1 "$WALLPAPER_MARK" 2>/dev/null || true)"
+fi
 
 # --- Resolve config.json (falls back to config.default.json), the same
 # deep-merge contract as stow/hypr/.config/hypr/modules/config.lua ---
@@ -735,9 +743,29 @@ if [ "$RELOAD" -eq 0 ]; then
     exit 0
 fi
 
-# tokens.json already restyled the shell. GTK/Qt/gsettings/icon cache
-# and hyprctl reload must not hold the Settings spinner.
+# tokens.json already restyled the shell, which holds that palette until
+# the wallpaper transition. Other apps reload once that transition has
+# started, so they do not recolor the old picture. GTK/Qt/gsettings stay
+# off the Settings spinner.
+wait_for_wallpaper_transition() {
+    [ "$SKIP_WALLPAPER" -eq 1 ] || return 0
+    [ "$WALLPAPER_EXPLICIT" -eq 1 ] || return 0
+    local waited=0 line
+    while [ "$waited" -lt 200 ]; do
+        if [ -f "$WALLPAPER_MARK" ]; then
+            line="$(head -n 1 "$WALLPAPER_MARK" 2>/dev/null || true)"
+            if [ "$line" != "$WALLPAPER_MARK_BODY" ]; then
+                case "$line" in
+                    start\ *|done\ *) return 0 ;;
+                esac
+            fi
+        fi
+        sleep 0.1
+        waited=$((waited + 1))
+    done
+}
 (
+    wait_for_wallpaper_transition
     finish_live
 ) </dev/null >/dev/null 2>&1 &
 disown $! 2>/dev/null || true

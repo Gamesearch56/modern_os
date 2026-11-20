@@ -268,10 +268,10 @@ Singleton {
         }
         root.currentPath = path;
         root.hide();
-        const shown = path;
         Qt.callLater(() => {
-            Quickshell.execDetached([Paths.script("wallpaper-show.sh"), shown]);
-            Theme.applyShown(shown);
+            Colors.armForWallpaper();
+            Quickshell.execDetached([Paths.script("wallpaper-show.sh"), path, "", String(Colors.transitionGen)]);
+            Theme.applyShown(path);
         });
         Logger.info("Wallpaper", "applied " + path);
     }
