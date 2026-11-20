@@ -1,9 +1,7 @@
-// Native folder chooser (kdialog, then zenity). Modules never spawn
-// those processes or write the picked path — Settings does ConfigWrite.
+// Folder choice uses the file manager. Settings only stores the path.
 pragma Singleton
 
 import Quickshell
-import Quickshell.Io
 import QtQuick
 import "../Commons"
 
@@ -11,7 +9,6 @@ Singleton {
     id: root
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string script: Paths.script("pick-directory.sh")
 
     signal directoryPicked(string path, string key)
     signal pickFinished(string section)
@@ -19,54 +16,10 @@ Singleton {
     property string _restoreSection: ""
     property string _configKey: ""
 
-    Timer {
-        id: startPick
-        interval: Motion.shortMs
-        repeat: false
-        onTriggered: pick.running = true
-    }
-
-    Process {
-        id: pick
-        running: false
-        stdout: StdioCollector {
-            id: pickOut
-        }
-        stderr: StdioCollector {
-            id: pickErr
-        }
-        onExited: (code) => {
-            if (code === 0) {
-                const path = pickOut.text.trim().split("\n").filter(l => l.length > 0).pop() || "";
-                if (path.length)
-                    root.directoryPicked(path, root._configKey);
-            } else if (code !== 1) {
-                const err = pickErr.text.trim();
-                Logger.error("FilePick", err.length ? err : I18n.t("folderPicker.needChooser"));
-            }
-            const section = root._restoreSection;
-            root._restoreSection = "";
-            root._configKey = "";
-            if (section.length)
-                root.pickFinished(section);
-        }
-    }
-
     function pickDirectory(startPath: string, restoreSection: string, configKey: string) {
-        try {
-            root._restoreSection = restoreSection || "";
-            root._configKey = configKey || "";
-            pick.running = false;
-            pick.command = [root.script, root._expand(startPath)];
-            startPick.restart();
-        } catch (e) {
-            Logger.error("FilePick", String(e));
-            const section = root._restoreSection;
-            root._restoreSection = "";
-            root._configKey = "";
-            if (section.length)
-                root.pickFinished(section);
-        }
+        root._restoreSection = restoreSection || "";
+        root._configKey = configKey || "";
+        FilesChoose.ask(root._expand(startPath), "folder", "directory");
     }
 
     function _expand(p: string): string {
@@ -81,5 +34,28 @@ Singleton {
             }
         }
         return t;
+    }
+
+    function _finish(path: string) {
+        const key = root._configKey;
+        const section = root._restoreSection;
+        root._configKey = "";
+        root._restoreSection = "";
+        if (path.length)
+            root.directoryPicked(path, key);
+        if (section.length)
+            root.pickFinished(section);
+    }
+
+    Connections {
+        target: FilesChoose
+        function onChosen(path, who) {
+            if (who === "directory")
+                root._finish(String(path || ""));
+        }
+        function onCancelled(who) {
+            if (who === "directory")
+                root._finish("");
+        }
     }
 }

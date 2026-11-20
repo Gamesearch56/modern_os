@@ -43,8 +43,8 @@ MDialog {
 
     Connections {
         target: FilesChoose
-        function onChosen(path) {
-            if (!root.open)
+        function onChosen(path, who) {
+            if (who !== "face" || !root.open)
                 return;
             root._draft = String(path || "");
             crop.reset();
@@ -79,10 +79,10 @@ MDialog {
             activeFocusOnTab: true
             Accessible.role: Accessible.Button
             Accessible.name: root._name.length ? root._name : I18n.t("settings.users.facePick")
-            Accessible.onPressAction: FilesChoose.ask(XdgDirs.pictures)
+            Accessible.onPressAction: FilesChoose.ask(XdgDirs.pictures, "image", "face")
             Keys.onPressed: (event) => {
                 if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
-                    FilesChoose.ask(XdgDirs.pictures);
+                    FilesChoose.ask(XdgDirs.pictures, "image", "face");
                     event.accepted = true;
                 }
             }
@@ -125,7 +125,7 @@ MDialog {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: FilesChoose.ask(XdgDirs.pictures)
+                onClicked: FilesChoose.ask(XdgDirs.pictures, "image", "face")
             }
         }
 

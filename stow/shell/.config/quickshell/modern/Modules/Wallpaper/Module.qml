@@ -14,6 +14,12 @@ Scope {
     property string _pendingChooser: ""
 
     Connections {
+        target: FilesChoose
+        function onChosen(path, who) { if (who === "wallpaper") Wallpaper.importFile(String(path || "")); }
+        function onCancelled(who) { if (who === "wallpaper") Wallpaper.chooserFinished(true); }
+    }
+
+    Connections {
         target: Wallpaper
         function onFetched(path) {
             Notifications.toast(I18n.t("wallpaper.fetched"), I18n.t("wallpaper.fetchedHint"), path);

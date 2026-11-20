@@ -269,7 +269,7 @@
     "importTitle": "Add wallpaper",
     "importImages": "Images",
     "importAll": "All files",
-    "needChooser": "Need zenity or kdialog to pick a wallpaper",
+    "needChooser": "That picture could not be chosen.",
     "remove": "Delete",
     "removeTitle": "Delete wallpaper?",
     "removeBody": "This image will be deleted from your wallpaper folder.",
@@ -287,7 +287,7 @@
   },
   "folderPicker": {
     "title": "Choose folder",
-    "needChooser": "Need zenity or kdialog to pick a folder"
+    "needChooser": "That folder could not be chosen."
   },
   "filePreview": {
     "title": "Quick Look",
@@ -1670,7 +1670,11 @@
     "title": "Files",
     "pick": {
       "title": "Choose a picture",
-      "use": "Use this picture"
+      "use": "Use this picture",
+      "fileTitle": "Choose a file",
+      "useFile": "Use this file",
+      "folderTitle": "Choose a folder",
+      "useFolder": "Use this folder"
     },
     "loading": "Loading",
     "emptyDir": "This folder is empty",

@@ -269,7 +269,7 @@
     "importTitle": "Hintergrund hinzufügen",
     "importImages": "Bilder",
     "importAll": "Alle Dateien",
-    "needChooser": "Zum Auswählen wird zenity oder kdialog benötigt",
+    "needChooser": "Dieses Bild konnte nicht ausgewählt werden.",
     "remove": "Löschen",
     "removeTitle": "Hintergrund löschen?",
     "removeBody": "Dieses Bild wird aus deinem Hintergrundordner gelöscht.",
@@ -287,7 +287,7 @@
   },
   "folderPicker": {
     "title": "Ordner wählen",
-    "needChooser": "Zum Auswählen eines Ordners wird zenity oder kdialog benötigt"
+    "needChooser": "Dieser Ordner konnte nicht ausgewählt werden."
   },
   "filePreview": {
     "title": "Schnellansicht",
@@ -1670,7 +1670,11 @@
     "title": "Dateien",
     "pick": {
       "title": "Bild auswählen",
-      "use": "Dieses Bild verwenden"
+      "use": "Dieses Bild verwenden",
+      "fileTitle": "Datei auswählen",
+      "useFile": "Diese Datei verwenden",
+      "folderTitle": "Ordner auswählen",
+      "useFolder": "Diesen Ordner verwenden"
     },
     "loading": "Wird geladen",
     "emptyDir": "Dieser Ordner ist leer",
