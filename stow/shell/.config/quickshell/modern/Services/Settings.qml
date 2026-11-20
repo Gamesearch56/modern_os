@@ -12,6 +12,8 @@ Singleton {
     property bool open: false
     property string sectionId: "overview"
     property string subsectionId: ""
+    property string _returnSection: ""
+    property string _returnSub: ""
 
     function resolve(section: string): string {
         const id = section || "overview";
@@ -35,6 +37,8 @@ Singleton {
     }
 
     function openAt(section: string, subsection: string) {
+        root._returnSection = "";
+        root._returnSub = "";
         if (section === "privacy" && subsection === "calendar") {
             section = "bar";
             subsection = "clock";
@@ -52,8 +56,23 @@ Singleton {
         root.open = false;
     }
 
+    // Close now, and open this page the next time Settings is shown.
+    function reopenAt(section: string, subsection: string) {
+        root._returnSection = section || "";
+        root._returnSub = subsection || "";
+        root.close();
+    }
+
     function show() {
-        root.open = true;
+        if (!root._returnSection.length) {
+            root.open = true;
+            return;
+        }
+        const section = root._returnSection;
+        const sub = root._returnSub;
+        root._returnSection = "";
+        root._returnSub = "";
+        root.openAt(section, sub);
     }
 
     function toggle() {
