@@ -20,6 +20,20 @@ if [ "${1:-}" = "--which" ]; then
     exit 0
 fi
 
+# Header only. The preview must not decode the whole photo on the shell thread.
+if [ "${1:-}" = "--size" ]; then
+    src="${2:-}"
+    [ -n "$src" ] && [ -f "$src" ] || exit 2
+    if command -v magick >/dev/null 2>&1; then
+        magick identify -ping -format '%w %h %[EXIF:Orientation]\n' "$src"
+    elif command -v identify >/dev/null 2>&1; then
+        identify -ping -format '%w %h %[EXIF:Orientation]\n' "$src"
+    else
+        exit 2
+    fi
+    exit 0
+fi
+
 sync_faces() {
     if [ -f "$SCRIPT_DIR/session-users-sync.sh" ]; then
         bash "$SCRIPT_DIR/session-users-sync.sh" || true

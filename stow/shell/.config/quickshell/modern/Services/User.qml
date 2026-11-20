@@ -17,8 +17,11 @@ Singleton {
     property bool hasFace: false
     property bool faceBusy: false
     property string faceError: ""
+    property int facePixelW: 0
+    property int facePixelH: 0
     property string _intent: ""
     property int _whichGen: 0
+    property int _sizeGen: 0
 
     readonly property string home: Quickshell.env("HOME")
 
@@ -73,6 +76,17 @@ Singleton {
         root._runFace(["--edit", path, rotate, crop]);
     }
 
+    // The preview is downscaled. The crop still has to be in file pixels.
+    function measureFace(path: string) {
+        root.facePixelW = 0;
+        root.facePixelH = 0;
+        root._sizeGen += 1;
+        sizeProc.gen = root._sizeGen;
+        sizeProc.command = [Paths.script("face-set.sh"), "--size", path];
+        sizeProc.running = false;
+        sizeProc.running = true;
+    }
+
     function _runFace(args: var) {
         root.faceBusy = true;
         root.faceError = "";
@@ -124,6 +138,28 @@ Singleton {
             if (gen !== root._whichGen)
                 return;
             root._show(root._whichPath(whichOut.text));
+        }
+    }
+
+    Process {
+        id: sizeProc
+        property int gen: 0
+        running: false
+        stdout: StdioCollector { id: sizeOut }
+        onExited: {
+            if (gen !== root._sizeGen)
+                return;
+            const parts = String(sizeOut.text || "").trim().split(/\s+/);
+            let w = parseInt(parts[0], 10) || 0;
+            let h = parseInt(parts[1], 10) || 0;
+            const orient = parseInt(parts[2], 10) || 0;
+            if (orient >= 5 && orient <= 8) {
+                const swap = w;
+                w = h;
+                h = swap;
+            }
+            root.facePixelW = w;
+            root.facePixelH = h;
         }
     }
 

@@ -11,6 +11,9 @@ Item {
     property real zoom: 1
     property real panX: 0
     property real panY: 0
+    // File pixels. The preview is downscaled, so the crop is scaled back up.
+    property int pixelW: 0
+    property int pixelH: 0
 
     readonly property real side: Tokens.spacing.xxl * 8
     readonly property bool ready: pic.status === Image.Ready
@@ -70,7 +73,26 @@ Item {
             w = Math.max(1, Math.floor(fit.rotW - x));
         if (y + h > fit.rotH)
             h = Math.max(1, Math.floor(fit.rotH - y));
-        return w + "x" + h + "+" + x + "+" + y;
+        return root._fileBox(x, y, w, h, fit);
+    }
+
+    function _fileBox(x: int, y: int, w: int, h: int, fit: var): string {
+        const swap = root.turn % 2 !== 0;
+        const fileW = root.pixelW > 0 ? root.pixelW : fit.natW;
+        const fileH = root.pixelH > 0 ? root.pixelH : fit.natH;
+        const rotFileW = swap ? fileH : fileW;
+        const rotFileH = swap ? fileW : fileH;
+        const sx = fit.rotW > 0 ? rotFileW / fit.rotW : 1;
+        const sy = fit.rotH > 0 ? rotFileH / fit.rotH : 1;
+        let fx = Math.max(0, Math.floor(x * sx));
+        let fy = Math.max(0, Math.floor(y * sy));
+        let fw = Math.max(1, Math.round(w * sx));
+        let fh = Math.max(1, Math.round(h * sy));
+        if (fx + fw > rotFileW)
+            fw = Math.max(1, Math.floor(rotFileW - fx));
+        if (fy + fh > rotFileH)
+            fh = Math.max(1, Math.floor(rotFileH - fy));
+        return fw + "x" + fh + "+" + fx + "+" + fy;
     }
 
     Item {
@@ -93,6 +115,9 @@ Item {
             source: root.source
             asynchronous: true
             cache: false
+            // A full-size texture is freed on the same thread that draws the shell.
+            sourceSize.width: root.side * 2
+            sourceSize.height: root.side * 2
             fillMode: Image.PreserveAspectFit
             rotation: root.turn * 90
             transformOrigin: Item.Center

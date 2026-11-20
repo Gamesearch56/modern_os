@@ -64,6 +64,17 @@ else
     err "clearing left a picture behind"
 fi
 
+if command -v magick >/dev/null 2>&1 || command -v identify >/dev/null 2>&1; then
+    size="$("$FACE" --size "$TMP/pic.png" 2>"$TMP/size.err" || true)"
+    if [ "$size" = "4 4 " ] || [ "$size" = "4 4" ]; then
+        ok "a picture reports its pixel size"
+    else
+        err "pixel size was '$size'"
+    fi
+else
+    ok "size skipped without ImageMagick"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

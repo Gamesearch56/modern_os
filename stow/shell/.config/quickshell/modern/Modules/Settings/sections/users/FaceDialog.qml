@@ -20,7 +20,7 @@ MDialog {
     wide: true
     titleKey: "settings.users.chooseFace"
     confirmKey: "settings.users.faceSave"
-    confirmEnabled: !root._saving && root._draft.length > 0 && crop.ready && !User.faceBusy
+    confirmEnabled: !root._saving && root._draft.length > 0 && crop.ready && User.facePixelW > 0 && !User.faceBusy
     showCancel: !root._saving
     destructiveKey: !root._saving && User.hasFace ? "settings.users.clearFace" : ""
     busy: root._saving
@@ -80,6 +80,7 @@ MDialog {
             if (who !== "face" || !root.open)
                 return;
             root._draft = String(path || "");
+            User.measureFace(root._draft);
             crop.reset();
             crop.source = root._url(root._draft);
         }
@@ -166,12 +167,16 @@ MDialog {
 
         FaceCrop {
             id: crop
-            visible: root._draft.length > 0 && !root._saving
+            // Stay mounted while saving. Hiding this layer stalls the shell thread,
+            // so the cover never gets a frame.
+            visible: root._draft.length > 0
+            pixelW: User.facePixelW
+            pixelH: User.facePixelH
             Layout.alignment: Qt.AlignHCenter
         }
 
         RowLayout {
-            visible: root._draft.length > 0 && !root._saving
+            visible: root._draft.length > 0
             Layout.alignment: Qt.AlignHCenter
             spacing: Tokens.spacing.sm
 
@@ -190,13 +195,13 @@ MDialog {
         }
 
         MText {
-            visible: root._draft.length > 0 && !root._saving
+            visible: root._draft.length > 0
             key: "settings.users.faceResize"
             styleName: "labelLarge"
             color: Colors.color.onSurfaceVariant
         }
         MSlider {
-            visible: root._draft.length > 0 && !root._saving
+            visible: root._draft.length > 0
             Layout.fillWidth: true
             from: 1
             to: 3
@@ -204,7 +209,7 @@ MDialog {
             onMoved: (next) => { crop.zoom = next; }
         }
         MHint {
-            visible: root._draft.length > 0 && !root._saving
+            visible: root._draft.length > 0
             key: "settings.users.faceHint"
             Layout.fillWidth: true
         }
