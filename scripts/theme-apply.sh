@@ -30,8 +30,8 @@
 #                       instead of extracting from the wallpaper.
 #   --extract          Ignore a stored source seed and extract again
 #                       from the wallpaper (--prefer saturation).
-#   --surface-tint N   Wallpaper chroma in surfaces (config design.surfaceTint).
-#                       Combined with the profile contrast as matugen --contrast.
+#   --surface-tint N   Accepted from the Design slider. Shell surfaces
+#                       read it from config; it is not a matugen contrast.
 #   --chrome-only      Patch GTK/Qt/KDE/Vivaldi radii, fonts, and motion
 #                       from config.json without re-running matugen.
 #   --no-reload        Write files (including Vivaldi Preferences) but
@@ -581,19 +581,15 @@ esac
 if [ -z "$SURFACE_TINT" ]; then
     SURFACE_TINT="$(merged_config | jq -r '.design.surfaceTint // 0.7')"
 fi
-# One point of matugen contrast per slider step washed every color
-# brighter. Keep about a third of that swing.
-MATUGEN_CONTRAST="$(awk -v pc="$CONTRAST_NUM" -v st="$SURFACE_TINT" 'BEGIN {
-    c = pc + ((st + 0) - 1) * 0.35
-    if (c < -1) c = -1
-    if (c > 1) c = 1
-    printf "%.3f", c
-}')"
-if ! awk -v c="$MATUGEN_CONTRAST" 'BEGIN { exit (c + 0 == 0) ? 0 : 1 }'; then
-    MATUGEN_ARGS+=(--contrast "$MATUGEN_CONTRAST")
+# Negative contrast (the old surface-tint coupling) lifts light-mode
+# on-colors toward the surface, so body text goes gray on cream and
+# on-background falls under 3:1. The profile contrast is the palette;
+# the slider tints shell surfaces through Tokens.
+if ! awk -v c="$CONTRAST_NUM" 'BEGIN { exit (c + 0 == 0) ? 0 : 1 }'; then
+    MATUGEN_ARGS+=(--contrast "$CONTRAST_NUM")
 fi
 
-log "profile=$PROFILE variant=$VARIANT mode=$PROFILE_MODE(matugen:$MATUGEN_MODE) contrast=$CONTRAST tint=$SURFACE_TINT (matugen --contrast $MATUGEN_CONTRAST) sourceMode=$SOURCE_MODE"
+log "profile=$PROFILE variant=$VARIANT mode=$PROFILE_MODE(matugen:$MATUGEN_MODE) contrast=$CONTRAST (matugen $CONTRAST_NUM) surfaceTint=$SURFACE_TINT sourceMode=$SOURCE_MODE"
 
 case "$SOURCE_MODE" in
     fixed)

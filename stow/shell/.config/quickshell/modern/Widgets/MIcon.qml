@@ -118,9 +118,13 @@ Item {
         saturation: 0
         maskEnabled: root._symbolicFile
         maskSource: root._file ? fileImg : img
-        // Wide ramp so the icon's antialiased edge stays, instead of a
-        // hard cut at the first non-zero alpha.
-        maskThresholdMin: 0.5
-        maskSpreadAtMin: 1
+        // Papirus draws off/muted status glyphs (bluetooth disabled,
+        // volume muted, notifications off, the offline wifi body) at
+        // 35% opacity in a light gray. A threshold above that leaves
+        // them as a pale tint on a light bar. The ramp sits under that
+        // ink so the role color is solid, and stays short so the
+        // antialiased edge does not bloom.
+        maskThresholdMin: 0.12
+        maskSpreadAtMin: 0.12
     }
 }
