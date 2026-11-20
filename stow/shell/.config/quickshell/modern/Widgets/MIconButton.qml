@@ -21,6 +21,7 @@ Item {
     property bool escapeClicks: root.close
     property bool highlighted: false
     property bool tip: false
+    property string tipEdge: "bottom"
     property color glyphColor: Colors.color.onSurface
     property color layerColor: Colors.color.primary
 
@@ -189,6 +190,7 @@ Item {
     MTooltip {
         open: root._tipReady && tipHover.hovered && root._tipHold && !ma.pressed
         key: root.key
+        edge: root.tipEdge
     }
 
     onBusyChanged: {

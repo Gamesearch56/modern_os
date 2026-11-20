@@ -98,13 +98,14 @@ Singleton {
         // Wide enough for a full place name beside an icon, and for a
         // volume name beside the eject button.
         readonly property real filesPlaces: root.spacing.xxl * 9
-        // Shell margins, the places column, the gap beside it, six
-        // cells, and the gaps between those cells. No leftover, so the
-        // last column meets the edge of the file area.
+        // Shell margins, the places column, the gap beside it, five
+        // cells, and the md gaps between those cells. No leftover, so
+        // the last column meets the edge of the file area. Keep
+        // windows.lua modern-files size in sync or the first open jumps.
         readonly property real filesWidth: win.filesPlaces
                 + root.spacing.md * 3
-                + win.filesCell * 6
-                + root.spacing.sm * 5
+                + win.filesCell * 5
+                + root.spacing.md * 4
         readonly property real filesHeight: root.spacing.xxl * 22
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg

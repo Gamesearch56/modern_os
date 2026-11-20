@@ -91,6 +91,7 @@ Item {
                     readonly property string factsText: dates.length && meta.length ? dates + "\n" + meta : (dates || meta)
                     readonly property int factLines: factsText.length > 0 ? factsText.split("\n").length : 0
                     readonly property bool _locked: modelData.readable === false || modelData.canRead === false
+                    readonly property bool _picked: !_locked && Files.selected.indexOf(modelData.path || modelData.uri) >= 0
                     readonly property bool _cut: Files.clipboardMode === "cut" && (Files.clipboard || []).indexOf(modelData.path) >= 0
                     readonly property bool _held: FilesDrag.active && (FilesDrag.paths || []).indexOf(modelData.path) >= 0
                     readonly property bool _land: FilesDrag.active && modelData.dir && FilesDrag.drop === modelData.path && !_held
@@ -102,11 +103,14 @@ Item {
                     Accessible.role: Accessible.ListItem
                     Accessible.name: cell.modelData.name || ""
 
+                    HoverHandler { id: cellHover }
+
                     Rectangle {
                         anchors.fill: parent
                         radius: Tokens.radius.medium
                         color: cell._held || cell._land ? Colors.color.primaryContainer
-                            : !cell._locked && Files.selected.indexOf(cell.modelData.path || cell.modelData.uri) >= 0 ? Colors.color.secondaryContainer : "transparent"
+                            : cell._picked ? Chrome.navSelected.bg
+                            : cellHover.hovered && !cell._locked ? Colors.color.secondaryContainer : "transparent"
                     }
 
                     ColumnLayout {
@@ -124,6 +128,7 @@ Item {
                             visible: Files.renaming !== cell.modelData.path
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
+                            color: cell._picked ? Chrome.navSelected.fg : Colors.color.onSurface
                             text: cell.modelData.name || ""
                         }
                         MText {
@@ -131,7 +136,7 @@ Item {
                             visible: cell.factsText.length > 0 && Files.renaming !== cell.modelData.path
                             horizontalAlignment: Text.AlignHCenter
                             styleName: "bodySmall"
-                            color: Colors.color.onSurfaceVariant
+                            color: cell._picked ? Chrome.navSelected.fg : Colors.color.onSurfaceVariant
                             wrapMode: Text.NoWrap
                             maximumLineCount: cell.factLines
                             elide: Text.ElideRight

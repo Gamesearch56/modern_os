@@ -129,6 +129,7 @@ Flickable {
                 id: row
                 required property var modelData
                 readonly property bool _locked: modelData.readable === false || modelData.canRead === false
+                readonly property bool _picked: !_locked && Files.selected.indexOf(modelData.path || modelData.uri) >= 0
                 readonly property bool _cut: Files.clipboardMode === "cut" && (Files.clipboard || []).indexOf(modelData.path) >= 0
                 readonly property bool _held: FilesDrag.active && (FilesDrag.paths || []).indexOf(modelData.path) >= 0
                 readonly property bool _land: FilesDrag.active && modelData.dir && FilesDrag.drop === modelData.path && !_held
@@ -144,8 +145,8 @@ Flickable {
                     anchors.fill: parent
                     radius: Tokens.radius.small
                     color: row._held || row._land ? Colors.color.primaryContainer
-                           : !row._locked && Files.selected.indexOf(row.modelData.path || row.modelData.uri) >= 0 ? Colors.color.secondaryContainer
-                           : rowHover.hovered && !row._locked ? Colors.color.surfaceContainer : "transparent"
+                           : row._picked ? Chrome.navSelected.bg
+                           : rowHover.hovered && !row._locked ? Colors.color.secondaryContainer : "transparent"
                 }
 
                 RowLayout {
@@ -165,6 +166,7 @@ Flickable {
                         visible: Files.renaming !== row.modelData.path
                         Layout.fillWidth: true
                         elide: Text.ElideRight
+                        color: row._picked ? Chrome.navSelected.fg : Colors.color.onSurface
                         text: row.modelData.name || ""
                     }
                     MTextField {
@@ -182,7 +184,7 @@ Flickable {
                         Layout.preferredWidth: facts.colSize
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
-                        color: Colors.color.onSurfaceVariant
+                        color: row._picked ? Chrome.navSelected.fg : Colors.color.onSurfaceVariant
                         elide: Text.ElideRight
                         text: facts.sizeText(row.modelData)
                     }
@@ -191,7 +193,7 @@ Flickable {
                         Layout.preferredWidth: facts.colDate
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
-                        color: Colors.color.onSurfaceVariant
+                        color: row._picked ? Chrome.navSelected.fg : Colors.color.onSurfaceVariant
                         elide: Text.ElideRight
                         text: facts.whenText(row.modelData.created)
                     }
@@ -200,7 +202,7 @@ Flickable {
                         Layout.preferredWidth: facts.colDate
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
-                        color: Colors.color.onSurfaceVariant
+                        color: row._picked ? Chrome.navSelected.fg : Colors.color.onSurfaceVariant
                         elide: Text.ElideRight
                         text: facts.whenText(row.modelData.mtime)
                     }
@@ -209,7 +211,7 @@ Flickable {
                         Layout.preferredWidth: facts.colType
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
-                        color: Colors.color.onSurfaceVariant
+                        color: row._picked ? Chrome.navSelected.fg : Colors.color.onSurfaceVariant
                         elide: Text.ElideRight
                         text: facts.kindText(row.modelData)
                     }

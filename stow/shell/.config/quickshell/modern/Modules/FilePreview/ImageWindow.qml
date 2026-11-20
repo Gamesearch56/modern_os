@@ -39,8 +39,15 @@ FloatingWindow {
     implicitWidth: Tokens.window.overlayWidth
     implicitHeight: Tokens.window.overlayHeight
     screen: win._screen()
+    property bool settle: false
 
     on_ImageUrlChanged: zoomFlick.zoom = 1
+
+    Timer {
+        interval: Motion.mediumMs
+        running: true
+        onTriggered: win.settle = true
+    }
 
     Flickable {
         id: zoomFlick
@@ -109,10 +116,8 @@ FloatingWindow {
     }
     Shortcut {
         sequence: "Space"
+        enabled: win.settle
         context: Qt.WindowShortcut
-        onActivated: {
-            FilePreview.noteSpace();
-            FilePreview.hide();
-        }
+        onActivated: FilePreview.spaceHide()
     }
 }

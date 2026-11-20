@@ -163,10 +163,16 @@ Item {
         anchors.fill: parent
         enabled: root.selectAllOnPress
         z: 2
+        hoverEnabled: true
         cursorShape: Qt.IBeamCursor
         onPressed: {
             input.forceActiveFocus();
             input.selectAll();
+        }
+        HoverHandler {
+            enabled: root.selectAllOnPress
+            cursorShape: Qt.IBeamCursor
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         }
     }
 

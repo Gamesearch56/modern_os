@@ -422,6 +422,31 @@ assert any("PWNED" in r.get("name", "") for r in rows)
 else
     err "search argv was unsafe"
 fi
+mkdir -p "$TMP/meta/detail-folder"
+printf 'abcdef\n' >"$TMP/meta/detail-file.txt"
+"$SEARCH" names --root "$TMP/meta" --scope folder --query detail >"$TMP/meta.json"
+if python3 -c '
+import json, sys
+rows = []
+for line in open(sys.argv[1]):
+    line = line.strip()
+    if not line:
+        continue
+    obj = json.loads(line)
+    if isinstance(obj.get("replace"), list):
+        rows = obj["replace"]
+by = {r["name"]: r for r in rows}
+folder = by["detail-folder"]
+file = by["detail-file.txt"]
+assert folder["dir"] is True and folder["mtime"] > 0 and folder["created"] > 0
+assert folder["size"] == 0
+assert file["dir"] is False and file["size"] == 7 and file["mtime"] > 0 and file["created"] > 0
+assert file["kind"] == "txt"
+' "$TMP/meta.json"; then
+    ok "search hits include size and dates for the grid"
+else
+    err "search hits omitted size or dates"
+fi
 mkdir -p "$TMP/rank/games/World of Warcraft Forever Game"
 python3 -c '
 import os, sys

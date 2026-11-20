@@ -11,6 +11,7 @@ from collections import deque
 
 sys.path.insert(0, os.path.dirname(__file__))
 import files_safe as safe  # noqa: E402
+import files_size_cache as size_cache  # noqa: E402
 
 CAP = 200
 # Name search keeps the best folders and files, not the first hits it walks.
@@ -141,6 +142,42 @@ def buried(path):
     return any(part in NOISE for part in parts)
 
 
+def created_of(st):
+    birth = getattr(st, "st_birthtime", None)
+    try:
+        if birth:
+            return int(birth)
+    except (TypeError, ValueError):
+        pass
+    return int(st.st_ctime)
+
+
+def hit_row(path, name, is_dir, st, score, line=""):
+    # Same stamps the folder list paints. Folder totals reuse a saved
+    # measure when one exists; a cold hit stays at -1 so the walk stays
+    # short.
+    if is_dir:
+        size = size_cache.read(path, st.st_mtime_ns)
+        if size is None:
+            size = -1
+    else:
+        size = int(st.st_size)
+    kind = "dir" if is_dir else (os.path.splitext(name)[1].lower().lstrip(".") or "file")
+    return {
+        "path": path,
+        "name": name,
+        "dir": is_dir,
+        "score": score,
+        "line": line,
+        "size": size,
+        "mtime": int(st.st_mtime),
+        "created": created_of(st),
+        "kind": kind,
+        "readable": True,
+        "link": False,
+    }
+
+
 def search_roots(scope, folder):
     if scope == "computer":
         return ["/"]
@@ -185,7 +222,7 @@ def cmd_names(scope, folder, query, hidden, near=""):
         else:
             queue.append((path, depth))
 
-    def consider(pool, limit, score, path, name, is_dir, depth):
+    def consider(pool, limit, score, path, name, is_dir, st, depth):
         score -= min(depth, 40)
         if is_dir:
             score += 25
@@ -198,13 +235,7 @@ def cmd_names(scope, folder, query, hidden, near=""):
         prev = pool.get(path)
         if prev is not None and prev[0] >= score:
             return
-        pool[path] = (score, {
-            "path": path,
-            "name": name,
-            "dir": is_dir,
-            "score": score,
-            "line": "",
-        })
+        pool[path] = (score, hit_row(path, name, is_dir, st, score))
         if len(pool) <= limit:
             publish()
             return
@@ -228,9 +259,10 @@ def cmd_names(scope, folder, query, hidden, near=""):
                 if skipped(scope, path):
                     continue
                 try:
-                    mode = item.stat(follow_symlinks=False).st_mode
+                    st = item.stat(follow_symlinks=False)
                 except OSError:
                     continue
+                mode = st.st_mode
                 is_link = stat.S_ISLNK(mode)
                 is_dir = stat.S_ISDIR(mode) and not is_link
                 hidden_name = item.name.startswith(".")
@@ -242,9 +274,21 @@ def cmd_names(scope, folder, query, hidden, near=""):
                 if got > 0 and os.access(path, os.R_OK):
                     pool = folders if is_dir else files
                     limit = FOLDER_KEEP if is_dir else FILE_KEEP
-                    consider(pool, limit, got, path, item.name, is_dir, depth)
+                    consider(pool, limit, got, path, item.name, is_dir, st, depth)
                 if is_dir and item.name not in SKIP_DOWN:
                     enqueue(path, depth + 1)
+    # The last paint can afford the folder totals. Earlier replaces stay
+    # light so hits appear while the tree is still walking.
+    for path, (score, row) in list(folders.items()):
+        if int(row.get("size", -1)) >= 0:
+            continue
+        try:
+            st = os.lstat(path)
+        except OSError:
+            continue
+        filled = dict(row)
+        filled["size"] = size_cache.total(path, st)
+        folders[path] = (score, filled)
     publish(True)
 
 
@@ -269,13 +313,20 @@ def cmd_contents(scope, folder, query, hidden):
             number, sep2, text = rest.partition(":")
             if not os.access(path, os.R_OK):
                 continue
-            emit_line({
-                "path": path,
-                "name": os.path.basename(path) or path,
-                "dir": False,
-                "line": number if sep2 == ":" else "",
-                "text": text if sep2 == ":" else rest,
-            })
+            try:
+                st = os.lstat(path)
+            except OSError:
+                continue
+            row = hit_row(
+                path,
+                os.path.basename(path) or path,
+                False,
+                st,
+                0,
+                number if sep2 == ":" else "",
+            )
+            row["text"] = text if sep2 == ":" else rest
+            emit_line(row)
             found += 1
             if found >= CAP:
                 proc.kill()

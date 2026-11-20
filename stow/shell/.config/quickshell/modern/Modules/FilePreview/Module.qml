@@ -13,8 +13,10 @@ Scope {
         target: "filepreview"
         function toggle() { FilePreview.toggle(); }
         function hide() { FilePreview.hide(); }
+        function spaceHide() { FilePreview.spaceHide(); }
         function open(path: string) { FilePreview.openPath(path); }
         function isOpen(): string { return FilePreview.open ? "true" : "false"; }
+        function spaceReady(): string { return FilePreview.spaceReady() ? "true" : "false"; }
     }
 
     Connections {
@@ -82,10 +84,7 @@ Scope {
                 sequence: "Space"
                 enabled: win.settle
                 context: Qt.ApplicationShortcut
-                onActivated: {
-                    FilePreview.noteSpace();
-                    FilePreview.hide();
-                }
+                onActivated: FilePreview.spaceHide()
             }
 
             Timer {

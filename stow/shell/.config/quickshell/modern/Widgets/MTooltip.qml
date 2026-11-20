@@ -1,6 +1,6 @@
-// Small elevated label under an icon button. Position is applied while
-// the card is still invisible, so a reparent never flashes at the window
-// origin before it sits under the button.
+// Small elevated label by an icon button. Position is applied while the
+// card is still invisible, so a reparent never flashes at the window
+// origin before it sits beside the button.
 import QtQuick
 import QtQuick.Window
 import "../Commons"
@@ -12,6 +12,8 @@ Item {
     property string key: ""
     property string value: ""
     property Item anchor: null
+    // "bottom" under the control; "right" to its trailing edge.
+    property string edge: "bottom"
 
     readonly property bool shown: root.open && (root.key.length > 0 || root.value.length > 0)
     readonly property Item _anchor: root.anchor || root.parent
@@ -67,13 +69,24 @@ Item {
         }
         const origin = anchor.mapToItem(host, 0, 0);
         const pad = Tokens.spacing.sm;
+        const gap = Tokens.spacing.xs;
         const w = label.width + card.padding * 2;
         const h = label.implicitHeight + card.padding * 2;
-        let x = origin.x + (anchor.width - w) / 2;
-        x = Math.max(pad, Math.min(x, host.width - w - pad));
-        let y = origin.y + anchor.height + Tokens.spacing.xs;
-        if (y + h > host.height - pad)
-            y = Math.max(pad, origin.y - h - Tokens.spacing.xs);
+        let x = 0;
+        let y = 0;
+        if (root.edge === "right") {
+            x = origin.x + anchor.width + gap;
+            if (x + w > host.width - pad)
+                x = Math.max(pad, origin.x - w - gap);
+            y = origin.y + (anchor.height - h) / 2;
+            y = Math.max(pad, Math.min(y, host.height - h - pad));
+        } else {
+            x = origin.x + (anchor.width - w) / 2;
+            x = Math.max(pad, Math.min(x, host.width - w - pad));
+            y = origin.y + anchor.height + gap;
+            if (y + h > host.height - pad)
+                y = Math.max(pad, origin.y - h - gap);
+        }
         card.parent = host;
         card.x = x;
         card.y = y;
