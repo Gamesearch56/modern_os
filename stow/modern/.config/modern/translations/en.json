@@ -661,6 +661,8 @@
       "gameOptimize": "Optimize the game window",
       "gameHdr": "HDR for Proton games",
       "browserLight": "Light browser",
+      "gameMode": "Gaming mode",
+      "easePc": "Ease this PC",
       "speedTest": "Speed test",
       "ethernet": "Ethernet",
       "wifiPassword": "Wi-Fi password",
@@ -872,6 +874,9 @@
       "gameOptimize": "Turns off extra window effects on the game so it can run smoother. Other windows keep their usual look.",
       "gameHdr": "Exports DXVK_HDR, ENABLE_HDR_WSI, and PROTON_ENABLE_HDR only for Battle.net/Proton games started via modern battlenet — not the whole desktop (that lags Steam and video). Turn HDR on under Displays. For Steam titles, add the same vars to launch options. Battle.net stays on XWayland.",
       "browserLight": "Vivaldi starts without a separate graphics process, and its windows skip blur and shadows. Turn this on when the browser takes several seconds to open on a slow processor. It applies the next time Vivaldi starts.",
+      "gameMode": "Keeps the session awake while a game is open and marks that window as a game. Fullscreen and HDR stay their own switches.",
+      "easePc": "Lightens the browser and drops extra effects on game windows. Other windows keep their usual look. The browser change applies the next time it starts.",
+      "gameHdrOff": "No HDR display is connected.",
       "repeatRate": "How many times a second a held key types again, once the delay has passed. A higher number types faster.",
       "repeatDelay": "Wait before a held key starts repeating.",
       "numlockOnBoot": "Turns Num Lock on when the system starts.",
@@ -951,8 +956,19 @@
       "video": "Video"
     },
     "gaming": {
-      "windows": "Game windows",
-      "slow": "Slow hardware"
+      "play": "Play",
+      "ease": "This PC",
+      "now": "Now playing",
+      "hours": "Hours played",
+      "installed": "Installed",
+      "last": "Last played",
+      "disk": "Library",
+      "running": "Open now",
+      "none": "None",
+      "lastBoth": "{name} · {when}",
+      "hoursValue": "{n} h",
+      "diskValue": "{n} GB",
+      "countValue": "{n}"
     },
     "privacy": {
       "notifications": "Notifications",

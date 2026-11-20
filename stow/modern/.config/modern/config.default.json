@@ -200,6 +200,7 @@
     "recordAudio": true
   },
   "gaming": {
+    "mode": false,
     "autoFullscreen": true,
     "autoOptimize": true,
     "hdrSession": false,

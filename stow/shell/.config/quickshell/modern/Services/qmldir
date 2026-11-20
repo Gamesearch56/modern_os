@@ -118,3 +118,4 @@ singleton FilesBus 1.0 FilesBus.qml
 singleton FilesThumbs 1.0 FilesThumbs.qml
 singleton FilesDrag 1.0 FilesDrag.qml
 singleton FilesHistory 1.0 FilesHistory.qml
+singleton GamesLibrary 1.0 GamesLibrary.qml

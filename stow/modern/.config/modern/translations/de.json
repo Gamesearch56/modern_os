@@ -661,6 +661,8 @@
       "gameOptimize": "Spielfenster beschleunigen",
       "gameHdr": "HDR für Proton-Spiele",
       "browserLight": "Browser entlasten",
+      "gameMode": "Spielmodus",
+      "easePc": "Diesen PC entlasten",
       "speedTest": "Geschwindigkeitstest",
       "ethernet": "Ethernet",
       "wifiPassword": "WLAN-Passwort",
@@ -872,6 +874,9 @@
       "gameOptimize": "Schaltet zusätzliche Fenstereffekte am Spiel aus, damit es flüssiger läuft. Andere Fenster behalten ihr gewohntes Aussehen.",
       "gameHdr": "Setzt DXVK_HDR, ENABLE_HDR_WSI und PROTON_ENABLE_HDR nur für Battle.net/Proton-Spiele über modern battlenet — nicht für die ganze Sitzung (sonst laggt Steam und Video). HDR unter Anzeigen einschalten. Für Steam-Titel dieselben Variablen in den Startoptionen. Battle.net bleibt bei XWayland.",
       "browserLight": "Vivaldi startet ohne eigenen Grafikprozess, und die Fenster lassen Weichzeichner und Schatten weg. Einschalten, wenn der Browser auf einem langsamen Prozessor mehrere Sekunden braucht. Gilt beim nächsten Start von Vivaldi.",
+      "gameMode": "Hält die Sitzung wach, solange ein Spiel offen ist, und kennzeichnet dieses Fenster als Spiel. Vollbild und HDR bleiben eigene Schalter.",
+      "easePc": "Entlastet den Browser und nimmt zusätzliche Effekte von Spielfenstern. Andere Fenster behalten ihr Aussehen. Die Browser-Änderung gilt beim nächsten Start.",
+      "gameHdrOff": "Kein HDR-Bildschirm ist angeschlossen.",
       "repeatRate": "Wie oft pro Sekunde eine gehaltene Taste wiederholt wird, sobald die Verzögerung vorbei ist. Ein höherer Wert tippt schneller.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn das System startet.",
@@ -951,8 +956,19 @@
       "video": "Video"
     },
     "gaming": {
-      "windows": "Spielfenster",
-      "slow": "Langsame Hardware"
+      "play": "Spielen",
+      "ease": "Dieser PC",
+      "now": "Läuft gerade",
+      "hours": "Spielzeit",
+      "installed": "Installiert",
+      "last": "Zuletzt gespielt",
+      "disk": "Bibliothek",
+      "running": "Gerade offen",
+      "none": "Keine",
+      "lastBoth": "{name} · {when}",
+      "hoursValue": "{n} h",
+      "diskValue": "{n} GB",
+      "countValue": "{n}"
     },
     "privacy": {
       "notifications": "Benachrichtigungen",

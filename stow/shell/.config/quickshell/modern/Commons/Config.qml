@@ -150,6 +150,7 @@ Singleton {
             ]
 
             property JsonObject gaming: JsonObject {
+                property bool mode: false
                 property bool autoFullscreen: true
                 property bool autoOptimize: true
                 property bool hdrSession: false
