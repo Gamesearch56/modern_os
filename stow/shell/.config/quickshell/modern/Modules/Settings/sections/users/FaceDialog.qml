@@ -10,6 +10,8 @@ MDialog {
     property string _draft: ""
     property bool _saving: false
 
+    signal saved()
+
     readonly property string _name: {
         const slash = root._draft.lastIndexOf("/");
         return slash >= 0 ? root._draft.slice(slash + 1) : root._draft;
@@ -18,8 +20,11 @@ MDialog {
     wide: true
     titleKey: "settings.users.chooseFace"
     confirmKey: "settings.users.faceSave"
-    confirmEnabled: root._draft.length > 0 && crop.ready && !User.faceBusy
-    destructiveKey: User.hasFace ? "settings.users.clearFace" : ""
+    confirmEnabled: !root._saving && root._draft.length > 0 && crop.ready && !User.faceBusy
+    showCancel: !root._saving
+    destructiveKey: !root._saving && User.hasFace ? "settings.users.clearFace" : ""
+    busy: root._saving
+    busyKey: "settings.users.faceSaving"
 
     onOpenChanged: {
         if (!root.open)
@@ -30,10 +35,34 @@ MDialog {
     }
     onConfirmed: {
         const spec = crop.box();
-        if (!spec.length)
+        if (!spec.length || root._saving)
             return;
+        const path = root._draft;
+        const turn = String(crop.turn * 90);
+        // Paint the saving state before the picture is written, or the
+        // dialog starts its close fade with no indicator on screen.
         root._saving = true;
-        User.applyFace(root._draft, String(crop.turn * 90), spec);
+        saveSoon.path = path;
+        saveSoon.turn = turn;
+        saveSoon.spec = spec;
+        saveSoon.restart();
+    }
+
+    // One frame so the cover is on screen before the picture is written.
+    Timer {
+        id: saveSoon
+        interval: Motion.shortMs > 0 ? Motion.shortMs : Motion.fileSettleMs
+        repeat: false
+        property string path: ""
+        property string turn: ""
+        property string spec: ""
+        onTriggered: {
+            if (!root.open || !root._saving)
+                return;
+            User.applyFace(saveSoon.path, saveSoon.turn, saveSoon.spec);
+            if (!User.faceBusy)
+                root._saving = false;
+        }
     }
     onCancelled: {
         if (root._saving)
@@ -62,8 +91,10 @@ MDialog {
             if (User.faceBusy || !root._saving)
                 return;
             root._saving = false;
-            if (User.faceError.length === 0 && User.hasFace)
+            if (User.faceError.length === 0 && User.hasFace) {
+                root.saved();
                 root.open = false;
+            }
         }
     }
 
@@ -135,12 +166,12 @@ MDialog {
 
         FaceCrop {
             id: crop
-            visible: root._draft.length > 0
+            visible: root._draft.length > 0 && !root._saving
             Layout.alignment: Qt.AlignHCenter
         }
 
         RowLayout {
-            visible: root._draft.length > 0
+            visible: root._draft.length > 0 && !root._saving
             Layout.alignment: Qt.AlignHCenter
             spacing: Tokens.spacing.sm
 
@@ -159,13 +190,13 @@ MDialog {
         }
 
         MText {
-            visible: root._draft.length > 0
+            visible: root._draft.length > 0 && !root._saving
             key: "settings.users.faceResize"
             styleName: "labelLarge"
             color: Colors.color.onSurfaceVariant
         }
         MSlider {
-            visible: root._draft.length > 0
+            visible: root._draft.length > 0 && !root._saving
             Layout.fillWidth: true
             from: 1
             to: 3
@@ -173,20 +204,8 @@ MDialog {
             onMoved: (next) => { crop.zoom = next; }
         }
         MHint {
-            visible: root._draft.length > 0
+            visible: root._draft.length > 0 && !root._saving
             key: "settings.users.faceHint"
-            Layout.fillWidth: true
-        }
-        MLinearProgress {
-            visible: root._saving
-            Layout.fillWidth: true
-            indeterminate: true
-        }
-        MText {
-            visible: root._saving
-            key: "settings.users.faceSaving"
-            styleName: "bodySmall"
-            color: Colors.color.onSurfaceVariant
             Layout.fillWidth: true
         }
         MText {

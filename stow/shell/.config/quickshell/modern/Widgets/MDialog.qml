@@ -21,6 +21,8 @@ FocusScope {
     property bool cancelLeading: false
     property bool confirmEnabled: true
     property bool showCancel: true
+    property bool busy: false
+    property string busyKey: ""
     property bool wide: false
     default property alias extra: extraCol.data
 
@@ -95,6 +97,37 @@ FocusScope {
             anchors.fill: parent
             hoverEnabled: true
             acceptedButtons: Qt.AllButtons
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            z: 20
+            visible: root.busy
+            radius: parent.radius
+            color: Colors.color.surface
+
+            MouseArea {
+                anchors.fill: parent
+            }
+
+            Column {
+                anchors.centerIn: parent
+                width: parent.width - Tokens.spacing.xxl * 2
+                spacing: Tokens.spacing.lg
+
+                MLinearProgress {
+                    width: parent.width
+                    indeterminate: true
+                }
+                MText {
+                    width: parent.width
+                    visible: root.busyKey.length > 0
+                    horizontalAlignment: Text.AlignHCenter
+                    key: root.busyKey.length > 0 ? root.busyKey : "settings.users.faceSaving"
+                    styleName: "bodyMedium"
+                    color: Colors.color.onSurface
+                }
+            }
         }
 
         ColumnLayout {

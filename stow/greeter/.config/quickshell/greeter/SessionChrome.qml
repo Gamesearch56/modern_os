@@ -72,7 +72,7 @@ Item {
         surfaceContainer: "#211F26",
         surfaceContainerHigh: "#2B2930",
         surfaceContainerHighest: "#36343B",
-        outline: "#938F99",
+        outline: "#9b8c9b",
         outlineVariant: "#49454F",
         scrim: "#000000",
         error: "#ffb4ab"

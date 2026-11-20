@@ -142,6 +142,13 @@ Item {
         parent: Window.window ? Window.window.contentItem : root
         anchors.fill: parent
         enabled: faceDlg.open
+        onSaved: root._scrollTop()
+    }
+
+    function _scrollTop() {
+        const flick = root.parent ? root.parent.parent : null;
+        if (flick)
+            flick.contentY = 0;
     }
 
     UserDialog {

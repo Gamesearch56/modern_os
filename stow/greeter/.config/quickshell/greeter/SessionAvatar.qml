@@ -126,7 +126,7 @@ Item {
         radius: width / 2
         color: "transparent"
         border.width: root._c ? root._c.strokeFocus : 2
-        border.color: root._c ? root._c.color.outline : "#938F99"
+        border.color: (root._c && root._c.color && root._c.color.primary) ? root._c.color.primary : (root._c ? root._c._fallbackColor.primary : "#D0BCFF")
         antialiasing: true
     }
 

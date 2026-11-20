@@ -98,7 +98,7 @@ Item {
         radius: width / 2
         color: "transparent"
         border.width: Tokens.stroke.focus
-        border.color: Colors.color.outline
+        border.color: Colors.color.primary
         antialiasing: true
     }
 
