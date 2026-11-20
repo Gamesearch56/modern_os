@@ -48,14 +48,19 @@ Singleton {
     signal failed(string reason)
     signal openedFile(string path)
     signal listed()
-    function show(raw: string) {
+    function show(raw: string, direct: bool) {
         root._readConfig();
-        root.open = true;
         const path = root._local(raw);
-        if (path.length)
-            root._enqueue(["stat", path], "open");
-        else
-            root._openAt(root.path || root._resume);
+        // Land before the window is shown. Otherwise it appears at Home
+        // and only then steps to the folder that was asked for.
+        if (path.charAt(0) === "/" && (direct || root._holdOpen || !root.open)) {
+            const slash = path.lastIndexOf("/");
+            const folder = root._holdOpen ? (slash > 0 ? path.slice(0, slash) : "/") : path;
+            const pick = root._holdOpen ? [path] : [];
+            if (root.open) root.go(folder, true, pick); else root._arrive("folder", folder, pick);
+        }
+        root.open = true;
+        if (path.length) root._enqueue(["stat", path], "open"); else root._openAt(root.path || root._resume);
         if (!Quickshell.env("MODERN_FILE_WINDOW"))
             Quickshell.execDetached(["hyprctl", "dispatch", "focuswindow", "title:modern.files"]);
     }
@@ -143,17 +148,11 @@ Singleton {
     }
     function setDetail(key: string, on: bool) {
         const name = "show" + key.charAt(0).toUpperCase() + key.slice(1);
-        root[name] = on;
-        ConfigWrite.set("files." + name, on);
+        root[name] = on; ConfigWrite.set("files." + name, on);
     }
-    function setView(mode: string) {
-        root.view = mode; root.hoverPath = "";
-        ConfigWrite.set("files.view", mode);
-    }
+    function setView(mode: string) { root.view = mode; root.hoverPath = ""; ConfigWrite.set("files.view", mode); }
     function toggleHidden() {
-        root.showHidden = !root.showHidden;
-        ConfigWrite.set("files.showHidden", root.showHidden);
-        root.refresh();
+        root.showHidden = !root.showHidden; ConfigWrite.set("files.showHidden", root.showHidden); root.refresh();
     }
     function click(file: string, extra: bool) {
         if (!extra) { root.selected = [file]; return; }
@@ -201,10 +200,8 @@ Singleton {
         root._enqueue(["rename", file, name], "mutate");
     }
     function removeSelected() {
-        if (!root.selected.length)
-            return;
-        root._enqueue(["delete"].concat(root.selected), "mutate");
-        root.selected = [];
+        if (!root.selected.length) return;
+        root._enqueue(["delete"].concat(root.selected), "mutate"); root.selected = [];
     }
     function openMenu(kind: string, folder: string, name: string, px: real, py: real) {
         const at = String(folder || "");
@@ -254,12 +251,13 @@ Singleton {
         const hold = root._holdOpen;
         root._holdOpen = false;
         if (info.dir && !info.link) {
-            root.go(info.path, true);
+            if (root.path !== info.path || root.place !== "folder")
+                root.go(info.path, true);
             return;
         }
         const slash = info.path.lastIndexOf("/");
         const parent = slash > 0 ? info.path.slice(0, slash) : "/";
-        if (root.path !== parent)
+        if (root.path !== parent || root.place !== "folder")
             root.go(parent, true);
         root.selected = [info.path];
         if (hold || !info.canRead)
@@ -283,7 +281,7 @@ Singleton {
     }
     IpcHandler {
         target: "files"
-        function open(target: string) { root.show(String(target || "")); }
+        function open(target: string) { root.show(String(target || ""), true); }
         function reveal(target: string) { root.reveal(String(target || "")); }
         function toggle() { root.toggle(); }
     }

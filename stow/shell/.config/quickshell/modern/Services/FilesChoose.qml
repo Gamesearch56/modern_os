@@ -31,7 +31,7 @@ Singleton {
         root.kind = String(kind || "image");
         root.who = String(who || "");
         root.active = true;
-        Files.show(String(folder || ""));
+        Files.show(String(folder || ""), true);
     }
 
     function accept(path: string): bool {
