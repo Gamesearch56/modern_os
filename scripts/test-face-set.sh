@@ -40,6 +40,22 @@ else
 fi
 
 printf 'old\n' >"$HOME/.face.icon"
+if command -v magick >/dev/null 2>&1 || command -v convert >/dev/null 2>&1; then
+    if "$FACE" --edit "$TMP/pic.png" 90 '4x4+0+0' >"$TMP/edit.out" \
+        && python3 -c 'import pathlib,sys; b=pathlib.Path(sys.argv[1]).read_bytes(); assert b[:2]==b"\xff\xd8"' "$HOME/.face"; then
+        ok "an edited picture is installed"
+    else
+        err "the edited picture was not installed"
+    fi
+    if "$FACE" --edit "$TMP/pic.png" 0 'nope' >/dev/null 2>"$TMP/crop.err"; then
+        err "a bad crop was accepted"
+    else
+        ok "a bad crop is refused"
+    fi
+else
+    ok "edit skipped without ImageMagick"
+fi
+
 if "$FACE" clear && [ ! -e "$HOME/.face" ] && [ ! -e "$HOME/.face.icon" ]; then
     ok "clearing removes the picture"
 else

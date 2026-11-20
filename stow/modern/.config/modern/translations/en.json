@@ -928,6 +928,13 @@
       "faceImages": "Pictures",
       "faceFailed": "That picture could not be used.",
       "faceChooser": "No file chooser is available.",
+      "faceHover": "Change picture",
+      "facePick": "Choose from files",
+      "faceSave": "Save picture",
+      "faceRotateLeft": "Rotate left",
+      "faceRotateRight": "Rotate right",
+      "faceResize": "Size",
+      "faceHint": "Drag the picture. The circle is what gets saved.",
       "all": "Users on this computer",
       "settings": "Settings",
       "others": "Other people",
@@ -1661,6 +1668,10 @@
   },
   "files": {
     "title": "Files",
+    "pick": {
+      "title": "Choose a picture",
+      "use": "Use this picture"
+    },
     "loading": "Loading",
     "emptyDir": "This folder is empty",
     "refused": "That change is not allowed",

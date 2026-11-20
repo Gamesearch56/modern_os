@@ -62,6 +62,12 @@ Singleton {
         root._runFace(["clear"]);
     }
 
+    function applyFace(path: string, rotate: string, crop: string) {
+        if (root.faceBusy)
+            return;
+        root._runFace(["--edit", path, rotate, crop]);
+    }
+
     function _runFace(args: var) {
         root.faceBusy = true;
         root.faceError = "";
@@ -90,17 +96,17 @@ Singleton {
         stdout: StdioCollector {}
         stderr: StdioCollector { id: faceErr }
         onExited: (code) => {
-            root.faceBusy = false;
             if (code === 0 || code === 1) {
                 if (code === 0)
                     root.faceError = "";
-                return;
+            } else {
+                const err = String(faceErr.text || "").trim();
+                Logger.error("User", err.length ? err : "face");
+                root.faceError = code === 3
+                    ? "settings.users.faceChooser"
+                    : "settings.users.faceFailed";
             }
-            const err = String(faceErr.text || "").trim();
-            Logger.error("User", err.length ? err : "face");
-            root.faceError = code === 3
-                ? "settings.users.faceChooser"
-                : "settings.users.faceFailed";
+            root.faceBusy = false;
         }
     }
 

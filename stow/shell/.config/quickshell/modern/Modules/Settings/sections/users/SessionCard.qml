@@ -8,6 +8,7 @@ ColumnLayout {
     id: root
 
     signal editClicked()
+    signal faceClicked()
 
     spacing: Tokens.spacing.sm
     Layout.fillWidth: true
@@ -19,25 +20,13 @@ ColumnLayout {
         showAvatar: true
         avatarSource: User.faceUrl
         avatarSize: Tokens.spacing.xxl * 2
+        avatarHoverIcon: "camera-photo-symbolic"
+        avatarHoverKey: "settings.users.faceHover"
+        onAvatarClicked: root.faceClicked()
         titleValue: User.displayName
         subtitleValue: User.loginName
         trailing: RowLayout {
             spacing: Tokens.spacing.xs
-            MIconButton {
-                iconName: "insert-image-symbolic"
-                key: "settings.users.chooseFace"
-                iconSize: Tokens.icon.sm
-                enabled: !User.faceBusy && !Passwd.running
-                onClicked: User.chooseFace()
-            }
-            MIconButton {
-                visible: User.hasFace
-                iconName: "edit-clear-symbolic"
-                key: "settings.users.clearFace"
-                iconSize: Tokens.icon.sm
-                enabled: !User.faceBusy && !Passwd.running
-                onClicked: User.clearFace()
-            }
             MIconButton {
                 iconName: "document-edit-symbolic"
                 key: "settings.users.editTitle"

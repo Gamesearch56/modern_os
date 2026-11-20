@@ -928,6 +928,13 @@
       "faceImages": "Bilder",
       "faceFailed": "Dieses Bild kann nicht verwendet werden.",
       "faceChooser": "Es ist kein Dateiauswahlfenster verfügbar.",
+      "faceHover": "Bild ändern",
+      "facePick": "Aus Dateien wählen",
+      "faceSave": "Bild speichern",
+      "faceRotateLeft": "Nach links drehen",
+      "faceRotateRight": "Nach rechts drehen",
+      "faceResize": "Größe",
+      "faceHint": "Ziehe das Bild. Der Kreis wird gespeichert.",
       "all": "Benutzer auf diesem Rechner",
       "settings": "Einstellungen",
       "others": "Andere Personen",
@@ -1661,6 +1668,10 @@
   },
   "files": {
     "title": "Dateien",
+    "pick": {
+      "title": "Bild auswählen",
+      "use": "Dieses Bild verwenden"
+    },
     "loading": "Wird geladen",
     "emptyDir": "Dieser Ordner ist leer",
     "refused": "Diese Änderung ist nicht erlaubt",

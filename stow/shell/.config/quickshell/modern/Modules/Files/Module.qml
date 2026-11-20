@@ -27,7 +27,7 @@ Scope {
 
             MWindowShell {
                 anchors.fill: parent
-                titleKey: "files.title"
+                titleKey: FilesChoose.active ? "files.pick.title" : "files.title"
                 trailingFill: true
                 onClosed: Files.hide()
 

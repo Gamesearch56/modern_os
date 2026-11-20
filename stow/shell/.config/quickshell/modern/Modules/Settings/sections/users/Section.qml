@@ -24,6 +24,7 @@ Item {
 
         SessionCard {
             Layout.fillWidth: true
+            onFaceClicked: faceDlg.open = true
             onEditClicked: {
                 userDlg.load(Passwd.sessionUser);
                 userDlg.open = true;
@@ -122,6 +123,10 @@ Item {
             groupDlg.open = false;
             return true;
         }
+        if (faceDlg.open) {
+            faceDlg.open = false;
+            return true;
+        }
         return false;
     }
 
@@ -130,6 +135,13 @@ Item {
         function onApplied(on) {
             ConfigWrite.set("general.autologin", on);
         }
+    }
+
+    FaceDialog {
+        id: faceDlg
+        parent: Window.window ? Window.window.contentItem : root
+        anchors.fill: parent
+        enabled: faceDlg.open
     }
 
     UserDialog {

@@ -266,6 +266,7 @@ Flickable {
         Files.openMenu(many ? "selection" : root._kind(row.modelData), row.modelData.path, name, x, y);
     }
     function openRow(entry) {
+        if (FilesChoose.active && entry && !entry.dir && FilesChoose.accept(String(entry.path || ""))) return;
         if (Files.place === "network") {
             const path = String(entry.path || "");
             if (path.charAt(0) === "/") Files.go(path, true); else FilesNet.connect(String(entry.uri || ""));

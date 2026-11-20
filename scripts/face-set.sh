@@ -30,8 +30,31 @@ if [ "${1:-}" = "clear" ]; then
     exit 0
 fi
 
-chosen="${1:-}"
-if [ -z "$chosen" ]; then
+# The circle the user framed. ImageMagick writes the square that every
+# face view clips back into a circle.
+if [ "${1:-}" = "--edit" ]; then
+    chosen="${2:-}"
+    rotate="${3:-}"
+    crop="${4:-}"
+    case "$rotate" in
+        0 | 90 | 180 | 270) ;;
+        *) exit 2 ;;
+    esac
+    if ! [[ "$crop" =~ ^[0-9]+x[0-9]+\+[0-9]+\+[0-9]+$ ]]; then
+        exit 2
+    fi
+    crop_w="${crop%%x*}"
+    crop_rest="${crop#*x}"
+    crop_h="${crop_rest%%+*}"
+    if [ "$crop_w" -lt 1 ] || [ "$crop_h" -lt 1 ]; then
+        exit 2
+    fi
+fi
+
+if [ "${1:-}" != "--edit" ]; then
+    chosen="${1:-}"
+fi
+if [ -z "${chosen:-}" ]; then
     start="$(xdg_user_dir PICTURES Pictures)"
     [ -d "$start" ] || start="$HOME"
     title="$(t settings.users.chooseFace)"
@@ -60,7 +83,7 @@ if command -v file >/dev/null 2>&1; then
     mime="$(file -b --mime-type "$src" || true)"
 fi
 case "$mime" in
-    image/jpeg | image/jpg | image/png | image/webp) ;;
+    image/jpeg | image/jpg | image/png | image/x-png | image/webp | image/gif | image/bmp | image/x-bmp | image/tiff | image/avif | image/heic | image/heif) ;;
     *) exit 2 ;;
 esac
 
@@ -77,7 +100,18 @@ cleanup() {
     fi
 }
 trap cleanup EXIT
-cp -- "$src" "$tmp"
+if [ "${1:-}" = "--edit" ]; then
+    draw=( -auto-orient -rotate "$rotate" -crop "$crop" +repage -resize 512x512^ -gravity center -extent 512x512 -quality 90 )
+    if command -v magick >/dev/null 2>&1; then
+        magick "$src" "${draw[@]}" "jpeg:$tmp"
+    elif command -v convert >/dev/null 2>&1; then
+        convert "$src" "${draw[@]}" "jpeg:$tmp"
+    else
+        exit 2
+    fi
+else
+    cp -- "$src" "$tmp"
+fi
 chmod 644 "$tmp"
 mv -f "$tmp" "$HOME/.face"
 tmp=""

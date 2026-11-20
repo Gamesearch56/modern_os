@@ -265,7 +265,7 @@ Item {
     }
 
     function activate(entry) {
-        if (!entry)
+        if (!entry || (FilesChoose.active && !entry.dir && FilesChoose.accept(String(entry.path || ""))))
             return;
         if (Files.place === "network") {
             const path = String(entry.path || "");
