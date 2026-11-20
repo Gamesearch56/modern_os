@@ -888,7 +888,7 @@
       "snapperMissing": "Snapper ist nicht installiert. Die Einrichtung ist abgeschottet und wird nicht aus den Einstellungen gesetzt.",
       "snapperUnconfigured": "Snapper braucht eine root-Config, bevor Snapshots möglich sind. Config anlegen fragt nach dem Admin-Passwort und schreibt die Config.",
       "speedTest": "Lädt etwa 15 Sekunden lang vom Arch-Geo-Mirror über mehrere Verbindungen. Keine Speedtest-Website.",
-      "bluetooth": "Schaltet den Adapter ein. Geräte erscheinen darunter.",
+      "bluetooth": "Schaltet den Adapter ein. Eine kurze Suche läuft und stoppt dann, damit eine Verbindung nicht abreißt.",
       "bluetoothBlocked": "Kein Bluetooth-Adapter, oder der Funk ist hardwareseitig gesperrt.",
       "wifi": "Schaltet das Funkmodul ein. Netzwerke erscheinen darunter.",
       "wifiHardware": "Kein WLAN-Adapter, oder der Funk ist hardwareseitig gesperrt.",
@@ -1020,8 +1020,12 @@
       "forget": "Vergessen",
       "connect": "Verbinden",
       "disconnect": "Trennen",
-      "connectBody": "Mit diesem Gerät verbinden. Wenn es noch nicht gekoppelt ist, bestätigst du auf dem Gerät.",
-      "disconnectBody": "Verbindung trennen. Das Gerät bleibt gekoppelt, bis du es vergisst.",
+      "connectBody": "Mit diesem Gerät verbinden. Ein gemerktes Gerät wird nicht erneut gekoppelt. Ist es neu, bestätigst du auf dem Gerät.",
+      "disconnectBody": "Verbindung trennen. Das Gerät bleibt gemerkt, bis du es vergisst.",
+      "connecting": "Verbinden…",
+      "connectFailedTitle": "Bluetooth",
+      "connectFailed": "Verbindung nicht möglich. Wenn die Kopfhörer schon mit zwei Geräten verbunden sind, trenne eines und versuche es erneut.",
+      "pairFailed": "Koppeln nicht möglich. Bestätige die Anfrage am Gerät und versuche es erneut.",
       "remembered": "Gemerkt"
     },
     "storage": {

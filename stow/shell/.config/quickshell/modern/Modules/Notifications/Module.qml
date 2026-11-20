@@ -24,6 +24,15 @@ Scope {
         }
     }
 
+    Connections {
+        target: BluetoothLink
+        function onSettled(ok, address) {
+            if (ok || !BluetoothLink.errorKey.length)
+                return;
+            Notifications.toast(I18n.t("settings.bluetooth.connectFailedTitle"), I18n.t(BluetoothLink.errorKey));
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 

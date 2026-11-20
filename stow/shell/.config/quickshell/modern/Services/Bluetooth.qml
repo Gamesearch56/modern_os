@@ -1,9 +1,8 @@
-// BlueZ via Quickshell.Bluetooth. Adapter power, device list, connect
-// and pair. The bluetooth widget never calls bluetoothctl. When
-// audio.autoSwitchBluetooth is on, paired audio devices are trusted
-// as they appear, so they may reconnect on their own; Services/
-// AudioBluetooth then makes them the speaker. Nothing here connects
-// a headset unasked.
+// BlueZ via Quickshell.Bluetooth. Adapter power and the device list.
+// Connect, pair, and the saved-device flag live in BluetoothLink.
+// Discovery is a short search, not the powered state: a scan makes
+// both hosts page a multipoint headset. Trust is applied when that
+// search is idle, so a saved headset can come back without a new bond.
 // Mice and keyboards are left alone.
 pragma Singleton
 
@@ -31,8 +30,9 @@ Singleton {
         for (let i = 0; i < list.length; i++) {
             const d = list[i];
             s += String(d.address || "") + ":" + (d.paired ? "1" : "0") + ":"
-                + (d.bonded ? "1" : "0") + ":" + (d.connected ? "1" : "0") + ":"
-                + String(d.name || d.deviceName || "") + ",";
+                + (d.bonded ? "1" : "0") + ":" + (d.trusted ? "1" : "0") + ":"
+                + (d.connected ? "1" : "0") + ":" + (d.pairing ? "1" : "0") + ":"
+                + String(d.state) + ":" + String(d.name || d.deviceName || "") + ",";
         }
         return s;
     }
@@ -45,7 +45,13 @@ Singleton {
     Timer {
         id: refreshBusy
         interval: Math.max(Motion.bluetoothScanMs, 1)
-        onTriggered: root.refreshing = false
+        onTriggered: {
+            root.refreshing = false;
+            if (root.adapter)
+                root.adapter.discovering = false;
+            if (root._uiReady)
+                root._syncAutoAudio();
+        }
     }
 
     Timer {
@@ -59,6 +65,8 @@ Singleton {
 
     on_DevSigChanged: {
         root._stampSeen();
+        BluetoothLink.note();
+        BluetoothLink.settle();
         if (root._uiReady)
             root._syncAutoAudio();
     }
@@ -88,17 +96,20 @@ Singleton {
         if (!a)
             return;
         a.enabled = on;
-        a.discovering = on;
+        if (!on)
+            a.discovering = false;
     }
 
     function setDiscovering(on: bool) {
         if (root.adapter)
             root.adapter.discovering = on;
+        if (!on && root._uiReady)
+            root._syncAutoAudio();
     }
 
     function refresh() {
         const a = root.adapter;
-        if (!a || !root.powered || root.refreshing)
+        if (!a || !root.powered || root.refreshing || BluetoothLink.busy)
             return;
         root.refreshing = true;
         refreshBusy.restart();
@@ -106,38 +117,10 @@ Singleton {
         refreshKick.restart();
     }
 
-    function connectDevice(device: var) {
-        if (!device)
-            return;
-        try {
-            if (!device.trusted)
-                device.trusted = true;
-            if (!device.paired && device.pair)
-                device.pair();
-            if (device.connect)
-                device.connect();
-        } catch (e) {
-            Logger.error("Bluetooth", String(e));
-        }
-    }
-
-    function disconnectDevice(device: var) {
-        if (device && device.disconnect)
-            device.disconnect();
-    }
-
-    function forgetDevice(device: var) {
-        if (!device)
-            return;
-        try {
-            if (device.forget)
-                device.forget();
-            else if (root.adapter && root.adapter.removeDevice)
-                root.adapter.removeDevice(device);
-        } catch (e) {
-            Logger.error("Bluetooth", String(e));
-        }
-    }
+    function connectDevice(device: var) { BluetoothLink.connect(device); }
+    function disconnectDevice(device: var) { BluetoothLink.disconnect(device); }
+    function forgetDevice(device: var) { BluetoothLink.forget(device); }
+    function isRemembered(device: var): bool { return BluetoothLink.isRemembered(device); }
 
     function isAudioDevice(device: var): bool {
         if (!device)
@@ -184,7 +167,7 @@ Singleton {
     }
 
     function _syncAutoAudio() {
-        if (!root.autoAudio || !root.powered)
+        if (!root.autoAudio || !root.powered || root.discovering || BluetoothLink.busy)
             return;
         const list = root._list(root.devices);
         for (let i = 0; i < list.length; i++) {
@@ -246,6 +229,8 @@ Singleton {
             void d.name;
             void d.deviceName;
             if (!!d.connected !== want)
+                continue;
+            if (!want && BluetoothLink.shadowed(d))
                 continue;
             if (!want && !(d.paired || d.bonded || d.trusted || root.isNamed(d)))
                 continue;

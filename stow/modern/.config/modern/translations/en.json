@@ -888,7 +888,7 @@
       "snapperMissing": "Snapper is not installed. Setup is gated and is not applied from Settings.",
       "snapperUnconfigured": "Snapper needs a root config before it can take snapshots. Create config asks for an admin password and writes that config.",
       "speedTest": "Downloads from the Arch geo mirror over several connections for about 15 seconds. Not a third-party speed-test site.",
-      "bluetooth": "Turns the adapter on. Nearby devices appear below.",
+      "bluetooth": "Turns the adapter on. A short search runs, then stops so a connection is not interrupted.",
       "bluetoothBlocked": "No Bluetooth adapter, or the radio is hardware-blocked.",
       "wifi": "Turns the wireless radio on. Nearby networks appear below.",
       "wifiHardware": "No Wi-Fi adapter, or the radio is hardware-blocked.",
@@ -1020,8 +1020,12 @@
       "forget": "Forget",
       "connect": "Connect",
       "disconnect": "Disconnect",
-      "connectBody": "Connect to this device. If it is not paired yet, confirm on the device.",
-      "disconnectBody": "Disconnect this device. It stays paired until you forget it.",
+      "connectBody": "Connect to this device. A saved device is not paired again. If it is new, confirm on the device.",
+      "disconnectBody": "Disconnect this device. It stays saved until you forget it.",
+      "connecting": "Connecting…",
+      "connectFailedTitle": "Bluetooth",
+      "connectFailed": "Could not connect. If the headphones are already linked to two devices, disconnect one and try again.",
+      "pairFailed": "Could not pair. Confirm the request on the device and try again.",
       "remembered": "Saved"
     },
     "storage": {

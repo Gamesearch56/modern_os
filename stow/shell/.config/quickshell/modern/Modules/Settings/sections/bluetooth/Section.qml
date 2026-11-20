@@ -11,15 +11,33 @@ Item {
 
     property var dialogDevice: null
     readonly property bool _online: !!(root.dialogDevice && root.dialogDevice.connected)
-    readonly property bool _paired: !!(root.dialogDevice && (root.dialogDevice.paired || root.dialogDevice.bonded))
+    readonly property bool _paired: {
+        void BluetoothLink.savedGen;
+        void root.dialogDevice?.paired;
+        void root.dialogDevice?.bonded;
+        void root.dialogDevice?.trusted;
+        return Bluetooth.isRemembered(root.dialogDevice);
+    }
+    readonly property string _addr: root.dialogDevice ? String(root.dialogDevice.address || "") : ""
+    readonly property bool _busy: BluetoothLink.busy && BluetoothLink.pendingAddress === root._addr
+    readonly property bool _failed: BluetoothLink.errorKey.length > 0 && BluetoothLink.errorAddress === root._addr
 
     implicitHeight: col.implicitHeight
 
     Component.onCompleted: {
         if (Bluetooth.powered)
-            Bluetooth.setDiscovering(true);
+            Bluetooth.refresh();
     }
     Component.onDestruction: Bluetooth.setDiscovering(false)
+
+    Connections {
+        target: BluetoothLink
+        function onSettled(ok, address) {
+            if (!ok || !root.dialogDevice || address !== root._addr)
+                return;
+            root.dialogDevice = null;
+        }
+    }
 
     ColumnLayout {
         id: col
@@ -103,15 +121,26 @@ Item {
         open: root.dialogDevice !== null
         titleValue: Bluetooth.deviceLabel(root.dialogDevice)
         bodyKey: root._online ? "settings.bluetooth.disconnectBody" : "settings.bluetooth.connectBody"
-        confirmKey: root._online ? "settings.bluetooth.disconnect" : "settings.bluetooth.connect"
+        confirmKey: root._busy ? "settings.bluetooth.connecting" : root._online ? "settings.bluetooth.disconnect" : "settings.bluetooth.connect"
+        confirmEnabled: !root._busy
         cancelKey: "powerMenu.cancel"
         destructiveKey: root._paired ? "settings.bluetooth.forget" : ""
         onConfirmed: {
-            if (root._online)
+            if (root._online) {
                 Bluetooth.disconnectDevice(root.dialogDevice);
-            else
-                Bluetooth.connectDevice(root.dialogDevice);
-            root.dialogDevice = null;
+                root.dialogDevice = null;
+                return;
+            }
+            Bluetooth.connectDevice(root.dialogDevice);
+        }
+
+        MText {
+            visible: root._failed
+            key: BluetoothLink.errorKey
+            styleName: "bodySmall"
+            color: Colors.color.error
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
         }
         onCancelled: root.dialogDevice = null
         onDestructiveClicked: {
