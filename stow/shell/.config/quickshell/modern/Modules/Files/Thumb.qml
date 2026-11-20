@@ -75,7 +75,7 @@ Item {
         opacity: status === Image.Ready ? 1 : 0
     }
 
-    // A share is an entry point. The folder tab would call it a directory.
+    // A share is an entry point, so it does not wear the folder tab.
     Rectangle {
         anchors.fill: parent
         visible: root.frame && root._share && pic.status !== Image.Ready

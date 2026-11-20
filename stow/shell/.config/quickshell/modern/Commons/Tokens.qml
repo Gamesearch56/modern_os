@@ -67,6 +67,8 @@ Singleton {
         readonly property real liftFrom: 0.25
         readonly property real passBoost: 3.2
         readonly property real minWash: 0.28
+        // The app grid sits on the wallpaper, so it keeps only a little of the see-through.
+        readonly property real panelPass: 0.2
     }
 
     readonly property QtObject icon: QtObject {

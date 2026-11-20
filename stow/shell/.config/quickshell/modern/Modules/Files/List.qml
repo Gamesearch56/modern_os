@@ -162,14 +162,14 @@ Flickable {
                         Layout.alignment: Qt.AlignVCenter
                     }
                     MText {
-                        visible: Files.renaming !== row.modelData.path
+                        visible: Files.renaming.length === 0 || Files.renaming !== row.modelData.path
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                         color: row._picked ? Chrome.navSelected.fg : Colors.color.onSurface
                         text: row.modelData.name || ""
                     }
                     MTextField {
-                        visible: Files.renaming === row.modelData.path
+                        visible: Files.renaming.length > 0 && Files.renaming === row.modelData.path
                         Layout.fillWidth: true
                         text: row.modelData.name || ""
                         selectOnFocus: true
@@ -219,7 +219,7 @@ Flickable {
                 FilePress {
                     anchors.fill: parent
                     markRadius: Tokens.radius.small
-                    enabled: Files.renaming !== row.modelData.path
+                    enabled: Files.renaming.length === 0 || Files.renaming !== row.modelData.path
                     entry: row.modelData
                     onMenu: (x, y) => root.menu(row, x, y)
                     onPicked: (extra, range) => FilesSelect.pick(row.modelData.path || row.modelData.uri, extra, range, root.rows)

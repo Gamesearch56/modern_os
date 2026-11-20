@@ -159,7 +159,7 @@ Item {
                         }
                         MText {
                             Layout.fillWidth: true
-                            visible: Files.renaming !== cell.modelData.path
+                            visible: Files.renaming.length === 0 || Files.renaming !== cell.modelData.path
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                             color: cell._picked ? Chrome.navSelected.fg : Colors.color.onSurface
@@ -178,7 +178,7 @@ Item {
                         }
                         MTextField {
                             Layout.fillWidth: true
-                            visible: Files.renaming === cell.modelData.path
+                            visible: Files.renaming.length > 0 && Files.renaming === cell.modelData.path
                             text: cell.modelData.name || ""
                             selectOnFocus: true
                             onVisibleChanged: if (visible && root.visible) Qt.callLater(focusInput)
@@ -190,7 +190,7 @@ Item {
 
                     FilePress {
                         anchors.fill: parent
-                        enabled: Files.renaming !== cell.modelData.path
+                        enabled: Files.renaming.length === 0 || Files.renaming !== cell.modelData.path
                         entry: cell.modelData
                         onMenu: (x, y) => root.menu(cell, x, y)
                         onPicked: (extra, range) => FilesSelect.pick(cell.modelData.path || cell.modelData.uri, extra, range, root.rows)

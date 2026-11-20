@@ -86,8 +86,8 @@ Item {
     MIconButton {
         id: button
         anchors.centerIn: parent
-        size: Tokens.spacing.xxl * 2 * 0.8
-        iconSize: Tokens.icon.lg * 0.8
+        size: Tokens.spacing.xxl * 2 * 0.8 - 2
+        iconSize: Tokens.icon.lg * 0.8 - 2
         iconName: "view-app-grid-symbolic"
         key: "launcher.allApps"
         tip: !root.open
@@ -152,7 +152,7 @@ Item {
             anchors.bottomMargin: root._arrowH - Tokens.stroke.hairline
             radius: Tokens.radius.medium
             color: Colors.color.surface
-            opacity: Chrome.washOpacity
+            opacity: 1 - (1 - Chrome.washOpacity) * Tokens.glass.panelPass
         }
 
         Canvas {
@@ -168,7 +168,7 @@ Item {
             z: 2
             property color ink: Colors.color.surface
             property color line: Colors.color.outlineVariant
-            property real wash: Chrome.washOpacity
+            property real wash: 1 - (1 - Chrome.washOpacity) * Tokens.glass.panelPass
             onInkChanged: requestPaint()
             onLineChanged: requestPaint()
             onWashChanged: requestPaint()
