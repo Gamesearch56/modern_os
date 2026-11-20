@@ -65,6 +65,8 @@ import io
 import contextlib
 import chatgpt_api
 
+os.environ["XDG_CONFIG_HOME"] = os.path.join(os.environ.get("TMPDIR", "/tmp"), "modern-chatgpt-test-config")
+os.makedirs(os.environ["XDG_CONFIG_HOME"], exist_ok=True)
 os.environ["OPENAI_API_KEY"] = "test-key-not-real"
 seen = {}
 
@@ -122,6 +124,69 @@ if sent.get("reasoning_effort") != "medium":
     raise SystemExit("sent effort")
 if "test-key-not-real" in json.dumps(out) or "test-key-not-real" in seen["body"]:
     raise SystemExit("key leaked")
+
+import io
+import urllib.error
+from email.message import Message
+
+def http_error(status, payload, retry_after=""):
+    hdr = Message()
+    if retry_after:
+        hdr["Retry-After"] = retry_after
+    return urllib.error.HTTPError(
+        "https://api.openai.com/v1/chat/completions",
+        status,
+        "err",
+        hdr,
+        io.BytesIO(json.dumps(payload).encode("utf-8")),
+    )
+
+credit = http_error(429, {"error": {"type": "insufficient_quota", "code": "credit_balance_exhausted", "message": "You have no credits remaining."}})
+if chatgpt_api.problem(credit) != "credits":
+    raise SystemExit("credit 429")
+spend = http_error(429, {"error": {"code": "project_spend_limit_exceeded", "type": "insufficient_quota"}})
+if chatgpt_api.problem(spend) != "spend":
+    raise SystemExit("spend 429")
+
+calls = {"n": 0}
+slept = []
+real_sleep = chatgpt_api.time.sleep
+chatgpt_api.time.sleep = lambda s: slept.append(s)
+chatgpt_api.emit = lambda obj: out.append(obj)
+
+def limited(req, timeout=0):
+    calls["n"] += 1
+    if calls["n"] == 1:
+        raise http_error(429, {"error": {"type": "rate_limit_error", "code": "slow_down"}}, "2")
+    return Resp("")
+
+out.clear()
+path = "/tmp/modern-chatgpt-test-body.json"
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(spec, f)
+try:
+    code = chatgpt_api.run_chat(path, limited)
+finally:
+    chatgpt_api.time.sleep = real_sleep
+    os.remove(path)
+if code != 0 or calls["n"] != 2 or slept != [2.0] or out[-1] != {"d": True}:
+    raise SystemExit("rate retry %s %s %s" % (code, calls, slept))
+
+calls["n"] = 0
+def broke(req, timeout=0):
+    calls["n"] += 1
+    raise http_error(429, {"error": {"code": "credit_balance_exhausted", "type": "insufficient_quota"}})
+
+out.clear()
+path = "/tmp/modern-chatgpt-test-body.json"
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(spec, f)
+try:
+    code = chatgpt_api.run_chat(path, broke)
+finally:
+    os.remove(path)
+if code != 1 or calls["n"] != 1 or out != [{"e": "credits"}]:
+    raise SystemExit("credits must not retry " + json.dumps(out))
 PY
 then
     ok "key stays on the header"
@@ -135,7 +200,11 @@ if grep -Fq 'value: "chatgpt"' "$GROUP/Section.qml" \
     && grep -Fq 'settings.chatgpt.connect' "$GROUP/ChatGpt.qml" \
     && grep -Fq 'openai.apiKey' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiChatGptAccount.qml" \
     && grep -Fq 'chatgpt-api.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiChatGpt.qml" \
-    && grep -Fq 'chatgptModel' "$ROOT/stow/shell/.config/quickshell/modern/Commons/Config.qml"; then
+    && grep -Fq 'chatgptModel' "$ROOT/stow/shell/.config/quickshell/modern/Commons/Config.qml" \
+    && grep -Fq 'openChatGptBilling' "$ROOT/stow/shell/.config/quickshell/modern/Services/Ai.qml" \
+    && grep -Fq 'settings.chatgpt.addCredits' "$GROUP/ChatGpt.qml" \
+    && grep -Fq 'errorChatGptCredits' "$ROOT/stow/modern/.config/modern/translations/en.json" \
+    && grep -Fq 'errorChatGptCredits' "$ROOT/stow/modern/.config/modern/translations/de.json"; then
     ok "settings offers a chatgpt account"
 else
     err "settings chatgpt is not wired"

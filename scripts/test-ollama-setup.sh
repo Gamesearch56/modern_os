@@ -99,6 +99,14 @@ else
     err "settings path still installs from the page or hides the download"
 fi
 
+SECTION="$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/ai/Section.qml"
+if [ "$(grep -cF 'visible: root.ollamaOn && Ai.installed' "$SECTION")" -ge 4 ] \
+    && grep -Fq 'Install {' "$SECTION"; then
+    ok "model, search key, and options stay hidden until ollama is installed"
+else
+    err "ollama options show before the package is installed"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

@@ -10,11 +10,18 @@ ColumnLayout {
     Layout.fillWidth: true
 
     readonly property string _mask: "************"
+    readonly property bool _limited: Ai.geminiBlock === "credits" || Ai.geminiBlock === "spend"
 
     MText {
-        key: Ai.ready ? "settings.gemini.connected" : "settings.gemini.needKey"
+        key: {
+            if (Ai.geminiBlock === "credits")
+                return "settings.gemini.needCredits";
+            if (Ai.geminiBlock === "spend")
+                return "settings.gemini.needSpend";
+            return Ai.geminiHasKey ? "settings.gemini.connected" : "settings.gemini.needKey";
+        }
         styleName: "titleSmall"
-        color: Ai.ready ? Colors.color.primary : Colors.color.onSurface
+        color: root._limited ? Colors.color.error : (Ai.geminiHasKey ? Colors.color.primary : Colors.color.onSurface)
         wrapMode: Text.WordWrap
         elide: Text.ElideNone
         Layout.fillWidth: true
@@ -61,6 +68,12 @@ ColumnLayout {
                 keyField._masked = false;
                 keyField.text = "";
             }
+        }
+        MButton {
+            visible: Ai.geminiHasKey
+            kind: "text"
+            key: "settings.gemini.addCredits"
+            onClicked: Ai.openGeminiBilling()
         }
         MButton {
             kind: "text"

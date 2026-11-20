@@ -10,6 +10,7 @@ Item {
     property alias hasKey: account.hasKey
     property alias ready: account.ready
     property alias models: account.models
+    property alias block: account.block
 
     property bool running: false
     property string content: ""
@@ -42,6 +43,7 @@ Item {
     function probe() { account.probe(); }
     function setKey(raw: string) { account.setKey(raw); }
     function openKeys() { account.openKeys(); }
+    function openBilling() { account.openBilling(); }
     function modelChoices(): var { return account.modelChoices(); }
     function resolveModel(want: string): string { return account.resolveModel(want); }
     function selectedModel(): string { return String(Config.accounts?.ai?.chatgptModel || "").trim(); }
@@ -168,7 +170,7 @@ Item {
             return;
         }
         if (data.e) {
-            root.lastError = String(data.e).substring(0, 240);
+            root.lastError = root._errorText(String(data.e));
             root._finish(false, root.lastError);
             if (proc.running)
                 proc.running = false;
@@ -195,11 +197,31 @@ Item {
             proc.running = false;
     }
 
+    function _errorText(code: string): string {
+        if (code === "credits" || code === "spend")
+            account.block = code;
+        else if (code === "auth" || code === "model")
+            account.block = "";
+        if (code === "credits")
+            return I18n.t("ai.errorChatGptCredits");
+        if (code === "spend")
+            return I18n.t("ai.errorChatGptSpend");
+        if (code === "rate")
+            return I18n.t("ai.errorChatGptRate");
+        if (code === "auth")
+            return I18n.t("ai.errorChatGptAuth");
+        if (code === "model")
+            return I18n.t("ai.errorChatGptModel");
+        return I18n.t("ai.error");
+    }
+
     function _finish(ok: bool, err: string) {
         if (root._closed)
             return;
         root._closed = true;
         root.running = false;
+        if (ok)
+            account.block = "";
         root.chunk(root.content, root.thinking);
         const e = err || root.lastError;
         root.finished((ok || root._capped) && !e, e);

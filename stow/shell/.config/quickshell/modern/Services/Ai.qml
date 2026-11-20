@@ -29,8 +29,10 @@ Singleton {
         return root._provider === "ollama" && root.installed && root.running;
     }
     readonly property bool geminiHasKey: gemini.hasKey
+    readonly property string geminiBlock: gemini.block
     readonly property var geminiModels: gemini.models
     readonly property bool chatgptHasKey: chatgpt.hasKey
+    readonly property string chatgptBlock: chatgpt.block
     readonly property var chatgptModels: chatgpt.models
     signal cancelled(string text)
 
@@ -102,10 +104,12 @@ Singleton {
     function setGeminiKey(raw: string) { gemini.setKey(raw); }
     function clearGeminiKey() { gemini.setKey(""); }
     function openGeminiStudio() { gemini.openStudio(); }
+    function openGeminiBilling() { gemini.openBilling(); }
     function geminiModelChoices(): var { return gemini.modelChoices(); }
     function setChatGptKey(raw: string) { chatgpt.setKey(raw); }
     function clearChatGptKey() { chatgpt.setKey(""); }
     function openChatGptKeys() { chatgpt.openKeys(); }
+    function openChatGptBilling() { chatgpt.openBilling(); }
     function chatgptModelChoices(): var { return chatgpt.modelChoices(); }
 
     function toggle(screen: var) {

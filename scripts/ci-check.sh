@@ -154,6 +154,8 @@ log "brave search"
 "$ROOT/scripts/test-brave-search.sh"
 log "chatgpt api"
 "$ROOT/scripts/test-chatgpt-api.sh"
+log "gemini api"
+"$ROOT/scripts/test-gemini-api.sh"
 log "theme seed"
 "$ROOT/scripts/test-theme-seed.sh"
 

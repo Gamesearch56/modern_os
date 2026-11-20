@@ -10,6 +10,7 @@ Item {
     property alias hasKey: account.hasKey
     property alias ready: account.ready
     property alias models: account.models
+    property alias block: account.block
 
     property bool running: false
     property string content: ""
@@ -44,6 +45,7 @@ Item {
     function probe() { account.probe(); }
     function setKey(raw: string) { account.setKey(raw); }
     function openStudio() { account.openStudio(); }
+    function openBilling() { account.openBilling(); }
     function modelChoices(): var { return account.modelChoices(); }
     function resolveModel(want: string): string { return account.resolveModel(want); }
     function selectedModel(): string { return String(Config.accounts?.ai?.geminiModel || "").trim(); }
@@ -199,7 +201,7 @@ Item {
             return;
         }
         if (data.e) {
-            root.lastError = String(data.e).substring(0, 240);
+            root.lastError = account.note(String(data.e));
             root._finish(false, root.lastError);
             if (proc.running)
                 proc.running = false;
@@ -233,6 +235,8 @@ Item {
             return;
         root._closed = true;
         root.running = false;
+        if (ok)
+            account.block = "";
         root.chunk(root.content, root.thinking);
         const e = err || root.lastError;
         root.finished((ok || root._capped) && !e, e);
