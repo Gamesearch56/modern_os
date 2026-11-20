@@ -27,7 +27,7 @@ Flickable {
             const nets = FilesPlaces.mounts || [];
             const out = [];
             for (let i = 0; i < nets.length; i++)
-                out.push({ name: nets[i].name || nets[i].path || nets[i].uri, path: nets[i].path || "", uri: nets[i].uri || "", dir: true, size: -1 });
+                out.push({ name: nets[i].name || nets[i].path || nets[i].uri, path: nets[i].path || "", uri: nets[i].uri || "", dir: true, share: true, size: -1 });
             return out;
         }
         return Files.entries || [];
@@ -276,7 +276,7 @@ Flickable {
     }
     function _kind(entry) {
         if (Files.place === "trash") return "trash";
-        if (Files.place === "network") return String(entry && entry.path || "").charAt(0) === "/" ? "folder" : "net";
+        if (Files.place === "network") return "share";
         return entry && entry.dir ? "folder" : "file";
     }
     function _blankKind() {

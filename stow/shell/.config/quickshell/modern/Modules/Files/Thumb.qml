@@ -14,6 +14,7 @@ Item {
     readonly property string _src: FilesThumbs.source(root._path)
     readonly property bool _video: FilesThumbs.video(root.entry)
     readonly property bool _dir: !!(root.entry && (root.entry.dir === true || root.entry.kind === "dir"))
+    readonly property bool _share: !!(root.entry && root.entry.share === true)
     readonly property real _tabH: root.frame ? Tokens.spacing.md : Tokens.spacing.xs
 
     implicitWidth: root.size
@@ -31,7 +32,7 @@ Item {
     // the same shape at list size collapses into a clipped blob.
     Item {
         anchors.fill: parent
-        visible: root.frame && root._dir && pic.status !== Image.Ready
+        visible: root.frame && root._dir && !root._share && pic.status !== Image.Ready
 
         // Surface tones. A primary fill on every tile outshouts the names.
         Rectangle {
@@ -74,12 +75,27 @@ Item {
         opacity: status === Image.Ready ? 1 : 0
     }
 
+    // A share is an entry point. The folder tab would call it a directory.
+    Rectangle {
+        anchors.fill: parent
+        visible: root.frame && root._share && pic.status !== Image.Ready
+        radius: Tokens.radius.medium
+        color: Colors.color.tertiaryContainer
+
+        MIcon {
+            anchors.centerIn: parent
+            name: "network-server"
+            size: Tokens.icon.lg
+            color: Colors.color.onTertiaryContainer
+        }
+    }
+
     MIcon {
         anchors.centerIn: parent
-        visible: pic.status !== Image.Ready && (!root._dir || !root.frame)
-        name: root._dir ? "folder" : FilesThumbs.glyph(root.entry)
+        visible: pic.status !== Image.Ready && (!root.frame || (!root._dir && !root._share))
+        name: root._share ? "network-server" : (root._dir ? "folder" : FilesThumbs.glyph(root.entry))
         size: root.frame ? Tokens.icon.lg : root.size
-        color: root._dir ? Colors.color.primary : Colors.color.onSurface
+        color: root._share ? Colors.color.tertiary : (root._dir ? Colors.color.primary : Colors.color.onSurface)
     }
 
     Rectangle {

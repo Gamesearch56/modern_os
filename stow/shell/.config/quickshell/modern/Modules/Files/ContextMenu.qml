@@ -49,7 +49,7 @@ MPopup {
     }
 
     readonly property Item _host: Window.window ? Window.window.contentItem : null
-    readonly property bool _dir: Files.menuKind === "folder" || Files.menuKind === "favorite" || Files.menuKind === "place"
+    readonly property bool _dir: Files.menuKind === "folder" || Files.menuKind === "favorite" || Files.menuKind === "place" || Files.menuKind === "share"
     readonly property bool _edit: {
         const row = root._entry();
         return !row || row.editable !== false;
@@ -118,10 +118,10 @@ MPopup {
         if (kind === "selection") {
             add("zip", "files.menu.zip", Files.place === "folder" && Files.path.charAt(0) === "/", false);
             sep();
-            add("copy", "files.menu.copy", true, false);
-            add("cut", "files.menu.cut", true, false);
+            add("copy", "files.menu.copy", Files.place !== "network", false);
+            add("cut", "files.menu.cut", Files.place !== "network", false);
             sep();
-            add("trash", "files.menu.trash", true, true);
+            add("trash", "files.menu.trash", Files.place !== "network", true);
             return rows;
         }
         if (kind === "tabs") {
@@ -148,12 +148,6 @@ MPopup {
         if (kind === "network") {
             add("rescan", "files.network.rescan", true, false);
             add("connect", "files.network.connect", true, false);
-            return rows;
-        }
-        if (kind === "net" && path.charAt(0) !== "/") {
-            add("open", "files.menu.open", Files.menuName.length > 0, false);
-            add("tab", "files.menu.openTab", Files.menuName.length > 0, false);
-            add("window", "files.menu.openWindow", Files.menuName.length > 0, false);
             return rows;
         }
         if (kind === "trash") {
@@ -184,16 +178,16 @@ MPopup {
             add("window", "files.menu.openWindow", !locked, false);
         }
         sep();
-        add("rename", "files.menu.rename", kind !== "place" && root._edit && !locked, false);
-        add("copy", "files.menu.copy", (kind !== "place" || path !== "/") && !locked, false);
-        add("cut", "files.menu.cut", kind !== "place" && root._edit && !locked, false);
+        add("rename", "files.menu.rename", kind !== "place" && kind !== "share" && root._edit && !locked, false);
+        add("copy", "files.menu.copy", kind !== "share" && (kind !== "place" || path !== "/") && !locked, false);
+        add("cut", "files.menu.cut", kind !== "place" && kind !== "share" && root._edit && !locked, false);
         if (Files.clipboard.length > 0)
-            add("paste", "files.menu.paste", path !== "/" && !(locked && dir), false);
+            add("paste", "files.menu.paste", path.charAt(0) === "/" && path !== "/" && !(locked && dir), false);
         sep();
-        add("favorite", FilesPlaces.favorite(path) ? "files.menu.unfavorite" : "files.menu.favorite", kind !== "place", false);
-        add("props", "files.menu.properties", true, false);
+        add("favorite", FilesPlaces.favorite(path) ? "files.menu.unfavorite" : "files.menu.favorite", kind !== "place" && path.charAt(0) === "/", false);
+        add("props", "files.menu.properties", kind !== "share" || path.charAt(0) === "/", false);
         sep();
-        add("trash", "files.menu.trash", kind !== "place" && root._edit && !locked, true);
+        add("trash", "files.menu.trash", kind !== "place" && kind !== "share" && root._edit && !locked, true);
         return rows;
     }
 
@@ -212,7 +206,7 @@ MPopup {
         else if (id === "newFile")
             Files.askName("file");
         else if (id === "open") {
-            if (Files.menuKind === "net" && path.charAt(0) !== "/")
+            if (Files.menuKind === "share" && path.charAt(0) !== "/")
                 FilesNet.connect(Files.menuName);
             else
                 Files.show(path);
@@ -224,7 +218,7 @@ MPopup {
             Files.go(parent, true, [path]);
         }
         else if (id === "tab") {
-            if (path.charAt(0) !== "/") { if (Files.menuKind === "net") FilesNet.connect(Files.menuName, "tab"); return; }
+            if (path.charAt(0) !== "/") { if (Files.menuKind === "share") FilesNet.connect(Files.menuName, "tab"); return; }
             if (!FilesTabs.paths.length && Files.path.charAt(0) === "/")
                 FilesTabs.add(Files.path);
             FilesTabs.add(path);

@@ -90,8 +90,7 @@ MouseArea {
         }
         if (root._locked)
             return;
-        if (Files.place === "network" && (mouse.modifiers & (Qt.ControlModifier | Qt.ShiftModifier)) === 0) root.activated();
-        else root.picked((mouse.modifiers & Qt.ControlModifier) !== 0, (mouse.modifiers & Qt.ShiftModifier) !== 0);
+        root.picked((mouse.modifiers & Qt.ControlModifier) !== 0, (mouse.modifiers & Qt.ShiftModifier) !== 0);
     }
     onDoubleClicked: (mouse) => {
         if (!root._side(mouse) && !root._dragged && !root._locked)
