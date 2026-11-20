@@ -36,5 +36,35 @@ MPopup {
                 }
             }
         }
+        MDivider {
+            width: parent.width
+            height: Tokens.stroke.hairline
+        }
+        Repeater {
+            model: [
+                { key: "files.places.recent", name: "recent", icon: "document-open-recent", on: Files.showRecent, place: "recent" },
+                { key: "files.places.network", name: "network", icon: "network-workgroup", on: Files.showNetwork, place: "network" }
+            ]
+            delegate: MListItem {
+                required property var modelData
+                width: parent.width
+                height: implicitHeight
+                compact: true
+                iconName: modelData.icon
+                titleKey: modelData.key
+                onClicked: root._place(modelData, !modelData.on)
+                MSwitch {
+                    compact: true
+                    checked: modelData.on
+                    onToggled: (on) => root._place(modelData, on)
+                }
+            }
+        }
+    }
+
+    function _place(row, on: bool) {
+        Files.setDetail(row.name, on);
+        if (!on && Files.place === row.place)
+            Files.home();
     }
 }

@@ -18,6 +18,8 @@ Singleton {
     property bool showCreated: true
     property bool showModified: true
     property bool showType: true
+    property bool showRecent: true
+    property bool showNetwork: false
     property string view: "grid"
     property string hoverPath: ""
     property string place: "folder"
@@ -87,10 +89,9 @@ Singleton {
         root.sortDesc = files.sortDesc !== false;
         root.foldersFirst = files.foldersFirst !== false;
         root.showHidden = files.showHidden === true;
-        root.showSize = files.showSize !== false;
-        root.showCreated = files.showCreated !== false;
-        root.showModified = files.showModified !== false;
-        root.showType = files.showType !== false;
+        root.showSize = files.showSize !== false; root.showCreated = files.showCreated !== false;
+        root.showModified = files.showModified !== false; root.showType = files.showType !== false;
+        root.showRecent = files.showRecent !== false; root.showNetwork = files.showNetwork === true;
         root.view = String(files.view || "grid");
     }
     function _spot() {

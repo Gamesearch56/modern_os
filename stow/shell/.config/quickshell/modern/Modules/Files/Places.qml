@@ -186,7 +186,7 @@ Flickable {
 
     readonly property var _rows: {
         const rows = [];
-        rows.push({ id: "recent", key: "files.places.recent", icon: "document-open-recent", path: "", kind: "recent" });
+        if (Files.showRecent) rows.push({ id: "recent", key: "files.places.recent", icon: "document-open-recent", path: "", kind: "recent" });
         rows.push({ id: "home", key: "files.places.home", icon: "user-home", path: root._dir("home"), kind: "place" });
         rows.push({ id: "favorites", key: "files.places.favorites", icon: "folder-favorites", path: "", kind: "favorites" });
         const folders = [
@@ -207,7 +207,7 @@ Flickable {
             });
         }
         rows.push({ id: "computer", key: "files.places.computer", icon: "computer", path: "/", kind: "place" });
-        rows.push({ id: "network", key: "files.places.network", icon: "network-workgroup", path: "", kind: "network" });
+        if (Files.showNetwork) rows.push({ id: "network", key: "files.places.network", icon: "network-workgroup", path: "", kind: "network" });
         rows.push({ id: "trash", key: "files.places.trash", icon: "user-trash", path: "", kind: "trash" });
         return rows;
     }

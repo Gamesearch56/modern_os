@@ -281,6 +281,8 @@ Singleton {
                 property bool showCreated: true
                 property bool showModified: true
                 property bool showType: true
+                property bool showRecent: true
+                property bool showNetwork: false
                 property var favorites: []
             }
 
