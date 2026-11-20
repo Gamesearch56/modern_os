@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Window
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
@@ -133,20 +132,20 @@ Flickable {
                 readonly property bool _cut: Files.clipboardMode === "cut" && (Files.clipboard || []).indexOf(modelData.path) >= 0
                 readonly property bool _held: FilesDrag.active && (FilesDrag.paths || []).indexOf(modelData.path) >= 0
                 readonly property bool _land: FilesDrag.active && modelData.dir && FilesDrag.drop === modelData.path && !_held
-                opacity: _cut ? Tokens.interaction.cut : 1
+                opacity: _cut ? Tokens.interaction.cut : (Files.showHidden && String(modelData.name || "").charAt(0) === "." ? Tokens.interaction.hidden : 1)
                 width: column.width
                 height: Tokens.spacing.xxl + Tokens.spacing.sm
                 Accessible.role: Accessible.ListItem
                 Accessible.name: row.modelData.name || ""
 
-                HoverHandler { id: rowHover }
+                HoverHandler { id: rowHover; enabled: !Files.covered }
 
                 Rectangle {
                     anchors.fill: parent
                     radius: Tokens.radius.small
                     color: row._held || row._land ? Colors.color.primaryContainer
                            : row._picked ? Chrome.navSelected.bg
-                           : rowHover.hovered && !row._locked ? Colors.color.secondaryContainer : "transparent"
+                           : rowHover.hovered && !row._locked && !Files.covered ? Colors.color.secondaryContainer : "transparent"
                 }
 
                 RowLayout {
@@ -236,30 +235,29 @@ Flickable {
         z: -1
     }
 
-    MouseArea {
-        id: blank
-        width: root.width
-        height: Math.max(column.implicitHeight, root.height)
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        focus: true
-        z: -1
-        onPressed: forceActiveFocus()
-        onClicked: (mouse) => {
-            if (Files._holdSelect)
-                return;
-            Files.clearSelection();
-            if (mouse.button !== Qt.RightButton)
-                return;
-            const kind = root._blankKind();
-            if (!kind.length)
-                return;
-            const at = root._at(blank, mouse.x, mouse.y);
-            Files.openMenu(kind, Files.path, "", at.x, at.y);
-        }
+    Marquee {
+        flick: root
+        repeater: cells
+        onMenu: (x, y) => root._blankMenu(x, y)
     }
 
-    function _at(item, x, y) {
-        return item.mapToItem(Window.window ? Window.window.contentItem : item, x, y);
+    // List clips, so the surrounding margin lives on the pane instead.
+    Marquee {
+        parent: root.parent
+        live: root.visible
+        x: root.x - Tokens.spacing.md
+        y: root.y - (FilesSearch.active ? 0 : Tokens.spacing.lg)
+        width: root.width + Tokens.spacing.md * 2
+        height: root.height + Tokens.spacing.md + (FilesSearch.active ? 0 : Tokens.spacing.lg)
+        z: -1
+        repeater: cells
+        onMenu: (x, y) => root._blankMenu(x, y)
+    }
+
+    function _blankMenu(x: real, y: real) {
+        const kind = root._blankKind();
+        if (kind.length)
+            Files.openMenu(kind, Files.path, "", x, y);
     }
     function menu(row, x: real, y: real) {
         const id = row.modelData.path || row.modelData.uri;

@@ -9,6 +9,8 @@ Singleton {
 
     property bool active: false
     property bool foreign: false
+    // This window took the drop. A no-op must not relist, or the size walk starts again.
+    property bool ours: false
     property var paths: []
     property string drop: ""
     property int _hover: 0
@@ -17,6 +19,7 @@ Singleton {
         root.paths = list || [];
         root.drop = "";
         root.foreign = false;
+        root.ours = false;
         root.active = true;
     }
 
@@ -72,6 +75,7 @@ Singleton {
     function land() {
         const dest = root.drop;
         const from = (root.paths || []).slice();
+        root.ours = true;
         root.end();
         if (!from.length)
             return;

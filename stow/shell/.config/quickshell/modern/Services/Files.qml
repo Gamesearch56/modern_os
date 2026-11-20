@@ -19,11 +19,14 @@ Singleton {
     property bool showModified: true
     property bool showType: true
     property string view: "grid"
+    property string hoverPath: ""
     property string place: "folder"
     property string clipboardMode: ""
     property var clipboard: []
     property string renaming: ""
     property bool menuOpen: false
+    property int _cover: 0
+    readonly property bool covered: root._cover > 0 || root.menuOpen
     property string menuKind: ""
     property string menuPath: ""
     property string menuName: ""
@@ -66,7 +69,7 @@ Singleton {
         try { return decodeURIComponent(path.slice(7)); } catch (e) { return path.slice(7); }
     }
     function hide() {
-        root.menuOpen = false; root.propertiesOpen = false; root.confirming = false; root.naming = false; root.open = false;
+        root.menuOpen = false; root._cover = 0; root.propertiesOpen = false; root.confirming = false; root.naming = false; root.open = false;
     }
     function toggle() { if (root.open) root.hide(); else root.show(""); }
     function _pick(out: string) {
@@ -109,18 +112,15 @@ Singleton {
         root.path = next;
         root.refresh();
     }
-    function go(folder: string, push: bool, pick: var) { FilesHistory.openFolder(folder, push === true, pick); }
-    function showPlace(kind: string) { FilesHistory.openPlace(kind); }
-    function back() { FilesHistory.travel(true); }
-    function forward() { FilesHistory.travel(false); }
-    function up() { FilesHistory.up(); }
+    function go(folder: string, push: bool, pick: var) { FilesHistory.openFolder(folder, push === true, pick); } function showPlace(kind: string) { FilesHistory.openPlace(kind); }
+    function back() { FilesHistory.travel(true); } function forward() { FilesHistory.travel(false); } function up() { FilesHistory.up(); } function home() { root.go(Paths.home, true); }
+    function cover(up: bool) { root._cover = Math.max(0, root._cover + (up ? 1 : -1)); }
     property string _resume: ""
     function _openAt(folder: string) {
         if (!folder.length) root.go(Paths.home, false);
         else if (folder !== root.path) root.go(folder, false);
         else if (root.place === "folder") root.refresh();
     }
-    function home() { root.go(Paths.home, true); }
     function refresh() {
         if (!root.path.length) return;
         ops.cancelLists();
@@ -147,7 +147,7 @@ Singleton {
         ConfigWrite.set("files." + name, on);
     }
     function setView(mode: string) {
-        root.view = mode;
+        root.view = mode; root.hoverPath = "";
         ConfigWrite.set("files.view", mode);
     }
     function toggleHidden() {
@@ -232,6 +232,8 @@ Singleton {
                     root.path = root.kept;
             } else if (kind === "mutate")
                 root.refresh();
+            if (kind === "mutate" && root.error === "exists" && FilesConflict.taken(root._cmd))
+                return;
             root.failed(root.error);
             return;
         }

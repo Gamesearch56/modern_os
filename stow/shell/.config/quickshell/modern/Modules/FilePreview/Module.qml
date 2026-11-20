@@ -82,7 +82,7 @@ Scope {
             }
             Shortcut {
                 sequence: "Space"
-                enabled: win.settle
+                enabled: win.settle && FilePreview.spaceReady()
                 context: Qt.ApplicationShortcut
                 onActivated: FilePreview.spaceHide()
             }

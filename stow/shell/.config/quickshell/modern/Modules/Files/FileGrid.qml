@@ -39,7 +39,8 @@ Item {
     readonly property int columns: {
         const gap = Tokens.spacing.md;
         const cell = Tokens.window.filesCell + gap;
-        return Math.max(1, Math.floor((scroller.width + gap) / cell));
+        const inner = scroller.width;
+        return Math.max(1, Math.floor((inner + gap) / cell));
     }
 
     function reveal(index: int) {
@@ -95,7 +96,7 @@ Item {
                     readonly property bool _cut: Files.clipboardMode === "cut" && (Files.clipboard || []).indexOf(modelData.path) >= 0
                     readonly property bool _held: FilesDrag.active && (FilesDrag.paths || []).indexOf(modelData.path) >= 0
                     readonly property bool _land: FilesDrag.active && modelData.dir && FilesDrag.drop === modelData.path && !_held
-                    opacity: _cut ? Tokens.interaction.cut : 1
+                    opacity: _cut ? Tokens.interaction.cut : (Files.showHidden && String(modelData.name || "").charAt(0) === "." ? Tokens.interaction.hidden : 1)
                     width: Tokens.window.filesCell
                     height: Tokens.spacing.sm * 2 + Tokens.spacing.xxl * 3 + Tokens.spacing.xs + Tokens.spacing.xl
                             + (factLines > 0 ? Tokens.spacing.xs + factLines * Tokens.spacing.lg : 0)
@@ -103,14 +104,29 @@ Item {
                     Accessible.role: Accessible.ListItem
                     Accessible.name: cell.modelData.name || ""
 
-                    HoverHandler { id: cellHover }
+                    HoverHandler {
+                        id: cellHover
+                        enabled: !Files.covered
+                        onHoveredChanged: cell._hover(hovered)
+                        onEnabledChanged: if (!enabled) cell._hover(false)
+                    }
+                    function _hover(on) {
+                        const id = String(cell.modelData.path || cell.modelData.uri || "");
+                        if (!id || (on && !cellHover.enabled))
+                            return;
+                        if (on) {
+                            Files.hoverPath = id;
+                            return;
+                        }
+                        Qt.callLater(() => { if (Files.hoverPath === id && !cellHover.hovered) Files.hoverPath = ""; });
+                    }
 
                     Rectangle {
                         anchors.fill: parent
                         radius: Tokens.radius.medium
                         color: cell._held || cell._land ? Colors.color.primaryContainer
                             : cell._picked ? Chrome.navSelected.bg
-                            : cellHover.hovered && !cell._locked ? Colors.color.secondaryContainer : "transparent"
+                            : cellHover.hovered && !cell._locked && !Files.covered ? Colors.color.secondaryContainer : "transparent"
                     }
 
                     ColumnLayout {
@@ -172,27 +188,29 @@ Item {
             z: -1
         }
 
-        MouseArea {
-            id: blank
-            width: scroller.width
-            height: Math.max(flow.implicitHeight, scroller.height)
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        focus: true
+        Marquee {
+            flick: scroller
+            repeater: cells
+            onMenu: (x, y) => root._blankMenu(x, y)
+        }
+    }
+
+    // The pane margin around the icons. The view itself does not clip,
+    // so this can sit in the space the layout already leaves.
+    Marquee {
+        x: -Tokens.spacing.md
+        y: FilesSearch.active ? 0 : -Tokens.spacing.lg
+        width: root.width + Tokens.spacing.md * 2
+        height: root.height + Tokens.spacing.md + (FilesSearch.active ? 0 : Tokens.spacing.lg)
         z: -1
-        onPressed: forceActiveFocus()
-        onClicked: (mouse) => {
-            if (Files._holdSelect)
-                return;
-            Files.clearSelection();
-            if (mouse.button !== Qt.RightButton)
-                return;
-            const kind = root._blankKind();
-            if (!kind.length)
-                return;
-            const at = root._at(blank, mouse.x, mouse.y);
-            Files.openMenu(kind, Files.path, "", at.x, at.y);
-        }
-        }
+        repeater: cells
+        onMenu: (x, y) => root._blankMenu(x, y)
+    }
+
+    function _blankMenu(x: real, y: real) {
+        const kind = root._blankKind();
+        if (kind.length)
+            Files.openMenu(kind, Files.path, "", x, y);
     }
 
     function _at(item, x, y) {

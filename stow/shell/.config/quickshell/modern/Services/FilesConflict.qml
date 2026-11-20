@@ -18,6 +18,9 @@ Singleton {
     property var _hits: []
     property int _at: 0
     property var _modes: ({})
+    property bool _create: false
+    property bool _makeDir: false
+    property bool _waitTrash: false
 
     function place(op: string, dest: string, sources: var) {
         const list = [];
@@ -28,6 +31,8 @@ Singleton {
         }
         if (!list.length || dest.charAt(0) !== "/" || root.open || proc.running)
             return;
+        root._create = false;
+        root._waitTrash = false;
         root._op = op === "move" ? "move" : "copy";
         root._dest = dest;
         root._sources = list;
@@ -64,9 +69,33 @@ Singleton {
         }
     }
 
+    // A new file or folder used a name that is already in this folder.
+    function taken(cmd: var): bool {
+        const op = String((cmd || [])[0] || "");
+        if ((op !== "mkdir" && op !== "touch") || root.open)
+            return false;
+        const parent = String((cmd || [])[1] || "");
+        const name = String((cmd || [])[2] || "");
+        if (parent.charAt(0) !== "/" || !name.length)
+            return false;
+        root._create = true;
+        root._makeDir = op === "mkdir";
+        root._waitTrash = false;
+        root._op = "";
+        root._hits = [];
+        root._dest = parent;
+        root.name = name;
+        root.folder = root._existingDir(name);
+        root.suggest = root._free(name);
+        root.open = true;
+        return true;
+    }
+
     function choose(mode: string) {
-        if (!root.open)
+        if (!root.open && !(root._create && mode === "cancel"))
             return;
+        if (root._create)
+            return root._createChoose(mode);
         if (mode === "cancel") {
             root.open = false;
             root._hits = [];
@@ -86,6 +115,15 @@ Singleton {
     }
 
     function named(text: string) {
+        if (root._create) {
+            const leaf = String(text || "").trim();
+            const kind = root._makeDir ? "dir" : "file";
+            root._create = false;
+            Files.naming = false;
+            if (leaf.length)
+                Files.create(kind, leaf);
+            return;
+        }
         const hit = root._hits[root._at] || ({});
         root._remember(String(hit.src || ""), { mode: "name", name: String(text || "").trim() });
         Files.naming = false;
@@ -96,7 +134,49 @@ Singleton {
     function abort() {
         root.open = false;
         root._hits = [];
+        root._create = false;
+        root._waitTrash = false;
         Files.naming = false;
+    }
+
+    function _createChoose(mode: string) {
+        if (mode === "cancel") {
+            root.abort();
+            return;
+        }
+        if (mode === "keep") {
+            root.open = false;
+            Files.namingKind = "place";
+            Files.naming = true;
+            return;
+        }
+        const dest = root._dest;
+        const path = dest === "/" ? "/" + root.name : dest + "/" + root.name;
+        root.open = false;
+        root._waitTrash = true;
+        FilesTrash.move([path]);
+    }
+
+    function _existingDir(name: string): bool {
+        const rows = Files.entries || [];
+        for (let i = 0; i < rows.length; i++) {
+            if (String(rows[i].name || "") === name)
+                return rows[i].dir === true;
+        }
+        return root._makeDir;
+    }
+
+    function _free(name: string): string {
+        const used = {};
+        const rows = Files.entries || [];
+        for (let i = 0; i < rows.length; i++)
+            used[String(rows[i].name || "")] = true;
+        for (let n = 2; n < 1000; n++) {
+            const cand = "(" + n + ") " + name;
+            if (!used[cand])
+                return cand;
+        }
+        return "(2) " + name;
     }
 
     function _remember(src: string, choice: var) {
@@ -139,6 +219,25 @@ Singleton {
             Files.clipboardMode = "";
         }
         Files._enqueue(["place", JSON.stringify({ op: root._op, dest: root._dest, items: items })], "mutate");
+    }
+
+    Connections {
+        target: FilesTrash
+        function onChanged() {
+            if (!root._waitTrash || !root._create)
+                return;
+            root._waitTrash = false;
+            const kind = root._makeDir ? "dir" : "file";
+            const name = root.name;
+            root._create = false;
+            Files.create(kind, name);
+        }
+        function onFailed() {
+            if (!root._waitTrash)
+                return;
+            root._waitTrash = false;
+            root._create = false;
+        }
     }
 
     Process {

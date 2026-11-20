@@ -38,6 +38,7 @@ MPopup {
                     width: parent.width
                     height: implicitHeight
                     compact: true
+                    iconName: root._icon(modelData.id)
                     titleKey: modelData.key || ""
                     enabled: modelData.on === true
                     destructive: modelData.destructive === true
@@ -48,7 +49,7 @@ MPopup {
     }
 
     readonly property Item _host: Window.window ? Window.window.contentItem : null
-    readonly property bool _dir: Files.menuKind === "folder" || Files.menuKind === "favorite"
+    readonly property bool _dir: Files.menuKind === "folder" || Files.menuKind === "favorite" || Files.menuKind === "place"
     readonly property bool _edit: {
         const row = root._entry();
         return !row || row.editable !== false;
@@ -88,6 +89,21 @@ MPopup {
         return !!(row && (row.readable === false || row.canRead === false));
     }
 
+    function _icon(id: string): string {
+        if (id === "favorite")
+            return FilesPlaces.favorite(Files.menuPath) ? "starred" : "non-starred";
+        const icons = {
+            open: "document-open", openDisk: "document-open", extract: "archive-extract",
+            zip: "archive-insert", location: "folder-open", tab: "tab-new",
+            window: "window-new", rename: "edit-rename", copy: "edit-copy",
+            cut: "edit-cut", paste: "edit-paste", props: "document-properties",
+            trash: "user-trash", delete: "edit-delete", restore: "edit-undo",
+            empty: "user-trash", connect: "network-connect", clearRecent: "edit-clear",
+            newFolder: "folder-new", newFile: "document-new", closeOthers: "window-close", eject: "media-eject"
+        };
+        return String(icons[id] || "");
+    }
+
     function _build() {
         const kind = Files.menuKind;
         const path = Files.menuPath;
@@ -106,6 +122,10 @@ MPopup {
             add("cut", "files.menu.cut", true, false);
             sep();
             add("trash", "files.menu.trash", true, true);
+            return rows;
+        }
+        if (kind === "tabs") {
+            add("closeOthers", "files.tabs.closeOthers", FilesTabs.paths.length > 1, false);
             return rows;
         }
         if (kind === "blank") {
@@ -152,8 +172,8 @@ MPopup {
         add("open", "files.menu.open", !locked, false);
         if (zip)
             add("extract", "files.menu.extract", !locked, false);
-        if (Files.place === "folder" && path.charAt(0) === "/")
-            add("zip", "files.menu.zip", !locked, false);
+        if (kind === "place" || (Files.place === "folder" && path.charAt(0) === "/"))
+            add("zip", "files.menu.zip", kind !== "place" && !locked, false);
         if (Files.place === "favorites" || Files.place === "recent")
             add("location", "files.menu.openLocation", path.charAt(0) === "/", false);
         if (dir) {
@@ -161,16 +181,16 @@ MPopup {
             add("window", "files.menu.openWindow", !locked, false);
         }
         sep();
-        add("rename", "files.menu.rename", root._edit && !locked, false);
-        add("copy", "files.menu.copy", !locked, false);
-        add("cut", "files.menu.cut", root._edit && !locked, false);
+        add("rename", "files.menu.rename", kind !== "place" && root._edit && !locked, false);
+        add("copy", "files.menu.copy", (kind !== "place" || path !== "/") && !locked, false);
+        add("cut", "files.menu.cut", kind !== "place" && root._edit && !locked, false);
         if (Files.clipboard.length > 0)
-            add("paste", "files.menu.paste", !(locked && dir), false);
+            add("paste", "files.menu.paste", path !== "/" && !(locked && dir), false);
         sep();
-        add("favorite", FilesPlaces.favorite(path) ? "files.menu.unfavorite" : "files.menu.favorite", true, false);
+        add("favorite", FilesPlaces.favorite(path) ? "files.menu.unfavorite" : "files.menu.favorite", kind !== "place", false);
         add("props", "files.menu.properties", true, false);
         sep();
-        add("trash", "files.menu.trash", root._edit && !locked, true);
+        add("trash", "files.menu.trash", kind !== "place" && root._edit && !locked, true);
         return rows;
     }
 
@@ -248,6 +268,12 @@ MPopup {
             FilesTrash.restore(Files.menuName);
         else if (id === "openDisk")
             Files.go(path, true);
+        else if (id === "closeOthers") {
+            const kept = String(Files.menuPath || "");
+            FilesTabs.keep(kept);
+            if (kept.length && Files.path !== kept)
+                Files.go(kept, false);
+        }
     }
 
     Connections {

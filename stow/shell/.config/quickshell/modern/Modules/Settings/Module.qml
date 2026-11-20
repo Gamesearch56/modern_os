@@ -9,8 +9,9 @@ import "../../Services"
 Scope {
     Connections {
         target: Update
-        function onNotify(summary, body) {
-            Notifications.toast(summary, body || "");
+        function onNotify(summary, body, section) {
+            const where = String(section || "");
+            if (where.length) Notifications.toastSection(summary, body || "", where); else Notifications.toast(summary, body || "");
         }
     }
 

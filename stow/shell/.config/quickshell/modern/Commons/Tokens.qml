@@ -80,8 +80,12 @@ Singleton {
         readonly property real hover: 0.08
         readonly property real press: 0.12
         readonly property real focus: 0.12
+        // Drag-box fill stays see-through so the names under it stay readable.
+        readonly property real band: 0.32
         // A cut file stays visible, but clearly waiting to move.
         readonly property real cut: 0.45
+        // A normally hidden name stays listed, but reads as faded.
+        readonly property real hidden: 0.5
     }
 
     // Hairline rest stroke vs MD3 2dp focus/hover indicator.
@@ -100,8 +104,8 @@ Singleton {
         readonly property real filesPlaces: root.spacing.xxl * 9
         // Shell margins, the places column, the gap beside it, five
         // cells, and the md gaps between those cells. No leftover, so
-        // the last column meets the edge of the file area. Keep
-        // windows.lua modern-files size in sync or the first open jumps.
+        // the last column meets the pane edge. Keep windows.lua
+        // modern-files size in sync or the first open jumps.
         readonly property real filesWidth: win.filesPlaces
                 + root.spacing.md * 3
                 + win.filesCell * 5

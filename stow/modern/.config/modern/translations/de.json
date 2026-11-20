@@ -1683,6 +1683,7 @@
       "forward": "Vor",
       "up": "Nach oben",
       "search": "Suchen",
+      "new": "Neu",
       "sort": "Sortieren",
       "details": "Details",
       "terminal": "Terminal hier öffnen",
@@ -1756,7 +1757,8 @@
     "extract": "Entpacken"
     },
     "tabs": {
-      "close": "Tab schließen"
+      "close": "Tab schließen",
+      "closeOthers": "Alle Tabs schließen"
     },
     "properties": {
       "title": "Eigenschaften",

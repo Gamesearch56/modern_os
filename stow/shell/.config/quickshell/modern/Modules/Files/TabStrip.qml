@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
@@ -85,7 +86,12 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     anchors.rightMargin: Tokens.spacing.xl + Tokens.spacing.sm
-                    onClicked: {
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: (mouse) => {
+                        if (mouse.button === Qt.RightButton) {
+                            root._menu(tab, mouse.x, mouse.y);
+                            return;
+                        }
                         FilesTabs.pick(tab.index);
                         const next = FilesTabs.paths[tab.index];
                         if (next && Files.path !== next)
@@ -119,6 +125,12 @@ Item {
                 }
             }
         }
+    }
+
+    function _menu(item, x, y) {
+        const host = Window.window ? Window.window.contentItem : item;
+        const at = item.mapToItem(host, x, y);
+        Files.openMenu("tabs", String(item.modelData || ""), "", at.x, at.y);
     }
 
     function labelOf(path: string): string {

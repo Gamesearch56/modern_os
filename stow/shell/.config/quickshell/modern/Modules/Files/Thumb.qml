@@ -13,6 +13,8 @@ Item {
     readonly property string _path: root.entry && root.entry.path ? String(root.entry.path) : ""
     readonly property string _src: FilesThumbs.source(root._path)
     readonly property bool _video: FilesThumbs.video(root.entry)
+    readonly property bool _dir: !!(root.entry && (root.entry.dir === true || root.entry.kind === "dir"))
+    readonly property real _tabH: root.frame ? Tokens.spacing.md : Tokens.spacing.xs
 
     implicitWidth: root.size
     implicitHeight: root.frame ? Tokens.spacing.xxl * 3 : root.size
@@ -22,7 +24,39 @@ Item {
         anchors.fill: parent
         radius: Tokens.radius.small
         color: Colors.color.surfaceContainer
-        visible: root.frame || pic.status !== Image.Ready
+        visible: !root._dir && (root.frame || pic.status !== Image.Ready)
+    }
+
+    // A tab plus a filled body. Only the large tile has room for it —
+    // the same shape at list size collapses into a clipped blob.
+    Item {
+        anchors.fill: parent
+        visible: root.frame && root._dir && pic.status !== Image.Ready
+
+        Rectangle {
+            width: root.frame ? Tokens.spacing.xxl * 2 : Tokens.spacing.lg
+            height: root._tabH + Tokens.spacing.xs
+            radius: Tokens.radius.small
+            color: Colors.color.secondary
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.top: parent.top
+            anchors.topMargin: root._tabH
+            radius: Tokens.radius.small
+            color: Colors.color.primaryContainer
+
+            MIcon {
+                anchors.centerIn: parent
+                visible: root.frame
+                name: "folder"
+                size: Tokens.icon.lg
+                color: Colors.color.onPrimaryContainer
+            }
+        }
     }
 
     Image {
@@ -41,9 +75,10 @@ Item {
 
     MIcon {
         anchors.centerIn: parent
-        visible: pic.status !== Image.Ready
-        name: FilesThumbs.glyph(root.entry)
+        visible: pic.status !== Image.Ready && (!root._dir || !root.frame)
+        name: root._dir ? "folder" : FilesThumbs.glyph(root.entry)
         size: root.frame ? Tokens.icon.lg : root.size
+        color: root._dir ? Colors.color.primary : Colors.color.onSurface
     }
 
     Rectangle {

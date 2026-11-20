@@ -7,6 +7,7 @@ import "../../Services"
 RowLayout {
     id: root
     property bool loading: false
+    enabled: !Files.covered || FilesSearch.popup
     anchors.fill: parent
     spacing: Tokens.spacing.xs
 
@@ -19,7 +20,7 @@ RowLayout {
         Layout.fillWidth: true
         placeholderKey: "files.search.placeholder"
         captureEscape: true
-        selectAllOnPress: search.text === root.locationText()
+        selectAllOnPress: search.text === root.locationText(); terminalCopy: search.text === root.locationText()
         captureReturn: true
         captureArrows: !root._quiet && root._query().length > 0
         onTextEdited: root._type()
@@ -57,7 +58,7 @@ RowLayout {
             anchors.bottomMargin: Tokens.spacing.xs
         }
 
-        // Hold and drag the path to move the window. A click still edits it.
+        // A short drag moves the window. A click still edits the path.
         MTitleDrag {
             anchors.fill: parent
             z: 10
@@ -74,11 +75,7 @@ RowLayout {
     Timer {
         id: hunt
         interval: Motion.shortMs
-        onTriggered: {
-            if (!root._query().length)
-                return;
-            FilesSearch.start(Files.path, search.text, Files.showHidden);
-        }
+        onTriggered: if (root._query().length) FilesSearch.start(Files.path, search.text, Files.showHidden)
     }
 
     Timer {
@@ -87,13 +84,14 @@ RowLayout {
         onTriggered: {
             if (root._quiet || !search.focused || !root.suggestions.length)
                 return;
-            suggest.open = true;
             FilesSearch.popup = true;
+            suggest.open = true;
         }
     }
 
     SearchScope {}
 
+    MIconButton { iconName: "list-add"; key: "files.toolbar.new"; tip: true; enabled: Files.place === "folder" && Files.path.charAt(0) === "/"; onClicked: newMenu.open = !newMenu.open; NewMenu { id: newMenu } }
     MIconButton {
         id: sortButton
         iconName: "view-sort-ascending"
@@ -115,10 +113,7 @@ RowLayout {
     MIconButton {
         iconName: "utilities-terminal"
         key: "files.toolbar.terminal"; tip: true
-        onClicked: {
-            FilesPlaces.openTerminal(Files.path);
-            Files.hide();
-        }
+        onClicked: { FilesPlaces.openTerminal(Files.path); Files.hide(); }
     }
 
     Connections {
@@ -128,9 +123,10 @@ RowLayout {
             root.showLocation();
             Qt.callLater(() => { search.forceActiveFocus(); Qt.callLater(() => search.editor.selectAll()); });
         }
-        function onPathChanged() { if (!search.focused) root.showLocation(); }
+        function onPathChanged() { Files.hoverPath = ""; if (!search.focused) root.showLocation(); }
         function onSelectedChanged() { if (!search.focused) root.showLocation(); }
-        function onPlaceChanged() { if (!search.focused) root.showLocation(); }
+        function onPlaceChanged() { Files.hoverPath = ""; if (!search.focused) root.showLocation(); }
+        function onHoverPathChanged() { if (!search.focused) root.showLocation(); }
     }
 
     Connections {
@@ -162,7 +158,15 @@ RowLayout {
     }
 
     function locationText(): string {
-        return Files.selected.length === 1 ? String(Files.selected[0] || "") : (Files.path || "");
+        const hover = String(Files.hoverPath || "");
+        if (hover.length)
+            return hover;
+        if (Files.selected.length === 1)
+            return String(Files.selected[0] || "");
+        const place = Files.place;
+        if (place === "recent" || place === "favorites" || place === "network" || place === "trash")
+            return I18n.t("files.places." + place);
+        return Files.path || "";
     }
 
     function showLocation() {
@@ -211,8 +215,8 @@ RowLayout {
         else
             at = Math.max(0, Math.min(rows.length - 1, at + delta));
         root._index = at;
-        suggest.open = true;
         FilesSearch.popup = true;
+        suggest.open = true;
     }
 
     function _accept() {
@@ -255,9 +259,7 @@ RowLayout {
     function _leaveSearch() {
         hunt.stop();
         FilesSearch.stop();
-        root._quiet = true;
-        root._index = -1;
-        Files.searchOpen = false;
+        root._quiet = true; root._index = -1; Files.searchOpen = false;
         root.showLocation();
         root._sync();
     }

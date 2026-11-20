@@ -280,7 +280,7 @@ Flickable {
         const place = row.kind === "trash" ? "trashPlace" : row.kind;
         const named = place === "recent" || place === "trashPlace" || place === "network";
         if (named || row.path)
-            Files.openMenu(named ? place : "folder", named ? "" : row.path, "", x, y);
+            Files.openMenu(named ? place : "place", named ? "" : row.path, "", x, y);
     }
 
     Component.onCompleted: {

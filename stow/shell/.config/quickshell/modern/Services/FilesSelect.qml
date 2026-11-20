@@ -8,6 +8,7 @@ Singleton {
     id: root
 
     property string anchor: ""
+    property bool banding: false
 
     function pick(file: string, extra: bool, range: bool, rows: var) {
         const id = String(file || "");

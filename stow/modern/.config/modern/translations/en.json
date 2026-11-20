@@ -1683,6 +1683,7 @@
       "forward": "Forward",
       "up": "Up",
       "search": "Search",
+      "new": "New",
       "sort": "Sort",
       "details": "Details",
       "terminal": "Open terminal here",
@@ -1756,7 +1757,8 @@
     "extract": "Extract"
     },
     "tabs": {
-      "close": "Close tab"
+      "close": "Close tab",
+      "closeOthers": "Close all tabs"
     },
     "properties": {
       "title": "Properties",

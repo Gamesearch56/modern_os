@@ -35,7 +35,7 @@ Singleton {
     property int _hold: 0
     property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, reason: "", iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
     signal finished(bool ok)
-    signal notify(string summary, string body)
+    signal notify(string summary, string body, string section)
 
     readonly property bool indeterminate: root.running && root.progress < 0
 
@@ -88,7 +88,7 @@ Singleton {
         id: mirrors
         onErrorChanged: if (mirrors.error.length) root.error = mirrors.error
         onFinished: (ok) => {
-            root.notify(ok ? I18n.t("settings.update.mirrorsDone") : I18n.t("settings.update.mirrorsFailed"), "");
+            root.notify(ok ? I18n.t("settings.update.mirrorsDone") : I18n.t("settings.update.mirrorsFailed"), "", "");
             if (ok)
                 root.refresh();
         }
@@ -104,7 +104,7 @@ Singleton {
             onStreamFinished: {
                 const v = String(this.text || "").trim();
                 if (v.length)
-                    root.notify(I18n.t("settings.update.desktopApplied", ({ v: v })), I18n.t("settings.update.desktopAppliedBody"));
+                    root.notify(I18n.t("settings.update.desktopApplied", ({ v: v })), I18n.t("settings.update.desktopAppliedBody"), "");
             }
         }
     }
@@ -227,9 +227,9 @@ Singleton {
         root.running = false;
         root.progress = ok ? 1 : -1;
         if (code === 3)
-            root.notify(I18n.t("settings.update.rolledBack"), I18n.t("settings.update.rolledBackBody"));
+            root.notify(I18n.t("settings.update.rolledBack"), I18n.t("settings.update.rolledBackBody"), "");
         else if (!ok || classify.doneSummary(root._ran).length)
-            root.notify(ok ? classify.doneSummary(root._ran) : I18n.t("settings.update.failed"), ok ? "" : root.step);
+            root.notify(ok ? classify.doneSummary(root._ran) : I18n.t("settings.update.failed"), ok ? "" : root.step, "");
         if (ok) {
             closeTimer.restart();
             root.refresh();
@@ -280,7 +280,7 @@ Singleton {
         const key = pending.map(p => p.name).join(" ");
         if (pending.length > 0 && key !== root._notified) {
             root._notified = key;
-            root.notify(classify.availableNotice(pending), "");
+            root.notify(classify.availableNotice(pending), "", "system");
         }
         if (pending.length === 0)
             root._notified = "";

@@ -49,6 +49,7 @@ MouseArea {
     // The shape has to follow the handler too, or it stays stale after the
     // openable check finishes while the pointer is already on the row.
     HoverHandler {
+        enabled: !Files.covered
         cursorShape: root.cursorShape
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     }
@@ -152,9 +153,12 @@ MouseArea {
         Drag.onDragFinished: (dropAction) => {
             ghost.x = 0;
             ghost.y = 0;
+            // Another program took the files. A drop here already refreshes if it moved something.
+            const gone = dropAction === Qt.MoveAction && !FilesDrag.ours;
+            FilesDrag.ours = false;
             if (FilesDrag.active)
                 FilesDrag.end();
-            if (dropAction === Qt.MoveAction)
+            if (gone)
                 Files.refresh();
         }
     }

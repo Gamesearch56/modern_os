@@ -129,6 +129,19 @@ Item {
         return p.x >= 0 && p.y >= 0 && p.x <= item.width && p.y <= item.height;
     }
 
+    // A disabled anchor cannot take the click, so the press closes the menu.
+    function _fieldTakes(mx: real, my: real): bool {
+        if (root.dismissAnywhere || !root._inside(root._field, mx, my))
+            return false;
+        let item = root._field;
+        while (item) {
+            if (!item.enabled)
+                return false;
+            item = item.parent;
+        }
+        return true;
+    }
+
     Behavior on opacity {
         enabled: Motion.overlaysFade
         NumberAnimation {
@@ -150,17 +163,11 @@ Item {
         anchors.fill: parent
         enabled: root.open && root._host
         visible: enabled
+        // Hover stays here, so rows under the menu do not highlight or take the pointer.
+        hoverEnabled: true
         z: 190
         onPressed: (mouse) => {
-            if (mouse.button !== Qt.LeftButton) {
-                mouse.accepted = false;
-                return;
-            }
-            if (root._inside(root, mouse.x, mouse.y)) {
-                mouse.accepted = false;
-                return;
-            }
-            if (!root.dismissAnywhere && root._inside(root._field, mouse.x, mouse.y)) {
+            if (root._inside(root, mouse.x, mouse.y) || (mouse.button === Qt.LeftButton && root._fieldTakes(mouse.x, mouse.y))) {
                 mouse.accepted = false;
                 return;
             }

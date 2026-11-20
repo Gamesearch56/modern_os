@@ -76,10 +76,13 @@ filepreview_run() {
         return 0
     fi
 
-    # Space is non-consuming. The same press that opened Quick Look from
-    # the file manager can land here after focus moves to the preview —
-    # only dismiss once that open has settled.
-    if filepreview_is_open || filepreview_class_is_preview "$class" "$title"; then
+    # The preview window closes itself on a later Space. Hiding here races
+    # the press that opened it once focus has already moved over.
+    if filepreview_class_is_preview "$class" "$title"; then
+        return 0
+    fi
+
+    if filepreview_is_open; then
         qs -c modern ipc call filepreview spaceHide >/dev/null 2>&1 || true
         return 0
     fi

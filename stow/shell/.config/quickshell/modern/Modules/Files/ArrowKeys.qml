@@ -11,7 +11,7 @@ Item {
 
     readonly property bool armed: Files.open && Files.renaming.length === 0 && !Files.typing
             && !FilesSearch.popup && !Files.propertiesOpen && !Files.confirming && !Files.naming && !FilesConflict.open
-            && !Files.menuOpen && Storage.confirmWhere !== "files"
+            && !Files.covered && Storage.confirmWhere !== "files"
 
     Shortcut { sequence: "Left"; enabled: root.armed; context: Qt.WindowShortcut; onActivated: root._step(-1) }
     Shortcut { sequence: "Right"; enabled: root.armed; context: Qt.WindowShortcut; onActivated: root._step(1) }

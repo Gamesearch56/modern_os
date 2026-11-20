@@ -34,6 +34,7 @@ Scope {
                 trailing: Toolbar { loading: mod._slow }
 
                 Layouts.RowLayout {
+                    enabled: !Files.covered
                     anchors.fill: parent
                     spacing: Tokens.spacing.md
 
@@ -161,7 +162,7 @@ Scope {
 
     function _mouseNav(): bool {
         return Files.open && !Files.propertiesOpen && !Files.confirming && !Files.naming && !FilesConflict.open
-            && !Files.menuOpen && Storage.confirmWhere !== "files";
+            && !Files.covered && Storage.confirmWhere !== "files";
     }
 
     function _pending(): bool {
