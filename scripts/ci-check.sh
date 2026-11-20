@@ -158,5 +158,7 @@ log "gemini api"
 "$ROOT/scripts/test-gemini-api.sh"
 log "theme seed"
 "$ROOT/scripts/test-theme-seed.sh"
+log "os label"
+"$ROOT/scripts/test-os-label.sh"
 
 log "ok"

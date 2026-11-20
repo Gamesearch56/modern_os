@@ -29,7 +29,11 @@
             }
         },
         "separator",
-        "os",
+        {
+            "type": "command",
+            "key": "OS",
+            "text": "repo=$(head -n 1 \"${XDG_CONFIG_HOME:-$HOME/.config}/modern/repo\" 2>/dev/null || true); if [ -n \"$repo\" ] && [ -x \"$repo/scripts/os-label.sh\" ]; then \"$repo/scripts/os-label.sh\"; else printf '%s\\n' 'ModernOS (Arch Linux)'; fi"
+        },
         "host",
         "kernel",
         "uptime",
