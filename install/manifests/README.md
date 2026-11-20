@@ -25,12 +25,12 @@ Layers, applied in order by `install.sh --profile <name>`:
 | `00-hw-gpu-*` | auto or `--hw` | GPU stack for every profile (RADV, Intel, NVIDIA DKMS) |
 | `10-desktop` | all profiles | Hyprland, Quickshell, portals, audio/network/bluetooth stack, clipboard/screenshot tools, kitty, Vivaldi. The file manager is the shell, not a packaged app. AUR: `phylax-git` (`10-desktop.aur.txt`). Text editor, image viewer, and video player packages are `default-apps.json`, not inlined in this layer. |
 | `20-theming` | all profiles | fonts, matugen, GTK/Qt theming support |
-| `30-apps` | `m0`+ | codecs, Spotify, Steam, GameMode, gamescope, umu-launcher (Battle.net) |
+| `30-apps` | `m0`+ | codecs, Spotify, Steam, GameMode, gamescope, umu-launcher (Battle.net). AUR: `proton-pass-bin` (`30-apps.aur.txt`). |
 | `30-hw-gpu-*` | with `30-apps`, auto or `--hw` | Steam's 32-bit Vulkan driver for this GPU (else pacman picks `lib32-vulkan-radeon`) |
 | `50-gaming` | `gaming`, `full` | 32-bit Mesa and GameMode, launchers, MangoHud |
 | `50-hw-*` | gaming/full + `--hw` | 32-bit GPU libraries (`lib32-*`) |
 | `60-flatpak` | `full` | flatpak-distributed apps |
-| `90-accounts.aur` | `--extra proton` | Proton Mail / Pass |
+| `90-accounts.aur` | `--extra proton` | Proton Mail |
 
 Run `scripts/snapshot-packages.sh --diff` any time to see drift between
 this machine's installed packages and these manifests.

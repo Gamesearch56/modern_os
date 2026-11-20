@@ -1,0 +1,3 @@
+# Daily-driver AUR apps for every profile (m0 and up). Store lists
+# these as removable apps, not system packages.
+proton-pass-bin            # password manager
