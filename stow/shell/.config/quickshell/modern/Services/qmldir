@@ -58,6 +58,7 @@ singleton Session 1.0 Session.qml
 SessionAuth 1.0 SessionAuth.qml
 singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
+singleton DefaultApps 1.0 DefaultApps.qml
 AppsIcons 1.0 AppsIcons.qml
 singleton IdleInhibit 1.0 IdleInhibit.qml
 singleton IdleDaemon 1.0 IdleDaemon.qml
@@ -99,3 +100,21 @@ StoreBrowse 1.0 StoreBrowse.qml
 StoreDetail 1.0 StoreDetail.qml
 StoreFetch 1.0 StoreFetch.qml
 singleton BugReport 1.0 BugReport.qml
+singleton Files 1.0 Files.qml
+FilesOps 1.0 FilesOps.qml
+singleton FilesSearch 1.0 FilesSearch.qml
+singleton FilesSizes 1.0 FilesSizes.qml
+singleton FilesTrash 1.0 FilesTrash.qml
+singleton FilesUndo 1.0 FilesUndo.qml
+singleton FilesConflict 1.0 FilesConflict.qml
+singleton FilesSelect 1.0 FilesSelect.qml
+singleton FilesZip 1.0 FilesZip.qml
+singleton FilesPlaces 1.0 FilesPlaces.qml
+singleton FilesNet 1.0 FilesNet.qml
+singleton FilesAccess 1.0 FilesAccess.qml
+singleton FilesTabs 1.0 FilesTabs.qml
+singleton FilesExtra 1.0 FilesExtra.qml
+singleton FilesBus 1.0 FilesBus.qml
+singleton FilesThumbs 1.0 FilesThumbs.qml
+singleton FilesDrag 1.0 FilesDrag.qml
+singleton FilesHistory 1.0 FilesHistory.qml

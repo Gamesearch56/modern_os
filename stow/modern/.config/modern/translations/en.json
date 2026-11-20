@@ -288,7 +288,9 @@
     "hint": "Space or Esc to close",
     "unsupported": "Can't preview this file type",
     "noSelection": "No file selected",
-    "loadFailed": "Could not load file"
+    "loadFailed": "Could not load file",
+    "emptyFolder": "This folder is empty",
+    "emptyFile": "This file is empty"
   },
   "notifications": {
     "empty": "No notifications",
@@ -1016,10 +1018,11 @@
       "eject": "Eject",
       "clean": "Clean up",
       "cleanTitle": "Clean unused files?",
-      "cleanBody": "Removes unused package files, old logs, and regenerable caches (thumbnails, GPU, fonts). Photos, documents, downloads, and games stay.",
+      "cleanBody": "Removes unused package files, old logs, and regenerable caches (thumbnails, folder sizes, GPU, fonts). Photos, documents, downloads, and games stay.",
       "cleanConfirm": "Clean up",
       "cleanStart": "Preparing…",
       "cleanThumbnails": "Clearing thumbnail cache…",
+      "cleanSizes": "Clearing folder sizes…",
       "cleanGpu": "Clearing GPU cache…",
       "cleanFonts": "Clearing font cache…",
       "cleanPackages": "Removing unused package files…",
@@ -1615,6 +1618,160 @@
       "failed": "Sending failed",
       "exported": "Saved as file",
       "sending": "Sending report"
+    }
+  },
+  "files": {
+    "title": "Files",
+    "loading": "Loading",
+    "emptyDir": "This folder is empty",
+    "refused": "That change is not allowed",
+    "noAccess": "You don't have access.",
+    "networkEmpty": "No network locations",
+    "network": {
+      "connect": "Connect to server",
+      "connectDo": "Connect",
+      "address": "Server address",
+      "refused": "Could not connect to that server"
+    },
+    "favoritesEmpty": "No favorites",
+    "recentEmpty": "No recent items",
+    "launcherName": "Filemanager",
+    "newFolder": "New folder",
+    "newFile": "New file",
+    "name": "Name",
+    "create": "Create",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "empty": "Empty",
+    "confirmDelete": "Delete permanently?",
+    "confirmDeleteBody": "These items are removed and cannot be restored from the trash.",
+    "confirmEmpty": "Empty trash?",
+    "confirmEmptyBody": "Everything in the trash is removed.",
+    "confirmEject": "Eject this device?",
+    "confirmEjectBody": "Eject {name}? Save anything still open on it first.",
+    "zip": {
+      "title": "Name the archive",
+      "create": "Create",
+      "placeholder": "Archive name",
+      "taken": "That name is already used in this folder."
+    },
+    "exists": {
+      "title": "Name already exists",
+      "file": "A file named {name} is already in this folder. Overwrite moves the existing file to the trash. Rename keeps both.",
+      "folder": "A folder named {name} is already in this folder. Overwrite moves the existing folder to the trash. Rename keeps both.",
+      "overwrite": "Overwrite",
+      "rename": "Rename"
+    },
+    "places": {
+      "home": "Home",
+      "recent": "Recent",
+      "favorites": "Favorites",
+      "network": "Network",
+      "trash": "Trash",
+      "downloads": "Downloads",
+      "pictures": "Pictures",
+      "videos": "Videos",
+      "computer": "Computer",
+      "clearRecent": "Clear recent",
+      "eject": "Eject"
+    },
+    "path": {
+      "root": "Computer"
+    },
+    "toolbar": {
+      "back": "Back",
+      "forward": "Forward",
+      "up": "Up",
+      "search": "Search",
+      "sort": "Sort",
+      "details": "Details",
+      "terminal": "Open terminal here",
+      "location": "Location"
+    },
+    "view": {
+      "grid": "Icons",
+      "list": "List"
+    },
+    "sort": {
+      "name": "Name",
+      "created": "Created",
+      "updated": "Updated",
+      "size": "Size",
+      "type": "Type",
+      "asc": "Ascending",
+      "desc": "Descending",
+      "foldersFirst": "Folders first",
+      "showHidden": "Show hidden files"
+    },
+    "details": {
+      "name": "Name",
+      "size": "Size",
+      "created": "Created",
+      "updated": "Last updated",
+      "changed": "Updated",
+      "type": "Type",
+      "folder": "Folder",
+      "file": "File",
+      "link": "Link",
+      "none": "—"
+    },
+    "units": {
+      "byte": "B",
+      "kb": "KB",
+      "mb": "MB",
+      "gb": "GB",
+      "tb": "TB"
+    },
+    "search": {
+      "names": "Names",
+      "contents": "Contents",
+      "where": "Search in",
+      "folder": "This folder",
+      "home": "Home",
+      "computer": "Computer",
+      "placeholder": "Search",
+      "heading": "Search for {query}",
+      "found": "{count} found"
+    },
+    "menu": {
+      "newFolder": "New folder",
+      "newFile": "New file",
+      "open": "Open",
+      "openLocation": "Open location",
+      "openTab": "Open in new tab",
+      "openWindow": "Open in new window",
+      "rename": "Rename",
+      "copy": "Copy",
+      "cut": "Cut",
+      "paste": "Paste",
+      "trash": "Move to trash",
+      "delete": "Delete permanently",
+      "favorite": "Add to favorites",
+      "unfavorite": "Remove from favorites",
+      "properties": "Properties",
+      "eject": "Eject",
+      "restore": "Restore",
+      "empty": "Empty trash",
+    "zip": "Compress to zip",
+    "extract": "Extract"
+    },
+    "tabs": {
+      "close": "Close tab"
+    },
+    "properties": {
+      "title": "Properties",
+      "owner": "Owner",
+      "group": "Group",
+      "user": "Owner",
+      "others": "Others",
+      "save": "Save",
+      "read": "Read",
+      "write": "Write",
+      "execute": "Execute",
+      "changeOwner": "Change owner",
+      "setuid": "Setuid",
+      "setgid": "Setgid",
+      "sticky": "Sticky"
     }
   }
 }

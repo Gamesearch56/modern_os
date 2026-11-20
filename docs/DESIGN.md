@@ -118,11 +118,11 @@ bell stay on disk under `Modules/Bar/widgets/` if a leftover
   `stow/theme/.config/matugen/templates/gtk.css.template`), libadwaita
   named colors plus `.nautilus-window` rules from MD3 roles. GTK3 Adwaita
   aliases theme Sushi. Folder icons use Papirus-Dark (emblem folders).
-  KDE apps keep `modern-folders`. SUPER+E launches
-  `apps.defaults.fileManager` (Nautilus by default). Restart Nautilus
-  after `theme-apply.sh`. The window is opaque. Sushi floats over it
-  (`nautilus-previewer` window rule, `dim_around` scrim). Video/audio
-  start muted; changing the Nautilus selection replaces the preview.
+  KDE apps keep `modern-folders`. SUPER+E and folder opens use the
+  ModernOS File Manager. Nautilus is not installed. If it is installed
+  later, these GTK rules, the opaque window rule, and Sushi's floating
+  preview (`nautilus-previewer`, `dim_around`) style it. Restart it
+  after `theme-apply.sh`. Video and audio start muted.
 - **Qt** — `kdeglobals` `[UiSettings] ColorScheme=modern` plus
   `modern.colors` (KF6 KColorSchemeManager; qt6ct reports
   `ColorScheme::Unknown` and otherwise applies a light Active palette),

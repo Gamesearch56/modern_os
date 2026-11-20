@@ -20,6 +20,7 @@ import "Modules/Session" as SessionMod
 import "Modules/Wallpaper" as WallpaperMod
 import "Modules/Screenshot" as ScreenshotMod
 import "Modules/FilePreview" as FilePreviewMod
+import "Modules/Files" as FilesMod
 import "Modules/BugReport" as BugReportMod
 
 ShellRoot {
@@ -37,6 +38,7 @@ ShellRoot {
     WallpaperMod.Module {}
     ScreenshotMod.Module {}
     FilePreviewMod.Module {}
+    FilesMod.Module {}
     BugReportMod.Module {}
 
     Shortcut {

@@ -1,6 +1,7 @@
 // Default-app launcher. Roles come from config apps.defaults
 // (browser, calendar, mail, communication, fileManager, videoPlayer,
-// imageViewer, terminal).
+// imageViewer, textEditor, terminal). Empty text editor, image viewer,
+// and video player fall back through DefaultApps, not a second id here.
 // DesktopEntries lookup lives here so Modules never spawn processes.
 pragma Singleton
 
@@ -50,7 +51,7 @@ Singleton {
             const e = entries[i];
             const stem = root._stem(e.id || e.name);
             const pinned = !!(keep[stem]);
-            // imv.desktop (and similar MIME handlers) ship NoDisplay=true.
+            // MIME handlers often ship NoDisplay=true; a pinned id still shows.
             if (e.noDisplay && !pinned)
                 continue;
             if (role.length > 0 && !DesktopRoles.matches(role, e.categories, e.name, e.genericName, e.id, keep))
@@ -82,7 +83,10 @@ Singleton {
 
     function desktopId(role: string): string {
         const d = root.defaults || ({});
-        return d[role] || "";
+        const cur = String(d[role] || "");
+        if (cur.length)
+            return cur;
+        return DefaultApps.desktop(role);
     }
 
     function entryFor(role: string): var {
@@ -179,12 +183,11 @@ Singleton {
             return ["proton-mail.desktop", "proton-mail", "org.proton.Mail.desktop", "thunderbird.desktop", "org.mozilla.Thunderbird.desktop"];
         if (role === "communication")
             return ["whatsapp.desktop", "whatsapp-desktop.desktop", "whatsapp-for-linux.desktop", "com.rtg.whatsapp.desktop", "io.github.mimbrero.WhatsAppDesktop.desktop", "wasistlos.desktop", "zapzap.desktop"];
-        if (role === "videoPlayer")
-            return ["mpv.desktop", "mpv"];
-        if (role === "imageViewer")
-            return ["imv.desktop", "imv"];
-        if (role === "textEditor")
-            return ["org.gnome.gedit.desktop", "gedit"];
+        const shipped = DefaultApps.ids(role);
+        if (shipped.length)
+            return shipped;
+        if (role === "fileManager")
+            return ["modern.files.desktop", "modern.files"];
         return [];
     }
 
@@ -192,15 +195,12 @@ Singleton {
         if (role === "browser")
             return ["vivaldi"];
         if (role === "fileManager")
-            return ["nautilus"];
+            return ["qs", "-c", "modern", "ipc", "call", "files", "open", ""];
         if (role === "terminal")
             return ["kitty"];
-        if (role === "videoPlayer")
-            return ["mpv"];
-        if (role === "imageViewer")
-            return ["imv"];
-        if (role === "textEditor")
-            return ["gedit"];
+        const argv = DefaultApps.launchArgv(role);
+        if (argv.length)
+            return argv;
         if (role === "mail")
             return ["xdg-open", "https://mail.proton.me"];
         return null;
@@ -278,7 +278,7 @@ Singleton {
             const p = FileManager.localPath(path);
             if (!p.length)
                 return false;
-            Quickshell.execDetached(["xdg-open", p]);
+            Quickshell.execDetached([Paths.script("files-open.sh"), p]);
             return true;
         } catch (err) {
             Logger.error("Apps", String(err));

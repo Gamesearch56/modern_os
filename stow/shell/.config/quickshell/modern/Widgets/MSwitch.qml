@@ -7,12 +7,13 @@ Item {
 
     property bool checked: false
     property bool enabled: true
+    property bool compact: false
     property string nameKey: ""
 
     signal toggled(bool value)
 
-    implicitWidth: Tokens.spacing.xxl + Tokens.spacing.xl
-    implicitHeight: Tokens.spacing.xl + Tokens.spacing.sm
+    implicitWidth: root.compact ? Tokens.spacing.xxl + Tokens.spacing.xs : Tokens.spacing.xxl + Tokens.spacing.xl
+    implicitHeight: root.compact ? Tokens.spacing.lg : Tokens.spacing.xl + Tokens.spacing.sm
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled
     Accessible.role: Accessible.CheckBox
@@ -34,7 +35,7 @@ Item {
         radius: Tokens.radius.full
         color: root.checked ? Colors.color.primary : Colors.color.surfaceVariant
         border.color: root.checked ? Colors.color.primary : Colors.color.outline
-        border.width: root.checked ? 0 : 2
+        border.width: root.checked ? 0 : (root.compact ? Tokens.stroke.hairline : Tokens.stroke.focus)
 
         Behavior on color {
             ColorAnimation {
@@ -46,12 +47,14 @@ Item {
 
     Rectangle {
         id: thumb
-        width: Tokens.icon.sm
-        height: Tokens.icon.sm
+        width: root.compact ? Tokens.spacing.md : Tokens.icon.sm
+        height: width
         radius: Tokens.radius.full
         color: root.checked ? Colors.color.onPrimary : Colors.color.outline
         anchors.verticalCenter: parent.verticalCenter
-        x: root.checked ? parent.width - width - Tokens.spacing.xs : Tokens.spacing.xs
+        x: root.checked
+           ? parent.width - width - (root.compact ? Tokens.spacing.xxs : Tokens.spacing.xs)
+           : (root.compact ? Tokens.spacing.xxs : Tokens.spacing.xs)
 
         Behavior on x {
             SpringAnimation {

@@ -15,7 +15,11 @@ Item {
     property int maximumLength: 32767
     property bool escapeCloses: false
     property bool captureArrows: false
+    property bool captureReturn: false
+    property bool captureEscape: false
     property bool holdFocus: false
+    property bool selectAllOnPress: false
+    property bool selectOnFocus: false
     property bool _pointer: false
     property bool capsOn: false
 
@@ -39,6 +43,7 @@ Item {
     HoverHandler {
         enabled: root.enabled
         cursorShape: Qt.IBeamCursor
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     }
 
     onActiveFocusChanged: {
@@ -58,8 +63,12 @@ Item {
     Connections {
         target: input
         function onActiveFocusChanged() {
-            if (!input.activeFocus)
+            if (!input.activeFocus) {
                 root._pointer = false;
+                return;
+            }
+            if (root.selectOnFocus)
+                input.selectAll();
         }
     }
 
@@ -113,6 +122,13 @@ Item {
         onTextChanged: root.textEdited()
         onEditingFinished: root.editingFinished()
         Keys.priority: Keys.BeforeItem
+        Keys.onShortcutOverride: (event) => {
+            const ret = event.key === Qt.Key_Return || event.key === Qt.Key_Enter;
+            const arrow = event.key === Qt.Key_Up || event.key === Qt.Key_Down;
+            const esc = root.captureEscape && event.key === Qt.Key_Escape;
+            if ((root.captureReturn && ret) || (root.captureArrows && arrow) || esc)
+                event.accepted = true;
+        }
         Keys.onPressed: (event) => {
             root._noteCaps(event);
             if (event.key === Qt.Key_Escape) {
@@ -140,6 +156,17 @@ Item {
                 root.upPressed();
                 event.accepted = root.captureArrows || root._arrowMove(0, -1);
             }
+        }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.selectAllOnPress
+        z: 2
+        cursorShape: Qt.IBeamCursor
+        onPressed: {
+            input.forceActiveFocus();
+            input.selectAll();
         }
     }
 

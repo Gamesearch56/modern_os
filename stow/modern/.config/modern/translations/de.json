@@ -288,7 +288,9 @@
     "hint": "Leertaste oder Esc schließt",
     "unsupported": "Vorschau für diesen Dateityp nicht möglich",
     "noSelection": "Keine Datei ausgewählt",
-    "loadFailed": "Datei konnte nicht geladen werden"
+    "loadFailed": "Datei konnte nicht geladen werden",
+    "emptyFolder": "Dieser Ordner ist leer",
+    "emptyFile": "Diese Datei ist leer"
   },
   "notifications": {
     "empty": "Keine Benachrichtigungen",
@@ -1016,10 +1018,11 @@
       "eject": "Auswerfen",
       "clean": "Aufräumen",
       "cleanTitle": "Ungenutzte Dateien entfernen?",
-      "cleanBody": "Entfernt übrig gebliebene Paketdateien, alte Logs und neu erzeugbare Caches (Vorschaubilder, GPU, Schriften). Fotos, Dokumente, Downloads und Spiele bleiben.",
+      "cleanBody": "Entfernt übrig gebliebene Paketdateien, alte Logs und neu erzeugbare Caches (Vorschaubilder, Ordnergrößen, GPU, Schriften). Fotos, Dokumente, Downloads und Spiele bleiben.",
       "cleanConfirm": "Aufräumen",
       "cleanStart": "Vorbereitung…",
       "cleanThumbnails": "Vorschaubilder-Cache wird geleert…",
+      "cleanSizes": "Ordnergrößen werden geleert…",
       "cleanGpu": "GPU-Cache wird geleert…",
       "cleanFonts": "Schrift-Cache wird geleert…",
       "cleanPackages": "Ungenutzte Paketdateien werden entfernt…",
@@ -1615,6 +1618,160 @@
       "failed": "Senden fehlgeschlagen",
       "exported": "Als Datei gespeichert",
       "sending": "Bericht wird gesendet"
+    }
+  },
+  "files": {
+    "title": "Dateien",
+    "loading": "Wird geladen",
+    "emptyDir": "Dieser Ordner ist leer",
+    "refused": "Diese Änderung ist nicht erlaubt",
+    "noAccess": "Du hast keinen Zugriff.",
+    "networkEmpty": "Keine Netzwerkorte",
+    "network": {
+      "connect": "Mit Server verbinden",
+      "connectDo": "Verbinden",
+      "address": "Serveradresse",
+      "refused": "Verbindung zu diesem Server ist nicht möglich"
+    },
+    "favoritesEmpty": "Keine Favoriten",
+    "recentEmpty": "Keine zuletzt verwendeten",
+    "launcherName": "Filemanager",
+    "newFolder": "Neuer Ordner",
+    "newFile": "Neue Datei",
+    "name": "Name",
+    "create": "Erstellen",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "empty": "Leeren",
+    "confirmDelete": "Endgültig löschen?",
+    "confirmDeleteBody": "Diese Einträge werden entfernt und lassen sich nicht aus dem Papierkorb zurückholen.",
+    "confirmEmpty": "Papierkorb leeren?",
+    "confirmEmptyBody": "Alles im Papierkorb wird entfernt.",
+    "confirmEject": "Dieses Gerät auswerfen?",
+    "confirmEjectBody": "{name} auswerfen? Speichere vorher, was darauf noch geöffnet ist.",
+    "zip": {
+      "title": "Archiv benennen",
+      "create": "Erstellen",
+      "placeholder": "Archivname",
+      "taken": "Dieser Name wird in diesem Ordner bereits verwendet."
+    },
+    "exists": {
+      "title": "Name bereits vorhanden",
+      "file": "Eine Datei namens {name} liegt in diesem Ordner bereits. Überschreiben verschiebt die vorhandene Datei in den Papierkorb. Umbenennen behält beide.",
+      "folder": "Ein Ordner namens {name} liegt in diesem Ordner bereits. Überschreiben verschiebt den vorhandenen Ordner in den Papierkorb. Umbenennen behält beide.",
+      "overwrite": "Überschreiben",
+      "rename": "Umbenennen"
+    },
+    "places": {
+      "home": "Persönlicher Ordner",
+      "recent": "Zuletzt verwendet",
+      "favorites": "Favoriten",
+      "network": "Netzwerk",
+      "trash": "Papierkorb",
+      "downloads": "Downloads",
+      "pictures": "Bilder",
+      "videos": "Videos",
+      "computer": "Computer",
+      "clearRecent": "Zuletzt verwendet leeren",
+      "eject": "Auswerfen"
+    },
+    "path": {
+      "root": "Computer"
+    },
+    "toolbar": {
+      "back": "Zurück",
+      "forward": "Vor",
+      "up": "Nach oben",
+      "search": "Suchen",
+      "sort": "Sortieren",
+      "details": "Details",
+      "terminal": "Terminal hier öffnen",
+      "location": "Ort"
+    },
+    "view": {
+      "grid": "Symbole",
+      "list": "Liste"
+    },
+    "sort": {
+      "name": "Name",
+      "created": "Erstellt",
+      "updated": "Geändert",
+      "size": "Größe",
+      "type": "Typ",
+      "asc": "Aufsteigend",
+      "desc": "Absteigend",
+      "foldersFirst": "Ordner zuerst",
+      "showHidden": "Versteckte Dateien anzeigen"
+    },
+    "details": {
+      "name": "Name",
+      "size": "Größe",
+      "created": "Erstellt",
+      "updated": "Zuletzt geändert",
+      "changed": "Geändert",
+      "type": "Typ",
+      "folder": "Ordner",
+      "file": "Datei",
+      "link": "Verknüpfung",
+      "none": "—"
+    },
+    "units": {
+      "byte": "B",
+      "kb": "KB",
+      "mb": "MB",
+      "gb": "GB",
+      "tb": "TB"
+    },
+    "search": {
+      "names": "Namen",
+      "contents": "Inhalt",
+      "where": "Suchen in",
+      "folder": "Dieser Ordner",
+      "home": "Persönlicher Ordner",
+      "computer": "Computer",
+      "placeholder": "Suchen",
+      "heading": "Suche nach {query}",
+      "found": "{count} gefunden"
+    },
+    "menu": {
+      "newFolder": "Neuer Ordner",
+      "newFile": "Neue Datei",
+      "open": "Öffnen",
+      "openLocation": "Speicherort öffnen",
+      "openTab": "In neuem Tab öffnen",
+      "openWindow": "In neuem Fenster öffnen",
+      "rename": "Umbenennen",
+      "copy": "Kopieren",
+      "cut": "Ausschneiden",
+      "paste": "Einfügen",
+      "trash": "In den Papierkorb",
+      "delete": "Endgültig löschen",
+      "favorite": "Zu Favoriten",
+      "unfavorite": "Aus Favoriten entfernen",
+      "properties": "Eigenschaften",
+      "eject": "Auswerfen",
+      "restore": "Wiederherstellen",
+      "empty": "Papierkorb leeren",
+    "zip": "Als Zip komprimieren",
+    "extract": "Entpacken"
+    },
+    "tabs": {
+      "close": "Tab schließen"
+    },
+    "properties": {
+      "title": "Eigenschaften",
+      "owner": "Besitzer",
+      "group": "Gruppe",
+      "user": "Besitzer",
+      "others": "Andere",
+      "save": "Speichern",
+      "read": "Lesen",
+      "write": "Schreiben",
+      "execute": "Ausführen",
+      "changeOwner": "Besitzer ändern",
+      "setuid": "Setuid",
+      "setgid": "Setgid",
+      "sticky": "Sticky"
     }
   }
 }

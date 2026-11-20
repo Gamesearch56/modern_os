@@ -36,7 +36,7 @@ Item {
     default property alias extra: trailing.data
 
     signal clicked()
-    signal rightClicked()
+    signal rightClicked(real x, real y)
     signal activated()
 
     function _onTrailing(px: real, py: real): bool {
@@ -60,6 +60,8 @@ Item {
     readonly property color _iconColor: {
         if (root.destructive)
             return Colors.color.error;
+        if (root.selected && root._nav)
+            return root._fg;
         return Colors.color.primary;
     }
 
@@ -76,12 +78,12 @@ Item {
     Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
     Accessible.description: root.badgeCount > 0 ? String(root.badgeCount) : ""
     Accessible.onPressAction: {
-        if (root.hoverHighlight)
+        if (root.enabled && root.hoverHighlight)
             root.clicked();
     }
 
     Keys.onPressed: (event) => {
-        if (!root.hoverHighlight)
+        if (!root.enabled || !root.hoverHighlight)
             return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
             root.clicked();
@@ -110,7 +112,7 @@ Item {
         anchors.fill: parent
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
         color: Colors.color.primary
-        opacity: root.selected || !root.hoverHighlight ? 0 : Chrome.stateLayer(ma.containsMouse, false)
+        opacity: !root.enabled || root.selected || !root.hoverHighlight ? 0 : Chrome.stateLayer(ma.containsMouse, false)
     }
 
     MouseArea {
@@ -118,29 +120,37 @@ Item {
         z: 3
         anchors.fill: parent
         anchors.rightMargin: trailing.visible ? trailing.width + root._padH : 0
-        enabled: root.enabled && root.hoverHighlight
+        enabled: root.hoverHighlight
         hoverEnabled: true
         propagateComposedEvents: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
         onPressed: (mouse) => {
+            if (!root.enabled)
+                return;
             ring.markPointer();
             if (root._onTrailing(mouse.x, mouse.y))
                 mouse.accepted = false;
         }
         onClicked: (mouse) => {
-            if (root._onTrailing(mouse.x, mouse.y))
+            if (!root.enabled || root._onTrailing(mouse.x, mouse.y))
                 return;
             if (mouse.button === Qt.RightButton)
-                root.rightClicked();
+                root.rightClicked(mouse.x, mouse.y);
             else
                 root.clicked();
         }
         onDoubleClicked: (mouse) => {
-            if (root._onTrailing(mouse.x, mouse.y))
+            if (!root.enabled || root._onTrailing(mouse.x, mouse.y))
                 return;
             root.activated();
         }
+    }
+
+    HoverHandler {
+        enabled: root.hoverHighlight
+        cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     }
 
     RowLayout {

@@ -86,10 +86,10 @@ modern_dotfile/
 │                                greetd configs consumed by install/lib/greetd.sh
 ├── stow/
 │   ├── hypr/.config/hypr/                   hyprland.lua + modules/
-│   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules
+│   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules; Modules/Files is the file manager
 │   ├── greeter/.config/quickshell/greeter/  shares Session/ with the shell
 │   ├── theme/.config/matugen/               config.toml + templates/
-│   ├── kitty/ gtk/ qt/ bash/ git/ mpv/ imv/
+│   ├── kitty/ gtk/ qt/ bash/ git/ mpv/ imv/   current external player and image viewer (`install/manifests/default-apps.json`)
 │   └── modern/.config/modern/               config.default.json, themes/, translations/
 ├── scripts/    theme-apply.sh wallpaper.sh optiscaler.sh game-profile.sh
 │               lint-layers.sh snapshot-packages.sh check-isolation.sh

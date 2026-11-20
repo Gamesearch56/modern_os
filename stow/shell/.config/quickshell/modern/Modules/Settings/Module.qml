@@ -191,6 +191,7 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 onActivated: {
+                    if (Storage.confirmWhere === "settings") { Storage.cancelEject(); return; }
                     if (SelectMenus.current && SelectMenus.current.closeMenu) {
                         SelectMenus.current.closeMenu();
                         return;
@@ -281,6 +282,7 @@ Scope {
             }
 
             CleanupDialog { }
+            EjectDialog { }
 
         }
     }

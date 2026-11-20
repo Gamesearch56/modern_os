@@ -90,6 +90,9 @@ step thumbnails
 wipe_cache_dir "$HOME_DIR/.cache/thumbnails"
 wipe_cache_dir "$HOME_DIR/.cache/modern/wallpaper-thumbs"
 
+step sizes
+wipe_cache_dir "$HOME_DIR/.cache/modern/folder-sizes"
+
 step gpu
 wipe_cache_dir "$HOME_DIR/.cache/mesa_shader_cache"
 wipe_cache_dir "$HOME_DIR/.cache/mesa_shader_cache_db"

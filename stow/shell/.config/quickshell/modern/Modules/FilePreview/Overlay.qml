@@ -11,9 +11,6 @@ MOverlay {
     cardWidth: Tokens.window.overlayWidth
     cardHeight: Tokens.window.overlayHeight
 
-    readonly property string _imageUrl: FilePreview.kind === "image" && FilePreview.path.length > 0
-        ? ("file://" + encodeURI(FilePreview.path)) : ""
-
     ColumnLayout {
         spacing: Tokens.spacing.md
 
@@ -28,23 +25,9 @@ MOverlay {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Image {
-                id: preview
-                anchors.fill: parent
-                visible: FilePreview.kind === "image" && !FilePreview.imageFailed
-                fillMode: Image.PreserveAspectFit
-                asynchronous: true
-                cache: false
-                source: root._imageUrl
-                onStatusChanged: {
-                    if (status === Image.Error)
-                        FilePreview.markImageFailed();
-                }
-            }
-
             Flickable {
                 anchors.fill: parent
-                visible: FilePreview.kind === "text"
+                visible: FilePreview.kind === "text" || FilePreview.kind === "folder"
                 clip: true
                 contentWidth: width
                 contentHeight: body.implicitHeight
@@ -53,7 +36,7 @@ MOverlay {
                 MText {
                     id: body
                     width: parent.width
-                    value: FilePreview.textContent
+                    value: FilePreview.kind === "folder" ? FilePreview.listing : FilePreview.textContent
                     styleName: "bodyMedium"
                     familyRole: "monospace"
                     wrapMode: Text.Wrap
@@ -61,6 +44,15 @@ MOverlay {
                     verticalAlignment: Text.AlignTop
                 }
             }
+        }
+
+        MText {
+            Layout.fillWidth: true
+            visible: FilePreview.kind === "file" && FilePreview.imagePath.length === 0
+            value: FilePreview.mime
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            horizontalAlignment: Text.AlignHCenter
         }
 
         MHint {

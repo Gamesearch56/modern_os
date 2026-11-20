@@ -17,6 +17,7 @@ Item {
     property real chromeOpacity: Chrome.washOpacity
     property bool busy: false
     property alias trailing: chrome.trailing
+    property alias trailingFill: chrome.trailingFill
 
     signal closed()
     signal actionClicked()

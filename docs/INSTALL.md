@@ -47,7 +47,8 @@ Profiles: `m0` (bar/launcher/session), `dev` (+ Cursor/toolchain),
 
 `install.sh` installs packages, stows listed packages into
 `--target` (default `$HOME`): hypr, shell, theme, kitty, gtk,
-qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, mpv, imv.
+qt, bash, git, modern, systemd, xdg, fontconfig, fastfetch, pipewire,
+plus each `stow` name in `install/manifests/default-apps.json`.
 It copies the greeter via `install/lib/greetd.sh` and enables greetd on
 a real user home (`--dry-run` and `--target /tmp` skip that). Stow
 conflict backups go under `$TARGET/.local/state/modern/stow-backups`.

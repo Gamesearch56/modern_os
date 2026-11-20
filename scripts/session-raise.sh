@@ -61,20 +61,37 @@ clients_json() {
     hyprctl -j clients 2>/dev/null || true
 }
 
+# Quickshell windows share one class. The file manager is the window
+# whose title is the desktop id, so Super+E can move that one here.
+active="${MODERN_RAISE_WORKSPACE:-}"
+if [[ -z "$active" && "${MODERN_RAISE_DRY:-}" != "1" ]]; then
+    active="$(hyprctl -j activeworkspace 2>/dev/null | jq -r '.id // empty' || true)"
+fi
+
 addr="$(clients_json | jq -r \
+    --arg raw "$raw" \
+    --arg active "$active" \
     --argjson n "$(printf '%s\n' "${needles[@]}" | jq -R . | jq -s .)" \
     --argjson exact "$(printf '%s\n' "${exacts[@]}" | jq -R . | jq -s .)" '
-  .[] |
-  . as $w |
-  (($w.class // "") | ascii_downcase) as $cls |
-  (($w.initialClass // "") | ascii_downcase) as $icls |
-  ((($w.class // "") + " " + ($w.initialClass // "") + " " + ($w.title // "") + " " + ($w.initialTitle // ""))
-    | ascii_downcase) as $hay |
-  select(
-    any($exact[]; . == $cls or . == $icls or . == ($cls | split(".") | last) or . == ($icls | split(".") | last))
-    or any($n[]; . as $needle | ($needle | length) >= 3 and ($hay | contains($needle)))
-  ) |
-  $w.address
+  [ .[] |
+    . as $w |
+    (($w.class // "") | ascii_downcase) as $cls |
+    (($w.initialClass // "") | ascii_downcase) as $icls |
+    (($w.title // "") | ascii_downcase) as $title |
+    (($w.initialTitle // "") | ascii_downcase) as $ititle |
+    ((($w.class // "") + " " + ($w.initialClass // "") + " " + ($w.title // "") + " " + ($w.initialTitle // ""))
+      | ascii_downcase) as $hay |
+    select(
+      any($exact[]; . == $cls or . == $icls or . == ($cls | split(".") | last) or . == ($icls | split(".") | last))
+      or ($title == $raw or $ititle == $raw)
+      or any($n[]; . as $needle | ($needle | length) >= 3 and ($hay | contains($needle)))
+    ) | $w
+  ] |
+  (map(select(
+    ($active | length) > 0 and
+    ((.workspace.id // .workspace // "") | tostring) == $active
+  )) | .[0].address // "") as $stay |
+  if $stay != "" then $stay else (.[0].address // "") end
 ' 2>/dev/null | head -n1)"
 
 if [[ -z "$addr" ]]; then

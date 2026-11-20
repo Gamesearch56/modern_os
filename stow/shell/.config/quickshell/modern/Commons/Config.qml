@@ -170,7 +170,10 @@ Singleton {
                     property string calendar: "proton-calendar.desktop"
                     property string mail: "proton-mail.desktop"
                     property string communication: "whatsapp.desktop"
-                    property string fileManager: "org.gnome.Nautilus.desktop"
+                    property string fileManager: "modern.files.desktop"
+                    // These three match install/manifests/default-apps.json.
+                    // test-default-apps.sh rejects drift. Packages and launch
+                    // overrides live in that manifest, not here.
                     property string videoPlayer: "mpv.desktop"
                     property string imageViewer: "imv.desktop"
                     property string textEditor: "org.gnome.gedit.desktop"
@@ -252,6 +255,19 @@ Singleton {
             property JsonObject bugReport: JsonObject {
                 property string repo: "Gamesearch56/modern-reports"
                 property bool screenshotsDefault: true
+            }
+
+            property JsonObject files: JsonObject {
+                property string sortKey: "name"
+                property bool sortDesc: true
+                property bool foldersFirst: true
+                property string view: "grid"
+                property bool showHidden: false
+                property bool showSize: true
+                property bool showCreated: true
+                property bool showModified: true
+                property bool showType: true
+                property var favorites: []
             }
 
             property JsonObject backup: JsonObject {
@@ -338,4 +354,5 @@ Singleton {
     readonly property alias backup: adapter.backup
     readonly property alias keybinds: adapter.keybinds
     readonly property alias bugReport: adapter.bugReport
+    readonly property alias files: adapter.files
 }

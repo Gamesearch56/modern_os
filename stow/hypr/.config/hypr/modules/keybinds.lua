@@ -102,7 +102,7 @@ local bindings = {
     terminal = have_launch and app_cmd("terminal", "kitty.desktop") or emergency_kitty,
     browser = app_cmd("browser", "vivaldi-stable.desktop"),
     browserIncognito = browser_incognito(),
-    fileManager = app_cmd("fileManager", "org.gnome.Nautilus.desktop"),
+    fileManager = app_cmd("fileManager", "modern.files.desktop"),
     -- Already-open Spotify lives on another monitor. spotify-launcher
     -- focuses that window in place, so Super+R looks dead here.
     spotify = have_launch and hl.dsp.exec_cmd(modern_launch .. " --on-active spotify-launcher") or hl.dsp.exec_cmd("spotify-launcher"),

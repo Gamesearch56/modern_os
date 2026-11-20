@@ -92,6 +92,8 @@ source "$REPO_ROOT/install/lib/log.sh"
 source "$REPO_ROOT/install/lib/ui.sh"
 # shellcheck source=lib/pkg.sh
 source "$REPO_ROOT/install/lib/pkg.sh"
+# shellcheck source=lib/default-apps.sh
+source "$REPO_ROOT/install/lib/default-apps.sh"
 # shellcheck source=lib/stow.sh
 source "$REPO_ROOT/install/lib/stow.sh"
 # shellcheck source=lib/preflight.sh
@@ -210,6 +212,10 @@ fi
 if [ "$EXTRA" = "proton" ]; then
     mapfile -t -O "${#aur_pkgs[@]}" aur_pkgs < <(parse_manifest "$MANIFEST_DIR/90-accounts.aur.txt")
 fi
+if ! default_app_packages >/dev/null; then
+    die "default-apps.json could not be read"
+fi
+mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(default_app_packages)
 
 install_native "${native_pkgs[@]}"
 install_aur "${aur_pkgs[@]}"
@@ -226,7 +232,11 @@ fi
 # ---------------------------------------------------------------------------
 log_phase "Phase 4/5: stow dotfiles -> $TARGET"
 
-stow_packages=(hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch mpv imv pipewire)
+stow_packages=(hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch pipewire)
+if ! default_app_stow >/dev/null; then
+    die "default-apps.json could not be read"
+fi
+mapfile -t -O "${#stow_packages[@]}" stow_packages < <(default_app_stow)
 for pkg in "${stow_packages[@]}"; do
     stow_package "$pkg" "$TARGET"
 done
@@ -358,7 +368,8 @@ else
 fi
 fi
 
-# Nautilus / xdg-open follow Settings → Applications video/image/text/folder defaults.
+# xdg-open follows Settings → Applications. nautilus-prefs only applies
+# when Nautilus schemas are present, so a later install is styled.
 run "$REPO_ROOT/scripts/mime-defaults.sh" \
     --config "$TARGET/.config/modern/config.json" \
     --mimeapps "$TARGET/.config/mimeapps.list" \

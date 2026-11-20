@@ -52,4 +52,5 @@ MSwatchStrip 1.0 MSwatchStrip.qml
 MFrost 1.0 MFrost.qml
 MPanelSurface 1.0 MPanelSurface.qml
 MTitleDrag 1.0 MTitleDrag.qml
+MTooltip 1.0 MTooltip.qml
 MOverlayBar 1.0 MOverlayBar.qml

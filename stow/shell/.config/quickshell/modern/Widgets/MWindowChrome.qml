@@ -16,12 +16,23 @@ Item {
     property string actionIcon: ""
     property real titleColumnWidth: 0
     property bool busy: false
+    // The files window puts its toolbar in the header and lets it use the
+    // free space. Other windows keep a trailing chip beside the close button.
+    property bool trailingFill: false
     property alias trailing: trailingSlot.data
 
     readonly property bool _hasSubtitle: root.subtitleKey.length > 0 || root.subtitleValue.length > 0
 
     signal closed()
     signal actionClicked()
+
+    function _fillTrailing() {
+        if (!root.trailingFill || trailingSlot.children.length !== 1)
+            return;
+        const child = trailingSlot.children[0];
+        if (child.anchors.fill !== trailingSlot)
+            child.anchors.fill = trailingSlot;
+    }
 
     implicitHeight: row.implicitHeight
     implicitWidth: row.implicitWidth
@@ -38,15 +49,16 @@ Item {
         spacing: Tokens.spacing.md
 
     ColumnLayout {
+        id: titleCol
         Layout.preferredWidth: root.titleColumnWidth > 0 ? root.titleColumnWidth : -1
-        Layout.fillWidth: root.titleColumnWidth <= 0
+        Layout.fillWidth: root.titleColumnWidth <= 0 && !root.trailingFill
         spacing: Tokens.spacing.xs
 
         MText {
             key: root.titleKey
             value: root.titleValue
             styleName: "headlineSmall"
-            Layout.fillWidth: true
+            Layout.fillWidth: !root.trailingFill
         }
 
         MText {
@@ -60,7 +72,8 @@ Item {
     }
 
     Item {
-        Layout.fillWidth: true
+        visible: !root.trailingFill
+        Layout.fillWidth: !root.trailingFill
     }
 
     Item {
@@ -68,7 +81,10 @@ Item {
         visible: children.length > 0
         implicitWidth: children.length > 0 ? children[0].implicitWidth : 0
         implicitHeight: children.length > 0 ? children[0].implicitHeight : 0
+        Layout.fillWidth: root.trailingFill
         Layout.alignment: Qt.AlignVCenter
+        onChildrenChanged: root._fillTrailing()
+        onWidthChanged: root._fillTrailing()
     }
 
     Item {
@@ -106,6 +122,7 @@ Item {
         visible: root.actionKey.length > 0 || root.actionIcon.length > 0
         iconName: root.actionIcon.length > 0 ? root.actionIcon : "list-add"
         key: root.actionKey
+        tip: true
         onClicked: root.actionClicked()
     }
 
@@ -115,5 +132,15 @@ Item {
         key: "bar.close"
         onClicked: root.closed()
     }
+    }
+
+    // The title sits above the row so a left-button hold always moves
+    // the window, including the padding around the word.
+    MTitleDrag {
+        x: row.x + titleCol.x
+        y: row.y + titleCol.y
+        width: titleCol.width
+        height: row.height
+        z: 2
     }
 }

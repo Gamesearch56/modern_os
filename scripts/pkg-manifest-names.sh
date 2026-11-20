@@ -8,6 +8,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/install/manifests"
+# shellcheck source=../install/lib/default-apps.sh
+source "$ROOT/install/lib/default-apps.sh"
 
 files=()
 if [ "${1:-}" = "--core" ]; then
@@ -21,7 +23,12 @@ else
 fi
 
 names="$(
-    { [ ${#files[@]} -gt 0 ] && sed -E 's/#.*$//' "${files[@]}"; } \
+    {
+        if [ ${#files[@]} -gt 0 ]; then
+            sed -E 's/#.*$//' "${files[@]}"
+        fi
+        default_app_packages
+    } \
         | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/\r$//' \
         | grep -E '^[a-z0-9][a-z0-9.+_-]*$' \
         | sort -u || true

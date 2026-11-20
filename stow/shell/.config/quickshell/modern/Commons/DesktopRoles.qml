@@ -98,7 +98,7 @@ Singleton {
         if (role === "communication")
             return ["discord", "telegram", "signal", "whatsapp", "element", "slack", "zoom", "teams"];
         if (role === "fileManager")
-            return ["dolphin", "nautilus", "thunar", "nemo", "pcmanfm", "krusader", "caja"];
+            return ["modern.files", "dolphin", "nautilus", "thunar", "nemo", "pcmanfm", "krusader", "caja"];
         if (role === "videoPlayer")
             return ["mpv", "vlc", "celluloid", "haruna", "smplayer", "totem"];
         if (role === "imageViewer")

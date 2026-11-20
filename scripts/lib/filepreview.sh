@@ -24,6 +24,24 @@ filepreview_class_is_nautilus() {
     esac
 }
 
+# The file manager toggles its own preview. Hiding here races the same
+# Space press: the window opens, then this script sees it and closes it.
+filepreview_class_is_files() {
+    local class="$1"
+    local title="$2"
+    case "$class" in
+        modern.files | modern.files-*)
+            return 0
+            ;;
+    esac
+    case "$title" in
+        modern.files)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
 filepreview_class_is_preview() {
     local class="$1"
     local title="$2"
@@ -51,6 +69,10 @@ filepreview_run() {
     title="$(printf '%s' "$json" | jq -r '.title // empty' 2>/dev/null || true)"
 
     if filepreview_class_is_nautilus "$class"; then
+        return 0
+    fi
+
+    if filepreview_class_is_files "$class" "$title"; then
         return 0
     fi
 

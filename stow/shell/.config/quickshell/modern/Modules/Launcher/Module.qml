@@ -40,8 +40,6 @@ Scope {
             if (root._matchAction(needle, "store", I18n.t("store.title"))
                 || root._matchAction(needle, "app store", I18n.t("bar.store")))
                 actions.push({ id: "shell:store", name: I18n.t("store.title"), genericName: "", icon: "plasmadiscover", kind: "store" });
-            if (root._matchAction(needle, "power", I18n.t("powerMenu.title")))
-                actions.push({ id: "shell:power", name: I18n.t("powerMenu.title"), genericName: "", icon: "system-shutdown", kind: "power" });
         }
         const apps = Launcher.query(text);
         const out = [];
@@ -72,11 +70,6 @@ Scope {
         }
         if (item.kind === "store") {
             Store.show();
-            Launcher.hide();
-            return;
-        }
-        if (item.kind === "power") {
-            PowerMenu.toggle();
             Launcher.hide();
             return;
         }
