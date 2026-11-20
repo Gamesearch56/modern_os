@@ -15,6 +15,9 @@ Item {
     property int elevation: 2
     property real gap: Tokens.spacing.xs
     property bool autoPlace: true
+    // Context menus have no button of their own. A click anywhere else
+    // closes them, including on the window that opened the menu.
+    property bool dismissAnywhere: false
     property bool opensAbove: false
     property real chromeOpacity: Chrome.washOpacity
     property bool reparentToHost: true
@@ -149,7 +152,15 @@ Item {
         visible: enabled
         z: 190
         onPressed: (mouse) => {
-            if (root._inside(root, mouse.x, mouse.y) || root._inside(root._field, mouse.x, mouse.y)) {
+            if (mouse.button !== Qt.LeftButton) {
+                mouse.accepted = false;
+                return;
+            }
+            if (root._inside(root, mouse.x, mouse.y)) {
+                mouse.accepted = false;
+                return;
+            }
+            if (!root.dismissAnywhere && root._inside(root._field, mouse.x, mouse.y)) {
                 mouse.accepted = false;
                 return;
             }
@@ -171,19 +182,8 @@ Item {
         anchors.fill: parent
         level: 0
         color: "transparent"
-        borderWidth: popupHover.hovered ? Tokens.stroke.focus : Tokens.stroke.hairline
-        borderColor: popupHover.hovered ? Colors.color.primary : Colors.color.outlineVariant
+        borderWidth: Tokens.stroke.hairline
+        borderColor: Colors.color.outlineVariant
         z: 1
-
-        HoverHandler {
-            id: popupHover
-        }
-
-        Behavior on borderColor {
-            ColorAnimation {
-                duration: Motion.shortMs
-                easing.bezierCurve: Motion.easingStandard
-            }
-        }
     }
 }

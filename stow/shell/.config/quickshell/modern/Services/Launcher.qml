@@ -73,14 +73,19 @@ Singleton {
                 continue;
             const name = (e.name || "").toLowerCase();
             const generic = (e.genericName || "").toLowerCase();
-            if (needle.length === 0 || name.indexOf(needle) !== -1 || generic.indexOf(needle) !== -1 || root._subseq(name, needle)) {
+            const comment = (e.comment || "").toLowerCase();
+            if (needle.length === 0 || name.indexOf(needle) !== -1 || generic.indexOf(needle) !== -1
+                    || comment.indexOf(needle) !== -1
+                    || root._keywordHit(e.keywords, needle) || root._subseq(name, needle)) {
                 const rank = (Config.launcher.frecencyEnabled ?? true)
                     ? root.score(e.id || e.name) : 0;
+                const own = root._filesApp(e);
                 out.push({
                     id: e.id || e.name,
-                    name: e.name,
+                    name: own ? I18n.t("files.launcherName") : e.name,
                     genericName: e.genericName,
-                    icon: Apps.resolveIcon(e.icon || e.startupClass || e.id),
+                    icon: own ? "modern-files-symbolic" : Apps.resolveIcon(e.icon || e.startupClass || e.id),
+                    tint: own,
                     exec: e,
                     score: rank
                 });
@@ -107,6 +112,21 @@ Singleton {
         } catch (e) {
             Logger.error("Launcher", String(e));
         }
+    }
+
+    function _filesApp(e: var): bool {
+        const id = String((e && e.id) || "").replace(/\.desktop$/i, "");
+        return id === "modern.files";
+    }
+
+    function _keywordHit(words: var, needle: string): bool {
+        const list = words || [];
+        for (let i = 0; i < list.length; i++) {
+            const word = String(list[i] || "").toLowerCase();
+            if (word.length && word.indexOf(needle) !== -1)
+                return true;
+        }
+        return false;
     }
 
     function _subseq(hay: string, needle: string): bool {

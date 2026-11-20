@@ -26,8 +26,8 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + RETURN` | Emergency terminal | `/usr/bin/kitty` (always bound; not in `config.json`) |
 | `SUPER + B` | Browser | Configured `apps.defaults.browser` via `modern-launch` |
 | `SUPER + SHIFT + B` | Browser private window | Same desktop id, with `--incognito` or `--private-window` |
-| `SUPER + E` | File manager | Configured `apps.defaults.fileManager` via `modern-launch` |
-| `SPACE` | Nautilus: Sushi overlay (native; bind no-ops) | `modern filepreview` |
+| `SUPER + E` | File manager | ModernOS File Manager (`modern.files`) via `apps.defaults.fileManager` |
+| `SPACE` | File preview. If Nautilus is installed, its own preview owns Space there | `modern filepreview` |
 | `SUPER + R` | Spotify | `modern-launch --on-active spotify-launcher` (moves an open window here) |
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |

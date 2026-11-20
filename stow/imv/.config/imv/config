@@ -1,3 +1,6 @@
+# Stow config for the current external image viewer only.
+# install/manifests/default-apps.json imageViewer.stow names this package.
+# Delete this tree with that entry.
 [binds]
 # Mausrad
 WheelUp = zoom 0.1

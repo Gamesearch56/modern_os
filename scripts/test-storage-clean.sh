@@ -25,6 +25,7 @@ PKG_FAKE="$TMP/pkg"
 mkdir -p \
     "$HOME_FAKE/.cache/thumbnails/large" \
     "$HOME_FAKE/.cache/modern/wallpaper-thumbs" \
+    "$HOME_FAKE/.cache/modern/folder-sizes/ab" \
     "$HOME_FAKE/.cache/modern/phylax-src" \
     "$HOME_FAKE/.cache/fontconfig" \
     "$HOME_FAKE/.cache/radv_builtin_shaders" \
@@ -34,6 +35,7 @@ mkdir -p \
     "$PKG_FAKE"
 printf 'thumb' >"$HOME_FAKE/.cache/thumbnails/large/a.png"
 printf 'wall' >"$HOME_FAKE/.cache/modern/wallpaper-thumbs/a.jpg"
+printf 'sizes' >"$HOME_FAKE/.cache/modern/folder-sizes/ab/one.json"
 printf 'src' >"$HOME_FAKE/.cache/modern/phylax-src/keep.c"
 printf 'font' >"$HOME_FAKE/.cache/fontconfig/x"
 printf 'radv' >"$HOME_FAKE/.cache/radv_builtin_shaders/a"
@@ -56,6 +58,7 @@ out="$("$SCRIPT")"
 if printf '%s\n' "$out" | grep -Eq '^done [0-9]+$' \
     && [ ! -e "$HOME_FAKE/.cache/thumbnails/large/a.png" ] \
     && [ ! -e "$HOME_FAKE/.cache/modern/wallpaper-thumbs/a.jpg" ] \
+    && [ ! -e "$HOME_FAKE/.cache/modern/folder-sizes/ab/one.json" ] \
     && [ ! -e "$HOME_FAKE/.cache/radv_builtin_shaders/a" ] \
     && [ ! -e "$HOME_FAKE/.cache/qtshadercache-test/a" ] \
     && [ ! -e "$HOME_FAKE/.cache/fontconfig/x" ] \

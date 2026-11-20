@@ -11,6 +11,8 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=../install/lib/default-apps.sh
+source "$REPO_ROOT/install/lib/default-apps.sh"
 OUT_DIR="$REPO_ROOT/install/baseline"
 MODE="${1:-snapshot}"
 
@@ -48,7 +50,12 @@ collect() {
 
 diff_against_manifests() {
     manifests_dir="$REPO_ROOT/install/manifests"
-    all_manifest_pkgs=$(cat "$manifests_dir"/*.txt 2>/dev/null | grep -vE '^\s*(#|$)' | awk '{print $1}' | sort -u)
+    all_manifest_pkgs=$(
+        {
+            cat "$manifests_dir"/*.txt 2>/dev/null | grep -vE '^\s*(#|$)' | awk '{print $1}' || true
+            default_app_packages
+        } | sort -u
+    )
     current_pkgs=$(pacman -Qqe | sort -u)
 
     echo "== In install/manifests/ but not currently installed =="

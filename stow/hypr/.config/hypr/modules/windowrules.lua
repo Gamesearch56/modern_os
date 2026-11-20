@@ -146,9 +146,12 @@ apply({
     suppress_event = "fullscreen maximize",
 })
 
--- imv fills its tile. On a virtual GPU the acrylic pass replaces that
--- tile with black, so the picture never shows. A real GPU is unchanged
--- because the viewer background is already opaque.
+-- Current external image viewer only. The role list names this rule
+-- (install/manifests/default-apps.json imageViewer.windowRule). The
+-- viewer fills its tile. On a virtual GPU the acrylic pass replaces
+-- that tile with black, so the picture never shows. A real GPU is
+-- unchanged because the viewer background is already opaque. Delete
+-- this rule with that manifest entry.
 apply({
     name = "imv-no-blur",
     match = { class = "imv" },
@@ -213,13 +216,22 @@ apply({
     opaque = true,
 })
 
--- Spacebar Quick Look video leftover class (mpv). Image/text use a Quickshell overlay.
+-- Spacebar Quick Look. Video is mpv (class). Image is a plain window
+-- with the same title, so it floats and dims the same way.
 apply({
     name = "modern-quicklook",
     match = { class = "modern.quicklook" },
     float = true,
     center = true,
     dim_around = true,
+})
+apply({
+    name = "modern-quicklook-title",
+    match = { title = "modern.quicklook" },
+    float = true,
+    center = true,
+    dim_around = true,
+    opaque = true,
 })
 
 -- GNOME Sushi (Nautilus Space). Toplevel on Hyprland unless floated;
@@ -241,7 +253,7 @@ for _, w in ipairs(overlays) do
         match = { title = w.title },
         float = true,
         center = true,
-        dim_around = true,
+        dim_around = w.dim ~= false,
         opaque = w.opaque == true,
     }
     if w.size then

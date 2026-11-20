@@ -20,6 +20,8 @@ Item {
     property bool acceptWheel: false
     property bool escapeClicks: root.close
     property bool highlighted: false
+    property bool tip: false
+    property color glyphColor: Colors.color.onSurface
 
     signal clicked()
     signal middleClicked()
@@ -54,13 +56,26 @@ Item {
 
     property bool _hover: false
     property bool _suppressHover: false
+    property bool _tipHold: false
+    property bool _tipReady: false
+
+    function _armTip() {
+        const hot = tipHover.hovered && root.tip && root._tipHold && root.key.length > 0 && !ma.pressed;
+        if (!hot) {
+            tipDelay.stop();
+            root._tipReady = false;
+            return;
+        }
+        if (!tipDelay.running && !root._tipReady)
+            tipDelay.restart();
+    }
 
     readonly property color _iconColor: {
         if (root.close)
             return Colors.color.error;
         if (root.checked)
             return Colors.color.onPrimaryContainer;
-        return Colors.color.onSurface;
+        return root.glyphColor;
     }
 
     readonly property real _layer: Chrome.stateLayer(root._hover && !root.checked && !root.busy, ma.pressed && !root.checked && !root.busy)
@@ -126,7 +141,11 @@ Item {
             root._hover = false;
             root._suppressHover = false;
         }
-        onPressed: ring.markPointer()
+        onPressed: {
+            ring.markPointer();
+            root._tipHold = false;
+            root._armTip();
+        }
         onClicked: (mouse) => {
             if (mouse.button === Qt.MiddleButton)
                 root.middleClicked();
@@ -147,6 +166,28 @@ Item {
         enabled: root.enabled && !root.busy && root.pointer
         cursorShape: Qt.PointingHandCursor
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+    }
+
+    HoverHandler {
+        id: tipHover
+        enabled: root.tip && root.key.length > 0
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        onHoveredChanged: {
+            if (hovered)
+                root._tipHold = true;
+            root._armTip();
+        }
+    }
+
+    Timer {
+        id: tipDelay
+        interval: Motion.mediumMs
+        onTriggered: root._tipReady = true
+    }
+
+    MTooltip {
+        open: root._tipReady && tipHover.hovered && root._tipHold && !ma.pressed
+        key: root.key
     }
 
     onBusyChanged: {

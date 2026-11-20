@@ -80,6 +80,8 @@ Singleton {
         readonly property real hover: 0.08
         readonly property real press: 0.12
         readonly property real focus: 0.12
+        // A cut file stays visible, but clearly waiting to move.
+        readonly property real cut: 0.45
     }
 
     // Hairline rest stroke vs MD3 2dp focus/hover indicator.
@@ -89,14 +91,29 @@ Singleton {
     }
 
     readonly property QtObject window: QtObject {
+        id: win
         readonly property real settingsWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real settingsHeight: root.spacing.xxl * 22 + root.spacing.lg
+        readonly property real filesCell: root.spacing.xxl * 5
+        // Wide enough for a full place name beside an icon, and for a
+        // volume name beside the eject button.
+        readonly property real filesPlaces: root.spacing.xxl * 9
+        // Shell margins, the places column, the gap beside it, six
+        // cells, and the gaps between those cells. No leftover, so the
+        // last column meets the edge of the file area.
+        readonly property real filesWidth: win.filesPlaces
+                + root.spacing.md * 3
+                + win.filesCell * 6
+                + root.spacing.sm * 5
+        readonly property real filesHeight: root.spacing.xxl * 22
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real reportWidth: root.spacing.xxl * 24 + root.spacing.lg
         readonly property real reportHeight: root.spacing.xxl * 24 + root.spacing.lg + root.spacing.xs
         readonly property real overlayWidth: root.spacing.xxl * 24
         readonly property real overlayHeight: root.spacing.xxl * 20
+        // Same frame the video preview uses for autofit.
+        readonly property real quicklookFit: 0.8
         readonly property real chatWidth: root.spacing.xxl * 14
         readonly property real chatHeight: root.spacing.xxl * 18
         readonly property real providerWidth: 1200

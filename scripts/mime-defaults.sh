@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
 # Write XDG default apps for video/image/text/folders/mailto into mimeapps.list so
-# Nautilus/Dolphin and xdg-open follow Settings → Applications. Settings
-# itself never touches this file; ConfigWrite runs this after
-# apps.defaults changes. Folders are set explicitly: kitty-open.desktop
-# also claims inode/directory, which is why Steam "Browse files" opened
-# a terminal. Mail pins x-scheme-handler/mailto to apps.defaults.mail.
+# xdg-open follows Settings → Applications. Settings itself never touches
+# this file; ConfigWrite runs this after apps.defaults changes. Folders
+# are pinned to the file manager only: a second handler must not open
+# them, and kitty-open.desktop also claims inode/directory. Mail pins
+# x-scheme-handler/mailto to apps.defaults.mail.
 #
 # Usage:
 #   mime-defaults.sh
-#   mime-defaults.sh --video mpv.desktop --image imv.desktop --text org.gnome.gedit.desktop --files org.gnome.Nautilus.desktop --mail proton-mail.desktop
+#   mime-defaults.sh --video DESKTOP --image DESKTOP --text DESKTOP --files DESKTOP --mail DESKTOP
 #
 # Desktop ids default to config.json apps.defaults.videoPlayer /
-# imageViewer / textEditor / fileManager / mail. Video/image MIME types come
-# from each app's .desktop MimeType= line; text also pins TEXT_TYPES.
+# imageViewer / textEditor / fileManager / mail. An empty text editor,
+# image viewer, or video player uses install/manifests/default-apps.json.
+# Video/image MIME types come from each app's .desktop MimeType= line;
+# text also pins TEXT_TYPES.
 set -euo pipefail
+
+_mime_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=../install/lib/default-apps.sh
+source "$_mime_root/install/lib/default-apps.sh"
+unset _mime_root
 
 CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
 MIMEAPPS="${XDG_CONFIG_HOME:-$HOME/.config}/mimeapps.list"
@@ -84,10 +91,10 @@ mime_types() {
 [ -n "$TEXT_ID" ] || TEXT_ID="$(from_config textEditor)"
 [ -n "$FILES_ID" ] || FILES_ID="$(from_config fileManager)"
 [ -n "$MAIL_ID" ] || MAIL_ID="$(from_config mail)"
-[ -n "$VIDEO_ID" ] || VIDEO_ID="mpv.desktop"
-[ -n "$IMAGE_ID" ] || IMAGE_ID="imv.desktop"
-[ -n "$TEXT_ID" ] || TEXT_ID="org.gnome.gedit.desktop"
-[ -n "$FILES_ID" ] || FILES_ID="org.gnome.Nautilus.desktop"
+[ -n "$VIDEO_ID" ] || VIDEO_ID="$(default_app_desktop videoPlayer || true)"
+[ -n "$IMAGE_ID" ] || IMAGE_ID="$(default_app_desktop imageViewer || true)"
+[ -n "$TEXT_ID" ] || TEXT_ID="$(default_app_desktop textEditor || true)"
+[ -n "$FILES_ID" ] || FILES_ID="modern.files.desktop"
 VIDEO_ID="$(desktop_id "$VIDEO_ID")"
 IMAGE_ID="$(desktop_id "$IMAGE_ID")"
 TEXT_ID="$(desktop_id "$TEXT_ID")"
@@ -226,12 +233,20 @@ def upsert_default(lines, mime, desktop):
         out.append(f"{mime}={desktop}")
     return out
 
+# A folder has one handler. Leaving another file manager in the list
+# makes some openers start that one when the first desktop file fails.
+FOLDER_MIMES = {"inode/directory", "inode/mount-point"}
+
 def upsert_added(lines, mime, desktop):
     key = mime + "="
     out, found = [], False
     for line in lines:
         if not line.startswith(key):
             out.append(line)
+            continue
+        if mime in FOLDER_MIMES:
+            out.append(f"{mime}={desktop};")
+            found = True
             continue
         rest = line[len(key):]
         ids = [x for x in rest.split(";") if x]

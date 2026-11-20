@@ -76,6 +76,17 @@ else
     err "session-raise org.gnome.Nautilus should be 0xfiles, got ${got:-empty}"
 fi
 
+qs_fix="$(mktemp)"
+printf '%s\n' '[{"class":"org.quickshell","title":"modern.settings","workspace":{"id":2},"address":"0xsettings"},{"class":"org.quickshell","title":"modern.files","workspace":{"id":2},"address":"0xaway"},{"class":"org.quickshell","title":"modern.files","workspace":{"id":4},"address":"0xhere"}]' >"$qs_fix"
+got="$(MODERN_RAISE_DRY=1 MODERN_RAISE_WORKSPACE=4 MODERN_RAISE_CLIENTS="$qs_fix" "$RAISE" modern.files || true)"
+away="$(MODERN_RAISE_DRY=1 MODERN_RAISE_WORKSPACE=9 MODERN_RAISE_CLIENTS="$qs_fix" "$RAISE" modern.files || true)"
+rm -f "$qs_fix"
+if [[ "$got" == "0xhere" && "$away" == "0xaway" ]]; then
+    ok "file manager raise uses the Quickshell title and prefers this workspace"
+else
+    err "session-raise modern.files should prefer this workspace, got ${got:-empty} / ${away:-empty}"
+fi
+
 if grep -Fq -- '--on-active spotify-launcher' "$ROOT/stow/hypr/.config/hypr/modules/keybinds.lua"; then
     ok "Super+R brings an existing Spotify window to this monitor"
 else
@@ -344,6 +355,9 @@ activate="$(awk '/function activate\(item\)/,/^    }$/' \
 invoke_at="$(grep -n 'invokeDefault(live)' <<<"$activate" | head -n1 | cut -d: -f1)"
 raise_at="$(grep -n 'Hypr.raiseApp' <<<"$activate" | head -n1 | cut -d: -f1)"
 if grep -Fq 'Apps.openInFileManager(file)' <<<"$activate" \
+    && grep -Fq '"files", "reveal"' "$ROOT/stow/shell/.config/quickshell/modern/Services/fileManager.js" \
+    && grep -Fq 'org.freedesktop.FileManager1' "$ROOT/scripts/file-manager-bus.py" \
+    && grep -Fq 'function reveal' "$ROOT/stow/shell/.config/quickshell/modern/Services/Files.qml" \
     && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq '!(wsId > 0)' "$HYPR_WIN" \
     && [ -n "$invoke_at" ] && [ -n "$raise_at" ] && [ "$invoke_at" -lt "$raise_at" ]; then

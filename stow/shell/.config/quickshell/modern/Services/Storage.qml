@@ -12,6 +12,9 @@ Singleton {
 
     property bool watching: false
     property string ejecting: ""
+    property string confirmName: ""
+    property string confirmLabel: ""
+    property string confirmWhere: ""
     property var internal: []
     property var external: []
     property var _speeds: ({})
@@ -90,8 +93,33 @@ Singleton {
         return I18n.t("units.b", { n: Math.round(v) });
     }
 
-    function eject(name: string) {
+    function _diskTitle(name: string): string {
+        const list = (root.external || []).concat(root.internal || []);
+        for (let i = 0; i < list.length; i++) {
+            if (String(list[i].name || "") === name)
+                return String(list[i].title || list[i].name || name);
+        }
+        return name;
+    }
+
+    function askEject(name: string, label: string, where: string) {
         const n = String(name || "").replace(/[^A-Za-z0-9]/g, "");
+        if (!n || root.ejecting.length || root.confirmName.length)
+            return;
+        root.confirmName = n;
+        root.confirmLabel = String(label || "").trim() || root._diskTitle(n);
+        root.confirmWhere = String(where || "");
+    }
+
+    function cancelEject() {
+        root.confirmName = "";
+        root.confirmLabel = "";
+        root.confirmWhere = "";
+    }
+
+    function commitEject() {
+        const n = root.confirmName;
+        root.cancelEject();
         if (!n || root.ejecting.length)
             return;
         root.ejecting = n;

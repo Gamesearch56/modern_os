@@ -9,6 +9,12 @@ lines and `#`-prefixed lines are ignored by `install/lib/pkg.sh`.
   `yay`, never `pacman -S` — see the audit bug this fixes in
   `docs/DECISIONS.md`).
 - `60-flatpak.txt` — flatpak application IDs.
+- `default-apps.json` — text editor, image viewer, and video player.
+  Each role has a desktop id, pacman packages, and optional `exec`,
+  `stow`, and `windowRule` for the current external app. `install.sh`,
+  `pkg-manifest-names.sh`, `files-open.sh`, and `mime-defaults.sh` read
+  this file. `config.default.json` `apps.defaults` repeats the desktop
+  id so Settings can seed `config.json`.
 
 Layers, applied in order by `install.sh --profile <name>`:
 
@@ -17,7 +23,7 @@ Layers, applied in order by `install.sh --profile <name>`:
 | `00-base` | all profiles | kernel/firmware, filesystem tools, shell essentials, `stow`, `yay` bootstrap deps |
 | `00-hw-cpu-*` | auto or `--cpu` | CPU microcode (`amd` / `intel`) |
 | `00-hw-gpu-*` | auto or `--hw` | GPU stack for every profile (RADV, Intel, NVIDIA DKMS) |
-| `10-desktop` | all profiles | Hyprland, Quickshell, portals, audio/network/bluetooth stack, clipboard/screenshot tools, kitty, Nautilus, Vivaldi, gedit, mpv, imv. AUR: `phylax-git` (`10-desktop.aur.txt`) |
+| `10-desktop` | all profiles | Hyprland, Quickshell, portals, audio/network/bluetooth stack, clipboard/screenshot tools, kitty, Vivaldi. The file manager is the shell, not a packaged app. AUR: `phylax-git` (`10-desktop.aur.txt`). Text editor, image viewer, and video player packages are `default-apps.json`, not inlined in this layer. |
 | `20-theming` | all profiles | fonts, matugen, GTK/Qt theming support |
 | `30-apps` | `m0`+ | codecs, Spotify, Steam, GameMode, gamescope, umu-launcher (Battle.net) |
 | `30-hw-gpu-*` | with `30-apps`, auto or `--hw` | Steam's 32-bit Vulkan driver for this GPU (else pacman picks `lib32-vulkan-radeon`) |

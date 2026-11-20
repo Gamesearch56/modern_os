@@ -79,6 +79,8 @@ names as already satisfying the manifest and skips the `-bin` packages.
 Conflict backups live under `$HOME/.local/state/modern/stow-backups`.
 GNU Stow can also restore from that tree. To leave the desktop:
 
+The `stow` names in `install/manifests/default-apps.json` are the current external video player and image viewer. Include them in the unstow list.
+
 ```bash
 cd /path/to/modern_dotfile/stow
 stow -D -t "$HOME" hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch mpv imv

@@ -35,10 +35,17 @@ Scope {
     }
 
     LazyLoader {
+        active: FilePreview.open && (FilePreview.kind === "image" || (FilePreview.kind === "page" && FilePreview.imagePath.length > 0))
+
+        ImageWindow {}
+    }
+
+    LazyLoader {
         active: FilePreview.showOverlay
 
         PanelWindow {
             id: win
+            property bool settle: false
             visible: FilePreview.showOverlay
             screen: root._focusedScreen()
             color: "transparent"
@@ -60,8 +67,9 @@ Scope {
                 id: keyGrab
                 windows: [win]
                 onCleared: {
-                    if (FilePreview.showOverlay)
-                        FilePreview.hide();
+                    if (!win.settle || !FilePreview.showOverlay)
+                        return;
+                    FilePreview.hide();
                 }
             }
 
@@ -72,8 +80,18 @@ Scope {
             }
             Shortcut {
                 sequence: "Space"
+                enabled: win.settle
                 context: Qt.ApplicationShortcut
-                onActivated: FilePreview.hide()
+                onActivated: {
+                    FilePreview.noteSpace();
+                    FilePreview.hide();
+                }
+            }
+
+            Timer {
+                id: settleTimer
+                interval: Motion.shortMs
+                onTriggered: win.settle = true
             }
 
             Component.onCompleted: {
@@ -81,6 +99,7 @@ Scope {
                     if (!FilePreview.showOverlay)
                         return;
                     keyGrab.active = true;
+                    settleTimer.start();
                 });
             }
         }

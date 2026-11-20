@@ -246,6 +246,18 @@
     "repo": "Gamesearch56/modern-reports",
     "screenshotsDefault": true
   },
+  "files": {
+    "sortKey": "name",
+    "sortDesc": true,
+    "foldersFirst": true,
+    "view": "grid",
+    "showHidden": false,
+    "showSize": true,
+    "showCreated": true,
+    "showModified": true,
+    "showType": true,
+    "favorites": []
+  },
   "backup": {
     "snapperEnabled": false,
     "resticEnabled": false,
@@ -317,7 +329,7 @@
       "calendar": "proton-calendar.desktop",
       "mail": "proton-mail.desktop",
       "communication": "whatsapp.desktop",
-      "fileManager": "org.gnome.Nautilus.desktop",
+      "fileManager": "modern.files.desktop",
       "videoPlayer": "mpv.desktop",
       "imageViewer": "imv.desktop",
       "textEditor": "org.gnome.gedit.desktop",

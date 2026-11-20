@@ -53,23 +53,15 @@ wire up the Linguist toolchain, so `qsTr()` calls are silently untranslated
 dead code in this environment. `noctalia-shell` independently converged on
 the same JSON-singleton pattern, which is a useful sanity check.
 
-## 5. Qt-first toolkit; Nautilus as default file manager
+## 5. Qt-first toolkit; ModernOS File Manager is the default
 
-**Decision:** Nautilus is the shipped file manager so GTK/libadwaita
-can follow matugen tokens (`gtk.css` named colors; Papirus-Dark icons).
-Space preview in Nautilus is GNOME Sushi (`org.gnome.NautilusPreviewer`),
-themed from the same `gtk.css` and floated over Nautilus with
-`dim_around` — not the Quickshell Quick Look overlay. Media starts muted
-(`scripts/sushi-previewer.sh` overlays gst/audio viewers). Selecting
-another file replaces the preview (Nautilus `notify::selection`; the
-window is not `stay_focused`). Qt/KDE apps are still first-class:
-matugen writes `kdeglobals` + a Qt color scheme, and
-`QT_QPA_PLATFORM=xcb` stays out of `.bashrc`.
+**Decision:** Super+E, folder opens, and `inode/directory` use the
+ModernOS File Manager (`modern.files`), a Quickshell window. Nautilus
+is not installed. Its GTK rules, window rules, and `nautilus-prefs.sh`
+stay, so installing it later from the app store is styled. Space in
+the ModernOS window uses the Quickshell file preview.
 
-**Rejected:** Shipping Dolphin as a second default, or going GTK-first
-for Qt apps. The old setup needed `QT_QPA_PLATFORM=xcb` to make Qt
-tolerable, which forces every Qt app onto XWayland — incompatible with
-a Wayland-first design.
+**Rejected:** Shipping Nautilus as the default file manager.
 
 ## 6. From-scratch build over forking end-4/dots-hyprland
 

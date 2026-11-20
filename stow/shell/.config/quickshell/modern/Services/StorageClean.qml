@@ -88,6 +88,8 @@ Singleton {
         switch (String(id || "")) {
         case "thumbnails":
             return I18n.t("settings.storage.cleanThumbnails");
+        case "sizes":
+            return I18n.t("settings.storage.cleanSizes");
         case "gpu":
             return I18n.t("settings.storage.cleanGpu");
         case "fonts":

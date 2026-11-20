@@ -101,7 +101,7 @@ MCard {
                         kind: "destructive"
                         key: "settings.storage.eject"
                         enabled: !root._busy
-                        onClicked: Storage.eject(drive.name)
+                        onClicked: Storage.askEject(drive.name, drive.title || "", "settings")
                     }
                 }
                 MText {

@@ -117,7 +117,7 @@ modern_dotfile/
 | `SUPER` + `T` | Terminal (kitty; always bound) |
 | `SUPER` + `Return` | Terminal (always bound) |
 | `SUPER` + `B` | Browser (Vivaldi) |
-| `SUPER` + `E` | File manager (Nautilus) |
+| `SUPER` + `E` | File manager |
 | `SUPER` + `Q` | Close window |
 
 Full list: `SUPER`+`K`, `docs/KEYBINDS.md`, or

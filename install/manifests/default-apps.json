@@ -1,0 +1,19 @@
+{
+  "textEditor": {
+    "desktop": "org.gnome.gedit.desktop",
+    "packages": ["gedit"]
+  },
+  "imageViewer": {
+    "desktop": "imv.desktop",
+    "packages": ["imv"],
+    "match": ["imv", "imv-wayland", "imv-x11"],
+    "exec": ["/usr/bin/imv-x11"],
+    "stow": "imv",
+    "windowRule": "imv-no-blur"
+  },
+  "videoPlayer": {
+    "desktop": "mpv.desktop",
+    "packages": ["mpv"],
+    "stow": "mpv"
+  }
+}

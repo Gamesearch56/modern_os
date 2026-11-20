@@ -128,8 +128,8 @@ Preferred backends are in both:
 - `stow/xdg/.config/xdg-desktop-portal/hyprland-portals.conf` (user)
 - `install/system/portals/hyprland-portals.conf` (staged system copy)
 
-FileChooser is the KDE portal (Qt apps); Nautilus is the shipped
-file manager (`docs/DECISIONS.md` #5).
+FileChooser is the KDE portal (Qt apps). Folders open in the
+ModernOS File Manager (`docs/DECISIONS.md` #5).
 Screenshot and ScreenCast are Hyprland.
 
 ## Troubleshooting a black session / no bar

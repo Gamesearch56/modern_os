@@ -36,7 +36,7 @@ Item {
     default property alias extra: trailing.data
 
     signal clicked()
-    signal rightClicked()
+    signal rightClicked(real x, real y)
     signal activated()
 
     function _onTrailing(px: real, py: real): bool {
@@ -60,6 +60,8 @@ Item {
     readonly property color _iconColor: {
         if (root.destructive)
             return Colors.color.error;
+        if (root.selected && root._nav)
+            return root._fg;
         return Colors.color.primary;
     }
 
@@ -132,7 +134,7 @@ Item {
             if (root._onTrailing(mouse.x, mouse.y))
                 return;
             if (mouse.button === Qt.RightButton)
-                root.rightClicked();
+                root.rightClicked(mouse.x, mouse.y);
             else
                 root.clicked();
         }
