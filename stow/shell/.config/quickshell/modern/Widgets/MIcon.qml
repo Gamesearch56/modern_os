@@ -118,13 +118,10 @@ Item {
         saturation: 0
         maskEnabled: root._symbolicFile
         maskSource: root._file ? fileImg : img
-        // Papirus draws off/muted status glyphs (bluetooth disabled,
-        // volume muted, notifications off, the offline wifi body) at
-        // 35% opacity in a light gray. A threshold above that leaves
-        // them as a pale tint on a light bar. The ramp sits under that
-        // ink so the role color is solid, and stays short so the
-        // antialiased edge does not bloom.
-        maskThresholdMin: 0.12
-        maskSpreadAtMin: 0.12
+        // Dark keeps the wide ramp these status icons were drawn with.
+        // Light sits under Papirus's 35% "off" ink, or that gray stays
+        // brighter than the rest of a light bar.
+        maskThresholdMin: Colors.mode === "light" ? 0.12 : 0.5
+        maskSpreadAtMin: Colors.mode === "light" ? 0.12 : 1
     }
 }
