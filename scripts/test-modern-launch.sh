@@ -87,6 +87,18 @@ else
     err "session-raise modern.files should prefer this workspace, got ${got:-empty} / ${away:-empty}"
 fi
 
+files_mod="$ROOT/stow/shell/.config/quickshell/modern/Modules/Files/Module.qml"
+files_win="$ROOT/stow/hypr/.config/hypr/modules/windows.lua"
+files_tok="$ROOT/stow/shell/.config/quickshell/modern/Commons/Tokens.qml"
+if grep -Fq 'onVisibleChanged: if (!visible) Files.hide()' "$files_mod" \
+    && grep -Fq 'size = { 1172, 704 }' "$files_win" \
+    && grep -Fq 'win.filesCell * 5' "$files_tok" \
+    && grep -Fq 'root.spacing.md * 4' "$files_tok"; then
+    ok "file manager clears open on Super+Q and keeps Hyprland size on the token width"
+else
+    err "modern.files must hide on visible loss and match Tokens.window.filesWidth"
+fi
+
 if grep -Fq -- '--on-active spotify-launcher' "$ROOT/stow/hypr/.config/hypr/modules/keybinds.lua"; then
     ok "Super+R brings an existing Spotify window to this monitor"
 else

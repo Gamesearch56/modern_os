@@ -24,14 +24,22 @@ Singleton {
     property int _folderToken: 0
     property string _videoPath: ""
     property bool _spaceNoted: false
+    property bool _spaceArmed: false
     property bool _fellBack: false
 
-    readonly property bool showOverlay: root.open && (root.kind === "text"
-            || root.kind === "folder" || root.kind === "file")
+    readonly property bool showOverlay: root.open && (root.kind === "text" || root.kind === "folder" || root.kind === "file")
     readonly property string home: Quickshell.env("HOME")
     readonly property string mpvInput: Paths.script("lib/quicklook-mpv-input.conf")
 
     signal previewFailed(string key, string name)
+
+    // Space is non-consuming: the global bind can see the new preview
+    // window on the same key that opened it. Arm only after that press.
+    Timer {
+        id: spaceArm
+        interval: Motion.mediumMs
+        onTriggered: root._spaceArmed = true
+    }
 
     FileView {
         id: textFile
@@ -101,70 +109,49 @@ Singleton {
         }
     }
 
-    function toggle() {
-        if (root.open)
-            root.hide();
+    function toggle() { if (root.open) root.hide(); }
+    function noteSpace() { root._spaceNoted = true; Qt.callLater(() => root._spaceNoted = false); }
+    function spaceHide() {
+        if (!root.open || !root._spaceArmed)
+            return;
+        root.noteSpace();
+        root.hide();
     }
-
-    function noteSpace() {
-        root._spaceNoted = true;
-        Qt.callLater(() => root._spaceNoted = false);
-    }
+    function spaceReady(): bool { return root.open && root._spaceArmed; }
 
     function togglePath(path: string) {
         if (root._spaceNoted || root.open) {
             root._spaceNoted = false;
-            if (root.open)
-                root.hide();
+            if (root.open) root.hide();
             return;
         }
-        if (!path.length) {
-            root._fail("filePreview.noSelection");
-            return;
-        }
+        if (!path.length) { root._fail("filePreview.noSelection"); return; }
         root.openPath(path);
     }
 
     function hide() {
+        spaceArm.stop();
+        root._spaceArmed = false;
         root._openToken += 1;
-        mimeProc.running = false;
-        folderProc.running = false;
-        thumbProc.running = false;
-        root._videoPath = "";
-        videoProc.running = false;
-        root.open = false;
-        root.kind = "";
-        root.mime = "";
-        root.path = "";
-        root.fileName = "";
-        root.textContent = "";
-        root.listing = "";
-        root.imagePath = "";
-        root.imageFailed = false;
+        mimeProc.running = false; folderProc.running = false; thumbProc.running = false;
+        root._videoPath = ""; videoProc.running = false;
+        root.open = false; root.kind = ""; root.mime = ""; root.path = ""; root.fileName = "";
+        root.textContent = ""; root.listing = ""; root.imagePath = ""; root.imageFailed = false;
     }
 
     function openPath(raw: string) {
         const p = root._normalize(raw);
         if (!p) {
-            if (!root.open)
-                root._fail("filePreview.noSelection");
+            if (!root.open) root._fail("filePreview.noSelection");
             return;
         }
         root._openToken += 1;
-        mimeProc.running = false;
-        root._videoPath = "";
-        videoProc.running = false;
-        root.kind = "";
-        root.mime = "";
-        root.textContent = "";
-        root.listing = "";
-        root.imagePath = "";
-        root.imageFailed = false;
-        root._fellBack = false;
-        folderProc.running = false;
-        thumbProc.running = false;
-        root.path = p;
-        root.fileName = p.split("/").pop();
+        mimeProc.running = false; folderProc.running = false; thumbProc.running = false;
+        root._videoPath = ""; videoProc.running = false;
+        root.kind = ""; root.mime = ""; root.textContent = ""; root.listing = "";
+        root.imagePath = ""; root.imageFailed = false; root._fellBack = false;
+        root.path = p; root.fileName = p.split("/").pop();
+        root._spaceArmed = false; spaceArm.restart();
         root.open = true;
         root._mimeToken = root._openToken;
         mimeProc.command = ["file", "--brief", "--mime-type", "--", p];

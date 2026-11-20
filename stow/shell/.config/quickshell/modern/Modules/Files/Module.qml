@@ -22,10 +22,8 @@ Scope {
             color: "transparent"
             implicitWidth: Tokens.window.filesWidth
             implicitHeight: Tokens.window.filesHeight
-            Component.onCompleted: {
-                if (implicitWidth > 0)
-                    width = implicitWidth;
-            }
+            // Super+Q kills the toplevel; clear open so Super+E recreates it.
+            onVisibleChanged: if (!visible) Files.hide()
 
             MWindowShell {
                 anchors.fill: parent
@@ -136,16 +134,17 @@ Scope {
                 rows: Files.view === "grid" ? fileGrid.rows : fileList.rows
                 columns: Files.view === "grid" ? fileGrid.columns : 1; view: Files.view === "grid" ? fileGrid : fileList
             }
-            MouseArea {
+            // Press, not tap: a tap grab can swallow the next side-button clicks.
+            // Do not use a full-window MouseArea — it forces the arrow cursor.
+            TapHandler {
                 parent: win.contentItem
-                anchors.fill: parent
-                z: 80
-                acceptedButtons: Qt.BackButton | Qt.ForwardButton
-                // A tap gesture stays grabbed after a fast side-button click and then ignores the next ones.
-                onPressed: (mouse) => {
-                    if (!mod._mouseNav()) return;
-                    if (mouse.button === Qt.BackButton) Files.back(); else Files.forward();
-                }
+                acceptedButtons: Qt.BackButton
+                onPressedChanged: if (pressed && mod._mouseNav()) Files.back()
+            }
+            TapHandler {
+                parent: win.contentItem
+                acceptedButtons: Qt.ForwardButton
+                onPressedChanged: if (pressed && mod._mouseNav()) Files.forward()
             }
             ContextMenu {}
             Properties {}

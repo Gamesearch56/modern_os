@@ -105,7 +105,7 @@ Flickable {
                     MIconButton {
                         visible: diskWrap.removable
                         iconName: "media-eject"
-                        key: "files.places.eject"
+                        key: "files.places.eject"; tip: true; tipEdge: "right"
                         size: Tokens.spacing.xl
                         iconSize: Tokens.icon.sm
                         // The active row is a primary pill. A primary wash on
