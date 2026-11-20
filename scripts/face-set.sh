@@ -7,6 +7,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 [ -n "${HOME:-}" ] || exit 2
 
+# The shell asks which portrait is installed. Printing it avoids treating
+# a deleted file as the current one.
+if [ "${1:-}" = "--which" ]; then
+    if [ -f "$HOME/.face" ]; then
+        printf 'have %s\n' "$HOME/.face"
+    elif [ -f "$HOME/.face.icon" ]; then
+        printf 'have %s\n' "$HOME/.face.icon"
+    else
+        printf 'none\n'
+    fi
+    exit 0
+fi
+
 sync_faces() {
     if [ -f "$SCRIPT_DIR/session-users-sync.sh" ]; then
         bash "$SCRIPT_DIR/session-users-sync.sh" || true

@@ -931,6 +931,7 @@
       "faceHover": "Change picture",
       "facePick": "Choose from files",
       "faceSave": "Save picture",
+      "faceSaved": "Picture saved",
       "faceRotateLeft": "Rotate left",
       "faceRotateRight": "Rotate right",
       "faceResize": "Size",

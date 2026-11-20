@@ -33,7 +33,8 @@ else
     ok "a text file is not installed as the picture"
 fi
 
-if "$FACE" "$TMP/pic.png" >"$TMP/out" && cmp -s "$TMP/pic.png" "$HOME/.face"; then
+if "$FACE" "$TMP/pic.png" >"$TMP/out" && cmp -s "$TMP/pic.png" "$HOME/.face" \
+    && [ "$("$FACE" --which)" = "have $HOME/.face" ]; then
     ok "a picture is installed as the account face"
 else
     err "the picture was not installed"
@@ -56,7 +57,8 @@ else
     ok "edit skipped without ImageMagick"
 fi
 
-if "$FACE" clear && [ ! -e "$HOME/.face" ] && [ ! -e "$HOME/.face.icon" ]; then
+if "$FACE" clear && [ ! -e "$HOME/.face" ] && [ ! -e "$HOME/.face.icon" ] \
+    && [ "$("$FACE" --which)" = "none" ]; then
     ok "clearing removes the picture"
 else
     err "clearing left a picture behind"
