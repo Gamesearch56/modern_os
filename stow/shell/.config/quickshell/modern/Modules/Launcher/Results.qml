@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons"
+import "../../Services"
 import "../../Widgets"
 
 Item {
@@ -53,27 +54,61 @@ Item {
             highlightFollowsCurrentItem: true
             highlightMoveDuration: Motion.shortMs
 
-            delegate: MListItem {
+            delegate: Item {
+                id: row
                 required property int index
                 readonly property var hit: root.model[index] || ({})
                 width: list.width
-                iconName: {
-                    if (!(Config.launcher.showIcons ?? true))
-                        return "";
-                    return hit.icon || "application-x-executable";
+                implicitHeight: item.implicitHeight
+                height: item.implicitHeight
+
+                MListItem {
+                    id: item
+                    width: row.width
+                    pointerHover: grab.containsMouse
+                    iconName: {
+                        if (!(Config.launcher.showIcons ?? true))
+                            return "";
+                        return row.hit.icon || "application-x-executable";
+                    }
+                    tintIcon: row.hit.tint === true
+                    preferSymbolic: row.hit.tint === true
+                    titleValue: row.hit.name
+                    subtitleValue: (Config.launcher.showDescriptions ?? true)
+                        ? (row.hit.genericName || "")
+                        : ""
+                    selected: root.currentIndex === row.index
+                    onClicked: {
+                        root.picked(row.index);
+                        root.activated(row.index);
+                    }
+                    onActivated: root.activated(row.index)
                 }
-                tintIcon: hit.tint === true
-                preferSymbolic: hit.tint === true
-                titleValue: hit.name
-                subtitleValue: (Config.launcher.showDescriptions ?? true)
-                    ? (hit.genericName || "")
-                    : ""
-                selected: root.currentIndex === index
-                onClicked: {
-                    root.picked(index);
-                    root.activated(index);
+
+                MDragArea {
+                    id: grab
+                    anchors.fill: parent
+                    canDrag: DockLayout.enabled && String(row.hit.id || "").length > 0
+                    onTapped: {
+                        root.picked(row.index);
+                        root.activated(row.index);
+                    }
+                    onDragBegan: (x, y) => {
+                        const p = Dock.pointerToScreen(grab, "top", x, y);
+                        const screen = grab.Window.window && grab.Window.window.screen ? grab.Window.window.screen.name : "";
+                        Dock.beginDrag(String(row.hit.id || ""), false, -1, p.x, p.y, screen);
+                    }
+                    onDragMoved: (x, y) => {
+                        const p = Dock.pointerToScreen(grab, "top", x, y);
+                        Dock.moveDrag(p.x, p.y);
+                    }
+                    onDragDropped: (x, y) => {
+                        const p = Dock.pointerToScreen(grab, "top", x, y);
+                        Dock.moveDrag(p.x, p.y);
+                        Dock.finish();
+                    }
+                    onDragCanceled: Dock.cancel()
                 }
-                onActivated: root.activated(index)
             }
 
             add: Transition {

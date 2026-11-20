@@ -664,6 +664,7 @@ if [ "$EXTRACTED_IMAGE" -eq 1 ] && [ -n "$WALLPAPER" ] && [ -f "$MODERN_DIR/toke
     theme_store_seed "$WALLPAPER" "$(jq -r '.sourceColor // empty' "$MODERN_DIR/tokens.json")" || true
 fi
 log "regenerated tokens.json, kitty/fastfetch/GTK/Qt/KDE/Vivaldi color files"
+"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/system-icons.sh" || true
 
 kitty_colors="${XDG_CONFIG_HOME:-$HOME/.config}/kitty/colors.conf"
 if [ ! -f "$kitty_colors" ]; then

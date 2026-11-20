@@ -16,7 +16,6 @@ Singleton {
     property real liveEdge: -1
     property real liveEnd: -1
     property string livePosition: ""
-    property string liveStyle: ""
     property int liveAutoHide: -1
 
     readonly property real height: {
@@ -47,13 +46,6 @@ Singleton {
             return root.livePosition;
         return saved;
     }
-    readonly property string style: {
-        void Config.generation;
-        const saved = String(Config.bar.style || "floating");
-        if (root.liveStyle.length > 0 && root.liveStyle !== saved)
-            return root.liveStyle;
-        return saved;
-    }
     readonly property bool autoHide: {
         void Config.generation;
         const saved = Config.bar.autoHide === true;
@@ -63,7 +55,7 @@ Singleton {
         return live === saved ? saved : live;
     }
 
-    readonly property real edge: root.style === "floating" ? root.edgeGap : 0
+    readonly property real edge: root.edgeGap
     readonly property real strip: root.height + root.edge * 2
     readonly property real windowPad: Tokens.spacing.xxs + Tokens.stroke.hairline
     readonly property real exclusive: root.autoHide

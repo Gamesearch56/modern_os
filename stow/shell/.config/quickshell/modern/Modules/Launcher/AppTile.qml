@@ -1,10 +1,12 @@
 import QtQuick
 import "../../Commons"
+import "../../Services"
 import "../../Widgets"
 
 Item {
     id: root
 
+    property string appId: ""
     property string iconName: ""
     property string title: ""
     property bool tint: false
@@ -62,11 +64,25 @@ Item {
         }
     }
 
-    MouseArea {
+    MDragArea {
         id: ma
         anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        canDrag: DockLayout.enabled && root.appId.length > 0
+        onTapped: root.clicked()
+        onDragBegan: (x, y) => {
+            const p = Dock.pointerToScreen(root, "top", x, y);
+            const screen = root.Window.window && root.Window.window.screen ? root.Window.window.screen.name : "";
+            Dock.beginDrag(root.appId, false, -1, p.x, p.y, screen);
+        }
+        onDragMoved: (x, y) => {
+            const p = Dock.pointerToScreen(root, "top", x, y);
+            Dock.moveDrag(p.x, p.y);
+        }
+        onDragDropped: (x, y) => {
+            const p = Dock.pointerToScreen(root, "top", x, y);
+            Dock.moveDrag(p.x, p.y);
+            Dock.finish();
+        }
+        onDragCanceled: Dock.cancel()
     }
 }

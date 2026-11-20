@@ -126,6 +126,10 @@ Singleton {
     // use. Starting points, not final — tune by eye once the shell
     // actually renders on screen. Usage:
     //   Behavior on scale { SpringAnimation { spring: Motion.springSnappy.spring; damping: Motion.springSnappy.damping } }
+    // Dock icon hover and the press that runs before a pin opens.
+    // Kept here so a fade-only overlay does not flatten the dock zoom.
+    readonly property real dockPop: 1.12
+    readonly property real dockPress: 0.92
     readonly property var springSnappy: ({ spring: 3.5, damping: 0.4 })
     readonly property var springGentle: ({ spring: 2.2, damping: 0.5 })
     readonly property var springBouncy: ({ spring: 4.0, damping: 0.25 })

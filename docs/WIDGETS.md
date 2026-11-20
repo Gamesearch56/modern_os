@@ -51,3 +51,28 @@ height is 36. Wi-Fi and Bluetooth on the bar open Settings, not a popup.
 AI, weather, and clock use `MPopup`. Reorder and per-widget forms in
 Settings → Bar (`docs/SETTINGS.md`).
 
+## Dock
+
+The dock is a centered row of pinned applications on the edge opposite
+the bar: a top bar puts the dock on the bottom, a left bar puts it on
+the right, and the reverse. It stays hidden until `dock.enabled` is on.
+`dock.apps` starts empty.
+
+Three styles, all from tokens: **edge dash** (`beam`, a short primary
+mark on the outer edge of each icon), **plate** (`inventory`, each icon
+in a surface slot), and **floating** (the icon alone). Hover plays the selected animation
+(`dock.hover`): zoom, a primary color wash, a bounce, or a lift off the
+screen edge. A click eases the icon in, then opens the application.
+Names are drawn with the icon only when `dock.showNames` is on.
+Hover does not add a label. Icon size and
+auto-hide follow the same live preview as the bar. Auto-hide also
+reveals the dock while a pin has keyboard focus.
+
+A pin launches on click. The row can be rearranged, and a pin can be
+dropped on the trash, only while the application launcher is open.
+Settings → Dock rearranges the same list with the launcher closed.
+Drag an application from the launcher results, the all-applications
+grid, or the installed list on that page to add it. With the dock
+off, the launcher does not start that drag, and it does not leave
+the dock's edge clear.
+

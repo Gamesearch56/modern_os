@@ -30,10 +30,10 @@ print("\n".join(ids))
 PY
 )
 
-if [ "${#IDS[@]}" -ne 21 ]; then
-    err "Catalog.qml ids count is ${#IDS[@]} (expected 21)"
+if [ "${#IDS[@]}" -ne 22 ]; then
+    err "Catalog.qml ids count is ${#IDS[@]} (expected 22)"
 else
-    ok "21 catalog ids"
+    ok "22 catalog ids"
 fi
 
 SKIP_MUTATE="network bluetooth audio"

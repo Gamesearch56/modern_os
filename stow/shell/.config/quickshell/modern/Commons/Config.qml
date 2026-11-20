@@ -127,6 +127,19 @@ Singleton {
                 property list<string> right: ["weather", "connectivity", "audio", "taskbar", "battery", "settings", "power"]
             }
 
+            // Edge is not stored. DockLayout mirrors the bar.
+            property JsonObject dock: JsonObject {
+                property bool enabled: false
+                property bool autoHide: false
+                property int iconSize: 48
+                property bool showNames: false
+                property int pad: 8
+                property int gap: 8
+                property string theme: "floating"
+                property string hover: "zoom"
+                property list<string> apps: []
+            }
+
             // Per-widget settings blobs — shape varies per widget, each
             // widget reads its own key (e.g. Config.widgets.clock).
             property var widgets: ({
@@ -339,6 +352,7 @@ Singleton {
     readonly property alias language: adapter.language
     readonly property alias input: adapter.input
     readonly property alias bar: adapter.bar
+    readonly property alias dock: adapter.dock
     readonly property alias widgets: adapter.widgets
     readonly property alias monitors: adapter.monitors
     readonly property alias windowRules: adapter.windowRules

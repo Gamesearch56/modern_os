@@ -109,7 +109,10 @@ Item {
             MIcon {
                 anchors.centerIn: parent
                 visible: !capture.hasContent
-                name: Apps.resolveIcon(root._class) || "application-x-executable"
+                name: {
+                    const mark = SystemIcons.glyph(root._rawTitle);
+                    return mark.length ? mark : (Apps.resolveIcon(root._class) || "application-x-executable");
+                }
                 size: Tokens.icon.lg
                 tint: false
                 preferSymbolic: false

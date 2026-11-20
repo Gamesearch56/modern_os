@@ -85,6 +85,17 @@
       "power"
     ]
   },
+  "dock": {
+    "enabled": false,
+    "autoHide": false,
+    "iconSize": 48,
+    "showNames": false,
+    "pad": 8,
+    "gap": 8,
+    "theme": "floating",
+    "hover": "zoom",
+    "apps": []
+  },
   "widgets": {
     "clock": {
       "dateFormat": "DD.MM.YYYY",

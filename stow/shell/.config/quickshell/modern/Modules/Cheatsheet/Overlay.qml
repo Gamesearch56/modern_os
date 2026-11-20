@@ -20,6 +20,7 @@ Item {
     MWindowShell {
         anchors.fill: parent
         titleKey: "cheatsheet.title"
+        iconName: "modern-cheatsheet-symbolic"
         titleColumnWidth: Tokens.spacing.xxl * 9
         onClosed: root.closed()
 

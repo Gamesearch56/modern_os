@@ -13,6 +13,7 @@ Item {
     property string subtitleValue: ""
     property string actionKey: ""
     property string actionIcon: ""
+    property string iconName: ""
     property real titleColumnWidth: 0
     property real chromeOpacity: Chrome.washOpacity
     property bool busy: false
@@ -58,6 +59,7 @@ Item {
             subtitleValue: root.subtitleValue
             actionKey: root.actionKey
             actionIcon: root.actionIcon
+            iconName: root.iconName
             titleColumnWidth: root.titleColumnWidth
             busy: root.busy
             onClosed: root.closed()

@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons"
@@ -11,11 +12,13 @@ PanelWindow {
     readonly property real _edge: BarLayout.edge
     readonly property real _end: BarLayout.endGap ?? Tokens.spacing.sm
     readonly property bool _auto: !!(BarLayout.autoHide)
-    readonly property real _strip: Tokens.spacing.xs
+    // A few pixels at the screen edge is easy to miss. This band is the
+    // only input while the bar is tucked away.
+    readonly property real _hot: Tokens.spacing.lg
+    readonly property bool _edgeOnly: root._auto && !root._shown && !root._slidingOut
     readonly property bool _hold: Popups.openCount > 0
     readonly property bool _cover: Hypr.focusedFullscreen
     readonly property bool _shown: !root._cover && (!root._auto || root._peek || root._hold)
-    readonly property bool _expanded: !root._cover && (!root._auto || root._shown || root._slidingOut)
     readonly property string _layoutKey: String(BarLayout.position || "top")
     readonly property real _fullH: BarLayout.strip
     readonly property real _fullW: BarLayout.strip
@@ -36,9 +39,33 @@ PanelWindow {
     anchors.bottom: BarLayout.position !== "top"
     anchors.left: BarLayout.position !== "right"
     anchors.right: BarLayout.position !== "left"
-    implicitHeight: root.vertical ? 0 : (root._expanded ? root._fullH : root._strip)
-    implicitWidth: root.vertical ? (root._expanded ? root._fullW : root._strip) : 0
-    exclusiveZone: root._cover ? 0 : BarLayout.exclusive
+    // Stay full size while tucked away. Shrinking the surface to a hairline
+    // drops the pointer and the bar never comes back.
+    implicitHeight: root.vertical ? 0 : root._fullH
+    implicitWidth: root.vertical ? root._fullW : 0
+    // Same as the dock: a reload can keep a Normal zone that a later 0
+    // does not replace. Ignore is what actually clears it.
+    readonly property bool _reserve: !root._cover && !root._auto
+    readonly property real _zone: root._reserve ? BarLayout.exclusive : 0
+    function _applyZone() {
+        if (!root._reserve) {
+            root.exclusionMode = ExclusionMode.Ignore;
+            return;
+        }
+        root.exclusionMode = ExclusionMode.Ignore;
+        root.exclusiveZone = Math.round(Math.max(0, root._zone));
+    }
+    on_ZoneChanged: Qt.callLater(root._applyZone)
+    mask: Region {
+        x: root._edgeOnly && BarLayout.position === "right" ? Math.max(0, root._fullW - root._hot) : 0
+        y: root._edgeOnly && BarLayout.position === "bottom" ? Math.max(0, root._fullH - root._hot) : 0
+        width: root.vertical
+            ? (root._edgeOnly ? root._hot : root._fullW)
+            : Math.max(root.width, root.screen ? root.screen.width : 0)
+        height: root.vertical
+            ? Math.max(root.height, root.screen ? root.screen.height : 0)
+            : (root._edgeOnly ? root._hot : root._fullH)
+    }
     visible: !root._cover
     // A virtual GPU draws this transparent strip as a black bar. An
     // opaque surface fill keeps the islands visible; a desktop GPU
@@ -77,7 +104,11 @@ PanelWindow {
             root._peek = false;
             root._slidingOut = false;
             root._slide = 0;
-        }
+        } else if (barHover.hovered || root._hold) {
+            hideTimer.stop();
+            root._peek = true;
+        } else
+            root._peek = false;
     }
     on_HoldChanged: {
         if (root._hold) {
@@ -91,6 +122,7 @@ PanelWindow {
         Popups.registerBar(root);
         if (!root._shown)
             root._slide = 1;
+        Qt.callLater(root._applyZone);
     }
     Component.onDestruction: Popups.unregisterBar(root)
 

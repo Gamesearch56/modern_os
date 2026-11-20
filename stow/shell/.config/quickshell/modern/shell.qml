@@ -7,6 +7,7 @@ import Quickshell.Io
 import "Commons"
 import "Services"
 import "Modules/Bar" as Bar
+import "Modules/Dock" as DockMod
 import "Modules/Launcher" as LauncherMod
 import "Modules/PowerMenu" as PowerMenuMod
 import "Modules/Cheatsheet" as CheatsheetMod
@@ -25,6 +26,7 @@ import "Modules/BugReport" as BugReportMod
 
 ShellRoot {
     Bar.Module {}
+    DockMod.Module {}
     LauncherMod.Module {}
     PowerMenuMod.Module {}
     CheatsheetMod.Module {}

@@ -86,7 +86,7 @@ modern_dotfile/
 │                                greetd configs consumed by install/lib/greetd.sh
 ├── stow/
 │   ├── hypr/.config/hypr/                   hyprland.lua + modules/
-│   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules; Modules/Files is the file manager
+│   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules; Modules/Files is the file manager; Modules/Dock is the application dock
 │   ├── greeter/.config/quickshell/greeter/  shares Session/ with the shell
 │   ├── theme/.config/matugen/               config.toml + templates/
 │   ├── kitty/ gtk/ qt/ bash/ git/ mpv/ imv/   current external player and image viewer (`install/manifests/default-apps.json`)
@@ -135,6 +135,12 @@ workspaces per display from left to right (1–5, 6–10, 11–15, …);
 `dynamic` opens on the monitor under the cursor and each bar lists
 only that output’s workspaces.
 Optional `monitors.rules` pin extra workspaces by description.
+
+The dock is one `PanelWindow` per screen, opposite `bar.position`.
+It reserves that edge while it is shown and not auto-hidden, and
+reserves nothing while auto-hidden, matching the bar. Pins, themes,
+and icon size live in `dock` in `config.json`. `Services/Dock` is the
+only writer of that pin list.
 
 ## i18n
 

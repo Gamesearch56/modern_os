@@ -27,7 +27,7 @@ Scope {
 
             MWindowShell {
                 anchors.fill: parent
-                titleKey: FilesChoose.active ? FilesChoose.headingKey : "files.title"
+                titleKey: FilesChoose.active ? FilesChoose.headingKey : "files.title"; iconName: "modern-files-symbolic"
                 trailingFill: true
                 onClosed: Files.hide()
 

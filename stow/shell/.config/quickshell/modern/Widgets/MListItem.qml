@@ -23,6 +23,7 @@ Item {
     property string variant: "row"
     property bool destructive: false
     property bool hoverHighlight: true
+    property bool pointerHover: false
     property string badgeIcon: ""
     property int badgeCount: 0
 
@@ -112,7 +113,7 @@ Item {
         anchors.fill: parent
         radius: root._nav ? Tokens.radius.full : Tokens.radius.small
         color: Colors.color.primary
-        opacity: !root.enabled || root.selected || !root.hoverHighlight ? 0 : Chrome.stateLayer(ma.containsMouse, false)
+        opacity: !root.enabled || root.selected || !root.hoverHighlight ? 0 : Chrome.stateLayer(ma.containsMouse || root.pointerHover, false)
     }
 
     MouseArea {

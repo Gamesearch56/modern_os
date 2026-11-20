@@ -11,21 +11,74 @@ Item {
     property var windows: null
     property var _raiseEntry: null
     property var _onMiss: null
+    property string _parkStem: ""
 
     Process {
         id: raiseProc
         running: false
         command: ["true"]
         onExited: (exitCode) => {
-            if (exitCode !== 0) {
-                if (root._raiseEntry && root._raiseEntry.execute)
-                    root._raiseEntry.execute();
-                else if (root._onMiss)
-                    root._onMiss();
-            }
+            const entry = root._raiseEntry;
+            const miss = root._onMiss;
+            const stem = root._parkStem;
             root._raiseEntry = null;
             root._onMiss = null;
+            root._parkStem = "";
+            if (exitCode === 0)
+                return;
+            if (entry && entry.execute) {
+                entry.execute();
+                // The class rule parks the new window. Move that one
+                // here once it exists, so the click still opens it.
+                if (stem.length)
+                    root._armParkedOpen(stem);
+                return;
+            }
+            if (miss)
+                miss();
         }
+    }
+
+    // A freshly started background app is not in the client list yet.
+    Process {
+        id: parkedOpen
+        running: false
+        command: ["true"]
+        property string stem: ""
+        property int tries: 0
+        onExited: (code) => {
+            if (code === 0 || parkedOpen.tries >= 12)
+                parkedWait.stop();
+        }
+    }
+
+    Timer {
+        id: parkedWait
+        interval: Math.max(Motion.mediumMs, 1)
+        repeat: true
+        onTriggered: {
+            if (parkedOpen.running || !parkedOpen.stem.length)
+                return;
+            parkedOpen.tries += 1;
+            if (parkedOpen.tries > 12) {
+                stop();
+                return;
+            }
+            parkedOpen.command = [Paths.script("session-raise.sh"), parkedOpen.stem];
+            parkedOpen.running = true;
+        }
+    }
+
+    function _armParkedOpen(stem: string) {
+        parkedWait.stop();
+        parkedOpen.stem = stem;
+        parkedOpen.tries = 0;
+        parkedWait.restart();
+    }
+
+    function _stopParkedOpen() {
+        parkedWait.stop();
+        parkedOpen.stem = "";
     }
 
     function raiseDesktop(desktopId: string): bool {
@@ -100,7 +153,9 @@ Item {
         }
         if (raiseProc.running)
             return true;
+        root._stopParkedOpen();
         root._raiseEntry = null;
+        root._parkStem = "";
         root._onMiss = onMiss || null;
         raiseProc.command = [Paths.script("session-raise.sh"), stem];
         raiseProc.running = true;
@@ -128,7 +183,9 @@ Item {
         }
         if (raiseProc.running)
             return true;
+        root._stopParkedOpen();
         root._raiseEntry = entry || null;
+        root._parkStem = stem;
         raiseProc.command = [Paths.script("session-raise.sh"), stem];
         raiseProc.running = true;
         return true;

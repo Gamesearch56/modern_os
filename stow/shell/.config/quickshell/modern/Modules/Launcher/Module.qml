@@ -50,10 +50,10 @@ Scope {
         const actions = [];
         if (needle.length > 0) {
             if (root._matchAction(needle, "settings", I18n.t("settings.title")))
-                actions.push({ id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "systemsettings", kind: "settings" });
+                actions.push({ id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "modern-settings-symbolic", kind: "settings" });
             if (root._matchAction(needle, "store", I18n.t("store.title"))
                 || root._matchAction(needle, "app store", I18n.t("bar.store")))
-                actions.push({ id: "shell:store", name: I18n.t("store.title"), genericName: "", icon: "plasmadiscover", kind: "store" });
+                actions.push({ id: "shell:store", name: I18n.t("store.title"), genericName: "", icon: "modern-store-symbolic", kind: "store" });
         }
         const apps = Launcher.query(text);
         const out = [];
@@ -71,9 +71,9 @@ Scope {
     // also has a desktop file, which the grid skips so it is listed once.
     function _shellApps(): var {
         return [
-            { id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "systemsettings", tint: false, kind: "settings" },
-            { id: "shell:store", name: I18n.t("store.title"), genericName: "", icon: "plasmadiscover", tint: false, kind: "store" },
-            { id: "shell:files", name: I18n.t("files.launcherName"), genericName: "", icon: "modern-files", tint: false, kind: "files" }
+            { id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "modern-settings-symbolic", tint: true, kind: "settings" },
+            { id: "shell:store", name: I18n.t("store.title"), genericName: "", icon: "modern-store-symbolic", tint: true, kind: "store" },
+            { id: "shell:files", name: I18n.t("files.launcherName"), genericName: "", icon: "modern-files-symbolic", tint: true, kind: "files" }
         ];
     }
 
@@ -124,6 +124,8 @@ Scope {
 
         PanelWindow {
             id: win
+            property real _grabAt: 0
+            property int _rearm: 0
             visible: Launcher.open
             screen: root._focusedScreen()
             color: "transparent"
@@ -131,6 +133,11 @@ Scope {
             anchors.left: true
             anchors.right: true
             anchors.bottom: true
+            // Leave the dock's edge clear so pins can be grabbed while this overlay is open.
+            margins.top: DockLayout.enabled && DockLayout.position === "top" ? DockLayout.cross : 0
+            margins.bottom: DockLayout.enabled && DockLayout.position === "bottom" ? DockLayout.cross : 0
+            margins.left: DockLayout.enabled && DockLayout.position === "left" ? DockLayout.cross : 0
+            margins.right: DockLayout.enabled && DockLayout.position === "right" ? DockLayout.cross : 0
             exclusionMode: ExclusionMode.Ignore
             focusable: true
             aboveWindows: true
@@ -164,8 +171,21 @@ Scope {
                 id: keyGrab
                 windows: Popups.grabWindows(win, win.screen)
                 onCleared: {
-                    if (Launcher.open)
-                        Launcher.hide();
+                    if (!Launcher.open)
+                        return;
+                    // The dock joins this grab and steps up to the overlay
+                    // layer as the launcher opens. That clears the grab once.
+                    if (win._rearm < 1 && Date.now() - win._grabAt < Motion.mediumMs) {
+                        win._rearm = 1;
+                        Qt.callLater(() => {
+                            if (!Launcher.open)
+                                return;
+                            keyGrab.active = true;
+                            overlay.focusSearch();
+                        });
+                        return;
+                    }
+                    Launcher.hide();
                 }
             }
 
@@ -184,6 +204,7 @@ Scope {
                 Qt.callLater(() => {
                     if (!Launcher.open)
                         return;
+                    win._grabAt = Date.now();
                     keyGrab.active = true;
                     overlay.focusSearch();
                 });
