@@ -7,7 +7,7 @@ local function on(path, fallback)
 end
 
 local auto_fs = on("gaming.autoFullscreen", true)
-local auto_opt = on("gaming.autoOptimize", true)
+local auto_opt = on("gaming.autoOptimize", false)
 local game_mode = config.value("gaming.mode", false) == true
 if not auto_fs and not auto_opt and not game_mode then
     return
