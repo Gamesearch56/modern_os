@@ -84,8 +84,8 @@ Singleton {
                 id: id,
                 name: own ? I18n.t("files.launcherName") : e.name,
                 genericName: e.genericName,
-                icon: own ? "modern-files-symbolic" : Apps.resolveIcon(e.icon || e.startupClass || e.id),
-                tint: own,
+                icon: own ? "modern-files" : Apps.resolveIcon(e.icon || e.startupClass || e.id),
+                tint: false,
                 exec: e,
                 score: (Config.launcher.frecencyEnabled ?? true) ? root.score(id) : 0
             });
