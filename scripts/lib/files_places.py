@@ -263,15 +263,32 @@ def _gvfs_uri(name):
     return "", name
 
 
+def _retitle(rows, folded, name):
+    # The mount point lowercases the share. Keep the name the server sent.
+    if not folded or not name:
+        return
+    for row in rows:
+        if _norm_uri(row.get("uri") or "").casefold() != folded:
+            continue
+        current = str(row.get("name") or "")
+        if current.casefold() == name.casefold() and current != name:
+            row["name"] = name
+        return
+
+
 def _add_place(rows, seen, path, name, kind, uri):
-    key = path or uri
-    if not key or key in seen:
+    # Share names are case-insensitive, so a mounted copy and the
+    # announced copy must count as the same place.
+    folded = _norm_uri(uri).casefold() if uri else ""
+    key = path or folded
+    if not key or key in seen or (folded and folded in seen):
+        _retitle(rows, folded, name)
         return
     seen.add(key)
     if path:
         seen.add(path)
-    if uri:
-        seen.add(_norm_uri(uri))
+    if folded:
+        seen.add(folded)
     rows.append({"path": path, "name": name or path or uri, "kind": kind, "uri": uri})
 
 
@@ -301,7 +318,7 @@ def _network_places(rows, seen):
     )
     for line in (proc.stdout or "").splitlines():
         uri = _uri(line.strip())
-        if not uri or _norm_uri(uri) in seen:
+        if not uri or _norm_uri(uri).casefold() in seen:
             continue
         _add_place(rows, seen, "", _uri_label(uri), "network", uri)
 
@@ -409,10 +426,12 @@ def cmd_connect(args):
     )
     if result.returncode != 0:
         fail("refused")
+    # The mounted name can differ in case from the address we asked for.
+    want = _norm_uri(uri).casefold()
     path = ""
-    want = _norm_uri(uri)
     for row in _places():
-        if row.get("uri") and _norm_uri(row["uri"]) == want and row.get("path"):
+        got = _norm_uri(row.get("uri") or "")
+        if row.get("path") and got.casefold() == want:
             path = row["path"]
             break
     emit({"path": path, "uri": uri})

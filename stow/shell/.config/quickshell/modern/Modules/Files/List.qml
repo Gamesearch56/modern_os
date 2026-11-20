@@ -275,7 +275,7 @@ Flickable {
     }
     function _kind(entry) {
         if (Files.place === "trash") return "trash";
-        if (Files.place === "network") return "net";
+        if (Files.place === "network") return String(entry && entry.path || "").charAt(0) === "/" ? "folder" : "net";
         return entry && entry.dir ? "folder" : "file";
     }
     function _blankKind() {

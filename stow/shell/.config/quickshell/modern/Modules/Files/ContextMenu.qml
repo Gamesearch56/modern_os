@@ -150,8 +150,10 @@ MPopup {
             add("connect", "files.network.connect", true, false);
             return rows;
         }
-        if (kind === "net") {
-            add("open", "files.menu.open", path.length > 0 || Files.menuName.length > 0, false);
+        if (kind === "net" && path.charAt(0) !== "/") {
+            add("open", "files.menu.open", Files.menuName.length > 0, false);
+            add("tab", "files.menu.openTab", Files.menuName.length > 0, false);
+            add("window", "files.menu.openWindow", Files.menuName.length > 0, false);
             return rows;
         }
         if (kind === "trash") {
@@ -222,13 +224,12 @@ MPopup {
             Files.go(parent, true, [path]);
         }
         else if (id === "tab") {
-            if (path.charAt(0) !== "/")
-                return;
+            if (path.charAt(0) !== "/") { if (Files.menuKind === "net") FilesNet.connect(Files.menuName, "tab"); return; }
             if (!FilesTabs.paths.length && Files.path.charAt(0) === "/")
                 FilesTabs.add(Files.path);
             FilesTabs.add(path);
         } else if (id === "window")
-            FilesExtra.open(path);
+            path.charAt(0) === "/" ? FilesExtra.open(path) : FilesNet.connect(Files.menuName, "window");
         else if (id === "rename")
             Files.renaming = path;
         else if (id === "zip")

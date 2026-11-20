@@ -248,7 +248,7 @@ Item {
         if (Files.place === "trash")
             return "trash";
         if (Files.place === "network")
-            return "net";
+            return String(entry && entry.path || "").charAt(0) === "/" ? "folder" : "net";
         return entry && entry.dir ? "folder" : "file";
     }
 
