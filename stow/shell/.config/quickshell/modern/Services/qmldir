@@ -10,6 +10,7 @@ NetworkJoin 1.0 NetworkJoin.qml
 NetworkSpeed 1.0 NetworkSpeed.qml
 singleton Bluetooth 1.0 Bluetooth.qml
 singleton BluetoothLink 1.0 BluetoothLink.qml
+singleton BluetoothAudio 1.0 BluetoothAudio.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml
 AudioNowPlaying 1.0 AudioNowPlaying.qml

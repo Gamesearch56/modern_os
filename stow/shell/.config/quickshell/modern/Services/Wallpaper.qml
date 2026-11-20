@@ -132,7 +132,7 @@ Singleton {
         function pick() { root.pick(); }
         function toggle() { root.togglePicker(); }
         function provider() { root.openProvider(); }
-        function ingest(path) { root.ingest(path); }
+        function ingest(path: string): void { root.ingest(path); }
     }
 
     function pick() { root.setPickerOpen(true); }

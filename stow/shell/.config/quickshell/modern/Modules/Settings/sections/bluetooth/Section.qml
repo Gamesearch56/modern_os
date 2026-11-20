@@ -10,7 +10,11 @@ Item {
     id: root
 
     property var dialogDevice: null
-    readonly property bool _online: !!(root.dialogDevice && root.dialogDevice.connected)
+    readonly property bool _online: {
+        void root.dialogDevice?.connected;
+        void BluetoothAudio.nodeSig;
+        return BluetoothAudio.linked(root.dialogDevice);
+    }
     readonly property bool _paired: {
         void BluetoothLink.savedGen;
         void root.dialogDevice?.paired;

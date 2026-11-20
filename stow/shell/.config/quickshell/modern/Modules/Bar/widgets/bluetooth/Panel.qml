@@ -28,12 +28,17 @@ ColumnLayout {
         model: Bluetooth.sortedDevices
         delegate: MListItem {
             required property var modelData
+            readonly property bool online: {
+                void modelData.connected;
+                void BluetoothAudio.nodeSig;
+                return BluetoothAudio.linked(modelData);
+            }
             width: ListView.view.width
             iconName: "bluetooth"
             titleValue: modelData.name || modelData.address || ""
-            selected: !!modelData.connected
+            selected: online
             onClicked: {
-                if (modelData.connected)
+                if (online)
                     Bluetooth.disconnectDevice(modelData);
                 else
                     Bluetooth.connectDevice(modelData);

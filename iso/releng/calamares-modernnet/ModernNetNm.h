@@ -47,7 +47,9 @@ public:
 
 signals:
     void changed();
-    void connectFinished( bool ok );
+    // code is wifi-join.sh's exit code: 3 password, 4 out of range,
+    // 5 timed out, 6 unsupported security, anything else failed.
+    void connectFinished( bool ok, int code );
 
 private:
     static QStringList splitNmcli( const QString& line );
@@ -66,8 +68,6 @@ private:
     QString m_ethernetAddr;
     QString m_wifiSsid;
     QString m_wifiState;
-    QString m_joinSsid;
-    QString m_joinPassword;
     QVector< Wifi > m_networks;
     QProcess* m_scan = nullptr;
     QProcess* m_join = nullptr;

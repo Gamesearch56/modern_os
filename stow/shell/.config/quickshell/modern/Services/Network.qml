@@ -82,7 +82,7 @@ Singleton {
     readonly property bool scanning: scanProc.running || join.waking
     readonly property bool joining: join.running
     readonly property string linkKind: root._wifiUp() ? "wifi" : (root._wiredUp() ? "ethernet" : "offline")
-    signal joinFinished(string op, string ssid, bool ok)
+    signal joinFinished(string op, string ssid, bool ok, string reason)
     readonly property bool speedTesting: speed.testing
     readonly property bool speedDone: speed.done
     readonly property bool speedFailed: speed.failed
@@ -93,7 +93,7 @@ Singleton {
     readonly property real speedConnectMs: speed.connectMs
     readonly property int speedHttp: speed.http
 
-    on_NetSigChanged: root._stampWifi()
+    on_NetSigChanged: Qt.callLater(root._stampWifi)
     onWifiChanged: root._syncScan()
     onWifiEnabledChanged: {
         root._syncScan();
@@ -274,7 +274,7 @@ Singleton {
 
     NetworkJoin {
         id: join
-        onFinished: (op, ssid, ok) => root.joinFinished(op, ssid, ok)
+        onFinished: (op, ssid, ok, reason) => root.joinFinished(op, ssid, ok, reason)
     }
 
     NetworkSpeed {

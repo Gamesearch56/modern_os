@@ -63,10 +63,15 @@ Singleton {
         }
     }
 
-    on_DevSigChanged: {
+    // Deferred: trusting a device inside this handler changes _devSig
+    // while it is still being evaluated (a binding loop).
+    on_DevSigChanged: Qt.callLater(root._onDevices)
+
+    function _onDevices() {
         root._stampSeen();
         BluetoothLink.note();
         BluetoothLink.settle();
+        BluetoothAudio.watch();
         if (root._uiReady)
             root._syncAutoAudio();
     }
@@ -228,9 +233,9 @@ Singleton {
             void d.bonded;
             void d.name;
             void d.deviceName;
-            if (!!d.connected !== want)
+            if (BluetoothAudio.linked(d) !== want)
                 continue;
-            if (!want && BluetoothLink.shadowed(d))
+            if (!want && !d.connected && BluetoothLink.shadowed(d))
                 continue;
             if (!want && !root.isRemembered(d) && !root.isNamed(d))
                 continue;
@@ -244,24 +249,30 @@ Singleton {
     // Connected, then a saved device, then everything else. A new scan
     // must not lift an unknown device above one this machine remembers.
     function _order(a: var, b: var, seen: var): int {
-        const ar = a && a.connected ? 0 : (root.isRemembered(a) ? 1 : 2);
-        const br = b && b.connected ? 0 : (root.isRemembered(b) ? 1 : 2);
+        const ar = BluetoothAudio.linked(a) ? 0 : (root.isRemembered(a) ? 1 : 2);
+        const br = BluetoothAudio.linked(b) ? 0 : (root.isRemembered(b) ? 1 : 2);
         if (ar !== br)
             return ar - br;
         return (seen[String(b?.address || "")] || 0) - (seen[String(a?.address || "")] || 0);
     }
 
-    readonly property var connectedDevices: { void root._devSig; return root._byConnected(true); }
+    readonly property var connectedDevices: {
+        void root._devSig;
+        void BluetoothAudio.nodeSig;
+        return root._byConnected(true);
+    }
     readonly property var availableDevices: {
         void root._devSig;
         void root._seenSeq;
         void BluetoothLink.savedGen;
+        void BluetoothAudio.nodeSig;
         return root._byConnected(false);
     }
     readonly property var sortedDevices: {
         void root._devSig;
         void root._seenSeq;
         void BluetoothLink.savedGen;
+        void BluetoothAudio.nodeSig;
         const list = root._list(root.devices).slice();
         const seen = root._seenAt;
         list.sort((a, b) => root._order(a, b, seen));

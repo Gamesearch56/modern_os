@@ -265,6 +265,6 @@ Singleton {
         function toggle() { root.toggle(); }
         function show() { root.show(); }
         function hide() { root.hide(); }
-        function showPackage(name) { root.showPackage(name); }
+        function showPackage(name: string): void { root.showPackage(name); }
     }
 }

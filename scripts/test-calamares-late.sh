@@ -782,6 +782,20 @@ else
     err "strip phase must carry the live rtw88 option to the target"
 fi
 
+regdom="$STRIPROOT/etc/conf.d/wireless-regdom"
+mkdir -p "$STRIPROOT/etc/conf.d" "$WORKDIR/zi"
+printf '#WIRELESS_REGDOM="AT"\n#WIRELESS_REGDOM="DE"\nWIRELESS_REGDOM="US"\n' >"$regdom"
+printf '# comment\nAT\t+4813+01620\tEurope/Vienna\nDE\t+5230+01322\tEurope/Berlin\tmost of Germany\n' >"$WORKDIR/zi/zone.tab"
+ln -sfn ../usr/share/zoneinfo/Europe/Berlin "$STRIPROOT/etc/localtime"
+if MODERN_LATE_STRIP_ROOT="$STRIPROOT" MODERN_LATE_ZONE_TAB="$WORKDIR/zi/zone.tab" run_late strip >/dev/null 2>&1 \
+    && [ "$(grep -c '^WIRELESS_REGDOM=' "$regdom")" -eq 1 ] \
+    && grep -qx 'WIRELESS_REGDOM="DE"' "$regdom"; then
+    ok "the installed system takes its Wi-Fi country from the chosen timezone"
+else
+    err "strip phase must set the Wi-Fi country: $(tr '\n' ' ' <"$regdom")"
+fi
+rm -f "$STRIPROOT/etc/localtime"
+
 # BIOS: grub-mkconfig only finds /boot/vmlinuz-*, which mkarchiso removed.
 BIOSROOT="$WORKDIR/bios"
 mkdir -p "$BIOSROOT/usr/lib/modules/6.99.0-zen1-1-zen" "$BIOSROOT/etc/mkinitcpio.d"

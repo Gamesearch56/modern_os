@@ -47,6 +47,9 @@ Singleton {
     readonly property int durationBluetoothConnect: 15000
     // Confirm-on-device pairing. Wall clock, not MD3 motion.
     readonly property int durationBluetoothPair: 30000
+    // A bare incoming link gets A2DP before the kernel drops a link
+    // without a channel (about 2 s). Wall clock.
+    readonly property int durationBluetoothProfile: 700
     // 100% stays up long enough to read, then the shell restarts.
     readonly property int durationUpdateSettle: 400
     // After the link is up, before the one login update check. Wall clock.
@@ -75,6 +78,7 @@ Singleton {
     readonly property int bluetoothScanMs: root.durationBluetoothScan
     readonly property int bluetoothConnectMs: root.durationBluetoothConnect
     readonly property int bluetoothPairMs: root.durationBluetoothPair
+    readonly property int bluetoothProfileMs: root.durationBluetoothProfile
     readonly property int updateSettleMs: root.durationUpdateSettle
     readonly property int bootSettleMs: root.durationBootSettle
     readonly property int fileSettleMs: root.durationFileSettle

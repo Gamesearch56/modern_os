@@ -266,6 +266,9 @@ Singleton {
         if (!t.length || root._themeName(t))
             return "";
         const lower = t.toLowerCase();
+        // A finished recording names its video; Image cannot decode it.
+        if (/\.(mp4|mkv|webm|mov|avi)$/.test(lower))
+            return "";
         const fileish = root._isLocalPath(t)
             || lower.indexOf(".png") !== -1 || lower.indexOf(".jpg") !== -1
             || lower.indexOf(".jpeg") !== -1 || lower.indexOf(".webp") !== -1

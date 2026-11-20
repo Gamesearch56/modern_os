@@ -1074,6 +1074,7 @@
       "connecting": "Connecting…",
       "connectFailedTitle": "Bluetooth",
       "connectFailed": "Could not connect. If the headphones are already linked to two devices, disconnect one and try again.",
+      "noAudio": "The headphones answered but did not start sound. Disconnect them on another device that is using them, then try again.",
       "pairFailed": "Could not pair. Confirm the request on the device and try again.",
       "remembered": "Saved"
     },
@@ -1271,7 +1272,6 @@
       "connectBody": "Connect to this network.",
       "connectSavedBody": "Connect with the saved password, or type a new one.",
       "disconnectBody": "Disconnect this network. It stays saved until you forget it.",
-      "connectFailed": "Could not connect. Check the password.",
       "nearby": "Nearby networks",
       "wifiEmpty": "No networks nearby",
       "wifiSearching": "Searching for networks",
@@ -1285,7 +1285,16 @@
       "mb": "{n} MB",
       "seconds": "{n} s",
       "ms": "{n} ms",
-      "httpCode": "{n}"
+      "httpCode": "{n}",
+      "connectFailedTitle": "Wi-Fi",
+      "fail": {
+        "password": "The password was not accepted. Type it again.",
+        "notFound": "The network is out of range. Move closer or search again.",
+        "timeout": "The network did not answer in time. Try again.",
+        "security": "This network needs a sign-in this desktop cannot enter, such as a company account.",
+        "rejected": "The network name or password contains characters that cannot be used.",
+        "failed": "Could not connect. Try again, or forget the network and connect anew."
+      }
     }
   },
   "onboarding": {
@@ -1832,8 +1841,8 @@
       "eject": "Eject",
       "restore": "Restore",
       "empty": "Empty trash",
-    "zip": "Compress to zip",
-    "extract": "Extract"
+      "zip": "Compress to zip",
+      "extract": "Extract"
     },
     "tabs": {
       "close": "Close tab",

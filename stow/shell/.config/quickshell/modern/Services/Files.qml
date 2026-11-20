@@ -94,7 +94,7 @@ Singleton {
         root.showRecent = files.showRecent !== false; root.showNetwork = files.showNetwork === true;
         root.view = String(files.view || "grid");
     }
-    function _spot() {
+    function _spot(): var {
         return { path: root.path, place: root.place, pick: (root.selected || []).slice() };
     }
     function _arrive(kind: string, folder: string, pick: var) {

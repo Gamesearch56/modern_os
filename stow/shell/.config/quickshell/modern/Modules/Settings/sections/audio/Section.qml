@@ -142,17 +142,21 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
+    // Sized, not anchored: the dialog starts as a layout child until the
+    // window's content item takes it.
     FallbackDialog {
         id: outputDlg
         sink: true
         parent: Window.window ? Window.window.contentItem : root
-        anchors.fill: parent
+        width: parent ? parent.width : 0
+        height: parent ? parent.height : 0
     }
 
     FallbackDialog {
         id: inputDlg
         sink: false
         parent: Window.window ? Window.window.contentItem : root
-        anchors.fill: parent
+        width: parent ? parent.width : 0
+        height: parent ? parent.height : 0
     }
 }

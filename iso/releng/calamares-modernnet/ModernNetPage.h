@@ -30,7 +30,7 @@ private slots:
     void syncUi();
     void connectWifi();
     void changeWifi();
-    void onConnectFinished( bool ok );
+    void onConnectFinished( bool ok, int code );
 
 private:
     void setOnline( bool on );

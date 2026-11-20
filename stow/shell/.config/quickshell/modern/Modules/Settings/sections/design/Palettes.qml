@@ -62,7 +62,9 @@ GridLayout {
         ThemePalettes.refresh(Wallpaper.currentPath, root.mode);
     }
 
-    onPreviewKeyChanged: root._refresh()
+    // Deferred: refresh flips loading/key, which opacity reads while
+    // previewKey is first evaluated (a binding loop).
+    onPreviewKeyChanged: Qt.callLater(root._refresh)
     Component.onCompleted: root._refresh()
 
     Repeater {
