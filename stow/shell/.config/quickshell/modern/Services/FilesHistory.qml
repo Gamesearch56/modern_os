@@ -13,6 +13,7 @@ Singleton {
     // is navigation, not a click on the file, and the resting pointer is
     // not a folder that was opened.
     property double sideAt: 0
+    property bool _sideOnce: false
     property bool pinHover: false
     property real pinX: -1
     property real pinY: -1
@@ -38,6 +39,22 @@ Singleton {
         else
             Files._openAt(home);
         return true;
+    }
+
+    // The icon and the window both see one side click. The second delivery
+    // is the same click, not another step.
+    function sideStep(backward: bool) {
+        if (root._sideOnce)
+            return;
+        if (!Files.open || Files.propertiesOpen || Files.confirming || Files.naming || FilesConflict.open || Files.covered || Storage.confirmWhere === "files")
+            return;
+        root._sideOnce = true;
+        root.sideAt = Date.now();
+        if (backward)
+            Files.back();
+        else
+            Files.forward();
+        Qt.callLater(() => { root._sideOnce = false; });
     }
 
     function pinLocation() {

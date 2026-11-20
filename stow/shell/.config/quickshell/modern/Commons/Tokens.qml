@@ -176,7 +176,7 @@ Singleton {
     }
 
     readonly property QtObject session: QtObject {
-        readonly property real avatar: root.spacing.xxl * 4
+        readonly property real avatar: root.spacing.xxl * 3 + root.spacing.lg
     }
 
     readonly property QtObject store: QtObject {

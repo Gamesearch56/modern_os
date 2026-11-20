@@ -11,7 +11,7 @@ Item {
     property string label: ""
 
     readonly property var _c: root.chrome
-    readonly property real _size: root._c ? root._c.avatarSize : 128
+    readonly property real _size: root._c ? root._c.avatarSize : 112
     readonly property string _letter: {
         const s = String(root.label || root.login || "").trim();
         if (!s.length)

@@ -13,6 +13,7 @@ MouseArea {
     property var entry: null
     property real markRadius: Tokens.radius.medium
     property bool _dragged: false
+    property int _nav: 0
     property var _paths: []
     property string _uris: ""
     property string _plain: ""
@@ -36,7 +37,7 @@ MouseArea {
     signal picked(bool extra, bool range)
     signal activated()
 
-    acceptedButtons: Qt.LeftButton | Qt.RightButton
+    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
     preventStealing: true
     hoverEnabled: true
     cursorShape: {
@@ -58,6 +59,12 @@ MouseArea {
     drag.threshold: Tokens.spacing.md
 
     onPressed: (mouse) => {
+        const extra = Qt.BackButton | Qt.ForwardButton;
+        if ((mouse.button & extra) || (mouse.buttons & extra)) {
+            root._nav = mouse.button === Qt.ForwardButton ? 1 : -1;
+            FilesHistory.sideAt = Date.now();
+            return;
+        }
         if (root._side(mouse) || (mouse.button === Qt.LeftButton && root._locked))
             return;
         forceActiveFocus();
@@ -72,7 +79,7 @@ MouseArea {
         if (drag.target)
             chip.grabToImage(result => { ghost.Drag.imageSource = result.url; });
     }
-    onReleased: drag.target = null
+    onReleased: { const forward = root._nav > 0; drag.target = null; if (root._nav !== 0) { root._nav = 0; Qt.callLater(() => FilesHistory.sideStep(!forward)); } }
     onClicked: (mouse) => {
         if (root._side(mouse) || root._dragged)
             return;

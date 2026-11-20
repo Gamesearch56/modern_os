@@ -1151,6 +1151,7 @@
       "headline": "Paketupdate",
       "fromTo": "{from} → {to}",
       "empty": "Keine Updates",
+      "restarting": "Oberfläche wird neu gestartet…",
       "search": "Nach Updates suchen",
       "checkFailed": "Updates konnten nicht geprüft werden",
       "success": "Systemupdate abgeschlossen",

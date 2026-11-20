@@ -384,6 +384,9 @@ if ! grep -Fq 'availableOne' "$ROOT/stow/modern/.config/modern/translations/en.j
     || ! grep -Fq 'settings.update.availableOne' "$ROOT/stow/shell/.config/quickshell/modern/Services/UpdateClassify.qml"; then
     err "one pending update must use the singular notice"
 fi
+if ! grep -Fq 'root.restarting = (root._ran' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml"; then
+    err "a package update must not wait on a UI restart"
+fi
 if ! grep -Fq 'settings.update.desktopApplied' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml" \
     || ! grep -Fq 'desktopAppliedBody' "$ROOT/stow/modern/.config/modern/translations/en.json" \
     || ! grep -Fq 'desktopAppliedBody' "$ROOT/stow/modern/.config/modern/translations/de.json"; then
@@ -393,6 +396,13 @@ grep -Fq 'inhibitReloadPopup' "$ROOT/stow/shell/.config/quickshell/modern/shell.
     || err "Quickshell's own reload popup must stay hidden"
 grep -Fq 'clear_hypr_reload_banner' "$ROOT/scripts/reload-ui.sh" \
     || err "reload-ui must dismiss Hyprland's error bar after a clean reload"
+qs_line="$(grep -n 'ipc call shell reload' "$ROOT/scripts/reload-ui.sh" | head -1 | cut -d: -f1)"
+idle_line="$(grep -n 'hypridle-apply.sh' "$ROOT/scripts/reload-ui.sh" | head -1 | cut -d: -f1)"
+if [ -n "$qs_line" ] && [ -n "$idle_line" ] && [ "$qs_line" -lt "$idle_line" ]; then
+    ok "Quickshell restarts before the slower compositor steps"
+else
+    err "Quickshell reload must run before hypridle so Settings does not wait on the finished update"
+fi
 grep -Fq 'vfat?' "$ROOT/iso/airootfs/etc/mkinitcpio.conf.d/50-modern-esp.conf" \
     || err "initramfs must carry the ESP driver"
 

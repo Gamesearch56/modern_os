@@ -87,8 +87,25 @@ Singleton {
         Files.go(slash > 0 ? path.slice(0, slash) : "/", true, [path]);
     }
 
+    // A copied location escapes spaces so a terminal gets one argument.
+    // Pasting that text back has to name the same file.
+    function _unescape(text: string): string {
+        const meta = " \t\n\\'\"`$&|;<>()*?[]{}!#~";
+        let out = "";
+        for (let i = 0; i < text.length; i++) {
+            const ch = text.charAt(i);
+            if (ch !== "\\" || i + 1 >= text.length || meta.indexOf(text.charAt(i + 1)) < 0) {
+                out += ch;
+                continue;
+            }
+            out += text.charAt(i + 1);
+            i++;
+        }
+        return out;
+    }
+
     function _clean(text: string): string {
-        let path = String(text || "").trim();
+        let path = root._unescape(String(text || "")).trim();
         const home = String(Paths.home || "");
         if (path === "~")
             path = home;

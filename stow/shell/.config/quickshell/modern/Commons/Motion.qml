@@ -43,8 +43,8 @@ Singleton {
     readonly property int durationWifiScan: 8000
     // BlueZ inquiry restart — not MD3 motion, never scaled.
     readonly property int durationBluetoothScan: 8000
-    // Finished update stays on screen at 100% before the shell restarts.
-    readonly property int durationUpdateSettle: 2500
+    // 100% stays up long enough to read, then the shell restarts.
+    readonly property int durationUpdateSettle: 400
     // After the link is up, before the one login update check. Wall clock.
     readonly property int durationBootSettle: 12000
     // Re-read of a file another process is still rewriting — never scaled.

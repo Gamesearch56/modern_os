@@ -1151,6 +1151,7 @@
       "headline": "Package Update",
       "fromTo": "{from} → {to}",
       "empty": "No updates",
+      "restarting": "UI restart in progress…",
       "search": "Search for Updates",
       "checkFailed": "Could not check for updates",
       "success": "System update finished",

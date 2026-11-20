@@ -58,7 +58,7 @@ Item {
     readonly property real formWidth: root.spaceXxl * 11
     readonly property real iconMd: 24
     readonly property real iconLg: 28
-    readonly property real avatarSize: root.spaceXxl * 4
+    readonly property real avatarSize: root.spaceXxl * 3 + root.spaceLg
     readonly property real hoverLayer: 0.08
 
     readonly property var _fallbackColor: ({
