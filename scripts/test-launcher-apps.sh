@@ -9,6 +9,7 @@ err() { printf 'test-launcher-apps: FAIL %s\n' "$*" >&2; FAIL=1; }
 ok() { printf 'test-launcher-apps: ok %s\n' "$*"; }
 
 LAUNCHER="$ROOT/stow/shell/.config/quickshell/modern/Services/Launcher.qml"
+MODULE="$ROOT/stow/shell/.config/quickshell/modern/Modules/Launcher/Module.qml"
 ALL="$ROOT/stow/shell/.config/quickshell/modern/Modules/Launcher/AllApps.qml"
 EN="$ROOT/stow/modern/.config/modern/translations/en.json"
 DE="$ROOT/stow/modern/.config/modern/translations/de.json"
@@ -33,6 +34,16 @@ if grep -Fq '"allApps": "All applications"' "$EN" \
     ok "the button name exists in English and German"
 else
     err "launcher.allApps must be translated in en and de"
+fi
+
+if grep -Fq 'shell:settings' "$MODULE" \
+    && grep -Fq 'shell:store' "$MODULE" \
+    && grep -Fq 'shell:files' "$MODULE" \
+    && grep -Fq 'kind: "files"' "$MODULE" \
+    && grep -Fq 'Files.show' "$MODULE"; then
+    ok "settings, the store, and the file manager are in the full list"
+else
+    err "the full list must include settings, the store, and the file manager"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

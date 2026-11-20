@@ -1,6 +1,6 @@
-// The full app grid hangs above its own button. Reparenting the card
-// onto the launcher column keeps clicks on the grid, and the arrow
-// stays aimed at the button when the list above it changes height.
+// The full app grid is a wide card. Its bottom arrow meets the button,
+// and the card stays centered on that button. Reparenting onto the
+// launcher overlay keeps it wider than the results column.
 import QtQuick
 import "../../Commons"
 import "../../Widgets"
@@ -14,16 +14,39 @@ Item {
     property int currentIndex: 0
     property bool showIcons: true
     property Item host: null
-    property real popupHeight: Tokens.spacing.xxl * 8
 
     signal toggled()
     signal activated(int index)
     signal retreated()
 
     readonly property int _count: root.model ? root.model.length : 0
-    readonly property real _arrowW: Tokens.spacing.xl
-    readonly property real _arrowH: Tokens.spacing.md
-    readonly property int columns: Math.max(3, Math.floor((pop.width > 0 ? pop.width : Tokens.spacing.xxl * 16) / (Tokens.spacing.xxl * 4)))
+    readonly property real _arrowW: Tokens.spacing.xxl
+    readonly property real _arrowH: Tokens.spacing.lg
+    readonly property real _cellW: Tokens.spacing.xxl * 4
+    readonly property real _cellH: Tokens.spacing.xxl * 3 + Tokens.spacing.sm
+    readonly property int columns: 8
+    readonly property int _rows: 8
+    readonly property real _pad: Tokens.spacing.md
+    readonly property real _arrowGap: Tokens.spacing.sm
+    readonly property Item _wrap: root.parent ? root.parent.parent : null
+    // Follow the button, including the launcher's open animation.
+    readonly property real _buttonTop: {
+        void root.y;
+        void (root.parent ? root.parent.y : 0);
+        void (root._wrap ? root._wrap.y : 0);
+        void (root._wrap ? root._wrap.scale : 1);
+        void button.height;
+        if (!root.host)
+            return 0;
+        return button.mapToItem(root.host, 0, 0).y;
+    }
+    readonly property real _buttonMid: {
+        void root._buttonTop;
+        void button.width;
+        if (!root.host)
+            return 0;
+        return button.mapToItem(root.host, button.width / 2, 0).x;
+    }
 
     implicitWidth: button.size
     implicitHeight: button.size
@@ -63,6 +86,8 @@ Item {
     MIconButton {
         id: button
         anchors.centerIn: parent
+        size: Tokens.spacing.xxl * 2 * 0.8
+        iconSize: Tokens.icon.lg * 0.8
         iconName: "view-app-grid-symbolic"
         key: "launcher.allApps"
         tip: !root.open
@@ -81,26 +106,26 @@ Item {
         id: pop
         parent: root.host || root
         z: 8
-        width: root.host ? root.host.width : 0
-        height: Math.max(Tokens.spacing.xxl * 4, root.popupHeight)
+        width: root.columns * root._cellW + root._pad * 2
+        height: {
+            const wanted = root._pad * 3 + Tokens.spacing.lg + root._rows * root._cellH + root._arrowH;
+            if (!root.host)
+                return wanted;
+            const room = root._buttonTop - root._arrowGap - Tokens.spacing.xl;
+            return Math.min(wanted, Math.max(root._cellH * 2 + root._pad * 2, room));
+        }
         visible: root.open || opacity > 0.01
         opacity: Motion.overlayOpacity(root.open)
         scale: Motion.overlayScale(root.open)
         transformOrigin: Item.Bottom
         x: {
-            void button.x;
             if (!root.host)
                 return 0;
-            const mid = button.mapToItem(root.host, button.width / 2, 0).x;
-            return mid - width / 2;
+            const raw = root._buttonMid - width / 2;
+            const limit = Math.max(Tokens.spacing.md, root.host.width - width - Tokens.spacing.md);
+            return Math.max(Tokens.spacing.md, Math.min(raw, limit));
         }
-        y: {
-            void button.y;
-            void root.popupHeight;
-            if (!root.host)
-                return 0;
-            return button.mapToItem(root.host, 0, 0).y - height - Tokens.spacing.xs;
-        }
+        y: root.host ? root._buttonTop - height - root._arrowGap : 0
 
         Behavior on opacity {
             enabled: Motion.overlaysFade
@@ -132,10 +157,14 @@ Item {
 
         Canvas {
             id: arrow
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
             width: root._arrowW
             height: root._arrowH
+            y: parent.height - height
+            x: {
+                const tip = root._buttonMid - pop.x;
+                const raw = tip - width / 2;
+                return Math.max(Tokens.spacing.lg, Math.min(raw, parent.width - width - Tokens.spacing.lg));
+            }
             z: 2
             property color ink: Colors.color.surface
             property color line: Colors.color.outlineVariant
@@ -202,16 +231,16 @@ Item {
             anchors.right: parent.right
             anchors.top: heading.bottom
             anchors.bottom: parent.bottom
-            anchors.leftMargin: Tokens.spacing.sm
-            anchors.rightMargin: Tokens.spacing.sm
-            anchors.topMargin: Tokens.spacing.sm
-            anchors.bottomMargin: root._arrowH + Tokens.spacing.sm
+            anchors.leftMargin: root._pad
+            anchors.rightMargin: root._pad
+            anchors.topMargin: root._pad
+            anchors.bottomMargin: root._arrowH + root._pad
             visible: root._count > 0
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             flickableDirection: Flickable.VerticalFlick
-            cellWidth: Math.max(1, Math.floor(width / root.columns))
-            cellHeight: Tokens.spacing.xxl * 2 + Tokens.spacing.xl
+            cellWidth: root._cellW
+            cellHeight: root._cellH
             model: root._count
             currentIndex: root.currentIndex
             highlightFollowsCurrentItem: false
@@ -226,7 +255,7 @@ Item {
 
                 AppTile {
                     anchors.fill: parent
-                    anchors.margins: Tokens.spacing.xxs
+                    anchors.margins: Tokens.spacing.xs
                     iconName: hit.icon || ""
                     title: hit.name || ""
                     tint: hit.tint === true

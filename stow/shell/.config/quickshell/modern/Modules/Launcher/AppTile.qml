@@ -19,14 +19,12 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        anchors.margins: Tokens.spacing.xxs
         radius: Tokens.radius.medium
         color: root.current ? Chrome.tonal.bg : "transparent"
     }
 
     Rectangle {
         anchors.fill: parent
-        anchors.margins: Tokens.spacing.xxs
         radius: Tokens.radius.medium
         color: Colors.color.primary
         opacity: Chrome.stateLayer(ma.containsMouse && !root.current, ma.pressed)

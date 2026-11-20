@@ -25,7 +25,20 @@ Scope {
         void Config.launcher.mostUsedGridSize;
         return root.resultsFor(root.query);
     }
-    readonly property var catalog: Launcher.catalog(root.query)
+    readonly property var catalog: {
+        void Launcher.open;
+        const out = root._shellApps();
+        const apps = Launcher.catalog("");
+        for (let i = 0; i < apps.length; i++) {
+            const a = apps[i];
+            if (root._isFilesEntry(a.id))
+                continue;
+            a.kind = "app";
+            out.push(a);
+        }
+        out.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+        return out;
+    }
     readonly property var current: {
         if (root.currentIndex < 0 || root.currentIndex >= root.results.length)
             return null;
@@ -54,6 +67,20 @@ Scope {
         return out;
     }
 
+    // Desktop entries never include these shell windows. The file manager
+    // also has a desktop file, which the grid skips so it is listed once.
+    function _shellApps(): var {
+        return [
+            { id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "preferences-system", tint: true, kind: "settings" },
+            { id: "shell:store", name: I18n.t("store.title"), genericName: "", icon: "plasmadiscover", tint: true, kind: "store" },
+            { id: "shell:files", name: I18n.t("files.launcherName"), genericName: "", icon: "modern-files-symbolic", tint: true, kind: "files" }
+        ];
+    }
+
+    function _isFilesEntry(id: string): bool {
+        return String(id || "").replace(/\.desktop$/i, "") === "modern.files";
+    }
+
     function _matchAction(needle: string, english: string, title: string): bool {
         const n = needle.toLowerCase();
         const en = english.toLowerCase();
@@ -71,6 +98,11 @@ Scope {
         }
         if (item.kind === "store") {
             Store.show();
+            Launcher.hide();
+            return;
+        }
+        if (item.kind === "files") {
+            Files.show("");
             Launcher.hide();
             return;
         }

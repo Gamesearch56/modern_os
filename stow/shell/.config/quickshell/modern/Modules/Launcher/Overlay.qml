@@ -53,7 +53,7 @@ Item {
         return true;
     }
 
-    readonly property real _buttonBlock: Tokens.spacing.xxl + Tokens.spacing.md + Tokens.spacing.md
+    readonly property real _buttonBlock: Tokens.spacing.xxl * 2 * 0.8 + Tokens.spacing.md * 2
     readonly property real _stackGap: Tokens.spacing.md
     readonly property real _searchY: Math.max(
         Tokens.spacing.xl,
@@ -130,7 +130,6 @@ Item {
                 Layout.fillWidth: true
                 onQueryEdited: (t) => {
                     root._buttonOn = false;
-                    root.appsIndex = 0;
                     root.queryEdited(t);
                 }
                 onAccepted: {
@@ -182,13 +181,10 @@ Item {
             Item {
                 id: card
                 Layout.fillWidth: true
-                Layout.preferredHeight: {
-                    const room = Math.max(0, root._belowSearch - root._buttonBlock);
-                    const full = results.maxImplicitHeight + Tokens.spacing.md * 2;
-                    if (root.appsOpen)
-                        return Math.min(full, room);
-                    return Math.min(results.implicitHeight + Tokens.spacing.md * 2, room);
-                }
+                Layout.preferredHeight: Math.min(
+                    results.implicitHeight + Tokens.spacing.md * 2,
+                    Math.max(0, root._belowSearch - root._buttonBlock)
+                )
                 clip: true
 
                 Rectangle {
@@ -222,13 +218,13 @@ Item {
             AllApps {
                 id: apps
                 Layout.alignment: Qt.AlignHCenter
-                host: wrap
+                Layout.topMargin: Tokens.spacing.md
+                host: root
                 open: root.appsOpen
                 armed: root._buttonOn
                 model: root.catalog
                 currentIndex: root.appsIndex
                 showIcons: Config.launcher.showIcons ?? true
-                popupHeight: card.height + stack.spacing - Tokens.spacing.xs
                 onToggled: {
                     root.appsOpen = !root.appsOpen;
                     if (root.appsOpen) {
