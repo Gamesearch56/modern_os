@@ -14,6 +14,7 @@ RowLayout {
     MIconButton { iconName: "go-previous"; key: "files.toolbar.back"; tip: true; enabled: FilesHistory.back.length > 0; onClicked: Files.back() }
     MIconButton { iconName: "go-next"; key: "files.toolbar.forward"; tip: true; enabled: FilesHistory.forward.length > 0; onClicked: Files.forward() }
     MIconButton { iconName: "go-up"; key: "files.toolbar.up"; tip: true; onClicked: Files.up() }
+    MIconButton { iconName: "view-refresh-symbolic"; key: "files.network.rescan"; tip: true; visible: Files.place === "network"; onClicked: FilesPlaces.reload() }
 
     MTextField {
         id: search

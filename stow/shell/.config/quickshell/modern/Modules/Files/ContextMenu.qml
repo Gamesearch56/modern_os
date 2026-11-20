@@ -98,7 +98,7 @@ MPopup {
             window: "window-new", rename: "edit-rename", copy: "edit-copy",
             cut: "edit-cut", paste: "edit-paste", props: "document-properties",
             trash: "user-trash", delete: "edit-delete", restore: "edit-undo",
-            empty: "user-trash", connect: "network-connect", clearRecent: "edit-clear",
+            empty: "user-trash", connect: "network-connect", rescan: "view-refresh-symbolic", clearRecent: "edit-clear",
             newFolder: "folder-new", newFile: "document-new", closeOthers: "window-close", eject: "media-eject"
         };
         return String(icons[id] || "");
@@ -146,6 +146,7 @@ MPopup {
             return rows;
         }
         if (kind === "network") {
+            add("rescan", "files.network.rescan", true, false);
             add("connect", "files.network.connect", true, false);
             return rows;
         }
@@ -213,10 +214,8 @@ MPopup {
                 FilesNet.connect(Files.menuName);
             else
                 Files.show(path);
-        } else if (id === "connect") {
-            Files.namingKind = "server";
-            Files.naming = true;
-        }
+        } else if (id === "connect") { Files.namingKind = "server"; Files.naming = true; }
+        else if (id === "rescan") FilesPlaces.reload();
         else if (id === "location") {
             const slash = path.lastIndexOf("/");
             const parent = slash > 0 ? path.slice(0, slash) : "/";

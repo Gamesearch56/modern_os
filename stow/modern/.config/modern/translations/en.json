@@ -1663,6 +1663,7 @@
     "networkEmpty": "No network locations",
     "network": {
       "connect": "Connect to server",
+      "rescan": "Look again",
       "connectDo": "Connect",
       "address": "Server address",
       "refused": "Could not connect to that server"

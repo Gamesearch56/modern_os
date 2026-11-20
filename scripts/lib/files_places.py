@@ -306,6 +306,78 @@ def _network_places(rows, seen):
         _add_place(rows, seen, "", _uri_label(uri), "network", uri)
 
 
+def _ipv4(text):
+    bits = (text or "").split(".")
+    if len(bits) != 4:
+        return False
+    try:
+        return all(bit.isdigit() and str(int(bit)) == bit and 0 <= int(bit) <= 255 for bit in bits)
+    except ValueError:
+        return False
+
+
+def _run(args, timeout):
+    try:
+        return subprocess.run(args, check=False, capture_output=True, text=True, timeout=timeout)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def _disk_shares(host):
+    # -g is one share per line. None means the client never ran.
+    proc = _run(["smbclient", "-L", host, "-N", "-g"], 3)
+    if proc is None:
+        return None
+    names = []
+    for line in (proc.stdout or "").splitlines():
+        bits = line.split("|")
+        if len(bits) < 2 or bits[0] != "Disk":
+            continue
+        name = bits[1].strip()
+        if not name or name.endswith("$") or "/" in name:
+            continue
+        names.append(name)
+    return names
+
+
+def _netbios_hosts():
+    # The network view's browse misses a server that only answers
+    # NetBIOS. A broadcast finds those, including one on this computer.
+    proc = _run(["nmblookup", "*"], 2)
+    if proc is None:
+        return []
+    hosts = []
+    for line in (proc.stdout or "").splitlines():
+        bits = line.split()
+        if not bits or not _ipv4(bits[0]) or bits[0] in hosts:
+            continue
+        hosts.append(bits[0])
+    return hosts
+
+
+def _add_shares(rows, seen, host):
+    shares = _disk_shares(host)
+    # None means the lookup itself failed, so there is no server to show.
+    if shares is None:
+        return False
+    if not shares:
+        _add_place(rows, seen, "", host, "network", _norm_uri("smb://" + host))
+        return False
+    for share in shares:
+        _add_place(rows, seen, "", share, "network", _norm_uri("smb://" + host + "/" + share))
+    return True
+
+
+def _announced_places(rows, seen):
+    hosts = _netbios_hosts()
+    found = False
+    for host in hosts[:8]:
+        if _add_shares(rows, seen, host):
+            found = True
+    if not found:
+        _add_shares(rows, seen, "127.0.0.1")
+
+
 def _places():
     rows = []
     seen = set()
@@ -315,6 +387,7 @@ def _places():
         _add_place(rows, seen, target, os.path.basename(target) or target, kind, "")
     _gvfs_places(rows, seen)
     _network_places(rows, seen)
+    _announced_places(rows, seen)
     return rows
 
 

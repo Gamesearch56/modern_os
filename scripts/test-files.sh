@@ -573,9 +573,17 @@ if [ "$1" = mount ]; then
 fi
 exit 1
 EOF
-chmod +x "$TMP/bin/findmnt" "$TMP/bin/gio"
+cat >"$TMP/bin/nmblookup" <<'EOF'
+#!/bin/sh
+printf '%s\n' '10.0.0.8 *<00>'
+EOF
+cat >"$TMP/bin/smbclient" <<'EOF'
+#!/bin/sh
+printf '%s\n' 'Disk|Media|'
+EOF
+chmod +x "$TMP/bin/findmnt" "$TMP/bin/gio" "$TMP/bin/nmblookup" "$TMP/bin/smbclient"
 listed="$(PATH="$TMP/bin:$PATH" XDG_RUNTIME_DIR="$TMP/runtime" "$PLACES" mounts)"
-if python3 -c 'import json,sys; rows=json.load(sys.stdin); paths={r["path"] for r in rows}; uris={r["uri"] for r in rows}; assert "/mnt/share" in paths and "/mnt/local" not in paths and any(r["path"].endswith("/gvfs/smb-share:server=nas,share=media") and r["uri"]=="smb://nas/media" for r in rows) and "sftp://desk" in uris' <<<"$listed"; then
+if python3 -c 'import json,sys; rows=json.load(sys.stdin); paths={r["path"] for r in rows}; uris={r["uri"] for r in rows}; assert "/mnt/share" in paths and "/mnt/local" not in paths and any(r["path"].endswith("/gvfs/smb-share:server=nas,share=media") and r["uri"]=="smb://nas/media" for r in rows) and "sftp://desk" in uris and "smb://10.0.0.8/Media" in uris' <<<"$listed"; then
     ok "network places list mounts, gvfs shares, and discovered servers"
 else
     err "network places were incomplete"

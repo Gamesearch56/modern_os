@@ -33,11 +33,12 @@ Item {
         anchors.fill: parent
         visible: root.frame && root._dir && pic.status !== Image.Ready
 
+        // Surface tones. A primary fill on every tile outshouts the names.
         Rectangle {
             width: root.frame ? Tokens.spacing.xxl * 2 : Tokens.spacing.lg
             height: root._tabH + Tokens.spacing.xs
             radius: Tokens.radius.small
-            color: Colors.color.secondary
+            color: Colors.color.surfaceContainerHighest
         }
 
         Rectangle {
@@ -47,14 +48,14 @@ Item {
             anchors.top: parent.top
             anchors.topMargin: root._tabH
             radius: Tokens.radius.small
-            color: Colors.color.primaryContainer
+            color: Colors.color.surfaceContainerHigh
 
             MIcon {
                 anchors.centerIn: parent
                 visible: root.frame
                 name: "folder"
                 size: Tokens.icon.lg
-                color: Colors.color.onPrimaryContainer
+                color: Colors.color.onSurfaceVariant
             }
         }
     }
