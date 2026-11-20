@@ -39,15 +39,20 @@ FloatingWindow {
     implicitWidth: Tokens.window.overlayWidth
     implicitHeight: Tokens.window.overlayHeight
     screen: win._screen()
-    property bool settle: false
+    // The opening Space can be delivered when this window first takes
+    // focus, which on a slow machine is after a short timer would fire.
+    property bool _spaceLive: false
 
     on_ImageUrlChanged: zoomFlick.zoom = 1
 
     Timer {
-        interval: Motion.mediumMs
-        running: true
-        onTriggered: win.settle = true
+        id: spaceLive
+        interval: Motion.extraLongMs
+        onTriggered: win._spaceLive = true
     }
+
+    onVisibleChanged: if (visible) { win._spaceLive = false; spaceLive.restart(); }
+    Component.onCompleted: spaceLive.restart()
 
     Flickable {
         id: zoomFlick
@@ -116,7 +121,7 @@ FloatingWindow {
     }
     Shortcut {
         sequence: "Space"
-        enabled: win.settle
+        enabled: win._spaceLive
         context: Qt.WindowShortcut
         onActivated: FilePreview.spaceHide()
     }

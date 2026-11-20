@@ -200,8 +200,9 @@
     "recordAudio": true
   },
   "gaming": {
+    "mode": false,
     "autoFullscreen": true,
-    "autoOptimize": true,
+    "autoOptimize": false,
     "hdrSession": false,
     "browserLight": false,
     "matchClass": "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl|wow|Wow|Warcraft.*",

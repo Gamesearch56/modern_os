@@ -93,7 +93,7 @@ hl.config({
         border_size = 1,
         layout = "dwindle",
         resize_on_border = true,
-        allow_tearing = config.value("gaming.autoOptimize", true) ~= false,
+        allow_tearing = config.value("gaming.autoOptimize", false) == true,
     },
     decoration = {
         rounding = rounding,

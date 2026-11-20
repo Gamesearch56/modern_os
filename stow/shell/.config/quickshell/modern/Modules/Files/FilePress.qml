@@ -13,6 +13,7 @@ MouseArea {
     property var entry: null
     property real markRadius: Tokens.radius.medium
     property bool _dragged: false
+    property int _nav: 0
     property var _paths: []
     property string _uris: ""
     property string _plain: ""
@@ -36,7 +37,7 @@ MouseArea {
     signal picked(bool extra, bool range)
     signal activated()
 
-    acceptedButtons: Qt.LeftButton | Qt.RightButton
+    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
     preventStealing: true
     hoverEnabled: true
     cursorShape: {
@@ -49,6 +50,7 @@ MouseArea {
     // The shape has to follow the handler too, or it stays stale after the
     // openable check finishes while the pointer is already on the row.
     HoverHandler {
+        enabled: !Files.covered
         cursorShape: root.cursorShape
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     }
@@ -57,7 +59,13 @@ MouseArea {
     drag.threshold: Tokens.spacing.md
 
     onPressed: (mouse) => {
-        if (mouse.button === Qt.LeftButton && root._locked)
+        const extra = Qt.BackButton | Qt.ForwardButton;
+        if ((mouse.button & extra) || (mouse.buttons & extra)) {
+            root._nav = mouse.button === Qt.ForwardButton ? 1 : -1;
+            FilesHistory.sideAt = Date.now();
+            return;
+        }
+        if (root._side(mouse) || (mouse.button === Qt.LeftButton && root._locked))
             return;
         forceActiveFocus();
         root._dragged = false;
@@ -71,9 +79,9 @@ MouseArea {
         if (drag.target)
             chip.grabToImage(result => { ghost.Drag.imageSource = result.url; });
     }
-    onReleased: drag.target = null
+    onReleased: { const forward = root._nav > 0; drag.target = null; if (root._nav !== 0) { root._nav = 0; Qt.callLater(() => FilesHistory.sideStep(!forward)); } }
     onClicked: (mouse) => {
-        if (root._dragged)
+        if (root._side(mouse) || root._dragged)
             return;
         if (mouse.button === Qt.RightButton) {
             const at = root._at(mouse.x, mouse.y);
@@ -84,9 +92,19 @@ MouseArea {
             return;
         root.picked((mouse.modifiers & Qt.ControlModifier) !== 0, (mouse.modifiers & Qt.ShiftModifier) !== 0);
     }
-    onDoubleClicked: {
-        if (!root._dragged && !root._locked)
+    onDoubleClicked: (mouse) => {
+        if (!root._side(mouse) && !root._dragged && !root._locked)
             root.activated();
+    }
+
+    // Same physical press as history. Opening here would push that folder onto the route the button is walking.
+    function _side(mouse): bool {
+        if (Date.now() - FilesHistory.sideAt < Motion.durationLong)
+            return true;
+        if (!mouse)
+            return false;
+        const extra = Qt.BackButton | Qt.ForwardButton;
+        return (mouse.button & extra) !== 0 || (mouse.buttons & extra) !== 0;
     }
 
     function _askOpen() {
@@ -152,9 +170,12 @@ MouseArea {
         Drag.onDragFinished: (dropAction) => {
             ghost.x = 0;
             ghost.y = 0;
+            // Another program took the files. A drop here already refreshes if it moved something.
+            const gone = dropAction === Qt.MoveAction && !FilesDrag.ours;
+            FilesDrag.ours = false;
             if (FilesDrag.active)
                 FilesDrag.end();
-            if (dropAction === Qt.MoveAction)
+            if (gone)
                 Files.refresh();
         }
     }

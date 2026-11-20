@@ -7,7 +7,7 @@ Item {
 
     property var places: null
     readonly property bool modal: Files.propertiesOpen || Files.confirming || Files.naming || FilesConflict.open
-            || Files.menuOpen || Storage.confirmWhere === "files"
+            || Files.covered || Storage.confirmWhere === "files"
     // Editing the path must not swallow Back and Forward.
     readonly property bool nav: Files.open && Files.renaming.length === 0 && !root.modal
     readonly property bool armed: root.nav && !Files.typing

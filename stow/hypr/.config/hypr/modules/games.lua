@@ -7,8 +7,9 @@ local function on(path, fallback)
 end
 
 local auto_fs = on("gaming.autoFullscreen", true)
-local auto_opt = on("gaming.autoOptimize", true)
-if not auto_fs and not auto_opt then
+local auto_opt = on("gaming.autoOptimize", false)
+local game_mode = config.value("gaming.mode", false) == true
+if not auto_fs and not auto_opt and not game_mode then
     return
 end
 
@@ -180,6 +181,10 @@ end
 
 local function effects(name, match)
     local rule = { name = name, match = match }
+    if auto_opt or game_mode then
+        rule.content = "game"
+        rule.idle_inhibit = "fullscreen"
+    end
     if auto_opt then
         rule.immediate = true
         rule.no_blur = true
@@ -187,8 +192,6 @@ local function effects(name, match)
         rule.no_anim = true
         rule.no_wobble = true
         rule.opaque = true
-        rule.content = "game"
-        rule.idle_inhibit = "fullscreen"
     end
     return rule
 end

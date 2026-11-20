@@ -20,6 +20,24 @@ ColumnLayout {
 
     onDraftChanged: Calendar.clearError()
 
+    function _takeReturn() {
+        const d = String(Settings.restoreDetail || "");
+        if (d !== "proton" && d !== "google" && d !== "apple" && d !== "appleLink")
+            return;
+        root.draft = d;
+        Settings.restoreDetail = "";
+    }
+
+    Component.onCompleted: root._takeReturn()
+
+    Connections {
+        target: Settings
+        function onRestoreDetailChanged() {
+            if (String(Settings.restoreDetail || "").length)
+                root._takeReturn();
+        }
+    }
+
     readonly property string _connectedKey: {
         const p = CalendarAccount.provider;
         if (p === "google")

@@ -18,6 +18,8 @@ Item {
     property string pin: ""
 
     function queue() {
+        if (FilesSelect.banding)
+            return;
         const selected = Files.selected || [];
         root.pin = selected.length === 1 ? String(selected[0] || "") : "";
         if (!root.pin.length) {

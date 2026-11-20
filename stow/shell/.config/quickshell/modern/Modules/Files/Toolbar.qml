@@ -7,19 +7,22 @@ import "../../Services"
 RowLayout {
     id: root
     property bool loading: false
+    enabled: !Files.covered || FilesSearch.popup
     anchors.fill: parent
     spacing: Tokens.spacing.xs
 
     MIconButton { iconName: "go-previous"; key: "files.toolbar.back"; tip: true; enabled: FilesHistory.back.length > 0; onClicked: Files.back() }
     MIconButton { iconName: "go-next"; key: "files.toolbar.forward"; tip: true; enabled: FilesHistory.forward.length > 0; onClicked: Files.forward() }
     MIconButton { iconName: "go-up"; key: "files.toolbar.up"; tip: true; onClicked: Files.up() }
+    MIconButton { iconName: "view-refresh-symbolic"; key: "files.network.rescan"; tip: true; visible: Files.place === "network"; onClicked: FilesPlaces.reload() }
+    MButton { visible: FilesChoose.active; kind: "tonal"; key: FilesChoose.useKey; enabled: FilesChoose.ready; onClicked: FilesChoose.accept("") }
 
     MTextField {
         id: search
         Layout.fillWidth: true
         placeholderKey: "files.search.placeholder"
         captureEscape: true
-        selectAllOnPress: search.text === root.locationText()
+        selectAllOnPress: search.text === root.locationText(); terminalCopy: search.text === root.locationText()
         captureReturn: true
         captureArrows: !root._quiet && root._query().length > 0
         onTextEdited: root._type()
@@ -57,7 +60,7 @@ RowLayout {
             anchors.bottomMargin: Tokens.spacing.xs
         }
 
-        // Hold and drag the path to move the window. A click still edits it.
+        // A short drag moves the window. A click still edits the path.
         MTitleDrag {
             anchors.fill: parent
             z: 10
@@ -74,11 +77,7 @@ RowLayout {
     Timer {
         id: hunt
         interval: Motion.shortMs
-        onTriggered: {
-            if (!root._query().length)
-                return;
-            FilesSearch.start(Files.path, search.text, Files.showHidden);
-        }
+        onTriggered: if (root._query().length) FilesSearch.start(Files.path, search.text, Files.showHidden)
     }
 
     Timer {
@@ -87,13 +86,14 @@ RowLayout {
         onTriggered: {
             if (root._quiet || !search.focused || !root.suggestions.length)
                 return;
-            suggest.open = true;
             FilesSearch.popup = true;
+            suggest.open = true;
         }
     }
 
     SearchScope {}
 
+    MIconButton { iconName: "list-add"; key: "files.toolbar.new"; tip: true; enabled: Files.place === "folder" && Files.path.charAt(0) === "/"; onClicked: newMenu.open = !newMenu.open; NewMenu { id: newMenu } }
     MIconButton {
         id: sortButton
         iconName: "view-sort-ascending"
@@ -115,10 +115,7 @@ RowLayout {
     MIconButton {
         iconName: "utilities-terminal"
         key: "files.toolbar.terminal"; tip: true
-        onClicked: {
-            FilesPlaces.openTerminal(Files.path);
-            Files.hide();
-        }
+        onClicked: { FilesPlaces.openTerminal(Files.path); Files.hide(); }
     }
 
     Connections {
@@ -128,9 +125,10 @@ RowLayout {
             root.showLocation();
             Qt.callLater(() => { search.forceActiveFocus(); Qt.callLater(() => search.editor.selectAll()); });
         }
-        function onPathChanged() { if (!search.focused) root.showLocation(); }
+        function onPathChanged() { FilesHistory.pinLocation(); if (!search.focused) root.showLocation(); }
         function onSelectedChanged() { if (!search.focused) root.showLocation(); }
-        function onPlaceChanged() { if (!search.focused) root.showLocation(); }
+        function onPlaceChanged() { FilesHistory.pinLocation(); if (!search.focused) root.showLocation(); }
+        function onHoverPathChanged() { if (!FilesHistory.pinHover && !search.focused) root.showLocation(); }
     }
 
     Connections {
@@ -149,7 +147,7 @@ RowLayout {
     property int _index: -1
     readonly property int _limit: 8
     readonly property var suggestions: {
-        void [search.text, search.focused, root._hold, FilesSearch.results, Files.entries, Files.foldersFirst, Files.place, Files.selected];
+        void [search.text, search.focused, root._hold, FilesSearch.results, Files.entries, Files.foldersFirst, Files.place, Files.selected, FilesLocate.gen];
         return root._collect();
     }
 
@@ -162,7 +160,13 @@ RowLayout {
     }
 
     function locationText(): string {
-        return Files.selected.length === 1 ? String(Files.selected[0] || "") : (Files.path || "");
+        const hover = String(Files.hoverPath || "");
+        if (hover.length && !FilesHistory.pinHover) return hover;
+        if (Files.selected.length === 1) return String(Files.selected[0] || "");
+        const place = Files.place;
+        if (place === "recent" || place === "favorites" || place === "network" || place === "trash")
+            return I18n.t("files.places." + place);
+        return Files.path || "";
     }
 
     function showLocation() {
@@ -178,7 +182,9 @@ RowLayout {
         if (!search.focused || root._hold)
             return "";
         const text = String(search.text || "").trim();
-        if (text.length < 3 || text === root.locationText())
+        if (!text.length || text === root.locationText())
+            return "";
+        if (text.length < 3 && text.charAt(0) !== "/" && text.charAt(0) !== "~")
             return "";
         return text;
     }
@@ -188,11 +194,10 @@ RowLayout {
             return;
         root._quiet = false;
         root._index = -1;
+        const text = String(search.text || "").trim();
+        FilesLocate.ask(text === root.locationText() ? "" : text);
         if (!root._query().length) {
-            hunt.stop();
-            FilesSearch.stop();
-            root._index = -1;
-            root._sync();
+            hunt.stop(); FilesSearch.stop(); root._sync();
             return;
         }
         hunt.restart();
@@ -211,8 +216,8 @@ RowLayout {
         else
             at = Math.max(0, Math.min(rows.length - 1, at + delta));
         root._index = at;
-        suggest.open = true;
         FilesSearch.popup = true;
+        suggest.open = true;
     }
 
     function _accept() {
@@ -226,9 +231,10 @@ RowLayout {
         FilesSearch.stop();
         root._index = -1;
         const path = String(row.path);
-        const slash = path.lastIndexOf("/");
-        const parent = slash > 0 ? path.slice(0, slash) : "/";
-        Files.go(parent, true, [path]);
+        if (!(FilesLocate.same(path) && FilesLocate.open(path))) {
+            const slash = path.lastIndexOf("/");
+            Files.go(slash > 0 ? path.slice(0, slash) : "/", true, [path]);
+        }
         root.showLocation();
         root._sync();
     }
@@ -237,37 +243,31 @@ RowLayout {
         const picked = (suggest.open || FilesSearch.popup) && root._index >= 0;
         const text = String(search.text || "").trim();
         const here = text !== root.locationText();
-        const keep = !picked && here && text === FilesSearch.query;
+        const opened = !picked && here && FilesLocate.open(text);
         if (picked) root._accept();
         else hunt.stop();
         root._closeQuick();
-        if (keep) FilesSearch.openPage();
-        else if (!picked && here && text.length)
-            FilesSearch.start(Files.path, text, Files.showHidden, true);
+        if (opened && FilesLocate.found) root.showLocation();
+        else if (!opened && !picked && here && text.length) {
+            if (text === FilesSearch.query) FilesSearch.openPage();
+            else FilesSearch.start(Files.path, text, Files.showHidden, true);
+        }
         root._dropField();
     }
 
     function _dropField() {
-        root._leaveField = true;
-        search.editor.deselect(); root.forceActiveFocus();
+        root._leaveField = true; search.editor.deselect(); root.forceActiveFocus();
     }
 
     function _leaveSearch() {
-        hunt.stop();
-        FilesSearch.stop();
-        root._quiet = true;
-        root._index = -1;
-        Files.searchOpen = false;
-        root.showLocation();
-        root._sync();
+        hunt.stop(); FilesSearch.stop();
+        root._quiet = true; root._index = -1; Files.searchOpen = false;
+        root.showLocation(); root._sync();
     }
 
     function _closeQuick() {
-        reveal.stop();
-        root._quiet = true;
-        root._index = -1;
-        suggest.open = false;
-        FilesSearch.popup = false;
+        reveal.stop(); root._quiet = true; root._index = -1;
+        suggest.open = false; FilesSearch.popup = false;
     }
 
     function _sync() {

@@ -10,6 +10,7 @@ gnome-keyring                  # login keyring via greetd PAM; without it Electr
 xdg-user-dirs                  # Desktop/Pictures before wallpaper copy
 gvfs                           # removable disks and network places
 gvfs-mtp                       # phone MTP
+gvfs-smb                       # SMB file servers in the file manager
 hypridle                       # idle handling (screen off, suspend) — see Services/Power
 hyprland-qt-support             # org.hyprland.style QML chrome (application-style.conf); polkit UI is phylax-git (10-desktop.aur.txt)
 xdg-desktop-portal-hyprland     # screen share / screenshot portal backend

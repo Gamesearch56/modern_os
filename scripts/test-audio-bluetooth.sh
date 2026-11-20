@@ -31,6 +31,37 @@ for lang in en de; do
         || err "hint missing in ${lang}"
 done
 
+BTQML="$SVC/Bluetooth.qml"
+LINK="$SVC/BluetoothLink.qml"
+WP="$ROOT/stow/pipewire/.config/wireplumber/wireplumber.conf.d/51-bluetooth.conf"
+if grep -q 'a.discovering = on' "$BTQML"; then
+    err "powering the adapter must not leave discovery running"
+fi
+if ! grep -q 'discovering = false' "$BTQML"; then
+    err "a finished search must stop discovery"
+fi
+if ! grep -q 'BluetoothLink.shadowed' "$BTQML"; then
+    err "a second advert of a saved headset is still listed"
+fi
+if ! grep -q '_pairing = !root.isRemembered' "$LINK"; then
+    err "a saved headset must be connected without a new pair"
+fi
+if ! grep -q 'device.trusted' "$LINK" || ! grep -q 'connectFailed' "$LINK"; then
+    err "a failed connect is not reported"
+fi
+if ! grep -q 'bluez5.auto-connect = \[ \]' "$WP" \
+    || ! grep -q 'autoswitch-to-headset-profile = false' "$WP" \
+    || ! grep -q 'dummy-avrcp-player = false' "$WP"; then
+    err "wireplumber still pages headsets and holds the headset profile"
+fi
+for lang in en de; do
+    for key in connecting connectFailed pairFailed connectFailedTitle; do
+        jq -e --arg k "$key" '.settings.bluetooth[$k] | length > 0' \
+            "$ROOT/stow/modern/.config/modern/translations/${lang}.json" >/dev/null \
+            || err "settings.bluetooth.${key} missing in ${lang}"
+    done
+done
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

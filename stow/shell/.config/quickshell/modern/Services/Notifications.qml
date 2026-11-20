@@ -232,6 +232,14 @@ Singleton {
         root._push(root._local(summary, body || "", imagePath || "", root._timeoutMs()));
     }
 
+    function toastSection(summary: string, body: string, section: string) {
+        if (root.effectiveDnd)
+            return;
+        const item = root._local(summary, body || "", "", root._timeoutMs());
+        item.section = String(section || "");
+        root._push(item);
+    }
+
     function _isLocalPath(s: string): bool {
         const t = String(s || "");
         return t.indexOf("/") === 0 || t.indexOf("file://") === 0;
@@ -491,6 +499,13 @@ Singleton {
         // Shell toasts carry the file they report (screenshot, recording,
         // fetched wallpaper): show it selected in the file manager.
         if (live.local) {
+            const section = root._str(live.section);
+            if (section.length) {
+                Settings.openAt(section, "");
+                root.hide();
+                root.dismiss(live);
+                return true;
+            }
             const file = root._openablePath(root._str(live.image));
             const shown = file.length > 0 && Apps.openInFileManager(file);
             if (shown)

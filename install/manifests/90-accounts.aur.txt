@@ -1,5 +1,4 @@
-# Accounts & Connections settings section surfaces these as "connect"
-# affordances. Not in any default profile — pass `--extra proton` to
-# install.sh to pull them in.
-proton-pass-bin
+# Accounts & Connections. Not in any default profile — pass
+# `--extra proton` to install.sh to pull them in. Proton Pass is a
+# default app (30-apps.aur.txt).
 proton-mail-bin

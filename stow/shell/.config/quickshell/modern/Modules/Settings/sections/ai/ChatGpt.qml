@@ -10,11 +10,18 @@ ColumnLayout {
     Layout.fillWidth: true
 
     readonly property string _mask: "************"
+    readonly property bool _limited: Ai.chatgptBlock === "credits" || Ai.chatgptBlock === "spend"
 
     MText {
-        key: Ai.chatgptHasKey ? "settings.chatgpt.connected" : "settings.chatgpt.needKey"
+        key: {
+            if (Ai.chatgptBlock === "credits")
+                return "settings.chatgpt.needCredits";
+            if (Ai.chatgptBlock === "spend")
+                return "settings.chatgpt.needSpend";
+            return Ai.chatgptHasKey ? "settings.chatgpt.connected" : "settings.chatgpt.needKey";
+        }
         styleName: "titleSmall"
-        color: Ai.chatgptHasKey ? Colors.color.primary : Colors.color.onSurface
+        color: root._limited ? Colors.color.error : (Ai.chatgptHasKey ? Colors.color.primary : Colors.color.onSurface)
         wrapMode: Text.WordWrap
         elide: Text.ElideNone
         Layout.fillWidth: true
@@ -61,6 +68,12 @@ ColumnLayout {
                 keyField._masked = false;
                 keyField.text = "";
             }
+        }
+        MButton {
+            visible: Ai.chatgptHasKey
+            kind: "text"
+            key: "settings.chatgpt.addCredits"
+            onClicked: Ai.openChatGptBilling()
         }
         MButton {
             kind: "text"

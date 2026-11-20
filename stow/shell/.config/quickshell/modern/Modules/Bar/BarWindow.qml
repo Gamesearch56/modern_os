@@ -7,26 +7,35 @@ import "../../Services"
 PanelWindow {
     id: root
 
-    readonly property bool vertical: Config.bar.position === "left" || Config.bar.position === "right"
+    readonly property bool vertical: BarLayout.position === "left" || BarLayout.position === "right"
     readonly property real _edge: BarLayout.edge
-    readonly property real _end: Config.bar.endGap ?? Tokens.spacing.sm
-    readonly property bool _auto: !!(Config.bar.autoHide)
+    readonly property real _end: BarLayout.endGap ?? Tokens.spacing.sm
+    readonly property bool _auto: !!(BarLayout.autoHide)
     readonly property real _strip: Tokens.spacing.xs
     readonly property bool _hold: Popups.openCount > 0
     readonly property bool _cover: Hypr.focusedFullscreen
     readonly property bool _shown: !root._cover && (!root._auto || root._peek || root._hold)
     readonly property bool _expanded: !root._cover && (!root._auto || root._shown || root._slidingOut)
-    readonly property string _layoutKey: String(Config.bar.position || "top")
+    readonly property string _layoutKey: String(BarLayout.position || "top")
     readonly property real _fullH: BarLayout.strip
     readonly property real _fullW: BarLayout.strip
+    function slotIds(which: string): var {
+        void Config.generation;
+        if (which === "center")
+            return (Config.bar.center || []).slice();
+        if (which === "right")
+            return (Config.bar.right || []).slice();
+        return (Config.bar.left || []).slice();
+    }
+
     property bool _peek: false
     property bool _slidingOut: false
     property real _slide: 0
 
-    anchors.top: Config.bar.position !== "bottom"
-    anchors.bottom: Config.bar.position !== "top"
-    anchors.left: Config.bar.position !== "right"
-    anchors.right: Config.bar.position !== "left"
+    anchors.top: BarLayout.position !== "bottom"
+    anchors.bottom: BarLayout.position !== "top"
+    anchors.left: BarLayout.position !== "right"
+    anchors.right: BarLayout.position !== "left"
     implicitHeight: root.vertical ? 0 : (root._expanded ? root._fullH : root._strip)
     implicitWidth: root.vertical ? (root._expanded ? root._fullW : root._strip) : 0
     exclusiveZone: root._cover ? 0 : BarLayout.exclusive
@@ -123,8 +132,8 @@ PanelWindow {
             id: chrome
             width: parent.width
             height: parent.height
-            x: root.vertical ? root._slide * (Config.bar.position === "right" ? root._fullW : -root._fullW) : 0
-            y: root.vertical ? 0 : root._slide * (Config.bar.position === "bottom" ? root._fullH : -root._fullH)
+            x: root.vertical ? root._slide * (BarLayout.position === "right" ? root._fullW : -root._fullW) : 0
+            y: root.vertical ? 0 : root._slide * (BarLayout.position === "bottom" ? root._fullH : -root._fullH)
             clip: true
 
             Loader {
@@ -148,11 +157,11 @@ PanelWindow {
             RowLayout {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                height: Config.bar.height
+                height: BarLayout.height
                 spacing: Tokens.spacing.sm
 
                 IslandRow {
-                    ids: Config.bar.left
+                    ids: root.slotIds("left")
                     barScreen: root.screen
                 }
             }
@@ -160,14 +169,14 @@ PanelWindow {
             IslandRow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                ids: Config.bar.center
+                ids: root.slotIds("center")
                 barScreen: root.screen
             }
 
             IslandRow {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                ids: Config.bar.right
+                ids: root.slotIds("right")
                 barScreen: root.screen
             }
         }
@@ -181,12 +190,12 @@ PanelWindow {
             ColumnLayout {
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: Config.bar.height
+                width: BarLayout.height
                 spacing: Tokens.spacing.sm
 
                 IslandRow {
                     vertical: true
-                    ids: Config.bar.left
+                    ids: root.slotIds("left")
                     barScreen: root.screen
                 }
             }
@@ -195,7 +204,7 @@ PanelWindow {
                 vertical: true
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
-                ids: Config.bar.center
+                ids: root.slotIds("center")
                 barScreen: root.screen
             }
 
@@ -203,7 +212,7 @@ PanelWindow {
                 vertical: true
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
-                ids: Config.bar.right
+                ids: root.slotIds("right")
                 barScreen: root.screen
             }
         }

@@ -42,6 +42,16 @@ Singleton {
         root.index = at;
     }
 
+    // Other tabs are only extra folders. This one stays, and the caller
+    // opens it when it was not already the folder on screen.
+    function keep(path: string) {
+        const next = String(path || "");
+        if (root.paths.length < 2 || root.paths.indexOf(next) < 0)
+            return;
+        root.paths = [next];
+        root.index = 0;
+    }
+
     function closeAt(at: int) {
         if (root.paths.length < 2 || at < 0 || at >= root.paths.length)
             return;

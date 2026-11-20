@@ -16,15 +16,15 @@ Item {
         void Audio.playback;
         void Typography.scale;
         if (BarLayout.vertical)
-            return Config.bar.height;
+            return BarLayout.height;
         return row.implicitWidth + Tokens.spacing.md * 2;
     }
-    implicitHeight: Config.bar.height
+    implicitHeight: BarLayout.height
 
     readonly property bool _mpris: Media.hasPlayer
     readonly property bool _sound: Media.playing || (!root._mpris && !!Audio.playback)
     readonly property real _art: BarLayout.vertical
-        ? Config.bar.height - Tokens.spacing.md
+        ? BarLayout.height - Tokens.spacing.md
         : Tokens.spacing.xl - Tokens.spacing.xxs
     readonly property real _titleMax: Tokens.spacing.xxl * 4
     readonly property string _label: {

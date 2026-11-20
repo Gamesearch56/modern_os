@@ -63,10 +63,10 @@ Singleton {
         return ids.slice(0, limit);
     }
 
-    function query(text: string): var {
+    function _matches(text: string): var {
         const entries = DesktopEntries.applications.values;
         const needle = (text || "").trim().toLowerCase();
-        let out = [];
+        const out = [];
         for (let i = 0; i < entries.length; i++) {
             const e = entries[i];
             if (e.noDisplay)
@@ -74,26 +74,38 @@ Singleton {
             const name = (e.name || "").toLowerCase();
             const generic = (e.genericName || "").toLowerCase();
             const comment = (e.comment || "").toLowerCase();
-            if (needle.length === 0 || name.indexOf(needle) !== -1 || generic.indexOf(needle) !== -1
-                    || comment.indexOf(needle) !== -1
-                    || root._keywordHit(e.keywords, needle) || root._subseq(name, needle)) {
-                const rank = (Config.launcher.frecencyEnabled ?? true)
-                    ? root.score(e.id || e.name) : 0;
-                const own = root._filesApp(e);
-                out.push({
-                    id: e.id || e.name,
-                    name: own ? I18n.t("files.launcherName") : e.name,
-                    genericName: e.genericName,
-                    icon: own ? "modern-files-symbolic" : Apps.resolveIcon(e.icon || e.startupClass || e.id),
-                    tint: own,
-                    exec: e,
-                    score: rank
-                });
-            }
+            if (needle.length > 0 && name.indexOf(needle) === -1 && generic.indexOf(needle) === -1
+                    && comment.indexOf(needle) === -1
+                    && !root._keywordHit(e.keywords, needle) && !root._subseq(name, needle))
+                continue;
+            const own = root._filesApp(e);
+            const id = e.id || e.name;
+            out.push({
+                id: id,
+                name: own ? I18n.t("files.launcherName") : e.name,
+                genericName: e.genericName,
+                icon: own ? "modern-files" : Apps.resolveIcon(e.icon || e.startupClass || e.id),
+                tint: false,
+                exec: e,
+                score: (Config.launcher.frecencyEnabled ?? true) ? root.score(id) : 0
+            });
         }
+        return out;
+    }
+
+    function query(text: string): var {
+        const needle = (text || "").trim();
+        const out = root._matches(text);
         out.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
         const limit = Config.launcher.resultCount ?? 9;
         return out.slice(0, needle.length === 0 ? (Config.launcher.mostUsedGridSize ?? 8) : limit);
+    }
+
+    // Every installed app, A–Z. The short list stays frecency-ranked.
+    function catalog(text: string): var {
+        const out = root._matches(text);
+        out.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+        return out;
     }
 
     function launch(item: var) {

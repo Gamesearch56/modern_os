@@ -12,6 +12,11 @@ Singleton {
     property bool open: false
     property string sectionId: "overview"
     property string subsectionId: ""
+    property string _returnSection: ""
+    property string _returnSub: ""
+    property string _returnDetail: ""
+    // One-shot page detail, such as which calendar was open.
+    property string restoreDetail: ""
 
     function resolve(section: string): string {
         const id = section || "overview";
@@ -35,6 +40,14 @@ Singleton {
     }
 
     function openAt(section: string, subsection: string) {
+        root._returnSection = "";
+        root._returnSub = "";
+        root._returnDetail = "";
+        root.restoreDetail = "";
+        root._apply(section, subsection);
+    }
+
+    function _apply(section: string, subsection: string) {
         if (section === "privacy" && subsection === "calendar") {
             section = "bar";
             subsection = "clock";
@@ -52,8 +65,28 @@ Singleton {
         root.open = false;
     }
 
+    // Close now, and open this page the next time Settings is shown.
+    // detail is restored with the page (the calendar that was open).
+    function reopenAt(section: string, subsection: string, detail: string) {
+        root._returnSection = section || "";
+        root._returnSub = subsection || "";
+        root._returnDetail = detail || "";
+        root.close();
+    }
+
     function show() {
-        root.open = true;
+        if (!root._returnSection.length) {
+            root.open = true;
+            return;
+        }
+        const section = root._returnSection;
+        const sub = root._returnSub;
+        const detail = root._returnDetail;
+        root._returnSection = "";
+        root._returnSub = "";
+        root._returnDetail = "";
+        root.restoreDetail = detail;
+        root._apply(section, sub);
     }
 
     function toggle() {

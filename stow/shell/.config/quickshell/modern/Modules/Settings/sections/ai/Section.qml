@@ -61,7 +61,7 @@ ColumnLayout {
     }
 
     MField {
-        visible: root.ollamaOn
+        visible: root.ollamaOn && Ai.installed
         labelKey: "settings.fields.aiModel"
         MSelect {
             enabled: Ai.running
@@ -77,12 +77,12 @@ ColumnLayout {
     }
 
     BraveKey {
-        visible: root.ollamaOn
+        visible: root.ollamaOn && Ai.installed
         Layout.fillWidth: true
     }
 
     Tune {
-        visible: root.ollamaOn
+        visible: root.ollamaOn && Ai.installed
         Layout.fillWidth: true
     }
 

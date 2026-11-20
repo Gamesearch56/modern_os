@@ -43,8 +43,12 @@ Singleton {
     readonly property int durationWifiScan: 8000
     // BlueZ inquiry restart — not MD3 motion, never scaled.
     readonly property int durationBluetoothScan: 8000
-    // Finished update stays on screen at 100% before the shell restarts.
-    readonly property int durationUpdateSettle: 2500
+    // Paging a multipoint headset while the other host answers. Wall clock.
+    readonly property int durationBluetoothConnect: 15000
+    // Confirm-on-device pairing. Wall clock, not MD3 motion.
+    readonly property int durationBluetoothPair: 30000
+    // 100% stays up long enough to read, then the shell restarts.
+    readonly property int durationUpdateSettle: 400
     // After the link is up, before the one login update check. Wall clock.
     readonly property int durationBootSettle: 12000
     // Re-read of a file another process is still rewriting — never scaled.
@@ -69,6 +73,8 @@ Singleton {
     readonly property int recordingChromeMs: root.durationRecordingChrome
     readonly property int wifiScanMs: root.durationWifiScan
     readonly property int bluetoothScanMs: root.durationBluetoothScan
+    readonly property int bluetoothConnectMs: root.durationBluetoothConnect
+    readonly property int bluetoothPairMs: root.durationBluetoothPair
     readonly property int updateSettleMs: root.durationUpdateSettle
     readonly property int bootSettleMs: root.durationBootSettle
     readonly property int fileSettleMs: root.durationFileSettle

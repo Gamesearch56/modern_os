@@ -19,20 +19,8 @@ start_quickshell() {
     disown $! 2>/dev/null || true
 }
 
-if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
-    hyprctl reload >/dev/null 2>&1 || echo "reload-ui: hyprctl reload failed" >&2
-    # shellcheck source=lib/hypr-watch.sh
-    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hypr-watch.sh"
-    clear_hypr_reload_banner
-    if [ -d "/var/cache/hyprpm/${USER_NAME}" ] && command -v hyprpm >/dev/null 2>&1; then
-        hyprpm reload -n >/dev/null 2>&1 || true
-    fi
-    timeout 5 "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hypridle-apply.sh" || true
-    # shellcheck source=lib/polkit-agent.sh
-    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/polkit-agent.sh"
-    ensure_polkit_agent || true
-fi
-
+# Settings is still open on the finished update. Restart it before the
+# compositor steps, which can take several seconds.
 if command -v qs >/dev/null 2>&1; then
     if ! qs -c modern ipc call shell reload >/dev/null 2>&1; then
         if ! pgrep -u "$USER_NAME" -x qs >/dev/null 2>&1 \
@@ -46,6 +34,20 @@ if command -v qs >/dev/null 2>&1; then
         qs -c modern ipc call shell reload >/dev/null 2>&1 \
             || echo "reload-ui: Quickshell IPC reload failed" >&2
     fi
+fi
+
+if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
+    hyprctl reload >/dev/null 2>&1 || echo "reload-ui: hyprctl reload failed" >&2
+    # shellcheck source=lib/hypr-watch.sh
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hypr-watch.sh"
+    clear_hypr_reload_banner
+    if [ -d "/var/cache/hyprpm/${USER_NAME}" ] && command -v hyprpm >/dev/null 2>&1; then
+        hyprpm reload -n >/dev/null 2>&1 || true
+    fi
+    timeout 5 "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hypridle-apply.sh" || true
+    # shellcheck source=lib/polkit-agent.sh
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/polkit-agent.sh"
+    ensure_polkit_agent || true
 fi
 
 if command -v kitty >/dev/null 2>&1; then

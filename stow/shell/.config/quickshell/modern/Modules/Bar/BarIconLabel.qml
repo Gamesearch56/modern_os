@@ -24,7 +24,7 @@ Item {
     readonly property real _layer: Chrome.stateLayer(ma.containsMouse && !root.checked, ma.pressed && !root.checked)
 
     implicitWidth: row.implicitWidth
-    implicitHeight: Config.bar.height
+    implicitHeight: BarLayout.height
     Layout.preferredWidth: implicitWidth
     Layout.preferredHeight: implicitHeight
     Layout.fillWidth: false
@@ -51,14 +51,14 @@ Item {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         spacing: root._named ? Tokens.spacing.xxs : 0
-        height: Config.bar.height
+        height: BarLayout.height
 
         Item {
             // An icon-only neighbor is centered in the bar height. A labeled
             // icon is only iconSize wide, so match that inset on the leading edge.
-            Layout.leftMargin: root._named ? (Config.bar.height - root.iconSize) / 2 : 0
-            Layout.preferredWidth: root._named ? root.iconSize : Config.bar.height
-            Layout.preferredHeight: Config.bar.height
+            Layout.leftMargin: root._named ? (BarLayout.height - root.iconSize) / 2 : 0
+            Layout.preferredWidth: root._named ? root.iconSize : BarLayout.height
+            Layout.preferredHeight: BarLayout.height
 
             MIcon {
                 anchors.centerIn: parent

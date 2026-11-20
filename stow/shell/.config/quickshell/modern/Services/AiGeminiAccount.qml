@@ -12,6 +12,7 @@ Item {
     property bool ready: false
     property var models: []
     property string lastError: ""
+    property string block: ""
     property bool _fileHasKey: false
 
     FileView {
@@ -60,12 +61,33 @@ Item {
             return;
         }
         root._fileHasKey = k.length > 0;
+        root.block = "";
         root._syncHasKey();
         root.probe();
     }
 
     function openStudio() {
         Quickshell.execDetached(["xdg-open", "https://aistudio.google.com/apikey"]);
+    }
+
+    function openBilling() {
+        Quickshell.execDetached(["xdg-open", "https://aistudio.google.com/billing"]);
+    }
+
+    function note(code: string): string {
+        if (code === "credits" || code === "spend")
+            root.block = code;
+        if (code === "credits")
+            return I18n.t("ai.errorGeminiCredits");
+        if (code === "spend")
+            return I18n.t("ai.errorGeminiSpend");
+        if (code === "rate")
+            return I18n.t("ai.errorGeminiRate");
+        if (code === "model")
+            return I18n.t("ai.errorGeminiModel");
+        if (code === "auth")
+            return I18n.t("ai.errorGeminiAuth");
+        return I18n.t("ai.error");
     }
 
     function modelChoices(): var {
@@ -136,7 +158,7 @@ Item {
         try {
             const data = JSON.parse(String(raw || "{}"));
             if (data.error) {
-                root.lastError = I18n.t("ai.errorGeminiAuth");
+                root.lastError = root.note(String(data.error));
                 root.ready = false;
                 root.models = [];
                 return;
@@ -168,7 +190,7 @@ Item {
         root.models = names;
         root.ready = root.hasKey && names.length > 0;
         if (!names.length && root.hasKey)
-            root.lastError = I18n.t("ai.errorGeminiAuth");
+            root.lastError = root.note("auth");
     }
 
     Process {
@@ -184,7 +206,7 @@ Item {
                 root.models = [];
                 return;
             }
-            if (code !== 0 && !(root.models || []).length) {
+            if (code !== 0 && !(root.models || []).length && !root.lastError) {
                 root.ready = false;
                 root.lastError = I18n.t("ai.errorGeminiAuth");
             }

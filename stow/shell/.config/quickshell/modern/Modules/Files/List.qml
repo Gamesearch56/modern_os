@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Window
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
@@ -28,7 +27,7 @@ Flickable {
             const nets = FilesPlaces.mounts || [];
             const out = [];
             for (let i = 0; i < nets.length; i++)
-                out.push({ name: nets[i].name || nets[i].path || nets[i].uri, path: nets[i].path || "", uri: nets[i].uri || "", dir: true, size: -1 });
+                out.push({ name: nets[i].name || nets[i].path || nets[i].uri, path: nets[i].path || "", uri: nets[i].uri || "", dir: true, share: true, size: -1 });
             return out;
         }
         return Files.entries || [];
@@ -82,7 +81,7 @@ Flickable {
                 Layout.fillWidth: true
             }
             MText {
-                visible: Files.showSize
+                visible: Files.showSize && (Files.place !== "network" || FilesSearch.active)
                 key: "files.details.size"
                 styleName: "labelSmall"
                 color: Colors.color.onSurfaceVariant
@@ -90,7 +89,7 @@ Flickable {
                 Layout.preferredWidth: facts.colSize
             }
             MText {
-                visible: Files.showCreated
+                visible: Files.showCreated && (Files.place !== "network" || FilesSearch.active)
                 key: "files.details.created"
                 styleName: "labelSmall"
                 color: Colors.color.onSurfaceVariant
@@ -98,7 +97,7 @@ Flickable {
                 Layout.preferredWidth: facts.colDate
             }
             MText {
-                visible: Files.showModified
+                visible: Files.showModified && (Files.place !== "network" || FilesSearch.active)
                 key: "files.details.updated"
                 styleName: "labelSmall"
                 color: Colors.color.onSurfaceVariant
@@ -106,7 +105,7 @@ Flickable {
                 Layout.preferredWidth: facts.colDate
             }
             MText {
-                visible: Files.showType
+                visible: Files.showType && (Files.place !== "network" || FilesSearch.active)
                 key: "files.details.type"
                 styleName: "labelSmall"
                 color: Colors.color.onSurfaceVariant
@@ -133,20 +132,20 @@ Flickable {
                 readonly property bool _cut: Files.clipboardMode === "cut" && (Files.clipboard || []).indexOf(modelData.path) >= 0
                 readonly property bool _held: FilesDrag.active && (FilesDrag.paths || []).indexOf(modelData.path) >= 0
                 readonly property bool _land: FilesDrag.active && modelData.dir && FilesDrag.drop === modelData.path && !_held
-                opacity: _cut ? Tokens.interaction.cut : 1
+                opacity: _cut ? Tokens.interaction.cut : (Files.showHidden && String(modelData.name || "").charAt(0) === "." ? Tokens.interaction.hidden : 1)
                 width: column.width
                 height: Tokens.spacing.xxl + Tokens.spacing.sm
                 Accessible.role: Accessible.ListItem
                 Accessible.name: row.modelData.name || ""
 
-                HoverHandler { id: rowHover }
+                HoverHandler { id: rowHover; enabled: !Files.covered }
 
                 Rectangle {
                     anchors.fill: parent
                     radius: Tokens.radius.small
                     color: row._held || row._land ? Colors.color.primaryContainer
                            : row._picked ? Chrome.navSelected.bg
-                           : rowHover.hovered && !row._locked ? Colors.color.secondaryContainer : "transparent"
+                           : rowHover.hovered && !row._locked && !Files.covered ? Colors.color.secondaryContainer : "transparent"
                 }
 
                 RowLayout {
@@ -163,14 +162,14 @@ Flickable {
                         Layout.alignment: Qt.AlignVCenter
                     }
                     MText {
-                        visible: Files.renaming !== row.modelData.path
+                        visible: Files.renaming.length === 0 || Files.renaming !== row.modelData.path
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                         color: row._picked ? Chrome.navSelected.fg : Colors.color.onSurface
                         text: row.modelData.name || ""
                     }
                     MTextField {
-                        visible: Files.renaming === row.modelData.path
+                        visible: Files.renaming.length > 0 && Files.renaming === row.modelData.path
                         Layout.fillWidth: true
                         text: row.modelData.name || ""
                         selectOnFocus: true
@@ -180,7 +179,7 @@ Flickable {
                         onActiveFocusChanged: Files.typing = focused
                     }
                     MText {
-                        visible: Files.showSize
+                        visible: Files.showSize && (Files.place !== "network" || FilesSearch.active)
                         Layout.preferredWidth: facts.colSize
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
@@ -189,7 +188,7 @@ Flickable {
                         text: facts.sizeText(row.modelData)
                     }
                     MText {
-                        visible: Files.showCreated
+                        visible: Files.showCreated && (Files.place !== "network" || FilesSearch.active)
                         Layout.preferredWidth: facts.colDate
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
@@ -198,7 +197,7 @@ Flickable {
                         text: facts.whenText(row.modelData.created)
                     }
                     MText {
-                        visible: Files.showModified
+                        visible: Files.showModified && (Files.place !== "network" || FilesSearch.active)
                         Layout.preferredWidth: facts.colDate
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
@@ -207,7 +206,7 @@ Flickable {
                         text: facts.whenText(row.modelData.mtime)
                     }
                     MText {
-                        visible: Files.showType
+                        visible: Files.showType && (Files.place !== "network" || FilesSearch.active)
                         Layout.preferredWidth: facts.colType
                         horizontalAlignment: Text.AlignRight
                         styleName: "bodySmall"
@@ -220,7 +219,7 @@ Flickable {
                 FilePress {
                     anchors.fill: parent
                     markRadius: Tokens.radius.small
-                    enabled: Files.renaming !== row.modelData.path
+                    enabled: Files.renaming.length === 0 || Files.renaming !== row.modelData.path
                     entry: row.modelData
                     onMenu: (x, y) => root.menu(row, x, y)
                     onPicked: (extra, range) => FilesSelect.pick(row.modelData.path || row.modelData.uri, extra, range, root.rows)
@@ -236,30 +235,29 @@ Flickable {
         z: -1
     }
 
-    MouseArea {
-        id: blank
-        width: root.width
-        height: Math.max(column.implicitHeight, root.height)
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        focus: true
-        z: -1
-        onPressed: forceActiveFocus()
-        onClicked: (mouse) => {
-            if (Files._holdSelect)
-                return;
-            Files.clearSelection();
-            if (mouse.button !== Qt.RightButton)
-                return;
-            const kind = root._blankKind();
-            if (!kind.length)
-                return;
-            const at = root._at(blank, mouse.x, mouse.y);
-            Files.openMenu(kind, Files.path, "", at.x, at.y);
-        }
+    Marquee {
+        flick: root
+        repeater: cells
+        onMenu: (x, y) => root._blankMenu(x, y)
     }
 
-    function _at(item, x, y) {
-        return item.mapToItem(Window.window ? Window.window.contentItem : item, x, y);
+    // List clips, so the surrounding margin lives on the pane instead.
+    Marquee {
+        parent: root.parent
+        live: root.visible
+        x: root.x - Tokens.spacing.md
+        y: root.y - (FilesSearch.active ? 0 : Tokens.spacing.lg)
+        width: root.width + Tokens.spacing.md * 2
+        height: root.height + Tokens.spacing.md + (FilesSearch.active ? 0 : Tokens.spacing.lg)
+        z: -1
+        repeater: cells
+        onMenu: (x, y) => root._blankMenu(x, y)
+    }
+
+    function _blankMenu(x: real, y: real) {
+        const kind = root._blankKind();
+        if (kind.length)
+            Files.openMenu(kind, Files.path, "", x, y);
     }
     function menu(row, x: real, y: real) {
         const id = row.modelData.path || row.modelData.uri;
@@ -268,6 +266,7 @@ Flickable {
         Files.openMenu(many ? "selection" : root._kind(row.modelData), row.modelData.path, name, x, y);
     }
     function openRow(entry) {
+        if (FilesChoose.active && entry && !entry.dir && FilesChoose.accept(String(entry.path || ""))) return;
         if (Files.place === "network") {
             const path = String(entry.path || "");
             if (path.charAt(0) === "/") Files.go(path, true); else FilesNet.connect(String(entry.uri || ""));
@@ -277,7 +276,7 @@ Flickable {
     }
     function _kind(entry) {
         if (Files.place === "trash") return "trash";
-        if (Files.place === "network") return "net";
+        if (Files.place === "network") return "share";
         return entry && entry.dir ? "folder" : "file";
     }
     function _blankKind() {

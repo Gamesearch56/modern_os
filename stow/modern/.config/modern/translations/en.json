@@ -206,8 +206,14 @@
     "errorTooLong": "That message is too long.",
     "errorGeminiAuth": "That Google AI key was rejected. Create a new key in Google AI Studio.",
     "errorGeminiModel": "That Gemini model is not available. Pick another in Settings → AI.",
+    "errorGeminiCredits": "This account has no API credits left. Add credits in Settings → AI.",
+    "errorGeminiSpend": "The spending limit for this account is reached. Raise it in Google AI Studio.",
+    "errorGeminiRate": "Gemini is limiting requests. Wait a moment and try again.",
     "errorChatGptAuth": "That ChatGPT key was rejected. Create a new key on the OpenAI platform.",
     "errorChatGptModel": "That ChatGPT model is not available. Pick another in Settings → AI.",
+    "errorChatGptCredits": "This account has no API credits left. Add credits in Settings → AI.",
+    "errorChatGptSpend": "The spending limit for this account is reached. Raise it on the OpenAI platform.",
+    "errorChatGptRate": "ChatGPT is limiting requests. Wait a moment and try again.",
     "errorNoModel": "Pick a model in Settings → AI.",
     "stop": "Stop",
     "stopped": "Stopped.",
@@ -263,7 +269,7 @@
     "importTitle": "Add wallpaper",
     "importImages": "Images",
     "importAll": "All files",
-    "needChooser": "Need zenity or kdialog to pick a wallpaper",
+    "needChooser": "That picture could not be chosen.",
     "remove": "Delete",
     "removeTitle": "Delete wallpaper?",
     "removeBody": "This image will be deleted from your wallpaper folder.",
@@ -281,7 +287,7 @@
   },
   "folderPicker": {
     "title": "Choose folder",
-    "needChooser": "Need zenity or kdialog to pick a folder"
+    "needChooser": "That folder could not be chosen."
   },
   "filePreview": {
     "title": "Quick Look",
@@ -424,6 +430,7 @@
     "mostUsed": "Most used",
     "results": "Results",
     "open": "Open",
+    "allApps": "All applications",
     "noResults": "No results"
   },
   "settings": {
@@ -659,8 +666,10 @@
       "games": "Games",
       "gameFullscreen": "Fullscreen games automatically",
       "gameOptimize": "Optimize the game window",
-      "gameHdr": "HDR for Proton games",
+      "gameHdr": "HDR for games",
       "browserLight": "Light browser",
+      "gameMode": "Gaming mode",
+      "easePc": "Drop effects for speed",
       "speedTest": "Speed test",
       "ethernet": "Ethernet",
       "wifiPassword": "Wi-Fi password",
@@ -729,6 +738,9 @@
       "connect": "Connect",
       "signOut": "Sign out",
       "openStudio": "Get API key",
+      "addCredits": "Add credits",
+      "needCredits": "No API credits left. Add credits, then try the assistant again.",
+      "needSpend": "The spending limit for this account is reached.",
       "noModels": "No Gemini models yet"
     },
     "chatgpt": {
@@ -738,6 +750,9 @@
       "connect": "Connect",
       "signOut": "Sign out",
       "openKeys": "Get API key",
+      "addCredits": "Add credits",
+      "needCredits": "No API credits left. Add credits, then try the assistant again.",
+      "needSpend": "The spending limit for this account is reached.",
       "noModels": "No ChatGPT models yet"
     },
     "brave": {
@@ -862,16 +877,19 @@
       "aiBrief": "Keeps answers to a few lines. Off allows a longer reply.",
       "braveKey": "Paste a Brave Search key. The assistant uses it when an answer needs the web.",
       "aiLibrary": "Search the library, then install a model or delete one you no longer use.",
-      "geminiAccount": "Sign in at Google AI Studio with the Google account that has Gemini, then paste an API key. Gemini Pro quota follows that account.",
+      "geminiAccount": "Paste an API key from Google AI Studio. Replies use the API quota on that account.",
       "geminiModel": "Used by the bar assistant when Gemini is selected.",
-      "chatgptAccount": "Sign in at the OpenAI platform with the ChatGPT account, then paste an API key. The assistant uses that key.",
+      "chatgptAccount": "Paste an API key from the OpenAI platform. Replies use API credits on that account.",
       "chatgptModel": "Used by the bar assistant when ChatGPT is selected.",
       "audioDevices": "The highlighted device is the default. Click another to send sound there.",
       "windowRulesJson": "JSON array of Hyprland window rules. Save validates before writing.",
       "gameFullscreen": "Forces exclusive fullscreen as soon as the game window appears, instead of waiting for the engine to request it.",
       "gameOptimize": "Turns off extra window effects on the game so it can run smoother. Other windows keep their usual look.",
-      "gameHdr": "Exports DXVK_HDR, ENABLE_HDR_WSI, and PROTON_ENABLE_HDR only for Battle.net/Proton games started via modern battlenet — not the whole desktop (that lags Steam and video). Turn HDR on under Displays. For Steam titles, add the same vars to launch options. Battle.net stays on XWayland.",
+      "gameHdr": "Games can use HDR, and the rest of the screen stays as it is. Turn HDR on under Displays first. Battle.net games pick it up the next time they start. A Steam game needs it in that game's own launch options.",
       "browserLight": "Vivaldi starts without a separate graphics process, and its windows skip blur and shadows. Turn this on when the browser takes several seconds to open on a slow processor. It applies the next time Vivaldi starts.",
+      "gameMode": "Keeps the session awake while a game is open and marks that window as a game.",
+      "easePc": "Turns off blur and shadows on games and the browser so they can run faster. Other windows keep those effects. Restart the browser once so it picks this up.",
+      "gameHdrOff": "No HDR display is connected.",
       "repeatRate": "How many times a second a held key types again, once the delay has passed. A higher number types faster.",
       "repeatDelay": "Wait before a held key starts repeating.",
       "numlockOnBoot": "Turns Num Lock on when the system starts.",
@@ -883,7 +901,7 @@
       "snapperMissing": "Snapper is not installed. Setup is gated and is not applied from Settings.",
       "snapperUnconfigured": "Snapper needs a root config before it can take snapshots. Create config asks for an admin password and writes that config.",
       "speedTest": "Downloads from the Arch geo mirror over several connections for about 15 seconds. Not a third-party speed-test site.",
-      "bluetooth": "Turns the adapter on. Nearby devices appear below.",
+      "bluetooth": "Turns the adapter on. A short search runs, then stops so a connection is not interrupted.",
       "bluetoothBlocked": "No Bluetooth adapter, or the radio is hardware-blocked.",
       "wifi": "Turns the wireless radio on. Nearby networks appear below.",
       "wifiHardware": "No Wi-Fi adapter, or the radio is hardware-blocked.",
@@ -905,6 +923,20 @@
       "passwordConfirm": "Confirm password",
       "passwordKeep": "Leave blank to keep the current password.",
       "thisAccount": "You",
+      "chooseFace": "Choose picture",
+      "clearFace": "Remove picture",
+      "faceImages": "Pictures",
+      "faceFailed": "That picture could not be used.",
+      "faceChooser": "No file chooser is available.",
+      "faceHover": "Change picture",
+      "facePick": "Choose from files",
+      "faceSave": "Save picture",
+      "faceSaving": "Saving picture",
+      "faceSaved": "Picture saved",
+      "faceRotateLeft": "Rotate left",
+      "faceRotateRight": "Rotate right",
+      "faceResize": "Size",
+      "faceHint": "Drag the picture. The circle is what gets saved.",
       "all": "Users on this computer",
       "settings": "Settings",
       "others": "Other people",
@@ -951,8 +983,19 @@
       "video": "Video"
     },
     "gaming": {
-      "windows": "Game windows",
-      "slow": "Slow hardware"
+      "play": "Play",
+      "ease": "Performance",
+      "now": "Now playing",
+      "hours": "Hours played",
+      "installed": "Installed",
+      "last": "Last played",
+      "disk": "Library",
+      "running": "Open now",
+      "none": "None",
+      "lastBoth": "{name} · {when}",
+      "hoursValue": "{n} h",
+      "diskValue": "{n} GB",
+      "countValue": "{n}"
     },
     "privacy": {
       "notifications": "Notifications",
@@ -1004,8 +1047,12 @@
       "forget": "Forget",
       "connect": "Connect",
       "disconnect": "Disconnect",
-      "connectBody": "Connect to this device. If it is not paired yet, confirm on the device.",
-      "disconnectBody": "Disconnect this device. It stays paired until you forget it.",
+      "connectBody": "Connect to this device. A saved device is not paired again. If it is new, confirm on the device.",
+      "disconnectBody": "Disconnect this device. It stays saved until you forget it.",
+      "connecting": "Connecting…",
+      "connectFailedTitle": "Bluetooth",
+      "connectFailed": "Could not connect. If the headphones are already linked to two devices, disconnect one and try again.",
+      "pairFailed": "Could not pair. Confirm the request on the device and try again.",
       "remembered": "Saved"
     },
     "storage": {
@@ -1135,6 +1182,7 @@
       "headline": "Package Update",
       "fromTo": "{from} → {to}",
       "empty": "No updates",
+      "restarting": "UI restart in progress…",
       "search": "Search for Updates",
       "checkFailed": "Could not check for updates",
       "success": "System update finished",
@@ -1622,6 +1670,14 @@
   },
   "files": {
     "title": "Files",
+    "pick": {
+      "title": "Choose a picture",
+      "use": "Use this picture",
+      "fileTitle": "Choose a file",
+      "useFile": "Use this file",
+      "folderTitle": "Choose a folder",
+      "useFolder": "Use this folder"
+    },
     "loading": "Loading",
     "emptyDir": "This folder is empty",
     "refused": "That change is not allowed",
@@ -1629,6 +1685,7 @@
     "networkEmpty": "No network locations",
     "network": {
       "connect": "Connect to server",
+      "rescan": "Look again",
       "connectDo": "Connect",
       "address": "Server address",
       "refused": "Could not connect to that server"
@@ -1683,6 +1740,7 @@
       "forward": "Forward",
       "up": "Up",
       "search": "Search",
+      "new": "New",
       "sort": "Sort",
       "details": "Details",
       "terminal": "Open terminal here",
@@ -1756,7 +1814,8 @@
     "extract": "Extract"
     },
     "tabs": {
-      "close": "Close tab"
+      "close": "Close tab",
+      "closeOthers": "Close all tabs"
     },
     "properties": {
       "title": "Properties",

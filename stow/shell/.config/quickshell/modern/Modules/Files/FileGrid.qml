@@ -24,7 +24,7 @@ Item {
             const nets = FilesPlaces.mounts || [];
             const out = [];
             for (let i = 0; i < nets.length; i++)
-                out.push({ name: nets[i].name || nets[i].path || nets[i].uri, path: nets[i].path || "", uri: nets[i].uri || "", dir: true, size: -1 });
+                out.push({ name: nets[i].name || nets[i].path || nets[i].uri, path: nets[i].path || "", uri: nets[i].uri || "", dir: true, share: true, size: -1 });
             return out;
         }
         return Files.entries || [];
@@ -39,7 +39,8 @@ Item {
     readonly property int columns: {
         const gap = Tokens.spacing.md;
         const cell = Tokens.window.filesCell + gap;
-        return Math.max(1, Math.floor((scroller.width + gap) / cell));
+        const inner = scroller.width;
+        return Math.max(1, Math.floor((inner + gap) / cell));
     }
 
     function reveal(index: int) {
@@ -95,7 +96,7 @@ Item {
                     readonly property bool _cut: Files.clipboardMode === "cut" && (Files.clipboard || []).indexOf(modelData.path) >= 0
                     readonly property bool _held: FilesDrag.active && (FilesDrag.paths || []).indexOf(modelData.path) >= 0
                     readonly property bool _land: FilesDrag.active && modelData.dir && FilesDrag.drop === modelData.path && !_held
-                    opacity: _cut ? Tokens.interaction.cut : 1
+                    opacity: _cut ? Tokens.interaction.cut : (Files.showHidden && String(modelData.name || "").charAt(0) === "." ? Tokens.interaction.hidden : 1)
                     width: Tokens.window.filesCell
                     height: Tokens.spacing.sm * 2 + Tokens.spacing.xxl * 3 + Tokens.spacing.xs + Tokens.spacing.xl
                             + (factLines > 0 ? Tokens.spacing.xs + factLines * Tokens.spacing.lg : 0)
@@ -103,14 +104,47 @@ Item {
                     Accessible.role: Accessible.ListItem
                     Accessible.name: cell.modelData.name || ""
 
-                    HoverHandler { id: cellHover }
+                    HoverHandler {
+                        id: cellHover
+                        enabled: !Files.covered
+                        onHoveredChanged: cell._hover(hovered)
+                        onPointChanged: if (hovered && FilesHistory.pinHover) cell._hover(true)
+                        onEnabledChanged: if (!enabled) cell._hover(false)
+                    }
+                    function _hover(on) {
+                        const id = String(cell.modelData.path || cell.modelData.uri || "");
+                        if (!id || (on && !cellHover.enabled))
+                            return;
+                        if (on && FilesHistory.pinHover && !cell._moved())
+                            return;
+                        if (on) {
+                            Files.hoverPath = id;
+                            return;
+                        }
+                        Qt.callLater(() => { if (Files.hoverPath === id && !cellHover.hovered) Files.hoverPath = ""; });
+                    }
+                    function _moved(): bool {
+                        const pt = cellHover.point.scenePosition;
+                        if (FilesHistory.pinX < 0) {
+                            FilesHistory.pinX = pt.x;
+                            FilesHistory.pinY = pt.y;
+                            return false;
+                        }
+                        const dx = pt.x - FilesHistory.pinX;
+                        const dy = pt.y - FilesHistory.pinY;
+                        if (dx * dx + dy * dy < Tokens.spacing.sm * Tokens.spacing.sm)
+                            return false;
+                        FilesHistory.pinHover = false;
+                        FilesHistory.pinX = -1;
+                        return true;
+                    }
 
                     Rectangle {
                         anchors.fill: parent
                         radius: Tokens.radius.medium
                         color: cell._held || cell._land ? Colors.color.primaryContainer
                             : cell._picked ? Chrome.navSelected.bg
-                            : cellHover.hovered && !cell._locked ? Colors.color.secondaryContainer : "transparent"
+                            : cellHover.hovered && !cell._locked && !Files.covered ? Colors.color.secondaryContainer : "transparent"
                     }
 
                     ColumnLayout {
@@ -125,7 +159,7 @@ Item {
                         }
                         MText {
                             Layout.fillWidth: true
-                            visible: Files.renaming !== cell.modelData.path
+                            visible: Files.renaming.length === 0 || Files.renaming !== cell.modelData.path
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                             color: cell._picked ? Chrome.navSelected.fg : Colors.color.onSurface
@@ -144,7 +178,7 @@ Item {
                         }
                         MTextField {
                             Layout.fillWidth: true
-                            visible: Files.renaming === cell.modelData.path
+                            visible: Files.renaming.length > 0 && Files.renaming === cell.modelData.path
                             text: cell.modelData.name || ""
                             selectOnFocus: true
                             onVisibleChanged: if (visible && root.visible) Qt.callLater(focusInput)
@@ -156,7 +190,7 @@ Item {
 
                     FilePress {
                         anchors.fill: parent
-                        enabled: Files.renaming !== cell.modelData.path
+                        enabled: Files.renaming.length === 0 || Files.renaming !== cell.modelData.path
                         entry: cell.modelData
                         onMenu: (x, y) => root.menu(cell, x, y)
                         onPicked: (extra, range) => FilesSelect.pick(cell.modelData.path || cell.modelData.uri, extra, range, root.rows)
@@ -172,27 +206,29 @@ Item {
             z: -1
         }
 
-        MouseArea {
-            id: blank
-            width: scroller.width
-            height: Math.max(flow.implicitHeight, scroller.height)
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        focus: true
+        Marquee {
+            flick: scroller
+            repeater: cells
+            onMenu: (x, y) => root._blankMenu(x, y)
+        }
+    }
+
+    // The pane margin around the icons. The view itself does not clip,
+    // so this can sit in the space the layout already leaves.
+    Marquee {
+        x: -Tokens.spacing.md
+        y: FilesSearch.active ? 0 : -Tokens.spacing.lg
+        width: root.width + Tokens.spacing.md * 2
+        height: root.height + Tokens.spacing.md + (FilesSearch.active ? 0 : Tokens.spacing.lg)
         z: -1
-        onPressed: forceActiveFocus()
-        onClicked: (mouse) => {
-            if (Files._holdSelect)
-                return;
-            Files.clearSelection();
-            if (mouse.button !== Qt.RightButton)
-                return;
-            const kind = root._blankKind();
-            if (!kind.length)
-                return;
-            const at = root._at(blank, mouse.x, mouse.y);
-            Files.openMenu(kind, Files.path, "", at.x, at.y);
-        }
-        }
+        repeater: cells
+        onMenu: (x, y) => root._blankMenu(x, y)
+    }
+
+    function _blankMenu(x: real, y: real) {
+        const kind = root._blankKind();
+        if (kind.length)
+            Files.openMenu(kind, Files.path, "", x, y);
     }
 
     function _at(item, x, y) {
@@ -212,7 +248,7 @@ Item {
         if (Files.place === "trash")
             return "trash";
         if (Files.place === "network")
-            return "net";
+            return "share";
         return entry && entry.dir ? "folder" : "file";
     }
 
@@ -229,7 +265,7 @@ Item {
     }
 
     function activate(entry) {
-        if (!entry)
+        if (!entry || (FilesChoose.active && !entry.dir && FilesChoose.accept(String(entry.path || ""))))
             return;
         if (Files.place === "network") {
             const path = String(entry.path || "");

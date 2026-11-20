@@ -30,8 +30,8 @@
 #                       instead of extracting from the wallpaper.
 #   --extract          Ignore a stored source seed and extract again
 #                       from the wallpaper (--prefer saturation).
-#   --surface-tint N   Wallpaper chroma in surfaces (config design.surfaceTint).
-#                       Combined with the profile contrast as matugen --contrast.
+#   --surface-tint N   Accepted from the Design slider. Shell surfaces
+#                       read it from config; it is not a matugen contrast.
 #   --chrome-only      Patch GTK/Qt/KDE/Vivaldi radii, fonts, and motion
 #                       from config.json without re-running matugen.
 #   --no-reload        Write files (including Vivaldi Preferences) but
@@ -273,8 +273,12 @@ patch_toolkit_chrome() {
   --md-blur: ${blur}px;
   --md-transparency: $(awk -v t="$trans" 'BEGIN { printf "%.0f", t*100 }')%;
   --md-wallpaper: ${wp_url};
+  --md-font-scale: ${scale};
 }
-body, #browser { font-family: var(--md-font-ui), sans-serif !important; }
+body, #browser {
+  font-family: var(--md-font-ui), sans-serif !important;
+  zoom: var(--md-font-scale);
+}
 EOF
     local qss="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qss/modern.qss"
     if [ -f "$qss" ]; then
@@ -504,6 +508,14 @@ done
 command -v jq >/dev/null 2>&1 || die "jq not on PATH — see install/manifests/00-base.txt"
 
 mkdir -p "$STATE_DIR"
+# Picker generates the palette in parallel with the crop. Remember the
+# transition file's time so a later reload can wait for this run's mark
+# instead of the previous wallpaper's.
+WALLPAPER_MARK="$STATE_DIR/wallpaper-transition"
+WALLPAPER_MARK_BODY=""
+if [ -f "$WALLPAPER_MARK" ]; then
+    WALLPAPER_MARK_BODY="$(head -n 1 "$WALLPAPER_MARK" 2>/dev/null || true)"
+fi
 
 # --- Resolve config.json (falls back to config.default.json), the same
 # deep-merge contract as stow/hypr/.config/hypr/modules/config.lua ---
@@ -569,19 +581,15 @@ esac
 if [ -z "$SURFACE_TINT" ]; then
     SURFACE_TINT="$(merged_config | jq -r '.design.surfaceTint // 0.7')"
 fi
-# One point of matugen contrast per slider step washed every color
-# brighter. Keep about a third of that swing.
-MATUGEN_CONTRAST="$(awk -v pc="$CONTRAST_NUM" -v st="$SURFACE_TINT" 'BEGIN {
-    c = pc + ((st + 0) - 1) * 0.35
-    if (c < -1) c = -1
-    if (c > 1) c = 1
-    printf "%.3f", c
-}')"
-if ! awk -v c="$MATUGEN_CONTRAST" 'BEGIN { exit (c + 0 == 0) ? 0 : 1 }'; then
-    MATUGEN_ARGS+=(--contrast "$MATUGEN_CONTRAST")
+# Negative contrast (the old surface-tint coupling) lifts light-mode
+# on-colors toward the surface, so body text goes gray on cream and
+# on-background falls under 3:1. The profile contrast is the palette;
+# the slider tints shell surfaces through Tokens.
+if ! awk -v c="$CONTRAST_NUM" 'BEGIN { exit (c + 0 == 0) ? 0 : 1 }'; then
+    MATUGEN_ARGS+=(--contrast "$CONTRAST_NUM")
 fi
 
-log "profile=$PROFILE variant=$VARIANT mode=$PROFILE_MODE(matugen:$MATUGEN_MODE) contrast=$CONTRAST tint=$SURFACE_TINT (matugen --contrast $MATUGEN_CONTRAST) sourceMode=$SOURCE_MODE"
+log "profile=$PROFILE variant=$VARIANT mode=$PROFILE_MODE(matugen:$MATUGEN_MODE) contrast=$CONTRAST (matugen $CONTRAST_NUM) surfaceTint=$SURFACE_TINT sourceMode=$SOURCE_MODE"
 
 case "$SOURCE_MODE" in
     fixed)
@@ -735,9 +743,29 @@ if [ "$RELOAD" -eq 0 ]; then
     exit 0
 fi
 
-# tokens.json already restyled the shell. GTK/Qt/gsettings/icon cache
-# and hyprctl reload must not hold the Settings spinner.
+# tokens.json already restyled the shell, which holds that palette until
+# the wallpaper transition. Other apps reload once that transition has
+# started, so they do not recolor the old picture. GTK/Qt/gsettings stay
+# off the Settings spinner.
+wait_for_wallpaper_transition() {
+    [ "$SKIP_WALLPAPER" -eq 1 ] || return 0
+    [ "$WALLPAPER_EXPLICIT" -eq 1 ] || return 0
+    local waited=0 line
+    while [ "$waited" -lt 200 ]; do
+        if [ -f "$WALLPAPER_MARK" ]; then
+            line="$(head -n 1 "$WALLPAPER_MARK" 2>/dev/null || true)"
+            if [ "$line" != "$WALLPAPER_MARK_BODY" ]; then
+                case "$line" in
+                    start\ *|done\ *) return 0 ;;
+                esac
+            fi
+        fi
+        sleep 0.1
+        waited=$((waited + 1))
+    done
+}
 (
+    wait_for_wallpaper_transition
     finish_live
 ) </dev/null >/dev/null 2>&1 &
 disown $! 2>/dev/null || true

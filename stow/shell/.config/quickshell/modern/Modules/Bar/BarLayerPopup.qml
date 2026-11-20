@@ -24,10 +24,10 @@ PanelWindow {
 
     signal grabReady()
 
-    readonly property real _gap: Config.bar.endGap ?? Tokens.spacing.md
-    readonly property bool _barBottom: Config.bar.position === "bottom"
-    readonly property bool _barLeft: Config.bar.position === "left"
-    readonly property bool _barRight: Config.bar.position === "right"
+    readonly property real _gap: BarLayout.endGap ?? Tokens.spacing.md
+    readonly property bool _barBottom: BarLayout.position === "bottom"
+    readonly property bool _barLeft: BarLayout.position === "left"
+    readonly property bool _barRight: BarLayout.position === "right"
     readonly property bool _side: root._barLeft || root._barRight
 
     visible: root.open
@@ -154,10 +154,10 @@ PanelWindow {
         Item {
             id: chrome
             anchors.fill: parent
-            anchors.topMargin: root._soft ? 0 : (Config.bar.position === "top" ? BarLayout.windowInset : 0)
-            anchors.bottomMargin: root._soft ? 0 : (Config.bar.position === "bottom" ? BarLayout.windowInset : 0)
-            anchors.leftMargin: root._soft ? 0 : (Config.bar.position === "left" ? BarLayout.windowInset : 0)
-            anchors.rightMargin: root._soft ? 0 : (Config.bar.position === "right" ? BarLayout.windowInset : 0)
+            anchors.topMargin: root._soft ? 0 : (BarLayout.position === "top" ? BarLayout.windowInset : 0)
+            anchors.bottomMargin: root._soft ? 0 : (BarLayout.position === "bottom" ? BarLayout.windowInset : 0)
+            anchors.leftMargin: root._soft ? 0 : (BarLayout.position === "left" ? BarLayout.windowInset : 0)
+            anchors.rightMargin: root._soft ? 0 : (BarLayout.position === "right" ? BarLayout.windowInset : 0)
 
             MPanelSurface {
                 id: host

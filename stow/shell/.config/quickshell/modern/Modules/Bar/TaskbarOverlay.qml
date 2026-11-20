@@ -38,8 +38,8 @@ Scope {
             aboveWindows: true
             WlrLayershell.layer: WlrLayer.Overlay
 
-            readonly property bool _barBottom: Config.bar.position === "bottom"
-            readonly property bool _barLeft: Config.bar.position === "left"
+            readonly property bool _barBottom: BarLayout.position === "bottom"
+            readonly property bool _barLeft: BarLayout.position === "left"
 
             MouseArea {
                 anchors.fill: parent
@@ -53,8 +53,8 @@ Scope {
                 height: Math.min(Tokens.spacing.xxl * 14, parent.height - Tokens.spacing.xl)
                 anchors.left: win._barLeft ? parent.left : undefined
                 anchors.right: !win._barLeft ? parent.right : undefined
-                anchors.leftMargin: Config.bar.endGap ?? Tokens.spacing.md
-                anchors.rightMargin: Config.bar.endGap ?? Tokens.spacing.md
+                anchors.leftMargin: BarLayout.endGap ?? Tokens.spacing.md
+                anchors.rightMargin: BarLayout.endGap ?? Tokens.spacing.md
                 y: win._barBottom ? (parent.height - height) : 0
                 scale: Motion.overlayScale(Taskbar.open)
 

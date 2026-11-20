@@ -118,9 +118,10 @@ Item {
         saturation: 0
         maskEnabled: root._symbolicFile
         maskSource: root._file ? fileImg : img
-        // Wide ramp so the icon's antialiased edge stays, instead of a
-        // hard cut at the first non-zero alpha.
-        maskThresholdMin: 0.5
-        maskSpreadAtMin: 1
+        // Dark keeps the wide ramp these status icons were drawn with.
+        // Light sits under Papirus's 35% "off" ink, or that gray stays
+        // brighter than the rest of a light bar.
+        maskThresholdMin: Colors.mode === "light" ? 0.12 : 0.5
+        maskSpreadAtMin: Colors.mode === "light" ? 0.12 : 1
     }
 }

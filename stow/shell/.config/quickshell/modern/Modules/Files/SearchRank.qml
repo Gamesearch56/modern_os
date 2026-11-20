@@ -1,6 +1,7 @@
 // Search hits stay folders-first, then by the score the walk assigned.
 import QtQuick
 import "../../Commons"
+import "../../Services"
 
 QtObject {
     id: root
@@ -70,6 +71,29 @@ QtObject {
                 });
             }
         }
-        return root.order(rows, foldersFirst).slice(0, limit);
+        const ranked = root.order(rows, foldersFirst);
+        const hit = root._pin(query, here);
+        if (!hit)
+            return ranked.slice(0, limit);
+        const rest = [];
+        for (let i = 0; i < ranked.length; i++) {
+            if (String(ranked[i].path || "") !== hit.path)
+                rest.push(ranked[i]);
+        }
+        return [hit].concat(rest).slice(0, limit);
+    }
+
+    // The typed path is a place, so it stays above name matches.
+    function _pin(query, here) {
+        if (!FilesLocate.same(query))
+            return null;
+        const path = String(FilesLocate.path || "");
+        return {
+            path: path,
+            name: String(FilesLocate.name || path),
+            dir: !!FilesLocate.dir,
+            where: root._where(path, String(here || "")),
+            score: 1000
+        };
     }
 }

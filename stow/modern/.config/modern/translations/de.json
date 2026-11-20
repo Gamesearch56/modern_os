@@ -206,8 +206,14 @@
     "errorTooLong": "Die Nachricht ist zu lang.",
     "errorGeminiAuth": "Dieser Google-AI-Schlüssel wurde abgelehnt. In Google AI Studio einen neuen Schlüssel erzeugen.",
     "errorGeminiModel": "Dieses Gemini-Modell ist nicht verfügbar. Unter Einstellungen → KI ein anderes wählen.",
+    "errorGeminiCredits": "Dieses Konto hat kein API-Guthaben mehr. Unter Einstellungen → KI Guthaben hinzufügen.",
+    "errorGeminiSpend": "Das Ausgabenlimit dieses Kontos ist erreicht. In Google AI Studio anheben.",
+    "errorGeminiRate": "Gemini begrenzt Anfragen. Kurz warten und erneut versuchen.",
     "errorChatGptAuth": "Dieser ChatGPT-Schlüssel wurde abgelehnt. Auf der OpenAI-Plattform einen neuen Schlüssel erzeugen.",
     "errorChatGptModel": "Dieses ChatGPT-Modell ist nicht verfügbar. Unter Einstellungen → KI ein anderes wählen.",
+    "errorChatGptCredits": "Dieses Konto hat kein API-Guthaben mehr. Unter Einstellungen → KI Guthaben hinzufügen.",
+    "errorChatGptSpend": "Das Ausgabenlimit dieses Kontos ist erreicht. Auf der OpenAI-Plattform anheben.",
+    "errorChatGptRate": "ChatGPT begrenzt Anfragen. Kurz warten und erneut versuchen.",
     "errorNoModel": "Unter Einstellungen → KI ein Modell wählen.",
     "stop": "Stopp",
     "stopped": "Abgebrochen.",
@@ -263,7 +269,7 @@
     "importTitle": "Hintergrund hinzufügen",
     "importImages": "Bilder",
     "importAll": "Alle Dateien",
-    "needChooser": "Zum Auswählen wird zenity oder kdialog benötigt",
+    "needChooser": "Dieses Bild konnte nicht ausgewählt werden.",
     "remove": "Löschen",
     "removeTitle": "Hintergrund löschen?",
     "removeBody": "Dieses Bild wird aus deinem Hintergrundordner gelöscht.",
@@ -281,7 +287,7 @@
   },
   "folderPicker": {
     "title": "Ordner wählen",
-    "needChooser": "Zum Auswählen eines Ordners wird zenity oder kdialog benötigt"
+    "needChooser": "Dieser Ordner konnte nicht ausgewählt werden."
   },
   "filePreview": {
     "title": "Schnellansicht",
@@ -424,6 +430,7 @@
     "mostUsed": "Meistgenutzt",
     "results": "Ergebnisse",
     "open": "Öffnen",
+    "allApps": "Alle Anwendungen",
     "noResults": "Keine Ergebnisse"
   },
   "settings": {
@@ -659,8 +666,10 @@
       "games": "Spiele",
       "gameFullscreen": "Spiele automatisch im Vollbild",
       "gameOptimize": "Spielfenster beschleunigen",
-      "gameHdr": "HDR für Proton-Spiele",
+      "gameHdr": "HDR für Spiele",
       "browserLight": "Browser entlasten",
+      "gameMode": "Spielmodus",
+      "easePc": "Effekte für Tempo weglassen",
       "speedTest": "Geschwindigkeitstest",
       "ethernet": "Ethernet",
       "wifiPassword": "WLAN-Passwort",
@@ -729,6 +738,9 @@
       "connect": "Verbinden",
       "signOut": "Abmelden",
       "openStudio": "API-Schlüssel holen",
+      "addCredits": "Guthaben hinzufügen",
+      "needCredits": "Kein API-Guthaben mehr. Guthaben hinzufügen und den Assistenten erneut versuchen.",
+      "needSpend": "Das Ausgabenlimit dieses Kontos ist erreicht.",
       "noModels": "Noch keine Gemini-Modelle"
     },
     "chatgpt": {
@@ -738,6 +750,9 @@
       "connect": "Verbinden",
       "signOut": "Abmelden",
       "openKeys": "API-Schlüssel holen",
+      "addCredits": "Guthaben hinzufügen",
+      "needCredits": "Kein API-Guthaben mehr. Guthaben hinzufügen und den Assistenten erneut versuchen.",
+      "needSpend": "Das Ausgabenlimit dieses Kontos ist erreicht.",
       "noModels": "Noch keine ChatGPT-Modelle"
     },
     "brave": {
@@ -862,16 +877,19 @@
       "aiBrief": "Hält Antworten auf ein paar Zeilen. Aus erlaubt eine längere Antwort.",
       "braveKey": "Brave-Search-Schlüssel einfügen. Der Assistent nutzt ihn, wenn eine Antwort das Web braucht.",
       "aiLibrary": "Bibliothek durchsuchen, dann ein Modell installieren oder eines löschen, das nicht mehr gebraucht wird.",
-      "geminiAccount": "In Google AI Studio mit dem Google-Konto anmelden, das Gemini hat, dann einen API-Schlüssel einfügen. Das Gemini-Pro-Kontingent folgt diesem Konto.",
+      "geminiAccount": "API-Schlüssel aus Google AI Studio einfügen. Antworten nutzen das API-Kontingent dieses Kontos.",
       "geminiModel": "Nutzt der Leisten-Assistent, wenn Gemini gewählt ist.",
-      "chatgptAccount": "Auf der OpenAI-Plattform mit dem ChatGPT-Konto anmelden, dann einen API-Schlüssel einfügen. Der Assistent nutzt diesen Schlüssel.",
+      "chatgptAccount": "API-Schlüssel von der OpenAI-Plattform einfügen. Antworten nutzen das API-Guthaben dieses Kontos.",
       "chatgptModel": "Nutzt der Leisten-Assistent, wenn ChatGPT gewählt ist.",
       "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken.",
       "windowRulesJson": "JSON-Array der Hyprland-Fensterregeln. Speichern prüft vor dem Schreiben.",
       "gameFullscreen": "Erzwingt exklusives Vollbild, sobald das Spielfenster erscheint, statt auf die Anfrage der Engine zu warten.",
       "gameOptimize": "Schaltet zusätzliche Fenstereffekte am Spiel aus, damit es flüssiger läuft. Andere Fenster behalten ihr gewohntes Aussehen.",
-      "gameHdr": "Setzt DXVK_HDR, ENABLE_HDR_WSI und PROTON_ENABLE_HDR nur für Battle.net/Proton-Spiele über modern battlenet — nicht für die ganze Sitzung (sonst laggt Steam und Video). HDR unter Anzeigen einschalten. Für Steam-Titel dieselben Variablen in den Startoptionen. Battle.net bleibt bei XWayland.",
+      "gameHdr": "Spiele können HDR nutzen, der restliche Bildschirm bleibt normal. HDR zuerst unter Anzeigen einschalten. Battle.net-Spiele übernehmen es beim nächsten Start. Bei einem Steam-Spiel gehört es in die Startoptionen dieses Spiels.",
       "browserLight": "Vivaldi startet ohne eigenen Grafikprozess, und die Fenster lassen Weichzeichner und Schatten weg. Einschalten, wenn der Browser auf einem langsamen Prozessor mehrere Sekunden braucht. Gilt beim nächsten Start von Vivaldi.",
+      "gameMode": "Hält die Sitzung wach, solange ein Spiel offen ist, und kennzeichnet dieses Fenster als Spiel.",
+      "easePc": "Schaltet Weichzeichner und Schatten an Spielen und im Browser aus, damit sie schneller laufen. Andere Fenster behalten diese Effekte. Den Browser einmal neu starten, damit es gilt.",
+      "gameHdrOff": "Kein HDR-Bildschirm ist angeschlossen.",
       "repeatRate": "Wie oft pro Sekunde eine gehaltene Taste wiederholt wird, sobald die Verzögerung vorbei ist. Ein höherer Wert tippt schneller.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn das System startet.",
@@ -883,7 +901,7 @@
       "snapperMissing": "Snapper ist nicht installiert. Die Einrichtung ist abgeschottet und wird nicht aus den Einstellungen gesetzt.",
       "snapperUnconfigured": "Snapper braucht eine root-Config, bevor Snapshots möglich sind. Config anlegen fragt nach dem Admin-Passwort und schreibt die Config.",
       "speedTest": "Lädt etwa 15 Sekunden lang vom Arch-Geo-Mirror über mehrere Verbindungen. Keine Speedtest-Website.",
-      "bluetooth": "Schaltet den Adapter ein. Geräte erscheinen darunter.",
+      "bluetooth": "Schaltet den Adapter ein. Eine kurze Suche läuft und stoppt dann, damit eine Verbindung nicht abreißt.",
       "bluetoothBlocked": "Kein Bluetooth-Adapter, oder der Funk ist hardwareseitig gesperrt.",
       "wifi": "Schaltet das Funkmodul ein. Netzwerke erscheinen darunter.",
       "wifiHardware": "Kein WLAN-Adapter, oder der Funk ist hardwareseitig gesperrt.",
@@ -905,6 +923,20 @@
       "passwordConfirm": "Passwort bestätigen",
       "passwordKeep": "Leer lassen, um das aktuelle Passwort zu behalten.",
       "thisAccount": "Du",
+      "chooseFace": "Bild auswählen",
+      "clearFace": "Bild entfernen",
+      "faceImages": "Bilder",
+      "faceFailed": "Dieses Bild kann nicht verwendet werden.",
+      "faceChooser": "Es ist kein Dateiauswahlfenster verfügbar.",
+      "faceHover": "Bild ändern",
+      "facePick": "Aus Dateien wählen",
+      "faceSave": "Bild speichern",
+      "faceSaving": "Bild wird gespeichert",
+      "faceSaved": "Bild gespeichert",
+      "faceRotateLeft": "Nach links drehen",
+      "faceRotateRight": "Nach rechts drehen",
+      "faceResize": "Größe",
+      "faceHint": "Ziehe das Bild. Der Kreis wird gespeichert.",
       "all": "Benutzer auf diesem Rechner",
       "settings": "Einstellungen",
       "others": "Andere Personen",
@@ -951,8 +983,19 @@
       "video": "Video"
     },
     "gaming": {
-      "windows": "Spielfenster",
-      "slow": "Langsame Hardware"
+      "play": "Spielen",
+      "ease": "Leistung",
+      "now": "Läuft gerade",
+      "hours": "Spielzeit",
+      "installed": "Installiert",
+      "last": "Zuletzt gespielt",
+      "disk": "Bibliothek",
+      "running": "Gerade offen",
+      "none": "Keine",
+      "lastBoth": "{name} · {when}",
+      "hoursValue": "{n} h",
+      "diskValue": "{n} GB",
+      "countValue": "{n}"
     },
     "privacy": {
       "notifications": "Benachrichtigungen",
@@ -1004,8 +1047,12 @@
       "forget": "Vergessen",
       "connect": "Verbinden",
       "disconnect": "Trennen",
-      "connectBody": "Mit diesem Gerät verbinden. Wenn es noch nicht gekoppelt ist, bestätigst du auf dem Gerät.",
-      "disconnectBody": "Verbindung trennen. Das Gerät bleibt gekoppelt, bis du es vergisst.",
+      "connectBody": "Mit diesem Gerät verbinden. Ein gemerktes Gerät wird nicht erneut gekoppelt. Ist es neu, bestätigst du auf dem Gerät.",
+      "disconnectBody": "Verbindung trennen. Das Gerät bleibt gemerkt, bis du es vergisst.",
+      "connecting": "Verbinden…",
+      "connectFailedTitle": "Bluetooth",
+      "connectFailed": "Verbindung nicht möglich. Wenn die Kopfhörer schon mit zwei Geräten verbunden sind, trenne eines und versuche es erneut.",
+      "pairFailed": "Koppeln nicht möglich. Bestätige die Anfrage am Gerät und versuche es erneut.",
       "remembered": "Gemerkt"
     },
     "storage": {
@@ -1135,6 +1182,7 @@
       "headline": "Paketupdate",
       "fromTo": "{from} → {to}",
       "empty": "Keine Updates",
+      "restarting": "Oberfläche wird neu gestartet…",
       "search": "Nach Updates suchen",
       "checkFailed": "Updates konnten nicht geprüft werden",
       "success": "Systemupdate abgeschlossen",
@@ -1622,6 +1670,14 @@
   },
   "files": {
     "title": "Dateien",
+    "pick": {
+      "title": "Bild auswählen",
+      "use": "Dieses Bild verwenden",
+      "fileTitle": "Datei auswählen",
+      "useFile": "Diese Datei verwenden",
+      "folderTitle": "Ordner auswählen",
+      "useFolder": "Diesen Ordner verwenden"
+    },
     "loading": "Wird geladen",
     "emptyDir": "Dieser Ordner ist leer",
     "refused": "Diese Änderung ist nicht erlaubt",
@@ -1629,6 +1685,7 @@
     "networkEmpty": "Keine Netzwerkorte",
     "network": {
       "connect": "Mit Server verbinden",
+      "rescan": "Erneut suchen",
       "connectDo": "Verbinden",
       "address": "Serveradresse",
       "refused": "Verbindung zu diesem Server ist nicht möglich"
@@ -1683,6 +1740,7 @@
       "forward": "Vor",
       "up": "Nach oben",
       "search": "Suchen",
+      "new": "Neu",
       "sort": "Sortieren",
       "details": "Details",
       "terminal": "Terminal hier öffnen",
@@ -1756,7 +1814,8 @@
     "extract": "Entpacken"
     },
     "tabs": {
-      "close": "Tab schließen"
+      "close": "Tab schließen",
+      "closeOthers": "Alle Tabs schließen"
     },
     "properties": {
       "title": "Eigenschaften",

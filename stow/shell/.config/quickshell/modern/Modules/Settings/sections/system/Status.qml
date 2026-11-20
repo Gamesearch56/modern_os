@@ -23,6 +23,8 @@ MStatusCard {
     }
 
     titleKey: {
+        if (Update.restarting)
+            return "settings.update.restarting";
         if (Update.checking && Update.pending.length === 0)
             return "settings.update.checking";
         if (root._desktopShown())
@@ -41,12 +43,12 @@ MStatusCard {
         iconName: "view-refresh"
         iconAfter: true
         busy: Update.checking
-        enabled: Passwd.canManage && !Update.running && !Update.mirrorsRunning
+        enabled: Passwd.canManage && !Update.running && !Update.mirrorsRunning && !Update.restarting
         onClicked: Update.refresh()
     }
 
     MLinearProgress {
-        visible: Update.checking
+        visible: Update.checking || Update.restarting
         Layout.fillWidth: true
         indeterminate: true
     }

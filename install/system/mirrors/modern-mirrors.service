@@ -1,0 +1,14 @@
+[Unit]
+Description=Refresh pacman mirrors
+After=network-online.target
+Wants=network-online.target
+# A boot where the network is not up yet should try again, not wait
+# until the next calendar day.
+StartLimitIntervalSec=1h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/modern/mirrors-refresh.sh --auto
+Restart=on-failure
+RestartSec=10min

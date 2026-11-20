@@ -50,16 +50,21 @@ Singleton {
         return "ics";
     }
 
+    function _openSite(url: string, draft: string) {
+        Settings.reopenAt("bar", "clock", draft);
+        Quickshell.execDetached(["xdg-open", url]);
+    }
+
     function openProton() {
-        Quickshell.execDetached(["xdg-open", "https://calendar.proton.me/u/0/settings/calendars"]);
+        root._openSite("https://calendar.proton.me/u/0/settings/calendars", "proton");
     }
 
     function openGoogle() {
-        Quickshell.execDetached(["xdg-open", "https://calendar.google.com/calendar/u/0/r/settings"]);
+        root._openSite("https://calendar.google.com/calendar/u/0/r/settings", "google");
     }
 
     function openAppleId() {
-        Quickshell.execDetached(["xdg-open", "https://account.apple.com/account/manage"]);
+        root._openSite("https://account.apple.com/account/manage", "apple");
     }
 
     // Translation key for a link that cannot be this provider's calendar

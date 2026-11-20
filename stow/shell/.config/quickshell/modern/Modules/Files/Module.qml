@@ -27,13 +27,14 @@ Scope {
 
             MWindowShell {
                 anchors.fill: parent
-                titleKey: "files.title"
+                titleKey: FilesChoose.active ? FilesChoose.headingKey : "files.title"
                 trailingFill: true
                 onClosed: Files.hide()
 
                 trailing: Toolbar { loading: mod._slow }
 
                 Layouts.RowLayout {
+                    enabled: !Files.covered
                     anchors.fill: parent
                     spacing: Tokens.spacing.md
 
@@ -134,17 +135,17 @@ Scope {
                 rows: Files.view === "grid" ? fileGrid.rows : fileList.rows
                 columns: Files.view === "grid" ? fileGrid.columns : 1; view: Files.view === "grid" ? fileGrid : fileList
             }
-            // Press, not tap: a tap grab can swallow the next side-button clicks.
+            // Release, not press: navigating while this grab is held drops the next click.
             // Do not use a full-window MouseArea — it forces the arrow cursor.
             TapHandler {
                 parent: win.contentItem
                 acceptedButtons: Qt.BackButton
-                onPressedChanged: if (pressed && mod._mouseNav()) Files.back()
+                onPressedChanged: if (pressed) FilesHistory.sideAt = Date.now(); else Qt.callLater(() => FilesHistory.sideStep(true))
             }
             TapHandler {
                 parent: win.contentItem
                 acceptedButtons: Qt.ForwardButton
-                onPressedChanged: if (pressed && mod._mouseNav()) Files.forward()
+                onPressedChanged: if (pressed) FilesHistory.sideAt = Date.now(); else Qt.callLater(() => FilesHistory.sideStep(false))
             }
             ContextMenu {}
             Properties {}
@@ -161,7 +162,7 @@ Scope {
 
     function _mouseNav(): bool {
         return Files.open && !Files.propertiesOpen && !Files.confirming && !Files.naming && !FilesConflict.open
-            && !Files.menuOpen && Storage.confirmWhere !== "files";
+            && !Files.covered && Storage.confirmWhere !== "files";
     }
 
     function _pending(): bool {

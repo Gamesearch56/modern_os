@@ -2,6 +2,7 @@
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -143,6 +144,54 @@ def emit(obj: dict) -> None:
     sys.stdout.flush()
 
 
+# Billing 429s do not clear by waiting. OpenAI documents these codes
+# separately from a temporary rate limit.
+_CREDIT_CODES = ("credit_balance_exhausted", "insufficient_quota")
+_SPEND_CODES = (
+    "organization_spend_limit_exceeded",
+    "project_spend_limit_exceeded",
+    "organization_usage_limit_exceeded",
+)
+
+
+def problem(exc: urllib.error.HTTPError) -> str:
+    code = ""
+    kind = ""
+    try:
+        raw = exc.read() or b""
+        payload = json.loads(raw.decode("utf-8", "replace") or "{}")
+        err = payload.get("error") if isinstance(payload, dict) else None
+        if isinstance(err, dict):
+            code = str(err.get("code") or "")
+            kind = str(err.get("type") or "")
+    except (OSError, json.JSONDecodeError, AttributeError):
+        code = ""
+    if code in _SPEND_CODES:
+        return "spend"
+    if code in _CREDIT_CODES or kind == "insufficient_quota":
+        return "credits"
+    if exc.code in (401, 403):
+        return "auth"
+    if exc.code == 404:
+        return "model"
+    if exc.code in (429, 503):
+        return "rate"
+    return "error"
+
+
+def retry_wait(exc: urllib.error.HTTPError) -> float:
+    try:
+        raw = str(exc.headers.get("Retry-After") or "").strip()
+        sec = float(raw)
+    except (AttributeError, TypeError, ValueError):
+        return 1.0
+    if sec < 0:
+        return 1.0
+    if sec > 8:
+        return 8.0
+    return sec
+
+
 def _auth_header(key: str) -> dict:
     return {
         "Authorization": "Bearer " + key,
@@ -166,7 +215,7 @@ def run_models(opener=None) -> int:
         with open_url(req, timeout=20) as resp:
             payload = json.loads(resp.read().decode("utf-8", "replace") or "{}")
     except urllib.error.HTTPError as e:
-        emit({"error": f"HTTP {e.code}"})
+        emit({"error": problem(e)})
         return 1
     except (TimeoutError, urllib.error.URLError, OSError, json.JSONDecodeError):
         emit({"error": "unreachable"})
@@ -211,27 +260,34 @@ def run_chat(path: str, opener=None) -> int:
         headers=headers,
     )
     open_url = opener or urllib.request.urlopen
-    try:
-        with open_url(req, timeout=180) as resp:
-            for chunk in resp:
-                ev = parse_sse(chunk.decode("utf-8", "replace"))
-                if ev:
-                    emit(ev)
-    except urllib.error.HTTPError as e:
-        emit({"e": f"HTTP {e.code}"})
-        return 1
-    except TimeoutError:
-        return 28
-    except urllib.error.URLError as e:
-        reason = str(getattr(e, "reason", e) or e)
-        if "timed out" in reason.lower():
+    # A temporary 429/503 asks for one wait. A credit or spend 429 will
+    # not succeed on a second try.
+    for attempt in (1, 2):
+        try:
+            with open_url(req, timeout=180) as resp:
+                for chunk in resp:
+                    ev = parse_sse(chunk.decode("utf-8", "replace"))
+                    if ev:
+                        emit(ev)
+            return 0
+        except urllib.error.HTTPError as e:
+            kind = problem(e)
+            if kind != "rate" or attempt == 2:
+                emit({"e": kind})
+                return 1
+            time.sleep(retry_wait(e))
+        except TimeoutError:
             return 28
-        emit({"e": "unreachable"})
-        return 1
-    except OSError:
-        emit({"e": "unreachable"})
-        return 1
-    return 0
+        except urllib.error.URLError as e:
+            reason = str(getattr(e, "reason", e) or e)
+            if "timed out" in reason.lower():
+                return 28
+            emit({"e": "unreachable"})
+            return 1
+        except OSError:
+            emit({"e": "unreachable"})
+            return 1
+    return 1
 
 
 def main(argv: list) -> int:

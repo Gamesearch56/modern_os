@@ -260,3 +260,9 @@ if [ "${ROOT_PLAN_SPLASH:-0}" -eq 1 ]; then
         mkinitcpio -P
     fi
 fi
+
+if [ "${ROOT_PLAN_MIRRORS:-0}" -eq 1 ]; then
+    # shellcheck source=../install/lib/mirrors.sh
+    source "$REPO_ROOT/install/lib/mirrors.sh"
+    mirrors_apply || printf 'update-apply: WARN mirror refresh was not enabled\n' >&2
+fi

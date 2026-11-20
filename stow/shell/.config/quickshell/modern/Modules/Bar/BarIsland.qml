@@ -14,8 +14,8 @@ Item {
 
     visible: !root.empty
     clip: true
-    implicitHeight: root.vertical ? Math.max(Config.bar.height, inner.implicitHeight) : Config.bar.height
-    implicitWidth: root.vertical ? Config.bar.height : Math.max(Config.bar.height, inner.implicitWidth)
+    implicitHeight: root.vertical ? Math.max(BarLayout.height, inner.implicitHeight) : BarLayout.height
+    implicitWidth: root.vertical ? BarLayout.height : Math.max(BarLayout.height, inner.implicitWidth)
     // Parent is a layout. Hints follow the pill so a late chip width
     // pushes the neighbors over instead of drawing under them.
     Layout.preferredWidth: implicitWidth

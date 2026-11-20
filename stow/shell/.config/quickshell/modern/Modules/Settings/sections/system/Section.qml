@@ -30,7 +30,7 @@ ColumnLayout {
             key: "settings.systemUpdate"
             iconName: "system-software-update"
             Layout.fillWidth: true
-            enabled: Passwd.canManage && Update.pending.length > 0 && !Update.running && !Update.mirrorsRunning
+            enabled: Passwd.canManage && Update.pending.length > 0 && !Update.running && !Update.mirrorsRunning && !Update.restarting
             onClicked: Update.start()
         }
         MButton {
@@ -54,31 +54,31 @@ ColumnLayout {
     }
 
     MSectionHeader {
-        visible: Update.pending.length > 0 && !Update.checking
+        visible: Update.pending.length > 0 && !Update.checking && !Update.restarting
         key: "settings.update.headline"
         styleName: "titleLarge"
         topMargin: Tokens.spacing.xxl
     }
 
     PkgGroup {
-        visible: Update.systemPkgs.length > 0 && !Update.checking
+        visible: Update.systemPkgs.length > 0 && !Update.checking && !Update.restarting
         titleKey: "settings.update.packages"
         packages: Update.systemPkgs
         expanded: Update.pending.length === 0
     }
     PkgGroup {
-        visible: Update.otherPkgs.length > 0 && !Update.checking
+        visible: Update.otherPkgs.length > 0 && !Update.checking && !Update.restarting
         titleKey: "settings.update.otherPackages"
         packages: Update.otherPkgs
         expanded: false
     }
 
     MEmptyState {
-        visible: Update.systemPkgs.length === 0 && Update.otherPkgs.length === 0 && !Update.checking
+        visible: Update.restarting || (Update.systemPkgs.length === 0 && Update.otherPkgs.length === 0 && !Update.checking)
         Layout.fillWidth: true
         Layout.preferredHeight: Tokens.spacing.xxl * 4
         iconName: "system-software-update"
         preferSymbolic: false
-        titleKey: "settings.update.empty"
+        titleKey: Update.restarting ? "settings.update.restarting" : "settings.update.empty"
     }
 }

@@ -24,6 +24,15 @@ Scope {
         }
     }
 
+    Connections {
+        target: BluetoothLink
+        function onSettled(ok, address) {
+            if (ok || !BluetoothLink.errorKey.length)
+                return;
+            Notifications.toast(I18n.t("settings.bluetooth.connectFailedTitle"), I18n.t(BluetoothLink.errorKey));
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -35,34 +44,34 @@ Scope {
             color: "transparent"
             implicitWidth: Tokens.spacing.xxl * 12
             implicitHeight: toastStack.implicitHeight
-            anchors.top: Config.bar.position !== "bottom"
-            anchors.bottom: Config.bar.position === "bottom"
-            anchors.right: Config.bar.position !== "left"
-            anchors.left: Config.bar.position === "left"
+            anchors.top: BarLayout.position !== "bottom"
+            anchors.bottom: BarLayout.position === "bottom"
+            anchors.right: BarLayout.position !== "left"
+            anchors.left: BarLayout.position === "left"
             exclusionMode: ExclusionMode.Ignore
             aboveWindows: true
             WlrLayershell.layer: WlrLayer.Overlay
             mask: Region {
                 item: toastStack
             }
-            margins.top: toastWin._edgeMargin(Config.bar.position === "top")
+            margins.top: toastWin._edgeMargin(BarLayout.position === "top")
                 + Tokens.panel.toastTopClearance
-            margins.bottom: toastWin._edgeMargin(Config.bar.position === "bottom")
-            margins.right: toastWin._edgeMargin(Config.bar.position === "right")
-            margins.left: toastWin._edgeMargin(Config.bar.position === "left")
+            margins.bottom: toastWin._edgeMargin(BarLayout.position === "bottom")
+            margins.right: toastWin._edgeMargin(BarLayout.position === "right")
+            margins.left: toastWin._edgeMargin(BarLayout.position === "left")
 
             function _edgeMargin(onBarEdge: bool): real {
                 if (onBarEdge)
                     return BarLayout.windowInset;
-                return Config.bar.endGap ?? Tokens.spacing.sm;
+                return BarLayout.endGap ?? Tokens.spacing.sm;
             }
 
             Toasts {
                 id: toastStack
-                anchors.top: Config.bar.position === "bottom" ? undefined : parent.top
-                anchors.bottom: Config.bar.position === "bottom" ? parent.bottom : undefined
-                anchors.right: Config.bar.position === "left" ? undefined : parent.right
-                anchors.left: Config.bar.position === "left" ? parent.left : undefined
+                anchors.top: BarLayout.position === "bottom" ? undefined : parent.top
+                anchors.bottom: BarLayout.position === "bottom" ? parent.bottom : undefined
+                anchors.right: BarLayout.position === "left" ? undefined : parent.right
+                anchors.left: BarLayout.position === "left" ? parent.left : undefined
             }
         }
     }
@@ -88,17 +97,17 @@ Scope {
             // Fullscreen transparent layers go black on a virtual GPU.
             // The card stays; a desktop GPU keeps the click-outside layer.
             readonly property bool _soft: Chrome.softwareGpu
-            readonly property real _cardW: Tokens.spacing.xxl * 16 + (Config.bar.endGap ?? Tokens.spacing.md)
-            anchors.top: overlay._soft ? Config.bar.position !== "bottom" : true
-            anchors.bottom: overlay._soft ? Config.bar.position === "bottom" : true
-            anchors.left: overlay._soft ? Config.bar.position === "left" : true
-            anchors.right: overlay._soft ? Config.bar.position !== "left" : true
+            readonly property real _cardW: Tokens.spacing.xxl * 16 + (BarLayout.endGap ?? Tokens.spacing.md)
+            anchors.top: overlay._soft ? BarLayout.position !== "bottom" : true
+            anchors.bottom: overlay._soft ? BarLayout.position === "bottom" : true
+            anchors.left: overlay._soft ? BarLayout.position === "left" : true
+            anchors.right: overlay._soft ? BarLayout.position !== "left" : true
             implicitWidth: overlay._soft ? overlay._cardW : 0
             implicitHeight: overlay._soft ? Math.min(overlay.screen ? overlay.screen.height : Tokens.spacing.xxl * 24, Tokens.spacing.xxl * 24) : 0
-            margins.top: overlay._soft && Config.bar.position === "top" ? overlay._barReserve : 0
-            margins.bottom: overlay._soft && Config.bar.position === "bottom" ? overlay._barReserve : 0
-            margins.left: overlay._soft && Config.bar.position === "left" ? overlay._barReserve : 0
-            margins.right: overlay._soft && Config.bar.position === "right" ? overlay._barReserve : 0
+            margins.top: overlay._soft && BarLayout.position === "top" ? overlay._barReserve : 0
+            margins.bottom: overlay._soft && BarLayout.position === "bottom" ? overlay._barReserve : 0
+            margins.left: overlay._soft && BarLayout.position === "left" ? overlay._barReserve : 0
+            margins.right: overlay._soft && BarLayout.position === "right" ? overlay._barReserve : 0
             exclusionMode: ExclusionMode.Ignore
             focusable: true
             aboveWindows: true
@@ -116,10 +125,10 @@ Scope {
 
             Item {
                 anchors.fill: parent
-                anchors.topMargin: overlay._soft ? 0 : (Config.bar.position === "top" ? overlay._barReserve : 0)
-                anchors.bottomMargin: overlay._soft ? 0 : (Config.bar.position === "bottom" ? overlay._barReserve : 0)
-                anchors.leftMargin: overlay._soft ? 0 : (Config.bar.position === "left" ? overlay._barReserve : 0)
-                anchors.rightMargin: overlay._soft ? 0 : (Config.bar.position === "right" ? overlay._barReserve : 0)
+                anchors.topMargin: overlay._soft ? 0 : (BarLayout.position === "top" ? overlay._barReserve : 0)
+                anchors.bottomMargin: overlay._soft ? 0 : (BarLayout.position === "bottom" ? overlay._barReserve : 0)
+                anchors.leftMargin: overlay._soft ? 0 : (BarLayout.position === "left" ? overlay._barReserve : 0)
+                anchors.rightMargin: overlay._soft ? 0 : (BarLayout.position === "right" ? overlay._barReserve : 0)
 
                 Panel {
                     anchors.fill: parent

@@ -6,8 +6,8 @@ import "../../"
 
 Item {
     id: root
-    implicitWidth: BarLayout.vertical ? Config.bar.height : row.implicitWidth
-    implicitHeight: BarLayout.vertical ? row.implicitHeight : Config.bar.height
+    implicitWidth: BarLayout.vertical ? BarLayout.height : row.implicitWidth
+    implicitHeight: BarLayout.vertical ? row.implicitHeight : BarLayout.height
 
     readonly property bool _wide: !BarLayout.vertical
     readonly property string _wifiIcon: Network.linkKind === "wifi" ? "network-wireless-symbolic" : (Network.linkKind === "ethernet" ? "network-wired-symbolic" : "network-offline-symbolic")

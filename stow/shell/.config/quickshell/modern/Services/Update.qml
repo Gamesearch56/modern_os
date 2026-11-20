@@ -33,9 +33,10 @@ Singleton {
     property var _ran: []
     property int _gen: 0
     property int _hold: 0
+    property bool restarting: false
     property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, reason: "", iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
     signal finished(bool ok)
-    signal notify(string summary, string body)
+    signal notify(string summary, string body, string section)
 
     readonly property bool indeterminate: root.running && root.progress < 0
 
@@ -88,7 +89,7 @@ Singleton {
         id: mirrors
         onErrorChanged: if (mirrors.error.length) root.error = mirrors.error
         onFinished: (ok) => {
-            root.notify(ok ? I18n.t("settings.update.mirrorsDone") : I18n.t("settings.update.mirrorsFailed"), "");
+            root.notify(ok ? I18n.t("settings.update.mirrorsDone") : I18n.t("settings.update.mirrorsFailed"), "", "");
             if (ok)
                 root.refresh();
         }
@@ -104,7 +105,7 @@ Singleton {
             onStreamFinished: {
                 const v = String(this.text || "").trim();
                 if (v.length)
-                    root.notify(I18n.t("settings.update.desktopApplied", ({ v: v })), I18n.t("settings.update.desktopAppliedBody"));
+                    root.notify(I18n.t("settings.update.desktopApplied", ({ v: v })), I18n.t("settings.update.desktopAppliedBody"), "");
             }
         }
     }
@@ -120,15 +121,11 @@ Singleton {
         }
     }
 
-    // A desktop release left its UI restart to us: run it only after 100%
-    // has been on screen.
+    // 100% stays up briefly. Closing the log starts the UI restart.
     Timer {
         id: closeTimer
         interval: Motion.updateSettleMs
-        onTriggered: {
-            root.close();
-            Quickshell.execDetached([Paths.script("update-run.sh"), "reload"]);
-        }
+        onTriggered: root.close()
     }
 
     onWatchingChanged: if (root.watching) root.refresh()
@@ -196,7 +193,15 @@ Singleton {
     function close() {
         if (root.running)
             return;
+        // Mark first. Closing the log can call back in before the reload starts.
+        const go = root.restarting && root.progress >= 0;
+        if (go)
+            root.progress = -1;
         root.open = false;
+        if (!go)
+            return;
+        closeTimer.stop();
+        Quickshell.execDetached([Paths.script("update-run.sh"), "reload"]);
     }
 
     function _append(line: string) {
@@ -227,13 +232,10 @@ Singleton {
         root.running = false;
         root.progress = ok ? 1 : -1;
         if (code === 3)
-            root.notify(I18n.t("settings.update.rolledBack"), I18n.t("settings.update.rolledBackBody"));
+            root.notify(I18n.t("settings.update.rolledBack"), I18n.t("settings.update.rolledBackBody"), "");
         else if (!ok || classify.doneSummary(root._ran).length)
-            root.notify(ok ? classify.doneSummary(root._ran) : I18n.t("settings.update.failed"), ok ? "" : root.step);
-        if (ok) {
-            closeTimer.restart();
-            root.refresh();
-        }
+            root.notify(ok ? classify.doneSummary(root._ran) : I18n.t("settings.update.failed"), ok ? "" : root.step, "");
+        if (ok) { root.restarting = (root._ran || []).filter(p => String(p && p.kind || "") === "desktop").length > 0; closeTimer.restart(); root.refresh(); }
     }
 
     function _parseCheck(text: string) {
@@ -280,7 +282,7 @@ Singleton {
         const key = pending.map(p => p.name).join(" ");
         if (pending.length > 0 && key !== root._notified) {
             root._notified = key;
-            root.notify(classify.availableNotice(pending), "");
+            root.notify(classify.availableNotice(pending), "", "system");
         }
         if (pending.length === 0)
             root._notified = "";

@@ -16,6 +16,7 @@ Singleton {
     property string mime: ""
     property string textContent: ""
     property string listing: ""
+    property var rows: []
     property string imagePath: ""
     property string fileName: ""
     property bool imageFailed: false
@@ -33,11 +34,11 @@ Singleton {
 
     signal previewFailed(string key, string name)
 
-    // Space is non-consuming: the global bind can see the new preview
-    // window on the same key that opened it. Arm only after that press.
+    // Space is non-consuming, and a slow machine maps the preview after
+    // that press is still in flight. Stay closed to Space until then.
     Timer {
         id: spaceArm
-        interval: Motion.mediumMs
+        interval: Motion.extraLongMs
         onTriggered: root._spaceArmed = true
     }
 
@@ -81,8 +82,10 @@ Singleton {
         running: false
         stdout: StdioCollector { onStreamFinished: root._onFolder(this.text) }
         onExited: (code) => {
-            if (code !== 0 && root._folderToken === root._openToken && root.kind === "folder" && !root.listing.length)
+            if (code !== 0 && root._folderToken === root._openToken && root.kind === "folder" && !root.listing.length && !(root.rows || []).length) {
+                root.rows = [];
                 root.listing = I18n.t("files.noAccess");
+            }
         }
     }
 
@@ -122,7 +125,7 @@ Singleton {
     function togglePath(path: string) {
         if (root._spaceNoted || root.open) {
             root._spaceNoted = false;
-            if (root.open) root.hide();
+            root.spaceHide();
             return;
         }
         if (!path.length) { root._fail("filePreview.noSelection"); return; }
@@ -136,7 +139,7 @@ Singleton {
         mimeProc.running = false; folderProc.running = false; thumbProc.running = false;
         root._videoPath = ""; videoProc.running = false;
         root.open = false; root.kind = ""; root.mime = ""; root.path = ""; root.fileName = "";
-        root.textContent = ""; root.listing = ""; root.imagePath = ""; root.imageFailed = false;
+        root.textContent = ""; root.listing = ""; root.rows = []; root.imagePath = ""; root.imageFailed = false;
     }
 
     function openPath(raw: string) {
@@ -148,7 +151,7 @@ Singleton {
         root._openToken += 1;
         mimeProc.running = false; folderProc.running = false; thumbProc.running = false;
         root._videoPath = ""; videoProc.running = false;
-        root.kind = ""; root.mime = ""; root.textContent = ""; root.listing = "";
+        root.kind = ""; root.mime = ""; root.textContent = ""; root.listing = ""; root.rows = [];
         root.imagePath = ""; root.imageFailed = false; root._fellBack = false;
         root.path = p; root.fileName = p.split("/").pop();
         root._spaceArmed = false; spaceArm.restart();
@@ -217,7 +220,7 @@ Singleton {
 
     function _listFolder() {
         root._folderToken = root._openToken;
-        root.listing = "";
+        root.listing = ""; root.rows = [];
         const hidden = Config.files.showHidden === true ? "1" : "0";
         folderProc.command = [Paths.script("files-ops.sh"), "list", root.path, hidden, "name", "0", "1"];
         folderProc.running = true;
@@ -230,12 +233,13 @@ Singleton {
         try { rows = JSON.parse(out || "[]"); } catch (e) { rows = []; }
         if (!Array.isArray(rows))
             return;
-        const names = [];
-        for (let i = 0; i < rows.length && names.length < 100; i++)
-            names.push(String(rows[i].name || ""));
+        const shown = [];
+        for (let i = 0; i < rows.length && shown.length < 100; i++)
+            shown.push({ name: String(rows[i].name || ""), dir: rows[i].dir === true });
         if (rows.length > 100)
-            names.push("…");
-        root.listing = names.length ? names.join("\n") : I18n.t("filePreview.emptyFolder");
+            shown.push({ name: "…", dir: false, more: true });
+        root.rows = shown;
+        root.listing = shown.length ? "" : I18n.t("filePreview.emptyFolder");
     }
 
     function _thumb() {

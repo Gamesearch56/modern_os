@@ -53,6 +53,8 @@ QtObject {
     }
 
     function gridDates(entry) {
+        if (entry && entry.share)
+            return "";
         const parts = [];
         if (Files.showCreated)
             parts.push(I18n.t("files.details.created") + " " + dateText(entry && entry.created));
@@ -62,6 +64,8 @@ QtObject {
     }
 
     function gridMeta(entry) {
+        if (entry && entry.share)
+            return "";
         const parts = [];
         if (Files.showSize)
             parts.push(sizeText(entry));

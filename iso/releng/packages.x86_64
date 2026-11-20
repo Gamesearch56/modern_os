@@ -51,6 +51,7 @@ yay-bin
 matugen-bin
 bibata-cursor-theme-bin
 phylax-git
+proton-pass-bin
 # AUR calamares PKGBUILD omits this; the binary links libKF6Crash.so.6.
 kcrash
 cage

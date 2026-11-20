@@ -26,16 +26,51 @@ MOverlay {
             Layout.fillHeight: true
 
             Flickable {
+                id: scroll
                 anchors.fill: parent
                 visible: FilePreview.kind === "text" || FilePreview.kind === "folder"
                 clip: true
                 contentWidth: width
-                contentHeight: body.implicitHeight
+                contentHeight: folderCol.visible ? folderCol.implicitHeight : body.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
+
+                Column {
+                    id: folderCol
+                    width: scroll.width
+                    visible: FilePreview.kind === "folder" && (FilePreview.rows || []).length > 0
+                    spacing: Tokens.spacing.xs
+
+                    Repeater {
+                        model: FilePreview.rows
+                        delegate: Row {
+                            required property var modelData
+                            width: folderCol.width
+                            height: Tokens.spacing.xl
+                            spacing: Tokens.spacing.sm
+
+                            MIcon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: modelData.more !== true
+                                name: modelData.dir ? "folder" : "text-x-generic"
+                                size: Tokens.icon.sm
+                                color: modelData.dir ? Colors.color.primary : Colors.color.onSurfaceVariant
+                            }
+                            MText {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: Math.max(0, parent.width - Tokens.icon.sm - parent.spacing)
+                                value: modelData.name || ""
+                                styleName: "bodyMedium"
+                                elide: Text.ElideRight
+                                color: modelData.dir ? Colors.color.onSurface : Colors.color.onSurfaceVariant
+                            }
+                        }
+                    }
+                }
 
                 MText {
                     id: body
-                    width: parent.width
+                    width: scroll.width
+                    visible: !folderCol.visible
                     value: FilePreview.kind === "folder" ? FilePreview.listing : FilePreview.textContent
                     styleName: "bodyMedium"
                     familyRole: "monospace"

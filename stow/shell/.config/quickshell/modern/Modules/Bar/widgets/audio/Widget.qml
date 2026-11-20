@@ -7,8 +7,8 @@ import "../../"
 
 Item {
     id: root
-    implicitWidth: BarLayout.vertical ? Config.bar.height : (row.implicitWidth + Tokens.spacing.sm * 2)
-    implicitHeight: Config.bar.height
+    implicitWidth: BarLayout.vertical ? BarLayout.height : (row.implicitWidth + Tokens.spacing.sm * 2)
+    implicitHeight: BarLayout.height
 
     readonly property string _icon: Audio.muted ? "audio-volume-muted-symbolic" : (Audio.volume < 34 ? "audio-volume-low-symbolic" : (Audio.volume < 67 ? "audio-volume-medium-symbolic" : "audio-volume-high-symbolic"))
     readonly property color _fg: hit.checked ? Colors.color.onPrimaryContainer : Colors.color.onSurface

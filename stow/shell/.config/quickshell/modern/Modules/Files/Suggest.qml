@@ -1,6 +1,7 @@
 import QtQuick
 import "../../Commons"
 import "../../Widgets"
+import "../../Services"
 
 MPopup {
     id: root
@@ -13,6 +14,7 @@ MPopup {
 
     width: root.span
     height: Math.max(column.implicitHeight, Tokens.spacing.xxl) + Tokens.spacing.md * 2
+    onOpenChanged: Files.cover(open)
 
     Column {
         id: column

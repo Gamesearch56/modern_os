@@ -61,6 +61,7 @@ MIconButton {
         id: menu
         width: Tokens.spacing.xxl * 8
         height: column.implicitHeight + Tokens.spacing.md * 2
+        onOpenChanged: Files.cover(open)
 
         Column {
             id: column

@@ -9,8 +9,8 @@ import "../../"
 Item {
     id: root
     property var barScreen: null
-    implicitWidth: BarLayout.vertical ? Config.bar.height : (label.implicitWidth + Tokens.spacing.md * 2)
-    implicitHeight: Config.bar.height
+    implicitWidth: BarLayout.vertical ? BarLayout.height : (label.implicitWidth + Tokens.spacing.md * 2)
+    implicitHeight: BarLayout.height
 
     readonly property color _fg: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
 

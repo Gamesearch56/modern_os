@@ -21,6 +21,9 @@ Item {
     readonly property string _class: String(root._ipc.class || root.win?.class || root._ipc.initialClass || "")
     readonly property string _rawTitle: String(root.win?.title || root._ipc.title || "").trim()
     readonly property string _appName: {
+        // The compositor title stays modern.files so window rules still match.
+        if (root._rawTitle === "modern.files")
+            return I18n.t("files.launcherName");
         const n = Apps.displayNameForHint(root._class);
         return n.length ? n : (root._rawTitle.length && root._rawTitle !== "~" ? root._rawTitle : root._class);
     }

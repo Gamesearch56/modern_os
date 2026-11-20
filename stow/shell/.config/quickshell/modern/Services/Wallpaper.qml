@@ -218,13 +218,14 @@ Singleton {
     function clearPendingSelect() { root.pendingSelect = ""; }
     function refresh() { root._refresh(); }
 
-    function tileSource(path: string): string {
-        return thumbs.url(path);
-    }
+    function tileSource(path: string): string { return thumbs.url(path); }
 
-    function _refresh() {
-        listProc.running = false;
-        Qt.callLater(() => { listProc.running = true; });
+    function _refresh() { listProc.running = false; Qt.callLater(() => { listProc.running = true; }); }
+
+    function importFile(path: string) {
+        importProc.command = [Paths.script("wallpaper-import.sh"), String(path || "")];
+        importProc.running = false;
+        importProc.running = true;
     }
 
     function importWallpaper() {
@@ -235,11 +236,7 @@ Singleton {
 
     function beginChooser(kind: string) {
         const k = String(kind || "");
-        if (k === "import") {
-            importProc.running = false;
-            importProc.running = true;
-            return;
-        }
+        if (k === "import") { FilesChoose.ask(XdgDirs.pictures, "image", "wallpaper"); return; }
         if (k === "provider") {
             providerProc.command = [Paths.script("wallpaper-provider.sh"), root.providerUrl(), root.libraryDir];
             providerProc.running = true;
@@ -268,10 +265,10 @@ Singleton {
         }
         root.currentPath = path;
         root.hide();
-        const shown = path;
         Qt.callLater(() => {
-            Quickshell.execDetached([Paths.script("wallpaper-show.sh"), shown]);
-            Theme.applyShown(shown);
+            Colors.armForWallpaper();
+            Quickshell.execDetached([Paths.script("wallpaper-show.sh"), path, "", String(Colors.transitionGen)]);
+            Theme.applyShown(path);
         });
         Logger.info("Wallpaper", "applied " + path);
     }

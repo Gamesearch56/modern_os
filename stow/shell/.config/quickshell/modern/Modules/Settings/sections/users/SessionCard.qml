@@ -8,6 +8,7 @@ ColumnLayout {
     id: root
 
     signal editClicked()
+    signal faceClicked()
 
     spacing: Tokens.spacing.sm
     Layout.fillWidth: true
@@ -16,16 +17,23 @@ ColumnLayout {
     readonly property bool admin: Passwd.isAdmin(root.person)
 
     MStatusCard {
+        showAvatar: true
         avatarSource: User.faceUrl
         avatarSize: Tokens.spacing.xxl * 2
+        avatarHoverIcon: "camera-photo-symbolic"
+        avatarHoverKey: "settings.users.faceHover"
+        onAvatarClicked: root.faceClicked()
         titleValue: User.displayName
         subtitleValue: User.loginName
-        trailing: MIconButton {
-            iconName: "document-edit-symbolic"
-            key: "settings.users.editTitle"
-            iconSize: Tokens.icon.sm
-            enabled: !Passwd.running
-            onClicked: root.editClicked()
+        trailing: RowLayout {
+            spacing: Tokens.spacing.xs
+            MIconButton {
+                iconName: "document-edit-symbolic"
+                key: "settings.users.editTitle"
+                iconSize: Tokens.icon.sm
+                enabled: !Passwd.running
+                onClicked: root.editClicked()
+            }
         }
         detail: Flow {
             Layout.fillWidth: true
@@ -57,6 +65,14 @@ ColumnLayout {
                 }
             }
         }
+    }
+    MText {
+        visible: User.faceError.length > 0
+        key: User.faceError.length > 0 ? User.faceError : "settings.users.faceFailed"
+        styleName: "bodySmall"
+        color: Colors.color.error
+        wrapMode: Text.WordWrap
+        Layout.fillWidth: true
     }
 
     RowLayout {

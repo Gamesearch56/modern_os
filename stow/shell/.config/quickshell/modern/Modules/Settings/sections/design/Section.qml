@@ -109,6 +109,7 @@ ColumnLayout {
         decimals: 2
         value: Config.typography.scale
         showValue: true
+        onMoved: (v) => { Config.typography.scale = Math.round(v * 100) / 100; }
         onCommitted: (v) => ConfigWrite.set("typography.scale", Math.round(v * 100) / 100)
     }
 

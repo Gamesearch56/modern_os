@@ -573,9 +573,17 @@ if [ "$1" = mount ]; then
 fi
 exit 1
 EOF
-chmod +x "$TMP/bin/findmnt" "$TMP/bin/gio"
+cat >"$TMP/bin/nmblookup" <<'EOF'
+#!/bin/sh
+printf '%s\n' '10.0.0.8 *<00>'
+EOF
+cat >"$TMP/bin/smbclient" <<'EOF'
+#!/bin/sh
+printf '%s\n' 'Disk|Media|'
+EOF
+chmod +x "$TMP/bin/findmnt" "$TMP/bin/gio" "$TMP/bin/nmblookup" "$TMP/bin/smbclient"
 listed="$(PATH="$TMP/bin:$PATH" XDG_RUNTIME_DIR="$TMP/runtime" "$PLACES" mounts)"
-if python3 -c 'import json,sys; rows=json.load(sys.stdin); paths={r["path"] for r in rows}; uris={r["uri"] for r in rows}; assert "/mnt/share" in paths and "/mnt/local" not in paths and any(r["path"].endswith("/gvfs/smb-share:server=nas,share=media") and r["uri"]=="smb://nas/media" for r in rows) and "sftp://desk" in uris' <<<"$listed"; then
+if python3 -c 'import json,sys; rows=json.load(sys.stdin); paths={r["path"] for r in rows}; uris={r["uri"] for r in rows}; assert "/mnt/share" in paths and "/mnt/local" not in paths and any(r["path"].endswith("/gvfs/smb-share:server=nas,share=media") and r["uri"]=="smb://nas/media" for r in rows) and "sftp://desk" in uris and "smb://10.0.0.8/Media" in uris' <<<"$listed"; then
     ok "network places list mounts, gvfs shares, and discovered servers"
 else
     err "network places were incomplete"
@@ -675,6 +683,65 @@ if command -v ffmpeg >/dev/null 2>&1; then
     else
         ok "video sample could not be encoded"
     fi
+fi
+
+# Ctrl+C in the location field shell-escapes spaces. Pasting that
+# string back has to stat the same file.
+if python3 - "$ROOT" "$TMP" "$OPS" <<'PY'
+import json, pathlib, subprocess, sys
+root, tmp, ops = sys.argv[1:]
+field = (pathlib.Path(root) / "stow/shell/.config/quickshell/modern/Widgets/MTextField.qml").read_text()
+locate = (pathlib.Path(root) / "stow/shell/.config/quickshell/modern/Services/FilesLocate.qml").read_text()
+def meta(src, name):
+    needle = 'const meta = "'
+    at = src.find(needle)
+    if at < 0:
+        raise SystemExit(f"missing shell meta in {name}")
+    i = at + len(needle)
+    raw = []
+    while i < len(src):
+        if src[i] == "\\" and i + 1 < len(src):
+            raw.append(src[i:i + 2])
+            i += 2
+            continue
+        if src[i] == '"':
+            break
+        raw.append(src[i])
+        i += 1
+    return "".join(raw).encode("utf-8").decode("unicode_escape")
+copied = meta(field, "MTextField")
+pasted = meta(locate, "FilesLocate")
+if copied != pasted:
+    raise SystemExit("location copy and paste do not escape the same characters")
+def escape(path):
+    return "".join(("\\" + ch) if ch in copied else ch for ch in path)
+def unescape(text):
+    out, i = [], 0
+    while i < len(text):
+        if text[i] == "\\" and i + 1 < len(text) and text[i + 1] in pasted:
+            out.append(text[i + 1])
+            i += 2
+            continue
+        out.append(text[i])
+        i += 1
+    return "".join(out)
+folder = pathlib.Path(tmp) / "My Documents"
+folder.mkdir()
+target = folder / "note file.txt"
+target.write_text("ok\n")
+raw = str(target)
+escaped = escape(raw)
+if "\\ " not in escaped or unescape(escaped) != raw:
+    raise SystemExit(f"space round-trip failed: {escaped!r}")
+out = subprocess.check_output([ops, "stat", unescape(escaped)], text=True)
+info = json.loads(out)
+if info.get("path") != raw or info.get("name") != "note file.txt":
+    raise SystemExit(f"stat missed the spaced path: {info}")
+PY
+then
+    ok "a shell-copied path with spaces pastes back to the same file"
+else
+    err "a shell-copied path with spaces did not resolve"
 fi
 
 [ "$FAIL" -eq 0 ]

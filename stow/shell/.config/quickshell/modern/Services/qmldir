@@ -9,6 +9,7 @@ singleton Network 1.0 Network.qml
 NetworkJoin 1.0 NetworkJoin.qml
 NetworkSpeed 1.0 NetworkSpeed.qml
 singleton Bluetooth 1.0 Bluetooth.qml
+singleton BluetoothLink 1.0 BluetoothLink.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml
 AudioNowPlaying 1.0 AudioNowPlaying.qml
@@ -101,6 +102,7 @@ StoreDetail 1.0 StoreDetail.qml
 StoreFetch 1.0 StoreFetch.qml
 singleton BugReport 1.0 BugReport.qml
 singleton Files 1.0 Files.qml
+singleton FilesChoose 1.0 FilesChoose.qml
 FilesOps 1.0 FilesOps.qml
 singleton FilesSearch 1.0 FilesSearch.qml
 singleton FilesSizes 1.0 FilesSizes.qml
@@ -118,3 +120,5 @@ singleton FilesBus 1.0 FilesBus.qml
 singleton FilesThumbs 1.0 FilesThumbs.qml
 singleton FilesDrag 1.0 FilesDrag.qml
 singleton FilesHistory 1.0 FilesHistory.qml
+singleton FilesLocate 1.0 FilesLocate.qml
+singleton GamesLibrary 1.0 GamesLibrary.qml

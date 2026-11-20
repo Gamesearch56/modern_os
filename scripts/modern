@@ -101,11 +101,10 @@ case "$TARGET" in
         esac
         ;;
     mirrors)
-        country="$(cfg network.mirrorCountry Germany)"
+        # Location when it has Arch mirrors. Germany is the fallback.
+        country="$("$SCRIPT_DIR/mirror-country.sh")"
         t cli.mirrors "$country"
-        # pacman downloads with libcurl, which has no rsync://. Unfiltered
-        # reflector ranks German rsync mirrors into the list and Store fails.
-        priv /usr/bin/reflector --country "$country" --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
+        priv "$SCRIPT_DIR/mirrors-refresh.sh" --country "$country"
         ;;
     repair)
         t cli.repairReset

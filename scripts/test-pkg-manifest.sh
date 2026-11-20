@@ -56,6 +56,18 @@ for pkg in steam gamemode gamescope umu-launcher; do
         err "$pkg must be in 30-apps.txt (default install, not a system package)"
     fi
 done
+pass="$ROOT/install/manifests/30-apps.aur.txt"
+if grep -qE '^proton-pass-bin([[:space:]]|#|$)' "$pass" \
+    && ! grep -qE '^proton-pass-bin([[:space:]]|#|$)' "$ROOT/install/manifests/90-accounts.aur.txt"; then
+    ok "proton-pass-bin is a default app, not an extra account package"
+else
+    err "proton-pass-bin must be in 30-apps.aur.txt and not only behind --extra proton"
+fi
+if in_core proton-pass-bin; then
+    err "proton-pass-bin must stay removable in Store (not --core)"
+else
+    ok "proton-pass-bin is removable in Store"
+fi
 if grep -F 'core: true' "$ROOT/stow/shell/.config/quickshell/modern/Services/Store.qml" >/dev/null \
     && grep -F "protected_pkg \"\$name\"" "$ROOT/scripts/pkg-mutate.sh" >/dev/null \
     && grep -F 'pkg-manifest-names.sh" --core' "$ROOT/scripts/pkg-mutate.sh" >/dev/null; then

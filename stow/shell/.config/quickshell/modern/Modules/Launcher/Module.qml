@@ -25,6 +25,20 @@ Scope {
         void Config.launcher.mostUsedGridSize;
         return root.resultsFor(root.query);
     }
+    readonly property var catalog: {
+        void Launcher.open;
+        const out = root._shellApps();
+        const apps = Launcher.catalog("");
+        for (let i = 0; i < apps.length; i++) {
+            const a = apps[i];
+            if (root._isFilesEntry(a.id))
+                continue;
+            a.kind = "app";
+            out.push(a);
+        }
+        out.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+        return out;
+    }
     readonly property var current: {
         if (root.currentIndex < 0 || root.currentIndex >= root.results.length)
             return null;
@@ -36,7 +50,7 @@ Scope {
         const actions = [];
         if (needle.length > 0) {
             if (root._matchAction(needle, "settings", I18n.t("settings.title")))
-                actions.push({ id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "preferences-system", kind: "settings" });
+                actions.push({ id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "systemsettings", kind: "settings" });
             if (root._matchAction(needle, "store", I18n.t("store.title"))
                 || root._matchAction(needle, "app store", I18n.t("bar.store")))
                 actions.push({ id: "shell:store", name: I18n.t("store.title"), genericName: "", icon: "plasmadiscover", kind: "store" });
@@ -51,6 +65,20 @@ Scope {
             out.push(a);
         }
         return out;
+    }
+
+    // Desktop entries never include these shell windows. The file manager
+    // also has a desktop file, which the grid skips so it is listed once.
+    function _shellApps(): var {
+        return [
+            { id: "shell:settings", name: I18n.t("settings.title"), genericName: "", icon: "systemsettings", tint: false, kind: "settings" },
+            { id: "shell:store", name: I18n.t("store.title"), genericName: "", icon: "plasmadiscover", tint: false, kind: "store" },
+            { id: "shell:files", name: I18n.t("files.launcherName"), genericName: "", icon: "modern-files", tint: false, kind: "files" }
+        ];
+    }
+
+    function _isFilesEntry(id: string): bool {
+        return String(id || "").replace(/\.desktop$/i, "") === "modern.files";
     }
 
     function _matchAction(needle: string, english: string, title: string): bool {
@@ -70,6 +98,11 @@ Scope {
         }
         if (item.kind === "store") {
             Store.show();
+            Launcher.hide();
+            return;
+        }
+        if (item.kind === "files") {
+            Files.show("");
             Launcher.hide();
             return;
         }
@@ -108,6 +141,7 @@ Scope {
                 anchors.fill: parent
                 query: root.query
                 results: root.results
+                catalog: root.catalog
                 currentIndex: root.currentIndex
                 onQueryEdited: (t) => {
                     root.query = t;
@@ -117,6 +151,11 @@ Scope {
                 onActivated: (i) => {
                     root.currentIndex = i;
                     root.activate(root.results[i]);
+                }
+                onActivatedApp: (i) => {
+                    const item = root.catalog[i];
+                    if (item)
+                        root.activate(item);
                 }
                 onClosed: Launcher.hide()
             }
@@ -133,7 +172,10 @@ Scope {
             Shortcut {
                 sequence: "Escape"
                 context: Qt.ApplicationShortcut
-                onActivated: Launcher.hide()
+                onActivated: {
+                    if (!overlay.takeEscape())
+                        Launcher.hide();
+                }
             }
 
             Component.onCompleted: {

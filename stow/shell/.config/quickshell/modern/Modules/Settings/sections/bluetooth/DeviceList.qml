@@ -37,7 +37,9 @@ ColumnLayout {
             readonly property bool remembered: {
                 void dev?.paired;
                 void dev?.bonded;
-                return !!(dev && (dev.paired || dev.bonded));
+                void dev?.trusted;
+                void BluetoothLink.savedGen;
+                return Bluetooth.isRemembered(dev);
             }
 
             Layout.fillWidth: true

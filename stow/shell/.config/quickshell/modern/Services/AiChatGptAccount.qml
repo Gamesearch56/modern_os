@@ -12,6 +12,7 @@ Item {
     property bool ready: false
     property var models: []
     property string lastError: ""
+    property string block: ""
     property bool _fileHasKey: false
 
     FileView {
@@ -64,12 +65,17 @@ Item {
             return;
         }
         root._fileHasKey = k.length > 0;
+        root.block = "";
         root._syncHasKey();
         root.probe();
     }
 
     function openKeys() {
         Quickshell.execDetached(["xdg-open", "https://platform.openai.com/api-keys"]);
+    }
+
+    function openBilling() {
+        Quickshell.execDetached(["xdg-open", "https://platform.openai.com/settings/organization/billing/"]);
     }
 
     function modelChoices(): var {
@@ -126,7 +132,7 @@ Item {
         try {
             const data = JSON.parse(String(raw || "{}"));
             if (data.error) {
-                root.lastError = I18n.t("ai.errorChatGptAuth");
+                root._note(String(data.error));
                 root.ready = false;
                 root.models = [];
                 return;
@@ -143,6 +149,21 @@ Item {
         root.models = names;
         root.ready = root.hasKey && names.length > 0;
         if (!names.length && root.hasKey)
+            root._note("auth");
+    }
+
+    function _note(code: string) {
+        if (code === "credits" || code === "spend")
+            root.block = code;
+        if (code === "credits")
+            root.lastError = I18n.t("ai.errorChatGptCredits");
+        else if (code === "spend")
+            root.lastError = I18n.t("ai.errorChatGptSpend");
+        else if (code === "rate")
+            root.lastError = I18n.t("ai.errorChatGptRate");
+        else if (code === "model")
+            root.lastError = I18n.t("ai.errorChatGptModel");
+        else
             root.lastError = I18n.t("ai.errorChatGptAuth");
     }
 
@@ -159,7 +180,7 @@ Item {
                 root.models = [];
                 return;
             }
-            if (code !== 0 && !(root.models || []).length) {
+            if (code !== 0 && !(root.models || []).length && !root.lastError) {
                 root.ready = false;
                 root.lastError = I18n.t("ai.errorChatGptAuth");
             }
