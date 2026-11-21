@@ -42,5 +42,9 @@ See [`AGENTS.md`](AGENTS.md) and [`.cursorrules`](.cursorrules). Short version:
 
 ## License
 
-By contributing, you agree your work is licensed under Apache-2.0
-(see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE)).
+By contributing, you agree your work is licensed under
+GPL-3.0-or-later with the additional terms in [`NOTICE`](NOTICE), the
+same as the rest of ModernOS (see [`LICENSE`](LICENSE)). You keep the
+copyright to your contribution. Every pull request is reviewed and
+approved by the maintainer before it is merged
+([`.github/CODEOWNERS`](.github/CODEOWNERS)).

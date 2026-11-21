@@ -92,7 +92,7 @@ it to GitHub Actions.
 
 ```
 modern_dotfile/
-├── AGENTS.md, README.md, LICENSE, NOTICE
+├── AGENTS.md, README.md, LICENSE, NOTICE, TRADEMARKS.md
 ├── docs/           architecture, design, decisions, install & ops guides
 ├── install/        install.sh, manifests/, system/ (gated)
 ├── stow/           everything that becomes a dotfile on the target user
@@ -124,6 +124,29 @@ modern_dotfile/
 Full list: `SUPER`+`K`, `docs/KEYBINDS.md`, or
 `stow/modern/.config/modern/config.default.json` → `keybinds`.
 
+## Support and feature requests
+
+ModernOS is free and maintained by one person. If it is useful to you,
+you can support it on [Ko-fi](https://ko-fi.com/gamesearch56).
+
+Want a feature built? Open a feature request on
+[GitHub Issues](https://github.com/Gamesearch56/modern_dotfile/issues).
+Paid requests, where you fund the work on a feature, can be arranged
+through Ko-fi. Contributions are welcome too; every pull request is
+reviewed and approved by the maintainer before it is merged (see
+[`CONTRIBUTING.md`](CONTRIBUTING.md)).
+
 ## License
 
-Apache License 2.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+ModernOS is free software under the
+[GNU General Public License v3.0 or later](LICENSE) (GPL-3.0-or-later).
+You may use, study, share and change it. If you distribute a modified
+version, it has to stay under the GPL with its source code available.
+
+[`NOTICE`](NOTICE) adds the terms that GPLv3 section 7 allows:
+- a modified version keeps the credit "Based on ModernOS by Gamesearch56";
+- it is clearly marked as changed;
+- it uses its own name and logo, because the license grants no rights to
+  the ModernOS name or logo.
+
+See [`TRADEMARKS.md`](TRADEMARKS.md) for what you can do with the name.
