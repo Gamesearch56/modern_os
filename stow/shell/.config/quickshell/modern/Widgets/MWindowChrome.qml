@@ -1,5 +1,6 @@
 // Window header: title (+ optional subtitle) on the left, close on the
-// right. `titleColumnWidth` pins the title over a Settings-style sidebar.
+// right. `titleColumnWidth` aligns the title over a Settings-style sidebar
+// and grows when the title needs more room.
 // Empty chrome starts the compositor move (Super+mouse).
 import QtQuick
 import QtQuick.Layouts
@@ -51,7 +52,9 @@ Item {
 
     ColumnLayout {
         id: titleCol
-        Layout.preferredWidth: root.titleColumnWidth > 0 ? root.titleColumnWidth : -1
+        // The sidebar width is a floor, not a cap: a longer title (German
+        // "Systemeinstellungen") widens the column instead of eliding.
+        Layout.preferredWidth: root.titleColumnWidth > 0 ? Math.max(root.titleColumnWidth, titleCol.implicitWidth) : -1
         Layout.fillWidth: root.titleColumnWidth <= 0 && !root.trailingFill
         spacing: 0
 
