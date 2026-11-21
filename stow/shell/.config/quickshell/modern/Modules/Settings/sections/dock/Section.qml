@@ -71,9 +71,9 @@ ColumnLayout {
             Layout.fillWidth: true
             value: DockLayout.theme
             model: [
+                { value: "floating", titleKey: "settings.dock.floating" },
                 { value: "beam", titleKey: "settings.dock.beam" },
-                { value: "inventory", titleKey: "settings.dock.inventory" },
-                { value: "floating", titleKey: "settings.dock.floating" }
+                { value: "inventory", titleKey: "settings.dock.inventory" }
             ]
             onSelected: (v) => {
                 DockLayout.liveTheme = v;
