@@ -69,7 +69,7 @@ install_native() {
         return 0
     fi
     log_info "Installing ${#pkgs[@]} native package(s): ${pkgs[*]}"
-    # ffmpeg/mpv depend on virtual `jack`; pipewire-pulse replaces
+    # ffmpeg depends on virtual `jack`; pipewire-pulse replaces
     # pulseaudio. --noconfirm answers No to "Remove jack2?".
     run sudo pacman -Rdd --noconfirm \
         jack2 jack2-dbus lib32-jack2 \

@@ -296,7 +296,8 @@
     "noSelection": "Keine Datei ausgewählt",
     "loadFailed": "Datei konnte nicht geladen werden",
     "emptyFolder": "Dieser Ordner ist leer",
-    "emptyFile": "Diese Datei ist leer"
+    "emptyFile": "Diese Datei ist leer",
+    "openFull": "Im Player öffnen"
   },
   "notifications": {
     "empty": "Keine Benachrichtigungen",
@@ -1748,7 +1749,9 @@
       "fileTitle": "Datei auswählen",
       "useFile": "Diese Datei verwenden",
       "folderTitle": "Ordner auswählen",
-      "useFolder": "Diesen Ordner verwenden"
+      "useFolder": "Diesen Ordner verwenden",
+      "mediaTitle": "Video oder Lied auswählen",
+      "useMedia": "Diese Datei abspielen"
     },
     "loading": "Wird geladen",
     "emptyDir": "Dieser Ordner ist leer",
@@ -2131,6 +2134,93 @@
       "failed": "Das hat nicht geklappt.",
       "cannotShow": "Dieses Bild kann nicht angezeigt werden",
       "cannotShowHint": "Die Datei ist vielleicht beschädigt oder in einem Format, das dieser Betrachter nicht liest."
+    }
+  },
+  "player": {
+    "launcherName": "Mediaplayer",
+    "windowTitle": "{name} – Mediaplayer",
+    "windowTitleEmpty": "Mediaplayer",
+    "position": "{index} / {count}",
+    "time": "{position} / {duration}",
+    "speed": "{speed}×",
+    "more": "Mehr",
+    "ok": "OK",
+    "actions": {
+      "open": "Öffnen…",
+      "newWindow": "Neues Fenster",
+      "reveal": "In Dateien zeigen",
+      "copyPath": "Pfad kopieren",
+      "close": "Schließen",
+      "play": "Abspielen",
+      "pause": "Pause",
+      "forward": "Vorspulen",
+      "back": "Zurückspulen",
+      "jumpForward": "Weit vorspringen",
+      "jumpBack": "Weit zurückspringen",
+      "nextFrame": "Nächstes Bild",
+      "previousFrame": "Vorheriges Bild",
+      "faster": "Schneller",
+      "slower": "Langsamer",
+      "normalSpeed": "Normale Geschwindigkeit",
+      "volumeUp": "Lauter",
+      "volumeDown": "Leiser",
+      "mute": "Stumm",
+      "next": "Nächste Datei",
+      "previous": "Vorherige Datei",
+      "loop": "Wiederholen",
+      "subtitles": "Nächste Untertitel",
+      "audioTrack": "Nächste Tonspur",
+      "screenshot": "Bild als Foto speichern",
+      "fullscreen": "Vollbild",
+      "leave": "Vollbild verlassen"
+    },
+    "menu": {
+      "speed": "Geschwindigkeit",
+      "audio": "Tonspur",
+      "subtitles": "Untertitel",
+      "off": "Aus",
+      "track": "Spur {number}",
+      "normal": "Normal"
+    },
+    "osd": {
+      "volume": "Lautstärke {percent} %",
+      "muted": "Stumm",
+      "loopOn": "Wiederholen an",
+      "loopOff": "Wiederholen aus",
+      "subtitles": "Untertitel: {name}",
+      "subtitlesOff": "Untertitel aus",
+      "audio": "Ton: {name}",
+      "saved": "Bild in Bilder gespeichert",
+      "zoom": "Zoom {percent} %"
+    },
+    "a11y": {
+      "video": "{name}, Datei {index} von {count}",
+      "seek": "Position",
+      "volume": "Lautstärke",
+      "progress": "{position} von {duration}"
+    },
+    "empty": {
+      "title": "Nichts wird abgespielt",
+      "hint": "Öffne ein Video oder ein Lied, oder zieh es hierher.",
+      "open": "Video öffnen"
+    },
+    "notice": {
+      "title": "Mediaplayer"
+    },
+    "errors": {
+      "missing": "„{name}“ gibt es nicht mehr.",
+      "directory": "Das ist ein Ordner, kein Video.",
+      "special": "Das ist keine normale Datei.",
+      "empty": "Hier gibt es nichts zum Abspielen.",
+      "denied": "Du darfst hier nicht speichern.",
+      "readOnlyFs": "Dieses Laufwerk ist schreibgeschützt.",
+      "full": "Das Laufwerk ist voll.",
+      "badName": "Der Name ist zu lang.",
+      "unsupported": "Nur ein Videobild kann gespeichert werden.",
+      "tooLarge": "„{name}“ ist dafür zu groß.",
+      "failed": "Das hat nicht geklappt.",
+      "cannotPlay": "Diese Datei kann nicht abgespielt werden",
+      "cannotPlayHint": "Die Datei ist vielleicht beschädigt oder in einem Format, das dieser Player nicht liest."
     }
   },
   "keys": {

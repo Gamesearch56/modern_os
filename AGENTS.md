@@ -74,13 +74,14 @@ the catalog — a folder alone is not enough. See `docs/SETTINGS.md`.
 and register its prefix in `config.default.json` under `launcher.providers`.
 
 **A new ModernOS app (own window, own process).** Follow the Texteditor
-(`docs/EDITOR.md`) or the Imageviewer (`docs/VIEWER.md`): a root `<app>.qml` with `//@ pragma AppId modern.<app>`,
+(`docs/EDITOR.md`), the Imageviewer (`docs/VIEWER.md`) or the Mediaplayer
+(`docs/PLAYER.md`): a root `<app>.qml` with `//@ pragma AppId modern.<app>`,
 a launcher script started with `qs -p`, a `modern.<app>.desktop` under
 `stow/xdg`, a row in `Commons/ModernApps.qml` (short name and icon for the
 launcher, dock and Overview), a `SystemIcons` glyph, and — only if it
 should float at a fixed size, like the Texteditor — a `class` entry in
 `stow/hypr/.config/hypr/modules/windows.lua`. Without one it tiles, like
-the Imageviewer.
+the Imageviewer and the Mediaplayer.
 
 **A new translation key.** Add it to both
 `stow/modern/.config/modern/translations/en.json` and `de.json` in the same

@@ -1,5 +1,6 @@
-// Spacebar Quick Look. Owns mime sniffing, text reads, and the mpv
-// process for video. Modules/FilePreview never touches disk.
+// Spacebar Quick Look. Owns mime sniffing, text reads, folder lists and
+// thumbnails. Modules/FilePreview never touches disk; its video window
+// only hands `path` to Qt Multimedia.
 pragma Singleton
 
 import Quickshell
@@ -23,14 +24,12 @@ Singleton {
     property int _openToken: 0
     property int _mimeToken: 0
     property int _folderToken: 0
-    property string _videoPath: ""
     property bool _spaceNoted: false
     property bool _spaceArmed: false
     property bool _fellBack: false
 
     readonly property bool showOverlay: root.open && (root.kind === "text" || root.kind === "folder" || root.kind === "file")
     readonly property string home: Quickshell.env("HOME")
-    readonly property string mpvInput: Paths.script("lib/quicklook-mpv-input.conf")
 
     signal previewFailed(string key, string name)
 
@@ -101,17 +100,6 @@ Singleton {
         }
     }
 
-    Process {
-        id: videoProc
-        running: false
-        stdout: StdioCollector {}
-        stderr: StdioCollector {}
-        onExited: {
-            if (root._videoPath.length > 0 && root.path === root._videoPath)
-                root.hide();
-        }
-    }
-
     function toggle() { if (root.open) root.hide(); }
     function noteSpace() { root._spaceNoted = true; Qt.callLater(() => root._spaceNoted = false); }
     function spaceHide() {
@@ -137,7 +125,6 @@ Singleton {
         root._spaceArmed = false;
         root._openToken += 1;
         mimeProc.running = false; folderProc.running = false; thumbProc.running = false;
-        root._videoPath = ""; videoProc.running = false;
         root.open = false; root.kind = ""; root.mime = ""; root.path = ""; root.fileName = "";
         root.textContent = ""; root.listing = ""; root.rows = []; root.imagePath = ""; root.imageFailed = false;
     }
@@ -150,7 +137,6 @@ Singleton {
         }
         root._openToken += 1;
         mimeProc.running = false; folderProc.running = false; thumbProc.running = false;
-        root._videoPath = ""; videoProc.running = false;
         root.kind = ""; root.mime = ""; root.textContent = ""; root.listing = ""; root.rows = [];
         root.imagePath = ""; root.imageFailed = false; root._fellBack = false;
         root.path = p; root.fileName = p.split("/").pop();
@@ -159,6 +145,19 @@ Singleton {
         root._mimeToken = root._openToken;
         mimeProc.command = ["file", "--brief", "--mime-type", "--", p];
         mimeProc.running = true;
+    }
+
+    // The previewed file in its default app, as Enter in Files opens it.
+    function openFull() {
+        if (!root.path.length)
+            return;
+        Quickshell.execDetached([Paths.script("files-open.sh"), root.path]);
+        root.hide();
+    }
+
+    function markVideoFailed() {
+        if (root.kind === "video")
+            root._fail("filePreview.loadFailed");
     }
 
     function markImageFailed() {
@@ -201,16 +200,6 @@ Singleton {
             return;
         }
         if (k === "file" || k === "page") { root.open = true; root._thumb(); return; }
-        if (k === "video") {
-            root.open = true;
-            root._videoPath = root.path;
-            videoProc.command = ["mpv", "--force-window=immediate", "--wayland-app-id=modern.quicklook",
-                "--x11-name=modern.quicklook", "--title=modern.quicklook", "--no-terminal",
-                "--keep-open=yes", "--mute=yes", "--loop-file=inf", "--autofit=80%x80%",
-                "--input-conf=" + root.mpvInput, root.path];
-            videoProc.running = true;
-            return;
-        }
         root.open = true;
         if (k === "image")
             root.imagePath = root.path;

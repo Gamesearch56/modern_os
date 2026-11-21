@@ -136,3 +136,6 @@ JsonJobs 1.0 JsonJobs.qml
 singleton ViewerIo 1.0 ViewerIo.qml
 singleton ViewerDoc 1.0 ViewerDoc.qml
 singleton ViewerPrefs 1.0 ViewerPrefs.qml
+singleton PlayerIo 1.0 PlayerIo.qml
+singleton PlayerDoc 1.0 PlayerDoc.qml
+singleton PlayerPrefs 1.0 PlayerPrefs.qml

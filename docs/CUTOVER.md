@@ -83,7 +83,7 @@ The `stow` names in `install/manifests/default-apps.json` are the current extern
 
 ```bash
 cd /path/to/modern_dotfile/stow
-stow -D -t "$HOME" hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch mpv
+stow -D -t "$HOME" hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch
 ```
 
 Then start another session of your choice.

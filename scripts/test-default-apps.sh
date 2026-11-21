@@ -104,10 +104,18 @@ else
     err "image viewer must be modern.imageviewer with no exec override (got $image_stem ${image_exec[*]})"
 fi
 
-text_desktop="$(default_app_desktop textEditor)"
-text_stem="${text_desktop%.desktop}"
 video_desktop="$(default_app_desktop videoPlayer)"
 video_stem="${video_desktop%.desktop}"
+mapfile -t video_exec < <(default_app_exec_for_desktop "$video_stem")
+if [ "$video_stem" = "modern.mediaplayer" ] && [ "${#video_exec[@]}" -eq 0 ] \
+    && [ "$(jq -r '.videoPlayer.packages | length' "$(default_apps_manifest)")" = 0 ]; then
+    ok "video player is $video_stem, with no extra package"
+else
+    err "video player must be modern.mediaplayer with no package or exec override (got $video_stem ${video_exec[*]})"
+fi
+
+text_desktop="$(default_app_desktop textEditor)"
+text_stem="${text_desktop%.desktop}"
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT

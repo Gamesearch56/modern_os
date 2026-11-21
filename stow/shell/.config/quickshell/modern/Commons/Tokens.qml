@@ -122,6 +122,8 @@ Singleton {
         readonly property real editorHeight: root.spacing.xxl * 20
         readonly property real viewerWidth: root.spacing.xxl * 24
         readonly property real viewerHeight: root.spacing.xxl * 18
+        readonly property real playerWidth: root.spacing.xxl * 24
+        readonly property real playerHeight: root.spacing.xxl * 15
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real reportWidth: root.spacing.xxl * 24 + root.spacing.lg

@@ -233,8 +233,8 @@ ensure_pacman_keyring() {
     rm -f "$out"
 }
 
-# ffmpeg/mpv depend on virtual `jack`. One pacman -S with pipewire-jack
-# and those apps lets the resolver pick jack2. --noconfirm then answers
+# ffmpeg depends on virtual `jack`. One pacman -S with pipewire-jack
+# and ffmpeg lets the resolver pick jack2. --noconfirm then answers
 # No to "Remove jack2?" and the transaction dies. Drop the conflicting
 # providers and install the PipeWire stack first.
 ensure_pipewire_jack() {

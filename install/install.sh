@@ -242,6 +242,7 @@ mapfile -t -O "${#stow_packages[@]}" stow_packages < <(default_app_stow)
 for pkg in "${stow_packages[@]}"; do
     stow_package "$pkg" "$TARGET"
 done
+stow_retire "$TARGET"
 
 # The target user's live config.json starts as a copy of the tracked default,
 # never overwritten on re-run.

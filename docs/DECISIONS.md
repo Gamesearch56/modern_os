@@ -302,6 +302,12 @@ A QML `TextEdit` hands back NBSP as a space and U+2028/U+2029 as newlines. The c
 
 **Rejected:** keeping imv (not styled by the token pipeline, no Files chooser, no trash); viewing inside the main shell (a 200-megapixel picture or a decoder crash would take the bar with it); Quick Look as the viewer (it is a floating preview tied to the Files window, not a window of its own); a C++ decoder plugin for AVIF/HEIC/JXL (not in the official Qt packages; a format is one row in `viewer_formats.py` once Qt reads it); auto-saving turns (silent quality loss).
 
+## 27. The Mediaplayer replaces mpv, on Qt Multimedia rather than mpv
+
+**Decision:** ModernOS Mediaplayer (`modern.mediaplayer`) is the default video player, built like the Imageviewer: one `qs -p mediaplayer.qml` process per window (`scripts/modern-mediaplayer`), its own window class, no `windows.lua` entry so it tiles, the same hover-only controls, and the shared command table (`MActionMenu`, `MActionKeys`, `JsonJobs`). Playback is Qt Multimedia's `MediaPlayer` with the FFmpeg backend (`qt6-multimedia-ffmpeg`): seeking, speed, audio and subtitle tracks, hardware decoding, and subtitles rendered into `VideoOutput` all come with it. Keys follow mpv's. The only file work is `scripts/player-io.sh` (folder playlist, facts, saving a frame through ffmpeg on a pipe); `scripts/lib/media_files.py` holds the listing and refusal code it shares with `viewer_io.py`. Quick Look's video preview moved to the same engine (`Modules/FilePreview/VideoWindow.qml`), so mpv, imv, and gedit are no longer installed or stowed; `stow_retire` removes links left in `~/.config/mpv` and `~/.config/imv`, and `mime-defaults.sh` drops defaults it once pinned to them.
+
+**Rejected:** mpv as the engine under a custom interface (embedding it in QML needs a C++ plugin built against the installed Qt and libmpv; driving a separate mpv window over its IPC socket cannot put our controls over its video); keeping mpv for Quick Look (a second player just for previews); GStreamer through Qt (the FFmpeg backend is Qt's default and reads more formats); playing inside the main shell (a decoder crash would take the bar with it).
+
 ## Open decisions
 
 - Whether `matugen` alone gives enough control over contrast/variant, or

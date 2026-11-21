@@ -294,6 +294,13 @@
     "info": false,
     "slideshowSeconds": 4
   },
+  "player": {
+    "volume": 1,
+    "muted": true,
+    "loop": true,
+    "seekSeconds": 5,
+    "jumpSeconds": 60
+  },
   "backup": {
     "snapperEnabled": false,
     "resticEnabled": false,
@@ -366,7 +373,7 @@
       "mail": "proton-mail.desktop",
       "communication": "whatsapp.desktop",
       "fileManager": "modern.files.desktop",
-      "videoPlayer": "mpv.desktop",
+      "videoPlayer": "modern.mediaplayer.desktop",
       "imageViewer": "modern.imageviewer.desktop",
       "textEditor": "modern.editor.desktop",
       "terminal": "kitty.desktop"

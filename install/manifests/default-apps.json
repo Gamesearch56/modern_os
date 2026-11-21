@@ -8,8 +8,7 @@
     "packages": []
   },
   "videoPlayer": {
-    "desktop": "mpv.desktop",
-    "packages": ["mpv"],
-    "stow": "mpv"
+    "desktop": "modern.mediaplayer.desktop",
+    "packages": []
   }
 }

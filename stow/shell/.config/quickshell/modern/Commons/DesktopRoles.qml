@@ -100,7 +100,7 @@ Singleton {
         if (role === "fileManager")
             return ["modern.files", "dolphin", "nautilus", "thunar", "nemo", "pcmanfm", "krusader", "caja"];
         if (role === "videoPlayer")
-            return ["mpv", "vlc", "celluloid", "haruna", "smplayer", "totem"];
+            return ["modern.mediaplayer", "mpv", "vlc", "celluloid", "haruna", "smplayer", "totem"];
         if (role === "imageViewer")
             return ["modern.imageviewer", "imv", "gwenview", "eog", "eom", "loupe", "nsxiv", "feh", "qimgv"];
         if (role === "terminal")

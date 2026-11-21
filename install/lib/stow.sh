@@ -136,6 +136,33 @@ _stow_prune() {
     return 0
 }
 
+# Packages that left the repo, with the folder their links lived in. Once
+# the package is gone nothing stows it again, so _stow_prune never visits
+# those links; only broken ones pointing into the old package go, and the
+# user's own files there stay.
+STOW_RETIRED=("imv:.config/imv" "mpv:.config/mpv")
+
+stow_retire() {
+    local target="${1:-$HOME}"
+    local stow_resolved entry pkg dir link
+    stow_resolved="$(readlink -m "$STOW_DIR")"
+    for entry in "${STOW_RETIRED[@]}"; do
+        pkg="${entry%%:*}"
+        dir="$target/${entry#*:}"
+        [ -d "$dir" ] && [ ! -L "$dir" ] || continue
+        while IFS= read -r -d '' link; do
+            [ -L "$link" ] && [ ! -e "$link" ] || continue
+            case "$(readlink -m "$link")" in
+                "$stow_resolved/$pkg"/*)
+                    log_info "Removing retired link $link"
+                    run rm -f "$link"
+                    ;;
+            esac
+        done < <(_stow_walk "$dir")
+    done
+    return 0
+}
+
 unstow_package() {
     local pkg="$1"
     local target="${2:-$HOME}"

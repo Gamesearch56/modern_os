@@ -1,4 +1,4 @@
-// Picture Quick Look. A plain window, like the video preview: no title,
+// Picture Quick Look. A plain window, like VideoWindow: no title,
 // name, or close button. Wheel zoom stays on the picture.
 import Quickshell
 import Quickshell.Hyprland

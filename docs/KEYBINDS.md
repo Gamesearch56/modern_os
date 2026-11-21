@@ -98,5 +98,27 @@ Inside an Imageviewer window (`docs/VIEWER.md`); the menu shows the same keys.
 | `X` / `DEL` | Remove from the list / move to trash (asks) |
 | `Q` `CTRL + W` | Close |
 
+## Mediaplayer
+
+Inside a Mediaplayer window (`docs/PLAYER.md`); the menu shows the same keys. Keys follow mpv.
+
+| Combo | Action |
+|---|---|
+| `SPACE` `K` `P`, click | Play / pause |
+| `→` / `←` | Forward / back by `player.seekSeconds` (5 s) |
+| `↑` / `↓` | Jump forward / back by `player.jumpSeconds` (60 s) |
+| `.` / `,` | Next / previous frame (pauses) |
+| `]` / `[` / `BACKSPACE` | Faster / slower / normal speed |
+| `0` `*` `CTRL + ↑` / `9` `/` `CTRL + ↓`, wheel | Louder / quieter |
+| `M` | Mute |
+| `CTRL` + wheel, pinch / drag | Zoom around the pointer / pan while zoomed |
+| `J` `V` / `#` | Next subtitles (then off) / next audio track |
+| `>` `N` `PAGE DOWN` / `<` `SHIFT + N` `PAGE UP` | Next / previous file (wraps) |
+| `SHIFT + L` | Repeat the file |
+| `S` | Save the frame to Pictures/Screenshots |
+| `F` `F11`, double-click / `ESC` | Fullscreen / leave fullscreen |
+| `CTRL + O` / `CTRL + N` / `CTRL + E` / `CTRL + SHIFT + C` | Open / new window / show in Files / copy path |
+| `Q` `CTRL + W` | Close |
+
 Live list: press `SUPER + K`. Media lists the hardware keys. Mouse lists Super+mouse and the window edge. CLI: `scripts/modern <target> <function>`
 (`qs -c modern ipc` wrapper).

@@ -296,7 +296,8 @@
     "noSelection": "No file selected",
     "loadFailed": "Could not load file",
     "emptyFolder": "This folder is empty",
-    "emptyFile": "This file is empty"
+    "emptyFile": "This file is empty",
+    "openFull": "Open in player"
   },
   "notifications": {
     "empty": "No notifications",
@@ -1748,7 +1749,9 @@
       "fileTitle": "Choose a file",
       "useFile": "Use this file",
       "folderTitle": "Choose a folder",
-      "useFolder": "Use this folder"
+      "useFolder": "Use this folder",
+      "mediaTitle": "Choose a video or song",
+      "useMedia": "Play this file"
     },
     "loading": "Loading",
     "emptyDir": "This folder is empty",
@@ -2131,6 +2134,93 @@
       "failed": "That did not work.",
       "cannotShow": "This picture cannot be shown",
       "cannotShowHint": "The file may be damaged or in a format this viewer does not read."
+    }
+  },
+  "player": {
+    "launcherName": "Mediaplayer",
+    "windowTitle": "{name} – Mediaplayer",
+    "windowTitleEmpty": "Mediaplayer",
+    "position": "{index} / {count}",
+    "time": "{position} / {duration}",
+    "speed": "{speed}×",
+    "more": "More",
+    "ok": "OK",
+    "actions": {
+      "open": "Open…",
+      "newWindow": "New window",
+      "reveal": "Show in Files",
+      "copyPath": "Copy path",
+      "close": "Close",
+      "play": "Play",
+      "pause": "Pause",
+      "forward": "Forward",
+      "back": "Back",
+      "jumpForward": "Jump forward",
+      "jumpBack": "Jump back",
+      "nextFrame": "Next frame",
+      "previousFrame": "Previous frame",
+      "faster": "Faster",
+      "slower": "Slower",
+      "normalSpeed": "Normal speed",
+      "volumeUp": "Louder",
+      "volumeDown": "Quieter",
+      "mute": "Mute",
+      "next": "Next file",
+      "previous": "Previous file",
+      "loop": "Repeat",
+      "subtitles": "Next subtitles",
+      "audioTrack": "Next audio track",
+      "screenshot": "Save frame as picture",
+      "fullscreen": "Fullscreen",
+      "leave": "Leave fullscreen"
+    },
+    "menu": {
+      "speed": "Speed",
+      "audio": "Audio track",
+      "subtitles": "Subtitles",
+      "off": "Off",
+      "track": "Track {number}",
+      "normal": "Normal"
+    },
+    "osd": {
+      "volume": "Volume {percent} %",
+      "muted": "Muted",
+      "loopOn": "Repeat on",
+      "loopOff": "Repeat off",
+      "subtitles": "Subtitles: {name}",
+      "subtitlesOff": "Subtitles off",
+      "audio": "Audio: {name}",
+      "saved": "Frame saved to Pictures",
+      "zoom": "Zoom {percent} %"
+    },
+    "a11y": {
+      "video": "{name}, file {index} of {count}",
+      "seek": "Position",
+      "volume": "Volume",
+      "progress": "{position} of {duration}"
+    },
+    "empty": {
+      "title": "Nothing playing",
+      "hint": "Open a video or a song, or drop one here.",
+      "open": "Open video"
+    },
+    "notice": {
+      "title": "Mediaplayer"
+    },
+    "errors": {
+      "missing": "“{name}” no longer exists.",
+      "directory": "This is a folder, not a video.",
+      "special": "This is not a regular file.",
+      "empty": "There is nothing to play here.",
+      "denied": "You are not allowed to save here.",
+      "readOnlyFs": "This drive is read-only.",
+      "full": "The drive is full.",
+      "badName": "The name is too long.",
+      "unsupported": "Only a video frame can be saved.",
+      "tooLarge": "“{name}” is too large for this.",
+      "failed": "That did not work.",
+      "cannotPlay": "This file cannot be played",
+      "cannotPlayHint": "The file may be damaged or in a format this player does not read."
     }
   },
   "keys": {

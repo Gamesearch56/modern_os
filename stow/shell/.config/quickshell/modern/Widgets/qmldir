@@ -59,3 +59,4 @@ MSignal 1.0 MSignal.qml
 MTag 1.0 MTag.qml
 MActionMenu 1.0 MActionMenu.qml
 MActionKeys 1.0 MActionKeys.qml
+MSeekBar 1.0 MSeekBar.qml

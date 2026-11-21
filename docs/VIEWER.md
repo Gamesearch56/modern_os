@@ -32,6 +32,7 @@ Why it is built this way: `docs/DECISIONS.md` #26.
 scripts/modern-imageviewer     launcher: URIs → paths, JSON args, qs -p imageviewer.qml
 scripts/viewer-io.sh           → scripts/lib/viewer_io.py   list/info/rotate/trash/copy (JSON out)
 scripts/lib/viewer_formats.py  the format table: extensions, MIME types, rotatable formats
+scripts/lib/media_files.py     listing, refusals, clipboard (shared with the Mediaplayer)
 scripts/lib/safe_write.py      atomic or in-place write (shared with the Texteditor)
 imageviewer.qml                process root (AppId modern.imageviewer, no file watching)
 Services/ViewerIo.qml          viewer-io.sh through Services/JsonJobs.qml

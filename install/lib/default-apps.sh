@@ -6,6 +6,11 @@
 # the desktop id in this manifest. Launch overrides (the image viewer's
 # exec) are data here, not a desktop-id branch in an opener.
 
+# Desktop ids the shipped apps replaced. mime-defaults.sh drops a default
+# it once pinned to one of them unless Settings still chooses it.
+# shellcheck disable=SC2034
+DEFAULT_APPS_RETIRED="mpv.desktop imv.desktop imv-dir.desktop org.gnome.gedit.desktop"
+
 default_apps_manifest() {
     local root="" repo_file=""
     if [ -n "${REPO_ROOT:-}" ] && [ -f "${REPO_ROOT}/install/manifests/default-apps.json" ]; then

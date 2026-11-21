@@ -146,12 +146,17 @@ apply({
     suppress_event = "fullscreen maximize",
 })
 
--- The Imageviewer fills its tile with the picture. On a virtual GPU the
--- acrylic pass replaces that tile with black, so the picture never
--- shows. A real GPU is unchanged because the viewer is already opaque.
+-- The Imageviewer and the Mediaplayer fill their tile with the picture.
+-- On a virtual GPU the acrylic pass replaces that tile with black, so the
+-- picture never shows. A real GPU is unchanged because both are opaque.
 apply({
     name = "modern-imageviewer-no-blur",
     match = { class = "modern.imageviewer" },
+    no_blur = true,
+})
+apply({
+    name = "modern-mediaplayer-no-blur",
+    match = { class = "modern.mediaplayer" },
     no_blur = true,
 })
 
@@ -213,15 +218,8 @@ apply({
     opaque = true,
 })
 
--- Spacebar Quick Look. Video is mpv (class). Image is a plain window
--- with the same title, so it floats and dims the same way.
-apply({
-    name = "modern-quicklook",
-    match = { class = "modern.quicklook" },
-    float = true,
-    center = true,
-    dim_around = true,
-})
+-- Spacebar Quick Look. Picture and video are plain shell windows with
+-- this title (Modules/FilePreview), so both float and dim the same way.
 apply({
     name = "modern-quicklook-title",
     match = { title = "modern.quicklook" },

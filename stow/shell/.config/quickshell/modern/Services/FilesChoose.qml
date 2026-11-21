@@ -5,7 +5,8 @@ import QtQuick
 import "../Commons"
 
 // Choosing a file or folder stays in this file manager.
-// kind is "image", "file", or "folder". who tells the caller apart.
+// kind is "image", "media" (video or audio), "file", or "folder". who
+// tells the caller apart.
 Singleton {
     id: root
 
@@ -16,15 +17,22 @@ Singleton {
     signal chosen(string path, string who)
     signal cancelled(string who)
 
-    readonly property string headingKey: root.kind === "folder" ? "files.pick.folderTitle" : (root.kind === "file" ? "files.pick.fileTitle" : "files.pick.title")
-    readonly property string useKey: root.kind === "folder" ? "files.pick.useFolder" : (root.kind === "file" ? "files.pick.useFile" : "files.pick.use")
+    readonly property var _keys: ({
+        image: ["files.pick.title", "files.pick.use"],
+        media: ["files.pick.mediaTitle", "files.pick.useMedia"],
+        file: ["files.pick.fileTitle", "files.pick.useFile"],
+        folder: ["files.pick.folderTitle", "files.pick.useFolder"]
+    })
+    readonly property var _kindKeys: root._keys[root.kind] || root._keys.image
+    readonly property string headingKey: root._kindKeys[0]
+    readonly property string useKey: root._kindKeys[1]
     readonly property bool ready: {
         if (!root.active)
             return false;
         if (root.kind === "folder")
             return Files.place === "folder" && String(Files.path || "").charAt(0) === "/";
         const path = root._selected();
-        return path.length > 0 && !root._dir(path) && (root.kind !== "image" || root._image(path));
+        return path.length > 0 && !root._dir(path) && root._fits(path);
     }
 
     function ask(folder: string, kind: string, who: string) {
@@ -47,7 +55,7 @@ Singleton {
                     return false;
                 picked = String(Files.path);
             }
-        } else if (!picked.length || root._dir(picked) || (root.kind === "image" && !root._image(picked)))
+        } else if (!picked.length || root._dir(picked) || !root._fits(picked))
             return false;
         const who = root.who;
         root.who = "";
@@ -75,14 +83,19 @@ Singleton {
         return false;
     }
 
-    function _image(path: string): bool {
+    readonly property var _extensions: ({
+        image: [".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tif", ".tiff", ".avif", ".heic", ".heif", ".jxl"],
+        media: [".mp4", ".m4v", ".mkv", ".webm", ".avi", ".mov", ".wmv", ".flv", ".mpg", ".mpeg", ".ts", ".m2ts",
+            ".mts", ".ogv", ".3gp", ".mp3", ".flac", ".ogg", ".oga", ".opus", ".m4a", ".aac", ".wav", ".wma", ".mka"]
+    })
+
+    function _fits(path: string): bool {
+        const ok = root._extensions[root.kind];
+        if (!ok)
+            return true;
         const n = String(path || "").toLowerCase();
         const dot = n.lastIndexOf(".");
-        if (dot < 0)
-            return false;
-        const ext = n.slice(dot);
-        const ok = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tif", ".tiff", ".avif", ".heic", ".heif", ".jxl"];
-        return ok.indexOf(ext) >= 0;
+        return dot >= 0 && ok.indexOf(n.slice(dot)) >= 0;
     }
 
     Connections {

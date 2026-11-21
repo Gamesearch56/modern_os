@@ -3,7 +3,8 @@ import QtQuick.Window
 import "../Commons"
 
 // A menu of commands from an app's command table ({ id, key, icon,
-// toggle, divider, danger }). `actions` answers enabled(id), checked(id),
+// toggle, divider, danger }; `params` fills the key, `value` is a label
+// that needs no translation, like a track name). `actions` answers enabled(id), checked(id),
 // keyLabel(id), and run(id). Under its button by default; openAt() puts
 // it at the pointer for a right-click menu.
 MPopup {
@@ -72,7 +73,9 @@ MPopup {
                     height: implicitHeight
                     compact: true
                     iconName: entry.modelData.icon || ""
-                    titleKey: entry.modelData.key
+                    titleKey: entry.modelData.key || ""
+                    titleParams: entry.modelData.params || ({})
+                    titleValue: entry.modelData.value || ""
                     destructive: entry.modelData.danger === true
                     enabled: root.actions ? root.actions.enabled(entry.modelData.id) : false
                     selected: !entry.modelData.icon && root.actions ? root.actions.checked(entry.modelData.id) : false

@@ -13,7 +13,8 @@ Singleton {
     readonly property var _apps: ({
         "modern.files": { nameKey: "files.launcherName", icon: "modern-files" },
         "modern.editor": { nameKey: "editor.launcherName", icon: "modern-editor" },
-        "modern.imageviewer": { nameKey: "viewer.launcherName", icon: "modern-imageviewer" }
+        "modern.imageviewer": { nameKey: "viewer.launcherName", icon: "modern-imageviewer" },
+        "modern.mediaplayer": { nameKey: "player.launcherName", icon: "modern-mediaplayer" }
     })
 
     function _key(raw: string): string {

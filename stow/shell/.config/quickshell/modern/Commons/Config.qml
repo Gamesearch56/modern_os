@@ -191,7 +191,7 @@ Singleton {
                     // These three match install/manifests/default-apps.json.
                     // test-default-apps.sh rejects drift. Packages and launch
                     // overrides live in that manifest, not here.
-                    property string videoPlayer: "mpv.desktop"
+                    property string videoPlayer: "modern.mediaplayer.desktop"
                     property string imageViewer: "modern.imageviewer.desktop"
                     property string textEditor: "modern.editor.desktop"
                     property string terminal: "kitty.desktop"
@@ -304,6 +304,14 @@ Singleton {
                 property int slideshowSeconds: 4
             }
 
+            property JsonObject player: JsonObject {
+                property real volume: 1
+                property bool muted: true
+                property bool loop: true
+                property int seekSeconds: 5
+                property int jumpSeconds: 60
+            }
+
             property JsonObject backup: JsonObject {
                 property bool snapperEnabled: false
                 property bool resticEnabled: false
@@ -392,4 +400,5 @@ Singleton {
     readonly property alias files: adapter.files
     readonly property alias editor: adapter.editor
     readonly property alias viewer: adapter.viewer
+    readonly property alias player: adapter.player
 }
