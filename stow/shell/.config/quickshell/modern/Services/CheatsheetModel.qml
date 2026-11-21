@@ -15,6 +15,7 @@ Singleton {
         terminal: "applications", browser: "applications",
         browserIncognito: "applications",
         fileManager: "applications", spotify: "applications",
+        filePreview: "applications",
         settings: "system", wallpaperPicker: "system",
         taskbar: "system", overview: "system", aiChat: "system",
         closeWindow: "windowManagement", fullscreen: "windowManagement",
@@ -38,7 +39,6 @@ Singleton {
         colorPicker: "system", bugReport: "system",
         cheatsheet: "system", powerMenu: "system", controlCenter: "system",
         lockScreen: "system", exitSession: "system"
-        // filePreview / clipboardHistory: omitted (former utilities category)
     })
 
     // Binds added after a config.json was first written. The live keybinds
@@ -48,11 +48,23 @@ Singleton {
         bugReport: "SUPER + #"
     })
 
-    // Chrome / Super+mouse gestures — not remappable, not in keybinds.
-    readonly property var mouseGestures: [
-        { action: "mouseMoveSuper", combo: "SUPER + LMB" },
-        { action: "mouseResizeSuper", combo: "SUPER + RMB" },
-        { action: "mouseResizeBorder", combo: "BORDER + LMB" }
+    // Not in keybinds: the emergency terminal, hardware keys, and mouse
+    // gestures. Clipboard history has no bind, so it stays off the sheet.
+    readonly property var fixedBinds: [
+        { action: "emergencyTerminal", combo: "SUPER + RETURN", category: "applications" },
+        { action: "volumeUp", combo: "VOL +", category: "media" },
+        { action: "volumeDown", combo: "VOL -", category: "media" },
+        { action: "volumeMute", combo: "MUTE", category: "media" },
+        { action: "micMute", combo: "MIC", category: "media" },
+        { action: "mediaPlay", combo: "PLAY", category: "media" },
+        { action: "mediaPause", combo: "PAUSE", category: "media" },
+        { action: "mediaNext", combo: "NEXT", category: "media" },
+        { action: "mediaPrev", combo: "PREV", category: "media" },
+        { action: "brightnessUp", combo: "BRI +", category: "media" },
+        { action: "brightnessDown", combo: "BRI -", category: "media" },
+        { action: "mouseMoveSuper", combo: "SUPER + LMB", category: "mouse" },
+        { action: "mouseResizeSuper", combo: "SUPER + RMB", category: "mouse" },
+        { action: "mouseResizeBorder", combo: "BORDER + LMB", category: "mouse" }
     ]
 
     function _rowMatches(action: string, combo: string, category: string, needle: string): bool {
@@ -120,14 +132,14 @@ Singleton {
                 caps: combo.split(" + ")
             });
         }
-        const gestures = root.mouseGestures;
-        for (let i = 0; i < gestures.length; i++) {
-            const g = gestures[i];
-            if (!root._rowMatches(g.action, g.combo, "mouse", needle))
+        const fixed = root.fixedBinds;
+        for (let i = 0; i < fixed.length; i++) {
+            const g = fixed[i];
+            if (!root._rowMatches(g.action, g.combo, g.category, needle))
                 continue;
             out.push({
                 action: g.action,
-                category: "mouse",
+                category: g.category,
                 combo: g.combo,
                 caps: g.combo.split(" + ")
             });
@@ -139,13 +151,13 @@ Singleton {
     function grouped(filter: string): var {
         const all = root.rows(filter);
         return {
-            left: root._pack(all, ["applications", "system", "screenshots"]),
+            left: root._pack(all, ["applications", "system", "screenshots", "media"]),
             right: root._pack(all, ["windowManagement", "workspaces", "mouse"])
         };
     }
 
     function categoryIds(): var {
-        return ["applications", "system", "screenshots", "windowManagement", "workspaces", "mouse"];
+        return ["applications", "system", "screenshots", "media", "windowManagement", "workspaces", "mouse"];
     }
 
     function categories(filter: string): var {

@@ -31,17 +31,19 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + R` | Spotify | `modern-launch --on-active spotify-launcher` (moves an open window here) |
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |
-| `SUPER + G` | Game mode | |
 | `PRINT` | Screenshot region (HUD: still or video) | `modern screenshot region` → stills `~/Pictures/Screenshots`, recordings `~/Videos/Recordings` |
 | `SHIFT + PRINT` | Screenshot window | `modern screenshot window` |
 | `SUPER + PRINT` | Screenshot full; stops an active recording | `modern screenshot full` |
 | `SUPER + LEFT` / `RIGHT` / `UP` / `DOWN` | Move focus | `hl.dsp.focus({ direction })` |
 | `SUPER + SHIFT + LEFT` / `RIGHT` / `UP` / `DOWN` | Move the focused window in that direction | `hl.dsp.window.move({ direction })` |
 | `SUPER + mouse 272 / 273` | Drag / resize window | |
-| `SUPER + scroll` | Next/prev workspace on this monitor | `workspace m±1` |
 | Window edge + drag | Resize window | |
+| Volume, mute, microphone, play, pause, next, previous | Those hardware keys | `modern volume` / `modern media` |
+| Brightness up / down | Those hardware keys | `modern brightness` |
 | Applications right-click | Float, fullscreen, togglesplit, close | |
 | `SUPER + SHIFT + C` | Color picker | |
+
+Gaming mode is a switch in Settings, not a shortcut. Scroll on Super no longer changes workspace.
 
 Workspace `SUPER + 1`…`0` and `SUPER + SHIFT + 1`…`0` (move window to
 that workspace) match the cheatsheet categories. Three fingers up or
@@ -49,6 +51,5 @@ down on the trackpad fade the overview with the swipe; two fingers
 then move between the windows. Three fingers sideways still change
 workspace.
 
-Live list: press `SUPER + K` (Mouse category lists chrome and Super+mouse
-gestures). CLI: `scripts/modern <target> <function>`
+Live list: press `SUPER + K`. Media lists the hardware keys. Mouse lists Super+mouse and the window edge. CLI: `scripts/modern <target> <function>`
 (`qs -c modern ipc` wrapper).
