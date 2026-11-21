@@ -15,7 +15,7 @@ Material Design 3, colors that follow your wallpaper, and everything set up for 
 
 [Install](#install) · [Screenshots](#screenshots) · [Documentation](#documentation) · [Contribute](#contributing) · [Support](#support-modernos)
 
-<img src="docs/screenshots/desktop.jpg" alt="The ModernOS desktop: a slim top bar, a dock, and a wallpaper" width="100%">
+<img src="docs/screenshots/desktop.jpg" alt="The ModernOS desktop with the Files app and the Texteditor open, the top bar and the dock" width="100%">
 
 </div>
 
@@ -62,20 +62,28 @@ through **System Settings**, and the whole desktop is available in
 
 <table>
   <tr>
+    <td width="50%"><img src="docs/screenshots/files.jpg" alt="The Files app with a Quick Look preview of a picture"></td>
+    <td width="50%"><img src="docs/screenshots/overview.jpg" alt="The Overview showing open windows across workspaces"></td>
+  </tr>
+  <tr>
+    <td align="center">Files with Quick Look (Space)</td>
+    <td align="center">Every open window at a glance in the Overview</td>
+  </tr>
+  <tr>
     <td width="50%"><img src="docs/screenshots/design.jpg" alt="System Settings, Design page with wallpaper and color options"></td>
-    <td width="50%"><img src="docs/screenshots/manual.jpg" alt="The ModernOS Manual app"></td>
+    <td width="50%"><img src="docs/screenshots/store.jpg" alt="The App Store with featured and popular apps"></td>
   </tr>
   <tr>
     <td align="center">System Settings: wallpaper and colors</td>
-    <td align="center">The built-in manual (SUPER + Y)</td>
+    <td align="center">The App Store</td>
   </tr>
   <tr>
+    <td width="50%"><img src="docs/screenshots/manual.jpg" alt="The ModernOS Manual app"></td>
     <td width="50%"><img src="docs/screenshots/cheatsheet.jpg" alt="The keyboard shortcut overview"></td>
-    <td width="50%"><img src="docs/screenshots/desktop.jpg" alt="The desktop with bar and dock"></td>
   </tr>
   <tr>
+    <td align="center">The built-in manual (SUPER + Y)</td>
     <td align="center">Every shortcut at a glance (SUPER + K)</td>
-    <td align="center">Bar, dock, and a wallpaper-colored theme</td>
   </tr>
 </table>
 
