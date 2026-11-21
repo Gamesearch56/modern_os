@@ -145,7 +145,7 @@ the solid installer colors.
 | Boot entry, splash, greetd | `journalctl -b -u plymouth-start -u modern-splash -u modern-boot-confirm -u greetd` |
 | Login screen | `/var/lib/modern/session/greeter.log` (greeter shell), `auth-trace.json` (last 20 auth events, no password data) |
 | Desktop session | `~/.local/state/modern/hyprland.log` (one `== desktop session` header per login) |
-| Shell and lock | `~/.local/state/modern/quickshell.log`, journal tag `modern-shell` |
+| Shell and lock | `~/.local/state/modern/quickshell.log` (moved to `.log.1` at login once past 5 MB), journal tag `modern-shell` |
 | Idle and sleep | `~/.local/state/modern/hypridle.log`, journal tag `modern-power` |
 | Logout, reboot, power off | journal tag `modern-session` (request and any refusal) |
 | Last shutdown | `journalctl -b -1 -n 300` |

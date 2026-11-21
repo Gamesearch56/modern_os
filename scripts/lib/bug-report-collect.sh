@@ -8,6 +8,8 @@
 
 # shellcheck source=bug-report-session.sh
 source "$(dirname "${BASH_SOURCE[0]}")/bug-report-session.sh"
+# shellcheck source=bug-report-apps.sh
+source "$(dirname "${BASH_SOURCE[0]}")/bug-report-apps.sh"
 
 BUG_REPORT_CAP_BYTES="${BUG_REPORT_CAP_BYTES:-2000000}"
 BUG_REPORT_TIMEOUT="${BUG_REPORT_TIMEOUT:-15}"
@@ -250,6 +252,7 @@ bug_report_collect() {
     _collect_hardware "$repo"
     _collect_devices "$since"
     _collect_games
+    _collect_apps
     _collect_session "$since"
     _collect_boot
     _collect_config

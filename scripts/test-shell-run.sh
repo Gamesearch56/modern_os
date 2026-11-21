@@ -74,6 +74,29 @@ else
     err "second supervisor or stop: n=$(cat "$TMP/n")"
 fi
 
+mkdir -p "$TMP/state/modern"
+head -c 2048 /dev/zero >"$TMP/state/modern/quickshell.log"
+printf '0\n' >"$TMP/codes"; rm -f "$TMP/n"
+STUB_DIR="$TMP" XDG_STATE_HOME="$TMP/state" XDG_RUNTIME_DIR="$TMP" MODERN_SHELL_CMD="$TMP/qs" \
+    MODERN_SHELL_ALIVE="$TMP/alive" MODERN_SHELL_LOG_CAP=1024 "$RUN"
+if [ "$(wc -c <"$TMP/state/modern/quickshell.log.1")" = 2048 ] \
+    && [ "$(wc -c <"$TMP/state/modern/quickshell.log" 2>/dev/null || echo 0)" -lt 1024 ]; then
+    ok "an oversized shell log moves to quickshell.log.1 at start"
+else
+    err "shell log not rotated"
+fi
+
+for app in editor imageviewer mediaplayer; do
+    launcher="$ROOT/scripts/modern-$app"
+    # shellcheck disable=SC2016
+    if grep -Fq 'lib/app-log.sh' "$launcher" && grep -Fq '>>"$out" 2>&1' "$launcher" \
+        && ! grep -Eq 'qs -p "\$config" >/dev/null' "$launcher"; then
+        ok "modern-$app keeps the window's own output in its log"
+    else
+        err "modern-$app must send qs output to its rotating log, not /dev/null"
+    fi
+done
+
 if grep -Fq 'shell-run.sh' "$ROOT/stow/hypr/.config/hypr/modules/autostart.lua" \
     && grep -Fq 'shell-run.sh' "$ROOT/scripts/reload-ui.sh"; then
     ok "login and UI reload start the shell through shell-run.sh"

@@ -49,6 +49,10 @@ SESSION_EXCERPTS = (
     ("session.txt", "Session, login and lock"),
     ("boot.txt", "Boot, splash and last shutdown"),
 )
+# Texteditor, Imageviewer and Mediaplayer run outside the shell process.
+APPS_EXCERPTS = (
+    ("apps.txt", "ModernOS apps log"),
+)
 
 
 class Unreachable(Exception):
@@ -204,7 +208,8 @@ def issue_body(root, req, version, bundle_url, shot_urls):
             lines += ["### %s" % name, "", "![%s](%s?raw=true)" % (name, url), ""]
     cats = req.get("categories") or []
     excerpts = ((UPDATE_EXCERPTS if "updates" in cats else ())
-                + (SESSION_EXCERPTS if "lock" in cats else ()) + EXCERPTS)
+                + (SESSION_EXCERPTS if "lock" in cats else ())
+                + (APPS_EXCERPTS if "apps" in cats else ()) + EXCERPTS)
     logs = [block for block in (_excerpt(root, req, name, title) for name, title in excerpts) if block]
     if logs:
         lines += ["## Logs", ""] + logs + [""]

@@ -12,9 +12,11 @@ set -euo pipefail
 dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 config="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/modern/editor.qml"
 log="${XDG_STATE_HOME:-$HOME/.local/state}/modern/editor.log"
+# shellcheck source=lib/app-log.sh
+. "$dir/lib/app-log.sh"
 
 note() {
-    mkdir -p "$(dirname "$log")" 2>/dev/null || return 0
+    app_log_open "$log" || return 0
     printf '%s modern-editor: %s\n' "$(date '+%F %T')" "$*" >>"$log" 2>/dev/null || true
 }
 
@@ -53,7 +55,9 @@ start() {
     fi
     # The Open chooser is the file manager in this process; it must not
     # save the main window's last place or focus that window.
-    MODERN_FILE_WINDOW=1 MODERN_EDITOR_PATH="$path" setsid -f qs -p "$config" >/dev/null 2>&1 </dev/null
+    local out=/dev/null
+    app_log_open "$log" && out="$log"
+    MODERN_FILE_WINDOW=1 MODERN_EDITOR_PATH="$path" setsid -f qs -p "$config" >>"$out" 2>&1 </dev/null
 }
 
 if [ "$#" -eq 0 ]; then

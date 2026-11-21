@@ -36,6 +36,11 @@ a report: `scripts/report-fetch.sh <issue>`.
 | `hardware.txt`, `games.txt`, `config.json` | PCI/USB, memory, disks, battery; Proton tools; behaviour config |
 | `session.txt` | Lock marker, whether shell/supervisor/hypridle/inhibitor run, logind session, inhibitors, `modern-session`/`modern-power`/`modern-shell` journal, greetd, login screen log and auth trace, desktop session log (headers, warnings, errors only), hypridle log |
 | `boot.txt` | Kernel command line, boot timing and critical chain, boot entries, splash/boot-confirm/greetd units, the end of the previous boot (its shutdown) |
+| `update.txt`, `update-log.txt`, `install-log.txt` | Update exit status and markers, system-update unit, release history, update and installer logs |
+| `apps.txt` | Texteditor, Imageviewer and Mediaplayer logs: launcher notes plus each window's own qs output (`scripts/lib/app-log.sh`, 1 MB, one previous file kept). An "Apps" report quotes it in the issue |
+
+Every file name needs a `bugReport.files.<name>` label in `en.json` and
+`de.json`; `scripts/test-bug-report.sh` fails on one without.
 
 Never collected (`_forbidden`): `secrets.json`, `.env`, keyrings, SSH
 and GnuPG, browser profiles. Redacted in every text file: tokens,

@@ -90,6 +90,8 @@ echo 'hypridle: lock notify received' >"$XDG_STATE_HOME/modern/hypridle.log"
 echo 'greeter: users loaded' >"$tmp/shared/greeter.log"
 echo '[{"event":"authFailure","message":"Authentication failure"}]' >"$tmp/shared/auth-trace.json"
 printf 1 >"$XDG_RUNTIME_DIR/modern-session-locked"
+echo 'qml: TypeError in Playback.qml' >"$XDG_STATE_HOME/modern/mediaplayer.log"
+echo 'qml: Editor save failed' >"$XDG_STATE_HOME/modern/editor.log.1"
 files="$("$BR" collect "$id" now)"
 dir="$REPORTS/$id/files"
 if grep -q 'session-locked marker: 1' "$dir/session.txt" \
@@ -112,6 +114,17 @@ fi
 rm -f "$XDG_STATE_HOME/modern/update.rc" "$XDG_STATE_HOME/modern/root-plan" \
     "$XDG_STATE_HOME/modern/release-incomplete" "$XDG_STATE_HOME/modern/update.log.1"
 [ -f "$dir/hyprland.txt" ] || err "collection wrote no hyprland.txt"
+grep -q 'TypeError in Playback.qml' "$dir/apps.txt" && grep -q 'Editor save failed' "$dir/apps.txt" \
+    && ok "the Texteditor, Imageviewer and Mediaplayer logs reach the report" || err "apps.txt: $(cat "$dir/apps.txt" 2>/dev/null)"
+unlabeled=""
+while read -r name; do
+    for lang in en de; do
+        jq -e --arg k "$name" '.bugReport.files[$k] | strings' \
+            "$ROOT/stow/modern/.config/modern/translations/$lang.json" >/dev/null || unlabeled="$unlabeled $lang:$name"
+    done
+done < <(grep -ohE '(_grab|_copy) [a-z0-9-]+\.(txt|json)|\$OUT/[a-z0-9-]+\.(txt|json)' "$ROOT"/scripts/lib/bug-report-*.sh \
+    | sed -E 's/.*(_grab |_copy |\$OUT\/)//; s/\.(txt|json)$//' | sort -u)
+[ -z "$unlabeled" ] && ok "every report file has a label in the review list" || err "report files without a label:$unlabeled"
 jq -e 'map(.name) | index("journal-user.txt") and index("config.json") and index("system.txt")' <<<"$files" >/dev/null \
     && ok "collection lists its files" || err "collect: $files"
 if grep -rq "$SECRET" "$dir"; then err "a secret reached the report"; else ok "secrets, keyrings and battlenet.env never collected"; fi
