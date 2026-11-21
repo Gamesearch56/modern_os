@@ -329,7 +329,7 @@ if grep -Fq 'virtual_gpu' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq '0x10de' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'MODERN_SOFTWARE_GPU' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'QSG_RHI_BACKEND' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
-    && grep -Fq 'enabled = not soft' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
+    && grep -Fq 'blur_on = not soft' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'cm_enabled = not soft' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'use_fp16 = soft and 0 or 2' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'modern-imageviewer-no-blur' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \

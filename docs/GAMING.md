@@ -273,7 +273,9 @@ A `PROTONPATH` line in `battlenet.env` still selects a different build.
   `battlenet-launcher` floats, centers, and sizes to `1280 800`.
 - **World of Warcraft / Warcraft III:** matched by title (and common
   Proton classes) for Settings → Gaming `autoFullscreen` +
-  `autoOptimize` — exclusive FS, tearing, opaque game content.
+  `autoOptimize` — exclusive FS, tearing, direct scanout, opaque game
+  content. The same switch also drops blur, shadows, and wobble on the
+  whole desktop for slow laptops (`modules/light_effects.lua`).
   Relaunch the game after a Hyprland reload if an older session still
   maps them windowed.
 - **HDR:** enable Settings → Gaming → HDR for Proton games (and Displays

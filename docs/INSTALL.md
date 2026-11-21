@@ -452,6 +452,10 @@ A VM has virtio Ethernet, no radio and UEFI. A laptop differs here:
 
 - **Secure Boot off.** The ISO and the installed systemd-boot/GRUB are
   unsigned. Prefer UEFI mode; Legacy/CSM works through the GRUB path.
+- **Boot menu is hidden.** systemd-boot starts the default entry at once
+  (`timeout 0` in Calamares `bootloader.conf`); hold Space while the
+  machine starts to open the menu. A kernel that fails to boot falls
+  back to the recovery kernel on its own.
 - **Network during install is required** — the desktop phase downloads
   packages. Wi-Fi in the Network step goes through NetworkManager.
   The live image builds `wl.ko` for its linux-zen and loads it only for

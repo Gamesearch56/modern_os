@@ -180,6 +180,8 @@ log "dock"
 "$ROOT/scripts/test-dock.sh"
 log "mouse windows"
 "$ROOT/scripts/test-mouse-windows.sh"
+log "light effects"
+"$ROOT/scripts/test-light-effects.sh"
 log "wallpaper color sync"
 "$ROOT/scripts/test-wallpaper-color-sync.sh"
 

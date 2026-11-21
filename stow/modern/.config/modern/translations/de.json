@@ -932,7 +932,7 @@
       "gameHdr": "Spiele können HDR nutzen, der restliche Bildschirm bleibt normal. HDR zuerst unter Anzeigen einschalten. Battle.net-Spiele übernehmen es beim nächsten Start. Bei einem Steam-Spiel gehört es in die Startoptionen dieses Spiels.",
       "browserLight": "Vivaldi startet ohne eigenen Grafikprozess, und die Fenster lassen Weichzeichner und Schatten weg. Einschalten, wenn der Browser auf einem langsamen Prozessor mehrere Sekunden braucht. Gilt beim nächsten Start von Vivaldi.",
       "gameMode": "Hält die Sitzung wach, solange ein Spiel offen ist, und kennzeichnet dieses Fenster als Spiel.",
-      "easePc": "Schaltet Weichzeichner und Schatten an Spielen und im Browser aus, damit sie schneller laufen. Andere Fenster behalten diese Effekte. Den Browser einmal neu starten, damit es gilt.",
+      "easePc": "Für langsame PCs und Laptops. Schaltet Weichzeichner, Schatten und das Nachfedern beim Verschieben auf dem ganzen Desktop aus und macht Leisten und Fenster deckend. Spiele zeigen ihre Bilder direkt an, und der Browser läuft sparsamer, sobald er einmal neu gestartet wurde.",
       "gameHdrOff": "Kein HDR-Bildschirm ist angeschlossen.",
       "repeatRate": "Wie oft pro Sekunde eine gehaltene Taste wiederholt wird, sobald die Verzögerung vorbei ist. Ein höherer Wert tippt schneller.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",

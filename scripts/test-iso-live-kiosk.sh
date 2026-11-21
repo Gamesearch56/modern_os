@@ -651,12 +651,12 @@ INSTALL_CONF="$ROOT/iso/airootfs/etc/kernel/install.conf"
 if grep -F 'efiBootLoader: "systemd-boot"' "$BOOTLOADER" >/dev/null \
     && grep -F 'kernelSearchPath: "/usr/lib/modules"' "$BOOTLOADER" >/dev/null \
     && grep -F 'kernelPattern:' "$BOOTLOADER" >/dev/null \
-    && grep -F 'timeout 3' "$BOOTLOADER" >/dev/null \
+    && grep -F '"timeout 0"' "$BOOTLOADER" >/dev/null \
     && ! grep -E '^kernel:' "$BOOTLOADER" >/dev/null \
     && grep -F 'layout=bls' "$INSTALL_CONF" >/dev/null; then
     ok "bootloader job uses systemd-boot kernel-install search paths"
 else
-    err "bootloader.conf must use kernelSearchPath, a 3s menu, and ship /etc/kernel/install.conf"
+    err "bootloader.conf must use kernelSearchPath, a hidden menu (Space opens it), and ship /etc/kernel/install.conf"
 fi
 
 MOUNT="$ROOT/iso/airootfs/etc/calamares/modules/mount.conf"

@@ -932,7 +932,7 @@
       "gameHdr": "Games can use HDR, and the rest of the screen stays as it is. Turn HDR on under Displays first. Battle.net games pick it up the next time they start. A Steam game needs it in that game's own launch options.",
       "browserLight": "Vivaldi starts without a separate graphics process, and its windows skip blur and shadows. Turn this on when the browser takes several seconds to open on a slow processor. It applies the next time Vivaldi starts.",
       "gameMode": "Keeps the session awake while a game is open and marks that window as a game.",
-      "easePc": "Turns off blur and shadows on games and the browser so they can run faster. Other windows keep those effects. Restart the browser once so it picks this up.",
+      "easePc": "For slow PCs and laptops. Turns off blur, shadows and the wobble when moving windows across the whole desktop, and makes panels and windows opaque. Games show their frames directly, and the browser runs lighter once it has been restarted.",
       "gameHdrOff": "No HDR display is connected.",
       "repeatRate": "How many times a second a held key types again, once the delay has passed. A higher number types faster.",
       "repeatDelay": "Wait before a held key starts repeating.",

@@ -26,7 +26,8 @@ Rectangle {
     border.width: root.borderWidth
     clip: true
 
-    layer.enabled: root._elev.shadowOpacity > 0
+    // One offscreen texture per card; it only keeps fades grouped.
+    layer.enabled: root._elev.shadowOpacity > 0 && !Chrome.lightEffects
     layer.effect: null
 
     Rectangle {

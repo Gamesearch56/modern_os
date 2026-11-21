@@ -80,9 +80,14 @@ if soft then
     hl.env("QSG_RHI_BACKEND", "software")
 end
 
+local light = require("modules.light_effects")
 local rounding = math.floor(16 * (config.value("design.cornerRounding", 1.0)))
 local blur = config.value("design.blurStrength", 40)
-local win_alpha = math.max(0, math.min(1, config.value("windows.opacity", 1.0)))
+-- Size 0 still runs every blur pass over the whole frame.
+local blur_on = not soft and not light and blur > 0
+-- Without blur a see-through window only shows the clutter behind it,
+-- and blending it costs fill rate.
+local win_alpha = light and 1 or math.max(0, math.min(1, config.value("windows.opacity", 1.0)))
 local gaps_in = config.value("windows.gapsIn", 5)
 local gaps_out = config.value("windows.gapsOut", 10)
 
@@ -93,14 +98,14 @@ hl.config({
         border_size = 1,
         layout = "dwindle",
         resize_on_border = true,
-        allow_tearing = config.value("gaming.autoOptimize", false) == true,
+        allow_tearing = light,
     },
     decoration = {
         rounding = rounding,
         active_opacity = win_alpha,
         inactive_opacity = win_alpha,
         blur = {
-            enabled = not soft,
+            enabled = blur_on,
             -- Acrylic is the only new blur that still reads as frosted
             -- material. Streaks, ripples, and cracked ice fight tonal
             -- surfaces. Bulb/refraction draw a lit glass rim that
@@ -123,7 +128,7 @@ hl.config({
         -- Elevation level 2: Tokens.elevation shadowRadius 6 at 10%
         -- black. Color is applied from the shadow role in theme_colors.
         shadow = {
-            enabled = true,
+            enabled = not light,
             range = 6,
             render_power = 3,
         },
@@ -132,7 +137,7 @@ hl.config({
         -- Stiffness stays high so swaps settle quickly; extra damping
         -- cuts the bounce. Games opt out with no_wobble.
         wobble = {
-            enabled = true,
+            enabled = not light,
             intensity = 0.05,
             stiffness = 800,
             damping = 40,
@@ -181,11 +186,14 @@ hl.config({
         -- translucent layer with black; a desktop GPU is left as shipped.
         cm_enabled = not soft,
         use_fp16 = soft and 0 or 2,
+        -- 2 scans out only content tagged "game" (games.lua), so a
+        -- fullscreen game skips composition and the desktop is unchanged.
+        direct_scanout = light and 2 or 0,
     },
 })
 
 if hl.layer_rule then
-    if soft then
+    if not blur_on then
         hl.layer_rule({
             name = "quickshell-noblur",
             match = { namespace = "quickshell" },
