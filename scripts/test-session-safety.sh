@@ -43,7 +43,9 @@ else
 fi
 
 mkdir -p "$TMP/bin"
+# shellcheck disable=SC2016
 printf '%s\n' '#!/bin/sh' 'echo "$*" >>"$STUB/journal"' >"$TMP/bin/logger"
+# shellcheck disable=SC2016
 printf '%s\n' '#!/bin/sh' 'case "$1" in start) exit 0 ;; *) exit 1 ;; esac' >"$TMP/bin/systemctl"
 printf '%s\n' '#!/bin/sh' 'exit 0' >"$TMP/bin/hyprctl"
 chmod +x "$TMP/bin/"*

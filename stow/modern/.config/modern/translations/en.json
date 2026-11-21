@@ -1626,7 +1626,9 @@
       "bat": "cat with syntax highlighting",
       "eza": "Modern ls",
       "tmux": "Terminal multiplexer"
-    }
+    },
+    "addToDock": "Add to Dock",
+    "removeFromDock": "Remove from Dock"
   },
   "battlenet": {
     "title": "Battle.net",

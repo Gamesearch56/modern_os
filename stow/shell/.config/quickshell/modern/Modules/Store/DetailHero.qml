@@ -69,9 +69,18 @@ RowLayout {
         }
     }
 
-    PkgAction {
+    RowLayout {
         Layout.alignment: Qt.AlignVCenter
-        pkgName: root.pkgName
-        installed: root.on
+        spacing: Tokens.spacing.sm
+
+        DockAction {
+            installed: root.on
+            pkgName: root.pkgName
+            desktopIds: root.info && root.info.desktop ? root.info.desktop : []
+        }
+        PkgAction {
+            pkgName: root.pkgName
+            installed: root.on
+        }
     }
 }
