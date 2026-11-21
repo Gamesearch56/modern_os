@@ -5,6 +5,8 @@ import "../Commons"
 // A media seek row: elapsed time, the slider, the length. Stateless:
 // position and length in milliseconds in, seek(ms) out while dragging
 // and on release. `progressKey` reads "{position} of {duration}".
+// While the pointer is over the slider, `hovering`, `hoverMs` and `hoverX`
+// (in this row's coordinates) say which spot it points at.
 RowLayout {
     id: root
 
@@ -13,6 +15,10 @@ RowLayout {
     property bool seekable: true
     property string nameKey: ""
     property string progressKey: ""
+
+    readonly property bool hovering: slider.hovered
+    readonly property real hoverX: slider.x + slider.hoverRatio * slider.width
+    readonly property real hoverMs: slider.hoverRatio * root.length
 
     signal seek(real ms)
 

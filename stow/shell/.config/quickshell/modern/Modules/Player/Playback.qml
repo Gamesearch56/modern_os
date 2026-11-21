@@ -18,6 +18,7 @@ FocusScope {
     readonly property bool ready: !root.failed && media.mediaStatus !== MediaPlayer.NoMedia
         && media.mediaStatus !== MediaPlayer.LoadingMedia && media.mediaStatus !== MediaPlayer.InvalidMedia
     readonly property bool hasVideo: media.hasVideo
+    readonly property real aspect: view.aspect
     readonly property real position: media.position
     readonly property real duration: media.duration
     readonly property bool seekable: media.seekable

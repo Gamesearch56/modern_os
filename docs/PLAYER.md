@@ -39,6 +39,12 @@ Why it is built this way: `docs/DECISIONS.md` #27.
 - One click pauses, a double click toggles fullscreen, the wheel sets
   the volume. Speed, volume, seeks, zoom, and track changes show a short
   OSD.
+- Hovering the timeline shows the frame at that spot and its time above
+  the pointer (`SeekPreview.qml`): a second, silent `MediaPlayer` stays
+  paused on the same file and seeks to the hovered time, at most every
+  `Motion.seekPreviewMs`. No thumbnails are made or stored; it opens the
+  file on the first hover. The frame is the keyframe at or before the
+  spot, so it can be a moment early.
 - Ctrl+wheel (or a touchpad pinch) zooms the video around the pointer,
   from fit up to 8×; a drag pans while zoomed, and the picture never
   leaves a gap it could fill. Zooming back out fits it again; the next
@@ -63,6 +69,7 @@ Modules/Player/
   PlayerWindow.qml             Playback, hover-only chrome, OSD, empty state, drop, dialog
   Playback.qml                 MediaPlayer + AudioOutput, song view, error view, wheel
   VideoView.qml                VideoOutput with zoom around a point, pinch, and pan
+  SeekPreview.qml              the frame and time above the hovered timeline spot
   Controls.qml                 seek bar, times, play, volume, speed and track menus, fullscreen
   TopBar.qml                   name, n / count, the full menu, close
   Osd.qml                      the short message over the video

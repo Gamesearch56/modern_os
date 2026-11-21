@@ -11,6 +11,7 @@ Item {
 
     readonly property alias output: video
     readonly property bool zoomed: root.zoom > 1
+    readonly property real aspect: video.sourceRect.width > 0 ? video.sourceRect.height / video.sourceRect.width : 0
     property real zoom: 1
     property real panX: 0
     property real panY: 0

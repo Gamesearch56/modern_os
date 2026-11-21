@@ -19,6 +19,8 @@ Item {
     property bool _dragging: false
     property bool _hold: false
     property real _live: 0
+    readonly property bool hovered: area.containsMouse
+    readonly property real hoverRatio: Math.max(0, Math.min(1, area.mouseX / Math.max(1, area.width)))
 
     signal moved(real value)
     signal committed(real value)
@@ -100,6 +102,7 @@ Item {
             }
 
             MouseArea {
+                id: area
                 anchors.fill: parent
                 enabled: root.enabled
                 hoverEnabled: root.enabled

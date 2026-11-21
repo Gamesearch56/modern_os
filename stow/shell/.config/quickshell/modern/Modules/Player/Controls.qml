@@ -36,6 +36,7 @@ Rectangle {
         spacing: 0
 
         MSeekBar {
+            id: seekBar
             Layout.fillWidth: true
             position: root.playback ? root.playback.position : 0
             length: root._duration
@@ -145,5 +146,14 @@ Rectangle {
                 onClicked: root.actions.run("fullscreen")
             }
         }
+    }
+
+    SeekPreview {
+        source: Ops.fileUrl(PlayerDoc.path)
+        aspect: root.playback ? root.playback.aspect : 0
+        at: seekBar.hoverMs
+        shown: seekBar.hovering && !!root.playback && root.playback.hasVideo
+        x: Math.max(0, Math.min(root.width - width, column.x + seekBar.x + seekBar.hoverX - width / 2))
+        y: -height - Tokens.spacing.sm
     }
 }
