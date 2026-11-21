@@ -207,7 +207,7 @@ at the top. It resets every option on that page to the original defaults,
 without touching other pages.
 
 For updates that failed, see
-[Updates and backups](11-updates-and-backups.md). It also explains how to
+[Updates and backups](12-updates-and-backups.md). It also explains how to
 go back to a snapshot or start the recovery kernel.
 
 ## Where the logs are

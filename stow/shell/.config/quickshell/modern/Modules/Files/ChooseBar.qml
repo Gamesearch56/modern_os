@@ -1,4 +1,4 @@
-// Chooser controls in the title bar: the app's file types, the name to
+// Chooser row under the file list: the app's file types, the name to
 // save under, and the button that hands the choice back.
 import QtQuick
 import QtQuick.Layouts
@@ -8,9 +8,11 @@ import "../../Services"
 
 RowLayout {
     id: root
+    // Space the list leaves free above this row.
+    readonly property real reserve: root.visible ? root.implicitHeight + Tokens.spacing.md : 0
     visible: FilesChoose.active
-    spacing: Tokens.spacing.xs
-    Layout.rightMargin: Tokens.spacing.sm
+    height: root.visible ? root.implicitHeight : 0
+    spacing: Tokens.spacing.sm
 
     MSelect {
         visible: FilesRequest.filters.length > 1
@@ -23,7 +25,8 @@ RowLayout {
     MTextField {
         id: name
         visible: FilesChoose.kind === "save"
-        Layout.preferredWidth: Tokens.spacing.xxl * 6
+        Layout.fillWidth: true
+        Layout.maximumWidth: Tokens.spacing.xxl * 12
         placeholderKey: "files.name"
         captureReturn: true
         captureEscape: true
@@ -33,8 +36,10 @@ RowLayout {
         onActiveFocusChanged: Files.typing = name.focused
     }
 
+    Item { Layout.fillWidth: true }
+
     MButton {
-        kind: "tonal"
+        kind: "filled"
         key: FilesChoose.useKey
         enabled: FilesChoose.ready && !FilesSaveAs.replacing
         onClicked: FilesChoose.accept("")

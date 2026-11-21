@@ -121,7 +121,9 @@ def _list(lines: list[str], i: int) -> tuple[str, int]:
             items[-1].append(line.strip())
         i += 1
     tag = "ol" if ordered else "ul"
-    out = [f'<{tag} style="margin-top:0px;margin-bottom:{{{{gap}}}}px">']
+    start = int(re.match(r"\d+", first.group(2)).group()) if ordered else 1
+    begin = f' start="{start}"' if start != 1 else ""
+    out = [f'<{tag}{begin} style="margin-top:0px;margin-bottom:{{{{gap}}}}px">']
     for body in items:
         inner = render(body)
         inner = re.sub(r'^<p style="[^"]*">(.*?)</p>', r"\1", inner, count=1, flags=re.S)

@@ -29,11 +29,26 @@ FloatingWindow {
         iconName: "modern-manual-symbolic"
         titleColumnWidth: Tokens.spacing.xxl * 9
         chromeOpacity: 1
-        actionKey: win.module && win.module.canGoBack ? "manual.back" : ""
-        actionIcon: win.module && win.module.canGoBack ? "go-previous" : ""
         busy: ManualDocs.loading
         onClosed: Qt.quit()
-        onActionClicked: win.module.back()
+
+        trailing: Row {
+            spacing: Tokens.spacing.xs
+            MIconButton {
+                iconName: "go-previous"
+                key: "manual.back"
+                tip: true
+                enabled: !!win.module && win.module.canGoBack
+                onClicked: win.module.back()
+            }
+            MIconButton {
+                iconName: "go-next"
+                key: "manual.forward"
+                tip: true
+                enabled: !!win.module && win.module.canGoForward
+                onClicked: win.module.forward()
+            }
+        }
 
         RowLayout {
             spacing: Tokens.spacing.lg
@@ -67,9 +82,28 @@ FloatingWindow {
         sequences: [StandardKey.Find]
         onActivated: nav.focusSearch()
     }
+    // Listing StandardKey.Back as well would register Alt+Left twice,
+    // which Qt treats as ambiguous and never activates.
     Shortcut {
-        sequences: [StandardKey.Back, "Alt+Left", "Backspace"]
+        sequences: ["Alt+Left", "Backspace", "Back"]
         enabled: !nav.searching
         onActivated: win.module.back()
+    }
+    Shortcut {
+        sequences: ["Alt+Right", "Forward"]
+        enabled: !nav.searching
+        onActivated: win.module.forward()
+    }
+    // Release, not press, like Files: stepping while the grab is held
+    // swallows the next click.
+    TapHandler {
+        parent: win.contentItem
+        acceptedButtons: Qt.BackButton
+        onPressedChanged: if (!pressed) Qt.callLater(() => win.module.back())
+    }
+    TapHandler {
+        parent: win.contentItem
+        acceptedButtons: Qt.ForwardButton
+        onPressedChanged: if (!pressed) Qt.callLater(() => win.module.forward())
     }
 }

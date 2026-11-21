@@ -7,20 +7,23 @@ import "links.js" as Links
 // ModernOS Manual: one window per process (scripts/modern-manual). It
 // opens on the first manual chapter, or on MODERN_MANUAL_DOC when the
 // launcher names a document. Links between documents stay in the
-// window and can be retraced with Back.
+// window and can be retraced with Back and Forward.
 Scope {
     id: root
 
     property string current: ""
     property var history: []
+    property var future: []
     readonly property var doc: ManualDocs.byPath(root.current)
     readonly property bool canGoBack: root.history.length > 0
+    readonly property bool canGoForward: root.future.length > 0
 
     function open(path: string) {
         if (!path.length || path === root.current || !ManualDocs.byPath(path))
             return false;
         if (root.current.length)
             root.history = root.history.concat([root.current]);
+        root.future = [];
         root.current = path;
         return true;
     }
@@ -29,8 +32,18 @@ Scope {
         if (!root.canGoBack)
             return;
         const h = root.history.slice();
+        root.future = root.future.concat([root.current]);
         root.current = h.pop();
         root.history = h;
+    }
+
+    function forward() {
+        if (!root.canGoForward)
+            return;
+        const f = root.future.slice();
+        root.history = root.history.concat([root.current]);
+        root.current = f.pop();
+        root.future = f;
     }
 
     function follow(link: string) {

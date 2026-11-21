@@ -56,6 +56,15 @@ check(len(manual) > 0 and docs[0]["group"] == "manual", "the user manual comes f
 check([d["rel"] for d in manual] == sorted(d["rel"] for d in manual), "chapters keep file-name order")
 check(all(d["title"] and d["html"] for d in docs), "every document has a title and a body")
 check(os.path.join(ROOT, "docs", "MANUAL.md") in paths, "the reference includes docs/MANUAL.md")
+check('<ol start="3"' in html("3. c\n4. d"), "a numbered list keeps its first number")
+unplaced = [d["rel"] for d in docs if d.get("section") == "more"]
+check(not unplaced, "every document has a sidebar section in manual-index.py" + "".join("\n  " + u for u in unplaced))
+numbers = [d["number"] for d in manual]
+check(numbers == list(range(1, len(manual) + 1)), "chapters count up through the sections without gaps")
+with open(os.path.join(ROOT, "stow/modern/.config/modern/translations/en.json"), encoding="utf-8") as fh:
+    named = json.load(fh)["manual"]["sections"]
+missing = sorted({d["section"] for d in docs} - set(named))
+check(not missing, "every sidebar section has a name" + "".join("\n  " + m for m in missing))
 
 LINK = re.compile(r"\[[^\]]+\]\(([^)\s]+)\)")
 broken = []

@@ -5,7 +5,7 @@ import "../../Widgets"
 import "../../Services"
 
 // Manual sidebar: search over titles and full text, then the documents
-// grouped into the user manual and the technical reference.
+// of the user manual and the technical reference, each in its sections.
 FocusScope {
     id: root
 
@@ -20,9 +20,15 @@ FocusScope {
             const items = root.docs.filter(d => d.group === groups[g]);
             if (!items.length)
                 continue;
-            out.push({ kind: "group", key: "manual.groups." + groups[g] });
-            for (let i = 0; i < items.length; i++)
-                out.push({ kind: "doc", path: items[i].path, title: items[i].title });
+            out.push({ kind: "part", key: "manual.groups." + groups[g] });
+            let section = "";
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].section !== section) {
+                    section = String(items[i].section || "more");
+                    out.push({ kind: "section", key: "manual.sections." + section });
+                }
+                out.push({ kind: "doc", path: items[i].path, title: items[i].title, number: Number(items[i].number || 0) });
+            }
         }
         return out;
     }
@@ -127,6 +133,8 @@ FocusScope {
             contentWidth: width
             contentHeight: col.implicitHeight
             boundsBehavior: Flickable.StopAtBounds
+            Accessible.role: Accessible.List
+            Accessible.name: I18n.t("manual.contents")
 
             ColumnLayout {
                 id: col
@@ -137,38 +145,10 @@ FocusScope {
                     id: repeater
                     model: root.rows.length
 
-                    delegate: Item {
-                        id: row
-                        required property int index
-                        readonly property var rowData: root.rows[index] || ({})
-                        readonly property bool _group: row.rowData.kind === "group"
-                        property alias navItem: navItem
-                        Layout.fillWidth: true
-                        implicitHeight: row._group ? Tokens.spacing.xl : navItem.implicitHeight
-                        Layout.preferredHeight: implicitHeight
-                        Layout.topMargin: row._group && row.index > 0 ? Tokens.spacing.md : 0
-                        Layout.bottomMargin: row._group ? Tokens.spacing.xs : 0
-
-                        MText {
-                            visible: row._group
-                            anchors.fill: parent
-                            key: row._group ? row.rowData.key : ""
-                            styleName: "labelSmall"
-                            color: Colors.color.onSurfaceVariant
-                            font.capitalization: Font.AllUppercase
-                        }
-
-                        MListItem {
-                            id: navItem
-                            visible: !row._group
-                            width: row.width
-                            variant: "nav"
-                            tabFocus: false
-                            titleValue: row._group ? "" : row.rowData.title
-                            titleLines: 2
-                            selected: !row._group && row.rowData.path === root.current
-                            onClicked: root.picked(row.rowData.path)
-                        }
+                    delegate: NavRow {
+                        rowData: root.rows[index] || ({})
+                        selected: rowData.kind === "doc" && rowData.path === root.current
+                        onClicked: root.picked(rowData.path)
                     }
                 }
             }

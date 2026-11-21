@@ -48,6 +48,13 @@ same '"SUPER + Y"' "$(jq '.keybinds.manual' "$ROOT/stow/modern/.config/modern/co
 has 'manual: "SUPER + Y"' "$QS/Commons/Config.qml" "Config falls back to SUPER + Y"
 has 'manual: "system"' "$QS/Services/CheatsheetModel.qml" "the shortcut sheet lists the manual under System"
 has 'manual: "SUPER + Y"' "$QS/Services/CheatsheetModel.qml" "the sheet shows the shortcut on an older config.json"
+has 'acceptedButtons: Qt.BackButton' "$QS/Modules/Manual/ManualWindow.qml" "the mouse back button goes back"
+has 'acceptedButtons: Qt.ForwardButton' "$QS/Modules/Manual/ManualWindow.qml" "the mouse forward button goes forward"
+if grep -q 'sequences:.*StandardKey\.\(Back\|Forward\)' "$QS/Modules/Manual/ManualWindow.qml"; then
+    err "StandardKey.Back/Forward doubles Alt+Left/Right and makes the shortcut ambiguous"
+else
+    ok "Alt+Left and Alt+Right are bound once"
+fi
 if grep -q 'modern.manual\|modern-manual' "$ROOT/stow/hypr/.config/hypr/modules/windows.lua"; then
     err "windows.lua floats the manual; it must tile like any window"
 else
@@ -57,7 +64,8 @@ fi
 for lang in en de; do
     file="$ROOT/stow/modern/.config/modern/translations/$lang.json"
     for key in manual.title manual.launcherName manual.windowTitle manual.search manual.groups.manual \
-        manual.groups.reference cheatsheet.action.manual; do
+        manual.groups.reference manual.back manual.forward manual.contents manual.chapter manual.link \
+        manual.sections.start manual.sections.system manual.sections.more cheatsheet.action.manual; do
         if [ -n "$(jq -r --arg k "$key" 'getpath($k | split(".")) // empty' "$file")" ]; then
             ok "$lang has $key"
         else

@@ -34,15 +34,14 @@ done
 has "singleton FilesRequest 1.0 FilesRequest.qml" "$QS/Services/qmldir" "FilesRequest is registered"
 has "singleton FilesSaveAs 1.0 FilesSaveAs.qml" "$QS/Services/qmldir" "FilesSaveAs is registered"
 has "FilesRequest.begin()" "$QS/files-window.qml" "a Files window starts the request it was given"
-has "ChooseBar {}" "$QS/Modules/Files/Toolbar.qml" "the title bar carries the chooser controls"
+has "anchors.bottomMargin: choose.reserve" "$QS/Modules/Files/Module.qml" "the chooser controls sit in their own row below the files"
+if grep -q "ChooseBar" "$QS/Modules/Files/Toolbar.qml"; then err "the title bar stays free of chooser controls"; else ok "the title bar stays free of chooser controls"; fi
 has "ReplaceConfirm {}" "$QS/Modules/Files/Dialogs.qml" "saving over a file asks first"
 has "Dialogs {}" "$QS/Modules/Files/Module.qml" "the Files window carries its dialogs"
 
 has '/install/lib/portal.sh"' "$ROOT/install/install.sh" "install.sh sources portal.sh"
 has "portal_apply" "$ROOT/install/install.sh" "install.sh installs the portal package"
-for p in python-gobject; do
-    if grep -Eq "^$p([[:space:]]|$)" "$ROOT/install/manifests/10-desktop.txt"; then ok "$p is in the desktop manifest"; else err "$p is in the desktop manifest"; fi
-done
+if grep -Eq "^python-gobject([[:space:]]|$)" "$ROOT/install/manifests/10-desktop.txt"; then ok "python-gobject is in the desktop manifest"; else err "python-gobject is in the desktop manifest"; fi
 
 # shellcheck source=../scripts/lib/pkg-name.sh
 source "$ROOT/scripts/lib/pkg-name.sh"
@@ -55,6 +54,25 @@ read_root_plan "$TMP/plan"
 same "1 jq" "$ROOT_PLAN_PORTAL ${ROOT_PLAN_PKGS[*]}" "the root plan carries the portal step"
 if PKEXEC_UID="" root_plan_portal_pkg >/dev/null 2>&1; then err "no caller, no portal package"; else ok "no caller, no portal package"; fi
 has 'root_plan_portal_pkg' "$ROOT/scripts/update-apply.sh" "the update's root step installs only the checked package"
+has 'MODERN_PACMAN_NOSANDBOX' "$ROOT/install/lib/portal.sh" "the installer chroot installs the portal without pacman's sandbox"
+
+has "scripts/lib/iso-local-pkgs.sh\"" "$ROOT/scripts/iso-build.sh" "the ISO build loads its own packages"
+has "iso_local_packages \"\$repo\"" "$ROOT/scripts/lib/iso-aur-repo.sh" "the ISO local repo gets ModernOS's packages"
+has 'report_portal' "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" "a fresh install reports the portal"
+(
+    # shellcheck source=../scripts/lib/iso-local-pkgs.sh
+    source "$ROOT/scripts/lib/iso-local-pkgs.sh"
+    ISO_AUR_BUILDER=nobody
+    chown() { :; }
+    log() { :; }
+    iso_aur_makepkg() { : >"$1/modern-portal-1-1-any.pkg.tar.zst"; }
+    mkdir -p "$TMP/iso/repo" "$TMP/iso/build" "$TMP/iso/profile"
+    printf 'base\n' >"$TMP/iso/profile/packages.x86_64"
+    iso_local_packages "$TMP/iso/repo" "$TMP/iso/build" "$TMP/iso/profile"
+    iso_local_packages "$TMP/iso/repo" "$TMP/iso/build" "$TMP/iso/profile"
+)
+if [ -f "$TMP/iso/repo/modern-portal-1-1-any.pkg.tar.zst" ]; then ok "the ISO repo holds modern-portal"; else err "the ISO repo holds modern-portal"; fi
+same "1" "$(grep -cx modern-portal "$TMP/iso/profile/packages.x86_64")" "the live image installs modern-portal once"
 
 if command -v makepkg >/dev/null 2>&1 && command -v bsdtar >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
     REPO_ROOT="$ROOT"

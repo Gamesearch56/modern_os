@@ -948,6 +948,17 @@ drop_install_sudo() {
     [ -n "${MODERN_LATE_TEST:-}" ] || rm -f "$INSTALL_SUDOERS"
 }
 
+# modern-portal comes from the squashfs (iso-local-pkgs.sh) or install.sh.
+# Missing it does not break the desktop, so this only reports.
+report_portal() {
+    [ -z "${MODERN_LATE_TEST:-}" ] || return 0
+    if pacman -Q modern-portal >/dev/null 2>&1; then
+        log "file chooser portal installed"
+    else
+        log "WARN: modern-portal is missing; apps keep the GTK file chooser"
+    fi
+}
+
 phase_desktop() {
     [ -d "$REPO/install" ] || die "clone phase did not leave $REPO"
     ensure_dns
@@ -998,6 +1009,7 @@ phase_desktop() {
     unpin_resolver
     rm -f "$out"
     ensure_provision_units
+    report_portal
     restore_installer_edits
     log "desktop install finished for $USERNAME"
 }

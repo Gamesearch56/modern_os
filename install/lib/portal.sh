@@ -60,8 +60,11 @@ portal_apply() {
         log_info "file chooser portal deferred to the update's root step"
         return 0
     fi
+    # The installer chroot has no landlock sandbox for pacman (pkg.sh does the same).
+    local sandbox=()
+    [ -n "${MODERN_PACMAN_NOSANDBOX:-}" ] && sandbox=(--disable-sandbox)
     tmp="$(mktemp -d)"
-    if file="$(portal_build "$tmp")" && sudo pacman -U --noconfirm --needed "$file"; then
+    if file="$(portal_build "$tmp")" && sudo pacman "${sandbox[@]}" -U --noconfirm --needed "$file"; then
         log_ok "file chooser portal installed ($want)"
         systemctl --user try-restart xdg-desktop-portal.service >/dev/null 2>&1 || true
     else

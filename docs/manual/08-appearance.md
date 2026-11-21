@@ -101,7 +101,7 @@ ModernOS uses **Inter** for the interface and **JetBrains Mono** for terminals a
 
 - **Animations** (Animationen) sets how long menus, the bar and windows take to move. **Off** (Aus) makes everything instant, **Default** (Standard) is normal, and **Slow** (Langsam) is calmer and easier to follow.
 - **Wallpaper animation** controls only the wallpaper change, as described above.
-- On slower computers, **Drop effects for speed** (Effekte für Tempo weglassen) under Settings > **Gaming** (Spiele) turns off blur, shadows and window wobble and makes panels solid. See [Gaming](12-gaming.md).
+- On slower computers, **Drop effects for speed** (Effekte für Tempo weglassen) under Settings > **Gaming** (Spiele) turns off blur, shadows and window wobble and makes panels solid. See [Gaming](11-gaming.md).
 
 ## Windows, corners and the cursor
 

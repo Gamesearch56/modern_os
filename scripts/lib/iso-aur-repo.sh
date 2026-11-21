@@ -222,6 +222,7 @@ iso_attach_aur_repo() {
             printf '%s\n' "$pkg" >>"$profile/packages.x86_64"
         fi
     done <"$list"
+    iso_local_packages "$repo" "$build" "$profile"
 
     shopt -s nullglob
     local pkgs=("$repo"/*.pkg.tar.*)

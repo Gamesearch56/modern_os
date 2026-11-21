@@ -15,7 +15,6 @@ RowLayout {
     MIconButton { iconName: "go-next"; key: "files.toolbar.forward"; tip: true; enabled: FilesHistory.forward.length > 0; onClicked: Files.forward() }
     MIconButton { iconName: "go-up"; key: "files.toolbar.up"; tip: true; onClicked: Files.up() }
     MIconButton { iconName: "view-refresh-symbolic"; key: "files.network.rescan"; tip: true; visible: Files.place === "network"; onClicked: FilesPlaces.reload() }
-    ChooseBar {}
 
     MTextField {
         id: search
@@ -23,7 +22,7 @@ RowLayout {
         trailingIcon: "edit-find-symbolic"
         placeholderKey: "files.search.placeholder"
         captureEscape: true
-        selectAllOnPress: search.text === root.locationText(); terminalCopy: search.text === root.locationText()
+        selectAllOnPress: search.text === root.locationText(); copyWhole: search.text === root.locationText()
         captureReturn: true
         captureArrows: !root._quiet && root._query().length > 0
         onTextEdited: root._type()

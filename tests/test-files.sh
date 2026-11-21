@@ -685,63 +685,36 @@ if command -v ffmpeg >/dev/null 2>&1; then
     fi
 fi
 
-# Ctrl+C in the location field shell-escapes spaces. Pasting that
-# string back has to stat the same file.
+# The location field copies the path as shown; kitty's paste filter turns
+# it into one shell argument, and leaves any other paste alone.
 if python3 - "$ROOT" "$TMP" "$OPS" <<'PY'
-import json, pathlib, subprocess, sys
+import json, pathlib, runpy, subprocess, sys
 root, tmp, ops = sys.argv[1:]
-field = (pathlib.Path(root) / "stow/shell/.config/quickshell/modern/Widgets/MTextField.qml").read_text()
-locate = (pathlib.Path(root) / "stow/shell/.config/quickshell/modern/Services/FilesLocate.qml").read_text()
-def meta(src, name):
-    needle = 'const meta = "'
-    at = src.find(needle)
-    if at < 0:
-        raise SystemExit(f"missing shell meta in {name}")
-    i = at + len(needle)
-    raw = []
-    while i < len(src):
-        if src[i] == "\\" and i + 1 < len(src):
-            raw.append(src[i:i + 2])
-            i += 2
-            continue
-        if src[i] == '"':
-            break
-        raw.append(src[i])
-        i += 1
-    return "".join(raw).encode("utf-8").decode("unicode_escape")
-copied = meta(field, "MTextField")
-pasted = meta(locate, "FilesLocate")
-if copied != pasted:
-    raise SystemExit("location copy and paste do not escape the same characters")
-def escape(path):
-    return "".join(("\\" + ch) if ch in copied else ch for ch in path)
-def unescape(text):
-    out, i = [], 0
-    while i < len(text):
-        if text[i] == "\\" and i + 1 < len(text) and text[i + 1] in pasted:
-            out.append(text[i + 1])
-            i += 2
-            continue
-        out.append(text[i])
-        i += 1
-    return "".join(out)
-folder = pathlib.Path(tmp) / "My Documents"
+qml = pathlib.Path(root) / "stow/shell/.config/quickshell/modern"
+for rel in ("Widgets/MTextField.qml", "Services/FilesLocate.qml"):
+    if "const meta" in (qml / rel).read_text():
+        raise SystemExit(f"{rel} still rewrites the copied path")
+paste = runpy.run_path(str(pathlib.Path(root) / "stow/kitty/.config/kitty/paste-actions.py"))["filter_paste"]
+folder = pathlib.Path(tmp) / "My Documents (old)"
 folder.mkdir()
 target = folder / "note file.txt"
 target.write_text("ok\n")
 raw = str(target)
-escaped = escape(raw)
-if "\\ " not in escaped or unescape(escaped) != raw:
-    raise SystemExit(f"space round-trip failed: {escaped!r}")
-out = subprocess.check_output([ops, "stat", unescape(escaped)], text=True)
-info = json.loads(out)
-if info.get("path") != raw or info.get("name") != "note file.txt":
+info = json.loads(subprocess.check_output([ops, "stat", raw], text=True))
+if info.get("name") != "note file.txt":
     raise SystemExit(f"stat missed the spaced path: {info}")
+pasted = paste(raw)
+args = subprocess.check_output(["bash", "-c", f'printf "%s\\0" {pasted}'], text=True).split("\0")[:-1]
+if args != [raw]:
+    raise SystemExit(f"pasted path is not one argument: {pasted!r} -> {args!r}")
+for text in ("hello world", str(folder / "missing file"), raw + "\n" + raw, "/usr/bin"):
+    if paste(text) != text:
+        raise SystemExit(f"paste filter changed {text!r}")
 PY
 then
-    ok "a shell-copied path with spaces pastes back to the same file"
+    ok "a copied path with spaces pastes into the terminal as one argument"
 else
-    err "a shell-copied path with spaces did not resolve"
+    err "kitty paste filter did not quote the copied path"
 fi
 
 [ "$FAIL" -eq 0 ]

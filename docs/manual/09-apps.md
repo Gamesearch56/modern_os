@@ -44,6 +44,7 @@ If you paste a file where one with the same name already exists, you can overwri
 
 - Press **Space** on a file for **Quick Look** (Schnellansicht), a fast preview. **Enter** opens it in its usual app.
 - **Open terminal here** (Terminal hier öffnen) starts a terminal in the current folder.
+- **Ctrl + C** in the location bar copies the folder's path exactly as shown. Pasting it into the terminal adds a backslash before spaces, so `cd` gets the whole path.
 - **Connect to server** (Mit Server verbinden) opens a network share.
 
 ### Choosing files for other apps
@@ -127,7 +128,7 @@ The **App Store** is where you add and remove programs. Open it from the launche
 
 When the dock is turned on, the details page also has **Add to Dock** (Zum Dock hinzufügen) or **Remove from Dock**.
 
-If updates are waiting, an **Updates available** button takes you to Settings > **Update** (Aktualisierung). See [Updates and backups](11-updates-and-backups.md).
+If updates are waiting, an **Updates available** button takes you to Settings > **Update** (Aktualisierung). See [Updates and backups](12-updates-and-backups.md).
 
 ### Uninstalling by dragging to the dock trash
 
@@ -145,12 +146,15 @@ To only take an icon off the dock, drag it from the dock onto **Remove from dock
 
 The manual you are reading is an app too. Open it with **SUPER + Y**, or search for "Manual" in the launcher.
 
-- On the left is a list of every document, in two groups: **User manual** (Benutzerhandbuch), the chapters written for everyday use, and **Technical reference** (Technische Referenz), the documents for people who want to look under the hood.
+- On the left is a list of every document, in two parts: **User manual** (Benutzerhandbuch), the numbered chapters written for everyday use, and **Technical reference** (Technische Referenz), the documents for people who want to look under the hood. Each part is split into topics, such as **Getting started** (Los geht's) or **Installation and system** (Installation und System).
 - The search field, **Search the manual...** (Handbuch durchsuchen...), looks through titles and full text. Press **Ctrl + F** to jump to it, **Enter** to open the first match, and **Esc** to clear it.
 - On the right is the open document. You can select and copy text, which is handy for commands in [Troubleshooting](14-troubleshooting.md).
-- Links to other documents open inside the manual. **Back** (Zurück), **Alt + Left** or **Backspace** takes you to the previous one.
+- Links to other documents open inside the manual. **Back** (Zurück), **Alt + Left**, **Backspace** or the back button on the side of your mouse takes you to the previous one. **Forward** (Vorwärts), **Alt + Right** or the mouse's forward button returns.
 - Links to websites open in your browser.
 - Use the arrow keys, **Page Up**, **Page Down**, **Space**, **Home** and **End** to read. **Left** moves back to the list.
+- **Tab** highlights the next link in the document and **Shift + Tab** the previous one; **Enter** opens it. So you can follow links without a mouse.
+- **Ctrl + Plus** and **Ctrl + Minus**, or Ctrl with the mouse wheel, make the text larger or smaller. **Ctrl + 0** returns to the normal size.
+- Screen readers announce the list, its topic headings and the open document by name.
 
 ## Installed apps
 
@@ -161,7 +165,7 @@ ModernOS also includes a few popular apps, already set up:
 | kitty | The terminal. It follows your colors immediately. | **SUPER + T** |
 | Vivaldi | The web browser, themed to match the desktop | **SUPER + B**, private window **SUPER + Shift + B** |
 | Spotify | Music streaming | **SUPER + R** |
-| Steam | Games, see [Gaming](12-gaming.md) | |
+| Steam | Games, see [Gaming](11-gaming.md) | |
 | Proton Pass | Password manager | |
 
 If the desktop ever misbehaves, **SUPER + Return** opens an emergency terminal.

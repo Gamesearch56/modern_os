@@ -87,8 +87,7 @@ through **System Settings**, and the whole desktop is available in
   </tr>
 </table>
 
-The screenshots show the German interface. English is one click away in
-Settings > Language & Time.
+ModernOS is available in English and German.
 
 ## Install
 
@@ -195,8 +194,8 @@ All documentation is also built into the system: press **SUPER + Y**.
 | [Appearance](docs/manual/08-appearance.md) | Wallpapers, colors, themes |
 | [Apps](docs/manual/09-apps.md) | Files, Texteditor, Imageviewer, Mediaplayer, App Store, Manual |
 | [AI assistant](docs/manual/10-assistant.md) | The chat and your privacy |
-| [Updates and backups](docs/manual/11-updates-and-backups.md) | Updates, snapshots, storage |
-| [Gaming](docs/manual/12-gaming.md) | Steam, Proton, game mode |
+| [Gaming](docs/manual/11-gaming.md) | Steam, Proton, game mode |
+| [Updates and backups](docs/manual/12-updates-and-backups.md) | Updates, snapshots, storage |
 | [Privacy and security](docs/manual/13-privacy-and-security.md) | Firewall, passwords, what leaves your computer |
 | [Troubleshooting](docs/manual/14-troubleshooting.md) | When something doesn't work |
 

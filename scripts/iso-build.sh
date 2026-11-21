@@ -421,6 +421,8 @@ rm -f "$PROFILE_WORK/airootfs/etc/mkinitcpio.d/linux.preset"
 MODERN_ISO_AUR_CACHE="${MODERN_ISO_AUR_CACHE:-$abs_out/aur-cache}"
 # shellcheck source=lib/iso-aur-repo.sh
 source "$ROOT/scripts/lib/iso-aur-repo.sh"
+# shellcheck source=lib/iso-local-pkgs.sh
+source "$ROOT/scripts/lib/iso-local-pkgs.sh"
 iso_build_finish() {
     iso_aur_cleanup
     if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ] && [ -d "$abs_out" ]; then

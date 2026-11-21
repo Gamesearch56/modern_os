@@ -131,7 +131,7 @@ erases it and lays it out for you. You can also choose how swap space is
 set up; the default is a swap file. Manual partitioning is not offered.
 
 The disk is formatted with Btrfs, which is what makes system snapshots
-possible later (see [Updates and backups](11-updates-and-backups.md)).
+possible later (see [Updates and backups](12-updates-and-backups.md)).
 
 ### User
 
@@ -159,7 +159,7 @@ technical details in [../INSTALL.md](../INSTALL.md).
 When the computer starts, a ModernOS splash screen with a spinner appears
 while the system loads. The boot menu is hidden; hold **Space** while the
 computer starts if you ever need it (see
-[Updates and backups](11-updates-and-backups.md)).
+[Updates and backups](12-updates-and-backups.md)).
 
 ### The login screen
 
@@ -314,7 +314,7 @@ A good order for the first minutes:
 3. **Install an app** from the **App Store**. See [Apps](09-apps.md).
 4. **Check for updates** under System Settings → **Update**
    (**Aktualisierung**), and turn on snapshots before updates. See
-   [Updates and backups](11-updates-and-backups.md).
+   [Updates and backups](12-updates-and-backups.md).
 5. **Learn the shortcuts** with SUPER + K. See
    [Keyboard shortcuts](06-keyboard-shortcuts.md).
 

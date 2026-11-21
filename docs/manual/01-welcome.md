@@ -6,9 +6,10 @@ You are reading it in the ModernOS Manual. You can open it at any time with **SU
 
 ## How to use this manual
 
-- The list on the left shows every document. **User manual** holds these chapters, written for everyday use. **Technical reference** holds the in-depth documents for administrators and developers.
+- The list on the left shows every document, sorted into topics. **User manual** holds these numbered chapters, written for everyday use. **Technical reference** holds the in-depth documents for administrators and developers.
 - Type in the search field to find a word in any document, not just in the titles. Several words narrow the search down.
-- Links to other chapters open right here. **Back** in the title bar, or Alt + Left, takes you back to where you were. Web links open in your browser.
+- Links to other chapters open right here. **Back** in the title bar, Alt + Left or the back button on the side of your mouse takes you back to where you were; **Forward** goes the other way. Web links open in your browser.
+- Press Tab to step through the links of a page and Enter to open one. Ctrl + Plus and Ctrl + Minus change the text size.
 - You can select text with the mouse and copy it with Ctrl + C, for example a command from the troubleshooting chapter.
 
 The desktop is available in English and German. This manual names each button by its English label, followed by its German label in parentheses the first time, for example Settings (Systemeinstellungen). You can switch the language in [Settings](07-settings.md) under Language & Time (Sprache & Zeit).
@@ -60,17 +61,33 @@ The ModernOS apps each run as their own program. If a huge file makes the Imagev
 
 ## Chapters
 
+The Manual's sidebar groups the chapters the same way.
+
+**Getting started**
+
 1. [Welcome](01-welcome.md): this overview.
 2. [First steps](02-first-steps.md): installing, signing in, language, Wi-Fi, and a short tour.
+
+**Using the desktop**
+
 3. [The desktop](03-desktop.md): the bar and its widgets, the Control panel, notifications, the dock, the lock screen, screenshots.
 4. [Launcher and Overview](04-launcher-and-overview.md): finding apps, files, and windows.
 5. [Windows and workspaces](05-windows-and-workspaces.md): how tiling works, floating windows, workspaces, mouse gestures.
 6. [Keyboard shortcuts](06-keyboard-shortcuts.md): the complete list.
+
+**Settings and appearance**
+
 7. [Settings](07-settings.md): every page of System Settings.
 8. [Appearance](08-appearance.md): wallpapers, colors, themes.
+
+**Apps**
+
 9. [Apps](09-apps.md): Files, Texteditor, Imageviewer, Mediaplayer, App Store, this Manual, and the default apps.
 10. [The assistant](10-assistant.md): the AI chat and what it can see.
-11. [Updates and backups](11-updates-and-backups.md): keeping the system current and safe.
-12. [Gaming](12-gaming.md): Steam, game mode, and performance.
+11. [Gaming](11-gaming.md): Steam, game mode, and performance.
+
+**Updates, security and help**
+
+12. [Updates and backups](12-updates-and-backups.md): keeping the system current and safe.
 13. [Privacy and security](13-privacy-and-security.md): the firewall, passwords, and what leaves your computer.
 14. [Troubleshooting](14-troubleshooting.md): what to do when something doesn't work.

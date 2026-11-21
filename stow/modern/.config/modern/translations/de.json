@@ -2181,13 +2181,29 @@
     "launcherName": "Handbuch",
     "windowTitle": "{name} – Handbuch",
     "back": "Zurück",
+    "forward": "Vorwärts",
     "search": "Handbuch durchsuchen...",
     "noResults": "Kein Dokument passt zu deiner Suche",
     "groups": {
       "manual": "Benutzerhandbuch",
       "reference": "Technische Referenz"
     },
+    "sections": {
+      "start": "Los geht's",
+      "desktop": "Den Desktop nutzen",
+      "personal": "Einstellungen und Aussehen",
+      "apps": "Apps",
+      "care": "Updates, Sicherheit und Hilfe",
+      "project": "Das Projekt",
+      "look": "Design und Sprache",
+      "shell": "Oberfläche und Apps",
+      "system": "Installation und System",
+      "more": "Weitere"
+    },
     "unavailable": "Das Handbuch konnte nicht geladen werden",
-    "unavailableHint": "Die Dokumentationsdateien fehlen im ModernOS-Ordner."
+    "unavailableHint": "Die Dokumentationsdateien fehlen im ModernOS-Ordner.",
+    "contents": "Inhalt",
+    "chapter": "{number}. {title}",
+    "link": "Link: {name}. Mit Enter öffnen."
   }
 }

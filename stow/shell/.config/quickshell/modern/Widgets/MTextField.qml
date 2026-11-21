@@ -21,8 +21,8 @@ Item {
     property bool captureEscape: false
     property bool holdFocus: false
     property bool selectAllOnPress: false
-    // The location field: Ctrl+C copies a shell-safe path, not the raw text.
-    property bool terminalCopy: false
+    // The location field: Ctrl+C with nothing selected copies the whole path.
+    property bool copyWhole: false
     property bool selectOnFocus: false
     property bool _pointer: false
     property bool capsOn: false
@@ -147,7 +147,7 @@ Item {
         }
         Keys.onPressed: (event) => {
             if (root._pathCopy(event)) {
-                Quickshell.clipboardText = root._shell(root._chunk());
+                Quickshell.clipboardText = root._chunk();
                 event.accepted = true;
                 return;
             }
@@ -206,7 +206,7 @@ Item {
     }
 
     function _pathCopy(event): bool {
-        if (!root.terminalCopy || !event || event.key !== Qt.Key_C)
+        if (!root.copyWhole || !event || event.key !== Qt.Key_C)
             return false;
         const mods = event.modifiers;
         if ((mods & Qt.ControlModifier) === 0 || (mods & Qt.AltModifier) || (mods & Qt.MetaModifier))
@@ -217,17 +217,6 @@ Item {
     function _chunk(): string {
         const picked = String(input.selectedText || "");
         return picked.length ? picked : String(input.text || "");
-    }
-
-    // One cd argument: spaces and other shell metacharacters get a backslash.
-    function _shell(path: string): string {
-        const meta = " \t\n\\'\"`$&|;<>()*?[]{}!#~";
-        let out = "";
-        for (let i = 0; i < path.length; i++) {
-            const ch = path.charAt(i);
-            out += meta.indexOf(ch) >= 0 ? ("\\" + ch) : ch;
-        }
-        return out;
     }
 
     function _arrowMove(dx: int, dy: int): bool {

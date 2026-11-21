@@ -231,7 +231,7 @@ At the top you see tiles for **Last played** (Zuletzt gespielt), **Hours played*
 
 - **Drop effects for speed** (Effekte für Tempo weglassen): for slower computers. It turns off blur, shadows and wobble, makes panels solid, lets games draw directly to the screen, and makes the browser lighter after its next restart.
 
-More in [Gaming](12-gaming.md).
+More in [Gaming](11-gaming.md).
 
 ### AI (KI)
 
@@ -313,7 +313,7 @@ For administrators only. ModernOS can take snapshots of the system so you can go
 - **Remove old snapshots** (Alte Snapshots entfernen) with **Keep at most** (Höchstens behalten): deletes the oldest snapshots so only that many remain.
 - **Snapshots** lists every snapshot. **Create snapshot** (Snapshot erstellen) makes one now, **Clear all** (Alle löschen) removes all, and each entry has **Restore** (Wiederherstellen) and **Delete** (Löschen).
 
-Restoring a snapshot restarts the computer. Your personal files in your home folder are not changed. More in [Updates and backups](11-updates-and-backups.md).
+Restoring a snapshot restarts the computer. Your personal files in your home folder are not changed. More in [Updates and backups](12-updates-and-backups.md).
 
 ### Firewall (Firewall)
 
@@ -333,4 +333,4 @@ For administrators only.
 - **Update mirrors** (Mirrors aktualisieren) picks fast download servers. This also happens automatically twice a month.
 - **Package Update** (Paketupdate) lists what will change, split into **System packages** (Systempakete) and **Other packages** (Andere Pakete), with old and new versions. **Changelog** (Änderungen) shows what is new.
 
-More in [Updates and backups](11-updates-and-backups.md).
+More in [Updates and backups](12-updates-and-backups.md).
