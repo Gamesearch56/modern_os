@@ -75,6 +75,29 @@ ColumnLayout {
         }
     }
 
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.xs
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Tokens.spacing.md
+            MText {
+                key: "settings.fields.mouseSideButtons"
+                styleName: "bodyMedium"
+                color: Colors.color.onSurfaceVariant
+                Layout.fillWidth: true
+            }
+            MSwitch {
+                checked: Config.input.mouseSideButtons !== false
+                onToggled: (v) => ConfigWrite.set("input.mouseSideButtons", v)
+            }
+        }
+        MHint {
+            key: "settings.hints.mouseSideButtons"
+            Layout.fillWidth: true
+        }
+    }
+
     MButton {
         kind: "tonal"
         key: "settings.openCheatsheet"

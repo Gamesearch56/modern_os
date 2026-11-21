@@ -41,6 +41,26 @@ else
     ok "detail rejects an invalid name"
 fi
 
+# pacman ships no launcher; the field is still a list for the dock button.
+if [ -x /usr/bin/pacman ] && /usr/bin/pacman -Q pacman >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+    if "$DETAIL" pacman | jq -e '.desktop == []' >/dev/null; then
+        ok "detail lists the installed package's launchers"
+    else
+        err "detail must list launchers as .desktop"
+    fi
+fi
+
+STORE_QML="$ROOT/stow/shell/.config/quickshell/modern"
+if grep -Fq 'DockAction' "$STORE_QML/Modules/Store/DetailHero.qml" \
+    && grep -Fq 'store.addToDock' "$STORE_QML/Modules/Store/DockAction.qml" \
+    && grep -Fq 'store.removeFromDock' "$STORE_QML/Modules/Store/DockAction.qml" \
+    && grep -Eq '^    visible: .*DockLayout\.enabled' "$STORE_QML/Modules/Store/DockAction.qml" \
+    && grep -Fq 'function dockIdFor' "$STORE_QML/Services/Store.qml"; then
+    ok "installed apps can be added to and removed from the dock, only while the dock is on"
+else
+    err "detail page must offer Add to Dock / Remove from Dock, hidden while the dock is off"
+fi
+
 if grep -F "screenshots.debian.net" "$EXTRAS" >/dev/null \
     && grep -F -- "--proto '=https'" "$EXTRAS" >/dev/null \
     && grep -F 'valid_pkg_name' "$EXTRAS" >/dev/null \

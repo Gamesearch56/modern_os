@@ -50,6 +50,10 @@ if [[ $* == *'connection up uuid 00000000-0000-4000-8000-00000000abcd passwd-fil
     pw=${!#}
     stat -c '%a' "$pw" >"${state}.mode"
     cat "$pw" >"${state}.secret"
+    if [[ -n ${SLOW_CONNECT:-} ]]; then
+        printf 'up\n' >"${state}.waiting"
+        sleep "$SLOW_CONNECT"
+    fi
     if [[ ${FAIL_CONNECT:-0} -eq 1 ]]; then
         printf 'Error: Connection activation failed: Secrets were required, but not provided.\n' >&2
         exit 4
@@ -81,6 +85,10 @@ if [[ $* == '-t -f UUID,TYPE,DEVICE connection show --active' ]]; then
 fi
 if [[ $* == '-t -f UUID,TYPE,TIMESTAMP connection show' ]]; then
     printf 'home-uuid:802-11-wireless:10\n'
+    exit 0
+fi
+if [[ $* == '-g GENERAL.STATE device show wlan0' ]]; then
+    printf '%s\n' "${WAKE_STATE:-30 (disconnected)}"
     exit 0
 fi
 if [[ $* == '-t -f DEVICE,TYPE,STATE device status' ]]; then
@@ -232,6 +240,36 @@ if run_join wake; then
     fi
 else
     err "wake without a name exited non-zero"
+fi
+
+rm -f "$STATE.tries"
+if WAKE_STATE='100 (connected)' run_join wake 'Cafe Net'; then
+    if ! grep -F 'connection up' "$LOG" >/dev/null \
+        && ! grep -F -- '--rescan yes' "$LOG" >/dev/null; then
+        ok "wake leaves a connection NetworkManager already brought up alone"
+    else
+        err "wake restarted an activation already in progress: $(tr '\n' ' ' <"$LOG")"
+    fi
+else
+    err "wake with an active connection exited non-zero"
+fi
+
+printf 'home\n' >"$STATE"
+rm -f "$STATE.left" "$STATE.waiting"
+: >"$LOG"
+printf 'killed mid connect\n' | LOG="$LOG" WIFI_JOIN_STATE="$STATE" MODERN_NMCLI="$TMP/nmcli" \
+    MODERN_WIFI_SECRETS_DIR="$TMP" SLOW_CONNECT=1 "$JOIN" connect 'Cafe Net' - 2>/dev/null &
+pid=$!
+for _ in $(seq 1 50); do
+    [[ -f $STATE.waiting ]] && break
+    sleep 0.1
+done
+kill -TERM "$pid" 2>/dev/null || true
+wait "$pid" 2>/dev/null || true
+if [[ -f $STATE.waiting ]] && ! compgen -G "$TMP/wifi-join.*" >/dev/null; then
+    ok "a connect killed by a shell reload still removes its passphrase file"
+else
+    err "passphrase file left behind after SIGTERM"
 fi
 
 if run_join connect '-bad' 'x' 2>/dev/null; then

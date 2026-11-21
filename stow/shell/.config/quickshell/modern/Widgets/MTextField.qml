@@ -39,7 +39,7 @@ Item {
     implicitWidth: Tokens.spacing.xxl * 8
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     opacity: root.enabled ? 1 : 0.38
-    activeFocusOnTab: root.enabled
+    activeFocusOnTab: true
     Accessible.role: Accessible.EditableText
     Accessible.name: root.placeholderKey.length > 0 ? I18n.t(root.placeholderKey) : ""
     Accessible.editable: true

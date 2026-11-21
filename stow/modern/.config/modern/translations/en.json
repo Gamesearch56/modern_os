@@ -351,6 +351,7 @@
     "title": "Keyboard shortcuts",
     "search": "Search shortcuts...",
     "noResults": "No matching shortcuts",
+    "mouseHint": "MB4 is the rear mouse side button, MB5 the front one. The side-button controls have to be turned on in System Settings under Keyboard → Mouse control.",
     "action": {
       "launcher": "Open launcher",
       "aiChat": "Assistant chat",
@@ -406,11 +407,28 @@
       "lockScreen": "Lock screen",
       "browserIncognito": "Browser (incognito)",
       "filePreview": "Quick Look",
+      "emergencyTerminal": "Emergency terminal",
+      "volumeUp": "Volume up",
+      "volumeDown": "Volume down",
+      "volumeMute": "Mute",
+      "micMute": "Mute microphone",
+      "mediaPlay": "Play or pause",
+      "mediaPause": "Pause",
+      "mediaNext": "Next track",
+      "mediaPrev": "Previous track",
+      "brightnessUp": "Brighter",
+      "brightnessDown": "Dimmer",
       "clipboardHistory": "Clipboard history",
       "mouseMoveSuper": "Move window",
       "mouseResizeSuper": "Resize window",
       "mouseWorkspaceScroll": "Next or previous workspace",
       "mouseResizeBorder": "Resize window from edge",
+      "mouseMoveSide": "Move window",
+      "mouseResizeSide": "Resize window",
+      "mouseCloseSide": "Close window",
+      "mouseFloatSide": "Toggle floating",
+      "mouseFullscreenSide": "Toggle fullscreen",
+      "mouseCloseApp": "Close in Applications",
       "mouseToggleSplit": "Toggle split",
       "bugReport": "Report a problem"
     },
@@ -661,6 +679,7 @@
       "repeatRate": "Key repeat speed",
       "repeatDelay": "Key repeat delay",
       "numlockOnBoot": "Num Lock at login",
+      "mouseSideButtons": "Mouse control",
       "showDescriptions": "Show descriptions",
       "inhibitFullscreen": "Inhibit idle on fullscreen",
       "inhibitMedia": "Inhibit idle while media plays",
@@ -700,7 +719,9 @@
       "search": "Name",
       "empty": "Drag an application here.",
       "remove": "Remove from dock",
-      "trash": "Remove from dock"
+      "trash": "Remove from dock",
+      "scrollMore": "More apps this way; select to scroll",
+      "scrollToTrash": "Keep holding here to scroll to the trash"
     },
     "sections": {
       "overview": "Overview",
@@ -915,6 +936,7 @@
       "repeatRate": "How many times a second a held key types again, once the delay has passed. A higher number types faster.",
       "repeatDelay": "Wait before a held key starts repeating.",
       "numlockOnBoot": "Turns Num Lock on when the system starts.",
+      "mouseSideButtons": "Turns on mouse controls for windows using the side buttons: move, resize, close, floating and fullscreen. \"See keyboard shortcuts\" lists every control.",
       "autoSwitchBluetooth": "When headphones or a speaker connect over Bluetooth, sound switches to them. When they disconnect, it returns to the previous speaker.",
       "restoreGated": "Restores the system disk to this snapshot. Your home folder stays. A restart is required.",
       "preUpdateSnapshot": "Creates a Snapper snapshot of / before a system update so you can roll back.",
@@ -1076,6 +1098,8 @@
       "connectFailed": "Could not connect. If the headphones are already linked to two devices, disconnect one and try again.",
       "noAudio": "The headphones answered but did not start sound. Disconnect them on another device that is using them, then try again.",
       "pairFailed": "Could not pair. Confirm the request on the device and try again.",
+      "bondLost": "The headphones no longer have this computer saved. Put them in pairing mode, usually by holding the button on the case, then connect again.",
+      "repairBody": "This computer's pairing with the headphones is gone, for example after they were reset. Put them in pairing mode, usually by holding the button on the case, then connect to pair them again.",
       "remembered": "Saved"
     },
     "storage": {
@@ -1225,7 +1249,18 @@
       "packageDone": "1 package updated",
       "bootRepair": "Boot repair",
       "bootRepairBody": "The installed kernel is not the one the computer will start. This update corrects that first.",
-      "bootRepaired": "Boot repaired"
+      "bootRepaired": "Boot repaired",
+      "desktopIncomplete": "Finish installing {v}",
+      "fail": {
+        "cancelled": "Update cancelled: the password was not entered",
+        "snapshot": "Update stopped: the backup snapshot could not be created",
+        "release": "ModernOS could not be updated",
+        "packages": "Package update failed; nothing was changed",
+        "partial": "Package update stopped halfway; update again before restarting",
+        "stopped": "The last update stopped before it finished",
+        "locked": "Another program is installing packages; try again when it is done",
+        "releaseStep": "The ModernOS update could not finish its system steps"
+      }
     },
     "overview": {
       "stats": "Live stats",
@@ -1251,7 +1286,8 @@
       "initrd": "Initrd",
       "userspace": "Userspace",
       "osNameVersion": "ModernOS {version} (Arch Linux)",
-      "osNameDev": "ModernOS {version}, development build {commit} (Arch Linux)"
+      "osNameDev": "ModernOS {version}, development build {commit} (Arch Linux)",
+      "kofi": "Support ModernOS"
     },
     "bar": {
       "available": "Available widgets",
@@ -1295,6 +1331,9 @@
         "rejected": "The network name or password contains characters that cannot be used.",
         "failed": "Could not connect. Try again, or forget the network and connect anew."
       }
+    },
+    "signal": {
+      "bars": "Signal {n} of 4"
     }
   },
   "onboarding": {
@@ -1589,7 +1628,9 @@
       "bat": "cat with syntax highlighting",
       "eza": "Modern ls",
       "tmux": "Terminal multiplexer"
-    }
+    },
+    "addToDock": "Add to Dock",
+    "removeFromDock": "Remove from Dock"
   },
   "battlenet": {
     "title": "Battle.net",
@@ -1621,7 +1662,7 @@
       "network": "Internet",
       "games": "Games",
       "updates": "Updates",
-      "lock": "Lock screen & login",
+      "lock": "Startup, login, lock & shutdown",
       "apps": "Apps",
       "other": "Something else"
     },

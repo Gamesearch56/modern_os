@@ -1,8 +1,10 @@
-// Scrolls the pin row when it is longer than the screen edge.
+// Scrolls the pin row when it is longer than the screen edge, and marks
+// each end that has more pins past it (DockOverflow).
 import QtQuick
 import "../../Commons"
+import "../../Services"
 
-Flickable {
+Item {
     id: root
 
     property bool vertical: false
@@ -10,75 +12,93 @@ Flickable {
 
     signal pinFocused()
 
-    // A clip buffer keeps previous glyphs when a pin moves, and this HDR
-    // panel shows that as color. A side column still has to clip, or the
-    // extra icons paint through the top and bottom gap.
-    clip: root.vertical
-    boundsBehavior: Flickable.StopAtBounds
-    interactive: false
-    onContentWidthChanged: Qt.callLater(root._snap)
-    onContentHeightChanged: Qt.callLater(root._snap)
-    contentWidth: root.vertical ? width : Math.max(width, row.implicitWidth)
-    contentHeight: root.vertical ? Math.max(height, row.implicitHeight) : height
+    readonly property real span: Math.max(0, root.vertical
+        ? flick.contentHeight - flick.height
+        : flick.contentWidth - flick.width)
+    readonly property real pos: root._pos
+    readonly property bool dragging: Dock.dragActive && Dock.dragFromDock
+    readonly property real _step: DockLayout.iconSize + DockLayout.gap
+    readonly property real _edge: Tokens.spacing.xxl * 2
 
-    property real _edgeX: 0
-    property real _edgeY: 0
-    property bool _edgeRun: false
+    // One scroll position along the dock; the view follows it on whole
+    // pixels, since a half pixel shifts every glyph onto two subpixels.
+    property real _pos: 0
+    on_PosChanged: {
+        const v = Math.round(root._pos);
+        if (root.vertical)
+            flick.contentY = v;
+        else
+            flick.contentX = v;
+        root._stick = root.span > 0 && root._pos >= root.span - 1;
+    }
+    property real _pull: 0
+    // At the end, a longer row (a pin added, the trash during a drag)
+    // keeps the view at the end instead of leaving a hidden remainder.
+    property bool _stick: false
+    onSpanChanged: Qt.callLater(root._snap)
+
+    function _clamp(v: real): real {
+        return Math.max(0, Math.min(root.span, v));
+    }
+
+    function _jump(v: real) {
+        glide.stop();
+        root._pos = root._clamp(v);
+    }
+
+    function _glideTo(v: real) {
+        const to = root._clamp(v);
+        glide.stop();
+        if (Math.abs(to - root._pos) < 1) {
+            root._pos = to;
+            return;
+        }
+        glide.from = root._pos;
+        glide.to = to;
+        glide.start();
+    }
 
     function _snap() {
-        const spanX = Math.max(0, root.contentWidth - root.width);
-        const spanY = Math.max(0, root.contentHeight - root.height);
-        const x = Math.round(Math.max(0, Math.min(spanX, root.contentX)));
-        const y = Math.round(Math.max(0, Math.min(spanY, root.contentY)));
-        if (root.contentX !== x)
-            root.contentX = x;
-        if (root.contentY !== y)
-            root.contentY = y;
+        if (root._stick && !glide.running)
+            root._jump(root.span);
+        else
+            root._jump(glide.running ? glide.to : root._pos);
     }
 
     function track(x: real, y: real) {
-        root._edgeX = x;
-        root._edgeY = y;
-        root._edgeRun = true;
-        root.nudge(x, y);
+        const along = root.vertical ? y : x;
+        const size = root.vertical ? root.height : root.width;
+        if (along < root._edge)
+            root._pull = -Math.min(1, (root._edge - along) / root._edge);
+        else if (along > size - root._edge)
+            root._pull = Math.min(1, (along - size + root._edge) / root._edge);
+        else
+            root._pull = 0;
     }
 
+    // A mouse wheel click is a whole 120-unit notch: it glides one pin,
+    // and quick clicks add up instead of restarting. On Wayland a wheel
+    // also reports a few pixels, so the notch wins; only a touchpad's
+    // fractional scroll follows its pixels directly.
     function scrollWheel(w) {
-        const step = DockLayout.iconSize + DockLayout.gap;
-        const ax = w.angleDelta.x;
-        const ay = w.angleDelta.y;
-        const dx = ax !== 0 || ay !== 0 ? ax / 120 * step : w.pixelDelta.x;
-        const dy = ax !== 0 || ay !== 0 ? ay / 120 * step : w.pixelDelta.y;
-        root.scrollBy(dx, dy);
+        const angle = root._pick(w.angleDelta.x, w.angleDelta.y);
+        const pixels = root._pick(w.pixelDelta.x, w.pixelDelta.y);
+        if (pixels !== 0 && angle % 120 !== 0) {
+            root._jump(root._pos - pixels);
+            return;
+        }
+        if (angle !== 0)
+            root._glideTo((glide.running ? glide.to : root._pos) - angle / 120 * root._step);
     }
 
     function scrollBy(dx: real, dy: real) {
-        const span = root.vertical
-            ? root.contentHeight - root.height
-            : root.contentWidth - root.width;
-        if (span <= 0)
-            return;
-        const delta = root.vertical
-            ? (Math.abs(dy) >= Math.abs(dx) ? dy : dx)
-            : (Math.abs(dx) >= Math.abs(dy) ? dx : dy);
-        if (root.vertical)
-            root.contentY = Math.round(Math.max(0, Math.min(span, root.contentY - delta)));
-        else
-            root.contentX = Math.round(Math.max(0, Math.min(span, root.contentX - delta)));
+        root._glideTo((glide.running ? glide.to : root._pos) - root._pick(dx, dy));
     }
 
-    function nudge(x: real, y: real) {
-        const edge = Tokens.spacing.xxl;
-        const step = Tokens.spacing.md;
-        if (root.vertical) {
-            if (y < edge)
-                root.scrollBy(0, step);
-            else if (y > root.height - edge)
-                root.scrollBy(0, -step);
-        } else if (x < edge)
-            root.scrollBy(step, 0);
-        else if (x > root.width - edge)
-            root.scrollBy(-step, 0);
+    function _pick(dx: real, dy: real): real {
+        return root.vertical
+            ? (Math.abs(dy) >= Math.abs(dx) ? dy : dx)
+            : (Math.abs(dx) >= Math.abs(dy) ? dx : dy);
     }
 
     function mapPoint(item, x: real, y: real): point {
@@ -93,34 +113,75 @@ Flickable {
         return row.indexAt(x, y);
     }
 
-    DockRow {
-        id: row
-        width: implicitWidth
-        height: implicitHeight
-        // A half pixel here shifts every glyph onto two subpixels.
-        x: root.vertical
-            ? Math.round((root.width - width) / 2)
-            : Math.round(Math.max(0, (root.width - width) / 2))
-        y: root.vertical
-            ? Math.round(Math.max(0, (root.height - height) / 2))
-            : Math.round((root.height - height) / 2)
+    NumberAnimation {
+        id: glide
+        target: root
+        property: "_pos"
+        duration: Motion.mediumMs
+        easing.type: Easing.OutCubic
+    }
+
+    // Holding a dragged pin at either end keeps scrolling, faster the
+    // deeper it sits in the edge band: one pin per short beat at the edge.
+    FrameAnimation {
+        running: root.dragging && root._pull !== 0 && root.span > 0
+        onTriggered: {
+            const speed = root._step / Math.max(Motion.shortMs, 1) * 1000;
+            root._jump(root._pos + root._pull * speed * frameTime);
+        }
+    }
+
+    Connections {
+        target: Dock
+        function onDragActiveChanged() {
+            if (!Dock.dragActive)
+                root._pull = 0;
+        }
+    }
+
+    Flickable {
+        id: flick
+        anchors.fill: parent
+        // A clip buffer keeps previous glyphs when a pin moves, and this
+        // HDR panel shows that as color. A side column still has to clip,
+        // or the extra icons paint through the top and bottom gap.
+        clip: root.vertical
+        boundsBehavior: Flickable.StopAtBounds
+        interactive: false
+        onContentWidthChanged: Qt.callLater(root._snap)
+        onContentHeightChanged: Qt.callLater(root._snap)
+        contentWidth: root.vertical ? width : Math.max(width, row.implicitWidth)
+        contentHeight: root.vertical ? Math.max(height, row.implicitHeight) : height
+
+        DockRow {
+            id: row
+            width: implicitWidth
+            height: implicitHeight
+            x: root.vertical
+                ? Math.round((flick.width - width) / 2)
+                : Math.round(Math.max(0, (flick.width - width) / 2))
+            y: root.vertical
+                ? Math.round(Math.max(0, (flick.height - height) / 2))
+                : Math.round((flick.height - height) / 2)
+            vertical: root.vertical
+            screenName: root.screenName
+            onPinFocused: root.pinFocused()
+        }
+    }
+
+    DockOverflow {
+        scroller: root
+        atEnd: false
         vertical: root.vertical
-        screenName: root.screenName
-        onPinFocused: root.pinFocused()
+        x: root.vertical ? Math.round((root.width - width) / 2) : 0
+        y: root.vertical ? 0 : Math.round((root.height - height) / 2)
     }
 
-    // Holding the pointer at the end of a full column has to keep moving.
-    // One nudge per move never reaches a trash that starts off screen.
-    Timer {
-        interval: Math.max(Motion.shortMs, 1)
-        repeat: true
-        running: root._edgeRun && Dock.dragActive && Dock.dragFromDock
-        onTriggered: root.nudge(root._edgeX, root._edgeY)
-    }
-
-    // Pins sit on top of this handler. A vertical wheel still moves a
-    // horizontal dock; the pin forwards the same event when it is the target.
-    WheelHandler {
-        onWheel: (event) => root.scrollWheel(event)
+    DockOverflow {
+        scroller: root
+        atEnd: true
+        vertical: root.vertical
+        x: root.vertical ? Math.round((root.width - width) / 2) : root.width - width
+        y: root.vertical ? root.height - height : Math.round((root.height - height) / 2)
     }
 }

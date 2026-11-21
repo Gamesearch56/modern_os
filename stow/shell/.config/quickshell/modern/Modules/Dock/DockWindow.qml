@@ -252,13 +252,15 @@ PanelWindow {
                     }
                 }
 
-                // A covering mouse area would take the click, so the pin never
-                // opens. The wheel handler does not accept buttons.
-                WheelHandler {
-                    onWheel: (event) => {
-                        if (Dock.dragActive && Dock.dragFromDock)
-                            scroller.scrollWheel(event);
-                    }
+                // On top of everything so the whole strip scrolls, the gaps
+                // between pins and the screen margins included. No buttons
+                // and no hover: clicks, drags and pin hover pass through.
+                MouseArea {
+                    anchors.fill: parent
+                    z: 10
+                    acceptedButtons: Qt.NoButton
+                    hoverEnabled: false
+                    onWheel: (event) => scroller.scrollWheel(event)
                 }
 
                 onActiveFocusChanged: {

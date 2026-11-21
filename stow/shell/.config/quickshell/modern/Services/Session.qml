@@ -30,6 +30,27 @@ Singleton {
     onLockedChanged: {
         if (marker.path.length)
             marker.setText(root.locked ? "1" : "");
+        if (root.locked && !root.secure)
+            confirmWatch.restart();
+    }
+    // True once the compositor confirms every output is covered. Suspend
+    // waits on this (secured IPC); `locked` alone is only the request.
+    property bool secure: false
+    function reportSecure(value: bool) {
+        root.secure = value;
+        if (value) {
+            confirmWatch.stop();
+            Logger.info("Session", "lock confirmed by the compositor");
+        }
+    }
+
+    Timer {
+        id: confirmWatch
+        interval: 3000
+        onTriggered: {
+            if (root.locked && !root.secure)
+                Logger.error("Session", "compositor has not confirmed the lock after 3 s");
+        }
     }
     property string mode: "lock"
     property string pendingAction: ""
@@ -41,6 +62,7 @@ Singleton {
         target: "session"
         function lock() { root.lock(); }
         function unlock() { root.unlock(); }
+        function secured(): bool { return root.locked && root.secure; }
     }
 
     SessionAuth {
@@ -68,6 +90,7 @@ Singleton {
     }
 
     function unlock() {
+        Logger.info("Session", "unlocked");
         auth.abort();
         root.locked = false;
         root.mode = "lock";

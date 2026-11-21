@@ -7,14 +7,13 @@ local paths = require("modules.paths")
 
 hl.on("hyprland.start", function()
     -- Shell first so the first frame is the bar, not a bus timeout.
-    -- Wallpaper and systemd stay in the background.
+    -- Wallpaper and systemd stay in the background. shell-run.sh restarts
+    -- a crashed shell so a locked session can always be unlocked.
     hl.exec_cmd("sh -lc '"
-        .. "mkdir -p \"${XDG_STATE_HOME:-$HOME/.local/state}/modern\"; "
-        .. "log=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log\"; "
         .. "if pgrep -u \"$USER\" -x qs >/dev/null 2>&1 || pgrep -u \"$USER\" -x quickshell >/dev/null 2>&1; then exit 0; fi; "
         .. "export QT_QPA_PLATFORM=wayland QT_QPA_PLATFORMTHEME=qt6ct "
         .. "QS_ICON_THEME=\"${QS_ICON_THEME:-Papirus-Dark}\"; "
-        .. "exec qs -c modern >>\"$log\" 2>&1'")
+        .. "exec " .. paths.scripts .. "/shell-run.sh'")
 
     hl.exec_cmd("awww-daemon")
     -- Own current-wallpaper first. The shared greeter JPEG is last so a

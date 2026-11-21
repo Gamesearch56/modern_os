@@ -20,6 +20,12 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
+    MHint {
+        visible: root.categoryId === "mouse"
+        key: "cheatsheet.mouseHint"
+        Layout.fillWidth: true
+    }
+
     Item {
         Layout.fillWidth: true
         Layout.fillHeight: true

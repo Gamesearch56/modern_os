@@ -71,6 +71,15 @@ checked / focused chrome uses `primaryContainer` / `onPrimaryContainer`
 (or filled `primary`), not a grey `secondaryContainer`. `MIcon` tints
 symbolic icons onto the role; launcher app icons set `tint: false`.
 
+The colored system app icons (`modern-files`, `modern-settings`, ...)
+outside the shell use the same two roles. Their templates live in
+`install/icons/apps/` in the default wallpaper's palette and are not
+stowed. `scripts/system-icons.sh` renders them as regular files into
+`~/.local/share/icons/hicolor/scalable/apps/` on install and after every
+theme change, so a wallpaper change never writes into the repo. The
+`-symbolic` variants stay stowed. If the default wallpaper or default
+profile changes, recolor the templates from its palette.
+
 ## QML primitives
 
 Every overlay and Settings form is assembled from `Widgets/` (stateless,

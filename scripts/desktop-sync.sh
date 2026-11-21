@@ -20,6 +20,10 @@ source "$SCRIPT_DIR/lib/hypr-watch.sh"
 source "$SCRIPT_DIR/../install/lib/kernel-boot.sh"
 REPO="${MODERN_DESKTOP_REPO:-$(modern_repo_path)}"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/modern-desktop-sync.lock"
+# Holds the tag whose install.sh has not finished. The checkout is
+# already on that tag, so without it a failed install would look current
+# and never be offered again.
+INCOMPLETE="${XDG_STATE_HOME:-$HOME/.local/state}/modern/release-incomplete"
 
 die() { printf 'desktop-sync: ERROR: %s\n' "$*" >&2; exit 1; }
 log() { printf 'desktop-sync: %s\n' "$*"; }
@@ -117,6 +121,14 @@ highest_tag() {
     printf '%s\n' "$best"
 }
 
+# The tag of a release whose install.sh still has to finish, or empty.
+incomplete_tag() {
+    local tag
+    tag="$(head -n 1 "$INCOMPLETE" 2>/dev/null || true)"
+    [[ "$tag" =~ $TAG_RE ]] && [ "$tag" = "$(installed_tag)" ] || return 0
+    printf '%s\n' "$tag"
+}
+
 cmd_status() {
     local boot=false
     if kernel_boot_needs_repair; then
@@ -128,9 +140,14 @@ cmd_status() {
     fi
     # Local edits must not hide the GitHub result. Apply still refuses a
     # dirty tree; status only needs the commit and the remote tags.
-    local cur latest
+    local cur latest unfinished
     cur="$(installed_tag)"
     latest="$(highest_tag)"
+    unfinished="$(incomplete_tag)"
+    if [ -n "$unfinished" ] && { [ -z "$latest" ] || [ "$latest" = "$unfinished" ]; }; then
+        emit true "$unfinished" "$unfinished" "incomplete" "$boot"
+        return 0
+    fi
     if [ -z "$latest" ]; then
         emit false "${cur}" "" "offline" "$boot"
         return 0
@@ -170,32 +187,46 @@ cmd_apply() {
     if [ -n "$dirt" ]; then
         die "work tree is dirty: $(printf '%s' "$dirt" | tr '\n' '; ')"
     fi
-    local latest
+    local latest unfinished
     latest="$(highest_tag)"
-    [[ "$latest" =~ $TAG_RE ]] || die "no valid release tag"
-    local url
-    url="$(remote_url)"
-    # Into refs/tags, not a private ref: without the local tag the next release is never offered.
-    git_safe -C "$REPO" fetch --no-tags --no-recurse-submodules \
-        "$url" "+refs/tags/${latest}:refs/tags/${latest}"
-    git_safe -C "$REPO" merge --ff-only "refs/tags/${latest}"
-    log "updated to ${latest}"
+    unfinished="$(incomplete_tag)"
+    if [ -n "$unfinished" ] && { [ -z "$latest" ] || [ "$latest" = "$unfinished" ]; }; then
+        log "finishing the installation of ${unfinished}"
+        latest="$unfinished"
+    else
+        [[ "$latest" =~ $TAG_RE ]] || die "no release tag reachable — check the network connection"
+        local url
+        url="$(remote_url)"
+        # Into refs/tags, not a private ref: without the local tag the next release is never offered.
+        git_safe -C "$REPO" fetch --no-tags --no-recurse-submodules \
+            "$url" "+refs/tags/${latest}:refs/tags/${latest}" \
+            || die "could not download ${latest}"
+        git_safe -C "$REPO" merge --ff-only "refs/tags/${latest}" \
+            || die "${latest} does not follow the installed version; the checkout has local commits"
+        log "updated to ${latest}"
+    fi
+    mkdir -p "$(dirname "$INCOMPLETE")"
+    printf '%s\n' "$latest" >"$INCOMPLETE"
     # Fixture releases may ship a fake install.sh to exercise the root plan.
     if [ "${MODERN_TEST_FIXTURE:-}" = "1" ] && [ "${MODERN_TEST_RUN_INSTALL:-}" != "1" ]; then
         log "test fixture — skipping install.sh"
+        rm -f "$INCOMPLETE"
         return 0
     fi
+    local rc=0
     if [ -x "$REPO/install/install.sh" ]; then
         # Settings runs this inside Quickshell. A new session keeps the
         # installer alive if that shell restarts, and skips the theme
         # rewrite that would restart it again.
         if [ -n "${MODERN_ROOT_PLAN:-}" ]; then
             export MODERN_LIVE_UPDATE=1
-            setsid -w "$REPO/install/install.sh" --profile m0 --yes
+            setsid -w "$REPO/install/install.sh" --profile m0 --yes || rc=$?
         else
-            "$REPO/install/install.sh" --profile m0 --yes
+            "$REPO/install/install.sh" --profile m0 --yes || rc=$?
         fi
     fi
+    [ "$rc" -eq 0 ] || die "installing ${latest} failed (install.sh exit ${rc}); the next update tries again"
+    rm -f "$INCOMPLETE"
 }
 
 case "${1:-}" in

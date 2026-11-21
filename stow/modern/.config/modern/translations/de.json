@@ -351,6 +351,7 @@
     "title": "Tastenkombinationen",
     "search": "Kombinationen durchsuchen...",
     "noResults": "Keine passenden Tastenkombinationen",
+    "mouseHint": "MB4 ist die hintere Seitentaste der Maus, MB5 die vordere. Die Steuerung mit den Seitentasten muss in den Systemeinstellungen unter Tastatur → Maussteuerung aktiviert sein.",
     "action": {
       "launcher": "Launcher öffnen",
       "aiChat": "Assistent-Chat",
@@ -406,11 +407,28 @@
       "lockScreen": "Sperrbildschirm",
       "browserIncognito": "Browser (Inkognito)",
       "filePreview": "Schnellansicht",
+      "emergencyTerminal": "Notfall-Terminal",
+      "volumeUp": "Lauter",
+      "volumeDown": "Leiser",
+      "volumeMute": "Stumm",
+      "micMute": "Mikrofon stumm",
+      "mediaPlay": "Wiedergabe",
+      "mediaPause": "Pause",
+      "mediaNext": "Nächster Titel",
+      "mediaPrev": "Vorheriger Titel",
+      "brightnessUp": "Heller",
+      "brightnessDown": "Dunkler",
       "clipboardHistory": "Zwischenablageverlauf",
       "mouseMoveSuper": "Fenster verschieben",
       "mouseResizeSuper": "Fenstergröße ändern",
       "mouseWorkspaceScroll": "Nächster oder vorheriger Arbeitsbereich",
       "mouseResizeBorder": "Fenster am Rand skalieren",
+      "mouseMoveSide": "Fenster verschieben",
+      "mouseResizeSide": "Fenstergröße ändern",
+      "mouseCloseSide": "Fenster schließen",
+      "mouseFloatSide": "Schwebend umschalten",
+      "mouseFullscreenSide": "Vollbild umschalten",
+      "mouseCloseApp": "In Anwendungen schließen",
       "mouseToggleSplit": "Teilung umschalten",
       "bugReport": "Problem melden"
     },
@@ -661,6 +679,7 @@
       "repeatRate": "Tastenwiederholung",
       "repeatDelay": "Wiederholverzögerung",
       "numlockOnBoot": "Num-Lock bei der Anmeldung",
+      "mouseSideButtons": "Maussteuerung",
       "showDescriptions": "Beschreibungen anzeigen",
       "inhibitFullscreen": "Idle bei Vollbild unterdrücken",
       "inhibitMedia": "Idle bei Wiedergabe unterdrücken",
@@ -700,7 +719,9 @@
       "search": "Name",
       "empty": "Eine Anwendung hierher ziehen.",
       "remove": "Vom Dock entfernen",
-      "trash": "Vom Dock entfernen"
+      "trash": "Vom Dock entfernen",
+      "scrollMore": "Weitere Apps in dieser Richtung, zum Scrollen auswählen",
+      "scrollToTrash": "Hier halten, um zum Papierkorb zu scrollen"
     },
     "sections": {
       "overview": "Übersicht",
@@ -915,6 +936,7 @@
       "repeatRate": "Wie oft pro Sekunde eine gehaltene Taste wiederholt wird, sobald die Verzögerung vorbei ist. Ein höherer Wert tippt schneller.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn das System startet.",
+      "mouseSideButtons": "Aktiviert die Maussteuerung für Fenster über die Seitentasten: verschieben, Größe ändern, schließen, schwebend und Vollbild. Alle Steuerungen zeigt „Tastenkombinationen anzeigen“.",
       "autoSwitchBluetooth": "Verbinden sich Kopfhörer oder ein Lautsprecher per Bluetooth, wechselt der Ton dorthin. Trennen sie sich, kehrt er zum vorherigen Lautsprecher zurück.",
       "restoreGated": "Stellt die Systemplatte auf diesen Snapshot zurück. Dein Home-Ordner bleibt. Ein Neustart ist nötig.",
       "preUpdateSnapshot": "Legt vor einem Systemupdate einen Snapper-Snapshot von / an, damit du zurückrollen kannst.",
@@ -1076,6 +1098,8 @@
       "connectFailed": "Verbindung nicht möglich. Wenn die Kopfhörer schon mit zwei Geräten verbunden sind, trenne eines und versuche es erneut.",
       "noAudio": "Die Kopfhörer haben geantwortet, aber keinen Ton gestartet. Trenne sie an einem anderen Gerät, das sie gerade nutzt, und versuche es erneut.",
       "pairFailed": "Koppeln nicht möglich. Bestätige die Anfrage am Gerät und versuche es erneut.",
+      "bondLost": "Die Kopfhörer haben diesen Computer nicht mehr gespeichert. Versetze sie in den Kopplungsmodus, meist durch Halten der Taste am Ladecase, und verbinde dich dann erneut.",
+      "repairBody": "Die Kopplung dieses Computers mit den Kopfhörern ist weg, etwa nach einem Zurücksetzen. Versetze sie in den Kopplungsmodus, meist durch Halten der Taste am Ladecase, und verbinde dich dann, um sie neu zu koppeln.",
       "remembered": "Gemerkt"
     },
     "storage": {
@@ -1225,7 +1249,18 @@
       "packageDone": "1 Paket aktualisiert",
       "bootRepair": "Startreparatur",
       "bootRepairBody": "Der installierte Kernel ist nicht der, mit dem der Rechner startet. Dieses Update korrigiert das zuerst.",
-      "bootRepaired": "Start repariert"
+      "bootRepaired": "Start repariert",
+      "desktopIncomplete": "Installation von {v} abschließen",
+      "fail": {
+        "cancelled": "Update abgebrochen: Das Passwort wurde nicht eingegeben",
+        "snapshot": "Update gestoppt: Der Sicherungs-Snapshot konnte nicht erstellt werden",
+        "release": "ModernOS konnte nicht aktualisiert werden",
+        "packages": "Paketupdate fehlgeschlagen, es wurde nichts verändert",
+        "partial": "Paketupdate mittendrin gestoppt. Vor dem Neustart erneut aktualisieren",
+        "stopped": "Das letzte Update wurde nicht abgeschlossen",
+        "locked": "Ein anderes Programm installiert gerade Pakete. Versuche es danach erneut",
+        "releaseStep": "Das ModernOS-Update konnte seine Systemschritte nicht abschließen"
+      }
     },
     "overview": {
       "stats": "Live-Werte",
@@ -1251,7 +1286,8 @@
       "initrd": "Initrd",
       "userspace": "Userspace",
       "osNameVersion": "ModernOS {version} (Arch Linux)",
-      "osNameDev": "ModernOS {version}, Entwicklungsstand {commit} (Arch Linux)"
+      "osNameDev": "ModernOS {version}, Entwicklungsstand {commit} (Arch Linux)",
+      "kofi": "ModernOS unterstützen"
     },
     "bar": {
       "available": "Verfügbare Widgets",
@@ -1295,6 +1331,9 @@
         "rejected": "Netzwerkname oder Passwort enthalten Zeichen, die nicht verwendet werden können.",
         "failed": "Verbinden fehlgeschlagen. Versuche es erneut oder vergiss das Netzwerk und verbinde dich neu."
       }
+    },
+    "signal": {
+      "bars": "Signal {n} von 4"
     }
   },
   "onboarding": {
@@ -1589,7 +1628,9 @@
       "bat": "cat mit Syntaxhervorhebung",
       "eza": "Modernes ls",
       "tmux": "Terminal-Multiplexer"
-    }
+    },
+    "addToDock": "Zum Dock hinzufügen",
+    "removeFromDock": "Aus dem Dock entfernen"
   },
   "battlenet": {
     "title": "Battle.net",
@@ -1621,7 +1662,7 @@
       "network": "Internet",
       "games": "Spiele",
       "updates": "Updates",
-      "lock": "Sperrbildschirm & Anmeldung",
+      "lock": "Start, Anmeldung, Sperren & Ausschalten",
       "apps": "Apps",
       "other": "Etwas anderes"
     },

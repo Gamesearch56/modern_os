@@ -83,7 +83,7 @@ GridLayout {
             color: String(modelData.surface || Colors.color.surfaceContainer)
             border.width: card.active ? Tokens.stroke.focus : Tokens.stroke.hairline
             border.color: card.active ? Colors.color.primary : Colors.color.outlineVariant
-            activeFocusOnTab: root.enabled
+            activeFocusOnTab: true
             Accessible.role: Accessible.Button
             Accessible.name: I18n.t(root._titleKey(modelData.variant))
             Accessible.checkable: true

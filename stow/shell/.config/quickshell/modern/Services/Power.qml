@@ -19,13 +19,14 @@ Singleton {
         Quickshell.execDetached([Paths.script("splash-hold.sh"), "logout"]);
     }
 
+    // `modern power` waits for the compositor to confirm the lock before
+    // sleeping; locking and suspending side by side raced on wake.
     function suspend() {
-        Quickshell.execDetached(["qs", "-c", "modern", "ipc", "call", "session", "lock"]);
-        Quickshell.execDetached(["systemctl", "suspend"]);
+        Quickshell.execDetached([Paths.script("modern"), "power", "suspend"]);
     }
 
     function hibernate() {
-        Quickshell.execDetached(["systemctl", "hibernate"]);
+        Quickshell.execDetached([Paths.script("modern"), "power", "hibernate"]);
     }
 
     function reboot() {

@@ -6,7 +6,6 @@ import "../Commons"
 
 Item {
     id: root
-
     property string iconName: ""
     property string iconSource: ""
     property string imageSource: ""
@@ -26,7 +25,6 @@ Item {
     property bool pointerHover: false
     property string badgeIcon: ""
     property int badgeCount: 0
-
     property bool compact: false
     property bool preferSymbolic: !root._nav
     property bool tabFocus: true
@@ -37,9 +35,12 @@ Item {
     property int imageFillMode: Image.PreserveAspectCrop
 
     default property alias extra: trailing.data
+    // Sits right after the name and never shrinks; the name elides first.
+    property alias titleAccessory: accessory.data
 
     signal clicked()
     signal rightClicked(real x, real y)
+    signal middleClicked()
     signal activated()
 
     function _onTrailing(px: real, py: real): bool {
@@ -75,7 +76,7 @@ Item {
         return Math.max(minH, body.implicitHeight + root._padV * 2);
     }
     implicitWidth: root.compact ? Tokens.spacing.xxl * 7 : Tokens.spacing.xxl * 10
-    opacity: root.enabled ? 1 : 0.38
+    opacity: root.enabled ? 1 : Tokens.dimmedOpacity
     activeFocusOnTab: root.tabFocus && root.enabled && (root.hoverHighlight || root.keyStop)
     Accessible.role: root.hoverHighlight ? Accessible.Button : Accessible.StaticText
     Accessible.name: root.titleKey.length > 0 ? I18n.t(root.titleKey, root.titleParams) : root.titleValue
@@ -126,7 +127,7 @@ Item {
         enabled: root.hoverHighlight
         hoverEnabled: true
         propagateComposedEvents: true
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
         onPressed: (mouse) => {
             if (!root.enabled)
@@ -140,11 +141,13 @@ Item {
                 return;
             if (mouse.button === Qt.RightButton)
                 root.rightClicked(mouse.x, mouse.y);
+            else if (mouse.button === Qt.MiddleButton)
+                root.middleClicked();
             else
                 root.clicked();
         }
         onDoubleClicked: (mouse) => {
-            if (!root.enabled || root._onTrailing(mouse.x, mouse.y))
+            if (!root.enabled || mouse.button === Qt.MiddleButton || root._onTrailing(mouse.x, mouse.y))
                 return;
             root.activated();
         }
@@ -213,7 +216,8 @@ Item {
 
                 MText {
                     Layout.fillWidth: true
-                    Layout.preferredWidth: 0
+                    Layout.preferredWidth: accessory.visible ? implicitWidth : 0
+                    Layout.maximumWidth: accessory.visible ? implicitWidth : Number.POSITIVE_INFINITY
                     key: root.titleKey
                     params: root.titleParams
                     value: root.titleValue
@@ -229,6 +233,17 @@ Item {
                     name: root.badgeIcon
                     size: Tokens.icon.xs
                     color: Colors.color.onSurfaceVariant
+                }
+                Row {
+                    id: accessory
+                    visible: implicitWidth > 0
+                    Layout.minimumWidth: implicitWidth
+                    Layout.leftMargin: Tokens.spacing.xs
+                    Layout.alignment: Qt.AlignVCenter
+                }
+                Item {
+                    visible: accessory.visible
+                    Layout.fillWidth: true
                 }
             }
 

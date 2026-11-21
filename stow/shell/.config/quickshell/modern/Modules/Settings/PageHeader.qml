@@ -65,6 +65,16 @@ Item {
         Layout.alignment: Qt.AlignVCenter
         onClicked: root.restoreOpen = true
     }
+
+    MButton {
+        visible: Settings.sectionId === "overview"
+        kind: "outlined"
+        key: "settings.overview.kofi"
+        iconSource: Qt.resolvedUrl("kofi.svg")
+        iconTint: false
+        Layout.alignment: Qt.AlignVCenter
+        onClicked: Support.openKoFi()
+    }
     }
 
     Item {

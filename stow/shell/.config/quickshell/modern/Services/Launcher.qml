@@ -67,6 +67,28 @@ Singleton {
         }
     }
 
+    // Ids whose desktop file is gone. `have` is stems, lowercase.
+    function dropMissing(have: var) {
+        const cur = root.usage || ({});
+        const next = {};
+        let dropped = 0;
+        for (const id in cur) {
+            const stem = String(id || "").replace(/\.desktop$/i, "").toLowerCase();
+            if (String(id).indexOf("shell:") === 0 || have[stem])
+                next[id] = cur[id];
+            else
+                dropped += 1;
+        }
+        if (dropped === 0)
+            return;
+        root.usage = next;
+        try {
+            file.setText(JSON.stringify(next));
+        } catch (e) {
+            Logger.error("Launcher", "failed to drop removed apps: " + e);
+        }
+    }
+
     function mostUsed(limit: int): var {
         const ids = Object.keys(root.usage);
         ids.sort((a, b) => root.score(b) - root.score(a));
@@ -74,6 +96,7 @@ Singleton {
     }
 
     function _matches(text: string): var {
+        void AppsPrune.rev;
         const entries = DesktopEntries.applications.values;
         const needle = (text || "").trim().toLowerCase();
         const out = [];

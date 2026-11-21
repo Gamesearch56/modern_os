@@ -35,4 +35,15 @@ fi
 printf 'login\n' >"$dir/default"
 chmod 0600 "$dir/default" || true
 password=""
+
+# pam_exec runs this as root. A keyrings directory it created, or one an
+# older version left root-owned, shuts the user's own keyring daemon out
+# ("couldn't create temporary file ... permission denied").
+if [ "$(id -u)" -eq 0 ]; then
+    owner="$(stat -c '%u:%g' -- "$home" 2>/dev/null || true)"
+    if [ -n "$owner" ]; then
+        chown -- "$owner" "$home/.local" "$home/.local/share" 2>/dev/null || true
+        chown -R -- "$owner" "$dir" 2>/dev/null || true
+    fi
+fi
 exit 0

@@ -148,15 +148,29 @@ if json_ok and json and json.decode then
     })
 end
 
+local function sh_quote(s)
+    return "'" .. (s:gsub("'", "'\\''")) .. "'"
+end
+
+-- The greeter's home is private, so its shell log goes to the shared
+-- session dir (group modern, 0640) where a bug report can read it. If
+-- that dir is not writable the login screen still starts, unlogged.
+local greeter_run = [[
+umask 027
+log=/var/lib/modern/session/greeter.log
+if [ -w "${log%/*}" ] && { [ ! -e "$log" ] || [ -w "$log" ]; }; then
+    if [ "$(wc -c 2>/dev/null <"$log" || echo 0)" -gt 1048576 ]; then mv -f "$log" "$log.1"; fi
+    printf '\n== login screen %s\n' "$(date -Is)" >>"$log"
+    exec qs -c greeter >>"$log" 2>&1
+fi
+exec qs -c greeter]]
+
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1, cm = "srgb" })
 hl.on("hyprland.start", function()
     -- Wallpaper is the greeter Image. An extra wallpaper daemon here
     -- outlives qs and blocks greetd from starting the user session.
-    if sock ~= "" then
-        hl.exec_cmd("env GREETD_SOCK='" .. sock:gsub("'", "'\\''") .. "' qs -c greeter")
-    else
-        hl.exec_cmd("qs -c greeter")
-    end
+    local env = sock ~= "" and ("env GREETD_SOCK=" .. sh_quote(sock) .. " ") or ""
+    hl.exec_cmd(env .. "sh -c " .. sh_quote(greeter_run))
     -- A warp before the layer maps does not send pointer-enter. The
     -- greeter holds HyprlandFocusGrab; this retry is only a fallback.
     if hl.timer and hl.dsp and hl.dsp.cursor and hl.dsp.cursor.move then

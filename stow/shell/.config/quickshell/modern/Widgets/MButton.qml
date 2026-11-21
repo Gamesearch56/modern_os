@@ -71,7 +71,7 @@ Item {
     implicitWidth: Math.max(Tokens.spacing.xxl * 2, row.implicitWidth + Tokens.spacing.lg * 2)
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     Layout.fillWidth: root.fillWidth
-    opacity: (root.enabled && !root.busy) ? 1 : 0.38
+    opacity: (root.enabled && !root.busy) ? 1 : Tokens.dimmedOpacity
     activeFocusOnTab: root.tabFocus && root.enabled && !root.busy
     Accessible.role: Accessible.Button
     Accessible.name: root.key.length > 0 ? I18n.t(root.key, root.params) : ""

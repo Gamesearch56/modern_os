@@ -88,6 +88,8 @@ QtObject {
         power: { icon: "battery", order: 16, group: "general", keywords: ["lid", "suspend", "energy", "idle", "battery", "charge", "remaining", "health"], restore: ["power", "general.idleTimings"] },
         design: { icon: "preferences-desktop-theme", order: 20, group: "appearance", keywords: ["theme", "motion", "wallpaper", "windows", "gaps", "cursor", "4k", "provider", "palette"], restore: ["design", "typography", "motion", "windows", "windowRules"] },
         bar: { icon: "cs-panel", order: 22, group: "appearance", keywords: ["widgets", "layout", "topbar", "clock", "calendar", "date"], restore: ["bar", "widgets"] },
+        // The enable switch and the pinned apps stay out of this list,
+        // so Restore cannot replace either.
         dock: { icon: "view-bottom-pane-symbolic", order: 23, group: "appearance", keywords: ["icons", "pins", "theme", "autohide", "applications"], restore: ["dock.autoHide", "dock.iconSize", "dock.showNames", "dock.pad", "dock.gap", "dock.theme", "dock.hover"] },
         launcher: { icon: "view-app-grid-symbolic", order: 24, group: "appearance", keywords: ["frecency", "icons", "results", "search"], restore: ["launcher"] },
         applications: { icon: "applications-other", order: 30, group: "apps", keywords: ["autostart", "browser", "calendar", "mail", "messenger", "video", "image", "text", "editor"], restore: ["apps.defaults", "general.autostart"] },

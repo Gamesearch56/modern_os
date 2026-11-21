@@ -77,6 +77,9 @@ suspend="$(read_sec suspendSec 1800)"
 mkdir -p "$(dirname -- "$CONF")" "$LOCK_DIR"
 tmp="$(mktemp "${CONF}.XXXXXX")"
 trap 'rm -f -- "$tmp"' EXIT
+# inhibit_sleep 3 holds suspend until the compositor reports the session
+# lock, so the desktop never shows for a frame on wake. The default
+# (auto) does that only for hyprlock; the lock IPC returns at once.
 {
     printf '%s\n' \
         "general {" \
@@ -84,6 +87,7 @@ trap 'rm -f -- "$tmp"' EXIT
         "    before_sleep_cmd = qs -c modern ipc call session lock" \
         "    after_sleep_cmd = hyprctl dispatch 'hl.dsp.dpms({ action = \"on\" })'" \
         "    ignore_dbus_inhibit = false" \
+        "    inhibit_sleep = 3" \
         "}"
     append_listener "$dim" "${BRIGHT} dim" "${BRIGHT} undim"
     append_listener "$off" \
@@ -109,10 +113,17 @@ fi
 
 command -v hypridle >/dev/null 2>&1 || exit 0
 
+LOG="${MODERN_HYPRIDLE_LOG:-${XDG_STATE_HOME:-$HOME/.local/state}/modern/hypridle.log}"
+
 # Close fd 8 in the child. Holding the flock fd in a long-lived
 # hypridle makes the next apply (reload_ui) wait forever.
 start_hypridle() {
-    nohup hypridle >/dev/null 2>&1 8>&- &
+    mkdir -p "$(dirname -- "$LOG")"
+    if [ "$(wc -c <"$LOG" 2>/dev/null || printf 0)" -gt 262144 ]; then
+        mv -f -- "$LOG" "$LOG.1"
+    fi
+    printf '== hypridle started %s\n' "$(date -Is)" >>"$LOG"
+    nohup hypridle >>"$LOG" 2>&1 8>&- &
     disown $! 2>/dev/null || true
 }
 

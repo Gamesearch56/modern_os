@@ -306,16 +306,29 @@ case "$TARGET" in
         ;;
     power)
         ACTION="${1:-button}"
+        # hypridle (inhibit_sleep 3) also holds sleep for the lock; this
+        # covers sleep while hypridle is down. A shell that never confirms
+        # gets the marker instead, so its next start comes up locked.
+        lock_before_sleep() {
+            local i reply
+            timeout 2 qs -c modern ipc call session lock >/dev/null 2>&1 || true
+            for i in $(seq 1 15); do
+                reply="$(timeout 1 qs -c modern ipc call session secured 2>/dev/null)" || break
+                [ "$reply" = true ] && return 0
+                sleep 0.2
+            done
+            logger -t modern-power "lock not confirmed before $1 (try $i); the shell starts locked" 2>/dev/null || true
+            [ -n "${XDG_RUNTIME_DIR:-}" ] && printf '1' >"$XDG_RUNTIME_DIR/modern-session-locked"
+            return 0
+        }
         act() {
             case "$1" in
                 lock)
                     exec qs -c modern ipc call session lock
                     ;;
-                suspend)
-                    # hypridle before_sleep_cmd also locks; call it here so
-                    # lid/button sleep still locks if hypridle is down.
-                    timeout 2 qs -c modern ipc call session lock >/dev/null 2>&1 || true
-                    exec systemctl suspend
+                suspend | hibernate)
+                    lock_before_sleep "$1"
+                    exec systemctl "$1"
                     ;;
                 poweroff)
                     exec systemctl poweroff
@@ -340,8 +353,11 @@ case "$TARGET" in
                     act "$(cfg power.lidActionAc lock)"
                 fi
                 ;;
+            lock | suspend | hibernate)
+                act "$ACTION"
+                ;;
             *)
-                echo "usage: modern power button|lid" >&2
+                echo "usage: modern power button|lid|lock|suspend|hibernate" >&2
                 exit 1
                 ;;
         esac

@@ -34,6 +34,15 @@ Item {
     }
     Component.onDestruction: Bluetooth.setDiscovering(false)
 
+    // The adapter can come up after the page opened; search then, too.
+    Connections {
+        target: Bluetooth
+        function onPoweredChanged() {
+            if (Bluetooth.powered)
+                Bluetooth.refresh();
+        }
+    }
+
     Connections {
         target: BluetoothLink
         function onSettled(ok, address) {
@@ -124,7 +133,8 @@ Item {
         anchors.fill: parent
         open: root.dialogDevice !== null
         titleValue: Bluetooth.deviceLabel(root.dialogDevice)
-        bodyKey: root._online ? "settings.bluetooth.disconnectBody" : "settings.bluetooth.connectBody"
+        bodyKey: root._online ? "settings.bluetooth.disconnectBody"
+            : (root._paired && BluetoothLink.bondLost(root.dialogDevice)) ? "settings.bluetooth.repairBody" : "settings.bluetooth.connectBody"
         confirmKey: root._busy ? "settings.bluetooth.connecting" : root._online ? "settings.bluetooth.disconnect" : "settings.bluetooth.connect"
         confirmEnabled: !root._busy
         cancelKey: "powerMenu.cancel"

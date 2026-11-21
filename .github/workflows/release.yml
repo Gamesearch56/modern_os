@@ -1,5 +1,5 @@
 # Keep a Changelog (keepachangelog.com) on every vX.Y.Z tag.
-# Then dispatch ISO — GITHUB_TOKEN does not chain release: published.
+# No ISO: it is built locally (scripts/iso-build.sh --mkarchiso).
 name: Release
 
 on:
@@ -9,7 +9,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   notes:
@@ -36,4 +35,3 @@ jobs:
           else
             gh release create "$tag" --title "ModernOS $tag" --notes-file "$notes"
           fi
-          gh workflow run ISO --ref "${{ github.event.repository.default_branch }}" -f "tag=$tag"

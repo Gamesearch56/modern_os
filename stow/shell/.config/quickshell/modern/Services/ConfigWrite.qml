@@ -93,7 +93,7 @@ Singleton {
         root._reloadHypr = job.path === "monitors" || job.path.indexOf("monitors.") === 0
             || job.path === "windowRules"
             || job.path === "motion.scale" || job.path === "motion"
-            || job.path === "gaming" || job.path.indexOf("gaming.") === 0;
+            || job.path === "gaming" || job.path.indexOf("gaming.") === 0 || job.path === "input.mouseSideButtons";
         root._patchMonitors = job.path === "monitors" || job.path.indexOf("monitors.") === 0;
         root._patchKeyboard = job.path === "input" || job.path === "input.kbLayout"
             || job.path === "input.kbVariant";

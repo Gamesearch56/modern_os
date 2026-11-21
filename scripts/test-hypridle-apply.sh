@@ -106,6 +106,19 @@ else
     err "IdleDaemon/autostart/reload-ui/Config.generation must call hypridle-apply.sh"
 fi
 
+if grep -Fq 'inhibit_sleep = 3' "$MODERN_HYPRIDLE_CONF"; then
+    ok "suspend waits for the session lock"
+else
+    err "hypridle.conf must set inhibit_sleep = 3"
+fi
+
+# shellcheck disable=SC2016
+if grep -Fq 'hypridle >>"$LOG"' "$SCRIPT" && ! grep -Fq 'nohup hypridle >/dev/null' "$SCRIPT"; then
+    ok "hypridle output goes to its log"
+else
+    err "hypridle-apply.sh must log hypridle instead of discarding it"
+fi
+
 if grep -Fq '8>&-' "$SCRIPT" && grep -Fq 'flock -w 2' "$SCRIPT"; then
     ok "apply lock is timed and not inherited by hypridle"
 else

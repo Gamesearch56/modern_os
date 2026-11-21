@@ -47,9 +47,21 @@ Singleton {
     readonly property int durationBluetoothConnect: 15000
     // Confirm-on-device pairing. Wall clock, not MD3 motion.
     readonly property int durationBluetoothPair: 30000
-    // A bare incoming link gets A2DP before the kernel drops a link
-    // without a channel (about 2 s). Wall clock.
-    readonly property int durationBluetoothProfile: 700
+    // One classic inquiry window (about 5 s) before pairing a headset, so
+    // BlueZ pairs over BR/EDR. Wall clock, not MD3 motion.
+    readonly property int durationBluetoothClassicScan: 6000
+    // BlueZ merges every client's discovery filter, so the classic scan
+    // waits until the shell's own search has stopped: a short quiet spell
+    // for a Start still in flight, and a cap for a Stop that never answers.
+    readonly property int durationBluetoothQuiet: 300
+    readonly property int durationBluetoothStopWait: 3000
+    // A user Connect on a link without audio waits past BlueZ's own A2DP
+    // fallback (about 3 s after the link), so the two never cross. Wall clock.
+    readonly property int durationBluetoothProfile: 4000
+    // Silence fed to a headset that just reconnected, longer than the
+    // window in which buds queue audio and play it late; with the suspend
+    // that follows, audio moves over about 3 s after the reconnect. Wall clock.
+    readonly property int durationBluetoothWarm: 1000
     // 100% stays up long enough to read, then the shell restarts.
     readonly property int durationUpdateSettle: 400
     // After the link is up, before the one login update check. Wall clock.
@@ -78,7 +90,11 @@ Singleton {
     readonly property int bluetoothScanMs: root.durationBluetoothScan
     readonly property int bluetoothConnectMs: root.durationBluetoothConnect
     readonly property int bluetoothPairMs: root.durationBluetoothPair
+    readonly property int bluetoothClassicScanMs: root.durationBluetoothClassicScan
+    readonly property int bluetoothQuietMs: root.durationBluetoothQuiet
+    readonly property int bluetoothStopWaitMs: root.durationBluetoothStopWait
     readonly property int bluetoothProfileMs: root.durationBluetoothProfile
+    readonly property int bluetoothWarmMs: root.durationBluetoothWarm
     readonly property int updateSettleMs: root.durationUpdateSettle
     readonly property int bootSettleMs: root.durationBootSettle
     readonly property int fileSettleMs: root.durationFileSettle

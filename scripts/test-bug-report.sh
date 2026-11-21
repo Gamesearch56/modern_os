@@ -77,8 +77,40 @@ shots="$("$BR" capture "$id")"
 [ "$(jq length <<<"$shots")" = 2 ] && jq -e 'map(.name) | any(test("^HDMI-A-1-[0-9]+\\.jpg$"))' <<<"$shots" >/dev/null \
     && ok "one screenshot per monitor" || err "screenshots: $shots"
 
+mkdir -p "$XDG_STATE_HOME/modern"
+echo 8 >"$XDG_STATE_HOME/modern/update.rc"
+echo 'pkg greetd' >"$XDG_STATE_HOME/modern/root-plan"
+echo v0.9.0 >"$XDG_STATE_HOME/modern/release-incomplete"
+echo 'update-apply: packages stopped halfway' >"$XDG_STATE_HOME/modern/update.log.1"
+mkdir -p "$tmp/shared"
+export BUG_REPORT_SESSION_DIR="$tmp/shared"
+printf '== desktop session 2026-11-21T09:00:00+01:00 (uid 1000, session 2)\n[LOG] openwindow title Private chat with Bob\nERR session wrapper failed\n' \
+    >"$XDG_STATE_HOME/modern/hyprland.log"
+echo 'hypridle: lock notify received' >"$XDG_STATE_HOME/modern/hypridle.log"
+echo 'greeter: users loaded' >"$tmp/shared/greeter.log"
+echo '[{"event":"authFailure","message":"Authentication failure"}]' >"$tmp/shared/auth-trace.json"
+printf 1 >"$XDG_RUNTIME_DIR/modern-session-locked"
 files="$("$BR" collect "$id" now)"
 dir="$REPORTS/$id/files"
+if grep -q 'session-locked marker: 1' "$dir/session.txt" \
+    && grep -q '== desktop session' "$dir/session.txt" && grep -q 'session wrapper failed' "$dir/session.txt" \
+    && grep -q 'lock notify received' "$dir/session.txt" && grep -q 'users loaded' "$dir/session.txt" \
+    && grep -q 'authFailure' "$dir/session.txt" && [ -s "$dir/boot.txt" ]; then
+    ok "a session report carries the lock marker, session, idle and login screen logs, and boot"
+else
+    err "session state missing: $(cat "$dir/session.txt" 2>/dev/null)"
+fi
+if grep -q 'Private chat' "$dir/session.txt"; then err "session log leaked a window title"; else ok "session log keeps window titles out"; fi
+rm -f "$XDG_RUNTIME_DIR/modern-session-locked"
+if grep -qx 'update.rc: 8 ' "$dir/update.txt" && grep -q 'root-plan: pkg greetd' "$dir/update.txt" \
+    && grep -q 'release-incomplete: v0.9.0' "$dir/update.txt" \
+    && grep -q 'packages stopped halfway' "$dir/update-log.txt"; then
+    ok "an update report carries the exit status, root plan, unfinished release and previous run"
+else
+    err "update state missing from the report: $(cat "$dir/update.txt" "$dir/update-log.txt" 2>/dev/null)"
+fi
+rm -f "$XDG_STATE_HOME/modern/update.rc" "$XDG_STATE_HOME/modern/root-plan" \
+    "$XDG_STATE_HOME/modern/release-incomplete" "$XDG_STATE_HOME/modern/update.log.1"
 [ -f "$dir/hyprland.txt" ] || err "collection wrote no hyprland.txt"
 jq -e 'map(.name) | index("journal-user.txt") and index("config.json") and index("system.txt")' <<<"$files" >/dev/null \
     && ok "collection lists its files" || err "collect: $files"

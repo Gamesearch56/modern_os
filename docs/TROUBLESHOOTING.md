@@ -222,6 +222,45 @@ registered under GitHub → Settings → Deploy keys with write access off.
 `scripts/deploy-key-init.sh` creates it; the ISO build embeds it.
 Details: `docs/GIT.md`.
 
+## A system update failed
+
+Settings names the failure from the update's exit status
+(`Services/UpdateClassify.qml` `failureText`). The full text is in
+`~/.local/state/modern/update.log`, the run before it in `update.log.1`.
+
+| Exit | Meaning | What to do |
+|---|---|---|
+| 3 | Packages failed halfway; the pre-update snapshot was restored | Restart |
+| 4 | Password prompt cancelled or refused; nothing changed | Update again |
+| 5 | Pre-update snapshot could not be created; nothing changed | Set up Settings → Backup, or turn the snapshot off |
+| 6 | The ModernOS release could not be installed | Update again; the release stays offered as "Finish installing" |
+| 7 | Packages failed before anything changed (mirror, network, conflict) | Read the log, update again |
+| 8 | Packages stopped halfway and stay half-applied | Update again before restarting; it finishes them |
+| 9 | The update stopped without a result (power loss, killed session) | Update again |
+| 10 | Another program holds the pacman database | Let it finish, update again |
+| 11 | A system step of the new release (packages, login screen, splash) failed | Update again; the root plan is kept |
+
+A pacman lock nobody has open is left over from a cut-off run and is
+removed automatically. A problem report filed under "Updates" quotes
+the update log and `update.txt` (exit status, markers, root plan,
+release history, the `modern-system-update` unit) in the issue.
+
+## Startup, login, lock or shutdown went wrong
+
+File a problem report under "Startup, login, lock & shutdown". It
+quotes `session.txt` and `boot.txt` in the issue; `docs/BOOT.md` →
+"Logs along the chain" lists what each stage writes. By hand:
+
+| Symptom | Look at |
+|---------|---------|
+| Login screen missing or stuck | `/var/lib/modern/session/greeter.log`, `journalctl -b -u greetd` |
+| Password accepted, desktop never comes | `auth-trace.json` (`readyToLaunch` without `launched`), `~/.local/state/modern/hyprland.log` |
+| Lock screen did not come back after a crash | `quickshell.log` → `shell-run:` lines; five crashes in two minutes stop the restarts |
+| Desktop visible for a moment on wake | `quickshell.log` → "compositor has not confirmed the lock", `journalctl -t modern-power` |
+| Unlock refused with the right password | `quickshell.log` → `PAM:` lines (faillock: `faillock --user "$USER" --reset`) |
+| Reboot or power off does nothing | `journalctl -t modern-session` → "refused"; `systemd-inhibit --list` |
+| Shutdown hangs | `journalctl -b -1 -n 300` after the next boot |
+
 ## `secrets.json` missing
 
 Expected until you create gitignored

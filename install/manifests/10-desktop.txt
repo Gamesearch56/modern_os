@@ -30,6 +30,7 @@ pipewire-alsa                    # ALSA compatibility shim
 pipewire-jack                    # JACK compatibility shim (audio production tools)
 pipewire-pulse                   # PulseAudio compatibility shim (most apps still expect this)
 wireplumber                      # PipeWire session manager, spoken to by Services/Audio
+rtkit                            # realtime priority for PipeWire; without it audio crackles under load
 wl-clipboard                     # wl-copy/wl-paste for screenshots, file preview, copy
 cliphist                         # clipboard history store (wl-clipboard companion)
 grim                             # screenshot capture backend

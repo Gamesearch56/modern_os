@@ -4,14 +4,21 @@
 # Hyprland's own banner is not a kernel message, so quiet does not hide it.
 # The power menu calls this directly. The splash service is optional: a
 # missing unit must not block logout, reboot, or shutdown.
+#
+# Every action is written to the journal (tag modern-session) so a hang
+# or refusal at logout/shutdown shows up in the bug report.
 set -euo pipefail
+
+note() {
+    logger -t modern-session "$*" 2>/dev/null || true
+}
 
 splash_show() {
     if plymouth --ping >/dev/null 2>&1; then
         plymouth show-splash || true
         return 0
     fi
-    rm -f /run/plymouth/pid
+    rm -f /run/plymouth/pid 2>/dev/null || true
     plymouthd --mode=boot --pid-file=/run/plymouth/pid --attach-to-session || true
     plymouth show-splash || true
 }
@@ -19,7 +26,8 @@ splash_show() {
 ask_splash() {
     # --no-ask-password: a missing polkit grant must fail quietly. An
     # interactive prompt races the reboot and flashes a password window.
-    timeout 2 systemctl start --no-ask-password modern-splash.service || true
+    timeout 2 systemctl start --no-ask-password modern-splash.service \
+        || note "splash service did not start before $1 (exit $?)"
 }
 
 case "${1:-show}" in
@@ -29,12 +37,24 @@ case "${1:-show}" in
     logout)
         # Plymouth has to be waiting before this compositor dies, or the
         # laptop paints the terminal in the gap.
-        ask_splash
-        exec hyprctl dispatch 'hl.dsp.exit()'
+        note "logout requested by $(id -un)"
+        ask_splash logout
+        hyprctl dispatch 'hl.dsp.exit()' || {
+            rc=$?
+            note "logout failed: hyprctl exit $rc"
+            exit "$rc"
+        }
         ;;
     reboot|poweroff)
-        ask_splash
-        exec systemctl "$1"
+        note "$1 requested by $(id -un)"
+        ask_splash "$1"
+        # An inhibitor or a polkit refusal leaves the desktop running;
+        # say so instead of failing silently from the power menu.
+        systemctl "$1" || {
+            rc=$?
+            note "$1 refused: systemctl exit $rc"
+            exit "$rc"
+        }
         ;;
     *)
         printf 'splash-hold: use show, logout, reboot, or poweroff\n' >&2

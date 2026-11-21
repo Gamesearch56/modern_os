@@ -259,6 +259,18 @@ Singleton {
     function descFor(name: string, fallback: string): string {
         return catalog.desc(name, fallback);
     }
+    // The launcher the dock pins for an installed package: one it ships
+    // (`desktop` from pkg-detail.sh) that the launcher lists, preferring
+    // the package's own name over helpers like kitty-open.
+    function dockIdFor(name: string, ids: var): string {
+        const shown = {};
+        const entries = Apps.allEntries();
+        for (let i = 0; i < entries.length; i++)
+            shown[String(entries[i].value || "").replace(/\.desktop$/i, "").toLowerCase()] = true;
+        const want = String(name || "").toLowerCase();
+        const list = (ids || []).map(String).filter(id => shown[id.toLowerCase()]);
+        return list.find(id => id.toLowerCase() === want) || list[0] || "";
+    }
 
     IpcHandler {
         target: "store"

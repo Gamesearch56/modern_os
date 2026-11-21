@@ -29,6 +29,17 @@ else
     ok "rejects an invalid username"
 fi
 
+printf '%s\n' '#!/bin/sh' >"$TMP/desktop-session.sh"
+chmod +x "$TMP/desktop-session.sh"
+export MODERN_DESKTOP_SESSION="$TMP/desktop-session.sh"
+
+MODERN_AUTOLOGIN_BACKEND=greetd MODERN_DESKTOP_SESSION="$TMP/missing.sh" "$SCRIPT" enable testdev
+if grep -Fq 'command = "start-hyprland --no-nixgl"' "$MODERN_AUTOLOGIN_GREETD"; then
+    ok "greetd autologin starts Hyprland directly when the session wrapper is missing"
+else
+    err "missing wrapper: $(cat "$MODERN_AUTOLOGIN_GREETD")"
+fi
+
 MODERN_AUTOLOGIN_BACKEND=greetd "$SCRIPT" enable testdev
 if grep -q '\[initial_session\]' "$MODERN_AUTOLOGIN_GREETD" \
     && grep -q 'user = "testdev"' "$MODERN_AUTOLOGIN_GREETD" \

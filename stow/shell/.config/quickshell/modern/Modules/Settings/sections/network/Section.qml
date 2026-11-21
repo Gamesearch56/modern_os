@@ -15,7 +15,7 @@ Item {
     property string joinReason: "failed"
     readonly property bool passwordOpen: root.pendingNet !== null
     readonly property bool _online: !!(root.pendingNet && root.pendingNet.connected)
-    readonly property bool _known: !!(root.pendingNet && root.pendingNet.known)
+    readonly property bool _known: Network.isKnown(root.pendingNet)
     readonly property bool _locked: Network.isLocked(root.pendingNet)
     readonly property bool _askSecret: !root._online && ((!root._known && root._locked) || root.forcePassword)
     readonly property bool _secretRequired: root._askSecret && (!root._known || root.forcePassword)

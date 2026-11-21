@@ -38,6 +38,10 @@ Singleton {
         readonly property real xxl: 32
     }
 
+    // MD3 disabled-content opacity; also marks rows that are present but
+    // out of reach (a saved device the last search did not hear).
+    readonly property real dimmedOpacity: 0.38
+
     // MD3 tonal elevation: a surfaceTint opacity mixed over the base
     // surface color, plus a subtle, optional shadow. level0 is "resting
     // on the background", level5 is the highest (e.g. a modal dialog).

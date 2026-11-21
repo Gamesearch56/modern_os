@@ -6,6 +6,9 @@
 # Hard exclusions live in _forbidden, not in the review checklist: a
 # toggle can be left on by mistake, a refusal here cannot.
 
+# shellcheck source=bug-report-session.sh
+source "$(dirname "${BASH_SOURCE[0]}")/bug-report-session.sh"
+
 BUG_REPORT_CAP_BYTES="${BUG_REPORT_CAP_BYTES:-2000000}"
 BUG_REPORT_TIMEOUT="${BUG_REPORT_TIMEOUT:-15}"
 
@@ -130,7 +133,41 @@ _collect_logs() {
     _grab quickshell.txt quickshell --version
     _grab quickshell-journal.txt journalctl --user -b --since="$since" --no-pager -o short-iso -n 1500 --identifier=quickshell
     _copy update-log.txt "$state/update.log" 2000
-    _copy pacman-log.txt /var/log/pacman.log 300
+    _copy update-log.txt "$state/update.log.1" 1000
+    # A full upgrade writes several lines per package plus its hooks.
+    _copy pacman-log.txt /var/log/pacman.log 1500
+}
+
+# What a failed ModernOS update leaves behind: the exit status and
+# markers Settings reads, the root plan, the system step's unit, the
+# release history of the checkout and the installer's own log.
+_collect_update() {
+    local repo="$1" state="${XDG_STATE_HOME:-$HOME/.local/state}/modern" f="$OUT/update.txt" m
+    {
+        for m in update.rc update.pid reload-pending update-applied release-incomplete root-plan; do
+            if [ -f "$state/$m" ]; then
+                printf '%s: %s\n' "$m" "$(head -c 2000 "$state/$m" | tr '\n' ' ')"
+            else
+                printf '%s: (none)\n' "$m"
+            fi
+        done
+        if [ -e /var/lib/modern/update-snapshot ]; then
+            printf 'interrupted-update mark: %s\n' "$(cat /var/lib/modern/update-snapshot 2>/dev/null || printf 'unreadable')"
+        else
+            printf 'interrupted-update mark: (none)\n'
+        fi
+        printf 'pacman lock: %s\n' "$([ -e /var/lib/pacman/db.lck ] && printf present || printf none)"
+        printf '\n$ git tag (newest releases)\n'
+        git -C "$repo" tag -l 'v*' --sort=-v:refname 2>/dev/null | head -n 5 || true
+        printf '\n$ git reflog (release history)\n'
+        git -C "$repo" reflog -n 15 --date=iso 2>/dev/null || true
+        printf '\n'
+    } >"$f"
+    _grab update.txt systemctl status modern-system-update --no-pager -n 0
+    _grab update.txt journalctl -b -u modern-system-update --no-pager -o short-iso -n 200
+    _grab update.txt snapper -c root list --columns number,date,description
+    _copy install-log.txt "$repo/install/install.log" 1500
+    return 0
 }
 
 _collect_hardware() {
@@ -193,14 +230,6 @@ _collect_games() {
     return 0
 }
 
-_collect_session() {
-    local since="$1" marker="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/modern-session-locked"
-    _grab session.txt journalctl -b -u greetd --since="$since" --no-pager -o short-iso -n 500
-    _grab session.txt journalctl --user -b -u hypridle --since="$since" --no-pager -o short-iso -n 500
-    [ -r "$marker" ] && printf 'session-locked marker: %s\n' "$(cat "$marker")" >>"$OUT/session.txt"
-    return 0
-}
-
 _collect_config() {
     local cfg="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
     _forbidden "$cfg" && return 0
@@ -217,10 +246,12 @@ bug_report_collect() {
     _collect_system "$repo"
     _collect_hyprland
     _collect_logs "$since"
+    _collect_update "$repo"
     _collect_hardware "$repo"
     _collect_devices "$since"
     _collect_games
     _collect_session "$since"
+    _collect_boot
     _collect_config
     for f in "$OUT"/*; do
         [ -f "$f" ] && _cap "$f"

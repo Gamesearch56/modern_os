@@ -61,6 +61,19 @@ update_guard_esp_backup() {
         /boot/ "$UPDATE_ESP_COPY/"
 }
 
+# Fails while another process holds the pacman database lock. libalpm
+# keeps db.lck open for as long as it runs, so a lock nobody has open is
+# left over from a cut-off run and only blocks this update; it goes.
+update_guard_pacman_lock() {
+    local lock="${UPDATE_PACMAN_LOCK:-/var/lib/pacman/db.lck}" fd
+    [ -e "$lock" ] || return 0
+    for fd in /proc/[0-9]*/fd/*; do
+        [ "$(readlink "$fd" 2>/dev/null || true)" = "$lock" ] && return 1
+    done
+    rm -f "$lock"
+    printf 'update-apply: removed a stale pacman lock left by an interrupted run\n'
+}
+
 # Byte offset of pacman.log, to check only this run's lines afterwards.
 update_guard_log_mark() {
     stat -c %s "$UPDATE_PACMAN_LOG" 2>/dev/null || printf '0\n'

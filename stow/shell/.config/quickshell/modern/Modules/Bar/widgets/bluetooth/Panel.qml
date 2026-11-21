@@ -43,6 +43,16 @@ ColumnLayout {
                 else
                     Bluetooth.connectDevice(modelData);
             }
+            opacity: !online && BluetoothSignal.searched && Bluetooth.isRemembered(modelData)
+                && !BluetoothSignal.inRange(modelData) ? Tokens.dimmedOpacity : 1
+            titleAccessory: MTag {
+                key: !online && Bluetooth.isRemembered(modelData) ? "settings.bluetooth.remembered" : ""
+            }
+
+            MSignal {
+                level: online ? -1 : BluetoothSignal.level(modelData)
+                label: I18n.t("settings.signal.bars", { n: level })
+            }
         }
     }
 

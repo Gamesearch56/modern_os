@@ -31,10 +31,7 @@ Singleton {
         );
     }
 
-    readonly property int count: {
-        void root.entries;
-        return (root.entries || []).length;
-    }
+    readonly property int count: (root.entries || []).length
 
     property string _raiseAfter: ""
 

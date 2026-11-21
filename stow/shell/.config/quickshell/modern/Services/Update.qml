@@ -234,7 +234,7 @@ Singleton {
         if (code === 3)
             root.notify(I18n.t("settings.update.rolledBack"), I18n.t("settings.update.rolledBackBody"), "");
         else if (!ok || classify.doneSummary(root._ran).length)
-            root.notify(ok ? classify.doneSummary(root._ran) : I18n.t("settings.update.failed"), ok ? "" : root.step, "");
+            root.notify(ok ? classify.doneSummary(root._ran) : classify.failureText(code), ok ? "" : root.step, "");
         if (ok) { root.restarting = (root._ran || []).filter(p => String(p && p.kind || "") === "desktop").length > 0; closeTimer.restart(); root.refresh(); }
     }
 

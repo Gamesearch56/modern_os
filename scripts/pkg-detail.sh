@@ -22,11 +22,15 @@ fi
 have=0
 LC_ALL=C "$PACMAN" -Q -- "$name" >/dev/null 2>&1 && have=1
 localver=""
+desktop=""
 if [ "$have" -eq 1 ]; then
     localver="$(LC_ALL=C "$PACMAN" -Q -- "$name" 2>/dev/null | awk '{print $2}')"
+    # The launchers this package ships; the dock pins them by file name.
+    desktop="$(LC_ALL=C "$PACMAN" -Qlq -- "$name" 2>/dev/null \
+        | grep -E '^/usr/share/applications/[^/]+\.desktop$' || true)"
 fi
 
-HAVE="$have" LOCALVER="$localver" python3 -c '
+HAVE="$have" LOCALVER="$localver" DESKTOP="$desktop" python3 -c '
 import json, os, sys
 
 def split_list(val):
@@ -66,6 +70,8 @@ row = {
     "builddate": cur.get("build date") or "",
     "installed": os.environ.get("HAVE") == "1",
     "localVersion": os.environ.get("LOCALVER") or "",
+    "desktop": [os.path.basename(p)[:-len(".desktop")]
+                for p in (os.environ.get("DESKTOP") or "").splitlines() if p.endswith(".desktop")],
 }
 print(json.dumps(row, ensure_ascii=False))
 ' <<<"$info"

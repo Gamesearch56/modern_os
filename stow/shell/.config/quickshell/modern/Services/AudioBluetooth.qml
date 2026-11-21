@@ -229,7 +229,7 @@ QtObject {
                 if (bt.isBluetoothNode(freshSinks[s])) {
                     bt._stopSettle();
                     bt.preferA2dp(freshSinks[s]);
-                    a.setDefaultSink(freshSinks[s]);
+                    BluetoothWarmup.warm(freshSinks[s], a);
                     tookBt = true;
                 }
             }

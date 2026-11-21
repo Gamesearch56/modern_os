@@ -15,7 +15,7 @@ Item {
     implicitHeight: Tokens.spacing.xxl + Tokens.spacing.xs
     implicitWidth: row.implicitWidth + Tokens.spacing.xs * 2
     opacity: root.enabled ? 1 : 0.38
-    activeFocusOnTab: root.enabled
+    activeFocusOnTab: true
     Accessible.role: Accessible.Grouping
 
     Keys.onPressed: (event) => {

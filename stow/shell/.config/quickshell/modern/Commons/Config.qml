@@ -137,7 +137,10 @@ Singleton {
                 property int gap: 8
                 property string theme: "floating"
                 property string hover: "zoom"
-                property list<string> apps: []
+                property list<string> apps: [
+                    "vivaldi-stable", "whatsapp", "spotify-launcher", "steam",
+                    "kitty", "shell:files", "shell:store", "shell:settings"
+                ]
             }
 
             // Per-widget settings blobs — shape varies per widget, each
@@ -201,6 +204,7 @@ Singleton {
                 property int repeatRate: 25
                 property int repeatDelay: 600
                 property bool numlockOnBoot: false
+                property bool mouseSideButtons: true
             }
 
             property JsonObject launcher: JsonObject {

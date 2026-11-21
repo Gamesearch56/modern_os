@@ -12,11 +12,14 @@ Item {
     property string failText: ""
     property bool busy: false
     property bool launching: false
+    property bool launched: false
     property string username: ""
     property string password: ""
     property string rememberedUser: ""
     property bool defaultReady: false
     property string _pendingPassword: ""
+    property bool _answered: false
+    property var _events: []
 
     function login() {
         const u = String(root.username || "").trim();
@@ -25,12 +28,15 @@ Item {
             return;
         root.failText = "";
         if (!Greetd.available) {
+            root._trace({ event: "unavailable" });
             root.busy = false;
             root.failText = "failed";
             return;
         }
         root.busy = true;
+        root._answered = false;
         root._pendingPassword = p;
+        root._trace({ event: "createSession" });
         Greetd.createSession(u);
     }
 
@@ -57,9 +63,13 @@ Item {
         root._pendingPassword = "";
     }
 
+    // The last events of this greeter run, for bug reports. Never the
+    // password or anything derived from it (length included).
     function _trace(info: var) {
+        info.at = new Date().toISOString();
+        root._events = root._events.concat([info]).slice(-20);
         try {
-            trace.setText(JSON.stringify(info) + "\n");
+            trace.setText(JSON.stringify(root._events) + "\n");
         } catch (e) {
             /* session dir may be read-only on a partial apply */
         }
@@ -95,22 +105,26 @@ Item {
                 message: String(message || ""),
                 error: !!error,
                 responseRequired: !!responseRequired,
-                echoResponse: !!echoResponse,
-                pendingLen: String(root._pendingPassword || "").length,
-                available: Greetd.available
+                echoResponse: !!echoResponse
             });
             if (!responseRequired)
                 return;
+            // One password, one answer. A second prompt (expired password,
+            // one-time code) must not receive the password again.
+            if (root._answered) {
+                root._trace({ event: "unsupportedPrompt" });
+                Greetd.cancelSession();
+                root._fail();
+                return;
+            }
             const secret = root._pendingPassword;
+            root._pendingPassword = "";
+            root._answered = true;
             Qt.callLater(() => Greetd.respond(secret));
         }
 
         function onAuthFailure(message) {
-            root._trace({
-                event: "authFailure",
-                message: String(message || ""),
-                pendingLen: String(root._pendingPassword || "").length
-            });
+            root._trace({ event: "authFailure", message: String(message || "") });
             root._fail();
         }
 
@@ -123,13 +137,16 @@ Item {
         }
 
         function onLaunched() {
+            root.launched = true;
             root._trace({ event: "launched" });
             Quickshell.execDetached(["/usr/lib/modern/splash-hold.sh", "logout"]);
         }
 
+        // After launch the socket closing is expected. Before it, a
+        // failed start_session must give the form back, not spin forever.
         function onError(err) {
-            root._trace({ event: "error", message: String(err || "") });
-            if (root.launching)
+            root._trace({ event: "error", message: String(err || ""), launching: root.launching });
+            if (root.launched)
                 return;
             root._fail();
         }

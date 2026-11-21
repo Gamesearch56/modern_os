@@ -39,6 +39,13 @@ QtObject {
             : I18n.t("settings.update.success");
     }
 
+    // Exit status of update-run.sh (scripts/lib/modern-update.sh).
+    // 143 and 129: the update was killed with the session.
+    function failureText(code: int): string {
+        const keys = ({ 4: "cancelled", 5: "snapshot", 6: "release", 7: "packages", 8: "partial", 9: "stopped", 10: "locked", 11: "releaseStep", 129: "stopped", 143: "stopped" });
+        return keys[code] ? I18n.t("settings.update.fail." + keys[code]) : I18n.t("settings.update.failed");
+    }
+
     // A desktop release replaces the package count. The version is the
     // pending card's `to` field from desktop-sync.
     function availableNotice(pending): string {
@@ -46,7 +53,7 @@ QtObject {
         for (let i = 0; i < list.length; i++) {
             const p = list[i];
             if (String(p && p.kind || "") === "desktop" && String(p && p.to || "").length)
-                return I18n.t("settings.update.desktopAvailable", ({ v: String(p.to) }));
+                return I18n.t(p.reason === "incomplete" ? "settings.update.desktopIncomplete" : "settings.update.desktopAvailable", ({ v: String(p.to) }));
         }
         if (list.length === 1)
             return I18n.t("settings.update.availableOne");
@@ -112,6 +119,8 @@ QtObject {
         let subtitle = I18n.t("settings.update.desktopCurrent");
         if (reason === "notag")
             subtitle = I18n.t("settings.update.desktopUnknown");
+        else if (reason === "incomplete")
+            subtitle = I18n.t("settings.update.desktopIncomplete", ({ v: to }));
         else if ("unavailable offline dirty".split(" ").indexOf(reason) !== -1)
             subtitle = I18n.t("settings.update.desktopUnavailable");
         else if (pending && from.length && to.length)

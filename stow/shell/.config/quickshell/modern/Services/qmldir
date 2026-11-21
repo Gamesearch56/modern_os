@@ -11,6 +11,9 @@ NetworkSpeed 1.0 NetworkSpeed.qml
 singleton Bluetooth 1.0 Bluetooth.qml
 singleton BluetoothLink 1.0 BluetoothLink.qml
 singleton BluetoothAudio 1.0 BluetoothAudio.qml
+singleton BluetoothClassic 1.0 BluetoothClassic.qml
+singleton BluetoothWarmup 1.0 BluetoothWarmup.qml
+singleton BluetoothSignal 1.0 BluetoothSignal.qml
 singleton Audio 1.0 Audio.qml
 AudioBluetooth 1.0 AudioBluetooth.qml
 AudioNowPlaying 1.0 AudioNowPlaying.qml
@@ -60,6 +63,7 @@ singleton Session 1.0 Session.qml
 SessionAuth 1.0 SessionAuth.qml
 singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
+singleton AppsPrune 1.0 AppsPrune.qml
 singleton Dock 1.0 Dock.qml
 singleton DefaultApps 1.0 DefaultApps.qml
 AppsIcons 1.0 AppsIcons.qml
@@ -91,6 +95,7 @@ UpdateClassify 1.0 UpdateClassify.qml
 UpdateMirrors 1.0 UpdateMirrors.qml
 UpdateProgress 1.0 UpdateProgress.qml
 singleton Snapshots 1.0 Snapshots.qml
+singleton Support 1.0 Support.qml
 SnapshotsParse 1.0 SnapshotsParse.qml
 singleton Firewall 1.0 Firewall.qml
 FirewallParse 1.0 FirewallParse.qml
