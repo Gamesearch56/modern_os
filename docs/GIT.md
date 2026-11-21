@@ -50,10 +50,10 @@ GitHub Actions on every PR to `main` or `dev`, on pushes to `dev` /
   patch / release-notes tests)
 - `./install/install.sh --dry-run --profile m0 --target $RUNNER_TEMP/…`
 
-The **ISO** workflow (release / `workflow_dispatch`, not pull requests)
-builds the image. A red ISO job means the image was not attached. It
-does **not** click through the installer. Local unattended install
-(after an ISO rebuild): `scripts/test-iso-qemu-install.sh`.
+CI does **not** build the ISO: one 1.8 GB image is past the free
+Actions storage quota. Build it locally with
+`sudo ./scripts/iso-build.sh --mkarchiso` (output in `iso/out/`), and
+for an unattended install test run `scripts/test-iso-qemu-install.sh`.
 
 `scripts/check-isolation.sh` is **local only**. Do not add it to GitHub.
 
@@ -73,14 +73,14 @@ git push origin v0.1.0
 
 The `Release` Action writes [Keep a Changelog](https://keepachangelog.com/)
 notes (Added / Changed / Fixed / …) from commits since the previous
-tag, publishes the GitHub Release, then dispatches the `ISO` workflow
-to attach the image (`GITHUB_TOKEN` does not chain `release: published`).
-Local test images: `sudo ./scripts/iso-build.sh --mkarchiso` then
-`./scripts/iso-qemu.sh`. Never run `provision-iso.sh` or Calamares on
+tag and publishes the GitHub Release. It does not build or attach an
+ISO. Build the image locally with `sudo ./scripts/iso-build.sh
+--mkarchiso`, test it with `./scripts/iso-qemu.sh`, and upload it to the
+Release by hand (`gh release upload vX.Y.Z iso/out/*.iso`) if you want it
+there. Never run `provision-iso.sh` or Calamares on
 the session you live in.
 
-That tag is what Settings → Update and the ISO pin look at. Download
-the image from the Release page.
+That tag is what Settings → Update and the ISO pin look at.
 
 **Semver:** `MAJOR.MINOR.PATCH`. Breaking desktop/install behavior bumps
 MAJOR; features MINOR; fixes PATCH. Start at `v0.1.0` until you want

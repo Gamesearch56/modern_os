@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Local: unattended Calamares in QEMU until late install finishes.
-# Not run from ci-check.sh or the ISO Action (unpack + m0 takes ~1h).
+# Not run from ci-check.sh (unpack + m0 takes ~1h).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

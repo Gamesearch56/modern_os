@@ -788,54 +788,18 @@ else
     err "iso-build.sh must refuse a missing pin, add ttyS0, and compile branding .qm"
 fi
 
-ISO_YML="$ROOT/.github/workflows/iso.yml"
-ISO_CONTAINER="$ROOT/scripts/ci-iso-container.sh"
 INSTALL_QEMU="$ROOT/scripts/test-iso-qemu-install.sh"
-# mkarchiso already fills the runner; QEMU boot is local (iso-qemu.sh).
-if [ -f "$ISO_YML" ] && [ -x "$ISO_CONTAINER" ] \
-    && ! grep -F 'test-iso-qemu-smoke.sh' "$ISO_CONTAINER" >/dev/null \
-    && ! grep -F 'qemu-system-x86' "$ISO_CONTAINER" >/dev/null \
-    && ! grep -F 'qemu-img' "$ISO_CONTAINER" >/dev/null \
+# A 1.8 GB ISO is past the free Actions storage, so it is built locally
+# (iso-build.sh --mkarchiso) and never by CI.
+if [ ! -e "$ROOT/.github/workflows/iso.yml" ] \
+    && [ ! -e "$ROOT/scripts/ci-iso-container.sh" ] \
+    && ! grep -Fq 'workflow run ISO' "$ROOT/.github/workflows/release.yml" \
     && [ -x "$INSTALL_QEMU" ] \
     && grep -F -- '--unattended' "$INSTALL_QEMU" >/dev/null \
-    && grep -F 'late install finished' "$INSTALL_QEMU" >/dev/null \
-    && ! grep -F 'test-iso-qemu-install.sh' "$ISO_CONTAINER" >/dev/null; then
-    ok "ISO workflow stops after mkarchiso (no QEMU smoke)"
+    && grep -F 'late install finished' "$INSTALL_QEMU" >/dev/null; then
+    ok "the ISO is built locally, not by a release workflow"
 else
-    err "iso.yml must not boot QEMU after mkarchiso"
-fi
-
-# iso-build.sh bundles the pin with `git clone $ROOT`, so the checkout has
-# to be a real repo with tags — and the job has to stay uncontainerised so
-# a host step can delete the toolchains mkarchiso needs the room of.
-if python3 - "$ISO_YML" "$ISO_CONTAINER" <<'PY'; then
-import pathlib, sys
-yml, script = (pathlib.Path(p).read_text(encoding="utf-8") for p in sys.argv[1:])
-iso_job = yml[yml.index("  iso:"):]
-assert "upload-artifact" not in yml, \
-    "a 1.8 GB ISO artifact is past the free artifact storage quota; attach it to the Release directly"
-assert "gh release upload" in iso_job and "contents: write" in iso_job, \
-    "the iso job must attach the ISO to the Release itself"
-# A key, not the word — the job carries a comment explaining its absence.
-keys = [ln.strip() for ln in iso_job.splitlines() if not ln.lstrip().startswith("#")]
-assert "container:" not in keys, \
-    "the iso job must not be containerised — Free disk space needs host paths"
-assert "docker run" in iso_job and "--privileged" in iso_job, \
-    "mkarchiso needs a privileged container started from the host step"
-assert "hostedtoolcache" in iso_job, \
-    "keep the disk cleanup — 14G is all GitHub guarantees and it is not enough"
-assert "fetch-depth: 0" in iso_job, \
-    "checkout needs fetch-depth: 0 so the bundle clone can resolve the tag"
-# checkout's safe.directory goes to a temporary global config that is gone
-# by the time the container runs as root over a workspace it does not own.
-assert "safe.directory" in script, \
-    "the container script must mark the workspace safe or git rejects the repo"
-assert "chown -R" in script, \
-    "the Release upload runs as the runner user and cannot read root-owned output"
-PY
-    ok "ISO workflow frees host disk and builds in a privileged container"
-else
-    err "iso.yml must stay uncontainerised, free disk, and fetch tags"
+    err "CI must not build the ISO; release.yml must not dispatch an ISO workflow"
 fi
 
 MODULES="$ROOT/iso/airootfs/etc/calamares/modules"

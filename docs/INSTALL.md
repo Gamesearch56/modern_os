@@ -128,7 +128,7 @@ covered by `test-calamares-late.sh`, not a VM run.
 wrapper writes `/etc/calamares/unattended` so Calamares auto-advances
 and fills user `modern` / password `modern`. `scripts/test-iso-qemu-install.sh`
 runs that until serial shows `late install finished` (about an hour;
-not part of `ci-check.sh` or the ISO Action).
+not part of `ci-check.sh`).
 
 The VM always attaches `iso/out/vm-disk.qcow2`. After a previous
 Calamares run, OVMF NVRAM (`iso/out/ovmf-vars.fd`) can boot that disk
@@ -167,9 +167,9 @@ the bootloader job wrote survives, and it does not need an ISO in
 
 Installer checks are two gates. Every PR runs `scripts/ci-check.sh`
 (QSS/config/schema, AUR patch fixtures, `calamares-late.sh` clone against
-a local git tag). The ISO Action (release only) boots the built image
-until Calamares starts; a red job does not attach the ISO. It does not
-click through pages or run late clone of GitHub.
+a local git tag). The ISO itself is built locally, never by CI
+(`sudo ./scripts/iso-build.sh --mkarchiso`); `scripts/test-iso-qemu-install.sh`
+then clicks through an unattended install.
 
 `stylesheet.qss` paints scroll viewports, Summary `#summaryContent` /
 `#summaryItemWrap` / `#summaryPartition`, `#summaryItemBody` cards, and
@@ -210,25 +210,14 @@ working. `iso-build.sh` now refuses to build when those three directories
 differ from the pin, listing the files; commit and tag, or pass
 `--stale-bundle` to deliberately ship the pin's copy. An explicit `--tag`
 also skips the check, since naming a pin is a deliberate choice — that is
-how the ISO workflow rebuilds an older release from `main`'s scripts.
+how you rebuild an older release with newer ISO scripts.
 
 Because the bundle is cloned from the clone rather than the remote, the
-checkout needs a real `.git` **with tags** — hence `fetch-depth: 0` in
-`iso.yml`, since a shallow checkout of `main` carries none.
+build needs a real `.git` **with tags**; a shallow clone carries none.
 `iso-build.sh` checks for the repository and the tag up front rather than
 letting git report "repository does not exist" against the destination
 path, and prints git's own message, which distinguishes a missing `.git`
 from a refusal on ownership.
-
-The ISO job is **not** a `container:` job, and that is load-bearing.
-GitHub guarantees only 14 GB free on `ubuntu-latest` and mkarchiso needs
-considerably more, so a host step deletes the preinstalled toolchains
-(`/usr/share/dotnet`, `/opt/hostedtoolcache`, …) first — paths a
-containerised step cannot see. The build itself then runs through
-`docker run --privileged` via `scripts/ci-iso-container.sh`, which also
-re-marks the workspace safe for git (`actions/checkout` writes
-`safe.directory` to a temporary global config that is gone by then) and
-chowns the output back so `upload-artifact` can read it.
 
 Location Region/Zone combos stay on the page; the **Change…** locale
 dialogs are hidden. They open a modal X11 window that cage maps as an

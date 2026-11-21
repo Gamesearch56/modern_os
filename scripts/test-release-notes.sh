@@ -68,6 +68,10 @@ else
     ok "range excludes previous tag"
 fi
 expect 'compare/v0.1.0...v0.1.1' "compare link" "missing compare link"
-expect 'ISO workflow' "ISO footer" "missing ISO footer"
+if printf '%s\n' "$out" | grep -q 'ISO workflow'; then
+    err "notes still promise a CI-built ISO"
+else
+    ok "no ISO footer"
+fi
 
 [ "$FAIL" -eq 0 ]

@@ -123,6 +123,3 @@ esac
 if [ -n "$web" ] && [ -n "$prev" ]; then
     printf '[Full changelog](%s/compare/%s...%s)\n\n' "$web" "$prev" "$TAG"
 fi
-
-iso_span=$(printf '%s%s%s' '`' '.iso' '`')
-printf 'The %s appears on this page when the ISO workflow finishes.\n' "$iso_span"
