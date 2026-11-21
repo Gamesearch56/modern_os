@@ -182,6 +182,7 @@ log "mouse windows"
 "$ROOT/scripts/test-mouse-windows.sh"
 log "light effects"
 "$ROOT/scripts/test-light-effects.sh"
+"$ROOT/scripts/test-app-package.sh"
 log "wallpaper color sync"
 "$ROOT/scripts/test-wallpaper-color-sync.sh"
 

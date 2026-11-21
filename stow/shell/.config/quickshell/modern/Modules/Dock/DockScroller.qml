@@ -16,7 +16,7 @@ Item {
         ? flick.contentHeight - flick.height
         : flick.contentWidth - flick.width)
     readonly property real pos: root._pos
-    readonly property bool dragging: Dock.dragActive && Dock.dragFromDock
+    readonly property bool dragging: Dock.trashShown
     readonly property real _step: DockLayout.iconSize + DockLayout.gap
     readonly property real _edge: Tokens.spacing.xxl * 2
 

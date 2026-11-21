@@ -76,3 +76,13 @@ grid, or the installed list on that page to add it. With the dock
 off, the launcher does not start that drag, and it does not leave
 the dock's edge clear.
 
+A drag from the all-applications grid also shows the trash, held still
+instead of wiggling, as an uninstall target (search results do not).
+`AppUninstall` asks `scripts/app-package.sh` which pacman package owns
+the desktop file and whether `pkg-mutate.sh` would remove it. Core and
+protected packages, applications no package owns (ModernOS apps, web
+apps, Flatpaks) and accounts that cannot manage software grey the trash
+out; a drop there only shows a notification. Otherwise a drop opens the
+App Store on that package with its own confirm dialog, progress and
+"removed" notification.
+

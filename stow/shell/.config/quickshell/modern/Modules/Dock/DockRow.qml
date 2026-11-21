@@ -14,8 +14,9 @@ Item {
     readonly property bool _dropHere: Dock.dragActive && Dock.hoverKind === "row"
         && Dock.hoverScreen === root.screenName
     readonly property int _dropAt: root._dropHere ? Dock.hoverIndex : -1
-    readonly property bool _trash: Dock.dragActive && Dock.dragFromDock
+    readonly property bool _trash: Dock.trashShown
         && (Dock.dragScreen.length === 0 || Dock.dragScreen === root.screenName)
+    readonly property bool _blocked: Dock.dragFromGrid && AppUninstall.blocked
 
     readonly property var ids: {
         void Config.generation;
@@ -139,12 +140,12 @@ Item {
         y: root.vertical ? host.implicitHeight + Tokens.spacing.md : (host.implicitHeight - height) / 2
         z: 3
         Accessible.role: Accessible.Button
-        Accessible.name: I18n.t("settings.dock.trash")
+        Accessible.name: I18n.t(Dock.dragFromGrid ? "launcher.uninstall.trash" : "settings.dock.trash")
 
         Rectangle {
             anchors.fill: parent
             radius: width / 2
-            color: Colors.color.errorContainer
+            color: root._blocked ? Colors.color.surfaceContainerHighest : Colors.color.errorContainer
         }
 
         MIcon {
@@ -152,13 +153,19 @@ Item {
             anchors.centerIn: parent
             name: "user-trash"
             size: trash.width - Tokens.spacing.md
-            color: Colors.color.onErrorContainer
+            color: root._blocked ? Colors.color.onSurface : Colors.color.onErrorContainer
+            opacity: root._blocked ? Tokens.dimmedOpacity : 1
             tint: true
         }
 
+        // Only a pin being unpinned wiggles; an uninstall target holds still.
         SequentialAnimation {
-            running: trash.visible
+            running: trash.visible && Dock.dragFromDock
             loops: Animation.Infinite
+            onRunningChanged: {
+                if (!running)
+                    glyph.rotation = 0;
+            }
             NumberAnimation {
                 target: glyph
                 property: "rotation"

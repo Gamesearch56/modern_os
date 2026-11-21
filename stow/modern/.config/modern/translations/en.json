@@ -450,7 +450,12 @@
     "results": "Results",
     "open": "Open",
     "allApps": "All applications",
-    "noResults": "No results"
+    "noResults": "No results",
+    "uninstall": {
+      "trash": "Uninstall",
+      "blocked": "{name} cannot be uninstalled",
+      "busy": "The App Store is still changing an application. Try again when it is done."
+    }
   },
   "settings": {
     "title": "System Settings",

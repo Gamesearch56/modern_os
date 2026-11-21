@@ -65,6 +65,8 @@ singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
 singleton AppsPrune 1.0 AppsPrune.qml
 singleton Dock 1.0 Dock.qml
+DockPlace 1.0 DockPlace.qml
+singleton AppUninstall 1.0 AppUninstall.qml
 singleton DefaultApps 1.0 DefaultApps.qml
 AppsIcons 1.0 AppsIcons.qml
 singleton IdleInhibit 1.0 IdleInhibit.qml

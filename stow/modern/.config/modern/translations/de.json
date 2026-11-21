@@ -450,7 +450,12 @@
     "results": "Ergebnisse",
     "open": "Öffnen",
     "allApps": "Alle Anwendungen",
-    "noResults": "Keine Ergebnisse"
+    "noResults": "Keine Ergebnisse",
+    "uninstall": {
+      "trash": "Deinstallieren",
+      "blocked": "{name} kann nicht deinstalliert werden",
+      "busy": "Der App Store ändert gerade eine Anwendung. Versuche es danach erneut."
+    }
   },
   "settings": {
     "title": "Systemeinstellungen",
