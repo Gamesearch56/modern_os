@@ -77,8 +77,22 @@ shots="$("$BR" capture "$id")"
 [ "$(jq length <<<"$shots")" = 2 ] && jq -e 'map(.name) | any(test("^HDMI-A-1-[0-9]+\\.jpg$"))' <<<"$shots" >/dev/null \
     && ok "one screenshot per monitor" || err "screenshots: $shots"
 
+mkdir -p "$XDG_STATE_HOME/modern"
+echo 8 >"$XDG_STATE_HOME/modern/update.rc"
+echo 'pkg greetd' >"$XDG_STATE_HOME/modern/root-plan"
+echo v0.9.0 >"$XDG_STATE_HOME/modern/release-incomplete"
+echo 'update-apply: packages stopped halfway' >"$XDG_STATE_HOME/modern/update.log.1"
 files="$("$BR" collect "$id" now)"
 dir="$REPORTS/$id/files"
+if grep -qx 'update.rc: 8 ' "$dir/update.txt" && grep -q 'root-plan: pkg greetd' "$dir/update.txt" \
+    && grep -q 'release-incomplete: v0.9.0' "$dir/update.txt" \
+    && grep -q 'packages stopped halfway' "$dir/update-log.txt"; then
+    ok "an update report carries the exit status, root plan, unfinished release and previous run"
+else
+    err "update state missing from the report: $(cat "$dir/update.txt" "$dir/update-log.txt" 2>/dev/null)"
+fi
+rm -f "$XDG_STATE_HOME/modern/update.rc" "$XDG_STATE_HOME/modern/root-plan" \
+    "$XDG_STATE_HOME/modern/release-incomplete" "$XDG_STATE_HOME/modern/update.log.1"
 [ -f "$dir/hyprland.txt" ] || err "collection wrote no hyprland.txt"
 jq -e 'map(.name) | index("journal-user.txt") and index("config.json") and index("system.txt")' <<<"$files" >/dev/null \
     && ok "collection lists its files" || err "collect: $files"

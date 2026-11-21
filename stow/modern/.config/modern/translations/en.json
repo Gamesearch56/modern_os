@@ -1247,7 +1247,18 @@
       "packageDone": "1 package updated",
       "bootRepair": "Boot repair",
       "bootRepairBody": "The installed kernel is not the one the computer will start. This update corrects that first.",
-      "bootRepaired": "Boot repaired"
+      "bootRepaired": "Boot repaired",
+      "desktopIncomplete": "Finish installing {v}",
+      "fail": {
+        "cancelled": "Update cancelled: the password was not entered",
+        "snapshot": "Update stopped: the backup snapshot could not be created",
+        "release": "ModernOS could not be updated",
+        "packages": "Package update failed; nothing was changed",
+        "partial": "Package update stopped halfway; update again before restarting",
+        "stopped": "The last update stopped before it finished",
+        "locked": "Another program is installing packages; try again when it is done",
+        "releaseStep": "The ModernOS update could not finish its system steps"
+      }
     },
     "overview": {
       "stats": "Live stats",

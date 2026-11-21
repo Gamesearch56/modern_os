@@ -39,6 +39,11 @@ EXCERPTS = (
     ("quickshell-log.txt", "Quickshell log"),
     ("quickshell-journal.txt", "Quickshell journal"),
 )
+# An update report leads with what the update itself wrote.
+UPDATE_EXCERPTS = (
+    ("update-log.txt", "Update log"),
+    ("update.txt", "Update state"),
+)
 
 
 class Unreachable(Exception):
@@ -192,7 +197,8 @@ def issue_body(root, req, version, bundle_url, shot_urls):
         lines += ["## Screenshots", ""]
         for name, url in shot_urls:
             lines += ["### %s" % name, "", "![%s](%s?raw=true)" % (name, url), ""]
-    logs = [block for block in (_excerpt(root, req, name, title) for name, title in EXCERPTS) if block]
+    excerpts = (UPDATE_EXCERPTS if "updates" in (req.get("categories") or []) else ()) + EXCERPTS
+    logs = [block for block in (_excerpt(root, req, name, title) for name, title in excerpts) if block]
     if logs:
         lines += ["## Logs", ""] + logs + [""]
     listed = ", ".join("`%s`" % n for n in (req.get("files") or []))

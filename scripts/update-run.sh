@@ -9,7 +9,9 @@
 #           no shell was watching; exit 75 when there is none
 #   reload  restart the UI if the update left that to Settings, which
 #           calls it once the finished update has been on screen
-# Exit status is the update's.
+# Exit status is the update's (see lib/modern-update.sh). 9: the update
+# stopped without recording a result, such as power loss or a killed
+# session. The previous run's log stays as update.log.1.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -18,7 +20,9 @@ LOG="$STATE/update.log"
 PIDF="$STATE/update.pid"
 RCF="$STATE/update.rc"
 RELOAD="$STATE/reload-pending"
+LOCK="$STATE/update.lock"
 NONE=75
+STOPPED=9
 
 running_pid() {
     local pid
@@ -29,10 +33,12 @@ running_pid() {
     printf '%s\n' "$pid"
 }
 
+# Every follower of one update reads its status. The first moves it
+# aside, so a shell started later does not report it again.
 report() {
     local rc
-    rc="$(cat "$RCF" 2>/dev/null || printf '1')"
-    rm -f "$RCF"
+    rc="$(cat "$RCF" 2>/dev/null || cat "$RCF.seen" 2>/dev/null || printf '1')"
+    mv -f "$RCF" "$RCF.seen" 2>/dev/null || true
     [[ "$rc" =~ ^[0-9]+$ ]] || rc=1
     exit "$rc"
 }
@@ -52,13 +58,40 @@ cmd_run() {
     rm -f "$PIDF"
 }
 
+# A pid file without a running update or a result: the update was cut
+# off before update-run.sh could write its exit status.
+stopped() {
+    [ -f "$PIDF" ] && [ ! -f "$RCF" ] || return 1
+    # Held while an update is starting or running.
+    flock -n "$LOCK" true 2>/dev/null || return 1
+    rm -f "$PIDF"
+    printf 'update-run: the update stopped before it finished; start it again to complete it\n' >>"$LOG"
+    printf '%s\n' "$STOPPED" >"$RCF"
+}
+
 cmd_start() {
-    local pid
+    local pid _
     if pid="$(running_pid)"; then
         follow "$pid"
     fi
     mkdir -p "$STATE"
-    rm -f "$RCF" "$RELOAD"
+    # The update inherits the lock, so a second start (two Settings
+    # windows, a double click) follows the first instead of racing it.
+    exec 8>"$LOCK"
+    if ! flock -n 8; then
+        for _ in $(seq 1 20); do
+            if pid="$(running_pid)"; then
+                follow "$pid"
+            fi
+            sleep 0.1
+        done
+        printf 'update-run: another update is starting\n' >&2
+        exit 1
+    fi
+    rm -f "$RCF" "$RCF.seen" "$RELOAD" "$PIDF"
+    if [ -s "$LOG" ]; then
+        mv -f "$LOG" "$LOG.1"
+    fi
     : >"$LOG"
     # Not a process-group leader under &, so setsid does not fork and $!
     # is the update's own pid.
@@ -74,6 +107,7 @@ cmd_attach() {
     if pid="$(running_pid)"; then
         follow "$pid"
     fi
+    stopped || true
     [ -f "$RCF" ] || exit "$NONE"
     # This shell started after the update finished, so it already runs
     # the new release.

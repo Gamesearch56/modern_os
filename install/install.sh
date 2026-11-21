@@ -370,6 +370,15 @@ else
 fi
 fi
 
+# The colored app icons are rendered, not stowed, so a wallpaper change
+# never writes into the repo. Without tokens.json they keep the default
+# wallpaper's palette; older installs still have stow links to replace.
+run env HOME="$TARGET" \
+    XDG_CONFIG_HOME="$TARGET/.config" \
+    XDG_DATA_HOME="$TARGET/.local/share" \
+    "$REPO_ROOT/scripts/system-icons.sh" \
+    || log_warn "system-icons.sh failed — app icons appear after the next theme change"
+
 # xdg-open follows Settings → Applications. nautilus-prefs only applies
 # when Nautilus schemas are present, so a later install is styled.
 run "$REPO_ROOT/scripts/mime-defaults.sh" \

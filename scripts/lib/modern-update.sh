@@ -12,6 +12,14 @@
 # MODERN_ROOT_PLAN. The plan lives in the state dir until the root step
 # succeeds: a cancelled auth prompt is retried by the next update even
 # though the desktop release no longer shows as pending.
+#
+# Exit status, read by Settings (Services/UpdateClassify.qml failureText):
+#   0 done           1 other failure
+#   3, 5, 7, 8, 10, 11 from update-apply.sh (rolled back, no snapshot,
+#     packages failed early / halfway, database locked, release step)
+#   4 the password prompt was cancelled or refused
+#   6 the ModernOS release could not be installed
+#   9 the update stopped without finishing (update-run.sh)
 
 # shellcheck source=../../install/lib/kernel-boot.sh
 source "$SCRIPT_DIR/../install/lib/kernel-boot.sh"
@@ -59,21 +67,21 @@ modern_update() {
     fi
     if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ] || [ "$snap_first" -eq 1 ]; then
         if [ -t 0 ]; then
-            sudo -v || return 1
+            sudo -v || return 4
         else
             _update_gate_open "$plan" "$boot_only" || return 1
-            _update_gate_ensure_ready || return 1
+            _update_gate_ensure_ready || return $?
         fi
     fi
 
     if [ "$desk_new" -eq 1 ]; then
         _update_progress desktop
         if [ -t 0 ]; then
-            "$SCRIPT_DIR/desktop-sync.sh" apply || return 1
+            "$SCRIPT_DIR/desktop-sync.sh" apply || return 6
         else
             if ! MODERN_ROOT_PLAN="$plan" "$SCRIPT_DIR/desktop-sync.sh" apply; then
                 _update_gate_send skip || true
-                return 1
+                return 6
             fi
         fi
     fi
@@ -84,7 +92,7 @@ modern_update() {
             _update_tty "$plan" "$boot_only" || return 1
         else
             [ -n "${_UPDATE_GATE_FD:-}" ] || _update_gate_open "$plan" "$boot_only" || return 1
-            _update_gate_ensure_ready || return 1
+            _update_gate_ensure_ready || return $?
             if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ]; then
                 if [ "$boot_repair" -eq 1 ] && [ "${pkgs:-0}" -eq 0 ] && [ ! -s "$plan" ]; then
                     _update_progress boot
@@ -171,6 +179,15 @@ _update_gate_ensure_ready() {
         kill "$_UPDATE_STATUS_READER" 2>/dev/null || true
         wait "$_UPDATE_STATUS_READER" 2>/dev/null || true
         rm -f "${_UPDATE_STATUS_FIFO:-}" "${_UPDATE_STATUS_FILE:-}"
+                # pkexec: 126 dismissed, 127 not authorized. Anything else is the
+        # root step's own status, such as 5 for a failed snapshot.
+        case "$rc" in
+            126 | 127)
+                printf 'modern update: the password prompt was cancelled; nothing was changed\n' >&2
+                return 4
+                ;;
+            0) return 1 ;;
+        esac
         return "$rc"
     fi
     wait "$_UPDATE_STATUS_READER" 2>/dev/null || true

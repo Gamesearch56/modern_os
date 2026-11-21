@@ -1247,7 +1247,18 @@
       "packageDone": "1 Paket aktualisiert",
       "bootRepair": "Startreparatur",
       "bootRepairBody": "Der installierte Kernel ist nicht der, mit dem der Rechner startet. Dieses Update korrigiert das zuerst.",
-      "bootRepaired": "Start repariert"
+      "bootRepaired": "Start repariert",
+      "desktopIncomplete": "Installation von {v} abschließen",
+      "fail": {
+        "cancelled": "Update abgebrochen: Das Passwort wurde nicht eingegeben",
+        "snapshot": "Update gestoppt: Der Sicherungs-Snapshot konnte nicht erstellt werden",
+        "release": "ModernOS konnte nicht aktualisiert werden",
+        "packages": "Paketupdate fehlgeschlagen, es wurde nichts verändert",
+        "partial": "Paketupdate mittendrin gestoppt. Vor dem Neustart erneut aktualisieren",
+        "stopped": "Das letzte Update wurde nicht abgeschlossen",
+        "locked": "Ein anderes Programm installiert gerade Pakete. Versuche es danach erneut",
+        "releaseStep": "Das ModernOS-Update konnte seine Systemschritte nicht abschließen"
+      }
     },
     "overview": {
       "stats": "Live-Werte",

@@ -117,10 +117,13 @@ reset
 release v0.3.0 otherpkg
 git_cfg -C "$CLONE" checkout -q --detach v0.2.0
 echo 126 >"$TMP/pkexec-rc"
-if ! update && [ -s "$PLAN" ] && [ ! -e "$MARKER" ] && ! wait_reload; then
-    ok "cancelled auth keeps the plan and does not reload"
+rc=0
+update || rc=$?
+if [ "$rc" -eq 4 ] && grep -q 'password prompt was cancelled' "$TMP/out" \
+    && [ -s "$PLAN" ] && [ ! -e "$MARKER" ] && ! wait_reload; then
+    ok "cancelled auth exits 4 with a message, keeps the plan and does not reload"
 else
-    err "cancelled pkexec must fail, keep the plan, skip reload"
+    err "cancelled pkexec must exit 4 (got $rc), keep the plan, skip reload: $(cat "$TMP/out")"
 fi
 reset
 if update && grep -qx 'pkg otherpkg' "$TMP/seen-plan" && [ ! -e "$PLAN" ] \
@@ -170,11 +173,13 @@ release v0.5.0 fifthpkg
 git_cfg -C "$CLONE" checkout -q --detach v0.4.0
 printf '#!/bin/sh\nprintf "root\\n"\nexit 0\n' >"$BIN/snapper"
 chmod +x "$BIN/snapper"
-echo 1 >"$TMP/pkexec-rc"
+echo 5 >"$TMP/pkexec-rc"
 export MODERN_UPDATE_PROGRESS=1
-if ! update && [ "$(git_cfg -C "$CLONE" describe --tags --exact-match)" = v0.4.0 ] \
+rc=0
+update || rc=$?
+if [ "$rc" -eq 5 ] && [ "$(git_cfg -C "$CLONE" describe --tags --exact-match)" = v0.4.0 ] \
     && ! grep -q '@@progress desktop' "$TMP/out"; then
-    ok "a failed privileged step stops the update before it is logged"
+    ok "a failed snapshot stops the update before it is logged and keeps its exit status"
 else
     err "update continued before the snapshot could finish: $(cat "$TMP/out" 2>/dev/null)"
 fi
@@ -278,6 +283,46 @@ if [ "$rc" -eq 3 ]; then
 else
     err "start rc $rc"
 fi
+if [ -s "$XDG_STATE_HOME/modern/update.log.1" ]; then
+    ok "the previous update's log is kept as update.log.1"
+else
+    err "start must keep the previous log as update.log.1"
+fi
+
+# Two starts at once (two Settings windows): one update, both follow it.
+printf '#!/bin/sh
+echo run >>"%s/runs"
+sleep 1
+exit 0
+' "$TMP" >"$BIN/fake-modern"
+rm -f "$TMP/runs"
+"$RUN" start >/dev/null 2>&1 &
+first=$!
+"$RUN" start >/dev/null 2>&1 &
+second=$!
+rc_a=0
+rc_b=0
+wait "$first" || rc_a=$?
+wait "$second" || rc_b=$?
+if [ "$(wc -l <"$TMP/runs")" -eq 1 ] && [ "$rc_a" -eq 0 ] && [ "$rc_b" -eq 0 ]; then
+    ok "a second start follows the running update instead of starting another"
+else
+    err "two starts ran $(wc -l <"$TMP/runs") updates (rc $rc_a/$rc_b)"
+fi
+
+# Power loss or a killed session: a pid file, no result, nothing running.
+rm -f "$XDG_STATE_HOME/modern/update.rc"
+echo 999999 >"$XDG_STATE_HOME/modern/update.pid"
+rc=0
+"$RUN" attach >"$TMP/attach" 2>&1 || rc=$?
+if [ "$rc" -eq 9 ] && grep -q 'stopped before it finished' "$TMP/attach"; then
+    ok "an update cut off without a result is reported as stopped"
+else
+    err "stopped update: rc=$rc $(cat "$TMP/attach")"
+fi
+rc=0
+"$RUN" attach >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 75 ] || err "a reported stopped update must not be reported twice (rc $rc)"
 
 # A release leaves the UI restart to Settings, which runs `reload` after
 # showing 100%. A shell that starts after the update already runs it.
@@ -342,6 +387,53 @@ EOF
     fi
 fi
 
+dblock="$TMP/db.lck"
+: >"$dblock"
+if (
+    # shellcheck source=lib/update-guard.sh
+    source "$ROOT/scripts/lib/update-guard.sh"
+    UPDATE_PACMAN_LOCK="$dblock" update_guard_pacman_lock >/dev/null
+) && [ ! -e "$dblock" ]; then
+    ok "a pacman lock nobody holds is removed"
+else
+    err "a stale pacman lock must be removed"
+fi
+: >"$dblock"
+(
+    exec 7<"$dblock"
+    sleep 5
+) &
+holder=$!
+if (
+    # shellcheck source=lib/update-guard.sh
+    source "$ROOT/scripts/lib/update-guard.sh"
+    ! UPDATE_PACMAN_LOCK="$dblock" update_guard_pacman_lock
+) && [ -e "$dblock" ]; then
+    ok "a pacman lock held by a running program stops the update"
+else
+    err "a held pacman lock must stop the update and stay"
+fi
+kill "$holder" 2>/dev/null || true
+wait "$holder" 2>/dev/null || true
+
+finish_line="$(grep -n '^progress finish' "$ROOT/scripts/update-apply.sh" | tail -1 | cut -d: -f1)"
+# shellcheck disable=SC2016
+greetd_line="$(grep -n 'greetd_apply "\$user"' "$ROOT/scripts/update-apply.sh" | cut -d: -f1)"
+if [ -n "$finish_line" ] && [ -n "$greetd_line" ] && [ "$finish_line" -gt "$greetd_line" ]; then
+    ok "100% comes after the release's own root steps"
+else
+    err "progress finish must follow the root plan steps"
+fi
+for k in cancelled snapshot release packages partial stopped locked releaseStep; do
+    for lang in en de; do
+        jq -e --arg k "$k" '.settings.update.fail[$k] | length > 0' \
+            "$ROOT/stow/modern/.config/modern/translations/$lang.json" >/dev/null \
+            || err "$lang.json lacks settings.update.fail.$k"
+    done
+    grep -Fq "\"$k\"" "$ROOT/stow/shell/.config/quickshell/modern/Services/UpdateClassify.qml" \
+        || err "UpdateClassify.failureText does not map $k"
+done
+
 if (
     # shellcheck source=lib/update-guard.sh
     source "$ROOT/scripts/lib/update-guard.sh"
@@ -361,7 +453,8 @@ else
     err "update_guard_partial misreads pacman.log"
 fi
 
-for want in update_guard_detach update_guard_esp_backup snapper-restore.sh 'exit 3'; do
+for want in update_guard_detach update_guard_esp_backup update_guard_pacman_lock snapper-restore.sh \
+    'fail 3' 'fail 5' 'fail 7' 'fail 8' 'fail 10' 'fail 11' 'STEP_RC=11'; do
     grep -Fq "$want" "$ROOT/scripts/update-apply.sh" || err "update-apply.sh lacks $want"
 done
 grep -Fq 'update-run.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml" \

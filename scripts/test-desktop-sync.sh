@@ -54,6 +54,7 @@ export MODERN_TEST_FIXTURE=1
 export MODERN_DESKTOP_REPO="$CLONE"
 export MODERN_DESKTOP_REMOTE="$REMOTE"
 export XDG_RUNTIME_DIR="$TMP"
+export XDG_STATE_HOME="$TMP/state"
 
 status_field() {
     "$SYNC" status | jq -r "$1"
@@ -191,6 +192,42 @@ else
     ok "url.*.insteadOf is ignored"
 fi
 unset GIT_CONFIG_GLOBAL
+
+# The checkout is already on the new tag when install.sh runs. A failed
+# install must stay offered, even offline, until a rerun finishes it.
+git_cfg -C "$CLONE" checkout -q --detach v0.3.0
+mkdir -p "$CLONE/install"
+cat >"$CLONE/install/install.sh" <<EOF
+#!/bin/sh
+[ ! -e "$TMP/fail-install" ] || exit 7
+: >"$TMP/installed"
+EOF
+chmod +x "$CLONE/install/install.sh"
+git_cfg -C "$CLONE" add install/install.sh
+git_cfg -C "$CLONE" commit -qm installer >/dev/null
+git_cfg -C "$CLONE" tag -a v0.4.0 -m v0.4.0
+git_cfg -C "$CLONE" push origin v0.4.0 >/dev/null 2>&1
+git_cfg -C "$CLONE" checkout -q --detach v0.3.0
+: >"$TMP/fail-install"
+if MODERN_TEST_RUN_INSTALL=1 "$SYNC" apply >/dev/null 2>"$TMP/apply-fail.err"; then
+    err "apply must fail when install.sh fails"
+elif ! grep -q 'installing v0.4.0 failed' "$TMP/apply-fail.err"; then
+    err "a failed install.sh needs a clear message: $(cat "$TMP/apply-fail.err")"
+elif [ "$(status_field .reason)" = incomplete ] && [ "$(status_field .pending)" = true ] \
+    && [ "$(status_field .to)" = v0.4.0 ] \
+    && [ "$(MODERN_DESKTOP_REMOTE="$TMP/missing.git" "$SYNC" status | jq -r .reason)" = incomplete ]; then
+    ok "a release whose install failed stays offered, also offline"
+else
+    err "failed install not offered again: $("$SYNC" status)"
+fi
+rm -f "$TMP/fail-install"
+if MODERN_TEST_RUN_INSTALL=1 "$SYNC" apply >/dev/null 2>&1 && [ -e "$TMP/installed" ] \
+    && [ "$(status_field .reason)" = current ] && [ ! -e "$XDG_STATE_HOME/modern/release-incomplete" ]; then
+    ok "the next apply finishes the release and clears the marker"
+else
+    err "rerun did not finish the release: $("$SYNC" status)"
+fi
+git_cfg -C "$CLONE" checkout -q --detach v0.1.0
 
 # iso-build refuse: must not mkdir under MODERN_PROTECT_HOME
 ISO="$ROOT/scripts/iso-build.sh"
