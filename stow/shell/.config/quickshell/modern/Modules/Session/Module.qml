@@ -9,6 +9,7 @@ Scope {
     // layer grabs (those fought across monitors and rebuilt the form).
     WlSessionLock {
         locked: Session.locked
+        onSecureChanged: Session.reportSecure(secure)
 
         WlSessionLockSurface {
             color: "transparent"

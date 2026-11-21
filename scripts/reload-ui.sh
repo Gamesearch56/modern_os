@@ -10,12 +10,10 @@ USER_NAME="${USER:-$(id -un)}"
 # in this session instead. qs is a Hyprland child from hyprland.start
 # and dies with the compositor; reload does not re-run that callback.
 start_quickshell() {
-    local log="${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log"
-    mkdir -p "$(dirname "$log")"
     nohup env QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}" \
         QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}" \
         QS_ICON_THEME="${QS_ICON_THEME:-Papirus-Dark}" \
-        qs -c modern >>"$log" 2>&1 &
+        "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/shell-run.sh" >/dev/null 2>&1 &
     disown $! 2>/dev/null || true
 }
 

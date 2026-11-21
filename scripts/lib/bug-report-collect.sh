@@ -6,6 +6,9 @@
 # Hard exclusions live in _forbidden, not in the review checklist: a
 # toggle can be left on by mistake, a refusal here cannot.
 
+# shellcheck source=bug-report-session.sh
+source "$(dirname "${BASH_SOURCE[0]}")/bug-report-session.sh"
+
 BUG_REPORT_CAP_BYTES="${BUG_REPORT_CAP_BYTES:-2000000}"
 BUG_REPORT_TIMEOUT="${BUG_REPORT_TIMEOUT:-15}"
 
@@ -227,14 +230,6 @@ _collect_games() {
     return 0
 }
 
-_collect_session() {
-    local since="$1" marker="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/modern-session-locked"
-    _grab session.txt journalctl -b -u greetd --since="$since" --no-pager -o short-iso -n 500
-    _grab session.txt journalctl --user -b -u hypridle --since="$since" --no-pager -o short-iso -n 500
-    [ -r "$marker" ] && printf 'session-locked marker: %s\n' "$(cat "$marker")" >>"$OUT/session.txt"
-    return 0
-}
-
 _collect_config() {
     local cfg="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
     _forbidden "$cfg" && return 0
@@ -256,6 +251,7 @@ bug_report_collect() {
     _collect_devices "$since"
     _collect_games
     _collect_session "$since"
+    _collect_boot
     _collect_config
     for f in "$OUT"/*; do
         [ -f "$f" ] && _cap "$f"

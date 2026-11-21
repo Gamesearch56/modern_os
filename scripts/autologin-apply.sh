@@ -62,6 +62,18 @@ else
     [ -n "$backend" ] || die "must run as root"
 fi
 
+SESSION_SH=/usr/lib/modern/desktop-session.sh
+
+# A system whose greetd files predate the session wrapper would point
+# autologin at a missing file; start Hyprland directly there instead.
+session_command() {
+    if [ -x "${MODERN_DESKTOP_SESSION:-$SESSION_SH}" ]; then
+        printf '%s\n' "$SESSION_SH"
+    else
+        printf '%s\n' "start-hyprland --no-nixgl"
+    fi
+}
+
 write_greetd() {
     local dest="$1" with_initial="$2"
     local tmp
@@ -79,7 +91,7 @@ write_greetd() {
         if [ "$with_initial" = 1 ]; then
             printf '\n'
             printf '%s\n' '[initial_session]'
-            printf '%s\n' 'command = "/usr/lib/modern/desktop-session.sh"'
+            printf 'command = "%s"\n' "$(session_command)"
             printf 'user = "%s"\n' "$user"
         fi
     } >"$tmp"

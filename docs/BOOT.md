@@ -121,6 +121,38 @@ Per-user state stays in `$XDG_STATE_HOME/modern/` and
 is shown on the lock screen and the login screen. The boot splash stays
 the solid installer colors.
 
+### Lock safeguards
+
+- **Sleep waits for the lock.** hypridle runs with `inhibit_sleep = 3`,
+  so suspend is held until Hyprland reports the session lock. `modern
+  power suspend|hibernate` (power menu, lid, button) also locks first and
+  waits up to three seconds for the `session secured` IPC. If the shell
+  never confirms, it writes the locked marker, logs under `modern-power`
+  and sleeps, so the next shell start comes up locked.
+- **The shell is supervised.** `scripts/shell-run.sh` starts `qs -c
+  modern` and restarts it after a crash. Hyprland keeps a crashed lock
+  locked (`misc:allow_session_lock_restore`), and the new shell reads the
+  marker and takes the lock over. A clean exit, a gone compositor or five
+  crashes in two minutes stop the loop.
+- **Failures are logged.** The shell logs lock requests, compositor
+  confirmation (or its absence after three seconds), PAM error text
+  (e.g. faillock) and unlocks to `quickshell.log`.
+
+### Logs along the chain
+
+| Stage | Where |
+|-------|-------|
+| Boot entry, splash, greetd | `journalctl -b -u plymouth-start -u modern-splash -u modern-boot-confirm -u greetd` |
+| Login screen | `/var/lib/modern/session/greeter.log` (greeter shell), `auth-trace.json` (last 20 auth events, no password data) |
+| Desktop session | `~/.local/state/modern/hyprland.log` (one `== desktop session` header per login) |
+| Shell and lock | `~/.local/state/modern/quickshell.log`, journal tag `modern-shell` |
+| Idle and sleep | `~/.local/state/modern/hypridle.log`, journal tag `modern-power` |
+| Logout, reboot, power off | journal tag `modern-session` (request and any refusal) |
+| Last shutdown | `journalctl -b -1 -n 300` |
+
+The bug report's "Startup, login, lock & shutdown" area collects all of
+these into `session.txt` and `boot.txt`.
+
 ## Portals
 
 Preferred backends are in both:
@@ -146,9 +178,9 @@ another TTY:
 Then:
 
 ```bash
-pgrep -a qs; pgrep -a quickshell; pgrep -a Hyprland
+pgrep -a qs; pgrep -a quickshell; pgrep -a Hyprland; pgrep -af shell-run.sh
 systemctl --user status modern-shell.service
-tail -n 80 ~/.local/state/modern/quickshell.log
+tail -n 80 ~/.local/state/modern/quickshell.log   # shell-run: lines = restarts
 qs -c modern log -t 80
 ls -l ~/.config/kitty/colors.conf
 ```

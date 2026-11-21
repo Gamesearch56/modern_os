@@ -68,6 +68,13 @@ Item {
             respond(secret);
         }
 
+        // PAM's own error text (faillock "account locked", expired
+        // password) explains a refusal; it never contains the secret.
+        onPamMessage: {
+            if (messageIsError && message.length)
+                Logger.info("Session", "PAM: " + message);
+        }
+
         onCompleted: (result) => {
             if (result === PamResult.Success)
                 root._ok();
@@ -75,6 +82,9 @@ Item {
                 root._fail();
         }
 
-        onError: root._fail()
+        onError: (error) => {
+            root._fail();
+            Logger.error("Session", "PAM error " + error);
+        }
     }
 }

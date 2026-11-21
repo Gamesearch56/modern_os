@@ -1658,7 +1658,7 @@
       "network": "Internet",
       "games": "Games",
       "updates": "Updates",
-      "lock": "Lock screen & login",
+      "lock": "Startup, login, lock & shutdown",
       "apps": "Apps",
       "other": "Something else"
     },

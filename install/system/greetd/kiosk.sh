@@ -49,5 +49,10 @@ export GREETD_SOCK="$sock"
 # The banner belongs in a log. On a laptop it would otherwise be the
 # picture between the splash and the login screen.
 log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
+log="$log_dir/hyprland.log"
 mkdir -p "$log_dir"
-exec /usr/bin/env GREETD_SOCK="$sock" /usr/bin/start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua >>"$log_dir/hyprland.log" 2>&1
+if [ "$(wc -c <"$log" 2>/dev/null || printf 0)" -gt 2097152 ]; then
+    mv -f "$log" "$log.1"
+fi
+printf '\n== login screen %s\n' "$(date -Is)" >>"$log"
+exec /usr/bin/env GREETD_SOCK="$sock" /usr/bin/start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua >>"$log" 2>&1

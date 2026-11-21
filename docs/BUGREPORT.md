@@ -33,7 +33,9 @@ a report: `scripts/report-fetch.sh <issue>`.
 | `audio.txt` | `wpctl status`, sinks, cards, PipeWire quantum/rate, Bluetooth card profile and codec |
 | `bluetooth.txt` | Adapter, per-device `bluetoothctl info` (paired/bonded/trusted), bluetoothd and WirePlumber logs |
 | `network.txt` | NM state, radios, rfkill, regulatory domain, joined network's band/signal/rate (no name), NetworkManager and wpa_supplicant logs |
-| `hardware.txt`, `games.txt`, `session.txt`, `config.json` | PCI/USB, memory, disks, battery; Proton tools; greetd/hypridle; behaviour config |
+| `hardware.txt`, `games.txt`, `config.json` | PCI/USB, memory, disks, battery; Proton tools; behaviour config |
+| `session.txt` | Lock marker, whether shell/supervisor/hypridle/inhibitor run, logind session, inhibitors, `modern-session`/`modern-power`/`modern-shell` journal, greetd, login screen log and auth trace, desktop session log (headers, warnings, errors only), hypridle log |
+| `boot.txt` | Kernel command line, boot timing and critical chain, boot entries, splash/boot-confirm/greetd units, the end of the previous boot (its shutdown) |
 
 Never collected (`_forbidden`): `secrets.json`, `.env`, keyrings, SSH
 and GnuPG, browser profiles. Redacted in every text file: tokens,

@@ -18,16 +18,57 @@ POWER_QML="$ROOT/stow/shell/.config/quickshell/modern/Services/Power.qml"
 EN="$ROOT/stow/modern/.config/modern/translations/en.json"
 DE="$ROOT/stow/modern/.config/modern/translations/de.json"
 
+# shellcheck disable=SC2016
 if grep -Fq 'loginctl lock-session' "$MODERN"; then
     err "modern power lock must not use loginctl lock-session"
 elif grep -Fq 'exec qs -c modern ipc call session lock' "$MODERN" \
     && grep -Fq 'timeout 2 qs -c modern ipc call session lock' "$MODERN" \
-    && grep -Fq 'exec systemctl suspend' "$MODERN" \
+    && grep -Fq 'exec systemctl "$1"' "$MODERN" \
     && grep -Fq 'exec systemctl poweroff' "$MODERN" \
     && grep -Fq 'exec qs -c modern ipc call powermenu open' "$MODERN"; then
     ok "modern power lock/suspend/poweroff/ask"
 else
     err "modern power actions missing"
+fi
+
+# Stub qs and systemctl: suspend must wait for the confirmed lock, and an
+# unconfirmed lock must leave the marker so the next shell starts locked.
+STUB="$(mktemp -d "${TMPDIR:-/tmp}/modern-power-XXXXXX")"
+trap 'rm -rf "$STUB"' EXIT
+mkdir -p "$STUB/bin" "$STUB/run"
+cat >"$STUB/bin/qs" <<'EOF'
+#!/bin/sh
+case "$*" in
+    *"session secured"*) cat "$STUB_DIR/secured" 2>/dev/null || echo false ;;
+    *"session lock"*) echo lock >>"$STUB_DIR/calls" ;;
+esac
+EOF
+# shellcheck disable=SC2016
+printf '%s\n' '#!/bin/sh' 'echo "systemctl $*" >>"$STUB_DIR/calls"' >"$STUB/bin/systemctl"
+printf '%s\n' '#!/bin/sh' 'exit 0' >"$STUB/bin/logger"
+chmod +x "$STUB/bin/"*
+echo true >"$STUB/secured"
+if STUB_DIR="$STUB" XDG_RUNTIME_DIR="$STUB/run" PATH="$STUB/bin:$PATH" "$MODERN" power suspend \
+    && [ "$(cat "$STUB/calls")" = "$(printf 'lock\nsystemctl suspend')" ] \
+    && [ ! -e "$STUB/run/modern-session-locked" ]; then
+    ok "suspend locks first and sleeps once the lock is confirmed"
+else
+    err "suspend with a confirmed lock: $(cat "$STUB/calls" 2>/dev/null)"
+fi
+rm -f "$STUB/calls" "$STUB/secured"
+if STUB_DIR="$STUB" XDG_RUNTIME_DIR="$STUB/run" PATH="$STUB/bin:$PATH" "$MODERN" power hibernate \
+    && grep -Fxq 'systemctl hibernate' "$STUB/calls" \
+    && [ "$(cat "$STUB/run/modern-session-locked" 2>/dev/null)" = 1 ]; then
+    ok "an unconfirmed lock still sleeps and leaves the locked marker"
+else
+    err "unconfirmed lock: $(cat "$STUB/calls" 2>/dev/null)"
+fi
+
+if grep -Fq 'Paths.script("modern"), "power", "suspend"' "$POWER_QML" \
+    && ! grep -Fq '"systemctl", "suspend"' "$POWER_QML"; then
+    ok "Power.qml suspends through modern power"
+else
+    err "Power.qml.suspend must go through modern power suspend"
 fi
 
 if grep -Fq 'switch:on:Lid Switch' "$POWER_LUA" \

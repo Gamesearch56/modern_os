@@ -44,6 +44,11 @@ UPDATE_EXCERPTS = (
     ("update-log.txt", "Update log"),
     ("update.txt", "Update state"),
 )
+# Start, login, lock and shutdown: the session chain, then boot.
+SESSION_EXCERPTS = (
+    ("session.txt", "Session, login and lock"),
+    ("boot.txt", "Boot, splash and last shutdown"),
+)
 
 
 class Unreachable(Exception):
@@ -197,7 +202,9 @@ def issue_body(root, req, version, bundle_url, shot_urls):
         lines += ["## Screenshots", ""]
         for name, url in shot_urls:
             lines += ["### %s" % name, "", "![%s](%s?raw=true)" % (name, url), ""]
-    excerpts = (UPDATE_EXCERPTS if "updates" in (req.get("categories") or []) else ()) + EXCERPTS
+    cats = req.get("categories") or []
+    excerpts = ((UPDATE_EXCERPTS if "updates" in cats else ())
+                + (SESSION_EXCERPTS if "lock" in cats else ()) + EXCERPTS)
     logs = [block for block in (_excerpt(root, req, name, title) for name, title in excerpts) if block]
     if logs:
         lines += ["## Logs", ""] + logs + [""]

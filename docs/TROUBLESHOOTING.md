@@ -245,6 +245,22 @@ removed automatically. A problem report filed under "Updates" quotes
 the update log and `update.txt` (exit status, markers, root plan,
 release history, the `modern-system-update` unit) in the issue.
 
+## Startup, login, lock or shutdown went wrong
+
+File a problem report under "Startup, login, lock & shutdown". It
+quotes `session.txt` and `boot.txt` in the issue; `docs/BOOT.md` →
+"Logs along the chain" lists what each stage writes. By hand:
+
+| Symptom | Look at |
+|---------|---------|
+| Login screen missing or stuck | `/var/lib/modern/session/greeter.log`, `journalctl -b -u greetd` |
+| Password accepted, desktop never comes | `auth-trace.json` (`readyToLaunch` without `launched`), `~/.local/state/modern/hyprland.log` |
+| Lock screen did not come back after a crash | `quickshell.log` → `shell-run:` lines; five crashes in two minutes stop the restarts |
+| Desktop visible for a moment on wake | `quickshell.log` → "compositor has not confirmed the lock", `journalctl -t modern-power` |
+| Unlock refused with the right password | `quickshell.log` → `PAM:` lines (faillock: `faillock --user "$USER" --reset`) |
+| Reboot or power off does nothing | `journalctl -t modern-session` → "refused"; `systemd-inhibit --list` |
+| Shutdown hangs | `journalctl -b -1 -n 300` after the next boot |
+
 ## `secrets.json` missing
 
 Expected until you create gitignored
