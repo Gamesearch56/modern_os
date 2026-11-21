@@ -50,7 +50,7 @@ Item {
     Shortcut { sequence: "Backtab"; enabled: root.armed && !FilesSearch.popup && root.places; context: Qt.WindowShortcut; onActivated: root.places.cycle(-1) }
     Shortcut { sequence: "Ctrl+H"; enabled: root.armed; onActivated: Files.toggleHidden() }
     Shortcut { sequence: "F5"; enabled: root.armed; onActivated: Files.refresh() }
-    Shortcut { sequence: "Return"; enabled: root.armed && !FilesSearch.popup && Files.selected.length === 1; onActivated: Files.show(Files.selected[0]) }
+    Shortcut { sequence: "Return"; enabled: root.armed && !FilesSearch.popup && Files.selected.length === 1; onActivated: { if (!FilesChoose.accept(String(Files.selected[0]))) Files.show(Files.selected[0]); } }
     Shortcut { sequence: "Space"; enabled: root.armed; onActivated: root.preview() }
     Shortcut { sequence: "Ctrl+I"; enabled: root.armed && Files.selected.length === 1; onActivated: root.properties(Files.selected[0]) }
     Shortcut { sequence: "Ctrl+D"; enabled: root.armed && Files.selected.length === 1; onActivated: FilesPlaces.toggleFavorite(Files.selected[0]) }
@@ -76,6 +76,8 @@ Item {
                 FilesSearch.requestClear();
             } else if (Files.locationOpen)
                 Files.locationOpen = false;
+            else if (FilesChoose.active && Files.selected.length === 0)
+                Files.hide();
             else
                 Files.clearSelection();
         }

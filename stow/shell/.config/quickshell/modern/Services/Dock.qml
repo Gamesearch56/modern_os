@@ -41,7 +41,8 @@ Singleton {
             return I18n.t("store.title");
         if (id === "shell:files")
             return I18n.t("files.launcherName");
-        return Apps.labelForId(id);
+        const own = ModernApps.shortName(id);
+        return own.length ? own : Apps.labelForId(id);
     }
 
     function iconFor(id: string): string {

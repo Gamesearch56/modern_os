@@ -117,6 +117,9 @@ Singleton {
                 + win.filesCell * 5
                 + root.spacing.md * 4
         readonly property real filesHeight: root.spacing.xxl * 22
+        // Keep windows.lua modern-editor size in sync.
+        readonly property real editorWidth: root.spacing.xxl * 26
+        readonly property real editorHeight: root.spacing.xxl * 20
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real reportWidth: root.spacing.xxl * 24 + root.spacing.lg

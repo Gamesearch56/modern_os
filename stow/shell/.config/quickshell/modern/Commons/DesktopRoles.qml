@@ -106,7 +106,7 @@ Singleton {
         if (role === "terminal")
             return ["kitty", "alacritty", "foot", "wezterm", "konsole", "ghostty", "ptyxis"];
         if (role === "textEditor")
-            return ["gedit", "gnome-text-editor", "kate", "kwrite", "mousepad", "xed", "pluma", "featherpad"];
+            return ["modern.editor", "gedit", "gnome-text-editor", "kate", "kwrite", "mousepad", "xed", "pluma", "featherpad"];
         return [];
     }
 }

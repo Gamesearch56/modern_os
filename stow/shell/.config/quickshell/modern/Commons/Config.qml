@@ -193,7 +193,7 @@ Singleton {
                     // overrides live in that manifest, not here.
                     property string videoPlayer: "mpv.desktop"
                     property string imageViewer: "imv.desktop"
-                    property string textEditor: "org.gnome.gedit.desktop"
+                    property string textEditor: "modern.editor.desktop"
                     property string terminal: "kitty.desktop"
                 }
             }
@@ -290,6 +290,14 @@ Singleton {
                 property var favorites: []
             }
 
+            property JsonObject editor: JsonObject {
+                property bool wordWrap: true
+                property bool statusBar: true
+                property bool monospace: true
+                property int zoom: 100
+                property int maxMegabytes: 8
+            }
+
             property JsonObject backup: JsonObject {
                 property bool snapperEnabled: false
                 property bool resticEnabled: false
@@ -376,4 +384,5 @@ Singleton {
     readonly property alias keybinds: adapter.keybinds
     readonly property alias bugReport: adapter.bugReport
     readonly property alias files: adapter.files
+    readonly property alias editor: adapter.editor
 }

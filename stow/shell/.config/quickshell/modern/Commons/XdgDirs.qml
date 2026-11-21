@@ -13,6 +13,7 @@ Singleton {
     readonly property string home: Paths.home
     readonly property string pictures: root._dir("PICTURES", "Pictures")
     readonly property string videos: root._dir("VIDEOS", "Videos")
+    readonly property string documents: root._dir("DOCUMENTS", "Documents")
     readonly property string wallpapers: root.pictures + "/Wallpapers"
     property var _map: ({})
 

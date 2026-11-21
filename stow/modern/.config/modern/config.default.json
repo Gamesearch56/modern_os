@@ -282,6 +282,13 @@
     "showNetwork": false,
     "favorites": []
   },
+  "editor": {
+    "wordWrap": true,
+    "statusBar": true,
+    "monospace": true,
+    "zoom": 100,
+    "maxMegabytes": 8
+  },
   "backup": {
     "snapperEnabled": false,
     "resticEnabled": false,
@@ -356,7 +363,7 @@
       "fileManager": "modern.files.desktop",
       "videoPlayer": "mpv.desktop",
       "imageViewer": "imv.desktop",
-      "textEditor": "org.gnome.gedit.desktop",
+      "textEditor": "modern.editor.desktop",
       "terminal": "kitty.desktop"
     }
   },

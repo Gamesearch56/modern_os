@@ -111,13 +111,13 @@ Singleton {
                     && comment.indexOf(needle) === -1
                     && !root._keywordHit(e.keywords, needle) && !root._subseq(name, needle))
                 continue;
-            const own = root._filesApp(e);
+            const own = ModernApps.owns(e.id);
             const id = e.id || e.name;
             out.push({
                 id: id,
-                name: own ? I18n.t("files.launcherName") : e.name,
+                name: own ? ModernApps.shortName(e.id) : e.name,
                 genericName: e.genericName,
-                icon: own ? "modern-files" : Apps.resolveIcon(e.icon || e.startupClass || e.id),
+                icon: own ? ModernApps.icon(e.id) : Apps.resolveIcon(e.icon || e.startupClass || e.id),
                 tint: false,
                 exec: e,
                 score: (Config.launcher.frecencyEnabled ?? true) ? root.score(id) : 0
@@ -157,11 +157,6 @@ Singleton {
         } catch (e) {
             Logger.error("Launcher", String(e));
         }
-    }
-
-    function _filesApp(e: var): bool {
-        const id = String((e && e.id) || "").replace(/\.desktop$/i, "");
-        return id === "modern.files";
     }
 
     function _keywordHit(words: var, needle: string): bool {

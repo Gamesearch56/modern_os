@@ -61,5 +61,21 @@ down on the trackpad fade the overview with the swipe; two fingers
 then move between the windows. Three fingers sideways still change
 workspace.
 
+## Texteditor
+
+Inside a Texteditor window (`docs/EDITOR.md`); the menus show the same keys.
+
+| Combo | Action |
+|---|---|
+| `CTRL + N` / `CTRL + SHIFT + N` | New document / new window |
+| `CTRL + O` / `CTRL + S` / `CTRL + SHIFT + S` | Open / save / save as |
+| `CTRL + W` | Close the window (asks about unsaved changes) |
+| `CTRL + Z` / `CTRL + Y` | Undo / redo |
+| `CTRL + F` / `F3` / `SHIFT + F3` | Find / next / previous |
+| `CTRL + H` / `CTRL + G` | Replace / go to line |
+| `F5` | Insert time and date |
+| `ALT + Z` | Word wrap |
+| `CTRL + +` / `CTRL + -` / `CTRL + 0`, `CTRL + wheel` | Zoom in / out / reset |
+
 Live list: press `SUPER + K`. Media lists the hardware keys. Mouse lists Super+mouse and the window edge. CLI: `scripts/modern <target> <function>`
 (`qs -c modern ipc` wrapper).

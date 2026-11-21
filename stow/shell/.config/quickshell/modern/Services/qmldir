@@ -129,3 +129,6 @@ singleton FilesDrag 1.0 FilesDrag.qml
 singleton FilesHistory 1.0 FilesHistory.qml
 singleton FilesLocate 1.0 FilesLocate.qml
 singleton GamesLibrary 1.0 GamesLibrary.qml
+singleton EditorIo 1.0 EditorIo.qml
+singleton EditorDoc 1.0 EditorDoc.qml
+singleton EditorPrefs 1.0 EditorPrefs.qml

@@ -21,10 +21,10 @@ icons="$XDG_DATA_HOME/icons/hicolor/scalable/apps"
 mkdir -p "$icons" "$XDG_CONFIG_HOME/modern"
 
 mapfile -t names < <(cd "$TEMPLATES" && printf '%s\n' modern-*.svg)
-if [ "${#names[@]}" -eq 7 ]; then
-    ok "seven app icon templates"
+if [ "${#names[@]}" -eq 8 ]; then
+    ok "eight app icon templates"
 else
-    err "expected 7 templates in install/icons/apps, found ${#names[@]}"
+    err "expected 8 templates in install/icons/apps, found ${#names[@]}"
 fi
 for n in "${names[@]}"; do
     [ ! -e "$STOWED/$n" ] || err "$n is still stowed, so a theme change would write the repo"

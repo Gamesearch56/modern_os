@@ -1,7 +1,7 @@
 {
   "textEditor": {
-    "desktop": "org.gnome.gedit.desktop",
-    "packages": ["gedit"]
+    "desktop": "modern.editor.desktop",
+    "packages": []
   },
   "imageViewer": {
     "desktop": "imv.desktop",

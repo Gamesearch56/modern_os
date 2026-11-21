@@ -1904,5 +1904,148 @@
       "setgid": "Setgid",
       "sticky": "Sticky"
     }
+  },
+  "editor": {
+    "launcherName": "Texteditor",
+    "untitled": "Untitled",
+    "windowTitle": "{name} – Texteditor",
+    "dirtyName": "• {name}",
+    "notSaved": "Not saved yet",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "menu": {
+      "file": "File",
+      "edit": "Edit",
+      "view": "View"
+    },
+    "actions": {
+      "new": "New",
+      "newWindow": "New window",
+      "open": "Open…",
+      "save": "Save",
+      "saveAs": "Save as…",
+      "reveal": "Show in Files",
+      "trash": "Move to trash",
+      "close": "Close",
+      "undo": "Undo",
+      "redo": "Redo",
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "delete": "Delete",
+      "find": "Find…",
+      "findNext": "Find next",
+      "findPrevious": "Find previous",
+      "replace": "Replace…",
+      "goTo": "Go to line…",
+      "selectAll": "Select all",
+      "timeDate": "Time/Date",
+      "wordWrap": "Word wrap",
+      "monospace": "Monospace font",
+      "statusBar": "Status bar",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "zoomReset": "Reset zoom"
+    },
+    "keys": {
+      "ctrl": "Ctrl",
+      "shift": "Shift",
+      "alt": "Alt",
+      "delete": "Del"
+    },
+    "eol": {
+      "lf": "Unix (LF)",
+      "crlf": "Windows (CRLF)",
+      "cr": "Classic Mac (CR)"
+    },
+    "encoding": {
+      "utf8": "UTF-8",
+      "utf8bom": "UTF-8 with BOM",
+      "utf16le": "UTF-16 LE",
+      "utf16be": "UTF-16 BE",
+      "windows1252": "Western (Windows-1252)",
+      "iso88591": "Western (ISO-8859-1)"
+    },
+    "status": {
+      "position": "Ln {line}, Col {column}",
+      "characters": "{count} characters",
+      "zoom": "{percent} %",
+      "lineEnding": "Line endings",
+      "encoding": "Encoding"
+    },
+    "readOnly": {
+      "denied": "Read-only",
+      "lossy": "Read-only: special line breaks",
+      "claimed": "Open in another window"
+    },
+    "find": {
+      "placeholder": "Find",
+      "replacePlaceholder": "Replace with",
+      "none": "No matches",
+      "count": "{count} matches",
+      "matchCase": "Match case",
+      "wrap": "Wrap around",
+      "close": "Close search",
+      "replaceOne": "Replace",
+      "replaceAll": "Replace all"
+    },
+    "goTo": {
+      "title": "Go to line",
+      "body": "Line number (1 – {last})",
+      "go": "Go to",
+      "placeholder": "Line"
+    },
+    "unsaved": {
+      "title": "Save changes?",
+      "body": "Do you want to save the changes to “{name}”?",
+      "save": "Save",
+      "discard": "Don't save"
+    },
+    "changed": {
+      "title": "File changed on disk",
+      "body": "“{name}” was changed by another program since it was opened. Overwrite it with your version?",
+      "overwrite": "Overwrite"
+    },
+    "exists": {
+      "title": "Replace file?",
+      "body": "“{name}” already exists in this folder. Replace it?",
+      "replace": "Replace"
+    },
+    "trash": {
+      "title": "Move to trash?",
+      "body": "“{name}” is moved to the trash and this window closes. You can restore it from the trash in Files.",
+      "confirm": "Move to trash"
+    },
+    "notice": {
+      "title": "Texteditor"
+    },
+    "saveAs": {
+      "title": "Save as",
+      "save": "Save",
+      "name": "File name",
+      "namePlaceholder": "Name.txt",
+      "defaultName": "Untitled.txt",
+      "folder": "Folder",
+      "encoding": "Encoding",
+      "lineEnding": "Line endings"
+    },
+    "errors": {
+      "failed": "“{name}” could not be opened or saved.",
+      "missing": "“{name}” no longer exists.",
+      "directory": "“{name}” is a folder, not a file.",
+      "special": "“{name}” is not a regular file and cannot be opened.",
+      "tooLarge": "“{name}” is larger than {megabytes} MB and cannot be opened here.",
+      "binary": "“{name}” is not a text file.",
+      "encoding": "The text encoding of “{name}” is not supported.",
+      "denied": "You don't have permission for “{name}”. Use Save as to keep a copy.",
+      "readOnlyFs": "“{name}” is on a read-only drive. Use Save as to keep a copy.",
+      "full": "The drive is full. “{name}” was not saved.",
+      "badName": "This file name is not allowed.",
+      "changed": "“{name}” was changed by another program.",
+      "exists": "A file with this name already exists.",
+      "unencodable": "Some characters in “{name}” can't be stored in the chosen encoding. Choose UTF-8 with Save as.",
+      "protected": "“{name}” is protected and cannot be moved to the trash.",
+      "busy": "Still working on the last request. Try again in a moment."
+    }
   }
 }

@@ -86,7 +86,7 @@ modern_dotfile/
 │                                greetd configs consumed by install/lib/greetd.sh
 ├── stow/
 │   ├── hypr/.config/hypr/                   hyprland.lua + modules/
-│   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules; Modules/Files is the file manager; Modules/Dock is the application dock
+│   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules; Modules/Files is the file manager; Modules/Editor is the Texteditor (own qs process, docs/EDITOR.md); Modules/Dock is the application dock
 │   ├── greeter/.config/quickshell/greeter/  shares Session/ with the shell
 │   ├── theme/.config/matugen/               config.toml + templates/
 │   ├── kitty/ gtk/ qt/ bash/ git/ mpv/ imv/   current external player and image viewer (`install/manifests/default-apps.json`)

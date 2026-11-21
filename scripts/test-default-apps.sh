@@ -45,8 +45,9 @@ for role in need:
     packages = spec.get("packages") or []
     if not desktop.endswith(".desktop"):
         bad(f"{role}.desktop must be a desktop id")
-    if not packages:
-        bad(f"{role}.packages is empty")
+    shipped = (Path(root) / "stow/xdg/.local/share/applications" / desktop).is_file()
+    if not packages and not shipped:
+        bad(f"{role}.packages is empty and {desktop} is not shipped in stow/xdg")
     if apps.get(role) != desktop:
         bad(
             f"config.default.json apps.defaults.{role} is {apps.get(role)!r}; "

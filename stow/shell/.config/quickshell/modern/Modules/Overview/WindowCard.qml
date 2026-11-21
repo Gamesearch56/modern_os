@@ -24,6 +24,9 @@ Item {
         // The compositor title stays modern.files so window rules still match.
         if (root._rawTitle === "modern.files")
             return I18n.t("files.launcherName");
+        const own = ModernApps.shortName(root._class);
+        if (own.length)
+            return own;
         const n = Apps.displayNameForHint(root._class);
         return n.length ? n : (root._rawTitle.length && root._rawTitle !== "~" ? root._rawTitle : root._class);
     }

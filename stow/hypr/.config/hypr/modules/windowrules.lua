@@ -250,7 +250,7 @@ apply({
 for _, w in ipairs(overlays) do
     local rule = {
         name = w.name,
-        match = { title = w.title },
+        match = w.class and { class = w.class } or { title = w.title },
         float = true,
         center = true,
         dim_around = w.dim ~= false,

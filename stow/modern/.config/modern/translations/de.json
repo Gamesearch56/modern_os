@@ -1904,5 +1904,148 @@
       "setgid": "Setgid",
       "sticky": "Sticky"
     }
+  },
+  "editor": {
+    "launcherName": "Texteditor",
+    "untitled": "Unbenannt",
+    "windowTitle": "{name} – Texteditor",
+    "dirtyName": "• {name}",
+    "notSaved": "Noch nicht gespeichert",
+    "cancel": "Abbrechen",
+    "ok": "OK",
+    "menu": {
+      "file": "Datei",
+      "edit": "Bearbeiten",
+      "view": "Ansicht"
+    },
+    "actions": {
+      "new": "Neu",
+      "newWindow": "Neues Fenster",
+      "open": "Öffnen…",
+      "save": "Speichern",
+      "saveAs": "Speichern unter…",
+      "reveal": "In Dateien anzeigen",
+      "trash": "In den Papierkorb",
+      "close": "Schließen",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
+      "cut": "Ausschneiden",
+      "copy": "Kopieren",
+      "paste": "Einfügen",
+      "delete": "Löschen",
+      "find": "Suchen…",
+      "findNext": "Weitersuchen",
+      "findPrevious": "Rückwärts suchen",
+      "replace": "Ersetzen…",
+      "goTo": "Gehe zu Zeile…",
+      "selectAll": "Alles auswählen",
+      "timeDate": "Uhrzeit/Datum",
+      "wordWrap": "Zeilenumbruch",
+      "monospace": "Schrift mit fester Breite",
+      "statusBar": "Statusleiste",
+      "zoomIn": "Vergrößern",
+      "zoomOut": "Verkleinern",
+      "zoomReset": "Zoom zurücksetzen"
+    },
+    "keys": {
+      "ctrl": "Strg",
+      "shift": "Umschalt",
+      "alt": "Alt",
+      "delete": "Entf"
+    },
+    "eol": {
+      "lf": "Unix (LF)",
+      "crlf": "Windows (CRLF)",
+      "cr": "Klassisches Mac (CR)"
+    },
+    "encoding": {
+      "utf8": "UTF-8",
+      "utf8bom": "UTF-8 mit BOM",
+      "utf16le": "UTF-16 LE",
+      "utf16be": "UTF-16 BE",
+      "windows1252": "Westeuropäisch (Windows-1252)",
+      "iso88591": "Westeuropäisch (ISO-8859-1)"
+    },
+    "status": {
+      "position": "Z. {line}, Sp. {column}",
+      "characters": "{count} Zeichen",
+      "zoom": "{percent} %",
+      "lineEnding": "Zeilenende",
+      "encoding": "Kodierung"
+    },
+    "readOnly": {
+      "denied": "Schreibgeschützt",
+      "lossy": "Schreibgeschützt: besondere Zeilenumbrüche",
+      "claimed": "In einem anderen Fenster geöffnet"
+    },
+    "find": {
+      "placeholder": "Suchen",
+      "replacePlaceholder": "Ersetzen durch",
+      "none": "Keine Treffer",
+      "count": "{count} Treffer",
+      "matchCase": "Groß-/Kleinschreibung beachten",
+      "wrap": "Am Ende von vorn beginnen",
+      "close": "Suche schließen",
+      "replaceOne": "Ersetzen",
+      "replaceAll": "Alle ersetzen"
+    },
+    "goTo": {
+      "title": "Gehe zu Zeile",
+      "body": "Zeilennummer (1 – {last})",
+      "go": "Gehe zu",
+      "placeholder": "Zeile"
+    },
+    "unsaved": {
+      "title": "Änderungen speichern?",
+      "body": "Möchtest du die Änderungen an „{name}“ speichern?",
+      "save": "Speichern",
+      "discard": "Nicht speichern"
+    },
+    "changed": {
+      "title": "Datei wurde geändert",
+      "body": "„{name}“ wurde seit dem Öffnen von einem anderen Programm geändert. Mit deiner Fassung überschreiben?",
+      "overwrite": "Überschreiben"
+    },
+    "exists": {
+      "title": "Datei ersetzen?",
+      "body": "„{name}“ gibt es in diesem Ordner schon. Ersetzen?",
+      "replace": "Ersetzen"
+    },
+    "trash": {
+      "title": "In den Papierkorb verschieben?",
+      "body": "„{name}“ wird in den Papierkorb verschoben und dieses Fenster geschlossen. In Dateien kannst du sie aus dem Papierkorb wiederherstellen.",
+      "confirm": "In den Papierkorb"
+    },
+    "notice": {
+      "title": "Texteditor"
+    },
+    "saveAs": {
+      "title": "Speichern unter",
+      "save": "Speichern",
+      "name": "Dateiname",
+      "namePlaceholder": "Name.txt",
+      "defaultName": "Unbenannt.txt",
+      "folder": "Ordner",
+      "encoding": "Kodierung",
+      "lineEnding": "Zeilenende"
+    },
+    "errors": {
+      "failed": "„{name}“ konnte nicht geöffnet oder gespeichert werden.",
+      "missing": "„{name}“ gibt es nicht mehr.",
+      "directory": "„{name}“ ist ein Ordner, keine Datei.",
+      "special": "„{name}“ ist keine normale Datei und kann nicht geöffnet werden.",
+      "tooLarge": "„{name}“ ist größer als {megabytes} MB und kann hier nicht geöffnet werden.",
+      "binary": "„{name}“ ist keine Textdatei.",
+      "encoding": "Die Textkodierung von „{name}“ wird nicht unterstützt.",
+      "denied": "Du hast keine Berechtigung für „{name}“. Mit „Speichern unter“ kannst du eine Kopie behalten.",
+      "readOnlyFs": "„{name}“ liegt auf einem schreibgeschützten Laufwerk. Mit „Speichern unter“ kannst du eine Kopie behalten.",
+      "full": "Das Laufwerk ist voll. „{name}“ wurde nicht gespeichert.",
+      "badName": "Dieser Dateiname ist nicht erlaubt.",
+      "changed": "„{name}“ wurde von einem anderen Programm geändert.",
+      "exists": "Eine Datei mit diesem Namen gibt es schon.",
+      "unencodable": "Einige Zeichen in „{name}“ passen nicht in die gewählte Kodierung. Wähle UTF-8 unter „Speichern unter“.",
+      "protected": "„{name}“ ist geschützt und kann nicht in den Papierkorb verschoben werden.",
+      "busy": "Die letzte Aktion läuft noch. Versuch es gleich noch einmal."
+    }
   }
 }
