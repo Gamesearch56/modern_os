@@ -1,5 +1,9 @@
 # Bar widgets
 
+For developers: which bar widgets exist, how a widget is declared and
+placed, and how the dock next to the bar behaves. End users change the
+same layout in Settings → Bar and Settings → Dock.
+
 The bar is three id lists in `config.json` (`bar.left`, `bar.center`,
 `bar.right`). Each id maps to `Modules/Bar/widgets/<id>/` with
 `Widget.qml` and a `widget.json` descriptor (`id`, translation `key`,
@@ -11,20 +15,19 @@ directory plus an id in those arrays — no central switch.
 | `launcher` | `bar.launcher` | Launcher | Opens the application launcher |
 | `workspaces` | `bar.workspaces` | Hypr | Per-monitor strip (`Hypr.workspaceIdsFor`); `monitors.workspaceMode` `dynamic` (this output only, + always shown) or `fixed` (1–5 / 6–10 / 11–15 / … by x-position) |
 | `tray` | `bar.tray` | — | Status notifier / system tray |
-| `taskbar` | `bar.taskbar` | Hypr | Open windows (`Hypr.toplevelList`; refreshes when the popup opens) |
-| `clock` | `bar.clock` | Calendar | Date/time; click opens Calendar / Events tabs (month grid + today's ICS events) |
-| `media` | `bar.media` | Media | Capsule (art, title, transport); playing app wins, then Spotify if it is open |
+| `taskbar` | `bar.taskbar` | Hypr, Tray, RunningApps | Open windows (`Hypr.toplevelList`; refreshes when the popup opens) |
+| `clock` | `bar.clock` | — | Date/time; click opens Calendar / Events tabs (month grid + today's ICS events) |
+| `media` | `bar.media` | Media, Audio | Capsule (art, title, transport); playing app wins, then Spotify if it is open |
 | `audio` | `bar.volume` | Audio | Master sink volume / mute (0% mutes every app stream); click opens Settings → Audio |
 | `weather` | `bar.weather` | Weather | Location-based conditions |
 | `network` | `bar.network` | Network | Wi-Fi / ethernet indicator |
 | `microphone` | `bar.microphone` | Audio | Source volume / mute |
 | `performance` | `bar.performance` | SystemStats | CPU / RAM / GPU / temp poll (timer off when hidden) |
-| `vpn` | `bar.vpn` | Vpn | VPN connection state |
 | `bluetooth` | `bar.bluetooth` | Bluetooth | Adapter + connected devices |
 | `notifications` | `bar.notifications` | Notifications | Unread / DND affordance |
-| `settings` | `bar.settings` | Notifications | Opens the control center (`Notifications.toggle`), not the Settings app |
+| `battery` | `bar.battery` | Battery | Charge level and state |
+| `settings` | `bar.controlPanel` | Notifications | Opens the control center (`Notifications.toggle`), not the Settings app |
 | `power` | `bar.power` | PowerMenu | Session power menu |
-
 | `ai` | `ai.title` | Ai | Assistant chip + chat popup (Ollama); empty state explains setup |
 | `connectivity` | `bar.connectivity` | Network, Bluetooth | Combined wifi + BT; click opens Settings |
 | `calendar` | `calendar.title` | Calendar | Month grid (optional bar chip) |
@@ -41,7 +44,7 @@ Settings → Bar can enable/disable and drag those ids across left/middle/right.
 These still exist as directories but are **not** in the Settings catalog
 (they render only if leftover `config.json` lists them): `tray`,
 `calendar`, `mail`, `network`, `bluetooth`, `microphone`, `performance`,
-`vpn`, `kdeconnect`, `notifications`.
+`kdeconnect`, `notifications`, `notes`.
 
 A **bubble** is a widget (or small cluster) with its own background
 pill. `widget.json` `"bubble": true` marks a standalone pill. Wi-Fi and

@@ -1,5 +1,9 @@
 # Troubleshooting
 
+Known problems and their fixes, grouped by symptom: login, the shell
+and bar, colors, updates, sessions, polkit prompts, games and apps. For
+admins and users comfortable with a terminal.
+
 Start with `scripts/doctor.sh` — it never mutates the machine. Critical
 missing repo files exit 1; everything else is a warning and exit 0.
 
@@ -8,7 +12,7 @@ missing repo files exit 1; everything else is a warning and exit 0.
 Quickshell’s greetd client only connects when `GREETD_SOCK` is set on
 `qs -c greeter`. Hyprland’s `exec` of qs does not inherit that socket
 unless `/etc/greetd/kiosk.sh` and `/etc/greetd/hyprland.lua` forward it
-(`install/lib/greetd.sh`). Re-run `./install/install.sh` on this home,
+(`install/lib/greetd.sh`). Re-run `./install/install.sh` as that user,
 then sign out — do not start `qs` by hand from a TTY; that process has
 no socket.
 
@@ -48,8 +52,8 @@ See `docs/ISOLATION.md`. Stow into `$HOME` or `--target`. If
 `--allow-live-home` is passed. Existing-account install: `docs/CUTOVER.md`.
 
 To return to another session without reboot: `Ctrl+Alt+F1` or `F2`.
-`install.sh --target` on a real home also enables greetd for this
-machine. Shell `Logger.error` toasts appear only on the session that
+`install.sh --target` on a real home also enables greetd for the whole
+system. Shell `Logger.error` toasts appear only on the session that
 is running Quickshell.
 
 ## Nautilus “No Home Directory” / “Kein Persönlicher Ordner”
@@ -72,7 +76,8 @@ Re-run `./install/install.sh --profile full` as the target user (idempotent).
 If a re-run logged hundreds of "backing up" lines under `.config/hypr`
 or `quickshell`, an older walker treated Stow folded directories as
 conflicts and may have moved files out of the git clone. Restore with
-`git checkout -- stow/` in `~/modern_dotfile`, then re-run install.
+`git checkout -- stow/` in your clone (`~/modern_dotfile` on an ISO
+install), then re-run install.
 Current stow.sh skips paths that already resolve inside the package and
 uses `--no-folding`.
 
@@ -147,8 +152,8 @@ from kitty after the bar is up.
 - Extra sessions for the same user: `loginctl list-sessions`, then
   `loginctl terminate-session <id>` from another account, or on a TTY:
   `pkill -x Hyprland`.
-- After restow, autostart runs `qs -c modern` as a child of *this*
-  compositor and **stops** `modern-shell.service` so a leftover TTY
+- After restow, autostart runs `qs -c modern` (through
+  `scripts/shell-run.sh`) as a child of *this* compositor and **stops** `modern-shell.service` so a leftover TTY
   cannot steal `WAYLAND_DISPLAY`. Leave that user unit disabled on
   TTY-started Hyprland; `scripts/doctor.sh` treats "not enabled" as
   expected in that setup. Bare `qs ipc` talks to a `default` config that
@@ -216,7 +221,8 @@ scripts/theme-apply.sh --wallpaper /path/to/image
 
 ## Update says offline while the repo is still private
 
-HTTPS cannot see a private repo. The laptop needs the read-only deploy
+Only applies to a private fork or mirror. HTTPS cannot see a private
+repo. The installed system needs the read-only deploy
 key at `~/.config/modern/deploy_key` (mode 600), and that public key
 registered under GitHub → Settings → Deploy keys with write access off.
 `scripts/deploy-key-init.sh` creates it; the ISO build embeds it.
@@ -263,8 +269,11 @@ quotes `session.txt` and `boot.txt` in the issue; `docs/BOOT.md` →
 
 ## `secrets.json` missing
 
-Expected until you create gitignored
-`~/.config/modern/secrets.json`. Weather/AI keys do not belong in
+Expected until a key is saved. The gitignored
+`~/.config/modern/secrets.json` holds AI keys and calendar credentials,
+which the shell reads and writes only through `Services/Secrets.qml`,
+plus the problem-report token `bugReport.githubToken` that
+`scripts/bug-report.sh` reads. Keys never belong in
 `config.default.json`. Doctor warns; it is not fatal.
 
 ## Portal file picker / screenshot broken

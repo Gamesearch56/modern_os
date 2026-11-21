@@ -1,5 +1,9 @@
 # Contributing
 
+For developers who want to send changes to ModernOS: the branch
+workflow, local checks to run, and the layer rules a pull request must
+follow.
+
 Work happens on `dev`. Open pull requests **into `dev`**. A release is a
 PR **`dev` → `main`**. Do not open `feature/*` or `fix/*` branches.
 Details: [`docs/GIT.md`](docs/GIT.md).
@@ -18,7 +22,7 @@ scripts/ci-check.sh           # deps, layer lint, shellcheck, unit tests
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
 ```
 
-`iso-build.sh --mkarchiso` may write `iso/out/` on this PC. Do not run
+`iso-build.sh --mkarchiso` may write `iso/out/` on your machine. Do not run
 `provision-iso.sh`, Calamares, or a live `install.sh` on a machine you
 live on. Isolation: [`docs/ISOLATION.md`](docs/ISOLATION.md).
 

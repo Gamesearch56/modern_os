@@ -1,5 +1,9 @@
 # Keybinds
 
+Every default keyboard and mouse shortcut in ModernOS, for end users,
+plus where developers find and change them. The in-session cheatsheet
+(`SUPER + K`) shows the same list.
+
 Combos are strings in `config.json` → `keybinds`, in Hyprland Lua
 `hl.bind()` form (`SUPER + SHIFT + T`). Settings > Keyboard **lists**
 that object; it does not write combos. `Modules/Cheatsheet` reads the
@@ -18,6 +22,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + SHIFT + M` | Exit compositor | `hyprctl dispatch "hl.dsp.exit()"` |
 | `SUPER + K` | Cheatsheet | `qs -c modern ipc call cheatsheet toggle` |
 | `SUPER + #` | Report a problem | `modern report` |
+| `SUPER + Y` | ModernOS Manual | `scripts/modern-manual` |
 | `SUPER + I` | System Settings (Hyprland window) | `qs -c modern ipc call settings toggle` |
 | `SUPER + W` | Wallpaper picker | `qs -c modern ipc call wallpaper toggle` |
 | `SUPER + DELETE` | Applications (taskbar) | `qs -c modern ipc call taskbar toggle` |
@@ -31,6 +36,9 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + R` | Spotify | `modern-launch --on-active spotify-launcher` (moves an open window here) |
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |
+| `SUPER + V` | Toggle floating | `hl.dsp.window.float({ action = "toggle" })` |
+| `SUPER + P` | Pseudo-tile | `hl.dsp.window.pseudo()` |
+| `SUPER + J` | Toggle split direction | |
 | `PRINT` | Screenshot region (HUD: still or video) | `modern screenshot region` → stills `~/Pictures/Screenshots`, recordings `~/Videos/Recordings` |
 | `SHIFT + PRINT` | Screenshot window | `modern screenshot window` |
 | `SUPER + PRINT` | Screenshot full; stops an active recording | `modern screenshot full` |
@@ -51,9 +59,9 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | Applications right-click | Float, fullscreen, togglesplit, close | |
 | `SUPER + SHIFT + C` | Color picker | |
 
-Gaming mode is a switch in Settings, not a shortcut. Scroll on Super no longer changes workspace.
+Gaming mode is a switch in Settings, not a shortcut. Scrolling with Super held does not change workspace.
 
-A side press shorter than 250 ms is always a click, even while the mouse is moving; only a held side button starts a move or resize. The middle button is only taken while a side button is held. The side buttons stay plain back/forward in games and fullscreen windows; forward + middle still toggles fullscreen there. Settings → Keyboard → "Mouse control" turns the side-button controls off (`input.mouseSideButtons`). `tests/test-mouse-windows-live.py` checks them against the running session with a virtual mouse.
+A side press shorter than 250 ms is always a click, even while the mouse is moving; only a held side button starts a move or resize. The middle button is only taken while a side button is held. The side buttons stay plain back/forward in games and fullscreen windows; forward + middle still toggles fullscreen there. Settings → Keyboard → "Mouse control" ("Maussteuerung") turns the side-button controls off (`input.mouseSideButtons`). `tests/test-mouse-windows-live.py` checks them against the running session with a virtual mouse.
 
 Workspace `SUPER + 1`…`0` and `SUPER + SHIFT + 1`…`0` (move window to
 that workspace) match the cheatsheet categories. Three fingers up or

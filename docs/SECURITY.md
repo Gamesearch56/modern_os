@@ -1,5 +1,9 @@
 # Threat model: modern-usersd
 
+For admins and security reviewers: how Settings → Users and Settings →
+Firewall get root rights, what they refuse to do, and which ports stay
+closed. How to report a vulnerability is in the top-level `SECURITY.md`.
+
 Settings → Users mutates accounts through one `pkexec` of
 `scripts/usersd.sh` after **admin** authentication (`auth_admin`). JSON
 on stdin; names as argv arrays; passwords never on argv. The session

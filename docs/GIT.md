@@ -1,10 +1,15 @@
 # Git workflow
 
+For contributors and maintainers: how branches, pull requests, release
+tags and GitHub settings work for ModernOS, and how installed systems
+pick up a release.
+
 Installers use a **version** (`v1.2.3`), not every commit. Daily work
 is on `dev`. A PR into `main` plus a tag is what they get.
 
-Do **not** test a release on the machine you live on. Build the ISO and
-try Calamares on a spare box, QEMU, or CI. Isolation: `docs/ISOLATION.md`.
+Do **not** test a release on your everyday machine. Build the ISO
+locally and try Calamares on a spare machine or in QEMU. Isolation:
+`docs/ISOLATION.md`.
 
 ```
 dev  --PR, CI green-->  main  -->  tag vX.Y.Z  -->  Releases
@@ -36,8 +41,8 @@ When `dev` should become a release (or a hotfix), open a PR
 **`dev` → `main`**. Title says why. Description says how to try it.
 Wait until CI is green, then merge.
 
-Forks also open PRs into `dev`. Commit on `dev` and PR `dev` → `main`.
-See `CONTRIBUTING.md`.
+Forks open their PRs into `dev` as well. Only the maintainer opens
+`dev` → `main`. See `CONTRIBUTING.md`.
 
 ## What “CI green” means
 
@@ -101,7 +106,8 @@ pending only when a **newer** `vX.Y.Z` exists on GitHub. It never tracks
 
 ## Private repo, while you are still testing
 
-A read-only **deploy key** lets an installed laptop fetch those tags
+Maintainer notes for a fork or mirror that is still private. A public
+repository needs none of this. A read-only **deploy key** lets an installed laptop fetch those tags
 without the repository being public. It is not your account SSH key.
 GitHub attaches it to this one repo, and it cannot push.
 
@@ -141,12 +147,13 @@ HTTPS and nothing else changes.
   `dev`).
 - Run `desktop-sync.sh apply` on a development clone while `HEAD` is
   dirty or not `dev`.
-- Run Calamares or `provision-iso.sh` on a machine you live on.
+- Run Calamares or `provision-iso.sh` on your everyday machine.
   `iso-build.sh --mkarchiso` is allowed; it writes `iso/out/` only.
 
 ## Flip day (you change visibility)
 
-You flip GitHub visibility. This tree does not. Optional history squash
+Maintainer checklist for turning a private repository public. You flip
+GitHub visibility. This tree does not. Optional history squash
 is also yours, and it must happen **before** branch protection —
 force-push is blocked after that.
 
@@ -195,7 +202,7 @@ Do **not** take Hyprland, Quickshell, PipeWire, `yay-bin`,
 `matugen-bin`, or `bibata-cursor-theme-bin` off the squashfs. That is
 the copy-the-live-root installer. Do not drop `linux-firmware` if
 real-hardware Wi-Fi still matters. Build and try the image in QEMU,
-never with `provision-iso.sh` / Calamares on a machine you live on.
+never with `provision-iso.sh` / Calamares on your everyday machine.
 
 ## After the repo is public (you apply)
 

@@ -272,6 +272,8 @@ print("patched", p)
 PY
 
 unset CARGO_TARGET_DIR
-(cd "$SRC" && cargo +stable build --release)
+# The binary ships in install/prebuilt; without the remap it would carry
+# the builder's home directory in every panic location.
+(cd "$SRC" && RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=$HOME=/build" cargo +stable build --release)
 install -m 755 "$SRC/target/release/phylax" "$BIN"
 printf 'installed %s\n' "$BIN"

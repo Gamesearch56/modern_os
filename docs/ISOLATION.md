@@ -1,5 +1,9 @@
 # Isolation: initramfs stays out of `install.sh`
 
+For developers and admins: which system-wide changes `install.sh` makes,
+which ones stay gated under `install/system/` and why, and how to test
+on a separate account without touching your own session.
+
 `install.sh` installs packages, stows this repo into `--target`
 (default `$HOME`), and enables the greetd login screen on a **real user
 home**. `--dry-run` and `--target /tmp/...` skip greetd.
@@ -75,7 +79,7 @@ might have written outside the clone:
 scripts/check-isolation.sh
 ```
 
-`iso-build.sh --mkarchiso` may write `iso/out/` on this PC (needs root).
+`iso-build.sh --mkarchiso` may write `iso/out/` on your build machine (needs root).
 Do not run `provision-iso.sh` or Calamares on a machine you live on
 unless you intend the ISO late extras (NVIDIA initramfs). Existing-account
 stow + greetd: `docs/CUTOVER.md`.

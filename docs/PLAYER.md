@@ -1,5 +1,9 @@
 # ModernOS Mediaplayer
 
+How the ModernOS Mediaplayer and the Files video preview behave (for end
+users) and how the player is built, tested and extended (for
+developers).
+
 A small video and music player in the spirit of mpv, styled by the same
 tokens as the shell. Desktop entry `modern.mediaplayer.desktop` (Name
 "ModernOS Mediaplayer"; launcher, dock, and Overview show "Mediaplayer"

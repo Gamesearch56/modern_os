@@ -36,7 +36,7 @@ Passwords and API keys, for example for the AI assistant or a calendar, are kept
 
 ### Colors from your wallpaper
 
-When you choose a wallpaper, ModernOS picks its main colors and builds a full Material palette from them, light or dark. That palette colors the bar, the panels, the apps, window borders, the terminal, regular GTK and Qt programs, the browser theme, and even the boot screen. Change the wallpaper and the whole desktop changes with it. You can also pick a theme style or a fixed color. See [Appearance](08-appearance.md).
+When you choose a wallpaper, ModernOS picks its main colors and builds a full Material palette from them, light or dark. That palette colors the bar, the panels, the apps, window borders, the terminal, regular GTK and Qt programs, and the browser theme. Change the wallpaper and the whole desktop changes with it. You can also pick a theme style or a fixed color. See [Appearance](08-appearance.md).
 
 ### Every app on its own
 
@@ -46,7 +46,7 @@ The ModernOS apps each run as their own program. If a huge file makes the Imagev
 
 | You want to | Do this |
 |---|---|
-| Start an app or find a file | Press SUPER + SPACE and start typing. See [Launcher and Overview](04-launcher-and-overview.md). |
+| Start an app | Press SUPER + SPACE and start typing. See [Launcher and Overview](04-launcher-and-overview.md). |
 | See all open windows | Press SUPER + TAB for the Overview. |
 | Change a setting | Press SUPER + I, or use the settings button at the top of the Control panel. See [Settings](07-settings.md). |
 | Quick toggles (Wi-Fi, Bluetooth, volume, Do Not Disturb) | Press SUPER + N for the Control panel (Kontrollzentrum). See [The desktop](03-desktop.md). |

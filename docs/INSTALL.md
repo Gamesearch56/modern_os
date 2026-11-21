@@ -1,5 +1,9 @@
 # Install
 
+How to install ModernOS, for admins and developers: onto an existing
+Arch user with `install.sh`, onto bare metal, or from the live ISO, plus
+the internals of the ISO installer (Calamares) and its test harness.
+
 Three paths: packages + stow onto an Arch user (`install.sh`), a live-ISO
 bootstrap that **prints** partitioning (`scripts/bootstrap.sh`), or an
 **ISO** (Calamares + late `install.sh --profile m0 --yes`).
@@ -41,8 +45,10 @@ or `F2`. Existing-account install: `docs/CUTOVER.md`.
 ./install/install.sh --profile m0 --target /home/otheruser
 ```
 
-Profiles: `m0` (bar/launcher/session), `dev` (+ Cursor/toolchain),
-`gaming` (+ Proton/MangoHud), `full`. Manifests:
+Profiles: `m0` (bar/launcher/session and the default apps, the
+default), `gaming` (+ 32-bit Mesa, Proton tools, MangoHud), `full`
+(+ flatpak apps). Hardware layers follow `--hw` / `--cpu` (auto-detected
+by default); `--extra proton` adds Proton Mail. Manifests:
 `install/manifests/README.md`.
 
 `install.sh` installs packages, stows listed packages into
@@ -56,7 +62,7 @@ conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
 Calamares late on a new machine is `./install/install.sh --profile m0 --yes`
 as the new user, then `MODERN_ISO_PROVISION=1 install/system/provision-iso.sh`
 (NVIDIA initramfs, keyboard/locale seed). Do not run `provision-iso.sh`
-on a machine you live on unless you want those extras.
+on your everyday machine unless you want those extras.
 
 Clone + install is the **designed** desktop (`config.default.json`:
 English UI, `kbLayout` `us`).
@@ -93,7 +99,22 @@ arch-chroot → chain `install.sh`). Disks are not wiped unless you pass
 
 ## ISO (Calamares)
 
-Build on this PC or CI. Output is gitignored `iso/out/` (throwaway
+### Firmware settings before booting the ISO
+
+- **Start in UEFI mode.** Set the boot mode to UEFI only (CSM / Legacy
+  off). The ISO also boots on Legacy BIOS through Calamares' GRUB path,
+  but UEFI with systemd-boot is the tested and recommended setup.
+- **Disable Secure Boot.** Neither the ISO nor the installed boot loader
+  is signed, so Secure Boot firmware refuses to start them. Some
+  firmware only unlocks the option once a supervisor password is set.
+- Choose the stick's **UEFI** entry in the one-time boot menu.
+
+The step-by-step version for end users, with firmware keys per maker, is
+in [First steps](manual/02-first-steps.md).
+
+### Building and testing the ISO
+
+Build locally; CI never builds the ISO. Output is gitignored `iso/out/` (throwaway
 `HOME` for matugen). `--mkarchiso` needs **root**, `archiso`, and about
 **8G free** on that directory — not `/tmp`. It does **not** run
 `provision-iso.sh` or touch live `/etc` except a throwaway AUR builder
@@ -548,11 +569,12 @@ A VM has virtio Ethernet, no radio and UEFI. A laptop differs here:
 `install.sh` phase 5 applies `~/.config/modern/wallpapers/default.jpg`
 (tokens, GTK/Qt/kitty). `wallpaper-sync.sh` writes lock/login assets to
 `/var/lib/modern/session` after greetd apply (else
-`$XDG_STATE_HOME/modern/session`). Nautilus sidebar starts with Downloads, Pictures, and Videos
-(`nautilus-prefs.sh`, XDG dirs for the target user). First-hour UI is
-**English**. Power-menu lock is `WlSessionLock` and checks the session
-password with PAM. Titlebars need a one-time `hyprpm` + pkexec
-in a graphical session (`docs/TROUBLESHOOTING.md`).
+`$XDG_STATE_HOME/modern/session`). If Nautilus is installed, its sidebar
+starts with Downloads, Pictures, and Videos (`nautilus-prefs.sh`, XDG
+dirs for the target user); it is skipped otherwise. A git install starts
+with an **English** UI. Power-menu lock is `WlSessionLock` and checks the
+session password with PAM. There are no compositor titlebars
+(`docs/DECISIONS.md` #20).
 
 To use a different image later:
 
@@ -569,10 +591,6 @@ To use a different image later:
    same function.
 
 Hand-edit reference is `config.default.json` (no `config.schema.json`).
-
-Firewall reminder if a later mobile/LAN API is involved: listen on
-`0.0.0.0` and `sudo ufw allow <port>/tcp` — not needed for this desktop
-shell itself.
 
 ## Verify
 

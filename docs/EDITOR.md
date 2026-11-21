@@ -1,5 +1,9 @@
 # ModernOS Texteditor
 
+For developers: how the ModernOS Texteditor is built, how to add a
+command, and how it keeps files safe. Its keyboard shortcuts for end
+users are in `docs/KEYBINDS.md` → Texteditor.
+
 A plain-text editor in the spirit of Windows Notepad, styled by the same
 tokens as the shell. Desktop entry `modern.editor.desktop` (Name
 "ModernOS Texteditor"; launcher, dock, and Overview show "Texteditor"

@@ -1,5 +1,9 @@
 # Decisions (ADR log)
 
+For developers: why ModernOS is built the way it is. Each entry records
+a decision, the alternatives that were rejected, and why; entries that
+were later replaced say so.
+
 Chronological. Each entry: decision, rejected alternatives, why.
 
 ## 1. Quickshell over AGS / Waybar+SwayNC+Rofi / EWW
@@ -35,7 +39,8 @@ since everything consumes `tokens.json`, not matugen's CLI directly.
 
 **Decision:** `config.json` is the only thing the Settings app writes.
 `hyprland.lua` reads it via a small dependency-free JSON decoder
-(`install/lib`'s shell equivalent, `Commons/config.lua`'s Lua equivalent).
+(`install/lib`'s shell equivalent; in Lua, `lib/json.lua` read through
+`modules/config.lua`).
 
 **Rejected:** Settings app templating/rewriting Lua files directly — any
 GUI bug could corrupt `hyprland.lua` and break the compositor on next
@@ -73,7 +78,7 @@ MD3-over-Quickshell, but forking means inheriting its architecture,
 its bugs, and a large upstream codebase not written to this project's
 "files under 200 lines, one pattern everywhere" maintainability bar, plus
 ongoing merge conflicts against upstream churn. Slower to reach parity,
-but every line is understood and owned, per the user's explicit choice.
+but every line is understood and owned, per the maintainer's explicit choice.
 
 ## 7. `WlSessionLock` over hyprlock
 
@@ -95,11 +100,15 @@ plus `scripts/autologin-apply.sh` (pkexec) writes greetd
 `[initial_session]` or a `getty@tty1` drop-in so the next reboot opens
 the session account. Settings still never writes `/etc` itself.
 
-**Rejected:** keeping autologin + hyprlock-as-a-workaround (current
+**Rejected:** keeping autologin + hyprlock-as-a-workaround (the earlier
 setup) — works, but isn't a login screen, and blocks a themed boot→login
 handoff.
 
 ## 9. Official `proton-drive` CLI over `rclone`'s protondrive backend
+
+**Status:** not shipped. There is no `Services/Drive`; Proton Drive is a
+launcher-only desktop entry (`docs/SETTINGS.md` → Applications). Kept
+for the reasoning in case a Drive integration returns.
 
 **Decision:** `Services/Drive` wraps the official Proton-shipped
 `proton-drive` CLI (June 2026, JSON output, OS-keyring sessions).
@@ -134,6 +143,9 @@ land in the native list, where `pacman -S` hard-fails on them.
 manually instead.
 
 ## 12. Local-first notes with a custom reconciliation loop
+
+**Status:** not shipped, depends on #9. No notes service or Drive sync
+exists.
 
 **Decision:** plain markdown files with YAML front-matter locally;
 `Services/Drive`'s own list-and-diff sync against Proton Drive, since the
@@ -172,7 +184,8 @@ one small set of derived, non-sensitive images is strictly less exposure.
 ## 15. Hand-curated layered manifests over a single package list
 
 **Decision:** `00-base` through `60-flatpak`, each entry commented with
-why it's there. `50-gaming` is the optional layer, deferred to M6. The
+why it's there. `50-gaming` is the optional layer (`gaming` and `full`
+profiles). The
 old `40-dev` layer (Docker, JDKs, Cursor, …) was dropped; those install
 from Settings → Store or the AUR when wanted.
 
@@ -192,7 +205,7 @@ assign a value to a signal (expecting a script to be run)"), not just
 the bare `onX: <value>` shorthand. Half of MD3's role names are exactly
 that shape (`onPrimary`, `onSurface`, `onError`, ...), so this wasn't a
 one-off rename — confirmed empirically by running the real `quickshell`
-binary (v0.3.1, already installed) against the generated file. A plain
+binary (v0.3.1) against the generated file. A plain
 object literal's keys aren't QML property declarations, so it sidesteps
 the restriction entirely while keeping the exact same consumer syntax
 (`Colors.color.onPrimary`).
@@ -248,11 +261,11 @@ wonder about the inherited `tr()` again) but is not fixing a real bug.
 
 ## 19. Hand-written `qmldir` in every QML layer directory, not auto-synthesis
 
-**Decision:** every layer directory (`Commons/`, `Widgets/`, and `Services/`/`Modules/` once they exist) ships a hand-written `qmldir` file explicitly listing `singleton Name 1.0 Name.qml` (or plain `Name 1.0 Name.qml` for non-singleton `Widgets`) for every QML file in that directory. New files are not visible until added here — this is a deliberate manual checklist step, not an oversight to fix later.
+**Decision:** every layer directory (`Commons/`, `Services/`, `Widgets/`) ships a hand-written `qmldir` file explicitly listing `singleton Name 1.0 Name.qml` (or plain `Name 1.0 Name.qml` for non-singleton `Widgets`) for every QML file in that directory. New files are not visible until added here — this is a deliberate manual checklist step, not an oversight to fix later.
 
 **Rejected:** relying on Quickshell's implicit directory-import auto-synthesis (what `import "Commons"` does with no `qmldir` present — it scans the directory and synthesizes one on the fly, auto-detecting `pragma Singleton`). This works for most files but was caught, by this project's mandatory real-`quickshell`-runtime-testing practice (decision #16), silently mis-detecting `Commons/I18n.qml` specifically: the synthesized qmldir registered it as a plain type (`I18n 1.0 I18n.qml`) instead of a singleton (missing the `singleton` keyword), even though the file is byte-for-byte a normal `pragma Singleton` file matching every other Commons file's shape. The failure mode is brutal to diagnose from the call site — `I18n.t(...)` throws `TypeError: Property 't' of object I18n is not a function` with no indication the actual problem is the type registration, not the function itself; `typeof I18n.t` reads `"undefined"` and every property on the singleton reads `undefined` too, permanently (a binding that throws once during its first, synchronous evaluation never gets a retry once its dependency — `Config`, in this case — finishes loading, since QML's dependency tracking for that binding never got established). This was root-caused by grepping the session's own `log.qslog` for `qmldir`/`singleton`, not by reasoning about the QML source. Confirmed fix: an explicit `qmldir` in the same directory makes Quickshell log `Found qmldir file, qmldir synthesization will be disabled for directory ".../Commons"` and skip the buggy scan entirely.
 
-**Consequence:** `AGENTS.md`'s "add a new Commons/Widgets file" instructions must include "add it to that directory's `qmldir`" as a required step, not an optional one — forgetting it doesn't error at all for most files (auto-synthesis still finds them), so this is an easy step to skip and only surfous as this exact class of silent, hard-to-diagnose bug for whichever file the scanner happens to mis-detect next.
+**Consequence:** `AGENTS.md`'s "add a new Commons/Widgets file" instructions must include "add it to that directory's `qmldir`" as a required step, not an optional one — forgetting it doesn't error at all for most files (auto-synthesis still finds them), so this is an easy step to skip and only surfaces as this exact class of silent, hard-to-diagnose bug for whichever file the scanner happens to mis-detect next.
 
 ## 20. No compositor titlebars
 
@@ -286,7 +299,7 @@ Overview is a full-screen layer-shell surface. A floating window capped at a fix
 
 The replay has three Hyprland quirks, each measured: `send_shortcut` inside a click/release bind only delivers the key-up, so the replay runs as a separate process. One dispatch (or one `--batch`) delivers the press and drops the release, so down and up are two `send_key_state` calls. Replayed buttons carry no pointer frame, so the app holds the release until the next motion, so the script ends with a cursor move onto itself.
 
-**Rejected:** passing the press through and only grabbing on drag (`pass_mouse_when_bound`, `non_consuming`) — Chromium, and so Vivaldi and WhatsApp, navigates back on the press, so every window drag also went back a page. `non_consuming` on the drag bind also moved windows on a plain click. Sending Alt+Left/Right as back/forward — not back in Cursor, IntelliJ or kitty, and wrong in games. A virtual uinput mouse for the replay — needs `/dev/uinput` access a normal account does not have. `long_press` on the drag bind — its delay is the keyboard repeat delay, so a fast keyboard setting would make clicks drag again. Starting the drag from a timer — `window.drag` only starts while a bind is being pressed. Capturing middle all the time to replay it — breaks middle drag (autoscroll, panning). Turning it off whenever gaming mode is on — gaming mode stays on for days here, and game windows are already matched one by one.
+**Rejected:** passing the press through and only grabbing on drag (`pass_mouse_when_bound`, `non_consuming`) — Chromium, and so Vivaldi and WhatsApp, navigates back on the press, so every window drag also went back a page. `non_consuming` on the drag bind also moved windows on a plain click. Sending Alt+Left/Right as back/forward — not back in Cursor, IntelliJ or kitty, and wrong in games. A virtual uinput mouse for the replay — needs `/dev/uinput` access a normal account does not have. `long_press` on the drag bind — its delay is the keyboard repeat delay, so a fast keyboard setting would make clicks drag again. Starting the drag from a timer — `window.drag` only starts while a bind is being pressed. Capturing middle all the time to replay it — breaks middle drag (autoscroll, panning). Turning it off whenever gaming mode is on — gaming mode can stay on for days, and game windows are already matched one by one.
 
 ## 25. The Texteditor is one qs process per window
 
@@ -316,6 +329,5 @@ A QML `TextEdit` hands back NBSP as a space and U+2028/U+2029 as newlines. The c
   only ever consumes `tokens.json`, so this is swappable later without
   touching a single consumer.
 - Spotify queue: MPRIS's `TrackList` interface isn't implemented by the
-  Spotify Linux client, so the media widget's queue section is a
-  self-contained, optional provider (see `docs/WIDGETS.md`) pending a
-  possible future Spotify Web API integration.
+  Spotify Linux client, so the media widget shows no queue. A Spotify
+  Web API integration could add one later.

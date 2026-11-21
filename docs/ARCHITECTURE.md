@@ -1,5 +1,9 @@
 # Architecture
 
+For developers: how ModernOS is put together — the color and behaviour
+data flows, the QML layer rules, the repository layout, and where
+config, theme, monitor and translation logic live.
+
 ## Data flow
 
 ```mermaid
@@ -38,8 +42,8 @@ Commons/   Tokens.qml Typography.qml Motion.qml Config.qml I18n.qml KeyboardLayo
            — depends on nothing.
 
 Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media
-           Wallpaper SystemStats Locale Snapshots Update Weather Calendar Notes Drive Ai
-           Users KdeConnect Diagnostics
+           Wallpaper SystemStats Snapshots Update Weather Calendar Ai Secrets
+           Passwd KdeConnect Diagnostics Files Store Dock BugReport …
            — imports Commons only. Owns ALL process spawning, IPC, D-Bus and
            filesystem access. Each file is `pragma Singleton` with a
            `Singleton { }` root and a matching line in that directory's
@@ -47,11 +51,12 @@ Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media
 
 Widgets/   MButton MIconButton MSwitch MSlider MCard MChip MListItem
            MTextField MPopup MIcon MText MDialog MTooltip MOverlay
-           MLinearProgress MSlotBoard
+           MLinearProgress MSlotBoard MWindowShell …
            — MD3 primitives. Stateless, token-driven, zero system access.
 
-Modules/   Bar/ Launcher/ Panels/ PowerMenu/ Notifications/ Wallpaper/
+Modules/   Bar/ Launcher/ Dock/ PowerMenu/ Notifications/ Wallpaper/
            Settings/ Store/ Overview/ Session/ Cheatsheet/ Onboarding/
+           Files/ Editor/ Viewer/ Player/ BugReport/ …
            — features. Composes Widgets, reads Services.
 ```
 
@@ -75,18 +80,21 @@ modern_dotfile/
 │   ARCHITECTURE.md DESIGN.md MOTION.md DECISIONS.md INSTALL.md
 │   CURSOR-SETUP.md KEYBINDS.md THEMING.md BOOT.md I18N.md WIDGETS.md
 │   ISOLATION.md BACKUP.md SECURITY.md GAMING.md TROUBLESHOOTING.md
-│   CUTOVER.md SETTINGS.md GIT.md
+│   CUTOVER.md SETTINGS.md GIT.md BUGREPORT.md EDITOR.md VIEWER.md
+│   PLAYER.md
 ├── install/
 │   ├── install.sh              phased, idempotent, set -euo pipefail
 │   ├── lib/                    log.sh ui.sh pkg.sh stow.sh i18n.sh preflight.sh greetd.sh
+│   │                            default-apps.sh kernel-boot.sh mirrors.sh ge-proton.sh wifi-wl.sh
 │   ├── manifests/               00-base 10-desktop 20-theming 30-apps
-│   │                            50-gaming 60-flatpak (+ .aur variants)
-│   ├── baseline/                snapshot of the OLD user's packages, for diffing
+│   │                            50-gaming 60-flatpak 90-accounts, hardware layers
+│   │                            (+ .aur variants), default-apps.json
+│   ├── baseline/                package snapshot from snapshot-packages.sh, for diffing
 │   └── system/                  Plymouth, nvidia, polkit usersd, snapper;
 │                                greetd configs consumed by install/lib/greetd.sh
 ├── stow/
 │   ├── hypr/.config/hypr/                   hyprland.lua + modules/
-│   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules; Modules/Files is the file manager; Modules/Editor is the Texteditor (own qs process, docs/EDITOR.md); Modules/Viewer is the Imageviewer (own qs process, docs/VIEWER.md); Modules/Player is the Mediaplayer (own qs process, docs/PLAYER.md); Modules/Dock is the application dock
+│   ├── shell/.config/quickshell/modern/     Commons Services Widgets Modules; Modules/Files is the file manager; Modules/Editor is the Texteditor (own qs process, docs/EDITOR.md); Modules/Viewer is the Imageviewer (own qs process, docs/VIEWER.md); Modules/Player is the Mediaplayer (own qs process, docs/PLAYER.md); Modules/Manual is the documentation reader (own qs process, docs/MANUAL.md); Modules/Dock is the application dock
 │   ├── greeter/.config/quickshell/greeter/  shares Session/ with the shell
 │   ├── theme/.config/matugen/               config.toml + templates/
 │   ├── kitty/ gtk/ qt/ bash/ git/          app configs (default apps: `install/manifests/default-apps.json`)
@@ -113,7 +121,7 @@ restart.
 
 `hyprland.lua` reads the same file through `lib/json.lua`, a small,
 dependency-free JSON decoder (Hyprland's Lua runtime ships no JSON
-module), via `Commons/config.lua`.
+module), via `modules/config.lua`.
 
 ## Theme layer
 
@@ -129,7 +137,8 @@ sync) the Plymouth theme. See `docs/THEMING.md` for the full pipeline and
 
 ## Monitors
 
-No hardcoded output names anywhere. `Services/Hypr` enumerates monitors
+No hardcoded output names anywhere. `Services/Hypr` (with
+`Services/HyprMonitors`) enumerates monitors
 via the Hyprland IPC socket and keys everything on `description + serial`
 (via `hyprctl monitors -j`), because connector names (`DP-1`, `DP-2`)
 shuffle across reboots and cable changes. Unknown monitors fall back to
@@ -153,9 +162,9 @@ only writer of that pin list.
 Quickshell's QML does not integrate with Qt Linguist (`qsTr()` is dead
 code in this environment), so this JSON approach is used everywhere
 instead of mixing `envsubst` with duplicated shell loaders. The lookup
-function is named `t()`, not `tr()` — every
-QtObject inherits a built-in `tr()` from Qt Linguist that silently shadows
-a same-named custom function (docs/DECISIONS.md).
+function is named `t()`, not `tr()`, for brevity and to stay clear of
+the `tr()` every QtObject inherits from Qt Linguist (docs/DECISIONS.md
+#18).
 
 ## Where things run
 

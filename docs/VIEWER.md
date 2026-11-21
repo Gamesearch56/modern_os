@@ -1,5 +1,8 @@
 # ModernOS Imageviewer
 
+How the ModernOS Imageviewer behaves (for end users) and how it is
+built, tested and extended with formats (for developers).
+
 A small picture viewer in the spirit of imv, styled by the same tokens as
 the shell. Desktop entry `modern.imageviewer.desktop` (Name "ModernOS
 Imageviewer"; launcher, dock, and Overview show "Imageviewer" via

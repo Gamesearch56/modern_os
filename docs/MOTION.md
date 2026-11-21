@@ -1,5 +1,9 @@
 # Motion system
 
+For developers: the animation tokens every ModernOS surface uses, the
+rules for using them in QML, and how Hyprland's window animations are
+kept in step with the shell.
+
 The target feel is MD3 *expressive* motion: smooth but snappy, slightly
 overshooting, spatially coherent. `Commons/Motion.qml` is the only place
 duration/easing/spring numbers exist — nothing else in the codebase
@@ -48,8 +52,7 @@ function extraLong(): int { return Math.round(durationExtraLong * scale); }
   use. `snappy` (`spring: 3.5, damping: 0.4` — buttons, toggles, workspace
   pills), `gentle` (`spring: 2.2, damping: 0.5` — panels, popups), `bouncy`
   (`spring: 4.0, damping: 0.25` — launcher open, wallpaper picker grid).
-  Starting points, not final — tune by eye once the shell actually
-  renders. Applied via `Behavior on x/y/scale/opacity { SpringAnimation {
+  Applied via `Behavior on x/y/scale/opacity { SpringAnimation {
   spring: Motion.springBouncy.spring; damping: Motion.springBouncy.damping } }`.
 
 ## Rules
@@ -119,7 +122,4 @@ awww wallpaper fades use the same tokens in `animations.lua` /
 `modules/motion_tokens.lua` is hand-kept in sync with the numeric
 constants in `Commons/Motion.qml`'s source — a comment pointer in both
 files rather than a build step, since the values change rarely and a
-build step would be more complexity than the drift risk it prevents. This
-whole file was executed against a mocked `hl` API during development
-(134 calls, zero runtime errors) to catch structural mistakes before ever
-touching a real compositor — see `docs/TROUBLESHOOTING.md`.
+build step would be more complexity than the drift risk it prevents.

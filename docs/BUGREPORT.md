@@ -1,5 +1,10 @@
 # Problem reports
 
+How "Report a problem" works: what it collects, how it redacts personal
+data before anything leaves the computer, and where a report goes. For
+end users who want to know what they send, and for developers who
+change the collectors.
+
 Super+# (`xkb.lua` `bugReport`, bound to keycode 51: `#` on a German
 layout, `\` on US) runs `modern report`. When the shell answers IPC it opens the
 `modern.bugreport` window (`Services/BugReport.qml`, `Modules/BugReport/`);
@@ -18,8 +23,8 @@ sends with no questions, so a dead shell can still be reported.
    a GitHub 5xx) leaves a `queued` marker; `outbox` sends it when the
    network returns. 21 is no token, 22 a refused token, 23 any other
    answer.
-5. `export` writes `~/Downloads/modernos-report-<id>.tar.xz` when there
-   is no token.
+5. `export` writes `modernos-report-<id>.tar.xz` to the XDG Downloads
+   folder (`~/Downloads` by default) when there is no token.
 
 The token is `secrets.json` → `bugReport.githubToken`, scoped to the
 reports repository. The `gh` login of the computer is used only with
@@ -55,4 +60,5 @@ and GnuPG, browser profiles. Redacted in every text file: tokens,
 hostname, the username and the home path. JSON loses every value under
 an account, location or secret key.
 
-Tests: `tests/test-bug-report.sh` (stubbed tools, fake GitHub).
+Tests: `tests/test-bug-report.sh` (stubbed tools, fake GitHub server in
+`tests/lib/fake-github.py`).

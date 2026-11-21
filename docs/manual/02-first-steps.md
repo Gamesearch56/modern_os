@@ -14,13 +14,68 @@ to the installer.
 
 Before you start, check these points:
 
+- **A 64-bit PC** (x86_64) and a USB stick of at least 4 GB. Everything on
+  the stick is erased.
 - **Internet is required.** The installer downloads packages while it
   sets up your desktop. A Wi-Fi network or an Ethernet cable is fine.
 - **The whole disk is used.** The installer erases the disk you choose.
   Copy anything you want to keep to another drive first.
 - **At least 16 GiB of disk space** and 1 GB of memory.
-- **Turn Secure Boot off** in the firmware settings. UEFI mode is
-  preferred; older Legacy/CSM mode also works.
+
+### 1. Download ModernOS
+
+Download the newest `.iso` file from the
+[Releases page](https://github.com/Gamesearch56/modern_dotfile/releases).
+
+### 2. Write it to a USB stick
+
+Use a program that writes disk images, for example
+[balenaEtcher](https://etcher.balena.io/) or
+[Fedora Media Writer](https://flathub.org/apps/org.fedoraproject.MediaWriter)
+(both work on Windows, macOS and Linux). Choose the ISO file, choose your
+USB stick, and start. Copying the ISO file onto the stick like a normal
+file does not work.
+
+### 3. Prepare the firmware: UEFI mode on, Secure Boot off
+
+The firmware (often still called the BIOS) is the setup screen of your
+computer. Open it by pressing a key right after switching the computer on.
+The key depends on the maker; it is usually shown briefly on screen.
+
+| Maker | Common key |
+|---|---|
+| Acer, ASUS, MSI, Gigabyte | Delete or F2 |
+| Dell | F2 |
+| HP | Esc, then F10 |
+| Lenovo | F1 or F2 (some laptops have a small Novo button) |
+
+From Windows you can also get there through Settings > System > Recovery >
+Advanced startup > Restart now, then Troubleshoot > Advanced options >
+UEFI Firmware Settings.
+
+In the firmware, change two settings. The menu names differ between
+makers, so look for the words in bold:
+
+1. **Boot mode: UEFI.** Often under *Boot*. If you see "UEFI", "Legacy",
+   "CSM" or "UEFI and Legacy", choose **UEFI** only, or turn **CSM** off.
+   Most computers from the last ten years already start in UEFI mode.
+2. **Secure Boot: Disabled.** Usually under *Security* or *Boot*. ModernOS
+   is not signed for Secure Boot, so with it on the computer refuses to
+   start the stick. On some computers you first have to set a supervisor
+   (administrator) password before Secure Boot can be changed.
+
+Save and exit, usually with **F10**.
+
+If Windows on this computer uses BitLocker drive encryption, note your
+BitLocker recovery key before you change these settings; Windows may ask
+for it on its next start.
+
+### 4. Start from the USB stick
+
+Plug in the stick and switch the computer on. Open the one-time boot
+menu (often **F12**, **F11**, **F8** or **Esc**) and choose the USB stick;
+pick the entry that starts with "UEFI". The ModernOS installer then opens
+by itself.
 
 On the first page of the installer you also find **Support** and
 **Known issues** buttons. They open the project pages in a browser window;

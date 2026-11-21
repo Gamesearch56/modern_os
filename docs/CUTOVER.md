@@ -1,7 +1,11 @@
 # Install onto an existing Arch user
 
-How to put this desktop on an account that already has a home directory
-(not a Calamares ISO install). Stow writes under `--target`. `install.sh`
+For admins and developers who want ModernOS on an Arch account that
+already has a home directory and possibly another desktop, instead of a
+fresh ISO install. Covers backing up, installing, removing replaced
+packages, and unstowing again.
+
+Stow writes under `--target`. `install.sh`
 also enables the greetd login screen on a real user home. Plymouth,
 NVIDIA initramfs, snapper, and `modern-usersd` stay gated
 (`docs/ISOLATION.md`).
@@ -24,7 +28,8 @@ cd modern_dotfile
 ```
 
 `--profile m0` is enough for bar/launcher/session and the login screen.
-`full` adds the dev and gaming layers.
+`gaming` adds the gaming layer; `full` adds the gaming layer and flatpak
+apps.
 
 Then disable leftover bar/notification user units (for example
 `waybar.service`), uninstall packages this desktop replaced (see below),
@@ -60,7 +65,7 @@ If `-Rns` wants to drop a reverse dependency you still need, abort and
 use `-R` without `-s`.
 
 `install.sh` asks for `matugen-bin` and `bibata-cursor-theme-bin`. If
-this machine already has the source AUR packages (`matugen`,
+the system already has the source AUR packages (`matugen`,
 `bibata-cursor-theme`), they conflict — `install_aur` treats the source
 names as already satisfying the manifest and skips the `-bin` packages.
 
@@ -79,11 +84,13 @@ names as already satisfying the manifest and skips the `-bin` packages.
 Conflict backups live under `$HOME/.local/state/modern/stow-backups`.
 GNU Stow can also restore from that tree. To leave the desktop:
 
-The `stow` names in `install/manifests/default-apps.json` are the current external video player and image viewer. Include them in the unstow list.
+If a role in `install/manifests/default-apps.json` has a `stow` name
+(an external default app), include it in the unstow list too. The
+shipped defaults are ModernOS apps and have none.
 
 ```bash
 cd /path/to/modern_dotfile/stow
-stow -D -t "$HOME" hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch
+stow -D -t "$HOME" hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch pipewire
 ```
 
 Then start another session of your choice.

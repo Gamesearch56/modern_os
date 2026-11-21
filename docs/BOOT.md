@@ -1,5 +1,9 @@
 # Boot and session
 
+For admins and developers debugging startup: how a ModernOS session
+starts from boot to desktop, where the lock and login screens live, and
+which log to read at each stage.
+
 How a graphical session starts, where the lock/login surfaces live, and
 what is shared with an unprivileged greeter. Plymouth stays gated
 (`install/system/`, `docs/ISOLATION.md`). Greetd is applied by
@@ -14,7 +18,7 @@ Getty fallback if greetd is down:
   TTY login → .bash_profile on tty1 execs start-hyprland
                               →  Hyprland (stow/hypr)
                               ├─ autostart.lua
-                              │     exec qs -c modern  (compositor child)
+                              │     exec scripts/shell-run.sh → qs -c modern  (compositor child)
                               ├─ modern-shell.service  (optional UWSM watchdog)
                               └─ portals (xdg-desktop-portal-hyprland + gtk/kde)
 ```
@@ -66,8 +70,8 @@ target — a TTY start without UWSM never reaches it, and `PartOf` would
 stop the shell immediately. TTY testing does **not** need this unit
 enabled.
 
-`modules/autostart.lua` **exec**s `qs -c modern` as a child of this
-compositor (logs: `~/.local/state/modern/quickshell.log`) **before**
+`modules/autostart.lua` **exec**s `scripts/shell-run.sh`, which runs
+`qs -c modern` as a child of this compositor (logs: `~/.local/state/modern/quickshell.log`) **before**
 wallpaper and any `systemctl --user` call. After greetd the user bus is
 often still coming up; waiting on it delayed the first shell frame. Do not
 wrap qs in a `while` loop: Hyprland then tracks `sh` instead of Quickshell,
@@ -168,8 +172,8 @@ Screenshot and ScreenCast are Hyprland.
 
 If the graphical session is up (wallpaper, `SUPER+B`) but you have no
 terminal, try `SUPER+RETURN` (emergency `/usr/bin/kitty`). Do **not**
-wait only on `SUPER+T` if `modern-launch` is broken. From the
-another TTY:
+wait only on `SUPER+T` if `modern-launch` is broken. From another
+TTY:
 
 1. `loginctl list-sessions` — note the session id for this user
 2. Optional: `loginctl terminate-session <id>`
