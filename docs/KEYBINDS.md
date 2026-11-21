@@ -77,5 +77,26 @@ Inside a Texteditor window (`docs/EDITOR.md`); the menus show the same keys.
 | `ALT + Z` | Word wrap |
 | `CTRL + +` / `CTRL + -` / `CTRL + 0`, `CTRL + wheel` | Zoom in / out / reset |
 
+## Imageviewer
+
+Inside an Imageviewer window (`docs/VIEWER.md`); the menu shows the same keys.
+
+| Combo | Action |
+|---|---|
+| `→` `SPACE` `PAGE DOWN` `N` / `←` `BACKSPACE` `PAGE UP` `P` | Next / previous picture (wraps) |
+| `HOME` `G G` / `END` `SHIFT + G` | First / last picture |
+| `↑` `+` `=` `I` / `↓` `-` `O`, wheel, pinch | Zoom in / out around the pointer |
+| `R` `CTRL + 0` / `A` `1` / `S` | Fit / actual size / switch scaling (shrink, fit, 1:1) |
+| double-click | Toggle fit and 100 % |
+| `H` `J` `K` `L`, drag | Move the zoomed view |
+| `SHIFT + R` `]` / `CTRL + SHIFT + R` `[` | Turn right / left (view only) |
+| `CTRL + S` | Save the turn into the file |
+| `F` `F11` / `ESC` | Fullscreen / leave fullscreen or stop the slideshow |
+| `T` / `CTRL + SPACE` / `D` `CTRL + I` | Slideshow / pause animation / details |
+| `CTRL + O` / `CTRL + N` / `CTRL + E` | Open / new window / show in Files |
+| `CTRL + C` / `CTRL + SHIFT + C` | Copy picture / copy path |
+| `X` / `DEL` | Remove from the list / move to trash (asks) |
+| `Q` `CTRL + W` | Close |
+
 Live list: press `SUPER + K`. Media lists the hardware keys. Mouse lists Super+mouse and the window edge. CLI: `scripts/modern <target> <function>`
 (`qs -c modern ipc` wrapper).

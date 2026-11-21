@@ -1,10 +1,11 @@
 import QtQuick
 import QtQuick.Window
-import "../../Commons"
-import "../../Widgets"
+import "../Commons"
 
-// One menu of editor commands from actions.js. Under its button by
-// default; openAt() puts it at the pointer for the right-click menu.
+// A menu of commands from an app's command table ({ id, key, icon,
+// toggle, divider, danger }). `actions` answers enabled(id), checked(id),
+// keyLabel(id), and run(id). Under its button by default; openAt() puts
+// it at the pointer for a right-click menu.
 MPopup {
     id: root
 

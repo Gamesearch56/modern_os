@@ -15,11 +15,11 @@ import json
 import os
 import stat
 import sys
-import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import editor_claim as claim  # noqa: E402
 import editor_codec as codec  # noqa: E402
+import safe_write  # noqa: E402
 
 DEFAULT_MAX = 8 * 1024 * 1024
 _ERRNO = {
@@ -101,65 +101,6 @@ def cmd_load(args):
     return doc
 
 
-def _copy_meta(fd, st):
-    os.fchmod(fd, stat.S_IMODE(st.st_mode))
-    try:
-        os.fchown(fd, -1, st.st_gid)
-    except OSError:
-        pass
-    try:
-        for name in os.listxattr(st.path):
-            try:
-                os.setxattr(fd, name, os.getxattr(st.path, name))
-            except OSError:
-                pass
-    except OSError:
-        pass
-
-
-class _Stat:
-    def __init__(self, path, raw):
-        self.path = path
-        self.st_mode = raw.st_mode
-        self.st_gid = raw.st_gid
-
-
-def _write_atomic(target, data, old):
-    folder = os.path.dirname(target) or "/"
-    fd, tmp = tempfile.mkstemp(prefix="." + os.path.basename(target) + ".", suffix=".tmp", dir=folder)
-    try:
-        if old is not None:
-            _copy_meta(fd, old)
-        else:
-            mask = os.umask(0)
-            os.umask(mask)
-            os.fchmod(fd, 0o666 & ~mask)
-        with os.fdopen(fd, "wb") as f:
-            f.write(data)
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(tmp, target)
-    except BaseException:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
-        raise
-    dfd = os.open(folder, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
-    try:
-        os.fsync(dfd)
-    finally:
-        os.close(dfd)
-
-
-def _write_in_place(target, data):
-    fd = os.open(target, os.O_WRONLY | os.O_TRUNC | os.O_NOFOLLOW | os.O_CLOEXEC)
-    with os.fdopen(fd, "wb") as f:
-        f.write(data)
-        f.flush()
-        os.fsync(f.fileno())
-
-
 def cmd_save(args):
     path = _abs(args[0] if args else "")
     encoding = _option(args, "--encoding", "utf-8")
@@ -192,15 +133,8 @@ def cmd_save(args):
         # A rename would replace a read-only file the folder lets us drop.
         if not os.access(target, os.W_OK):
             raise Fail("denied")
-    folder = os.path.dirname(target) or "/"
     try:
-        # Someone else's file, a hard link, or a folder we cannot write:
-        # rewrite the inode itself so owner, links, and ACLs stay put.
-        if raw is not None and (raw.st_uid != os.getuid() or raw.st_nlink > 1
-                                or not os.access(folder, os.W_OK)):
-            _write_in_place(target, data)
-        else:
-            _write_atomic(target, data, _Stat(target, raw) if raw is not None else None)
+        safe_write.write(target, data, raw)
         done = os.stat(target)
     except OSError as exc:
         raise _os_fail(exc) from None

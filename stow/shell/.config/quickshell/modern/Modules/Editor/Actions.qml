@@ -123,16 +123,8 @@ QtObject {
             + DateTime.formatDate(now, Config.language.dateFormat);
     }
 
-    // "Ctrl+Shift+S" in the words of the current language.
     function keyLabel(id: string): string {
         const a = ActionList.byId(id);
-        if (!a || !a.keys.length)
-            return "";
-        const names = { Ctrl: "editor.keys.ctrl", Shift: "editor.keys.shift", Alt: "editor.keys.alt", Del: "editor.keys.delete" };
-        return a.keys[0].split("+").map((part, i, all) => {
-            if (part === "" && i === all.length - 1)
-                return "+";
-            return names[part] ? I18n.t(names[part]) : part;
-        }).filter(p => p.length).join("+");
+        return a && a.keys.length ? KeyLabel.of(a.keys[0]) : "";
     }
 }

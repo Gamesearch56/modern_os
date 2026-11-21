@@ -1947,12 +1947,6 @@
       "zoomOut": "Verkleinern",
       "zoomReset": "Zoom zurücksetzen"
     },
-    "keys": {
-      "ctrl": "Strg",
-      "shift": "Umschalt",
-      "alt": "Alt",
-      "delete": "Entf"
-    },
     "eol": {
       "lf": "Unix (LF)",
       "crlf": "Windows (CRLF)",
@@ -2047,5 +2041,114 @@
       "protected": "„{name}“ ist geschützt und kann nicht in den Papierkorb verschoben werden.",
       "busy": "Die letzte Aktion läuft noch. Versuch es gleich noch einmal."
     }
+  },
+  "viewer": {
+    "launcherName": "Imageviewer",
+    "windowTitle": "{name} – Imageviewer",
+    "windowTitleEmpty": "Imageviewer",
+    "position": "{index} / {count}",
+    "percent": "{percent} %",
+    "more": "Mehr",
+    "ok": "OK",
+    "cancel": "Abbrechen",
+    "actions": {
+      "open": "Öffnen…",
+      "newWindow": "Neues Fenster",
+      "reveal": "In Dateien zeigen",
+      "copy": "Bild kopieren",
+      "copyPath": "Pfad kopieren",
+      "saveRotation": "Drehung speichern",
+      "remove": "Aus der Liste nehmen",
+      "trash": "In den Papierkorb",
+      "close": "Schließen",
+      "next": "Nächstes Bild",
+      "previous": "Vorheriges Bild",
+      "first": "Erstes Bild",
+      "last": "Letztes Bild",
+      "slideshow": "Diashow",
+      "zoomIn": "Vergrößern",
+      "zoomOut": "Verkleinern",
+      "fit": "An Fenster anpassen",
+      "actual": "Originalgröße",
+      "scaling": "Skalierung wechseln",
+      "rotateRight": "Nach rechts drehen",
+      "rotateLeft": "Nach links drehen",
+      "pause": "Animation anhalten",
+      "info": "Bilddetails",
+      "fullscreen": "Vollbild",
+      "leave": "Vollbild verlassen",
+      "panLeft": "Ansicht nach links",
+      "panRight": "Ansicht nach rechts",
+      "panUp": "Ansicht nach oben",
+      "panDown": "Ansicht nach unten"
+    },
+    "a11y": {
+      "image": "{name}, Bild {index} von {count}",
+      "size": "{width} × {height} Pixel, angezeigt mit {percent} %"
+    },
+    "empty": {
+      "title": "Kein Bild geöffnet",
+      "hint": "Öffne ein Bild oder zieh eines hierher.",
+      "open": "Bild öffnen"
+    },
+    "info": {
+      "title": "Details",
+      "dimensions": "Abmessungen",
+      "pixels": "{width} × {height} px",
+      "size": "Dateigröße",
+      "type": "Typ",
+      "modified": "Geändert",
+      "folder": "Ordner"
+    },
+    "units": {
+      "byte": "{value} Bytes",
+      "kb": "{value} KB",
+      "mb": "{value} MB",
+      "gb": "{value} GB",
+      "tb": "{value} TB"
+    },
+    "trash": {
+      "title": "In den Papierkorb?",
+      "body": "„{name}“ kommt in den Papierkorb. Von dort kannst du es wiederherstellen.",
+      "confirm": "In den Papierkorb"
+    },
+    "notice": {
+      "title": "Imageviewer"
+    },
+    "errors": {
+      "missing": "„{name}“ gibt es nicht mehr.",
+      "directory": "Das ist ein Ordner, kein Bild.",
+      "special": "Das ist keine normale Datei.",
+      "empty": "Hier sind keine Bilder.",
+      "denied": "Du darfst „{name}“ nicht ändern.",
+      "readOnlyFs": "Dieses Laufwerk ist schreibgeschützt.",
+      "full": "Das Laufwerk ist voll.",
+      "badName": "Der Name ist zu lang.",
+      "changed": "„{name}“ wurde von einem anderen Programm geändert. Öffne es vor dem Speichern neu.",
+      "unsupported": "Diese Bildart kann hier nicht geändert werden.",
+      "tooLarge": "„{name}“ ist dafür zu groß.",
+      "protected": "Diese Datei ist geschützt und bleibt, wo sie ist.",
+      "failed": "Das hat nicht geklappt.",
+      "cannotShow": "Dieses Bild kann nicht angezeigt werden",
+      "cannotShowHint": "Die Datei ist vielleicht beschädigt oder in einem Format, das dieser Betrachter nicht liest."
+    }
+  },
+  "keys": {
+    "ctrl": "Strg",
+    "shift": "Umschalt",
+    "alt": "Alt",
+    "delete": "Entf",
+    "space": "Leertaste",
+    "enter": "Eingabe",
+    "escape": "Esc",
+    "backspace": "Rücktaste",
+    "left": "←",
+    "right": "→",
+    "up": "↑",
+    "down": "↓",
+    "home": "Pos1",
+    "end": "Ende",
+    "pageUp": "Bild auf",
+    "pageDown": "Bild ab"
   }
 }

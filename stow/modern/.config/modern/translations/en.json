@@ -1947,12 +1947,6 @@
       "zoomOut": "Zoom out",
       "zoomReset": "Reset zoom"
     },
-    "keys": {
-      "ctrl": "Ctrl",
-      "shift": "Shift",
-      "alt": "Alt",
-      "delete": "Del"
-    },
     "eol": {
       "lf": "Unix (LF)",
       "crlf": "Windows (CRLF)",
@@ -2047,5 +2041,114 @@
       "protected": "“{name}” is protected and cannot be moved to the trash.",
       "busy": "Still working on the last request. Try again in a moment."
     }
+  },
+  "viewer": {
+    "launcherName": "Imageviewer",
+    "windowTitle": "{name} – Imageviewer",
+    "windowTitleEmpty": "Imageviewer",
+    "position": "{index} / {count}",
+    "percent": "{percent} %",
+    "more": "More",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "actions": {
+      "open": "Open…",
+      "newWindow": "New window",
+      "reveal": "Show in Files",
+      "copy": "Copy picture",
+      "copyPath": "Copy path",
+      "saveRotation": "Save rotation",
+      "remove": "Remove from list",
+      "trash": "Move to trash",
+      "close": "Close",
+      "next": "Next picture",
+      "previous": "Previous picture",
+      "first": "First picture",
+      "last": "Last picture",
+      "slideshow": "Slideshow",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fit": "Fit to window",
+      "actual": "Actual size",
+      "scaling": "Switch scaling",
+      "rotateRight": "Rotate right",
+      "rotateLeft": "Rotate left",
+      "pause": "Pause animation",
+      "info": "Picture details",
+      "fullscreen": "Fullscreen",
+      "leave": "Leave fullscreen",
+      "panLeft": "Move view left",
+      "panRight": "Move view right",
+      "panUp": "Move view up",
+      "panDown": "Move view down"
+    },
+    "a11y": {
+      "image": "{name}, picture {index} of {count}",
+      "size": "{width} × {height} pixels, shown at {percent} %"
+    },
+    "empty": {
+      "title": "No picture open",
+      "hint": "Open a picture, or drop one here.",
+      "open": "Open picture"
+    },
+    "info": {
+      "title": "Details",
+      "dimensions": "Dimensions",
+      "pixels": "{width} × {height} px",
+      "size": "File size",
+      "type": "Type",
+      "modified": "Modified",
+      "folder": "Folder"
+    },
+    "units": {
+      "byte": "{value} bytes",
+      "kb": "{value} KB",
+      "mb": "{value} MB",
+      "gb": "{value} GB",
+      "tb": "{value} TB"
+    },
+    "trash": {
+      "title": "Move to trash?",
+      "body": "“{name}” goes to the trash. You can restore it from there.",
+      "confirm": "Move to trash"
+    },
+    "notice": {
+      "title": "Imageviewer"
+    },
+    "errors": {
+      "missing": "“{name}” no longer exists.",
+      "directory": "This is a folder, not a picture.",
+      "special": "This is not a regular file.",
+      "empty": "There are no pictures here.",
+      "denied": "You are not allowed to change “{name}”.",
+      "readOnlyFs": "This drive is read-only.",
+      "full": "The drive is full.",
+      "badName": "The name is too long.",
+      "changed": "“{name}” was changed by another program. Open it again before saving.",
+      "unsupported": "This picture type cannot be changed here.",
+      "tooLarge": "“{name}” is too large for this.",
+      "protected": "This file is protected and stays where it is.",
+      "failed": "That did not work.",
+      "cannotShow": "This picture cannot be shown",
+      "cannotShowHint": "The file may be damaged or in a format this viewer does not read."
+    }
+  },
+  "keys": {
+    "ctrl": "Ctrl",
+    "shift": "Shift",
+    "alt": "Alt",
+    "delete": "Del",
+    "space": "Space",
+    "enter": "Enter",
+    "escape": "Esc",
+    "backspace": "Backspace",
+    "left": "←",
+    "right": "→",
+    "up": "↑",
+    "down": "↓",
+    "home": "Home",
+    "end": "End",
+    "pageUp": "Page Up",
+    "pageDown": "Page Down"
   }
 }

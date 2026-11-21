@@ -72,7 +72,7 @@ RowLayout {
         onClicked: eolMenu.open = !eolMenu.open
         Accessible.description: I18n.t("editor.status.lineEnding")
 
-        ActionMenu {
+        MActionMenu {
             id: eolMenu
             actions: root.actions
             items: ActionList.inMenu("eol")

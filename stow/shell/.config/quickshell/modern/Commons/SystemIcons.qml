@@ -24,6 +24,8 @@ Singleton {
             return "modern-files-symbolic";
         if (s === "modern.editor" || s === "modern-editor" || s === "modern-editor-symbolic")
             return "modern-editor-symbolic";
+        if (s === "modern.imageviewer" || s === "modern-imageviewer" || s === "modern-imageviewer-symbolic")
+            return "modern-imageviewer-symbolic";
         if (s === "modern.wallpaper" || s === "modern-wallpaper" || s === "modern-wallpaper-symbolic")
             return "modern-wallpaper-symbolic";
         if (s === "modern.cheatsheet" || s === "modern-cheatsheet" || s === "modern-cheatsheet-symbolic")

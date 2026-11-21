@@ -67,8 +67,6 @@ for role in need:
     if isinstance(rule, str) and rule:
         if f'name = "{rule}"' not in rules:
             bad(f"window rule {rule} is not in windowrules.lua")
-if "default-apps.json" not in rules:
-    bad("windowrules.lua should point the image-viewer rule at default-apps.json")
 if fail:
     sys.exit(1)
 print("test-default-apps: ok manifest matches config.default.json and Config.qml")
@@ -100,10 +98,10 @@ fi
 image_desktop="$(default_app_desktop imageViewer)"
 image_stem="${image_desktop%.desktop}"
 mapfile -t image_exec < <(default_app_exec_for_desktop "$image_stem")
-if [ "${#image_exec[@]}" -gt 0 ]; then
-    ok "image viewer override is ${image_exec[*]}"
+if [ "$image_stem" = "modern.imageviewer" ] && [ "${#image_exec[@]}" -eq 0 ]; then
+    ok "image viewer is $image_stem, launched like any desktop entry"
 else
-    err "image viewer manifest has no exec override"
+    err "image viewer must be modern.imageviewer with no exec override (got $image_stem ${image_exec[*]})"
 fi
 
 text_desktop="$(default_app_desktop textEditor)"
@@ -113,7 +111,8 @@ video_stem="${video_desktop%.desktop}"
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-mkdir -p "$tmp/bin" "$tmp/cfg/modern"
+mkdir -p "$tmp/bin" "$tmp/cfg/modern" "$tmp/.local/share/applications"
+printf '[Desktop Entry]\nType=Application\nName=stub\n' >"$tmp/.local/share/applications/$image_stem.desktop"
 cat >"$tmp/bin/xdg-mime" <<'EOF'
 #!/bin/sh
 if [ "$1" = query ] && [ "$2" = filetype ]; then
@@ -146,12 +145,12 @@ run_open() {
 
 write_cfg '""' '""' '""'
 got="$(run_open "$tmp/picture.png")"
-expected="$(printf '%q\n' "${image_exec[@]}" "$tmp/picture.png")"
-if [ "$got" = "$expected" ]; then
-    ok "empty imageViewer execs the manifest override"
+if printf '%s\n' "$got" | head -n1 | grep -Fq 'modern-launch' \
+    && printf '%s\n' "$got" | grep -Fxq "$image_stem"; then
+    ok "empty imageViewer execs modern-launch $image_stem"
 else
-    err "empty imageViewer argv mismatch"
-    printf 'got:\n%s\nexpected:\n%s\n' "$got" "$expected" >&2
+    err "empty imageViewer did not resolve to the manifest desktop"
+    printf '%s\n' "$got" >&2
 fi
 
 got="$(run_open "$tmp/note.txt")"
@@ -174,29 +173,15 @@ fi
 
 write_cfg '"loupe.desktop"' '""' '""'
 got="$(run_open "$tmp/picture.png")"
-if [ "${#image_exec[@]}" -gt 0 ] \
-    && printf '%s\n' "$got" | grep -Fxq 'loupe' \
-    && ! printf '%s\n' "$got" | grep -Fq "${image_exec[0]}"; then
-    ok "a chosen image viewer skips the shipped override"
+if printf '%s\n' "$got" | grep -Fxq 'loupe' \
+    && ! printf '%s\n' "$got" | grep -Fxq "$image_stem"; then
+    ok "a chosen image viewer replaces the shipped one"
 else
-    err "chosen image viewer still used the shipped override"
+    err "chosen image viewer still opened the shipped one"
     printf '%s\n' "$got" >&2
 fi
 
 write_cfg '""' '""' '""'
-if [ -n "${image_exec[0]:-}" ] && [ -x "${image_exec[0]}" ]; then
-    got="$(HOME="$tmp" XDG_CONFIG_HOME="$tmp/cfg" PATH="$tmp/bin:$PATH" \
-        "$ROOT/scripts/files-open.sh" --print "$tmp/picture.png")"
-    if [ "$got" = "$expected" ]; then
-        ok "installed override binary is what files-open would exec"
-    else
-        err "files-open ignored an executable manifest override"
-        printf '%s\n' "$got" >&2
-    fi
-else
-    ok "override binary is not installed here; --print used MODERN_OPEN_ASSUME_EXEC"
-fi
-
 : >"$tmp/mystery.blob"
 if HOME="$tmp" XDG_CONFIG_HOME="$tmp/cfg" PATH="$tmp/bin:$PATH" \
     MODERN_OPEN_ASSUME_EXEC=1 \

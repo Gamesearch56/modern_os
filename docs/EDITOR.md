@@ -14,8 +14,9 @@ scripts/modern-editor          launcher: file:// → path, focus an open window 
 scripts/editor-io.sh           → scripts/lib/editor_io.py   load/save/trash/claim (JSON out)
 scripts/lib/editor_codec.py    bytes ↔ text: encodings, BOM, line endings, NBSP stand-in
 scripts/lib/editor_claim.py    one window per file ($XDG_RUNTIME_DIR/modern-editor)
+scripts/lib/safe_write.py      atomic or in-place write (shared with the Imageviewer)
 editor.qml                     process root (AppId modern.editor, no file watching)
-Services/EditorIo.qml          job queue around editor-io.sh
+Services/EditorIo.qml          editor-io.sh through Services/JsonJobs.qml (one job at a time)
 Services/EditorDoc.qml         the open document: path, encoding, eol, lock, dirty, notices
 Services/EditorPrefs.qml       config.editor (wrap, status bar, monospace, zoom) via ConfigWrite
 Modules/Editor/
@@ -23,8 +24,9 @@ Modules/Editor/
   EditorWindow.qml             header + menus, FindBar, TextPane, StatusBar, dialogs
   DocFlow.qml                  unsaved → save/discard, Save as fallback, conflicts, trash
   actions.js / Actions.qml     every command once: label, icon, keys, menu, handler
-  MenuRow / ActionMenu         File / Edit / View menus and the right-click menu
-  KeyBindings.qml              Shortcut per key in actions.js (off while a dialog is open)
+  MenuRow                      File / Edit / View menus (Widgets/MActionMenu) and the right-click menu
+                               keys: Widgets/MActionKeys, a Shortcut per key in actions.js
+                               (off while a dialog is open); labels from Commons/KeyLabel
   TextPane / FindBar / StatusBar / *Dialog.qml
   textops.js                   pure find/replace/line helpers (tested with node)
 ```

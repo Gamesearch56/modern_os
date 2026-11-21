@@ -146,15 +146,12 @@ apply({
     suppress_event = "fullscreen maximize",
 })
 
--- Current external image viewer only. The role list names this rule
--- (install/manifests/default-apps.json imageViewer.windowRule). The
--- viewer fills its tile. On a virtual GPU the acrylic pass replaces
--- that tile with black, so the picture never shows. A real GPU is
--- unchanged because the viewer background is already opaque. Delete
--- this rule with that manifest entry.
+-- The Imageviewer fills its tile with the picture. On a virtual GPU the
+-- acrylic pass replaces that tile with black, so the picture never
+-- shows. A real GPU is unchanged because the viewer is already opaque.
 apply({
-    name = "imv-no-blur",
-    match = { class = "imv" },
+    name = "modern-imageviewer-no-blur",
+    match = { class = "modern.imageviewer" },
     no_blur = true,
 })
 

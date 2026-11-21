@@ -39,6 +39,8 @@ Singleton {
     readonly property int durationStorePage: 1000
     // Wall-clock hide for recording chrome — not MD3 motion, never scaled.
     readonly property int durationRecordingChrome: 3000
+    // Imageviewer controls hide after the pointer rests this long — wall clock.
+    readonly property int durationViewerChromeIdle: 3000
     // NetworkManager wifi rescan — not MD3 motion, never scaled.
     readonly property int durationWifiScan: 8000
     // BlueZ inquiry restart — not MD3 motion, never scaled.
@@ -86,6 +88,7 @@ Singleton {
     readonly property int configWriteMs: Math.round(durationConfigWrite * (root.scale === 0 ? 1 : root.scale))
     readonly property int storePageMs: root.durationStorePage
     readonly property int recordingChromeMs: root.durationRecordingChrome
+    readonly property int viewerChromeIdleMs: root.durationViewerChromeIdle
     readonly property int wifiScanMs: root.durationWifiScan
     readonly property int bluetoothScanMs: root.durationBluetoothScan
     readonly property int bluetoothConnectMs: root.durationBluetoothConnect

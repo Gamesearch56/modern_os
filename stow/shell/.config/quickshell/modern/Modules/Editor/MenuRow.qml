@@ -39,7 +39,7 @@ Row {
                 }
             }
 
-            ActionMenu {
+            MActionMenu {
                 id: menu
                 actions: root.actions
                 items: ActionList.inMenu(button.modelData.menu)

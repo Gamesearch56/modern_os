@@ -192,7 +192,7 @@ Singleton {
                     // test-default-apps.sh rejects drift. Packages and launch
                     // overrides live in that manifest, not here.
                     property string videoPlayer: "mpv.desktop"
-                    property string imageViewer: "imv.desktop"
+                    property string imageViewer: "modern.imageviewer.desktop"
                     property string textEditor: "modern.editor.desktop"
                     property string terminal: "kitty.desktop"
                 }
@@ -298,6 +298,12 @@ Singleton {
                 property int maxMegabytes: 8
             }
 
+            property JsonObject viewer: JsonObject {
+                property string scaling: "shrink"
+                property bool info: false
+                property int slideshowSeconds: 4
+            }
+
             property JsonObject backup: JsonObject {
                 property bool snapperEnabled: false
                 property bool resticEnabled: false
@@ -385,4 +391,5 @@ Singleton {
     readonly property alias bugReport: adapter.bugReport
     readonly property alias files: adapter.files
     readonly property alias editor: adapter.editor
+    readonly property alias viewer: adapter.viewer
 }

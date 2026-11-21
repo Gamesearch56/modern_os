@@ -1,16 +1,17 @@
 import QtQuick
-import "actions.js" as ActionList
 
-// A Shortcut for every key in actions.js the text field does not already
-// handle. Dialogs switch them off so Ctrl+S cannot save under a prompt.
+// A window Shortcut for every key of every command in `model`
+// ([{ id, keys: ["Ctrl+S", ...] }]). Pressing one calls actions.run(id).
+// Dialogs switch `armed` off so a shortcut cannot act under a prompt.
 Item {
     id: root
 
+    property var model: []
     property var actions: null
     property bool armed: true
 
     Repeater {
-        model: ActionList.bindable()
+        model: root.model
         delegate: Item {
             id: slot
             required property var modelData

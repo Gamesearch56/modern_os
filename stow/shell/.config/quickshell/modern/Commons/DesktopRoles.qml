@@ -102,7 +102,7 @@ Singleton {
         if (role === "videoPlayer")
             return ["mpv", "vlc", "celluloid", "haruna", "smplayer", "totem"];
         if (role === "imageViewer")
-            return ["imv", "gwenview", "eog", "eom", "loupe", "nsxiv", "feh", "qimgv"];
+            return ["modern.imageviewer", "imv", "gwenview", "eog", "eom", "loupe", "nsxiv", "feh", "qimgv"];
         if (role === "terminal")
             return ["kitty", "alacritty", "foot", "wezterm", "konsole", "ghostty", "ptyxis"];
         if (role === "textEditor")

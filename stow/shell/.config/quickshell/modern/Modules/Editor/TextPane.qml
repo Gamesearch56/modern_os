@@ -164,7 +164,7 @@ Item {
         }
     }
 
-    ActionMenu {
+    MActionMenu {
         id: context
         actions: root.actions
         items: ActionList.forContext()

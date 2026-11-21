@@ -296,6 +296,12 @@ A QML `TextEdit` hands back NBSP as a space and U+2028/U+2029 as newlines. The c
 
 **Rejected:** the editor inside the main shell (a 500 MB paste or a QML error would take the bar and lock screen with it); one process for all editor windows (one crash closes every unsaved document); `FileView` for loading (no encoding detection, no refusal of FIFOs before blocking); GtkSourceView or another toolkit (not styled by the token pipeline). Printing and tabs are left for later; the command table in `Modules/Editor/actions.js` is where they go.
 
+## 26. The Imageviewer replaces imv the same way the Texteditor replaced gedit
+
+**Decision:** ModernOS Imageviewer (`modern.imageviewer`) is the default image viewer. Like the Texteditor it is one `qs -p imageviewer.qml` process per window (`scripts/modern-imageviewer`, a new window per launch as imv did), with its own window class and no `windows.lua` entry, so it tiles. All file work goes through `scripts/viewer-io.sh` (Python, one JSON line per call): folder listing in natural order, facts, trash through `files_trash`, clipboard through `wl-copy`, and saving a turn through ImageMagick on stdin/stdout with `--expect` mtime and `safe_write`. Turning is a view change until Ctrl+S, because rewriting a JPEG re-encodes it. Decoding is Qt's (`Image` / `AnimatedImage` with `autoTransform` for EXIF orientation); `qt6-imageformats` adds WebP, TIFF, TGA, and ICNS. The controls show only while the pointer moves in the window and for three seconds after (longer while it rests on a control, plus key focus, open menus and dialogs, and the empty state), so a picture is never covered while you look at it. Qt repeats hover events whenever the scene repaints, so only a changed pointer position counts as movement. The command table, menu, and key handling are shared with the Texteditor (`MActionMenu`, `MActionKeys`, `KeyLabel`, `JsonJobs`), so a third app starts from those pieces.
+
+**Rejected:** keeping imv (not styled by the token pipeline, no Files chooser, no trash); viewing inside the main shell (a 200-megapixel picture or a decoder crash would take the bar with it); Quick Look as the viewer (it is a floating preview tied to the Files window, not a window of its own); a C++ decoder plugin for AVIF/HEIC/JXL (not in the official Qt packages; a format is one row in `viewer_formats.py` once Qt reads it); auto-saving turns (silent quality loss).
+
 ## Open decisions
 
 - Whether `matugen` alone gives enough control over contrast/variant, or

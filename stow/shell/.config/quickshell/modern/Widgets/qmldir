@@ -57,3 +57,5 @@ MDragArea 1.0 MDragArea.qml
 MOverlayBar 1.0 MOverlayBar.qml
 MSignal 1.0 MSignal.qml
 MTag 1.0 MTag.qml
+MActionMenu 1.0 MActionMenu.qml
+MActionKeys 1.0 MActionKeys.qml

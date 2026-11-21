@@ -4,12 +4,8 @@
     "packages": []
   },
   "imageViewer": {
-    "desktop": "imv.desktop",
-    "packages": ["imv"],
-    "match": ["imv", "imv-wayland", "imv-x11"],
-    "exec": ["/usr/bin/imv-x11"],
-    "stow": "imv",
-    "windowRule": "imv-no-blur"
+    "desktop": "modern.imageviewer.desktop",
+    "packages": []
   },
   "videoPlayer": {
     "desktop": "mpv.desktop",

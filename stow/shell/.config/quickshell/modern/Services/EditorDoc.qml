@@ -43,9 +43,10 @@ Singleton {
         return "editor.errors." + (root._knownErrors.indexOf(r) >= 0 ? r : "failed");
     }
 
+    // Params first: DocFlow reacts to `notice` the moment it changes.
     function _say(out: var) {
-        root.notice = root.errorKey(out.error);
         root.noticeParams = { name: root.name, megabytes: Math.ceil(Number(out.limit || 0) / 1048576) };
+        root.notice = root.errorKey(out.error);
     }
 
     function clearNotice() {

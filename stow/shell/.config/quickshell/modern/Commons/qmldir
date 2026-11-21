@@ -17,3 +17,4 @@ singleton XdgDirs 1.0 XdgDirs.qml
 singleton DesktopRoles 1.0 DesktopRoles.qml
 singleton SystemIcons 1.0 SystemIcons.qml
 singleton ModernApps 1.0 ModernApps.qml
+singleton KeyLabel 1.0 KeyLabel.qml

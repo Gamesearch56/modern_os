@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "../../Commons"
 import "../../Widgets"
 import "../../Services"
+import "actions.js" as ActionList
 
 // One Texteditor window: header with the file name and menus, the find
 // bar, the page, and the status bar. The compositor title carries the
@@ -109,7 +110,8 @@ FloatingWindow {
         saveAsDialog: saveAs
     }
 
-    KeyBindings {
+    MActionKeys {
+        model: ActionList.bindable()
         actions: actions
         armed: !win._dialog
     }
