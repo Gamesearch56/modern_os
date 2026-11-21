@@ -14,6 +14,7 @@ SESSION="$ROOT/stow/hypr/.config/hypr/modules/session_apps.lua"
 MATCH="$ROOT/stow/hypr/.config/hypr/modules/session_match.lua"
 LAYOUT="$ROOT/stow/hypr/.config/hypr/modules/workspaces_layout.lua"
 GAMES="$ROOT/stow/hypr/.config/hypr/modules/games.lua"
+GAME_MATCH="$ROOT/stow/hypr/.config/hypr/modules/game_match.lua"
 HYPR_AS="$ROOT/stow/shell/.config/quickshell/modern/Services/HyprAutostart.qml"
 HYPR_WIN="$ROOT/stow/shell/.config/quickshell/modern/Services/HyprWindows.qml"
 AUTOSTART_UI="$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/applications/Autostart.qml"
@@ -290,8 +291,8 @@ else
     err "primaryDescription + ProfileForm + no games snap_primary required"
 fi
 
-if grep -Fq 'explorer.exe' "$GAMES" \
-    && grep -Fq 'steam_app_%d+' "$GAMES" \
+if grep -Fq 'explorer.exe' "$GAME_MATCH" \
+    && grep -Fq 'steam_app_%d+' "$GAME_MATCH" \
     && grep -Fq 'proton-desktop-silent' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
     && ! grep -Fq 'keep_windowed' "$GAMES" \
     && grep -Fq 'wine-shell-silent' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
@@ -302,10 +303,10 @@ else
     err "launcher must suppress client fullscreen without trapping SUPER+F"
 fi
 
-if grep -Fq 'nautilus' "$GAMES" \
-    && grep -Fq 'MAX_ID' "$GAMES" \
+if grep -Fq 'nautilus' "$GAME_MATCH" \
+    && grep -Fq 'MAX_ID' "$GAME_MATCH" \
     && grep -Fq 'window.fullscreen' "$GAMES" \
-    && ! grep -Fq 're2_alt' "$GAMES" \
+    && ! grep -Fq 're2_alt' "$GAME_MATCH" "$GAMES" \
     && grep -Fq 'suppress-client-maximize' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
     && grep -Fq 'steamwebhelper' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua"; then
     ok "file manager titles stay out of the game matcher"

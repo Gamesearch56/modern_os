@@ -64,7 +64,13 @@ Singleton {
         { action: "brightnessDown", combo: "BRI -", category: "media" },
         { action: "mouseMoveSuper", combo: "SUPER + LMB", category: "mouse" },
         { action: "mouseResizeSuper", combo: "SUPER + RMB", category: "mouse" },
-        { action: "mouseResizeBorder", combo: "BORDER + LMB", category: "mouse" }
+        { action: "mouseResizeBorder", combo: "BORDER + LMB", category: "mouse" },
+        { action: "mouseMoveSide", combo: "MB4 + DRAG", category: "mouse", side: true },
+        { action: "mouseResizeSide", combo: "MB5 + DRAG", category: "mouse", side: true },
+        { action: "mouseCloseSide", combo: "MB4 + MB5", category: "mouse", side: true },
+        { action: "mouseFloatSide", combo: "MB4 + MMB", category: "mouse", side: true },
+        { action: "mouseFullscreenSide", combo: "MB5 + MMB", category: "mouse", side: true },
+        { action: "mouseCloseApp", combo: "MMB", category: "mouse" }
     ]
 
     function _rowMatches(action: string, combo: string, category: string, needle: string): bool {
@@ -133,9 +139,10 @@ Singleton {
             });
         }
         const fixed = root.fixedBinds;
+        const side = Config.input.mouseSideButtons !== false;
         for (let i = 0; i < fixed.length; i++) {
             const g = fixed[i];
-            if (!root._rowMatches(g.action, g.combo, g.category, needle))
+            if ((g.side && !side) || !root._rowMatches(g.action, g.combo, g.category, needle))
                 continue;
             out.push({
                 action: g.action,

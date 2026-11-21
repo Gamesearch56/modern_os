@@ -46,6 +46,7 @@ MListItem {
         host.currentIndex = item.index;
         host.activateCurrent();
     }
+    onMiddleClicked: item.clickClose()
     onRightClicked: {
         if (!host)
             return;

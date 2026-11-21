@@ -204,6 +204,7 @@ Singleton {
                 property int repeatRate: 25
                 property int repeatDelay: 600
                 property bool numlockOnBoot: false
+                property bool mouseSideButtons: true
             }
 
             property JsonObject launcher: JsonObject {

@@ -136,7 +136,8 @@
     "kbVariant": "",
     "repeatRate": 25,
     "repeatDelay": 600,
-    "numlockOnBoot": false
+    "numlockOnBoot": false,
+    "mouseSideButtons": true
   },
   "monitors": {
     "profiles": {},

@@ -6,7 +6,6 @@ import "../Commons"
 
 Item {
     id: root
-
     property string iconName: ""
     property string iconSource: ""
     property string imageSource: ""
@@ -26,7 +25,6 @@ Item {
     property bool pointerHover: false
     property string badgeIcon: ""
     property int badgeCount: 0
-
     property bool compact: false
     property bool preferSymbolic: !root._nav
     property bool tabFocus: true
@@ -42,6 +40,7 @@ Item {
 
     signal clicked()
     signal rightClicked(real x, real y)
+    signal middleClicked()
     signal activated()
 
     function _onTrailing(px: real, py: real): bool {
@@ -128,7 +127,7 @@ Item {
         enabled: root.hoverHighlight
         hoverEnabled: true
         propagateComposedEvents: true
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
         onPressed: (mouse) => {
             if (!root.enabled)
@@ -142,11 +141,13 @@ Item {
                 return;
             if (mouse.button === Qt.RightButton)
                 root.rightClicked(mouse.x, mouse.y);
+            else if (mouse.button === Qt.MiddleButton)
+                root.middleClicked();
             else
                 root.clicked();
         }
         onDoubleClicked: (mouse) => {
-            if (!root.enabled || root._onTrailing(mouse.x, mouse.y))
+            if (!root.enabled || mouse.button === Qt.MiddleButton || root._onTrailing(mouse.x, mouse.y))
                 return;
             root.activated();
         }
