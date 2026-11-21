@@ -6,9 +6,9 @@ calamares
 yay-bin
 # m0 AUR (10-desktop.aur.txt / 20-theming.aur.txt / 30-apps.aur.txt). On the squashfs so
 # late `yay -S --needed` is a no-op instead of building in the chroot.
-# matugen-bin: source AUR matugen is 3.0.0 and calls rustup in prepare();
-# this PC has rustup with no default for modernisoaur. Binary is 4.2.0
-# (templates in THEMING.md) and provides `matugen`.
+# matugen-bin: the source AUR matugen calls rustup in prepare(), which
+# fails for a build user without a default toolchain. The binary package
+# provides `matugen` (templates in THEMING.md).
 matugen-bin
 # Source bibata needs AUR python-clickgen; makepkg -s cannot see AUR.
 bibata-cursor-theme-bin

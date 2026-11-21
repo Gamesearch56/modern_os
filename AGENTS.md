@@ -108,7 +108,7 @@ country's default, put it in that country's slot in `languages.json`.
 **A new installer string.** A `tr()` in `iso/releng/calamares-modernnet`
 or a `qsTr()` in the slideshow needs an `installer.*` key in every
 translation file and a row in `iso/releng/installer-strings.json`;
-`scripts/test-installer-locales.py` fails until both exist.
+`tests/test-installer-locales.py` fails until both exist.
 
 **A new theme profile (color template).** Drop a JSON file in
 `stow/modern/.config/modern/themes/<name>.json` with `{ variant, mode,
@@ -161,4 +161,5 @@ stow: `docs/CUTOVER.md`.
 See the tree in `docs/ARCHITECTURE.md`. Short version: `stow/` is
 everything that becomes a dotfile on the target user; `install/` is the
 installer, manifests and gated system files; `scripts/` is standalone
-tooling; `docs/` is reference material.
+tooling; `tests/` holds every `test-*` script `scripts/ci-check.sh` runs
+(a new test needs a line there); `docs/` is reference material.

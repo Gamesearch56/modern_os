@@ -50,18 +50,10 @@ Singleton {
             root._run(args, "save", { snap: root._shot(), name: name, bits: bits, owner: owner });
     }
 
-    function saveMode(path: string, bits: string) {
-        root._run(["chmod", path, bits], "save", { snap: root._shot(), bits: bits });
-    }
-
     function saveGroup(path: string, group: string) {
         root._editPath = String(path || "");
         root._editName = "";
         root._run(["chgrp", path, group], "save", { snap: root._shot(), group: group });
-    }
-
-    function saveOwner(path: string, user: string) {
-        root._run(["chown", path, user], "save", { snap: root._shot(), owner: user });
     }
 
     function _run(args: var, kind: string, extra: var) {

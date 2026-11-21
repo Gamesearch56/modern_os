@@ -32,7 +32,6 @@ Singleton {
     readonly property string desktopEntry: String(root.active?.desktopEntry || "").replace(/\.desktop$/i, "")
     readonly property string trackTitle: root._titleOf(root.active)
     readonly property string trackArtist: root._artistOf(root.active)
-    readonly property string trackAlbum: root.active?.trackAlbum ?? ""
     readonly property string trackArtUrl: root.active?.trackArtUrl ?? ""
     readonly property real position: root.active?.position ?? 0
     readonly property real length: root.active?.length ?? 0
@@ -46,12 +45,9 @@ Singleton {
         }
         return false;
     }
-    readonly property bool canPlay: root.active?.canPlay ?? false
-    readonly property bool canPause: root.active?.canPause ?? false
     readonly property bool canGoNext: root.active?.canGoNext ?? false
     readonly property bool canGoPrevious: root.active?.canGoPrevious ?? false
     readonly property bool canSeek: root.active?.canSeek ?? false
-    readonly property int loopState: root.active?.loopState ?? 0
     readonly property bool shuffle: root.active?.shuffle ?? false
 
     IpcHandler {
@@ -86,23 +82,6 @@ Singleton {
     function seek(seconds: real) {
         if (root.active?.canSeek)
             root.active.seek(seconds);
-    }
-    function setPosition(seconds: real) {
-        if (root.active)
-            root.active.position = seconds;
-    }
-    function setShuffle(on: bool) {
-        if (root.active)
-            root.active.shuffle = on;
-    }
-    function cycleLoop() {
-        if (!root.active)
-            return;
-        root.active.loopState = (root.active.loopState + 1) % 3;
-    }
-    function openUri(uri: string) { root.active?.openUri(uri); }
-    function launchSpotify() {
-        Quickshell.execDetached(["spotify-launcher"]);
     }
     function setActive(player: var) {
         if (player)

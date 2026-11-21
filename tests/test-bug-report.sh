@@ -64,7 +64,7 @@ REPORTS="$XDG_STATE_HOME/modern/reports"
 start_server() {
     [ -z "$server" ] || { kill "$server" 2>/dev/null || true; wait "$server" 2>/dev/null || true; }
     rm -f "$tmp/port" "$tmp/gh.log"
-    python3 "$ROOT/scripts/lib/fake-github.py" "$tmp/port" "$tmp/gh.log" "$@" &
+    python3 "$ROOT/tests/lib/fake-github.py" "$tmp/port" "$tmp/gh.log" "$@" &
     server=$!
     local _
     for _ in $(seq 1 50); do [ -s "$tmp/port" ] && break; sleep 0.1; done
@@ -164,9 +164,20 @@ id3="$("$BR" new)"
 start_server refuse
 rc=0; "$BR" send "$id3" "$req" >/dev/null || rc=$?
 [ "$rc" = 22 ] && ok "refused token answers 22" || err "refused rc=$rc"
+for mode in ratelimit down; do
+    rm -f "$REPORTS/$id3/queued"
+    start_server "$mode"
+    rc=0; "$BR" send "$id3" "$req" >/dev/null 2>&1 || rc=$?
+    [ "$rc" = 20 ] && [ -f "$REPORTS/$id3/queued" ] \
+        && ok "GitHub $mode is queued for a later try, not lost" || err "$mode rc=$rc"
+done
+rm -f "$REPORTS/$id3/queued"
 printf '{}\n' >"$XDG_CONFIG_HOME/modern/secrets.json"
+stub gh 'printf "gho_personal-login\n"'
 rc=0; "$BR" send "$id3" "$req" >/dev/null || rc=$?
-[ "$rc" = 21 ] && ok "missing token answers 21" || err "no-token rc=$rc"
+[ "$rc" = 21 ] && ok "missing token answers 21 and never borrows the gh login" || err "no-token rc=$rc"
+[ "$("$BR" status)" = '{"ready":false,"queued":0}' ] \
+    && ok "status is not ready on a gh login alone" || err "status with gh: $("$BR" status)"
 
 path="$("$BR" export "$id3")"
 tar -tJf "$path" | grep -q 'files/system.txt' && ok "export writes a bundle to Downloads" || err "export: $path"
@@ -174,6 +185,13 @@ tar -tJf "$path" | grep -q 'files/system.txt' && ok "export writes a bundle to D
 "$BR" quick sound >/dev/null 2>&1 || true
 grep -q "$(jq -r '.bugReport.notSetUp' "$ROOT/stow/modern/.config/modern/translations/en.json")" "$tmp/calls/notify" \
     && ok "quick report without a token exports and notifies" || err "quick: $(cat "$tmp/calls/notify" 2>/dev/null)"
+
+mkdir -p "$tmp/broken"
+printf '{"calendarAccount": "%s", "latitude": 52.5, "theme": "dark",\n' "$SECRET" >"$tmp/broken/cut.json"
+python3 "$ROOT/scripts/lib/report-redact.py" "$tmp/broken" 2>"$tmp/broken.err"
+! grep -q -e "$SECRET" -e '52.5' "$tmp/broken/cut.json" && grep -q '"theme": "dark"' "$tmp/broken/cut.json" \
+    && grep -q 'not valid JSON' "$tmp/broken.err" \
+    && ok "truncated JSON is still redacted by key and the fallback is logged" || err "broken json: $(cat "$tmp/broken/cut.json")"
 
 [ "$FAIL" -eq 0 ] && printf 'test-bug-report: all passed\n'
 exit "$FAIL"

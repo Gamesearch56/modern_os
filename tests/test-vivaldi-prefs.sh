@@ -28,7 +28,7 @@ cat >"$HOME/.config/modern/tokens.json" <<'EOF'
 {"mode":"dark","color":{"primary":"#d0bcff","surface":"#141218","onSurface":"#e6e0e9","onPrimary":"#381e72","primaryContainer":"#4f378b"}}
 EOF
 
-# shellcheck source=lib/vivaldi-prefs.sh
+# shellcheck source=../scripts/lib/vivaldi-prefs.sh
 source "$ROOT/scripts/lib/vivaldi-prefs.sh"
 
 if merge_vivaldi_prefs "$HOME/.config/modern/tokens.json"; then

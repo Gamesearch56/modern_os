@@ -39,6 +39,9 @@ Singleton {
                 root._ids = ["us"];
             }
         }
-        onLoadFailed: root._ids = ["us"]
+        onLoadFailed: (error) => {
+            Logger.warn("KeyboardLayouts", `keyboard-layouts.json not loaded (${error}); offering us only`);
+            root._ids = ["us"];
+        }
     }
 }

@@ -47,7 +47,7 @@ Services/  Hypr Audio Network Bluetooth Brightness Power Notifications Media
 
 Widgets/   MButton MIconButton MSwitch MSlider MCard MChip MListItem
            MTextField MPopup MIcon MText MDialog MTooltip MOverlay
-           MSparkline MLinearProgress MSlotBoard
+           MLinearProgress MSlotBoard
            — MD3 primitives. Stateless, token-driven, zero system access.
 
 Modules/   Bar/ Launcher/ Panels/ PowerMenu/ Notifications/ Wallpaper/
@@ -91,9 +91,12 @@ modern_dotfile/
 │   ├── theme/.config/matugen/               config.toml + templates/
 │   ├── kitty/ gtk/ qt/ bash/ git/          app configs (default apps: `install/manifests/default-apps.json`)
 │   └── modern/.config/modern/               config.default.json, themes/, translations/
-├── scripts/    theme-apply.sh wallpaper.sh optiscaler.sh game-profile.sh
+├── scripts/    theme-apply.sh wallpaper-*.sh optiscaler.sh game-profile.sh
 │               lint-layers.sh snapshot-packages.sh check-isolation.sh
-│               doctor.sh modern (IPC CLI) desktop-sync.sh iso-build.sh
+│               doctor.sh modern (IPC CLI) desktop-sync.sh iso-build.sh;
+│               lib/ holds the helpers they source or run
+├── tests/      test-*.sh / test-*.py run by scripts/ci-check.sh;
+│               lib/ holds fake servers (GitHub, CalDAV) for them
 ├── iso/        releng overlay + airootfs Calamares late (not applied by install.sh)
 ```
 

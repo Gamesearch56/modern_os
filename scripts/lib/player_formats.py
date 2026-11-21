@@ -1,6 +1,6 @@
 """Media types the ModernOS Mediaplayer opens: what Qt Multimedia's FFmpeg
 backend plays. The desktop entry's MimeType= lists exactly these types
-(scripts/test-player.sh checks it), so Files never hands the player a file
+(tests/test-player.sh checks it), so Files never hands the player a file
 it was not meant for.
 """
 

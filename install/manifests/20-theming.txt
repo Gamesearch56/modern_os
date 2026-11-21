@@ -4,7 +4,7 @@ inter-font              # default interface typeface (docs/DESIGN.md)
 ttf-jetbrains-mono-nerd # default monospace typeface, with icon glyphs for the bar/cheatsheet
 ttf-liberation          # metric-compatible fallback for documents expecting Arial/Times
 noto-fonts              # broad Unicode coverage fallback
-noto-fonts-cjk          # CJK fallback (kept from the audited system)
+noto-fonts-cjk          # Chinese, Japanese and Korean glyph fallback
 noto-fonts-emoji        # emoji rendering everywhere, including the launcher's `:` emoji mode
 qt6-svg                 # SVG decode for Papirus/Adwaita icons in Quickshell IconImage
 qt6-imageformats        # WebP, TIFF, TGA, ICNS decode for the Imageviewer (scripts/lib/viewer_formats.py)
@@ -15,5 +15,4 @@ breeze                  # Qt widget style (modern-launch QT_STYLE_OVERRIDE); Col
 adwaita-icon-theme      # fallback names when Papirus has no match
 hicolor-icon-theme      # freedesktop icon fallback
 gnome-themes-extra      # provides Adwaita GTK assets some apps fall back to
-sassc                   # compiles the generated gtk.css theme templates
 imagemagick             # wallpaper-sync.sh blur + boot-downscale variants; Imageviewer saved rotation

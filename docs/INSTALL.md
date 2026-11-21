@@ -105,7 +105,7 @@ sudo ./scripts/iso-build.sh --mkarchiso
 ./scripts/iso-qemu.sh          # UEFI live image + 64G qcow2 (Calamares needs ≥ 16 GiB)
 ./scripts/iso-qemu.sh --headless   # no GTK; serial still goes to iso/out/vm-serial.log
 ./scripts/iso-qemu.sh --reset-disk # wipe a previous VM install, still boot the ISO
-./scripts/test-iso-qemu-install.sh # unattended QEMU until late install finishes
+./tests/test-iso-qemu-install.sh # unattended QEMU until late install finishes
 ```
 
 The **live** ISO is this clone (kiosk, branding, Calamares). After
@@ -126,7 +126,7 @@ Calamares' GRUB path: an msdos table, then `shellprocess@biosboot` puts
 covered by `test-calamares-late.sh`, not a VM run.
 `--unattended` sets QEMU fw_cfg `opt/org.modernos/unattended`; the live
 wrapper writes `/etc/calamares/unattended` so Calamares auto-advances
-and fills user `modern` / password `modern`. `scripts/test-iso-qemu-install.sh`
+and fills user `modern` / password `modern`. `tests/test-iso-qemu-install.sh`
 runs that until serial shows `late install finished` (about an hour;
 not part of `ci-check.sh`).
 
@@ -168,7 +168,7 @@ the bootloader job wrote survives, and it does not need an ISO in
 Installer checks are two gates. Every PR runs `scripts/ci-check.sh`
 (QSS/config/schema, AUR patch fixtures, `calamares-late.sh` clone against
 a local git tag). The ISO itself is built locally, never by CI
-(`sudo ./scripts/iso-build.sh --mkarchiso`); `scripts/test-iso-qemu-install.sh`
+(`sudo ./scripts/iso-build.sh --mkarchiso`); `tests/test-iso-qemu-install.sh`
 then clicks through an unattended install.
 
 `stylesheet.qss` paints scroll viewports, Summary `#summaryContent` /
@@ -292,7 +292,7 @@ language the working tree lacks. A language missing a key shows that
 string in English.
 
 **What fails, and where.** `scripts/lint-layers.sh` and
-`scripts/test-installer-locales.py` (both in `ci-check.sh`) reject: a
+`tests/test-installer-locales.py` (both in `ci-check.sh`) reject: a
 translation without a catalog entry or the reverse, a layout outside
 `keyboard-layouts.json` or unknown to xkb, a country not in `zone.tab`, a
 language + country glibc has no UTF-8 locale for, a language Calamares
@@ -304,7 +304,7 @@ adds French and Brazilian Portuguese to a scratch copy and compiles and
 runs the generated Welcome C++ against Qt6, so adding a language needs
 no ISO test install. With an unpacked Calamares tarball,
 `MODERN_CALAMARES_SRC=/path/to/calamares-3.4.2 python3
-scripts/test-installer-locales.py` also patches the real source.
+tests/test-installer-locales.py` also patches the real source.
 
 The Keyboard step's own job only writes `/etc/vconsole.conf` (the TTY) and
 `/etc/X11/xorg.conf.d/00-keyboard.conf` (Xwayland clients). Hyprland reads
@@ -348,7 +348,7 @@ that call has to come after `language.ui` and `kbLayout` are in
 `config.json`. An earlier bake left the login screen in English on a `us`
 layout even when the desktop later followed the install. The second
 wallpaper-sync still refreshes the same files.
-`scripts/test-calamares-late.sh` pins that ordering.
+`tests/test-calamares-late.sh` pins that ordering.
 
 The **Network** / **Netzwerk** page sits after Keyboard. Next stays off
 until Ethernet or Wi-Fi is up (or a default route exists). Wi-Fi turns
@@ -414,8 +414,8 @@ Order matters in both directions: `striplive` reads the account the
 `initrd_generator=mkinitcpio` — and that is what actually builds the
 initramfs. There is no `initcpio` job after `initcpiocfg` for the same
 reason: a preset-driven `mkinitcpio -P` would only add an unused second
-image to the ESP. `scripts/test-iso-live-kiosk.sh` asserts the ordering
-and `scripts/test-calamares-late.sh` asserts that every live-only file
+image to the ESP. `tests/test-iso-live-kiosk.sh` asserts the ordering
+and `tests/test-calamares-late.sh` asserts that every live-only file
 tracked under `iso/airootfs` is on the strip list.
 
 The Calamares packages job does not `pacman -S` anything (no sync db on the

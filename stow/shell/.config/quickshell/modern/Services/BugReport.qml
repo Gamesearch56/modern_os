@@ -186,7 +186,7 @@ Singleton {
         onTriggered: root._run(captureProc, ["capture", root.reportId])
     }
 
-    Process {
+    BugReportProc {
         id: newProc
         stdout: StdioCollector {
             onStreamFinished: {
@@ -199,7 +199,7 @@ Singleton {
         }
     }
 
-    Process {
+    BugReportProc {
         id: captureProc
         stdout: StdioCollector {
             onStreamFinished: {
@@ -212,7 +212,7 @@ Singleton {
         }
     }
 
-    Process {
+    BugReportProc {
         id: collectProc
         stdout: StdioCollector {
             onStreamFinished: {
@@ -224,8 +224,9 @@ Singleton {
         }
     }
 
-    Process {
+    BugReportProc {
         id: sendProc
+        expectedCodes: [0, 20, 21]
         stdout: StdioCollector { id: sendOut }
         onExited: (code) => {
             root.sending = false;
@@ -236,7 +237,7 @@ Singleton {
         }
     }
 
-    Process {
+    BugReportProc {
         id: exportProc
         stdout: StdioCollector {
             onStreamFinished: {
@@ -247,7 +248,7 @@ Singleton {
         }
     }
 
-    Process {
+    BugReportProc {
         id: statusProc
         command: [Paths.script("bug-report.sh"), "status"]
         stdout: StdioCollector {
@@ -266,7 +267,7 @@ Singleton {
         }
     }
 
-    Process {
+    BugReportProc {
         id: outboxProc
         command: [Paths.script("bug-report.sh"), "outbox"]
         stdout: SplitParser {

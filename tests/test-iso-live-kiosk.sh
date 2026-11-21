@@ -819,7 +819,7 @@ else
     err "iso-build.sh must refuse a missing pin, add ttyS0, and compile branding .qm"
 fi
 
-INSTALL_QEMU="$ROOT/scripts/test-iso-qemu-install.sh"
+INSTALL_QEMU="$ROOT/tests/test-iso-qemu-install.sh"
 # A 1.8 GB ISO is past the free Actions storage, so it is built locally
 # (iso-build.sh --mkarchiso) and never by CI.
 if [ ! -e "$ROOT/.github/workflows/iso.yml" ] \

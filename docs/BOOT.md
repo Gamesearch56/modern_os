@@ -44,7 +44,7 @@ like from the outside: plain Hyprland, no greeter, no shell, and a
 tell that `$HOME` was `/`. The greetd command is therefore `/etc/greetd/kiosk.sh`, which re-exports
 `GREETD_SOCK` (Quickshell will not connect without it) and execs
 `start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua`.
-`scripts/test-calamares-late.sh` asserts both. Greetd sets
+`tests/test-calamares-late.sh` asserts both. Greetd sets
 `source_profile = false` so `~/.bashrc` (fastfetch) does not run on the
 seat before Hyprland. The kiosk sets `ulimit -c 0` so a crash dump cannot
 block reaping. Greeter wallpaper is the Quickshell Image — no `awww`

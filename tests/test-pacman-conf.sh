@@ -8,7 +8,7 @@ FAIL=0
 err() { printf 'test-pacman-conf: FAIL %s\n' "$*" >&2; FAIL=1; }
 ok() { printf 'test-pacman-conf: ok %s\n' "$*"; }
 
-# shellcheck source=lib/pacman-conf.sh
+# shellcheck source=../scripts/lib/pacman-conf.sh
 source "$ROOT/scripts/lib/pacman-conf.sh"
 
 TMP="$(mktemp -d)"

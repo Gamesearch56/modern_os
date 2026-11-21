@@ -517,9 +517,9 @@ KB_DETECT_NEW = """    QString welcomeCountry;
         getCurrentKeyboardLayoutXkb( currentLayout, currentVariant, currentModel );
     }"""
 
-# automaticLocaleConfiguration() used to prefer a LANG already stored from
+# Upstream automaticLocaleConfiguration() prefers a LANG already stored from
 # the live ISO. That stays en_US after Welcome moves to German, so the
-# Location step installed English and the login screen followed it.
+# Location step installs English and the login screen follows it.
 # The timezone country picks the regional locale (Vienna -> de_AT), and
 # setCurrentLocation() re-runs this whenever the zone changes.
 LOCALE_LANG_OLD = """    auto* gs = Calamares::JobQueue::instance()->globalStorage();

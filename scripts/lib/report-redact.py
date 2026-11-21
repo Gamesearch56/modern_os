@@ -53,6 +53,19 @@ def redact_value(key, value):
     return value
 
 
+# For JSON that does not parse (truncated logs, comments): the same keys
+# as SENSITIVE_KEY, matched as "key": "value" or "key": number.
+LOOSE_PAIR = re.compile(r'("([^"\\]*)"\s*:\s*)("(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?)')
+
+
+def redact_loose_json(text):
+    def sub(m):
+        if not SENSITIVE_KEY.search(m.group(2)) or m.group(3) in ('""', "0"):
+            return m.group(0)
+        return m.group(1) + '"<redacted>"'
+    return LOOSE_PAIR.sub(sub, text)
+
+
 def identity_rules():
     rules = []
     home = os.path.expanduser("~")
@@ -87,8 +100,9 @@ def main():
         if name.endswith(".json"):
             try:
                 text = json.dumps(redact_value("", json.loads(text)), indent=2, ensure_ascii=False) + "\n"
-            except ValueError:
-                pass
+            except ValueError as err:
+                print("report-redact: %s is not valid JSON (%s); redacting by pattern" % (name, err), file=sys.stderr)
+                text = redact_loose_json(text)
         text = redact_text(text, rules)
         tmp = path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as fh:

@@ -96,7 +96,8 @@ modern_dotfile/
 ├── docs/           architecture, design, decisions, install & ops guides
 ├── install/        install.sh, manifests/, system/ (gated)
 ├── stow/           everything that becomes a dotfile on the target user
-└── scripts/        theme-apply, doctor, isolation check, `modern` IPC CLI
+├── scripts/        theme-apply, doctor, isolation check, `modern` IPC CLI
+└── tests/          unit and integration tests run by scripts/ci-check.sh
 ```
 
 ## Keybinds (M0 defaults)

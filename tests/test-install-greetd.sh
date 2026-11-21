@@ -205,7 +205,7 @@ fi
 
 # Isolated bash: greetd_apply's `exit 1` must not kill this script, and
 # the child must not see a pre-existing greeter account (CI has none;
-# this PC does).
+# a developer machine may).
 dry_out="$(
     bash --noprofile --norc -c '
         set -euo pipefail

@@ -83,7 +83,7 @@ else
 fi
 
 port_file="$TMP/port"
-python3 "$ROOT/scripts/lib/fake-caldav.py" me@icloud.com abcd-efgh-ijkl-mnop >"$port_file" &
+python3 "$ROOT/tests/lib/fake-caldav.py" me@icloud.com abcd-efgh-ijkl-mnop >"$port_file" &
 srv=$!
 trap 'kill "$srv" 2>/dev/null || true; cleanup' EXIT
 for _ in $(seq 1 50); do

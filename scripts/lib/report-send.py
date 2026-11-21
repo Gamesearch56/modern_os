@@ -6,12 +6,14 @@ Usage: report-send.py <report-dir> <owner/repo>
 Reads request.json (title, description, categories, when, repeat and the
 file/shot names the user left ticked), uploads the bundle and the ticked
 screenshots with the Contents API, then opens an issue that shows the
-screenshots inline and links the bundle. The token is secrets.json → bugReport.githubToken, scoped to the
-reports repo only. This computer's own GitHub login is used when that
-key is empty and BUG_REPORT_API is unset (the test server sets it).
+screenshots inline and links the bundle. The token is secrets.json →
+bugReport.githubToken, scoped to the reports repo only. The `gh` login of
+this computer is used only when MODERN_REPORT_GH=1: it usually carries
+far more rights than filing one issue needs.
 
-Exit: 0 sent (prints the issue number), 20 unreachable (try again later),
-21 no token, 22 token refused, 23 any other server answer.
+Exit: 0 sent (prints the issue number), 20 unreachable, rate limited or
+a GitHub outage (queued, try again later), 21 no token, 22 token refused,
+23 any other server answer.
 """
 import base64
 import io
@@ -74,13 +76,23 @@ def token():
             saved = str((json.load(fh).get("bugReport") or {}).get("githubToken") or "").strip()
     except (OSError, ValueError, AttributeError):
         saved = ""
-    if saved or os.environ.get("BUG_REPORT_API"):
+    if saved or os.environ.get("MODERN_REPORT_GH") != "1":
         return saved
     try:
         out = subprocess.check_output(["gh", "auth", "token"], stderr=subprocess.DEVNULL, timeout=10)
     except (OSError, subprocess.SubprocessError):
         return ""
     return out.decode().strip()
+
+
+# Worth queueing: the same request can succeed later unchanged.
+RETRY = (408, 429, 500, 502, 503, 504)
+
+
+def _rate_limited(err):
+    """GitHub answers secondary rate limits with 403, not 429."""
+    headers = err.headers or {}
+    return bool(headers.get("Retry-After")) or headers.get("X-RateLimit-Remaining") == "0"
 
 
 def call(tok, method, path, body):
@@ -98,6 +110,8 @@ def call(tok, method, path, body):
         with urllib.request.urlopen(req, timeout=60) as resp:
             return json.loads(resp.read() or b"{}")
     except urllib.error.HTTPError as err:
+        if err.code in RETRY or (err.code == 403 and _rate_limited(err)):
+            raise Unreachable() from err
         if err.code in (401, 403):
             raise Refused() from err
         raise Rejected(str(err.code)) from err
@@ -228,8 +242,9 @@ def ensure_labels(tok, repo, names):
             call(tok, "POST", "/repos/%s/labels" % repo, {
                 "name": name, "color": "6f42c1", "description": name.split(":", 1)[-1],
             })
-        except Rejected:
-            pass
+        except Rejected as err:
+            if str(err) != "422":
+                print("report-send: label %s not created (%s)" % (name, err), file=sys.stderr)
 
 
 def version_of(root):
@@ -283,8 +298,8 @@ def send(root, repo, tok):
             call(tok, "PATCH", "/repos/%s/issues/%s" % (repo, number), {
                 "body": body["body"].replace("<issue>", str(number)),
             })
-        except (Rejected, Unreachable):
-            pass
+        except (Rejected, Unreachable) as err:
+            print("report-send: issue %s filed, fetch hint not added (%r)" % (number, err), file=sys.stderr)
     with open(os.path.join(root, "sent.json"), "w", encoding="utf-8") as fh:
         json.dump({"number": number, "url": made.get("html_url", "")}, fh)
     return number

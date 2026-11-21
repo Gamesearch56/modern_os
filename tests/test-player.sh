@@ -21,7 +21,7 @@ lacks() {
     if grep -rqE "$1" "$2"; then err "$3"; else ok "$3"; fi
 }
 
-python3 "$ROOT/scripts/test-player.py" || FAIL=1
+python3 "$ROOT/tests/test-player.py" || FAIL=1
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-player-sh-XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT

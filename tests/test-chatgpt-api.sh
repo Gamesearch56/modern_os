@@ -198,7 +198,7 @@ GROUP="$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/ai"
 if grep -Fq 'value: "chatgpt"' "$GROUP/Section.qml" \
     && grep -Fq 'ChatGpt {' "$GROUP/Section.qml" \
     && grep -Fq 'settings.chatgpt.connect' "$GROUP/ChatGpt.qml" \
-    && grep -Fq 'openai.apiKey' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiChatGptAccount.qml" \
+    && grep -Fq 'Secrets.put("openai"' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiChatGptAccount.qml" \
     && grep -Fq 'chatgpt-api.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiChatGpt.qml" \
     && grep -Fq 'chatgptModel' "$ROOT/stow/shell/.config/quickshell/modern/Commons/Config.qml" \
     && grep -Fq 'openChatGptBilling' "$ROOT/stow/shell/.config/quickshell/modern/Services/Ai.qml" \

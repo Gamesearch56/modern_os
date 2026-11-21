@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Side- and middle-button window controls: Lua state machine against a mock hl,
 # the replay helper's argument guard, and the Settings/cheatsheet wiring.
-# scripts/test-mouse-windows-live.py drives the real compositor.
+# tests/test-mouse-windows-live.py drives the real compositor.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

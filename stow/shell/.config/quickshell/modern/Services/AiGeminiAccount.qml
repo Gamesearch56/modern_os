@@ -15,17 +15,12 @@ Item {
     property string block: ""
     property bool _fileHasKey: false
 
-    FileView {
-        id: secretsFile
-        path: Paths.configHome + "/modern/secrets.json"
-        watchChanges: true
-        printErrors: false
-        onLoaded: root._ingest(text())
-        onLoadFailed: {
-            root._fileHasKey = false;
-            root._syncHasKey();
-        }
+    Connections {
+        target: Secrets
+        function onStoreChanged() { root._ingest(); }
     }
+
+    Component.onCompleted: root._ingest()
 
     function probe() {
         root._syncHasKey();
@@ -41,29 +36,8 @@ Item {
     }
 
     function setKey(raw: string) {
-        const k = String(raw || "").trim();
-        let obj = ({});
-        try {
-            obj = JSON.parse(secretsFile.text() || "{}") || ({});
-        } catch (e) {
-            obj = ({});
-        }
-        if (!obj.gemini || typeof obj.gemini !== "object")
-            obj.gemini = ({});
-        if (k.length)
-            obj.gemini.apiKey = k;
-        else
-            delete obj.gemini.apiKey;
-        try {
-            secretsFile.setText(JSON.stringify(obj, null, 2) + "\n");
-        } catch (err) {
-            Logger.error("Ai", "secrets write failed");
-            return;
-        }
-        root._fileHasKey = k.length > 0;
-        root.block = "";
-        root._syncHasKey();
-        root.probe();
+        if (Secrets.put("gemini", { apiKey: raw }))
+            root.block = "";
     }
 
     function openStudio() {
@@ -125,14 +99,8 @@ Item {
         }
     }
 
-    function _ingest(raw: string) {
-        let on = false;
-        try {
-            const data = JSON.parse(String(raw || "{}")) || ({});
-            on = String((data.gemini && data.gemini.apiKey) || "").trim().length > 0;
-        } catch (e) {
-            on = false;
-        }
+    function _ingest() {
+        const on = Secrets.value("gemini", "apiKey").length > 0;
         root._fileHasKey = on;
         root._syncHasKey();
         if (root.hasKey)

@@ -53,7 +53,7 @@ GitHub Actions on every PR to `main` or `dev`, on pushes to `dev` /
 CI does **not** build the ISO: one 1.8 GB image is past the free
 Actions storage quota. Build it locally with
 `sudo ./scripts/iso-build.sh --mkarchiso` (output in `iso/out/`), and
-for an unattended install test run `scripts/test-iso-qemu-install.sh`.
+for an unattended install test run `tests/test-iso-qemu-install.sh`.
 
 `scripts/check-isolation.sh` is **local only**. Do not add it to GitHub.
 

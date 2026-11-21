@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 # Stow wrapper with non-destructive conflict handling. Source, never
-# execute directly. Fixes the audited bug where the old install.sh's
-# "desktop" package silently wiped every .desktop file on each run: we
-# never delete anything, we move conflicts to a timestamped backup
-# directory and log exactly what moved.
+# execute directly. Never deletes anything: a conflict moves to a
+# timestamped backup directory and every move is logged.
 #
 # Conflict detection walks the package tree. A path is a real conflict
 # when it exists as a regular file or as a symlink that does *not*

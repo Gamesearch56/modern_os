@@ -26,7 +26,11 @@ Item {
         id: proc
         running: false
         stdout: StdioCollector { id: out }
-        onExited: (code) => root._done(out.text)
+        onExited: (code) => {
+            if (code !== 0)
+                Logger.warn("StoreBrowse", `catalog page exited ${code}`);
+            root._done(out.text);
+        }
     }
 
     Timer {

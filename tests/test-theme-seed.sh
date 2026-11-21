@@ -12,7 +12,7 @@ cleanup() { rm -rf "$TMP"; }
 trap cleanup EXIT
 
 export STATE_DIR="$TMP/state" THEME_SEED_VERSION="test"
-# shellcheck source=lib/theme-seed.sh
+# shellcheck source=../scripts/lib/theme-seed.sh
 source "$ROOT/scripts/lib/theme-seed.sh"
 
 img="$TMP/wall.png"

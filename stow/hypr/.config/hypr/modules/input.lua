@@ -21,8 +21,8 @@ hl.config({
     },
 })
 
--- Touchpad gestures: 3-finger swipe switches workspaces, matching the
--- most common Hyprland default and the audited system's laptop use.
+-- Touchpad gestures: 3-finger swipe switches workspaces, the most common
+-- Hyprland default.
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 
 -- Three fingers up and down share one vertical gesture so the overview

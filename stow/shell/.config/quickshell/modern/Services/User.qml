@@ -96,7 +96,7 @@ Singleton {
     }
 
     // FileView.loaded stays true for a picture that was just removed, so the
-    // circle kept the old path and never showed the file that replaced it.
+    // circle would keep the old path and never show its replacement.
     function _which() {
         root._whichGen += 1;
         whichProc.gen = root._whichGen;

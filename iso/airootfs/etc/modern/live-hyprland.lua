@@ -1,8 +1,7 @@
 -- Live ISO kiosk only. Installed sessions use ~/.config/hypr/hyprland.lua.
 -- Autostart must be inside hyprland.start — file-scope exec is ignored
--- on reload and is how .conf exec-once failed to open Calamares.
--- v0.1.6 (liveuser + start-hyprland + exec calamares) is the last
--- combination that drew a frame and showed the installer.
+-- on reload and never opens Calamares. Keep liveuser + start-hyprland +
+-- exec calamares together: other combinations drew no frame.
 
 hl.env("QT_QPA_PLATFORM", "wayland")
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")

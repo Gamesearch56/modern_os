@@ -37,8 +37,8 @@ USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 # Calamares' keyboard job writes the chosen layout to /etc/vconsole.conf and
 # the X11 snippet, which covers the TTY and Xwayland clients. Neither is read
 # by Hyprland (modules/input.lua takes kb_layout from config.json) or by
-# greetd's own Hyprland instance, so a German install used to boot to a us
-# login prompt and a us desktop.
+# greetd's own Hyprland instance; without this step a German install boots
+# to a us login prompt and a us desktop.
 XORG_KB="${MODERN_XORG_KB:-/etc/X11/xorg.conf.d/00-keyboard.conf}"
 GREETD_LUA="${MODERN_GREETD_LUA:-/etc/greetd/hyprland.lua}"
 SESSION_DIR="${MODERN_SESSION_DIR:-/var/lib/modern/session}"
@@ -102,8 +102,8 @@ apply_keyboard_layout
 
 # Calamares' locale job writes LANG= to /etc/locale.conf, which is what PAM
 # sessions and install/lib/i18n.sh read. Commons/I18n.qml does not: it picks
-# its translation file from language.ui in config.json, so a German install
-# used to come up with a German system locale and an English shell.
+# its translation file from language.ui in config.json; without this step a
+# German install has a German system locale and an English shell.
 LOCALE_CONF="${MODERN_LOCALE_CONF:-/etc/locale.conf}"
 
 locale_var() {

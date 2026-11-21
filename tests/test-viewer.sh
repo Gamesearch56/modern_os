@@ -18,7 +18,7 @@ has() {
     if grep -q "$1" "$2"; then ok "$3"; else err "$3"; fi
 }
 
-python3 "$ROOT/scripts/test-viewer.py" || FAIL=1
+python3 "$ROOT/tests/test-viewer.py" || FAIL=1
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-viewer-sh-XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT

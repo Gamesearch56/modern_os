@@ -53,7 +53,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 
 Gaming mode is a switch in Settings, not a shortcut. Scroll on Super no longer changes workspace.
 
-A side press shorter than 250 ms is always a click, even while the mouse is moving; only a held side button starts a move or resize. The middle button is only taken while a side button is held. The side buttons stay plain back/forward in games and fullscreen windows; forward + middle still toggles fullscreen there. Settings → Keyboard → "Mouse control" turns the side-button controls off (`input.mouseSideButtons`). `scripts/test-mouse-windows-live.py` checks them against the running session with a virtual mouse.
+A side press shorter than 250 ms is always a click, even while the mouse is moving; only a held side button starts a move or resize. The middle button is only taken while a side button is held. The side buttons stay plain back/forward in games and fullscreen windows; forward + middle still toggles fullscreen there. Settings → Keyboard → "Mouse control" turns the side-button controls off (`input.mouseSideButtons`). `tests/test-mouse-windows-live.py` checks them against the running session with a virtual mouse.
 
 Workspace `SUPER + 1`…`0` and `SUPER + SHIFT + 1`…`0` (move window to
 that workspace) match the cheatsheet categories. Three fingers up or

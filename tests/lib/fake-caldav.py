@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""iCloud-shaped CalDAV stub for scripts/test-calendar-fetch.sh.
+"""iCloud-shaped CalDAV stub for tests/test-calendar-fetch.sh.
 
 Prints its port, then serves until killed. Mirrors what the real server
 does to clients: two WWW-Authenticate challenges, a redirect to the

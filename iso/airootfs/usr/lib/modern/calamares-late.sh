@@ -940,6 +940,14 @@ phase_clone() {
     log "cloned $PIN for $USERNAME"
 }
 
+INSTALL_SUDOERS=/etc/sudoers.d/99-modern-calamares
+
+# Passwordless sudo exists only for install.sh. A failed or aborted run
+# must not leave it in the installed system.
+drop_install_sudo() {
+    [ -n "${MODERN_LATE_TEST:-}" ] || rm -f "$INSTALL_SUDOERS"
+}
+
 phase_desktop() {
     [ -d "$REPO/install" ] || die "clone phase did not leave $REPO"
     ensure_dns
@@ -954,9 +962,10 @@ phase_desktop() {
         chmod a+rx /etc 2>/dev/null || true
         install -d -m 0750 /etc/sudoers.d
         # sudo 1.9+ Defaults use_pty; Calamares chroot has no /dev/pts.
+        trap drop_install_sudo EXIT
         printf 'Defaults !use_pty\n%s ALL=(ALL) NOPASSWD: ALL\n' "$USERNAME" \
-            >/etc/sudoers.d/99-modern-calamares
-        chmod 0440 /etc/sudoers.d/99-modern-calamares
+            >"$INSTALL_SUDOERS"
+        chmod 0440 "$INSTALL_SUDOERS"
     fi
     # ISO pin's pkg.sh may not pass --disable-sandbox; install.sh itself
     # is the tagged copy, not this working tree.
@@ -996,6 +1005,7 @@ phase_desktop() {
 phase_provision() {
     # -f, not -x: the bundle arrives mode-stripped and this runs via bash.
     [ -f "$REPO/install/system/provision-iso.sh" ] || die "clone phase did not leave provision-iso.sh"
+    drop_install_sudo
     ensure_dns
     ensure_nss
     export MODERN_ISO_PROVISION=1

@@ -83,7 +83,7 @@ for track names), `Widgets/MActionKeys`, `Commons/KeyLabel`,
 `Services/JsonJobs`.
 
 Adding a command is one row in `actions.js`, one `case` in
-`Actions.run`, and its label in both translations (`scripts/test-player.sh`
+`Actions.run`, and its label in both translations (`tests/test-player.sh`
 checks all three). A choice menu (speed, audio, subtitles) uses ids like
 `speed:1.5` so `Actions.run` stays the one place that acts.
 
@@ -130,7 +130,7 @@ chooser's `media` extensions (`Services/FilesChoose.qml`) must match.
 
 ## Tests
 
-`scripts/test-player.sh` (run by `scripts/ci-check.sh`): the Python file
+`tests/test-player.sh` (run by `scripts/ci-check.sh`): the Python file
 layer (`test-player.py`, frames need ffmpeg), launcher dry runs
 (`MODERN_PLAYER_DRY=1`), the desktop entry, defaults, that no mpv, imv,
 or gedit is installed or stowed, the command table against both

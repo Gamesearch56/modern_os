@@ -41,7 +41,7 @@ Modules/Editor/
 3. Add `editor.actions.<id>` to `en.json` and `de.json`.
 
 Menus, the keyboard shortcut, and the right-click menu pick it up from the
-table. `scripts/test-editor.sh` fails if a command lacks a label in
+table. `tests/test-editor.sh` fails if a command lacks a label in
 either language or a case in `Actions.run()`.
 
 ## Safety rules
@@ -56,6 +56,6 @@ either language or a case in `Actions.run()`.
 ## Testing
 
 ```bash
-scripts/test-editor.sh        # codec, I/O, claims, launcher, desktop entry, commands
+tests/test-editor.sh        # codec, I/O, claims, launcher, desktop entry, commands
 MODERN_EDITOR_DRY=1 modern-editor some.txt
 ```

@@ -134,14 +134,6 @@ Singleton {
         return open ? 1 : 0.92;
     }
 
-    function overlayFades(): bool {
-        return root.overlaysFade;
-    }
-
-    function overlayZooms(): bool {
-        return root.overlaysZoom;
-    }
-
     // Inverse of the closed overlay scale (~0.92 → ~1.087). Search
     // fields use this as a focused bump so motion.overlay still owns
     // the number; fade-only / scale-0 stays at 1.

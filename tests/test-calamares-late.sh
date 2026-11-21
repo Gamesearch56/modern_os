@@ -892,4 +892,25 @@ else
 fi
 rm -rf "$dnsdir"
 
+sudodir="$(mktemp -d)"
+printf 'NOPASSWD\n' >"$sudodir/99-modern-calamares"
+{
+    printf 'set -e\nINSTALL_SUDOERS=%q\n' "$sudodir/99-modern-calamares"
+    sed -n '/^drop_install_sudo()/,/^}$/p' "$LATE"
+    printf 'trap drop_install_sudo EXIT\nfalse\n'
+} >"$sudodir/run.sh"
+desktop="$(sed -n '/^phase_desktop()/,/^}$/p' "$LATE")"
+# The single-quoted $INSTALL_SUDOERS is the literal text being searched for.
+# shellcheck disable=SC2016
+if ! env -u MODERN_LATE_TEST bash "$sudodir/run.sh" 2>/dev/null \
+    && [ ! -e "$sudodir/99-modern-calamares" ] \
+    && [ "$(grep -n 'trap drop_install_sudo EXIT' <<<"$desktop" | cut -d: -f1)" -lt \
+        "$(grep -n '>"$INSTALL_SUDOERS"' <<<"$desktop" | cut -d: -f1)" ] \
+    && sed -n '/^phase_provision()/,/^}$/p' "$LATE" | grep -q '^    drop_install_sudo$'; then
+    ok "a failed desktop phase leaves no passwordless sudo behind"
+else
+    err "NOPASSWD drop-in can outlive a failed install"
+fi
+rm -rf "$sudodir"
+
 [ "$FAIL" -eq 0 ]

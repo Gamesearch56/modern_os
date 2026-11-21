@@ -204,8 +204,8 @@ Singleton {
     function elevationFor(level: int): var {
         const raw = elevation[Math.max(0, Math.min(level, elevation.length - 1))];
         return {
-            // Full strength at slider 1 read as a bright veil. The top
-            // of the slider now sits near what the middle used to be.
+            // Full tint strength reads as a bright veil, so the top of
+            // the slider stays well below it.
             tintOpacity: Math.min(1, raw.tintOpacity * root.surfaceTint * 0.55),
             shadowOpacity: raw.shadowOpacity,
             shadowRadius: raw.shadowRadius

@@ -41,7 +41,7 @@ chmod +x "$TMP/bin/xdg-user-dir" "$TMP/bin/xdg-user-dirs-update"
 export PATH="$TMP/bin:$PATH"
 export LANG=de_DE.UTF-8
 
-# shellcheck source=lib/paths.sh
+# shellcheck source=../scripts/lib/paths.sh
 source "$ROOT/scripts/lib/paths.sh"
 
 stock_stills="" stock_video="" locale_stills="" custom_video=""

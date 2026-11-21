@@ -7,8 +7,8 @@ import "../../"
 Item {
     id: root
 
-    // Clip to the slot the bar layout assigns. The label used to keep
-    // its own width and draw under the control and power buttons.
+    // Clip to the slot the bar layout assigns; otherwise the label keeps
+    // its own width and draws under the control and power buttons.
     clip: true
     readonly property real _w: Math.max(hit.implicitWidth, BarLayout.height)
     implicitWidth: Battery.hasBattery ? root._w : 0

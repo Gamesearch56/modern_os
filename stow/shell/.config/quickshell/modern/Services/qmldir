@@ -39,9 +39,9 @@ singleton KdeConnect 1.0 KdeConnect.qml
 singleton FirstRun 1.0 FirstRun.qml
 singleton Overview 1.0 Overview.qml
 singleton Plugins 1.0 Plugins.qml
-singleton Mail 1.0 Mail.qml
 singleton Weather 1.0 Weather.qml
 singleton WeatherGeocode 1.0 WeatherGeocode.qml
+singleton Secrets 1.0 Secrets.qml
 singleton CalendarAccount 1.0 CalendarAccount.qml
 singleton Calendar 1.0 Calendar.qml
 singleton Ai 1.0 Ai.qml
@@ -110,6 +110,7 @@ StoreBrowse 1.0 StoreBrowse.qml
 StoreDetail 1.0 StoreDetail.qml
 StoreFetch 1.0 StoreFetch.qml
 singleton BugReport 1.0 BugReport.qml
+BugReportProc 1.0 BugReportProc.qml
 singleton Files 1.0 Files.qml
 singleton FilesChoose 1.0 FilesChoose.qml
 FilesOps 1.0 FilesOps.qml

@@ -35,6 +35,9 @@ Singleton {
                 root._ids = [];
             }
         }
-        onLoadFailed: root._ids = []
+        onLoadFailed: (error) => {
+            Logger.warn("Languages", `languages.json not loaded (${error}); only the fallback language is offered`);
+            root._ids = [];
+        }
     }
 }

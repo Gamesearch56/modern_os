@@ -29,7 +29,6 @@ MDivider 1.0 MDivider.qml
 MImageTile 1.0 MImageTile.qml
 MAvatar 1.0 MAvatar.qml
 MWindowChrome 1.0 MWindowChrome.qml
-MWindowTile 1.0 MWindowTile.qml
 MPane 1.0 MPane.qml
 MTextArea 1.0 MTextArea.qml
 MFocusRing 1.0 MFocusRing.qml
@@ -37,7 +36,6 @@ MFocusWalk 1.0 MFocusWalk.qml
 MPercentTile 1.0 MPercentTile.qml
 MPerfGrid 1.0 MPerfGrid.qml
 MQuickTile 1.0 MQuickTile.qml
-MSparkline 1.0 MSparkline.qml
 MLinearProgress 1.0 MLinearProgress.qml
 MLogView 1.0 MLogView.qml
 MStackedBar 1.0 MStackedBar.qml

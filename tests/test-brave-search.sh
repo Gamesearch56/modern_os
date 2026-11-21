@@ -103,7 +103,8 @@ if grep -Fq 'ollama-chat.sh' "$ROOT/stow/shell/.config/quickshell/modern/Service
     && grep -Fq 'web_search' "$ROOT/stow/modern/.config/modern/translations/en.json" \
     && grep -Fq 'web_search' "$ROOT/stow/modern/.config/modern/translations/de.json" \
     && grep -Fq 'BraveKey {' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/ai/Section.qml" \
-    && grep -Fq 'brave.apiKey' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiSearch.qml" \
+    && grep -Fq 'Secrets.value("brave", "apiKey")' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiSearch.qml" \
+    && grep -Fq 'Secrets.put("brave"' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiSearch.qml" \
     && grep -Fq 'api-dashboard.search.brave.com/app/keys' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiSearch.qml" \
     && grep -Fq 'settings.brave.getKey' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/ai/BraveKey.qml"; then
     ok "the assistant asks the model to search"

@@ -72,7 +72,7 @@ MCard {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             // The menu writes monitors.profiles[].mode. The live Hyprland
-            // rate lags that write, so the card was stuck on the old Hz.
+            // rate lags that write; reading it alone shows the old Hz.
             value: {
                 void Hypr.monitorGen;
                 void Config.monitors;

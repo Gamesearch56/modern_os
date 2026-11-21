@@ -5,7 +5,7 @@ import QtQuick
 import "../../Commons"
 import "../../Services"
 
-// Full-screen layer, not the old floating card: the swipe has to fade
+// Full-screen layer, not a floating card: the swipe has to fade
 // the desktop itself, and a sized Hyprland window cannot track a finger.
 Scope {
     LazyLoader {

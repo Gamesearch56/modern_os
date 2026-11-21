@@ -194,7 +194,7 @@ detect_nvidia_family() {
 }
 
 # Same PCI ids as wifi-wl.sh. sysfs, not lspci: a fresh install has no
-# pciutils yet, and a missing lspci used to skip the driver entirely.
+# pciutils yet, and a missing lspci would skip the driver entirely.
 detect_wifi_wl() {
     wifi_needs_wl
 }

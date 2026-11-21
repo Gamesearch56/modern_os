@@ -55,13 +55,6 @@ Singleton {
         Quickshell.execDetached(cmd);
     }
 
-    function openFile(path: string) {
-        const target = String(path || "");
-        if (target.charAt(0) !== "/")
-            return;
-        Quickshell.execDetached(["xdg-open", target]);
-    }
-
     function note(place: string) {
         if (place === "recent") root.reloadRecent();
         else if (place === "trash") FilesTrash.refresh();

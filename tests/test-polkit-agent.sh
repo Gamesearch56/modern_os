@@ -23,7 +23,7 @@ SH
 chmod +x "$TMP/bin/systemctl"
 export PATH="$TMP/bin:$PATH" CALLS="$TMP/calls" POLKIT_AGENT_PROC="$TMP/proc"
 
-# shellcheck source=lib/polkit-agent.sh
+# shellcheck source=../scripts/lib/polkit-agent.sh
 . "$ROOT/scripts/lib/polkit-agent.sh"
 ensure_patched_phylax() { :; }
 sleep() { :; }

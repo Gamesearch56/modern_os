@@ -11,7 +11,7 @@ FAIL=0
 err() { printf 'test-editor: FAIL %s\n' "$*" >&2; FAIL=1; }
 ok() { printf 'test-editor: ok %s\n' "$*"; }
 
-python3 "$ROOT/scripts/test-editor.py" || FAIL=1
+python3 "$ROOT/tests/test-editor.py" || FAIL=1
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-editor-sh-XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT

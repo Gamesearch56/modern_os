@@ -208,9 +208,9 @@ else
     err "nothing pending must not prompt or reload"
 fi
 
-# shellcheck source=lib/pkg-name.sh
+# shellcheck source=../scripts/lib/pkg-name.sh
 source "$ROOT/scripts/lib/pkg-name.sh"
-# shellcheck source=lib/root-plan.sh
+# shellcheck source=../scripts/lib/root-plan.sh
 source "$ROOT/scripts/lib/root-plan.sh"
 printf 'pkg good-pkg\npkg -Rdd\npkg ../x\nrm -rf /\ngreetd\nsplash\nmirrors\nnope\n' >"$TMP/evil"
 read_root_plan "$TMP/evil" 2>/dev/null
@@ -376,7 +376,7 @@ EOF
     rc=0
     out="$(
         unset MODERN_UPDATE_UNIT
-        # shellcheck source=lib/update-guard.sh
+        # shellcheck source=../scripts/lib/update-guard.sh
         source "$ROOT/scripts/lib/update-guard.sh"
         UPDATE_OUT="$TMP/unit.log" PATH="$DBIN:$PATH" update_guard_detach "$DBIN/job"
     )" || rc=$?
@@ -390,7 +390,7 @@ fi
 dblock="$TMP/db.lck"
 : >"$dblock"
 if (
-    # shellcheck source=lib/update-guard.sh
+    # shellcheck source=../scripts/lib/update-guard.sh
     source "$ROOT/scripts/lib/update-guard.sh"
     UPDATE_PACMAN_LOCK="$dblock" update_guard_pacman_lock >/dev/null
 ) && [ ! -e "$dblock" ]; then
@@ -405,7 +405,7 @@ fi
 ) &
 holder=$!
 if (
-    # shellcheck source=lib/update-guard.sh
+    # shellcheck source=../scripts/lib/update-guard.sh
     source "$ROOT/scripts/lib/update-guard.sh"
     ! UPDATE_PACMAN_LOCK="$dblock" update_guard_pacman_lock
 ) && [ -e "$dblock" ]; then
@@ -435,7 +435,7 @@ for k in cancelled snapshot release packages partial stopped locked releaseStep;
 done
 
 if (
-    # shellcheck source=lib/update-guard.sh
+    # shellcheck source=../scripts/lib/update-guard.sh
     source "$ROOT/scripts/lib/update-guard.sh"
     UPDATE_PACMAN_LOG="$TMP/pacman.log"
     printf '[ALPM] transaction completed\n' >"$UPDATE_PACMAN_LOG"

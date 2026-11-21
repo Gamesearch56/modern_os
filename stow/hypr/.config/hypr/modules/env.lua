@@ -21,7 +21,7 @@ local path = os.getenv("PATH") or "/usr/bin"
 hl.env("MODERN_REPO", paths.repo)
 hl.env("PATH", paths.scripts .. ":" .. paths.home .. "/.local/bin:/usr/bin:/bin:" .. path)
 
--- greetd no longer sources ~/.profile. Apps and `modern` (SUPER+Q)
+-- greetd does not source ~/.profile. Apps and `modern` (SUPER+Q)
 -- need LANG from the system locale, not a login shell.
 do
     local f = io.open("/etc/locale.conf", "r")

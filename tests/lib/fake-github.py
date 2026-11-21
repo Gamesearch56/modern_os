@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Tiny stand-in for the GitHub REST calls report-send.py makes.
 
-Usage: fake-github.py <port-file> <log-file> [refuse]
+Usage: fake-github.py <port-file> <log-file> [refuse|ratelimit|down]
 
 Writes the bound port to <port-file>, appends one JSON line per request
 to <log-file>. Contents PUTs succeed once per path (a second PUT without
 sha answers 422, like GitHub); issue POSTs return number 7. With
-`refuse`, every request answers 401.
+`refuse`, every request answers 401; `ratelimit` answers 403 with
+Retry-After (GitHub's secondary rate limit); `down` answers 503.
 """
 import base64
 import json
@@ -36,8 +37,18 @@ class Handler(BaseHTTPRequestHandler):
         with open(sys.argv[2], "a", encoding="utf-8") as fh:
             fh.write(json.dumps({"method": self.command, "path": self.path,
                                  "auth": self.headers.get("Authorization", ""), "body": body}) + "\n")
-        if len(sys.argv) > 3 and sys.argv[3] == "refuse":
+        mode = sys.argv[3] if len(sys.argv) > 3 else ""
+        if mode == "refuse":
             return self._answer(401, {"message": "Bad credentials"})
+        if mode == "ratelimit":
+            self.send_response(403)
+            self.send_header("Retry-After", "60")
+            self.send_header("Content-Length", "2")
+            self.end_headers()
+            self.wfile.write(b"{}")
+            return None
+        if mode == "down":
+            return self._answer(503, {"message": "Service Unavailable"})
         if "/contents/" in self.path:
             if self.command == "GET":
                 if "application/vnd.github.raw" in (self.headers.get("Accept") or ""):

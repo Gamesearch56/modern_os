@@ -1,12 +1,12 @@
 # Base system — every profile installs this layer first.
 base                    # minimal Arch base group
 base-devel              # toolchain required to build AUR packages
-linux-zen               # low-latency kernel, matches the audited running system
+linux-zen               # low-latency desktop kernel, the default boot entry
 linux-zen-headers       # required for DKMS-style modules against linux-zen
 linux-firmware          # firmware blobs for GPU/network/etc.
 btrfs-progs             # the root filesystem is btrfs (see docs/BACKUP.md)
 dosfstools              # mkfs.vfat for the EFI System Partition
-exfatprogs              # read/write the exfat external backup SSD
+exfatprogs              # read/write exFAT USB sticks, SD cards and external drives
 fuse2                   # required by several AppImage-style AUR packages
 sudo                    # privilege escalation for install.sh and daily use
 git                     # clone this repo, and general dev use
@@ -14,11 +14,9 @@ stow                    # symlinks every stow/ package into $HOME
 jq                      # JSON manipulation used throughout install/ and scripts/
 bash-completion         # completion for pacman/systemctl/etc.
 man-db                  # man pages
-bc                      # arithmetic in shell scripts (theme-apply, doctor)
 pacman-contrib          # paccache, checkupdates — used by Settings > Update
 reflector               # mirrorlist refresh, see Settings > Update
 openssh                 # remote access / git over ssh
-wget                    # fetched by install.sh and scripts/optiscaler.sh
 unzip                   # unpacking release archives (OptiScaler, fonts)
 zip                     # export/import of config.json and backups
 zram-generator          # swap-on-zram; provision-iso.sh installs the config that turns it on

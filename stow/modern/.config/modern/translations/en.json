@@ -38,21 +38,9 @@
     "clock": "Date and time",
     "workspaceAdd": "Next workspace"
   },
-  "media": {
-    "notPlaying": "Not playing",
-    "launch": "Open Spotify",
-    "play": "Play",
-    "pause": "Pause",
-    "stop": "Stop",
-    "next": "Next",
-    "previous": "Previous",
-    "shuffle": "Shuffle",
-    "repeat": "Repeat"
-  },
   "audio": {
     "output": "Speaker",
     "input": "Microphone",
-    "applications": "Applications",
     "noOutputs": "No output devices",
     "noInputs": "No input devices",
     "fallback": "Set default",
@@ -62,13 +50,7 @@
     "fallbackInputBody": "When a Bluetooth microphone disconnects, use this input. None uses the last microphone you chose."
   },
   "network": {
-    "disconnected": "Disconnected",
-    "ethernet": "Ethernet",
-    "bitrateValue": "{rx} / {tx} Mbit/s"
-  },
-  "bluetooth": {
-    "off": "Bluetooth off",
-    "connected": "{count} connected"
+    "disconnected": "Disconnected"
   },
   "kdeconnect": {
     "off": "No devices",
@@ -80,7 +62,6 @@
     "unavailableHint": "Choose current location or a city to show the forecast.",
     "setup": "Set up",
     "detailTitle": "Weather",
-    "condition": "Current conditions",
     "refresh": "Refresh",
     "clear": "Clear",
     "partlyCloudy": "Partly cloudy",
@@ -117,7 +98,6 @@
   },
   "calendar": {
     "title": "Calendar",
-    "today": "Today",
     "empty": "No events today",
     "open": "Open calendar",
     "monthTab": "Calendar",
@@ -177,14 +157,9 @@
     "errorOffline": "The calendar server could not be reached. Check your internet connection and try again.",
     "errorGeneric": "The calendar could not be loaded. Try again in a moment."
   },
-  "mail": {
-    "open": "Open mail"
-  },
   "ai": {
     "title": "Assistant",
     "placeholder": "Ask anything...",
-    "you": "You",
-    "assistant": "Assistant",
     "empty": "No messages yet",
     "hint": "Ask a question. Replies come from the local Ollama model.",
     "hintGemini": "Ask a question. Replies come from Gemini.",
@@ -194,14 +169,11 @@
     "settings": "Assistant settings",
     "clear": "Clear chat",
     "send": "Send",
-    "thinking": "Thinking…",
     "generating": "Writing a reply…",
     "reasoning": "Reasoning",
     "timeout": "The assistant timed out. Try again, or pick another model in Settings → AI.",
     "error": "The assistant could not reply.",
-    "errorMissing": "Ollama is not installed or not on PATH.",
     "errorModel": "That model is not available. Pull it with ollama, or pick another in Settings → AI.",
-    "errorStderr": "The assistant reported: {detail}",
     "errorEmpty": "The assistant returned an empty reply.",
     "errorTooLong": "That message is too long.",
     "errorGeminiAuth": "That Google AI key was rejected. Create a new key in Google AI Studio.",
@@ -216,7 +188,6 @@
     "errorChatGptRate": "ChatGPT is limiting requests. Wait a moment and try again.",
     "errorNoModel": "Pick a model in Settings → AI.",
     "stop": "Stop",
-    "stopped": "Stopped.",
     "systemBrief": "Reply in the user's language. Keep the friendly card style: emoji in short headings, a numbered list for steps, a blank line between sections. Stay short: a few list items only, no essay and no preamble. If a fact may have changed or you are unsure, call web_search before you answer.",
     "systemRoom": "Reply in the user's language. Keep the friendly card style: emoji in short headings, a numbered list for steps, a blank line between sections. If a fact may have changed or you are unsure, call web_search before you answer."
   },
@@ -231,19 +202,16 @@
     "welcome": "Welcome",
     "loginFailed": "Could not sign in",
     "unavailable": "Sign-in is not available",
-    "capsLock": "Caps Lock is on",
-    "admin": "Admin"
+    "capsLock": "Caps Lock is on"
   },
   "alarm": {
     "title": "Alarm",
-    "running": "Alarm running",
     "start": "Start",
     "fired": "Alarm",
     "minutesHint": "The number is the alarm duration in minutes"
   },
   "cli": {
     "usage": "Usage: modern <command>",
-    "snapperMissing": "snapper is not installed. See docs/BACKUP.md",
     "snapperUnconfigured": "The backup tool has not been set up. Update at your own risk.",
     "snapshotting": "Creating snapper snapshot…",
     "snapshotFailed": "snapper snapshot failed",
@@ -266,19 +234,11 @@
     "hint": "Use the arrow keys to choose a wallpaper and Enter to apply it, or add a new image.",
     "alreadyInLibrary": "That file is already in the wallpaper folder",
     "importFailed": "Could not import wallpaper",
-    "importTitle": "Add wallpaper",
-    "importImages": "Images",
-    "importAll": "All files",
-    "needChooser": "That picture could not be chosen.",
     "remove": "Delete",
     "removeTitle": "Delete wallpaper?",
     "removeBody": "This image will be deleted from your wallpaper folder.",
     "removeFailed": "Could not delete wallpaper",
     "get": "Get wallpapers",
-    "providerTitle": "Wallpaper provider",
-    "providerHint": "Save an image from the site to add it to your wallpaper folder.",
-    "providerBack": "Back",
-    "providerForward": "Forward",
     "fetched": "Wallpaper saved",
     "fetchedHint": "Set it as active from the gallery.",
     "fetchFailed": "Could not save that image",
@@ -286,8 +246,7 @@
     "providerBrowserHint": "Save images into your wallpaper folder, then pick them in the gallery."
   },
   "folderPicker": {
-    "title": "Choose folder",
-    "needChooser": "That folder could not be chosen."
+    "title": "Choose folder"
   },
   "filePreview": {
     "title": "Quick Look",
@@ -311,13 +270,10 @@
     "empty": "No notes"
   },
   "quickSettings": {
-    "title": "Quick settings",
     "brightness": "Brightness",
-    "brightnessFailed": "Could not set brightness",
-    "caffeine": "Caffeine"
+    "brightnessFailed": "Could not set brightness"
   },
   "overview": {
-    "title": "Overview",
     "workspace": "Workspace {id}",
     "empty": "No open windows",
     "emptyHint": "Apps you open show up here. Choose one with the trackpad or the arrow keys."
@@ -329,12 +285,6 @@
     "bootTime": "Boot time",
     "hardware": "Hardware",
     "software": "Software"
-  },
-  "users": {
-    "title": "Users"
-  },
-  "backup": {
-    "snapshotNow": "Snapshot now"
   },
   "powerMenu": {
     "title": "Power",
@@ -448,7 +398,6 @@
     "placeholder": "Search apps, run a command, calculate...",
     "mostUsed": "Most used",
     "results": "Results",
-    "open": "Open",
     "allApps": "All applications",
     "noResults": "No results",
     "uninstall": {
@@ -463,8 +412,6 @@
     "selectSearch": "Search",
     "selectNone": "None",
     "refresh": "Refresh",
-    "noResults": "No matching settings",
-    "loadError": "This section failed to load. Check qs -c modern log.",
     "save": "Save",
     "cancel": "Cancel",
     "done": "Done",
@@ -472,32 +419,8 @@
       "web": "Web and accounts",
       "files": "Files and system"
     },
-    "themeCreate": "New theme",
-    "themeName": "Name (letters, numbers, dashes)",
-    "themeCreated": "Theme saved",
     "themeModeDark": "Dark",
     "themeModeLight": "Light",
-    "themeModeAuto": "Auto",
-    "themeContrastStandard": "Standard contrast",
-    "themeContrastMedium": "Medium contrast",
-    "themeContrastHigh": "High contrast",
-    "themeProfileHint": "{mode} · {contrast}",
-    "themePalette": "Palette {n}",
-    "paletteHint": "{hue} tones taken from the wallpaper, distinct from the other cards.",
-    "paletteHue": {
-      "rose": "Rose",
-      "orange": "Orange",
-      "yellow": "Yellow",
-      "green": "Green",
-      "teal": "Teal",
-      "cyan": "Cyan",
-      "blue": "Blue",
-      "indigo": "Indigo",
-      "violet": "Violet",
-      "magenta": "Magenta",
-      "neutral": "Neutral",
-      "accent": "Accent"
-    },
     "wallpaperFade": "Fade",
     "wallpaperGrow": "Grow",
     "wallpaperWipe": "Wipe",
@@ -514,16 +437,10 @@
     "restoreDone": "{name} settings restored",
     "restoreFailed": "Could not restore {name} settings",
     "saving": "Saving…",
-    "typePreview": "Type preview",
-    "typePreviewBody": "The quick brown fox jumps over the lazy dog.",
     "barTop": "Top",
     "barBottom": "Bottom",
     "barLeft": "Left",
     "barRight": "Right",
-    "on": "On",
-    "off": "Off",
-    "cliNote": "Writes go through ConfigWrite → modern config set (jq). This app is the only writer of config.json.",
-    "gated": "Account changes use the gated modern-usersd helper (docs/SECURITY.md). It is not installed to /usr by default.",
     "langs": {
       "en": "English",
       "de": "German"
@@ -765,9 +682,6 @@
     "motionOff": "Off",
     "motionDefault": "Default",
     "motionSlow": "Slow",
-    "overlayFade": "Fade",
-    "overlayZoom": "Zoom",
-    "overlayBoth": "Fade and zoom",
     "weekMon": "Monday",
     "weekSun": "Sunday",
     "wsDynamic": "Dynamic",
@@ -775,9 +689,6 @@
     "cmSrgb": "sRGB",
     "cmWide": "Wide",
     "cmEdid": "Native (EDID)",
-    "btAsk": "Ask",
-    "btOn": "On",
-    "btOff": "Off",
     "aiOllama": "Ollama",
     "aiGemini": "Gemini",
     "aiChatGpt": "ChatGPT",
@@ -839,7 +750,6 @@
       "installed": "{name} is installed.",
       "removed": "{name} was removed.",
       "jobFailed": "That did not finish for {name}.",
-      "searching": "Searching…",
       "empty": "No matching models.",
       "needRunning": "Start Ollama below before downloading a model.",
       "fitGoodGpu": "Fits in the {vram} of graphics memory, so it should run well on this computer.",
@@ -863,7 +773,6 @@
       }
     },
     "powerAsk": "Power menu",
-    "weatherLocationPlaceholder": "City or lat, lon",
     "weatherSearchCity": "Search for a city",
     "weatherMetric": "Celsius",
     "weatherImperial": "Fahrenheit",
@@ -873,12 +782,9 @@
     "speedTestResult": "{n} Mbps",
     "mirrorsUpdate": "Update mirrors",
     "updateStep": "Updating…",
-    "restoreHint": "Restores the system disk from this snapshot. Your home folder stays. A restart follows.",
     "snapshotDelete": "Delete",
     "snapshotEmpty": "No snapshots yet",
-    "energyNow": "Consumption",
     "energyBattery": "{n}%",
-    "providerPrefixPlaceholder": ">",
     "nav": {
       "general": "General",
       "session": "General",
@@ -891,7 +797,6 @@
     "themes": {
       "expressive": "Expressive",
       "tonalSpot": "Tonal spot",
-      "tonalSpotAuto": "Tonal spot (auto)",
       "fidelity": "Fidelity",
       "content": "Content",
       "fruitSalad": "Fruit salad",
@@ -901,8 +806,7 @@
       "monochrome": "Monochrome"
     },
     "empty": {
-      "autostart": "No autostart apps",
-      "rules": "No window rules"
+      "autostart": "No autostart apps"
     },
     "windows": {
       "rulesNotArray": "Window rules must be a JSON array.",
@@ -910,20 +814,13 @@
     },
     "hints": {
       "animations": "How long menus, the bar, and windows take to move. Off is instant.",
-      "overlayMotion": "Fade in/out, zoom in on open / zoom out on close, or both.",
       "wallpaperProvider": "The site opened from the wallpaper picker to fetch new pictures. Downloads from that site are added to your wallpapers.",
       "wallpaperColor": "Lightens surfaces, buttons, and icons with the wallpaper color. Higher is brighter.",
       "wallpaperTransition": "How the desktop switches to a new wallpaper. The choice plays that animation once on the picture showing now.",
-      "activeProfile": "Each card is a different palette matugen pulled from the current wallpaper.",
       "themeVariant": "How strongly wallpaper hues show. Each card is generated from the current wallpaper in the light or dark mode you picked.",
       "workspaceMode": "Dynamic opens a workspace on the display under the cursor; each bar shows only that display’s workspaces. Fixed keeps 1–5, 6–10, 11–15, … from left to right.",
-      "primaryMonitor": "New windows and games open on this display. When unset, the first connected display is used.",
-      "hdr": "Wide-gamut HDR panels (QD-OLED) need this on. Hyprland only maps sRGB saturation in HDR; 10-bit PQ output.",
-      "storageGated": "Snapshots are applied by the gated install/system helpers.",
-      "timeMerged": "Date and time formats live under Language & Time.",
       "weatherLocation": "When on, weather uses this location. When off, choose a city.",
       "frecency": "Sorts apps by how often and how recently they were launched.",
-      "ollamaModel": "Pulled locally with ollama pull. Used by the bar assistant.",
       "aiThinking": "The model thinks the question through before it answers. Replies take longer.",
       "aiBrief": "Keeps answers to a few lines. Off allows a longer reply.",
       "braveKey": "Paste a Brave Search key. The assistant uses it when an answer needs the web.",
@@ -932,12 +829,9 @@
       "geminiModel": "Used by the bar assistant when Gemini is selected.",
       "chatgptAccount": "Paste an API key from the OpenAI platform. Replies use API credits on that account.",
       "chatgptModel": "Used by the bar assistant when ChatGPT is selected.",
-      "audioDevices": "The highlighted device is the default. Click another to send sound there.",
       "windowRulesJson": "JSON array of Hyprland window rules. Save validates before writing.",
       "gameFullscreen": "Forces exclusive fullscreen as soon as the game window appears, instead of waiting for the engine to request it.",
-      "gameOptimize": "Turns off extra window effects on the game so it can run smoother. Other windows keep their usual look.",
       "gameHdr": "Games can use HDR, and the rest of the screen stays as it is. Turn HDR on under Displays first. Battle.net games pick it up the next time they start. A Steam game needs it in that game's own launch options.",
-      "browserLight": "Vivaldi starts without a separate graphics process, and its windows skip blur and shadows. Turn this on when the browser takes several seconds to open on a slow processor. It applies the next time Vivaldi starts.",
       "gameMode": "Keeps the session awake while a game is open and marks that window as a game.",
       "lightEffects": "Transparency is off while \"Drop effects for speed\" is on under Gaming.",
       "easePc": "For slow PCs and laptops. Turns off blur, shadows and the wobble when moving windows across the whole desktop, and makes panels and windows opaque. Games show their frames directly, and the browser runs lighter once it has been restarted.",
@@ -947,10 +841,8 @@
       "numlockOnBoot": "Turns Num Lock on when the system starts.",
       "mouseSideButtons": "Turns on mouse controls for windows using the side buttons: move, resize, close, floating and fullscreen. \"See keyboard shortcuts\" lists every control.",
       "autoSwitchBluetooth": "When headphones or a speaker connect over Bluetooth, sound switches to them. When they disconnect, it returns to the previous speaker.",
-      "restoreGated": "Restores the system disk to this snapshot. Your home folder stays. A restart is required.",
       "preUpdateSnapshot": "Creates a Snapper snapshot of / before a system update so you can roll back.",
       "backupPrune": "When more than {n} snapshots exist, the oldest are deleted.",
-      "snapperReady": "Point-in-time copies of the system disk (btrfs).",
       "snapperMissing": "Snapper is not installed. Setup is gated and is not applied from Settings.",
       "snapperUnconfigured": "Snapper needs a root config before it can take snapshots. Create config asks for an admin password and writes that config.",
       "speedTest": "Downloads from the Arch geo mirror over several connections for about 15 seconds. Not a third-party speed-test site.",
@@ -963,10 +855,6 @@
       "firewallInactive": "UFW is installed but not filtering. Turning it on sets deny incoming, allow outgoing, deny routed.",
       "firewallMissing": "UFW is not installed. The firewall package is in the base manifest and is not applied from Settings."
     },
-    "hub": {
-      "title": "Shortcuts",
-      "hint": "Jump to the most used pages. Editors live in those sections."
-    },
     "users": {
       "editTitle": "Edit user",
       "displayName": "Display name",
@@ -978,7 +866,6 @@
       "thisAccount": "You",
       "chooseFace": "Choose picture",
       "clearFace": "Remove picture",
-      "faceImages": "Pictures",
       "faceFailed": "That picture could not be used.",
       "faceChooser": "No file chooser is available.",
       "faceHover": "Change picture",
@@ -990,8 +877,6 @@
       "faceRotateRight": "Rotate right",
       "faceResize": "Size",
       "faceHint": "Drag the picture. The circle is what gets saved.",
-      "all": "Users on this computer",
-      "settings": "Settings",
       "others": "Other people",
       "addUser": "Add user",
       "addGroup": "Add group",
@@ -1012,10 +897,6 @@
       "colAdmin": "Admin",
       "adminYes": "Admin",
       "adminNo": "Standard",
-      "login": "Login",
-      "terminalLogin": "Login",
-      "terminalConfirmTitle": "Open a terminal as {user}?",
-      "terminalConfirmBody": "This opens the default terminal and runs su to {user}. You will be asked for that account's password.",
       "changePassword": "Change password",
       "members": "Members",
       "memberCount": "{n} members",
@@ -1045,7 +926,6 @@
       "disk": "Library",
       "running": "Open now",
       "none": "None",
-      "lastBoth": "{name} · {when}",
       "hoursValue": "{n} h",
       "diskValue": "{n} GB",
       "countValue": "{n}"
@@ -1076,17 +956,10 @@
       "durationM": "{n} min",
       "remainingIn": "{t} left",
       "untilFullIn": "{t} to full",
-      "remainingMin": "{n} min left",
-      "remainingHours": "{n} h left",
-      "remainingHm": "{h} h {m} min left",
-      "untilFullMin": "{n} min to full",
-      "untilFullHours": "{n} h to full",
-      "untilFullHm": "{h} h {m} min to full",
       "watts": "{n} W",
       "volts": "{n} V",
       "energyWh": "{n} Wh",
       "energyOf": "{now} of {full} Wh",
-      "minSuffix": " min",
       "idleMin": "{n} min",
       "idleHour": "{n} hr",
       "idleNever": "Never"
@@ -1112,7 +985,6 @@
       "remembered": "Saved"
     },
     "storage": {
-      "internal": "Internal",
       "external": "External",
       "otherDrives": "Other drives",
       "system": "System disk",
@@ -1206,7 +1078,6 @@
       "deleteBody": "Remove {to} from {from}?",
       "emptyAllow": "No allow rules",
       "emptyDeny": "No deny rules",
-      "colTo": "To",
       "colProto": "Protocol",
       "colFrom": "From",
       "port": "Port",
@@ -1300,7 +1171,6 @@
     },
     "bar": {
       "available": "Available widgets",
-      "editWidget": "Widget",
       "emptySlot": "Drop a widget here",
       "customize": "Has options"
     },
@@ -1315,7 +1185,6 @@
       "remembered": "Saved",
       "forget": "Forget",
       "connectBody": "Connect to this network.",
-      "connectSavedBody": "Connect with the saved password, or type a new one.",
       "disconnectBody": "Disconnect this network. It stays saved until you forget it.",
       "nearby": "Nearby networks",
       "wifiEmpty": "No networks nearby",
@@ -1421,7 +1290,6 @@
     "install": "Install",
     "remove": "Remove",
     "update": "Update",
-    "installed": "Installed",
     "back": "Back",
     "featured": "Featured",
     "official": "Official",
@@ -1434,13 +1302,9 @@
     "description": "About",
     "screenshots": "Images",
     "screenshotsEmpty": "No images are available for this package.",
-    "reviews": "Reviews",
-    "reviewsEmpty": "Reviews are not available here. The project page may have discussion.",
-    "ratingVotes": "{n} votes",
     "version": "Version",
     "size": "Size",
     "license": "License",
-    "openPage": "Open project page",
     "confirmInstall": "Install {name}?",
     "confirmInstallBody": "{name} will be installed from the official repositories. You can remove it again later.",
     "confirmUpdate": "Update {name}?",
@@ -1448,7 +1312,6 @@
     "confirmRemove": "Remove {name}?",
     "confirmRemoveBody": "{name} will be removed from this system. You can install it again later from the App Store.",
     "updates": "Updates available",
-    "working": "Changing packages…",
     "installing": "Installing {name}",
     "updating": "Updating {name}",
     "removing": "Removing {name}",
@@ -1468,10 +1331,8 @@
     "doneRemove": "Removed {name}",
     "popular": "Popular",
     "seeAll": "See all",
-    "viewDetails": "View details",
     "resultsTitle": "Results for {q}",
     "systemPackages": "System packages",
-    "systemPackage": "System package",
     "categories": {
       "discover": "Discover",
       "internet": "Internet",
@@ -1727,12 +1588,6 @@
     "back": "Back",
     "close": "Close",
     "needSummary": "Add a short summary first",
-    "reportThis": "Report this problem",
-    "settingsTitle": "Problem reports",
-    "screenshotsDefault": "Include screenshots by default",
-    "ready": "Reporting is set up",
-    "missing": "Reporting is not set up yet: no access token on this computer",
-    "waiting": "{n} reports waiting to be sent",
     "whenOptions": {
       "now": "Just now",
       "today": "Earlier today",

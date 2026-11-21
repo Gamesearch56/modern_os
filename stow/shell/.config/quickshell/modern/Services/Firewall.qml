@@ -77,7 +77,7 @@ Singleton {
 
     // clearError is false after a failed enable so the ufw message
     // stays up. The status read exits 0 even when the firewall is off,
-    // and that used to wipe the failure.
+    // which would otherwise wipe the failure.
     function _reload(clearError: bool) {
         if (!root.watching)
             return;

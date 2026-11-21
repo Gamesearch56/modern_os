@@ -28,7 +28,8 @@ Item {
             root._parse(text());
             root.loaded();
         }
-        onLoadFailed: {
+        onLoadFailed: (error) => {
+            Logger.warn("StoreCatalog", `catalog not loaded (${error})`);
             root._parse("");
             root.loaded();
         }

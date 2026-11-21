@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck source=lib/iso-aur-repo.sh
+# shellcheck source=../scripts/lib/iso-aur-repo.sh
 source "$ROOT/scripts/lib/iso-aur-repo.sh"
 
 FAIL=0

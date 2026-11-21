@@ -109,11 +109,6 @@ Singleton {
             Update.refresh();
         root.reload();
     }
-    function showQuery(text: string) {
-        root.closeDetail();
-        root.query = String(text || "").slice(0, 80);
-        root.show();
-    }
     function showPackage(name: string) {
         const n = String(name || "").trim();
         if (!mutate.validName(n))

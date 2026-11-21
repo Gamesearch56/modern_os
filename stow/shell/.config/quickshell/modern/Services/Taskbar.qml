@@ -31,7 +31,7 @@ Singleton {
         );
     }
 
-    readonly property int count: (root.entries || []).length
+    readonly property int count: Array.isArray(root.entries) ? root.entries.length : 0
 
     property string _raiseAfter: ""
 
@@ -162,8 +162,8 @@ Singleton {
                     Hypr.killWindow(a);
             }
         } else {
-            // A headless row is its own process. Parking every login app
-            // here used to return before that process was killed.
+            // A headless row is its own process: kill it here instead of
+            // parking it with the login apps.
             RunningApps.killEntry(entry);
             if (entry.kind === "tray")
                 Tray.dismiss(entry.item);

@@ -30,8 +30,10 @@ Singleton {
             onStreamFinished: root._answer(proc.forId, this.text)
         }
         onExited: (code) => {
-            if (code !== 0)
+            if (code !== 0) {
+                Logger.warn("AppUninstall", `owner check for ${proc.forId} exited ${code}`);
                 root._answer(proc.forId, "");
+            }
         }
     }
 

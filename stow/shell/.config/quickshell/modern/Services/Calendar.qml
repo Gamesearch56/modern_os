@@ -31,7 +31,6 @@ Singleton {
     readonly property string icsUrl: CalendarAccount.icsUrl
     readonly property bool connected: CalendarAccount.connected
     readonly property string todayYmd: Ics.ymd(DateTime.displayDate(new Date()))
-    readonly property int monthEventDays: Object.keys(root.eventDays).length
 
     Process {
         id: fetchProc

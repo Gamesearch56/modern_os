@@ -90,11 +90,11 @@ What Qt reads here: PNG, JPEG, GIF and WebP (animated too), BMP, TIFF,
 SVG/SVGZ, ICO, TGA, ICNS, WBMP, XPM/XBM, PBM/PGM/PPM/PNM. WebP, TIFF,
 TGA, and ICNS need `qt6-imageformats` (`install/manifests/20-theming.txt`).
 A new format is one row in `viewer_formats.py`; the desktop entry's
-`MimeType=` must match `mime_types()` (`scripts/test-viewer.sh` checks).
+`MimeType=` must match `mime_types()` (`tests/test-viewer.sh` checks).
 
 ## Tests
 
-`scripts/test-viewer.sh` (run by `scripts/ci-check.sh`): the Python file
+`tests/test-viewer.sh` (run by `scripts/ci-check.sh`): the Python file
 layer (`test-viewer.py`), launcher dry runs (`MODERN_VIEWER_DRY=1`), the
 desktop entry, window rules, the command table against both
 translations, and the node checks for `viewops.js` and `actions.js`.

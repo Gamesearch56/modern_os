@@ -1,6 +1,6 @@
 """Image types the ModernOS Imageviewer opens: what Qt decodes with qt6-svg
 and qt6-imageformats. The desktop entry's MimeType= lists exactly these
-types (scripts/test-viewer.sh checks it), so Files never hands the viewer
+types (tests/test-viewer.sh checks it), so Files never hands the viewer
 a file it cannot show.
 """
 

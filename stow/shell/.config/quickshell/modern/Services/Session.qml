@@ -106,9 +106,4 @@ Singleton {
         auth.authenticate(password);
     }
 
-    function shutdownOverlay(action: string) {
-        root.pendingAction = action;
-        root.mode = "shutdown";
-        root.locked = true;
-    }
 }

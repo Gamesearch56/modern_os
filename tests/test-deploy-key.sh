@@ -4,7 +4,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck source=lib/deploy-key.sh
+# shellcheck source=../scripts/lib/deploy-key.sh
 source "$ROOT/scripts/lib/deploy-key.sh"
 SYNC="$ROOT/scripts/desktop-sync.sh"
 FAIL=0
