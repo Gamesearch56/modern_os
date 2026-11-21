@@ -719,7 +719,9 @@
       "search": "Name",
       "empty": "Eine Anwendung hierher ziehen.",
       "remove": "Vom Dock entfernen",
-      "trash": "Vom Dock entfernen"
+      "trash": "Vom Dock entfernen",
+      "scrollMore": "Weitere Apps in dieser Richtung, zum Scrollen auswählen",
+      "scrollToTrash": "Hier halten, um zum Papierkorb zu scrollen"
     },
     "sections": {
       "overview": "Übersicht",

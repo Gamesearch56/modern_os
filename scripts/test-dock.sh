@@ -95,6 +95,20 @@ else
     err "dock restore must reset each setting except dock.enabled and dock.apps, and drop the live preview"
 fi
 
+SCROLL="$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockScroller.qml"
+OVERFLOW="$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockOverflow.qml"
+if grep -Fq 'FrameAnimation' "$SCROLL" && grep -Fq 'id: glide' "$SCROLL" \
+    && grep -Fq 'Math.round(root._pos)' "$SCROLL" && grep -Fq 'root._stick' "$SCROLL" \
+    && grep -Fq 'onWheel: (event) => scroller.scrollWheel(event)' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockWindow.qml" \
+    && grep -Fq 'acceptedButtons: Qt.NoButton' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockWindow.qml" \
+    && [ "$(grep -c '^    DockOverflow {' "$SCROLL")" -eq 2 ] \
+    && grep -Fq 'root.scroller.dragging' "$OVERFLOW" && grep -Fq '"user-trash"' "$OVERFLOW" \
+    && grep -Fq 'settings.dock.scrollToTrash' "$OVERFLOW" && grep -Fq 'settings.dock.scrollMore' "$OVERFLOW"; then
+    printf 'test-dock: ok a full dock glides, scrolls while a pin is held at an end, and shows the way to the trash\n'
+else
+    err "DockScroller must glide on whole pixels and mark both ends; DockOverflow must point to the trash while dragging"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi
