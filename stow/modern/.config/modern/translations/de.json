@@ -265,10 +265,6 @@
     "shellError": "Shell-Fehler",
     "shellWarning": "Shell-Warnung"
   },
-  "notes": {
-    "title": "Notizen",
-    "empty": "Keine Notizen"
-  },
   "quickSettings": {
     "brightness": "Helligkeit",
     "brightnessFailed": "Helligkeit konnte nicht gesetzt werden"

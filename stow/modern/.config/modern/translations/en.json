@@ -265,10 +265,6 @@
     "shellError": "Shell error",
     "shellWarning": "Shell warning"
   },
-  "notes": {
-    "title": "Notes",
-    "empty": "No notes"
-  },
   "quickSettings": {
     "brightness": "Brightness",
     "brightnessFailed": "Could not set brightness"

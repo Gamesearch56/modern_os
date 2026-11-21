@@ -11,6 +11,7 @@ Usage: test-i18n-keys.py [--list]   (--list prints the unused keys)
 """
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -41,15 +42,21 @@ def keys(node, base=""):
             yield path
 
 
+def tracked():
+    # Gitignored files exist only on this machine; counting them hides keys CI sees as unused.
+    out = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z", "--", *SOURCES],
+                         capture_output=True, check=True).stdout
+    return [ROOT / name for name in out.decode().split("\0") if name]
+
+
 def corpus():
-    for top in SOURCES:
-        for path in (ROOT / top).rglob("*"):
-            if not path.is_file() or SKIP_DIRS.intersection(path.relative_to(ROOT).parts):
-                continue
-            text = path.read_text(encoding="utf-8", errors="ignore") if path.suffix in SUFFIXES or not path.suffix else ""
-            # Extension-less files count only as scripts (scripts/modern).
-            if path.suffix or text.startswith("#!"):
-                yield text
+    for path in tracked():
+        if not path.is_file() or SKIP_DIRS.intersection(path.relative_to(ROOT).parts):
+            continue
+        text = path.read_text(encoding="utf-8", errors="ignore") if path.suffix in SUFFIXES or not path.suffix else ""
+        # Extension-less files count only as scripts (scripts/modern).
+        if path.suffix or text.startswith("#!"):
+            yield text
 
 
 def main():
