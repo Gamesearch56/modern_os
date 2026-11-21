@@ -116,6 +116,7 @@ Singleton {
         root._saw = false;
         root._pairing = false;
         attempt.stop();
+        BluetoothClassic.cancel();
     }
 
     function _ok() {
@@ -226,13 +227,10 @@ Singleton {
         root._pairing = !(device.paired || device.bonded);
         root._failKey = !root._pairing ? "settings.bluetooth.connectFailed"
             : root.bondLost(device) ? "settings.bluetooth.bondLost" : "settings.bluetooth.pairFailed";
-        const adapter = Bluetooth.adapter;
-        if (adapter && adapter.discovering)
-            adapter.discovering = false;
+        Bluetooth.setDiscovering(false);
         try {
             if (root._pairing) {
-                if (device.pair)
-                    device.pair();
+                BluetoothClassic.pair(device);
             } else {
                 if (!device.trusted)
                     device.trusted = true;

@@ -7,6 +7,8 @@ import "../../../../Services"
 ColumnLayout {
     spacing: Tokens.spacing.sm
 
+    Component.onCompleted: Network.scan()
+
     MSectionHeader {
         key: "bar.network"
         styleName: "headlineSmall"
@@ -38,6 +40,14 @@ ColumnLayout {
                     Settings.openAt("network", "");
                 else
                     Network.connect(modelData, "");
+            }
+            titleAccessory: MTag {
+                key: Network.isKnown(modelData) && !modelData.connected ? "settings.network.remembered" : ""
+            }
+
+            MSignal {
+                level: Network.signalLevel(modelData)
+                label: I18n.t("settings.signal.bars", { n: level })
             }
         }
 

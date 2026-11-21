@@ -1076,9 +1076,9 @@
       "connectFailed": "Verbindung nicht möglich. Wenn die Kopfhörer schon mit zwei Geräten verbunden sind, trenne eines und versuche es erneut.",
       "noAudio": "Die Kopfhörer haben geantwortet, aber keinen Ton gestartet. Trenne sie an einem anderen Gerät, das sie gerade nutzt, und versuche es erneut.",
       "pairFailed": "Koppeln nicht möglich. Bestätige die Anfrage am Gerät und versuche es erneut.",
-      "remembered": "Gemerkt",
       "bondLost": "Die Kopfhörer haben diesen Computer nicht mehr gespeichert. Versetze sie in den Kopplungsmodus, meist durch Halten der Taste am Ladecase, und verbinde dich dann erneut.",
-      "repairBody": "Die Kopplung dieses Computers mit den Kopfhörern ist weg, etwa nach einem Zurücksetzen. Versetze sie in den Kopplungsmodus, meist durch Halten der Taste am Ladecase, und verbinde dich dann, um sie neu zu koppeln."
+      "repairBody": "Die Kopplung dieses Computers mit den Kopfhörern ist weg, etwa nach einem Zurücksetzen. Versetze sie in den Kopplungsmodus, meist durch Halten der Taste am Ladecase, und verbinde dich dann, um sie neu zu koppeln.",
+      "remembered": "Gemerkt"
     },
     "storage": {
       "internal": "Intern",
@@ -1297,6 +1297,9 @@
         "rejected": "Netzwerkname oder Passwort enthalten Zeichen, die nicht verwendet werden können.",
         "failed": "Verbinden fehlgeschlagen. Versuche es erneut oder vergiss das Netzwerk und verbinde dich neu."
       }
+    },
+    "signal": {
+      "bars": "Signal {n} von 4"
     }
   },
   "onboarding": {

@@ -11,6 +11,18 @@ ColumnLayout {
 
     signal networkClicked(var network)
 
+    // NetworkManager's own background scan can be minutes old; the page
+    // opening or Wi-Fi coming on asks for a fresh one.
+    Component.onCompleted: Network.scan()
+
+    Connections {
+        target: Network
+        function onWifiEnabledChanged() {
+            if (Network.wifiEnabled)
+                Network.scan();
+        }
+    }
+
     RowLayout {
         Layout.fillWidth: true
         Layout.topMargin: Tokens.spacing.xl
@@ -44,7 +56,8 @@ ColumnLayout {
             readonly property var net: Network.networks[index] || ({})
             readonly property bool locked: Network.isLocked(net)
             readonly property bool online: !!(net.connected)
-            readonly property bool remembered: !!(net.known)
+            readonly property bool remembered: Network.isKnown(net)
+            readonly property int bars: Network.signalLevel(net)
 
             Layout.fillWidth: true
             iconName: locked ? "network-wireless-encrypted" : "network-wireless"
@@ -53,24 +66,16 @@ ColumnLayout {
             selected: online
             onClicked: root.networkClicked(net)
 
-            Rectangle {
-                visible: remembered && !online
-                implicitHeight: Tokens.spacing.lg + Tokens.spacing.xs
-                implicitWidth: savedLabel.implicitWidth + Tokens.spacing.sm * 2
-                radius: Tokens.radius.full
-                color: Colors.color.primaryContainer
-                Accessible.role: Accessible.StaticText
-                Accessible.name: I18n.t("settings.network.remembered")
-
-                MText {
-                    id: savedLabel
-                    anchors.centerIn: parent
-                    key: "settings.network.remembered"
-                    styleName: "labelSmall"
-                    color: Colors.color.onPrimaryContainer
-                }
+            // Every listed network was heard in the last scan, so a saved
+            // one here can be joined now.
+            titleAccessory: MTag {
+                key: remembered && !online ? "settings.network.remembered" : ""
             }
 
+            MSignal {
+                level: bars
+                label: I18n.t("settings.signal.bars", { n: bars })
+            }
         }
     }
 

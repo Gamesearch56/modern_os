@@ -41,31 +41,31 @@ ColumnLayout {
                 void BluetoothLink.savedGen;
                 return Bluetooth.isRemembered(dev);
             }
+            readonly property bool online: {
+                void dev?.connected;
+                void BluetoothAudio.nodeSig;
+                return BluetoothAudio.linked(dev);
+            }
+            readonly property bool inRange: BluetoothSignal.inRange(dev)
+            readonly property int bars: BluetoothSignal.level(dev)
+            // Before the first search ends, absence means nothing yet.
+            readonly property bool away: remembered && !online && !inRange && BluetoothSignal.searched
 
             Layout.fillWidth: true
+            opacity: away ? Tokens.dimmedOpacity : 1
             iconName: Bluetooth.deviceIcon(dev)
             preferSymbolic: false
             tintIcon: false
             titleValue: label
             subtitleValue: showAddress ? address : ""
             onClicked: root.deviceClicked(dev)
+            titleAccessory: MTag {
+                key: remembered && !online ? "settings.bluetooth.remembered" : ""
+            }
 
-            Rectangle {
-                visible: remembered
-                implicitHeight: Tokens.spacing.lg + Tokens.spacing.xs
-                implicitWidth: savedLabel.implicitWidth + Tokens.spacing.sm * 2
-                radius: Tokens.radius.full
-                color: Colors.color.primaryContainer
-                Accessible.role: Accessible.StaticText
-                Accessible.name: I18n.t("settings.bluetooth.remembered")
-
-                MText {
-                    id: savedLabel
-                    anchors.centerIn: parent
-                    key: "settings.bluetooth.remembered"
-                    styleName: "labelSmall"
-                    color: Colors.color.onPrimaryContainer
-                }
+            MSignal {
+                level: online ? -1 : bars
+                label: I18n.t("settings.signal.bars", { n: bars })
             }
         }
     }

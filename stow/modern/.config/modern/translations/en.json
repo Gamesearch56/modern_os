@@ -1076,9 +1076,9 @@
       "connectFailed": "Could not connect. If the headphones are already linked to two devices, disconnect one and try again.",
       "noAudio": "The headphones answered but did not start sound. Disconnect them on another device that is using them, then try again.",
       "pairFailed": "Could not pair. Confirm the request on the device and try again.",
-      "remembered": "Saved",
       "bondLost": "The headphones no longer have this computer saved. Put them in pairing mode, usually by holding the button on the case, then connect again.",
-      "repairBody": "This computer's pairing with the headphones is gone, for example after they were reset. Put them in pairing mode, usually by holding the button on the case, then connect to pair them again."
+      "repairBody": "This computer's pairing with the headphones is gone, for example after they were reset. Put them in pairing mode, usually by holding the button on the case, then connect to pair them again.",
+      "remembered": "Saved"
     },
     "storage": {
       "internal": "Internal",
@@ -1297,6 +1297,9 @@
         "rejected": "The network name or password contains characters that cannot be used.",
         "failed": "Could not connect. Try again, or forget the network and connect anew."
       }
+    },
+    "signal": {
+      "bars": "Signal {n} of 4"
     }
   },
   "onboarding": {

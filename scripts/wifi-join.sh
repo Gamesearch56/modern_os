@@ -169,7 +169,11 @@ cmd_wake() {
     done
     [[ -n $dev ]] || die "wifi device not ready"
     "$NMCLI" device set "$dev" autoconnect yes >/dev/null || true
+    # NetworkManager often autoconnects on its own; a second `connection
+    # up` would tear that activation down and start it over.
+    ! device_busy "$dev" || return 0
     "$NMCLI" -w 15 device wifi list --rescan yes >/dev/null || true
+    ! device_busy "$dev" || return 0
     if [[ -n $ssid ]]; then
         saved=$(first_uuid "$ssid" || true)
     else
@@ -191,6 +195,16 @@ newest_wifi_uuid() {
     done < <("$NMCLI" -t -f UUID,TYPE,TIMESTAMP connection show 2>/dev/null || true)
     [[ -n $best ]] || return 1
     printf '%s\n' "$best"
+}
+
+# NM device states 40 (prepare) through 100 (activated) mean a connection
+# is already on its way up or up.
+device_busy() {
+    local state
+    state=$(LC_ALL=C "$NMCLI" -g GENERAL.STATE device show "$1" 2>/dev/null || true)
+    state=${state%% *}
+    [[ $state =~ ^[0-9]+$ ]] || return 1
+    [[ $state -ge 40 && $state -le 100 ]]
 }
 
 wifi_device_ready() {

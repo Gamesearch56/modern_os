@@ -45,20 +45,14 @@ Singleton {
     Timer {
         id: refreshBusy
         interval: Math.max(Motion.bluetoothScanMs, 1)
-        onTriggered: {
-            root.refreshing = false;
-            if (root.adapter)
-                root.adapter.discovering = false;
-            if (root._uiReady)
-                root._syncAutoAudio();
-        }
+        onTriggered: root.setDiscovering(false)
     }
 
     Timer {
         id: refreshKick
         interval: Math.max(Motion.shortMs, 1)
         onTriggered: {
-            if (root.adapter && root.powered)
+            if (root.adapter && root.powered && !BluetoothLink.busy && !BluetoothClassic.scanning)
                 root.adapter.discovering = true;
         }
     }
@@ -71,7 +65,6 @@ Singleton {
         root._stampSeen();
         BluetoothLink.note();
         BluetoothLink.settle();
-        BluetoothAudio.watch();
         if (root._uiReady)
             root._syncAutoAudio();
     }
@@ -105,16 +98,24 @@ Singleton {
             a.discovering = false;
     }
 
+    // Stopping also cancels a pending refresh, or its kick would start
+    // the search again under a classic scan that is about to pair. A Stop
+    // with no search running only makes BlueZ answer with an error.
     function setDiscovering(on: bool) {
-        if (root.adapter)
+        if (root.adapter && (on || root.adapter.discovering || root.refreshing))
             root.adapter.discovering = on;
+        if (!on) {
+            refreshKick.stop();
+            refreshBusy.stop();
+            root.refreshing = false;
+        }
         if (!on && root._uiReady)
             root._syncAutoAudio();
     }
 
     function refresh() {
         const a = root.adapter;
-        if (!a || !root.powered || root.refreshing || BluetoothLink.busy)
+        if (!a || !root.powered || root.refreshing || BluetoothLink.busy || BluetoothClassic.scanning)
             return;
         root.refreshing = true;
         refreshBusy.restart();
@@ -246,13 +247,17 @@ Singleton {
         return out;
     }
 
-    // Connected, then a saved device, then everything else. A new scan
-    // must not lift an unknown device above one this machine remembers.
+    // Connected, then saved devices, then everything else, strongest
+    // signal first. A new scan must not lift an unknown device above one
+    // this machine remembers.
     function _order(a: var, b: var, seen: var): int {
-        const ar = BluetoothAudio.linked(a) ? 0 : (root.isRemembered(a) ? 1 : 2);
-        const br = BluetoothAudio.linked(b) ? 0 : (root.isRemembered(b) ? 1 : 2);
+        const ar = BluetoothAudio.linked(a) ? 0 : 1;
+        const br = BluetoothAudio.linked(b) ? 0 : 1;
         if (ar !== br)
             return ar - br;
+        const s = BluetoothSignal.compare(a, b);
+        if (s !== 0)
+            return s;
         return (seen[String(b?.address || "")] || 0) - (seen[String(a?.address || "")] || 0);
     }
 
@@ -264,6 +269,7 @@ Singleton {
     readonly property var availableDevices: {
         void root._devSig;
         void root._seenSeq;
+        void BluetoothSignal.rev;
         void BluetoothLink.savedGen;
         void BluetoothAudio.nodeSig;
         return root._byConnected(false);
@@ -271,6 +277,7 @@ Singleton {
     readonly property var sortedDevices: {
         void root._devSig;
         void root._seenSeq;
+        void BluetoothSignal.rev;
         void BluetoothLink.savedGen;
         void BluetoothAudio.nodeSig;
         const list = root._list(root.devices).slice();

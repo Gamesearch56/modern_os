@@ -7,6 +7,7 @@ import Quickshell.Networking
 import Quickshell.Io
 import QtQuick
 import "../Commons"
+import "signalLevel.js" as SignalLevel
 
 Singleton {
     id: root
@@ -136,22 +137,16 @@ Singleton {
     }
 
     function _sortedWifi(raw: var): var {
-        const list = [];
-        for (let i = 0; i < raw.length; i++)
-            list.push(raw[i]);
-        list.sort((a, b) => {
-            const ar = a?.connected ? 0 : (a && (a.known || (a.nmSettings && a.nmSettings.length)) ? 1 : 2);
-            const br = b?.connected ? 0 : (b && (b.known || (b.nmSettings && b.nmSettings.length)) ? 1 : 2);
-            if (ar !== br)
-                return ar - br;
-            const ds = (Number(b?.signalStrength) || 0) - (Number(a?.signalStrength) || 0);
-            if (ds !== 0)
-                return ds;
-            const an = root._wifiKey(a);
-            const bn = root._wifiKey(b);
-            return an < bn ? -1 : (an > bn ? 1 : 0);
-        });
-        return list;
+        return SignalLevel.sortWifi(raw, root._wifiKey);
+    }
+
+    // 0–4 bars for a network in the list.
+    function signalLevel(network: var): int {
+        return SignalLevel.wifi(network?.signalStrength);
+    }
+
+    function isKnown(network: var): bool {
+        return !!(network && (network.known || (network.nmSettings && network.nmSettings.length)));
     }
 
     function _list(model: var): var {
@@ -265,7 +260,7 @@ Singleton {
     }
 
     function needsPassword(network: var): bool {
-        return !!(network && !network.connected && !network.known && root.isLocked(network));
+        return !!(network && !network.connected && !root.isKnown(network) && root.isLocked(network));
     }
 
     function speedTest() {
