@@ -265,14 +265,11 @@ PanelWindow {
                     }
                 }
 
-                // On top of everything so the whole strip scrolls, the gaps
-                // between pins and the screen margins included. No buttons
-                // and no hover: clicks, drags and pin hover pass through.
-                MouseArea {
-                    anchors.fill: parent
-                    z: 10
-                    acceptedButtons: Qt.NoButton
-                    hoverEnabled: false
+                // The gaps between pins and the screen margins scroll too; a
+                // pin forwards its own wheel. A MouseArea on top would force
+                // its arrow cursor over the pins' hand.
+                WheelHandler {
+                    target: null
                     onWheel: (event) => scroller.scrollWheel(event)
                 }
 

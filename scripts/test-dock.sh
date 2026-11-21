@@ -100,7 +100,8 @@ OVERFLOW="$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockOverflow.q
 if grep -Fq 'FrameAnimation' "$SCROLL" && grep -Fq 'id: glide' "$SCROLL" \
     && grep -Fq 'Math.round(root._pos)' "$SCROLL" && grep -Fq 'root._stick' "$SCROLL" \
     && grep -Fq 'onWheel: (event) => scroller.scrollWheel(event)' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockWindow.qml" \
-    && grep -Fq 'acceptedButtons: Qt.NoButton' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockWindow.qml" \
+    && grep -Fq 'WheelHandler {' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockWindow.qml" \
+    && ! grep -Fq 'acceptedButtons: Qt.NoButton' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockWindow.qml" \
     && [ "$(grep -c '^    DockOverflow {' "$SCROLL")" -eq 2 ] \
     && grep -Fq 'root.scroller.dragging' "$OVERFLOW" && grep -Fq '"user-trash"' "$OVERFLOW" \
     && grep -Fq 'settings.dock.scrollToTrash' "$OVERFLOW" && grep -Fq 'settings.dock.scrollMore' "$OVERFLOW"; then
