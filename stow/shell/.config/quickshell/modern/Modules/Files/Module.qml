@@ -149,8 +149,7 @@ Scope {
             }
             ContextMenu {}
             Properties {}
-            Confirm {}
-            NamePrompt {}
+            Dialogs {}
         }
     }
 

@@ -113,6 +113,8 @@ singleton BugReport 1.0 BugReport.qml
 BugReportProc 1.0 BugReportProc.qml
 singleton Files 1.0 Files.qml
 singleton FilesChoose 1.0 FilesChoose.qml
+singleton FilesRequest 1.0 FilesRequest.qml
+singleton FilesSaveAs 1.0 FilesSaveAs.qml
 FilesOps 1.0 FilesOps.qml
 singleton FilesSearch 1.0 FilesSearch.qml
 singleton FilesSizes 1.0 FilesSizes.qml

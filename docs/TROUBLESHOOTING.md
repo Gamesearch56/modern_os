@@ -279,8 +279,18 @@ plus the problem-report token `bugReport.githubToken` that
 ## Portal file picker / screenshot broken
 
 Confirm `~/.config/xdg-desktop-portal/hyprland-portals.conf` is stowed
-and `xdg-desktop-portal-hyprland` plus `xdg-desktop-portal-gtk` /
-kde are installed. Restart: `systemctl --user restart xdg-desktop-portal`.
+and `xdg-desktop-portal-hyprland` plus `xdg-desktop-portal-gtk` are
+installed. Restart: `systemctl --user restart xdg-desktop-portal`.
+
+The file chooser is ModernOS Files through the `modern-portal` package,
+which only installs `/usr/share/xdg-desktop-portal/portals/modern.portal`
+(the portal reads backends from nowhere else). `pacman -Q modern-portal`
+tells whether it is there; `./install/install.sh` builds and installs it.
+Without it the portal falls back to the GTK dialog. If Files opens but
+the app gets nothing, run `scripts/file-chooser-portal.py` in a terminal
+(it replaces the running backend) and pick again; failures are printed
+there. `gdbus call` is no good for testing by hand: it sends byte-string
+options such as `current_folder` as garbage.
 
 Vivaldi does not use the desktop keyring. Sign-in starts the session
 without a typed password, so that keyring stays locked and the browser

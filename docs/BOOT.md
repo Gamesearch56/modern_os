@@ -164,8 +164,10 @@ Preferred backends are in both:
 - `stow/xdg/.config/xdg-desktop-portal/hyprland-portals.conf` (user)
 - `install/system/portals/hyprland-portals.conf` (staged system copy)
 
-FileChooser is the KDE portal (Qt apps). Folders open in the
-ModernOS File Manager (`docs/DECISIONS.md` #5).
+FileChooser is ModernOS Files (`modern;gtk`: the `modern-portal`
+package, with GTK as fallback until it is installed;
+`docs/DECISIONS.md` #28). Folders open in the ModernOS File Manager
+(`docs/DECISIONS.md` #5).
 Screenshot and ScreenCast are Hyprland.
 
 ## Troubleshooting a black session / no bar

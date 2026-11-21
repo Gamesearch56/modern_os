@@ -106,6 +106,8 @@ source "$REPO_ROOT/install/lib/ge-proton.sh"
 source "$REPO_ROOT/install/lib/kernel-boot.sh"
 # shellcheck source=lib/mirrors.sh
 source "$REPO_ROOT/install/lib/mirrors.sh"
+# shellcheck source=lib/portal.sh
+source "$REPO_ROOT/install/lib/portal.sh"
 
 : > "$LOG_FILE"
 _err_trap() {
@@ -466,6 +468,14 @@ elif greetd_target_is_live_user "$TARGET"; then
     mirrors_apply || log_warn "mirror refresh was not enabled"
 else
     log_info "skipping mirror refresh (target '$TARGET' is not a login home)"
+fi
+
+if [ "$DOTFILES_ONLY" -eq 1 ]; then
+    log_info "skipping file chooser portal (dotfiles-only)"
+elif greetd_target_is_live_user "$TARGET" || [ "$DRY_RUN" -eq 1 ]; then
+    portal_apply
+else
+    log_info "skipping file chooser portal (target '$TARGET' is not a login home)"
 fi
 
 if [ "$DOTFILES_ONLY" -eq 1 ]; then

@@ -15,7 +15,7 @@ RowLayout {
     MIconButton { iconName: "go-next"; key: "files.toolbar.forward"; tip: true; enabled: FilesHistory.forward.length > 0; onClicked: Files.forward() }
     MIconButton { iconName: "go-up"; key: "files.toolbar.up"; tip: true; onClicked: Files.up() }
     MIconButton { iconName: "view-refresh-symbolic"; key: "files.network.rescan"; tip: true; visible: Files.place === "network"; onClicked: FilesPlaces.reload() }
-    MButton { visible: FilesChoose.active; kind: "tonal"; key: FilesChoose.useKey; enabled: FilesChoose.ready; Layout.rightMargin: Tokens.spacing.sm; onClicked: FilesChoose.accept("") }
+    ChooseBar {}
 
     MTextField {
         id: search

@@ -1,5 +1,6 @@
 // A file manager window besides the main one. Launched with qs -p so it
-// stays in this config, without starting another bar or panel.
+// stays in this config, without starting another bar or panel. With
+// MODERN_FILE_CHOOSE it is another app's file chooser (FilesRequest).
 import Quickshell
 import QtQuick
 import "Commons"
@@ -15,7 +16,10 @@ ShellRoot {
     FilesMod.Module {}
     FilePreviewMod.Module {}
 
-    Component.onCompleted: Files.show(Quickshell.env("MODERN_FILE_PATH") || "", true)
+    Component.onCompleted: {
+        if (!FilesRequest.begin())
+            Files.show(Quickshell.env("MODERN_FILE_PATH") || "", true);
+    }
 
     Timer {
         interval: Motion.longMs

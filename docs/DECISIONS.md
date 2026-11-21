@@ -321,6 +321,14 @@ A QML `TextEdit` hands back NBSP as a space and U+2028/U+2029 as newlines. The c
 
 **Rejected:** mpv as the engine under a custom interface (embedding it in QML needs a C++ plugin built against the installed Qt and libmpv; driving a separate mpv window over its IPC socket cannot put our controls over its video); keeping mpv for Quick Look (a second player just for previews); GStreamer through Qt (the FFmpeg backend is Qt's default and reads more formats); playing inside the main shell (a decoder crash would take the bar with it).
 
+## 28. Other apps choose files in ModernOS Files, through a one-file package
+
+**Decision:** `scripts/file-chooser-portal.py` is an `org.freedesktop.impl.portal.FileChooser` backend. `hyprland-portals.conf` names it first (`modern;gtk`), and the session bus starts it on demand from `org.freedesktop.impl.portal.desktop.modern.service`, which runs the repo's script the same way the FileManager1 service does. For each OpenFile / SaveFile / SaveFiles it starts one `qs -p files-window.qml` with the request in `MODERN_FILE_CHOOSE`: start folder, multiple, folder mode, suggested name, and the app's filters turned into globs (MIME types through `/usr/share/mime/globs2`). The window is the normal Files chooser (`FilesChoose`) plus a filter menu, a name field for saving, and a replace question (`FilesSaveAs`). It writes the chosen paths atomically to `MODERN_FILE_CHOOSE_OUT` and quits. No answer is a cancel; the app closing the request kills the window. The request and answer translation lives in `scripts/lib/file_chooser_spec.py`. The bus side uses Gio from `python-gobject`.
+
+xdg-desktop-portal reads backend descriptions only from `/usr/share/xdg-desktop-portal/portals/`, so `modern.portal` ships as the `modern-portal` pacman package (`install/packages/modern-portal`). `install.sh` builds it with makepkg and installs it with `sudo pacman -U` on a live user home. A terminal-less update from Settings builds it as the user into `~/.local/state/modern/packages/` and adds `portal` to the root plan. `update-apply.sh` installs only that fixed file, owned by the caller, not a symlink, and named `modern-portal` by `pacman -Qqp`.
+
+**Rejected:** writing `modern.portal` into `/usr/share` from `install.sh` (an untracked file pacman does not know about, never removed); `XDG_DESKTOP_PORTAL_DIR` (a test override, not read in a normal session); asking apps to use Files directly (Chromium, Firefox and Flatpak only talk to the portal); a chooser inside the main shell process (a hung request or a huge folder would stall the bar); dbus-python for the bus (one more dependency, and Gio is already there for the main loop). Hiding files that do not match the filter is left for later; today they show but cannot be used.
+
 ## Open decisions
 
 - Whether `matugen` alone gives enough control over contrast/variant, or

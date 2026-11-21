@@ -14,7 +14,9 @@ gvfs-smb                       # SMB file servers in the file manager
 hypridle                       # idle handling (screen off, suspend) — see Services/Power
 hyprland-qt-support             # org.hyprland.style QML chrome (application-style.conf); polkit UI is phylax-git (10-desktop.aur.txt)
 xdg-desktop-portal-hyprland     # screen share / screenshot portal backend
-xdg-desktop-portal-gtk          # fallback portal backend (file chooser when KDE one is absent)
+xdg-desktop-portal-gtk          # fallback portal backend (file chooser before modern-portal is installed)
+python-dbus                     # FileManager1 bus (file-manager-bus.py)
+python-gobject                  # Gio/GLib for the file chooser portal and the FileManager1 main loop
 quickshell                      # the shell itself — bar, panels, launcher, lock, greeter
 qt6-wayland                     # native Wayland for Qt6 apps (Quickshell, Settings)
 qt6-declarative                 # qml6 for wallpaper-provider.sh

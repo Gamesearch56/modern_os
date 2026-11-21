@@ -46,6 +46,15 @@ If you paste a file where one with the same name already exists, you can overwri
 - **Open terminal here** (Terminal hier öffnen) starts a terminal in the current folder.
 - **Connect to server** (Mit Server verbinden) opens a network share.
 
+### Choosing files for other apps
+
+When an app such as Vivaldi asks you to pick a file, for example to upload a picture, a Files window opens titled **Choose files** (Dateien auswählen). Everything you know from Files works there: places, search, tabs and Quick Look.
+
+- Select one file, or several with **Ctrl** or **Shift** when the app accepts more, and click **Use these files** (Diese Dateien verwenden) or press **Enter**.
+- If the app only accepts certain types, the menu next to the location shows them, for example **Images** (Bilder). Pick another entry to allow other files.
+- When an app saves a file, the window is titled **Save as** (Speichern unter). Go to a folder, type the name and click **Save** (Speichern). If a file with that name is already there, Files asks before replacing it.
+- Close the window to cancel. The app then gets nothing.
+
 ## Texteditor
 
 A simple, fast editor for notes and plain text files. Open it from the launcher, or open any text file from Files.

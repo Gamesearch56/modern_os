@@ -63,8 +63,9 @@ Singleton {
         root._pump();
     }
 
+    // busy, not proc.running: that reads false until the process has started (see FilesOps).
     function _pump() {
-        if (proc.running || !root._queue.length)
+        if (root.busy || !root._queue.length)
             return;
         const q = root._queue.slice();
         const job = q.shift();
