@@ -19,41 +19,43 @@ export MODERN_EDITOR_RUNTIME="$TMP/run"
 mkdir -p "$TMP/dir with space"
 printf 'x\n' >"$TMP/dir with space/a b.txt"
 
+same() {
+    if [ "$2" = "$1" ]; then ok "$3"; else err "$3 (got: $2)"; fi
+}
+has() {
+    if grep -q "$1" "$2"; then ok "$3"; else err "$3"; fi
+}
+
 out="$(cd "$TMP" && MODERN_EDITOR_DRY=1 "$ROOT/scripts/modern-editor" "dir with space/a b.txt")"
-[ "$out" = "start $TMP/dir with space/a b.txt" ] && ok "a relative path opens against the working folder" \
-    || err "relative path gave: $out"
+same "start $TMP/dir with space/a b.txt" "$out" "a relative path opens against the working folder"
 out="$(MODERN_EDITOR_DRY=1 "$ROOT/scripts/modern-editor" "file://$TMP/dir%20with%20space/a%20b.txt")"
-[ "$out" = "start $TMP/dir with space/a b.txt" ] && ok "a file:// URI is decoded" || err "URI gave: $out"
+same "start $TMP/dir with space/a b.txt" "$out" "a file:// URI is decoded"
 out="$(MODERN_EDITOR_DRY=1 "$ROOT/scripts/modern-editor")"
-[ "$out" = "start <new>" ] && ok "no argument opens one empty window" || err "no argument gave: $out"
+same "start <new>" "$out" "no argument opens one empty window"
 MODERN_EDITOR_ANY_PID=1 "$ROOT/scripts/editor-io.sh" claim "$TMP/dir with space/a b.txt" "$$" >/dev/null
 out="$(MODERN_EDITOR_ANY_PID=1 MODERN_EDITOR_DRY=1 "$ROOT/scripts/modern-editor" "$TMP/dir with space/a b.txt")"
-[ "$out" = "focus $$ $TMP/dir with space/a b.txt" ] && ok "an open file focuses its window" \
-    || err "claimed file gave: $out"
+same "focus $$ $TMP/dir with space/a b.txt" "$out" "an open file focuses its window"
 
 field() { sed -n "s/^$1=//p" "$DESKTOP" | head -1; }
-[ "$(field Name)" = "ModernOS Texteditor" ] && ok "desktop entry is ModernOS Texteditor" || err "desktop Name"
-[ "$(field Exec)" = "modern-editor %F" ] && ok "desktop entry passes files" || err "desktop Exec"
-[ "$(field StartupWMClass)" = "modern.editor" ] && ok "desktop entry matches the window class" || err "StartupWMClass"
-grep -q '^AppId modern.editor$\|pragma AppId modern.editor' "$QS/editor.qml" && ok "editor.qml sets the app id" \
-    || err "editor.qml app id"
-grep -q 'settings.watchFiles: false' "$QS/editor.qml" && ok "a file change never reloads unsaved text away" \
-    || err "editor.qml watches files"
+same "ModernOS Texteditor" "$(field Name)" "desktop entry is ModernOS Texteditor"
+same "modern-editor %F" "$(field Exec)" "desktop entry passes files"
+same "modern.editor" "$(field StartupWMClass)" "desktop entry matches the window class"
+has 'pragma AppId modern.editor' "$QS/editor.qml" "editor.qml sets the app id"
+has 'settings.watchFiles: false' "$QS/editor.qml" "a file change never reloads unsaved text away"
 mimes="$(field MimeType | tr ';' '\n' | sed '/^$/d' | sort)"
-pinned="$(sed -n 's/^TEXT_TYPES="\(.*\)"$/\1/p;/^TEXT_TYPES="/,/"$/p' "$ROOT/scripts/mime-defaults.sh" \
-    | tr ' "' '\n\n' | grep '/' | sed 's/^TEXT_TYPES=//' | sort -u)"
+pinned="$(sed -n '/^TEXT_TYPES="/,/"$/p' "$ROOT/scripts/mime-defaults.sh" \
+    | sed 's/^TEXT_TYPES=//' | tr -d '"' | tr ' ' '\n' | grep '/' | sort -u)"
 missing="$(comm -13 <(printf '%s\n' "$mimes") <(printf '%s\n' "$pinned"))"
-[ -z "$missing" ] && ok "every pinned text type is in the desktop entry" || err "not in MimeType: $missing"
-grep -q '"modern.editor": *{ *nameKey: "editor.launcherName"' "$QS/Commons/ModernApps.qml" \
-    && ok "the launcher shows the short name" || err "ModernApps has no editor row"
+same "" "$missing" "every pinned text type is in the desktop entry"
+has '"modern.editor": *{ *nameKey: "editor.launcherName"' "$QS/Commons/ModernApps.qml" "the launcher shows the short name"
+[ "$(printf '%s\n' "$pinned" | wc -l)" -gt 20 ] || err "TEXT_TYPES could not be read from mime-defaults.sh"
 
 size="$(sed -n 's/.*name = "modern-editor".*size = { \([0-9]*\), \([0-9]*\) }.*/\1 \2/p' \
     "$ROOT/stow/hypr/.config/hypr/modules/windows.lua")"
 xxl="$(sed -n 's/.*readonly property real xxl: \([0-9]*\).*/\1/p' "$QS/Commons/Tokens.qml" | head -1)"
 w="$(sed -n 's/.*editorWidth: root.spacing.xxl \* \([0-9]*\).*/\1/p' "$QS/Commons/Tokens.qml")"
 h="$(sed -n 's/.*editorHeight: root.spacing.xxl \* \([0-9]*\).*/\1/p' "$QS/Commons/Tokens.qml")"
-[ "$size" = "$((xxl * w)) $((xxl * h))" ] && ok "window rule size matches the tokens" \
-    || err "windows.lua size '$size' vs tokens $((xxl * w)) $((xxl * h))"
+same "$((xxl * w)) $((xxl * h))" "$size" "window rule size matches the tokens"
 
 for lang in en de; do
     file="$ROOT/stow/modern/.config/modern/translations/$lang.json"
