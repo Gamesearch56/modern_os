@@ -51,9 +51,8 @@ expect '../etc/passwd' '{"pkg":"","removable":false,"why":"notPackaged"}'
 
 grep -q 'Dock.beginGridDrag' "$QS/Modules/Launcher/AppTile.qml" \
     || err "the all-apps grid does not start a grid drag"
-if grep -q 'beginGridDrag' "$QS/Modules/Launcher/Results.qml"; then
-    err "search results must not offer uninstall"
-fi
+grep -q 'Dock.beginGridDrag' "$QS/Modules/Launcher/Results.qml" \
+    || err "launcher search results do not start an uninstall-aware drag"
 grep -q 'AppUninstall.drop' "$QS/Services/Dock.qml" || err "trash drop is not wired"
 grep -q 'running: trash.visible && Dock.dragFromDock' "$QS/Modules/Dock/DockRow.qml" \
     || err "the trash wiggles for grid drags"

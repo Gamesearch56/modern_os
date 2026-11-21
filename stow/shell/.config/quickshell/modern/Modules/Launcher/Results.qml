@@ -96,7 +96,7 @@ Item {
                     onDragBegan: (x, y) => {
                         const p = Dock.pointerToScreen(grab, "top", x, y);
                         const screen = grab.Window.window && grab.Window.window.screen ? grab.Window.window.screen.name : "";
-                        Dock.beginDrag(String(row.hit.id || ""), false, -1, p.x, p.y, screen);
+                        Dock.beginGridDrag(String(row.hit.id || ""), p.x, p.y, screen);
                     }
                     onDragMoved: (x, y) => {
                         const p = Dock.pointerToScreen(grab, "top", x, y);
