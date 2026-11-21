@@ -118,6 +118,22 @@ else
     err "Catalog must hide backup, firewall, and system from non-admins"
 fi
 
+HEADER="$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/PageHeader.qml"
+SUPPORT="$ROOT/stow/shell/.config/quickshell/modern/Services/Support.qml"
+if grep -Fq 'singleton Support 1.0 Support.qml' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Services/qmldir" \
+    && grep -Fq 'https://ko-fi.com/gamesearch56' "$SUPPORT" \
+    && grep -Fq 'Support.openKoFi' "$HEADER" \
+    && grep -Fq 'kofi.svg' "$HEADER" \
+    && grep -Fq 'sectionId === "overview"' "$HEADER" \
+    && jq -e '.settings.overview.kofi | length > 0' "$EN" >/dev/null \
+    && jq -e '.settings.overview.kofi | length > 0' "$DE" >/dev/null \
+    && ! grep -Fq 'kofiHint' "$EN" && ! grep -Fq 'kofiHint' "$DE"; then
+    ok "the overview headline carries a Ko-fi button in English and German"
+else
+    err "the overview header must open Ko-fi, with the label in en and de"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

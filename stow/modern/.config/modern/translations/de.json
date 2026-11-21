@@ -1253,7 +1253,8 @@
       "initrd": "Initrd",
       "userspace": "Userspace",
       "osNameVersion": "ModernOS {version} (Arch Linux)",
-      "osNameDev": "ModernOS {version}, Entwicklungsstand {commit} (Arch Linux)"
+      "osNameDev": "ModernOS {version}, Entwicklungsstand {commit} (Arch Linux)",
+      "kofi": "ModernOS unterstützen"
     },
     "bar": {
       "available": "Verfügbare Widgets",

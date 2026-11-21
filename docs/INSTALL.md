@@ -424,7 +424,7 @@ Welcome **Support** / **Known issues** open GitHub in Firefox on the
 same Xwayland display. Cage does not decorate X11 windows, so the live
 session runs **openbox** (Calamares stays fullscreen without a titlebar).
 Close Firefox with its window-close button or Alt+F4 to return to the
-installer. There is no Donate button. The VM needs virtio 3D.
+installer. **Donate** opens https://ko-fi.com/gamesearch56. The VM needs virtio 3D.
 
 Calamares is still Qt Widgets for every *page* (Welcome, Partitions,
 Users, …). `stylesheet.qss` can restyle those: colors, field radii,

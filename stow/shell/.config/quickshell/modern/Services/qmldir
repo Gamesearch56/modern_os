@@ -95,6 +95,7 @@ UpdateClassify 1.0 UpdateClassify.qml
 UpdateMirrors 1.0 UpdateMirrors.qml
 UpdateProgress 1.0 UpdateProgress.qml
 singleton Snapshots 1.0 Snapshots.qml
+singleton Support 1.0 Support.qml
 SnapshotsParse 1.0 SnapshotsParse.qml
 singleton Firewall 1.0 Firewall.qml
 FirewallParse 1.0 FirewallParse.qml

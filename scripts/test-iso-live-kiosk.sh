@@ -158,12 +158,14 @@ WELCOME="$ROOT/iso/airootfs/etc/calamares/modules/welcome.conf"
 XDG="$ROOT/iso/airootfs/usr/lib/modern/live-xdg-open.sh"
 PKGS="$ROOT/iso/releng/packages.x86_64"
 
-if grep -E '^showDonateUrl:[[:space:]]+false$' "$WELCOME" >/dev/null \
+BRAND="$ROOT/iso/airootfs/etc/calamares/branding/modern/branding.desc"
+if grep -E '^showDonateUrl:[[:space:]]+true$' "$WELCOME" >/dev/null \
     && grep -E '^showSupportUrl:[[:space:]]+true$' "$WELCOME" >/dev/null \
-    && grep -E '^showKnownIssuesUrl:[[:space:]]+true$' "$WELCOME" >/dev/null; then
-    ok "welcome.conf hides Donate and shows Support/Issues"
+    && grep -E '^showKnownIssuesUrl:[[:space:]]+true$' "$WELCOME" >/dev/null \
+    && grep -F 'donateUrl:           https://ko-fi.com/gamesearch56' "$BRAND" >/dev/null; then
+    ok "welcome.conf shows Donate, Support, and Issues, and Donate opens Ko-fi"
 else
-    err "welcome.conf must hide Donate and enable Support/Issues"
+    err "welcome.conf must show Donate, Support, and Issues, with Donate pointing at Ko-fi"
 fi
 
 if grep -F 'kde.org/community/donations' "$WELCOME" >/dev/null \
