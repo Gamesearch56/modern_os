@@ -58,6 +58,19 @@ Singleton {
         return !Bluetooth.isAudioDevice(device) || root.audioUp(device);
     }
 
+    // A user Connect on a link that is already up: ask again even if
+    // this link was asked once already.
+    function ask(device: var) {
+        const addr = String(device?.address || "");
+        if (!addr.length || root.audioUp(device))
+            return;
+        const asked = Object.assign({}, root._asked);
+        delete asked[addr];
+        root._asked = asked;
+        root._due = Object.assign({}, root._due, { [addr]: true });
+        wait.restart();
+    }
+
     function _changed() {
         root.watch();
         BluetoothLink.settle();

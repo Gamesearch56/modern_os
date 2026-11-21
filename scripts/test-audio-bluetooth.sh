@@ -43,9 +43,20 @@ fi
 if ! grep -q 'BluetoothLink.shadowed' "$BTQML"; then
     err "a second advert of a saved headset is still listed"
 fi
-if ! grep -q '_pairing = !root.isRemembered' "$LINK"; then
-    err "a saved headset must be connected without a new pair"
+if ! grep -q '_pairing = !(device.paired || device.bonded)' "$LINK"; then
+    err "a bonded headset must connect without a new pair, and one without a bond must pair"
 fi
+if ! grep -q 'function bondLost' "$LINK" || ! grep -q 'settings.bluetooth.bondLost' "$LINK"; then
+    err "a saved headset whose bond is gone is not reported as needing pairing mode"
+fi
+if ! grep -q 'BluetoothAudio.ask(device)' "$LINK"; then
+    err "connecting a headset with a bare link calls Connect, which BlueZ refuses"
+fi
+if grep -q 'Logger.error("Bluetooth"' "$LINK"; then
+    err "a refused headset raises a shell-error toast"
+fi
+grep -q 'settings.bluetooth.repairBody' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/bluetooth/Section.qml" \
+    || err "the connect dialog does not say the headset must be paired again"
 if ! grep -q 'device.trusted' "$LINK" || ! grep -q 'connectFailed' "$LINK"; then
     err "a failed connect is not reported"
 fi
@@ -64,7 +75,7 @@ if ! grep -q 'ConnectProfile' "$BTA" || ! grep -q '!d.connected' "$BTA"; then
 fi
 grep -q 'Qt.callLater(root._onDevices)' "$BTQML" || err "device changes run inside the _devSig binding"
 for lang in en de; do
-    for key in connecting connectFailed pairFailed connectFailedTitle noAudio; do
+    for key in connecting connectFailed pairFailed connectFailedTitle noAudio bondLost repairBody; do
         jq -e --arg k "$key" '.settings.bluetooth[$k] | length > 0' \
             "$ROOT/stow/modern/.config/modern/translations/${lang}.json" >/dev/null \
             || err "settings.bluetooth.${key} missing in ${lang}"

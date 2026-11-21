@@ -6,7 +6,7 @@ import QtQuick
 import "../Commons"
 
 // One connect or pair at a time, and the result of it.
-// A saved headset is never paired again: a second bond drops the other
+// A bonded headset is never paired again: a second bond drops the other
 // host. Inquiry is stopped first so the page is not cancelled by a scan.
 // Quickshell reports no BlueZ error string; a return to Disconnected
 // after Connecting, or the connect timeout, is the failure.
@@ -39,6 +39,13 @@ Singleton {
             return false;
         const addr = String(device.address || "");
         return !!(device.paired || device.bonded || device.trusted || (addr.length && root._saved[addr]));
+    }
+
+    // Saved here, but BlueZ holds no key: the headset was reset or paired
+    // fresh elsewhere, and the next key-missing refusal deleted the bond.
+    // Connect cannot work; only a new pair can.
+    function bondLost(device: var): bool {
+        return root.isRemembered(device) && !device.paired && !device.bonded;
     }
 
     // The LE advert of a headset we already saved. Connecting that copy
@@ -124,13 +131,17 @@ Singleton {
         const addr = root.pendingAddress;
         if (!addr.length)
             return;
-        const key = root._failKey;
+        let key = root._failKey;
         root._clear();
         // A link the headset holds without audio only blocks its slot
         // for the computer or phone that is playing.
         const dev = root._device(addr);
-        // State at failure tells a report which step stopped: bond, trust, link or audio.
-        Logger.error("Bluetooth", key + (dev ? " paired=" + !!dev.paired + " bonded=" + !!dev.bonded
+        // noAudio needs a link that is still up; a dropped link is a plain failure.
+        if (key === "settings.bluetooth.noAudio" && dev && !dev.connected)
+            key = root.bondLost(dev) ? "settings.bluetooth.bondLost" : "settings.bluetooth.connectFailed";
+        // State at failure tells a report which step stopped. A warning,
+        // not an error: errors toast raw text, and the result toasts already.
+        Logger.warn("Bluetooth", key + (dev ? " paired=" + !!dev.paired + " bonded=" + !!dev.bonded
             + " trusted=" + !!dev.trusted + " link=" + !!dev.connected + " audio=" + BluetoothAudio.audioUp(dev) : ""));
         const d = key === "settings.bluetooth.noAudio" ? dev : null;
         if (d && d.connected && !BluetoothAudio.audioUp(d))
@@ -161,7 +172,7 @@ Singleton {
                 attempt.interval = Math.max(Motion.bluetoothConnectMs, 1);
                 attempt.restart();
             } catch (e) {
-                Logger.error("Bluetooth", String(e));
+                Logger.warn("Bluetooth", String(e));
                 root._fail();
             }
             return;
@@ -210,8 +221,11 @@ Singleton {
         root.pendingAddress = addr;
         root.errorKey = "";
         root.errorAddress = "";
-        root._pairing = !root.isRemembered(device);
-        root._failKey = root._pairing ? "settings.bluetooth.pairFailed" : "settings.bluetooth.connectFailed";
+        // A second bond would drop the other host, so a bonded headset is
+        // only connected. Without a bond there is nothing to connect with.
+        root._pairing = !(device.paired || device.bonded);
+        root._failKey = !root._pairing ? "settings.bluetooth.connectFailed"
+            : root.bondLost(device) ? "settings.bluetooth.bondLost" : "settings.bluetooth.pairFailed";
         const adapter = Bluetooth.adapter;
         if (adapter && adapter.discovering)
             adapter.discovering = false;
@@ -222,11 +236,14 @@ Singleton {
             } else {
                 if (!device.trusted)
                     device.trusted = true;
-                if (device.connect)
+                // BlueZ refuses Connect on a link that is already up.
+                if (device.connected)
+                    BluetoothAudio.ask(device);
+                else if (device.connect)
                     device.connect();
             }
         } catch (e) {
-            Logger.error("Bluetooth", String(e));
+            Logger.warn("Bluetooth", String(e));
             root._fail();
             return;
         }
@@ -261,7 +278,7 @@ Singleton {
             else if (Bluetooth.adapter && Bluetooth.adapter.removeDevice)
                 Bluetooth.adapter.removeDevice(device);
         } catch (e) {
-            Logger.error("Bluetooth", String(e));
+            Logger.warn("Bluetooth", String(e));
         }
     }
 }

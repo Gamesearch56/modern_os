@@ -1,6 +1,7 @@
 // Scrolls the pin row when it is longer than the screen edge.
 import QtQuick
 import "../../Commons"
+import "../../Services"
 
 Flickable {
     id: root

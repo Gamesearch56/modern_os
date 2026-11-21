@@ -102,6 +102,13 @@ else
     err "a matching keyring must be kept"
 fi
 
+if grep -Fq "chown -R -- \"\$owner\" \"\$dir\"" "$LOGIN" \
+    && grep -Fq "stat -c '%u:%g' -- \"\$home\"" "$LOGIN"; then
+    ok "keyrings created as root are handed back to the home owner"
+else
+    err "keyring-login.sh must chown the keyrings directory to the home owner"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

@@ -22,9 +22,10 @@ Item {
     implicitHeight: Math.max(Tokens.spacing.xxl * 2, root._cell + root._nameH + DockLayout.pad * 2 + Tokens.spacing.sm)
 
     // The strip is a pill. Its caps slice an icon that sits on the end,
-    // so the row scrolls inside the straight middle.
+    // so the row scrolls inside the straight middle. The layout keeps the
+    // strip at its implicit height; reading height looped through it.
     readonly property real _inset: {
-        const h = root.height > 0 ? root.height : root.implicitHeight;
+        const h = root.implicitHeight;
         const r = Math.max(1, h / 2);
         const rowH = root._cell + root._nameH;
         const top = (h - rowH) / 2 + (root._named ? 0 : (root._cell - root._icon) / 2);

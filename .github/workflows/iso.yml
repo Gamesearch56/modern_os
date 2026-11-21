@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 150
     permissions:
-      contents: read
+      contents: write
     # Deliberately not a `container:` job. mkarchiso needs well over the
     # 14G GitHub guarantees free, and the preinstalled toolchains worth
     # deleting are on the host, invisible from inside a container. So the
@@ -78,33 +78,18 @@ jobs:
             -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
             archlinux:latest ./scripts/ci-iso-container.sh
 
-      - uses: actions/upload-artifact@v7
-        with:
-          name: modernos-iso
-          path: ${{ github.workspace }}/iso-out/*.iso
-          if-no-files-found: error
-          retention-days: 7
-
-  publish:
-    needs: iso
-    if: >-
-      github.repository == 'Gamesearch56/modern_dotfile'
-      && !github.event.repository.fork
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      TAG: ${{ github.event.release.tag_name || inputs.tag }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: modernos-iso
-          path: iso-out
+      # Straight onto the Release, not through an artifact: one 1.8 GB ISO
+      # held for a week is past the free plan's artifact storage quota.
       - name: Attach ISO to Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           shopt -s nullglob
-          files=(iso-out/*.iso)
-          [ ${#files[@]} -gt 0 ] || { echo "no ISO artifact" >&2; exit 1; }
+          files=("$GITHUB_WORKSPACE"/iso-out/*.iso)
+          [ ${#files[@]} -gt 0 ] || { echo "no ISO built" >&2; exit 1; }
+          for f in "${files[@]}"; do
+            size="$(stat -c %s "$f")"
+            # GitHub rejects Release assets of 2 GiB or more.
+            [ "$size" -lt 2147483648 ] || { echo "$f is $size bytes, over the 2 GiB asset limit" >&2; exit 1; }
+          done
           gh release upload "$TAG" "${files[@]}" --clobber --repo "${GITHUB_REPOSITORY}"

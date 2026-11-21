@@ -35,6 +35,6 @@ find "$ISO_OUT" -name '*.iso' -ls
 
 df -h "$ISO_OUT" /tmp || true
 
-# upload-artifact runs as the runner user, outside this container, and
+# The Release upload runs as the runner user, outside this container, and
 # everything above was written by root.
 chown -R "${HOST_UID:-0}:${HOST_GID:-0}" "$ISO_OUT"

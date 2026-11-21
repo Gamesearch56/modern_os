@@ -30,8 +30,8 @@ FloatingWindow {
             return;
         const fit = Tokens.window.quicklookFit;
         const scale = Math.min((screen.width * fit) / sw, (screen.height * fit) / sh);
-        win.width = Math.max(1, Math.round(sw * scale));
-        win.height = Math.max(1, Math.round(sh * scale));
+        win.implicitWidth = Math.max(1, Math.round(sw * scale));
+        win.implicitHeight = Math.max(1, Math.round(sh * scale));
     }
 
     title: "modern.quicklook"

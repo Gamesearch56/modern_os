@@ -47,8 +47,10 @@ Item {
         const n = String(name || "").toLowerCase();
         if (!n.length)
             return "package-x-generic";
+        // A mapped name often ships only with the app itself; before install
+        // it is missing and the next fallback has to answer.
         const mapped = root.icons && root.icons[n] ? String(root.icons[n]) : "";
-        if (mapped.length)
+        if (mapped.length && root._themeIcon(mapped))
             return mapped;
         const stems = root._stems(n);
         try {

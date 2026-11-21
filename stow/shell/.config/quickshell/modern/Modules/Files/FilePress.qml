@@ -77,7 +77,7 @@ MouseArea {
         }
         drag.target = root._arm() ? ghost : null;
         if (drag.target)
-            chip.grabToImage(result => { ghost.Drag.imageSource = result.url; });
+            chip.grabToImage(result => { ghost.Drag.imageSource = result.url; }, Qt.size(chip.width, chip.height));
     }
     onReleased: { const forward = root._nav > 0; drag.target = null; if (root._nav !== 0) { root._nav = 0; Qt.callLater(() => FilesHistory.sideStep(!forward)); } }
     onClicked: (mouse) => {

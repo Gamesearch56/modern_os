@@ -811,7 +811,11 @@ fi
 if python3 - "$ISO_YML" "$ISO_CONTAINER" <<'PY'; then
 import pathlib, sys
 yml, script = (pathlib.Path(p).read_text(encoding="utf-8") for p in sys.argv[1:])
-iso_job = yml[yml.index("  iso:"):yml.index("  publish:")]
+iso_job = yml[yml.index("  iso:"):]
+assert "upload-artifact" not in yml, \
+    "a 1.8 GB ISO artifact is past the free artifact storage quota; attach it to the Release directly"
+assert "gh release upload" in iso_job and "contents: write" in iso_job, \
+    "the iso job must attach the ISO to the Release itself"
 # A key, not the word — the job carries a comment explaining its absence.
 keys = [ln.strip() for ln in iso_job.splitlines() if not ln.lstrip().startswith("#")]
 assert "container:" not in keys, \
@@ -827,7 +831,7 @@ assert "fetch-depth: 0" in iso_job, \
 assert "safe.directory" in script, \
     "the container script must mark the workspace safe or git rejects the repo"
 assert "chown -R" in script, \
-    "upload-artifact runs as the runner user and cannot read root-owned output"
+    "the Release upload runs as the runner user and cannot read root-owned output"
 PY
     ok "ISO workflow frees host disk and builds in a privileged container"
 else
