@@ -373,6 +373,7 @@ Singleton {
                 screenshotWindow: "SHIFT + PRINT",
                 screenshotFull: "SUPER + PRINT",
                 colorPicker: "SUPER + SHIFT + C",
+                manual: "SUPER + Y",
                 filePreview: "SPACE",
                 bugReport: "SUPER + #"
             })

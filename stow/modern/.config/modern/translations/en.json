@@ -381,7 +381,8 @@
       "mouseFullscreenSide": "Toggle fullscreen",
       "mouseCloseApp": "Close in Applications",
       "mouseToggleSplit": "Toggle split",
-      "bugReport": "Report a problem"
+      "bugReport": "Report a problem",
+      "manual": "ModernOS manual"
     },
     "category": {
       "applications": "Applications",
@@ -2171,5 +2172,19 @@
       "rebootTitle": "After reboot",
       "reboot": "Sign in with the user you just created. Super+N is the control panel. Super+L locks."
     }
+  },
+  "manual": {
+    "title": "ModernOS Manual",
+    "launcherName": "Manual",
+    "windowTitle": "{name} – Manual",
+    "back": "Back",
+    "search": "Search the manual...",
+    "noResults": "No document matches your search",
+    "groups": {
+      "manual": "User manual",
+      "reference": "Technical reference"
+    },
+    "unavailable": "The manual could not be loaded",
+    "unavailableHint": "The documentation files are missing from the ModernOS folder."
   }
 }

@@ -381,7 +381,8 @@
       "mouseFullscreenSide": "Vollbild umschalten",
       "mouseCloseApp": "In Anwendungen schließen",
       "mouseToggleSplit": "Teilung umschalten",
-      "bugReport": "Problem melden"
+      "bugReport": "Problem melden",
+      "manual": "ModernOS-Handbuch"
     },
     "category": {
       "applications": "Anwendungen",
@@ -2171,5 +2172,19 @@
       "rebootTitle": "Nach dem Neustart",
       "reboot": "Melde dich mit dem gerade angelegten Konto an. Super+N ist die Steuerzentrale. Super+L sperrt."
     }
+  },
+  "manual": {
+    "title": "ModernOS Handbuch",
+    "launcherName": "Handbuch",
+    "windowTitle": "{name} – Handbuch",
+    "back": "Zurück",
+    "search": "Handbuch durchsuchen...",
+    "noResults": "Kein Dokument passt zu deiner Suche",
+    "groups": {
+      "manual": "Benutzerhandbuch",
+      "reference": "Technische Referenz"
+    },
+    "unavailable": "Das Handbuch konnte nicht geladen werden",
+    "unavailableHint": "Die Dokumentationsdateien fehlen im ModernOS-Ordner."
   }
 }

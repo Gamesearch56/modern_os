@@ -14,7 +14,8 @@ Singleton {
         "modern.files": { nameKey: "files.launcherName", icon: "modern-files" },
         "modern.editor": { nameKey: "editor.launcherName", icon: "modern-editor" },
         "modern.imageviewer": { nameKey: "viewer.launcherName", icon: "modern-imageviewer" },
-        "modern.mediaplayer": { nameKey: "player.launcherName", icon: "modern-mediaplayer" }
+        "modern.mediaplayer": { nameKey: "player.launcherName", icon: "modern-mediaplayer" },
+        "modern.manual": { nameKey: "manual.launcherName", icon: "modern-manual" }
     })
 
     function _key(raw: string): string {

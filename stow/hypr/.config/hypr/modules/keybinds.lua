@@ -149,6 +149,7 @@ local bindings = {
     screenshotWindow = hl.dsp.exec_cmd(modern .. " screenshot window"),
     screenshotFull = hl.dsp.exec_cmd(modern .. " screenshot full"),
     colorPicker = hl.dsp.exec_cmd("hyprpicker -a"),
+    manual = hl.dsp.exec_cmd(paths.scripts .. "/modern-manual"),
     filePreview = hl.dsp.exec_cmd(modern .. " filepreview"),
     -- Through the CLI so the shortcut still files a report when the shell is down.
     bugReport = hl.dsp.exec_cmd(modern .. " report"),
