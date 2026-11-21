@@ -396,6 +396,63 @@ set_wifi_country() {
     log "Wi-Fi country set to $cc"
 }
 
+# localecfg only enables a locale that sits commented in the target's
+# locale.gen and otherwise writes "# Missing:", which leaves that LANG or
+# LC_* on the C locale. The generated locale.gen lists every language +
+# country, so this only fires for a value it missed; glibc's SUPPORTED has
+# the line then. A locale problem never fails the install: the desktop
+# still starts, only dates and numbers fall back.
+locale_enabled() {
+    grep -qE "^[[:space:]]*${2}[[:space:]]" "$1" 2>/dev/null
+}
+
+ensure_target_locales() {
+    local root="${MODERN_LATE_STRIP_ROOT:-}"
+    local conf="$root/etc/locale.conf" gen="$root/etc/locale.gen"
+    local supported="${MODERN_LATE_SUPPORTED:-$root/usr/share/i18n/SUPPORTED}"
+    local loc re line changed=0 wanted=()
+    [ -f "$conf" ] || { log "no /etc/locale.conf yet; nothing to generate"; return 0; }
+    while IFS= read -r loc; do
+        [ -n "$loc" ] || continue
+        if ! [[ $loc =~ ^[A-Za-z0-9_.@-]+$ ]]; then
+            log "WARNING: ignoring odd locale value '$loc' in locale.conf"
+            continue
+        fi
+        [[ " ${wanted[*]} " == *" $loc "* ]] || wanted+=("$loc")
+    done < <(sed -nE 's/^(LANG|LC_[A-Z]+)="?([^"]*)"?$/\2/p' "$conf")
+    touch "$gen"
+    for loc in "${wanted[@]}"; do
+        case "$loc" in C | POSIX | C.UTF-8 | C.utf8) continue ;; esac
+        re="${loc//./\\.}"
+        locale_enabled "$gen" "$re" && continue
+        if grep -qE "^#[[:space:]]*${re}[[:space:]]" "$gen"; then
+            awk -v re="^#[[:space:]]*${re}[[:space:]]" '
+                !done && $0 ~ re { sub(/^#[[:space:]]*/, ""); done = 1 } { print }
+            ' "$gen" >"$gen.modern" && mv "$gen.modern" "$gen"
+        else
+            line="$(grep -m1 -E "^${re}[[:space:]]" "$supported" 2>/dev/null || true)"
+            if [ -z "$line" ]; then
+                log "WARNING: $loc is not a glibc locale; it falls back to C"
+                continue
+            fi
+            printf '%s\n' "$line" >>"$gen"
+        fi
+        log "enabled locale $loc in /etc/locale.gen"
+        changed=1
+    done
+    log "locales for this install: ${wanted[*]:-none}"
+    [ "$changed" -eq 1 ] || return 0
+    [ -z "${MODERN_LATE_TEST:-}" ] || return 0
+    if ! locale-gen >>"$LATE_LOG" 2>&1; then
+        log "WARNING: locale-gen failed; see $LATE_LOG"
+        return 0
+    fi
+    for loc in "${wanted[@]}"; do
+        locale -a 2>/dev/null | grep -qix "$(printf '%s' "$loc" | sed 's/UTF-8/utf8/I')" \
+            || log "WARNING: $loc still missing after locale-gen"
+    done
+}
+
 # live-wifi-up.sh writes its rtw88 option to the live overlay, which
 # unpackfs does not copy. /sys in this chroot is the live kernel's, so
 # the loaded parameters say whether the chip needed it.
@@ -772,6 +829,7 @@ phase_strip() {
     strip_live
     carry_rtw88_quirk
     set_wifi_country
+    ensure_target_locales
     local drop="${MODERN_LATE_STRIP_ROOT:-}/etc/mkinitcpio.conf.d/archiso.conf"
     [ ! -e "$drop" ] || die "$drop survived; the target would boot to a rescue shell"
     log "live-only files removed"

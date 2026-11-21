@@ -65,8 +65,8 @@ Presentation {
     }
 
     Slide {
-        title: qsTr("English and German")
-        centeredText: qsTr("The desktop ships both. Switch language in Settings when you want.")
+        title: qsTr("Your language")
+        centeredText: qsTr("The desktop starts in the language you picked here. Switch it in Settings any time.")
     }
 
     Slide {

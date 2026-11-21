@@ -796,6 +796,35 @@ else
 fi
 rm -f "$STRIPROOT/etc/localtime"
 
+# Whatever language + country the user picked, every locale.conf value has
+# to end up enabled in locale.gen, or that part of the desktop is C.
+gen="$STRIPROOT/etc/locale.gen"
+printf 'LANG=de_AT.UTF-8\nLC_TIME=de_AT.UTF-8\nLC_MONETARY=en_IE.UTF-8\nLC_PAPER=fr_FR.UTF-8\nLC_NAME=xx_YY.UTF-8\nLC_CTYPE=C.UTF-8\n' \
+    >"$STRIPROOT/etc/locale.conf"
+printf 'en_US.UTF-8 UTF-8\n#de_AT.UTF-8 UTF-8\n#  en_IE.UTF-8 UTF-8\n#de_CH.UTF-8 UTF-8\n' >"$gen"
+printf 'de_AT.UTF-8 UTF-8\nfr_FR.UTF-8 UTF-8\nfr_FR ISO-8859-1\n' >"$WORKDIR/SUPPORTED"
+loc_run() {
+    MODERN_LATE_STRIP_ROOT="$STRIPROOT" MODERN_LATE_SUPPORTED="$WORKDIR/SUPPORTED" run_late strip 2>&1
+}
+if out="$(loc_run)" && loc_run >/dev/null \
+    && grep -qx 'de_AT.UTF-8 UTF-8' "$gen" \
+    && grep -qx 'en_IE.UTF-8 UTF-8' "$gen" \
+    && [ "$(grep -c '^fr_FR.UTF-8 UTF-8$' "$gen")" -eq 1 ] \
+    && grep -qx '#de_CH.UTF-8 UTF-8' "$gen" \
+    && ! grep -q 'xx_YY\|^C\.UTF-8\|ISO-8859' "$gen" \
+    && grep -q 'WARNING: xx_YY.UTF-8 is not a glibc locale' <<<"$out"; then
+    ok "strip phase enables every locale.conf value in locale.gen, once, and warns on unknown ones"
+else
+    err "locale safety net: $(tr '\n' '|' <"$gen") / $out"
+fi
+rm -f "$STRIPROOT/etc/locale.conf"
+if out="$(loc_run)" && grep -q 'no /etc/locale.conf yet' <<<"$out"; then
+    ok "strip phase tolerates a target without locale.conf"
+else
+    err "strip phase must not fail without locale.conf: $out"
+fi
+rm -f "$gen"
+
 # BIOS: grub-mkconfig only finds /boot/vmlinuz-*, which mkarchiso removed.
 BIOSROOT="$WORKDIR/bios"
 mkdir -p "$BIOSROOT/usr/lib/modules/6.99.0-zen1-1-zen" "$BIOSROOT/etc/mkinitcpio.d"

@@ -35,10 +35,6 @@ def _locales_paths() -> list[Path]:
     here = Path(__file__).resolve()
     paths.append(Path("/usr/lib/modern/installer-locales.json"))
     paths.append(here.parent / "installer-locales.json")
-    try:
-        paths.append(here.parents[4] / "releng" / "installer-locales.json")
-    except IndexError:
-        pass
     return paths
 
 

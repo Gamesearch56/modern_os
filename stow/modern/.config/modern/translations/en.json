@@ -524,8 +524,10 @@
     "off": "Off",
     "cliNote": "Writes go through ConfigWrite → modern config set (jq). This app is the only writer of config.json.",
     "gated": "Account changes use the gated modern-usersd helper (docs/SECURITY.md). It is not installed to /usr by default.",
-    "langEn": "English",
-    "langDe": "Deutsch",
+    "langs": {
+      "en": "English",
+      "de": "German"
+    },
     "kbLayouts": {
       "us": "English (US)",
       "gb": "English (UK)",
@@ -2250,5 +2252,69 @@
     "end": "End",
     "pageUp": "Page Up",
     "pageDown": "Page Down"
+  },
+  "installer": {
+    "steps": {
+      "user": "User",
+      "summary": "Summary"
+    },
+    "finished": {
+      "done": "<h1>All done.</h1><br/>%1 is installed and ready.<br/>Restart to start using your new desktop."
+    },
+    "net": {
+      "title": "Network",
+      "ethernet": "Ethernet",
+      "nearby": "Nearby networks",
+      "refresh": "Refresh",
+      "password": "Password",
+      "connect": "Connect",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "viaEthernet": "You're connected with Ethernet",
+      "viaWifi": "You're connected with Wi-Fi",
+      "canContinue": "You can continue to the next step.",
+      "passwordRequired": "Password required",
+      "openNetwork": "Open network",
+      "connecting": "Connecting…",
+      "enterPassword": "Enter the password to connect.",
+      "needWifi": "Connect to Wi-Fi to continue.",
+      "searching": "Searching for networks…",
+      "noneFound": "No networks found.",
+      "noneFoundHint": "No networks found. Move closer to the router, then choose Refresh.",
+      "badPassword": "Could not connect. Check the password.",
+      "outOfRange": "The network is out of range. Move closer or search again.",
+      "timeout": "The network did not answer in time. Try again.",
+      "portal": "This network needs a sign-in the installer cannot enter. Choose another network.",
+      "rejected": "The password was not accepted. Type it again.",
+      "another": "Choose another network",
+      "noDriver": "This computer's Wi-Fi chip (%1) has no driver in the installer. %2",
+      "noAdapter": "No Wi-Fi adapter was found. %1",
+      "wiredHint": "Connect an Ethernet cable or share your phone's connection over USB.",
+      "saved": "Saved",
+      "forget": "Forget",
+      "disconnect": "Disconnect"
+    },
+    "slides": {
+      "assistantTitle": "Assistant",
+      "assistant": "Super+A opens AI chat. Ask in your language. Replies come from a local model or Gemini.",
+      "colorsTitle": "Colors from your wallpaper",
+      "colors": "Pick a wallpaper with Super+W. Bars, apps, and login restyle from that image.",
+      "keysTitle": "Keyboard helper",
+      "keys": "Forget a shortcut? Super+K lists every bind. Search, then press the combo.",
+      "storeTitle": "App Store",
+      "store": "Install programs from the official repositories. Search, confirm, done.",
+      "launcherTitle": "Launcher",
+      "launcher": "Super+Space finds apps, runs commands, and does quick sums.",
+      "settingsTitle": "Settings",
+      "settings": "Super+I opens System Settings. One file holds every preference.",
+      "languageTitle": "Your language",
+      "language": "The desktop starts in the language you picked here. Switch it in Settings any time.",
+      "shortcutsTitle": "Everyday shortcuts",
+      "shortcuts": "Super+T terminal. Super+B browser. Super+E files. Print takes a screenshot.",
+      "windowsTitle": "Windows and workspaces",
+      "windows": "Super+arrows move focus. Super+Shift+arrows move the window. Super+Tab shows an overview.",
+      "rebootTitle": "After reboot",
+      "reboot": "Sign in with the user you just created. Super+N is the control panel. Super+L locks."
+    }
   }
 }

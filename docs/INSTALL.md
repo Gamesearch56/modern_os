@@ -232,20 +232,79 @@ of German still left the test field on `us`: cage's Xwayland ignores
 because it is in `non-ascii-layouts`). The same patch now always sends
 `-option` and runs `setxkbmap` twice.
 
-The Keyboard step opens on the Welcome language's layout. English stays
-`us`, German is `de`, from `installer-locales.json`. `guessLayout: false`
-stays off: Calamares' own guess flipped this page when the Location step
-settled on a timezone, including while Welcome was still English.
-Startup detection only sees the live ISO locale (`setxkbmap -print` is
-`pc+us`), so the same detection runs again when the Keyboard page opens.
-A layout picked on that page is kept. Do not treat the combo's first row
-as the default — Calamares sorts by description, so Arabic would lead the
-shared catalog.
+### Languages, countries and keyboard layouts
 
-The Keyboard combo lists the common layouts in
-`iso/releng/installer-locales.json` `layouts` (same ids as Settings →
-Keyboard / `keyboard-layouts.json`). Welcome languages stay English and
-German only.
+One catalog drives the installer and the desktop:
+`stow/modern/.config/modern/languages.json`. Each entry is a UI language
+(one per `translations/<id>.json`), its default country, and the
+countries it is offered in with the keyboard layout each country uses:
+
+```json
+{ "id": "de", "country": "DE", "countries": { "DE": "de", "AT": "at", "CH": "ch" } }
+```
+
+An optional `"calamares"` names the Calamares translation when it is not
+the bare id (`"pt"` → `"pt_BR"`). Settings → Language lists the same
+entries (`Commons/Languages.qml`). `iso-build.sh` runs
+`scripts/installer-locales.py --strict` on the **bundle** (the tag the
+installed system comes from) and generates:
+
+| Output | Used by |
+|---|---|
+| `/usr/lib/modern/installer-locales.json` | AUR Calamares hook, `live-setup.sh`, `live-i18n.sh`, `live-xkb-filter.py` |
+| `/etc/locale.gen` | the installed system: defaults on, every language + country commented for `localecfg` |
+| `branding/modern/lang/calamares-modern_<code>.ts` | slideshow translations, compiled with `lrelease6` |
+
+The installer then follows the combination the user picks:
+
+1. **Welcome** lists every catalog language.
+2. **Location** turns Welcome language + timezone country into the
+   locale: German + Vienna installs `de_AT.UTF-8`, English + London
+   `en_GB.UTF-8`. A country the language does not list (English + Berlin)
+   uses the language's default (`en_US.UTF-8`). Changing the zone
+   re-runs this.
+3. **Keyboard** opens on that country's layout (`de_AT` → `at`,
+   `de_CH` → `ch`), else the language default. A layout the user picked
+   on that page is kept.
+
+`guessLayout: false` stays off: Calamares' own guess flipped this page
+when the Location step settled on a timezone. Startup detection only sees
+the live ISO locale (`setxkbmap -print` is `pc+us`), so detection runs
+again when the Keyboard page opens. Do not treat the combo's first row as
+the default — Calamares sorts by description, so Arabic would lead.
+
+The live `SUPPORTED` lists every combination (so Location can pick
+`de_AT`), the live `locale.gen` only the defaults (generating the rest
+slowed boot). After `localecfg`, `calamares-late.sh strip` checks every
+`LANG`/`LC_*` in the target's `/etc/locale.conf`, enables any that is not
+active from glibc's `SUPPORTED`, runs `locale-gen`, and logs each locale
+to `/var/log/modern-calamares-late.log`. An unknown locale is a logged
+warning, never a failed install.
+
+Installer strings our patches and the Network step add, and the
+slideshow, are keys under `installer.*` in the translation files.
+`iso/releng/installer-strings.json` maps each Calamares source string to
+its key, and the hook writes every language's values into
+`lang/calamares_<code>.ts` before the build. These strings come from the
+working tree (the installer code is the working tree's too), so an ISO
+pinned to an older tag still gets them; the bundle only supplies a
+language the working tree lacks. A language missing a key shows that
+string in English.
+
+**What fails, and where.** `scripts/lint-layers.sh` and
+`scripts/test-installer-locales.py` (both in `ci-check.sh`) reject: a
+translation without a catalog entry or the reverse, a layout outside
+`keyboard-layouts.json` or unknown to xkb, a country not in `zone.tab`, a
+language + country glibc has no UTF-8 locale for, a language Calamares
+3.4.2 does not compile, an `installer.*` English value that no longer
+matches the code, and a new `tr()` / `qsTr()` string without a mapping.
+The AUR build re-checks the languages against the real Calamares
+`CMakeLists.txt` and stops with the list of valid codes. The test also
+adds French and Brazilian Portuguese to a scratch copy and compiles and
+runs the generated Welcome C++ against Qt6, so adding a language needs
+no ISO test install. With an unpacked Calamares tarball,
+`MODERN_CALAMARES_SRC=/path/to/calamares-3.4.2 python3
+scripts/test-installer-locales.py` also patches the real source.
 
 The Keyboard step's own job only writes `/etc/vconsole.conf` (the TTY) and
 `/etc/X11/xorg.conf.d/00-keyboard.conf` (Xwayland clients). Hyprland reads

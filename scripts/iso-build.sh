@@ -230,10 +230,6 @@ install -m 0755 "$ROOT/scripts/wifi-join.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/wifi-join.sh"
 install -m 0644 "$ROOT/install/lib/wifi-wl.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/wifi-wl.sh"
-[ -f "$ROOT/iso/releng/installer-locales.json" ] \
-    || die "missing $ROOT/iso/releng/installer-locales.json"
-install -m 0644 "$ROOT/iso/releng/installer-locales.json" \
-    "$AIROOTFS_OUT/usr/lib/modern/installer-locales.json"
 install -d -m 0755 "$AIROOTFS_OUT/usr/local/bin"
 ln -sfn /usr/lib/modern/live-xdg-open.sh "$AIROOTFS_OUT/usr/local/bin/xdg-open"
 printf '%s\n' "$pin" >"$AIROOTFS_OUT/usr/lib/modern/iso-pin"
@@ -243,6 +239,22 @@ git clone --depth 1 --single-branch --sparse --branch "$pin" "$ROOT" "$bundle" \
     || die "could not bundle $pin into the live image"
 git -C "$bundle" sparse-checkout set --cone install stow scripts \
     || die "could not sparse-checkout the ISO bundle"
+# Installer languages, regional locales and keyboard defaults follow the
+# bundle, i.e. what the installed desktop can actually show. --strict: the
+# build host has glibc SUPPORTED, zone.tab and xkb base.lst, so a language
+# or layout glibc/xkb do not know stops here, not in a user's install.
+ISO_INSTALLER_LOCALES="$AIROOTFS_OUT/usr/lib/modern/installer-locales.json"
+brand_lang="$AIROOTFS_OUT/etc/calamares/branding/modern/lang"
+install -d -m 0755 "$brand_lang"
+python3 "$ROOT/scripts/installer-locales.py" --strict \
+    --root "$bundle" --fallback-root "$ROOT" \
+    --json "$ISO_INSTALLER_LOCALES" \
+    --locale-gen "$AIROOTFS_OUT/etc/locale.gen" \
+    --branding-ts "$brand_lang" \
+    || die "languages.json / keyboard-layouts.json failed validation (see above)"
+chmod 0644 "$ISO_INSTALLER_LOCALES" "$AIROOTFS_OUT/etc/locale.gen"
+export ISO_INSTALLER_LOCALES
+log "installer languages: $(jq -r '[.locales[] | .calamares] | join(" ")' "$ISO_INSTALLER_LOCALES")"
 # shellcheck source=lib/deploy-key.sh
 source "$ROOT/scripts/lib/deploy-key.sh"
 if ! stage_deploy_key "$AIROOTFS_OUT/usr/lib/modern/deploy_key" \
@@ -319,11 +331,8 @@ fi
 install -m 0644 "$tokens_out" "$AIROOTFS_OUT/var/lib/modern/session/tokens.json"
 write_qss "$tokens_out" "$AIROOTFS_OUT/etc/calamares/branding/modern/stylesheet.qss"
 install -m 0644 "$LOGO" "$AIROOTFS_OUT/etc/calamares/branding/modern/logo.png"
-brand_lang="$AIROOTFS_OUT/etc/calamares/branding/modern/lang"
-install -d -m 0755 "$brand_lang"
-if [ -f "$ROOT/iso/airootfs/etc/calamares/branding/modern/lang/calamares-modern_de.ts" ]; then
-    install -m 0644 "$ROOT/iso/airootfs/etc/calamares/branding/modern/lang/calamares-modern_de.ts" \
-        "$brand_lang/calamares-modern_de.ts"
+brand_ts=("$brand_lang"/calamares-modern_*.ts)
+if [ -e "${brand_ts[0]}" ]; then
     lrelease_bin=""
     # Arch qt6-tools ships lrelease6 (/usr/lib/qt6/bin/lrelease), not
     # Debian's lrelease-qt6. sudo's PATH still includes /usr/bin.
@@ -338,11 +347,13 @@ if [ -f "$ROOT/iso/airootfs/etc/calamares/branding/modern/lang/calamares-modern_
         fi
     done
     if [ -n "$lrelease_bin" ]; then
-        "$lrelease_bin" "$brand_lang/calamares-modern_de.ts" \
-            -qm "$brand_lang/calamares-modern_de.qm" >/dev/null
-        log "compiled branding $brand_lang/calamares-modern_de.qm"
+        for ts in "${brand_ts[@]}"; do
+            "$lrelease_bin" "$ts" -qm "${ts%.ts}.qm" >/dev/null \
+                || die "lrelease failed for $ts"
+            log "compiled branding ${ts%.ts}.qm"
+        done
     elif [ "$DO_MKARCHISO" -eq 1 ]; then
-        die "lrelease6 missing (pacman -S --needed qt6-tools) — needed for German slideshow"
+        die "lrelease6 missing (pacman -S --needed qt6-tools) — needed for the translated slideshow"
     else
         log "lrelease6 missing — slideshow stays English until qt6-tools is installed"
     fi

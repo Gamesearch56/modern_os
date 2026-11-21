@@ -107,17 +107,67 @@ def wrap(old: str) -> str:
 (src / "modules/users/UsersViewStep.cpp").write_text(wrap(mod.USERS_NAME_OLD), encoding="utf-8")
 (src / "modules/users/Config.cpp").write_text(wrap(mod.USERS_CFG_OLD), encoding="utf-8")
 (pathlib.Path(sys.argv[2]).parent / "lang" / "calamares_de.ts").write_text(
-    wrap(mod.USERS_TS_OLD) + wrap(mod.SUMMARY_TS_OLD) + wrap(mod.FINISHED_TS_OLD),
+    """<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="de">
+  <context>
+    <name>UsersViewStep</name>
+    <message>
+      <location filename="../src/modules/users/UsersViewStep.cpp" line="48"/>
+      <source>Users</source>
+      <translation>Benutzer</translation>
+    </message>
+  </context>
+  <context>
+    <name>Config</name>
+    <message>
+      <location filename="../src/modules/summary/Config.cpp" line="35"/>
+      <source>Summary</source>
+      <comment>@label</comment>
+      <translation>Zusammenfassung</translation>
+    </message>
+  </context>
+  <context>
+    <name>FinishedPage</name>
+    <message>
+      <source>&lt;h1&gt;All done.&lt;/h1&gt;&lt;br/&gt;%1 has been installed on your computer.&lt;br/&gt;You may now restart into your new system, or continue using the %2 Live environment.</source>
+      <comment>@info</comment>
+      <translation>&lt;h1&gt;Alles erledigt.&lt;/h1&gt;&lt;br/&gt;%1 wurde auf Ihrem Computer installiert.&lt;br/&gt;Sie können weiterhin die %2 Live-Umgebung benutzen.</translation>
+    </message>
+  </context>
+</TS>
+""",
     encoding="utf-8",
 )
 PY
 
+# Same compiled-language lists as Calamares 3.4.2's CMakeLists.txt.
+python3 - "$ROOT/scripts/lib" "$WORKDIR/CMakeLists.txt" <<'PY'
+import sys
+sys.path.insert(0, sys.argv[1])
+import installer_catalog as ic
+
+codes = " ".join(sorted(ic.CALAMARES_TRANSLATIONS - {"en"}))
+with open(sys.argv[2], "w", encoding="utf-8") as f:
+    f.write(f"set( _tx_complete {codes} )  # all\nset( _tx_incomplete lv mk )\n")
+PY
+
 cp "$HOOK" "$WORKDIR/calamares-limit-languages.py"
-cp "$ROOT/iso/releng/installer-locales.json" "$WORKDIR/installer-locales.json"
 cp -a "$ROOT/iso/releng/calamares-modernnet" "$WORKDIR/calamares-modernnet"
+python3 "$ROOT/scripts/installer-locales.py" --json "$WORKDIR/installer-locales.json" >/dev/null \
+    || { err "installer-locales.py could not generate installer-locales.json"; exit 1; }
 if ! python3 "$WORKDIR/calamares-limit-languages.py" "$WORKDIR"; then
     err "hook failed on fixture tree"
     exit 1
+fi
+cp -a "$src" "$WORKDIR/src-once"
+cp "$WORKDIR/lang/calamares_de.ts" "$WORKDIR/de-once.ts"
+if python3 "$WORKDIR/calamares-limit-languages.py" "$WORKDIR" \
+    && diff -r "$WORKDIR/src-once" "$src" >/dev/null \
+    && cmp -s "$WORKDIR/de-once.ts" "$WORKDIR/lang/calamares_de.ts"; then
+    ok "a second hook run changes nothing (makepkg re-runs prepare)"
+else
+    err "hook is not idempotent: $(diff -r "$WORKDIR/src-once" "$src" | head -5)"
 fi
 
 check() {
@@ -177,7 +227,12 @@ check "$src/modules/keyboard/Config.cpp" "currentLayout = welcomeLayout" "detect
 check "$src/modules/keyboard/KeyboardViewStep.cpp" "m_config->detectCurrentKeyboardLayout();" "re-detect layout after Welcome"
 check "$src/modules/locale/Config.cpp" "modernWelcomeLanguage" "Welcome language glibc locale"
 check "$src/modules/locale/Config.cpp" 'QStringLiteral( "de_DE.UTF-8" )' "German Welcome locale is de_DE.UTF-8"
-check "$src/modules/locale/Config.cpp" "QString lang = modernWelcomeLanguage();" "prefer Welcome language over stored LANG"
+check "$src/modules/locale/Config.cpp" "QString lang = modernWelcomeLanguage( currentLocation() ? currentLocation()->country() : QString() );" "prefer Welcome language + timezone country over stored LANG"
+check "$src/modules/locale/Config.cpp" 'QStringLiteral( "de_AT.UTF-8" )' "German in Austria installs de_AT.UTF-8"
+check "$src/modules/locale/Config.cpp" 'QStringLiteral( "en_GB.UTF-8" )' "English in the UK installs en_GB.UTF-8"
+check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "at" )' "German in Austria preselects the at layout"
+check "$src/modules/keyboard/Config.cpp" "modernWelcomeLayout( welcomeCountry )" "keyboard layout follows the Location country"
+check "$src/modules/keyboard/Config.cpp" 'readGS( *gs, QStringLiteral( "LANG" ) )' "keyboard reads the LANG the Location step stored"
 check "$src/modules/summary/SummaryPage.cpp" "summaryContent" "summary content object name"
 check "$src/modules/partition/PartitionViewStep.cpp" "summaryPartition" "partition summary object name"
 check "$src/modules/partition/gui/PartitionLabelsView.cpp" "QPalette::WindowText" "partition legend palette text"
@@ -205,7 +260,25 @@ check "$src/libcalamaresui/ViewManager.cpp" "updateBackAndNextVisibility( false 
 check "$src/modules/finished/FinishedPage.cpp" "%1 is installed and ready." "finished English success copy"
 check "$WORKDIR/lang/calamares_de.ts" "ist installiert und einsatzbereit." "finished German success copy"
 refute "$src/modules/finished/FinishedPage.cpp" "Live environment" "English success copy names no live medium"
-refute "$WORKDIR/lang/calamares_de.ts" "Live-Umgebung" "German success copy names no live medium"
+if python3 - "$WORKDIR/lang/calamares_de.ts" "$src/modules/finished/FinishedPage.cpp" <<'PY'
+import re, sys
+import xml.etree.ElementTree as ET
+
+cpp = open(sys.argv[2], encoding="utf-8").read()
+call = re.search(r'setText\( tr\( ((?:"(?:[^"\\]|\\.)*"\s*)+),\s*"@info"', cpp)
+source = "".join(re.findall(r'"((?:[^"\\]|\\.)*)"', call.group(1)))
+hits = [
+    m.findtext("translation") or ""
+    for m in ET.parse(sys.argv[1]).getroot().iter("message")
+    if m.findtext("source") == source and m.findtext("comment") == "@info"
+]
+sys.exit(0 if hits and all(h and "Live" not in h for h in hits) else 1)
+PY
+then
+    ok "German success copy the finished page uses names no live medium"
+else
+    err "German translation of the current finished copy is missing or names the live medium"
+fi
 
 if grep -F 'UPDATE_BUTTON_PROPERTY( quitVisible, true );' "$src/libcalamaresui/ViewManager.cpp" >/dev/null; then
     err "Done button still shown at the very end"
@@ -231,7 +304,12 @@ names = re.findall(
 )
 if not names:
     sys.exit("no branding names in branding.desc")
-copy = mod.FINISHED_TEXT_NEW + mod.FINISHED_TS_NEW
+sys.path.insert(0, str(pathlib.Path(sys.argv[1]).parents[2] / "scripts/lib"))
+import installer_catalog as ic
+tdir = pathlib.Path(sys.argv[1]).parents[2] / "stow/modern/.config/modern/translations"
+copy = mod.FINISHED_TEXT_NEW + "".join(
+    t.get("installer.finished.done", "") for t in ic.load_translations(tdir.parent).values()
+)
 leaks = sorted(
     {
         name + sep + "Live"
@@ -246,6 +324,23 @@ then
     ok "finished success copy renders no live-medium name"
 else
     err "finished success copy renders a live-medium name"
+fi
+
+# A language Calamares does not compile would show in Welcome and then
+# leave every page English. The build has to stop with the reason instead.
+python3 - "$WORKDIR/installer-locales.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+data["locales"].append(dict(data["locales"][0], calamares="lv"))
+json.dump(data, open(sys.argv[1], "w", encoding="utf-8"))
+PY
+rm -rf "$src" && cp -a "$WORKDIR/src-once" "$src"
+if out="$(python3 "$WORKDIR/calamares-limit-languages.py" "$WORKDIR" 2>&1)"; then
+    err "hook accepted a language Calamares does not compile"
+elif grep -F "does not compile translations ['lv']" <<<"$out" >/dev/null; then
+    ok "hook stops the build for a language Calamares does not compile"
+else
+    err "uncompiled language failed without a clear reason: $out"
 fi
 
 [ "$FAIL" -eq 0 ]

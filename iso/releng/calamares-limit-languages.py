@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """Patch Calamares for the live ISO.
 
-Welcome languages come from installer-locales.json (next to this file).
+Welcome languages, the locale per timezone country, the keyboard layout per
+locale and every translated string come from installer-locales.json (next
+to this file), which scripts/installer-locales.py generates from
+languages.json. Nothing here names a language, so adding one never needs an
+edit to this file; a language Calamares does not compile stops the build.
 Also: 180px sidebar, stacked zone, hide Location Change…, qApp QSS,
 in-window combo list overlay, Summary/partition
 object names, hide Keyboard model, hide Cancel during exec,
 ViewManager/QML retranslate, Toggle log tr(), Users step titled User,
-Summary German title Übersicht (English stays Summary; title() calls tr()).
+Summary title() calls tr() so it follows the Welcome language.
 Partition legend Boot/root names use palette text (not Qt::black).
-Finished success copy drops the live-session offer, English and German.
+Finished success copy drops the live-session offer.
 Keyboard layout changes call apply() even when there are no variants.
 setxkbmap always passes -option so cage/Xwayland rebuilds the map.
 Unattended QEMU: /etc/calamares/unattended auto-next + user modern/modern.
@@ -19,8 +23,10 @@ Pass TranslationsModel.cpp (AUR prepare) or the unpacked source tree.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 TRANS_OLD = """TranslationsModel*
@@ -473,6 +479,9 @@ KB_LOCALE_INC_NEW = """#include <QGuiApplication>
 # Prefer the Welcome language over setxkbmap -print. A fresh Xwayland
 # reports pc+us even after the Welcome combo is German, and detect runs
 # again from onActivate while the choice is still the initial one.
+# The Location step stores LANG before this step opens, so its country
+# (de_AT -> at) picks the layout; a LANG left from another language is
+# ignored rather than mixing one language's country into another.
 KB_DETECT_OLD = """    if ( m_configureLocale1 )
     {
         getCurrentKeyboardLayoutLocale1( currentLayout, currentVariant, currentModel );
@@ -481,7 +490,20 @@ KB_DETECT_OLD = """    if ( m_configureLocale1 )
     {
         getCurrentKeyboardLayoutXkb( currentLayout, currentVariant, currentModel );
     }"""
-KB_DETECT_NEW = """    const QString welcomeLayout = modernWelcomeLayout();
+KB_DETECT_NEW = """    QString welcomeCountry;
+    if ( auto* gs = Calamares::JobQueue::instance()->globalStorage() )
+    {
+        const QString stored = Calamares::Locale::readGS( *gs, QStringLiteral( "LANG" ) )
+                                   .section( QLatin1Char( '.' ), 0, 0 )
+                                   .section( QLatin1Char( '@' ), 0, 0 );
+        if ( stored.section( QLatin1Char( '_' ), 0, 0 ).toLower()
+             == QLocale().name().section( QLatin1Char( '_' ), 0, 0 ).toLower() )
+        {
+            welcomeCountry = stored.section( QLatin1Char( '_' ), 1, 1 );
+        }
+    }
+    const QString welcomeLayout = modernWelcomeLayout( welcomeCountry );
+    cDebug() << "ModernOS: Welcome" << QLocale().name() << "country" << welcomeCountry << "layout" << welcomeLayout;
     if ( !welcomeLayout.isEmpty() )
     {
         currentLayout = welcomeLayout;
@@ -498,6 +520,8 @@ KB_DETECT_NEW = """    const QString welcomeLayout = modernWelcomeLayout();
 # automaticLocaleConfiguration() used to prefer a LANG already stored from
 # the live ISO. That stays en_US after Welcome moves to German, so the
 # Location step installed English and the login screen followed it.
+# The timezone country picks the regional locale (Vienna -> de_AT), and
+# setCurrentLocation() re-runs this whenever the zone changes.
 LOCALE_LANG_OLD = """    auto* gs = Calamares::JobQueue::instance()->globalStorage();
     QString lang = Calamares::Locale::readGS( *gs, QStringLiteral( "LANG" ) );
     if ( lang.isEmpty() )
@@ -505,7 +529,8 @@ LOCALE_LANG_OLD = """    auto* gs = Calamares::JobQueue::instance()->globalStora
         lang = QLocale().name();
     }
     return LocaleConfiguration::fromLanguageAndLocation( lang, supportedLocales(), currentLocation()->country() );"""
-LOCALE_LANG_NEW = """    QString lang = modernWelcomeLanguage();
+LOCALE_LANG_NEW = """    QString lang = modernWelcomeLanguage( currentLocation() ? currentLocation()->country() : QString() );
+    cDebug() << "ModernOS: Welcome" << QLocale().name() << "locale" << lang;
     if ( lang.isEmpty() )
     {
         auto* gs = Calamares::JobQueue::instance()->globalStorage();
@@ -596,23 +621,6 @@ USERS_CFG_NEW = """    ApplyPresets( *this, configurationMap ) << "fullName"
         setUserPasswordSecondary( QStringLiteral( "modern" ) );
     }
 }"""
-
-USERS_TS_OLD = """  <context>
-    <name>UsersViewStep</name>
-    <message>
-      <location filename="../src/modules/users/UsersViewStep.cpp" line="48"/>
-      <source>Users</source>
-      <translation>Benutzer</translation>
-    </message>
-  </context>"""
-USERS_TS_NEW = """  <context>
-    <name>UsersViewStep</name>
-    <message>
-      <location filename="../src/modules/users/UsersViewStep.cpp" line="48"/>
-      <source>User</source>
-      <translation>Benutzer</translation>
-    </message>
-  </context>"""
 
 FINISHED_H_OLD = """    Ui::FinishedPage* ui;
     std::optional< QString > m_failure;"""
@@ -719,15 +727,6 @@ FINISHED_TEXT_NEW = """            ui->mainText->setText( tr( "<h1>All done.</h1
                                        "@info" )
                                        .arg( branding->versionedName() ) );"""
 
-FINISHED_TS_OLD = """      <location filename="../src/modules/finished/FinishedPage.cpp" line="89"/>
-      <source>&lt;h1&gt;All done.&lt;/h1&gt;&lt;br/&gt;%1 has been installed on your computer.&lt;br/&gt;You may now restart into your new system, or continue using the %2 Live environment.</source>
-      <comment>@info</comment>
-      <translation>&lt;h1&gt;Alles erledigt.&lt;/h1&gt;&lt;br/&gt;%1 wurde auf Ihrem Computer installiert.&lt;br/&gt;Sie können nun per Neustart das installierte System laden oder weiterhin die %2 Live-Umgebung benutzen.</translation>"""
-FINISHED_TS_NEW = """      <location filename="../src/modules/finished/FinishedPage.cpp" line="89"/>
-      <source>&lt;h1&gt;All done.&lt;/h1&gt;&lt;br/&gt;%1 is installed and ready.&lt;br/&gt;Restart to start using your new desktop.</source>
-      <comment>@info</comment>
-      <translation>&lt;h1&gt;Alles erledigt.&lt;/h1&gt;&lt;br/&gt;%1 ist installiert und einsatzbereit.&lt;br/&gt;Starte neu, um deinen neuen Desktop zu nutzen.</translation>"""
-
 # A failed install quits from the error dialog and never reaches this page,
 # so hiding the footer here cannot strand the user without a way out.
 FOOTER_OLD = """        UPDATE_BUTTON_PROPERTY( quitLabel, tr( "&Done", "@button" ) );
@@ -747,182 +746,12 @@ SUMMARY_TITLE_NEW = (
     '    QString title() const { return tr( "Summary", "@label" ); }'
 )
 
-SUMMARY_TS_OLD = """      <location filename="../src/modules/summary/Config.cpp" line="35"/>
-      <source>Summary</source>
-      <comment>@label</comment>
-      <translation>Zusammenfassung</translation>"""
-SUMMARY_TS_NEW = """      <location filename="../src/modules/summary/Config.cpp" line="35"/>
-      <source>Summary</source>
-      <comment>@label</comment>
-      <translation>Übersicht</translation>"""
-
-MODERNNET_TS = """
-  <context>
-    <name>ModernNetViewStep</name>
-    <message>
-      <source>Network</source>
-      <comment>@title</comment>
-      <translation>Netzwerk</translation>
-    </message>
-  </context>
-  <context>
-    <name>ModernNetPage</name>
-    <message>
-      <source>Ethernet</source>
-      <translation>Ethernet</translation>
-    </message>
-    <message>
-      <source>Nearby networks</source>
-      <translation>Netzwerke in der Nähe</translation>
-    </message>
-    <message>
-      <source>Refresh</source>
-      <translation>Aktualisieren</translation>
-    </message>
-    <message>
-      <source>Password</source>
-      <translation>Passwort</translation>
-    </message>
-    <message>
-      <source>Connect</source>
-      <translation>Verbinden</translation>
-    </message>
-    <message>
-      <source>Connected</source>
-      <translation>Verbunden</translation>
-    </message>
-    <message>
-      <source>Not connected</source>
-      <translation>Nicht verbunden</translation>
-    </message>
-    <message>
-      <source>You're connected with Ethernet</source>
-      <translation>Du bist per Ethernet verbunden</translation>
-    </message>
-    <message>
-      <source>You're connected with Wi-Fi</source>
-      <translation>Du bist per WLAN verbunden</translation>
-    </message>
-    <message>
-      <source>You can continue to the next step.</source>
-      <translation>Du kannst mit dem nächsten Schritt fortfahren.</translation>
-    </message>
-    <message>
-      <source>Password required</source>
-      <translation>Passwort erforderlich</translation>
-    </message>
-    <message>
-      <source>Open network</source>
-      <translation>Offenes Netzwerk</translation>
-    </message>
-    <message>
-      <source>Connecting…</source>
-      <translation>Verbinden…</translation>
-    </message>
-    <message>
-      <source>Enter the password to connect.</source>
-      <translation>Gib das Passwort ein, um dich zu verbinden.</translation>
-    </message>
-    <message>
-      <source>Wi-Fi is connected.</source>
-      <translation>WLAN ist verbunden.</translation>
-    </message>
-    <message>
-      <source>Connect to Wi-Fi to continue.</source>
-      <translation>Verbinde dich mit WLAN, um fortzufahren.</translation>
-    </message>
-    <message>
-      <source>%1 — Connected</source>
-      <translation>%1 — Verbunden</translation>
-    </message>
-    <message>
-      <source>%1 — Saved</source>
-      <translation>%1 — Gespeichert</translation>
-    </message>
-    <message>
-      <source>Searching for networks…</source>
-      <translation>Suche nach Netzwerken…</translation>
-    </message>
-    <message>
-      <source>No networks found.</source>
-      <translation>Keine Netzwerke gefunden.</translation>
-    </message>
-    <message>
-      <source>Could not connect. Check the password.</source>
-      <translation>Verbinden fehlgeschlagen. Passwort prüfen.</translation>
-    </message>
-    <message>
-      <source>The network is out of range. Move closer or search again.</source>
-      <translation>Das Netzwerk ist außer Reichweite. Geh näher heran oder suche erneut.</translation>
-    </message>
-    <message>
-      <source>The network did not answer in time. Try again.</source>
-      <translation>Das Netzwerk hat nicht rechtzeitig geantwortet. Versuche es erneut.</translation>
-    </message>
-    <message>
-      <source>This network needs a sign-in the installer cannot enter. Choose another network.</source>
-      <translation>Dieses Netzwerk braucht eine Anmeldung, die das Installationsprogramm nicht eingeben kann. Wähle ein anderes Netzwerk.</translation>
-    </message>
-    <message>
-      <source>The password was not accepted. Type it again.</source>
-      <translation>Das Passwort wurde nicht angenommen. Gib es erneut ein.</translation>
-    </message>
-    <message>
-      <source>Choose another network</source>
-      <translation>Anderes Netzwerk wählen</translation>
-    </message>
-  </context>
-  <context>
-    <name>ModernNetRow</name>
-    <message>
-      <source>Connected</source>
-      <translation>Verbunden</translation>
-    </message>
-    <message>
-      <source>Saved</source>
-      <translation>Gespeichert</translation>
-    </message>
-    <message>
-      <source>Password required</source>
-      <translation>Passwort erforderlich</translation>
-    </message>
-    <message>
-      <source>Open network</source>
-      <translation>Offenes Netzwerk</translation>
-    </message>
-    <message>
-      <source>Connect</source>
-      <translation>Verbinden</translation>
-    </message>
-    <message>
-      <source>Forget</source>
-      <translation>Vergessen</translation>
-    </message>
-    <message>
-      <source>Disconnect</source>
-      <translation>Trennen</translation>
-    </message>
-  </context>
-"""
-
-
-def load_calamares_codes() -> list[str]:
-    here = Path(__file__).resolve().parent
-    for path in (
-        here / "installer-locales.json",
-        Path("/usr/lib/modern/installer-locales.json"),
-    ):
-        if not path.is_file():
-            continue
-        data = json.loads(path.read_text(encoding="utf-8"))
-        codes = [str(loc["calamares"]) for loc in data.get("locales") or [] if loc.get("calamares")]
-        if codes:
-            return codes
-    print("live-calamares: installer-locales.json missing or empty", file=sys.stderr)
+def _die(msg: str) -> None:
+    print(f"live-calamares: {msg}", file=sys.stderr)
     sys.exit(1)
 
 
-def _installer_locale_rows() -> list[dict]:
+def installer_data() -> dict:
     here = Path(__file__).resolve().parent
     for path in (
         here / "installer-locales.json",
@@ -932,47 +761,127 @@ def _installer_locale_rows() -> list[dict]:
             continue
         data = json.loads(path.read_text(encoding="utf-8"))
         rows = [loc for loc in (data.get("locales") or []) if isinstance(loc, dict)]
-        if rows:
-            return rows
-    print("live-calamares: installer-locales.json missing or empty", file=sys.stderr)
-    sys.exit(1)
+        if not rows:
+            break
+        for loc in rows:
+            if not loc.get("calamares") or not isinstance(loc.get("countries"), list):
+                _die(f"{path} is not generated by scripts/installer-locales.py (no countries)")
+        return data
+    _die("installer-locales.json missing or empty (run scripts/installer-locales.py)")
+    return {}
 
 
 def _cpp_literal(value: str) -> str:
     if not value or any(c not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-" for c in value):
-        print(f"live-calamares: refusing locale value {value!r}", file=sys.stderr)
-        sys.exit(1)
+        _die(f"refusing locale value {value!r}")
     return value
 
 
-def welcome_cpp_fn(name: str, field: str) -> str:
-    """Map the Welcome language onto one installer-locales.json column."""
-    arms = []
-    for loc in _installer_locale_rows():
-        code = _cpp_literal(str(loc.get("calamares") or ""))
-        value = _cpp_literal(str(loc.get(field) or ""))
-        arms.append(
-            "    if ( lang == QLatin1String( \""
-            + code
-            + "\" ) )\n"
-            "    {\n"
-            "        return QStringLiteral( \""
-            + value
-            + "\" );\n"
-            "    }"
-        )
-    body = "\n".join(arms)
+def _country_arm(cond: str, loc: dict, field: str) -> str:
+    default = _cpp_literal(str(loc.get(field) or ""))
+    lines = [f"    if ( {cond} )", "    {"]
+    for c in loc["countries"]:
+        value = _cpp_literal(str(c.get(field) or ""))
+        if value == default:
+            continue
+        cc = _cpp_literal(str(c.get("country") or ""))
+        lines += [
+            f'        if ( country == QLatin1String( "{cc}" ) )',
+            "        {",
+            f'            return QStringLiteral( "{value}" );',
+            "        }",
+        ]
+    lines += [f'        return QStringLiteral( "{default}" );', "    }"]
+    return "\n".join(lines)
+
+
+def welcome_cpp_fn(name: str, field: str, data: dict) -> str:
+    """Map Welcome language + country onto one installer-locales.json column.
+
+    Codes with a region (pt_BR) match the full QLocale name first, so pt_BR
+    and pt can both ship; the bare language is a last resort for them.
+    """
+    rows = data["locales"]
+    regional = [r for r in rows if "_" in r["calamares"]]
+    plain = [r for r in rows if "_" not in r["calamares"]]
+    plain_codes = {r["calamares"] for r in plain}
+    arms = [_country_arm(f'name == QLatin1String( "{_cpp_literal(r["calamares"])}" )', r, field) for r in regional]
+    arms += [_country_arm(f'lang == QLatin1String( "{_cpp_literal(r["calamares"])}" )', r, field) for r in plain]
+    for r in regional:
+        base = r["calamares"].split("_", 1)[0]
+        if base not in plain_codes:
+            plain_codes.add(base)
+            arms.append(_country_arm(f'lang == QLatin1String( "{_cpp_literal(base)}" )', r, field))
     return (
         "static QString\n"
         + name
-        + "()\n"
+        + "( const QString& country )\n"
         "{\n"
-        "    const QString lang = QLocale().name().section( QLatin1Char( '_' ), 0, 0 ).toLower();\n"
-        + body
+        "    const QString name = QLocale().name();\n"
+        "    const QString lang = name.section( QLatin1Char( '_' ), 0, 0 ).toLower();\n"
+        + "\n".join(arms)
         + "\n"
         "    return QString();\n"
         "}\n\n"
     )
+
+
+def check_compiled_translations(top: Path, codes: list[str]) -> None:
+    """Fail the build for a language this Calamares release does not compile.
+
+    A code outside _tx_complete/_tx_good/_tx_ok has no .qm in a release
+    build: Welcome would list it and then show English everywhere.
+    """
+    cmake = top / "CMakeLists.txt"
+    if not cmake.is_file():
+        _die(f"missing {cmake}; cannot check Calamares translations")
+    compiled = {"en"}
+    for m in re.finditer(r"set\(\s*_tx_(complete|good|ok)\s+([^)]*)\)", cmake.read_text(encoding="utf-8")):
+        compiled.update(m.group(2).split())
+    missing = [c for c in codes if c not in compiled]
+    if missing:
+        _die(
+            f"Calamares does not compile translations {missing}; "
+            "set \"calamares\" in languages.json to one of: " + " ".join(sorted(compiled))
+        )
+
+
+def apply_ts_strings(lang_dir: Path, strings: dict) -> None:
+    """Set each translation in lang/calamares_<code>.ts, adding missing messages."""
+    for code, entries in sorted((strings or {}).items()):
+        if not entries:
+            continue
+        ts = lang_dir / f"calamares_{code}.ts"
+        if not ts.is_file():
+            _die(f"missing {ts} for language {code}")
+        root = ET.parse(ts).getroot()
+        for e in entries:
+            source, comment = e["source"], e.get("comment") or ""
+            contexts = [c for c in root.findall("context") if c.findtext("name") == e["context"]]
+            if not contexts:
+                ctx = ET.SubElement(root, "context")
+                ET.SubElement(ctx, "name").text = e["context"]
+                contexts = [ctx]
+            hits = [
+                m
+                for c in contexts
+                for m in c.findall("message")
+                if m.findtext("source") == source and (m.findtext("comment") or "") == comment
+            ]
+            if not hits:
+                msg = ET.SubElement(contexts[0], "message")
+                ET.SubElement(msg, "source").text = source
+                if comment:
+                    ET.SubElement(msg, "comment").text = comment
+                hits = [msg]
+            for msg in hits:
+                tr = msg.find("translation")
+                if tr is None:
+                    tr = ET.SubElement(msg, "translation")
+                tr.text = e["translation"]
+                tr.attrib.pop("type", None)
+        body = ET.tostring(root, encoding="unicode")
+        ts.write_text('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE TS>\n' + body + "\n", encoding="utf-8")
 
 
 def translations_new(codes: list[str]) -> str:
@@ -988,9 +897,11 @@ availableTranslations()
 
 def patch(path: Path, old: str, new: str, label: str) -> None:
     text = path.read_text(encoding="utf-8")
+    # Several insertions keep the anchor (old) inside new, so a re-run
+    # must look for new first or it inserts a second copy.
+    if new in text:
+        return
     if old not in text:
-        if new in text:
-            return
         print(f"live-calamares: {label} not found in {path}", file=sys.stderr)
         sys.exit(1)
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
@@ -1015,17 +926,6 @@ def install_modernnet(src: Path) -> None:
     if not cmake.is_file():
         print(f"live-calamares: missing {cmake}", file=sys.stderr)
         sys.exit(1)
-
-
-def patch_modernnet_ts(ts: Path) -> None:
-    text = ts.read_text(encoding="utf-8")
-    if "ModernNetViewStep" in text:
-        return
-    if "</TS>" in text:
-        text = text.replace("</TS>", MODERNNET_TS + "</TS>", 1)
-    else:
-        text += MODERNNET_TS
-    ts.write_text(text, encoding="utf-8")
 
 
 def main() -> int:
@@ -1054,8 +954,11 @@ def main() -> int:
     finished_h = src / "modules" / "finished" / "FinishedPage.h"
     users = src / "modules" / "users" / "UsersViewStep.cpp"
     users_cfg = src / "modules" / "users" / "Config.cpp"
-    users_ts = (src.parent if src.name == "src" else src) / "lang" / "calamares_de.ts"
-    patch(trans, TRANS_OLD, translations_new(load_calamares_codes()), "availableTranslations()")
+    top = src.parent if src.name == "src" else src
+    data = installer_data()
+    codes = [str(loc["calamares"]) for loc in data["locales"]]
+    check_compiled_translations(top, codes)
+    patch(trans, TRANS_OLD, translations_new(codes), "availableTranslations()")
     patch(window, SIDE_OLD, SIDE_NEW, "sidebar width qBound")
     patch(window, STYLE_OLD, STYLE_NEW, "qApp stylesheet for combo popups")
     patch(window, COMBO_INC_OLD, COMBO_INC_NEW, "in-window combo list overlay")
@@ -1082,7 +985,7 @@ def main() -> int:
     patch(
         keyboard_cfg,
         "void\nConfig::detectCurrentKeyboardLayout()\n",
-        welcome_cpp_fn("modernWelcomeLayout", "xkb") + "void\nConfig::detectCurrentKeyboardLayout()\n",
+        welcome_cpp_fn("modernWelcomeLayout", "xkb", data) + "void\nConfig::detectCurrentKeyboardLayout()\n",
         "Welcome language keyboard layout",
     )
     patch(keyboard_cfg, KB_DETECT_OLD, KB_DETECT_NEW, "detect Welcome layout instead of setxkbmap")
@@ -1090,7 +993,7 @@ def main() -> int:
     patch(
         locale_cfg,
         "LocaleConfiguration\nConfig::automaticLocaleConfiguration() const\n",
-        welcome_cpp_fn("modernWelcomeLanguage", "glibc")
+        welcome_cpp_fn("modernWelcomeLanguage", "glibc", data)
         + "LocaleConfiguration\nConfig::automaticLocaleConfiguration() const\n",
         "Welcome language glibc locale",
     )
@@ -1102,10 +1005,7 @@ def main() -> int:
     patch(labels, PARTITION_LABELS_OLD, PARTITION_LABELS_NEW, "partition legend palette text")
     patch(users, USERS_NAME_OLD, USERS_NAME_NEW, "Users step prettyName")
     patch(users_cfg, USERS_CFG_OLD, USERS_CFG_NEW, "unattended user presets")
-    patch(users_ts, USERS_TS_OLD, USERS_TS_NEW, "Users step German source")
-    patch(users_ts, SUMMARY_TS_OLD, SUMMARY_TS_NEW, "Summary step German title")
-    patch(users_ts, FINISHED_TS_OLD, FINISHED_TS_NEW, "finished success copy German")
-    patch_modernnet_ts(users_ts)
+    apply_ts_strings(top / "lang", data.get("strings") or {})
     return 0
 
 

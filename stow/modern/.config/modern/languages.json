@@ -1,0 +1,29 @@
+{
+  "languages": [
+    {
+      "id": "en",
+      "country": "US",
+      "countries": {
+        "US": "us",
+        "GB": "gb",
+        "IE": "ie",
+        "AU": "us",
+        "CA": "us",
+        "NZ": "us",
+        "ZA": "us"
+      }
+    },
+    {
+      "id": "de",
+      "country": "DE",
+      "countries": {
+        "DE": "de",
+        "AT": "at",
+        "CH": "ch",
+        "LI": "ch",
+        "BE": "be",
+        "IT": "it"
+      }
+    }
+  ]
+}

@@ -524,8 +524,10 @@
     "off": "Aus",
     "cliNote": "Änderungen laufen über ConfigWrite → modern config set (jq). Nur diese App schreibt config.json.",
     "gated": "Kontenänderungen nutzen den abgeschotteten Helfer modern-usersd (docs/SECURITY.md). Er wird standardmäßig nicht nach /usr installiert.",
-    "langEn": "English",
-    "langDe": "Deutsch",
+    "langs": {
+      "en": "Englisch",
+      "de": "Deutsch"
+    },
     "kbLayouts": {
       "us": "Englisch (US)",
       "gb": "Englisch (UK)",
@@ -2250,5 +2252,69 @@
     "end": "Ende",
     "pageUp": "Bild auf",
     "pageDown": "Bild ab"
+  },
+  "installer": {
+    "steps": {
+      "user": "Benutzer",
+      "summary": "Übersicht"
+    },
+    "finished": {
+      "done": "<h1>Alles erledigt.</h1><br/>%1 ist installiert und einsatzbereit.<br/>Starte neu, um deinen neuen Desktop zu nutzen."
+    },
+    "net": {
+      "title": "Netzwerk",
+      "ethernet": "Ethernet",
+      "nearby": "Netzwerke in der Nähe",
+      "refresh": "Aktualisieren",
+      "password": "Passwort",
+      "connect": "Verbinden",
+      "connected": "Verbunden",
+      "notConnected": "Nicht verbunden",
+      "viaEthernet": "Du bist per Ethernet verbunden",
+      "viaWifi": "Du bist per WLAN verbunden",
+      "canContinue": "Du kannst mit dem nächsten Schritt fortfahren.",
+      "passwordRequired": "Passwort erforderlich",
+      "openNetwork": "Offenes Netzwerk",
+      "connecting": "Verbinden…",
+      "enterPassword": "Gib das Passwort ein, um dich zu verbinden.",
+      "needWifi": "Verbinde dich mit WLAN, um fortzufahren.",
+      "searching": "Suche nach Netzwerken…",
+      "noneFound": "Keine Netzwerke gefunden.",
+      "noneFoundHint": "Keine Netzwerke gefunden. Geh näher an den Router und wähle dann Aktualisieren.",
+      "badPassword": "Verbinden fehlgeschlagen. Passwort prüfen.",
+      "outOfRange": "Das Netzwerk ist außer Reichweite. Geh näher heran oder suche erneut.",
+      "timeout": "Das Netzwerk hat nicht rechtzeitig geantwortet. Versuche es erneut.",
+      "portal": "Dieses Netzwerk braucht eine Anmeldung, die das Installationsprogramm nicht eingeben kann. Wähle ein anderes Netzwerk.",
+      "rejected": "Das Passwort wurde nicht angenommen. Gib es erneut ein.",
+      "another": "Anderes Netzwerk wählen",
+      "noDriver": "Für den WLAN-Chip dieses Computers (%1) hat das Installationsprogramm keinen Treiber. %2",
+      "noAdapter": "Es wurde kein WLAN-Adapter gefunden. %1",
+      "wiredHint": "Schließe ein Netzwerkkabel an oder teile die Verbindung deines Handys per USB.",
+      "saved": "Gespeichert",
+      "forget": "Vergessen",
+      "disconnect": "Trennen"
+    },
+    "slides": {
+      "assistantTitle": "Assistent",
+      "assistant": "Super+A öffnet den KI-Chat. Frag in deiner Sprache. Antworten kommen von einem lokalen Modell oder Gemini.",
+      "colorsTitle": "Farben von deinem Hintergrundbild",
+      "colors": "Wähle ein Hintergrundbild mit Super+W. Leisten, Apps und Anmeldung passen sich dem Bild an.",
+      "keysTitle": "Tastaturhilfe",
+      "keys": "Shortcut vergessen? Super+K listet alle Tastenkürzel. Suchen, dann die Kombination drücken.",
+      "storeTitle": "App Store",
+      "store": "Programme aus den offiziellen Paketquellen installieren. Suchen, bestätigen, fertig.",
+      "launcherTitle": "Launcher",
+      "launcher": "Super+Leertaste findet Apps, führt Befehle aus und rechnet schnell.",
+      "settingsTitle": "Einstellungen",
+      "settings": "Super+I öffnet die Systemeinstellungen. Eine Datei speichert alle Vorgaben.",
+      "languageTitle": "Deine Sprache",
+      "language": "Der Desktop startet in der Sprache, die du hier gewählt hast. Du kannst sie jederzeit in den Einstellungen wechseln.",
+      "shortcutsTitle": "Tägliche Tastenkürzel",
+      "shortcuts": "Super+T Terminal. Super+B Browser. Super+E Dateien. Drucken macht einen Screenshot.",
+      "windowsTitle": "Fenster und Arbeitsflächen",
+      "windows": "Super+Pfeile wechseln den Fokus. Super+Umschalt+Pfeile verschieben das Fenster. Super+Tab zeigt die Übersicht.",
+      "rebootTitle": "Nach dem Neustart",
+      "reboot": "Melde dich mit dem gerade angelegten Konto an. Super+N ist die Steuerzentrale. Super+L sperrt."
+    }
   }
 }

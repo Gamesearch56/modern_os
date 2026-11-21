@@ -89,6 +89,27 @@ change, in the same nested path. Reference it with `I18n.t("path.to.key")`.
 Never leave a key in one file and not the other — `scripts/lint-layers.sh`
 checks for this.
 
+**A new language.** Add `translations/<id>.json` with every key `en.json`
+has (same `%1` / `{name}` placeholders, including `installer.*`), a
+`settings.langs.<id>` name in every translation file, and an entry in
+`stow/modern/.config/modern/languages.json`: `id`, default `country`, and
+`countries` mapping each country code to its keyboard layout. Add
+`"calamares": "pt_BR"` only when Calamares' translation is not the bare
+id. Settings → Language, the installer's Welcome list, the regional locale
+per timezone and the Keyboard default all follow from that entry; no
+installer file changes. Run `python3 scripts/installer-locales.py --check`
+— it names anything glibc, xkb, `zone.tab` or Calamares cannot do. See
+`docs/INSTALL.md` → *Languages, countries and keyboard layouts*.
+
+**A new keyboard layout.** Add the xkb id to `keyboard-layouts.json` and
+`settings.kbLayouts.<id>` to every translation file. To make it a
+country's default, put it in that country's slot in `languages.json`.
+
+**A new installer string.** A `tr()` in `iso/releng/calamares-modernnet`
+or a `qsTr()` in the slideshow needs an `installer.*` key in every
+translation file and a row in `iso/releng/installer-strings.json`;
+`scripts/test-installer-locales.py` fails until both exist.
+
 **A new theme profile (color template).** Drop a JSON file in
 `stow/modern/.config/modern/themes/<name>.json` with `{ variant, mode,
 contrast, sourceMode, fixedSeed }`. Selecting it in Settings → Design (or
