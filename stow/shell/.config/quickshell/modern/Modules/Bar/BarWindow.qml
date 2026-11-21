@@ -34,6 +34,10 @@ PanelWindow {
     property bool _peek: false
     property bool _slidingOut: false
     property real _slide: 0
+    // Off until the saved auto-hide choice is known, so a hidden strip
+    // starts hidden instead of sliding away after the shell starts.
+    property bool _settled: false
+    readonly property bool _loaded: Config.loaded
 
     anchors.top: BarLayout.position !== "bottom"
     anchors.bottom: BarLayout.position !== "top"
@@ -66,7 +70,7 @@ PanelWindow {
             ? Math.max(root.height, root.screen ? root.screen.height : 0)
             : (root._edgeOnly ? root._hot : root._fullH)
     }
-    visible: !root._cover
+    visible: Config.loaded && !root._cover
     // A virtual GPU draws this transparent strip as a black bar. An
     // opaque surface fill keeps the islands visible; a desktop GPU
     // still sees the wallpaper through the gaps.
@@ -74,6 +78,7 @@ PanelWindow {
     focusable: Popups.active !== null
 
     Behavior on _slide {
+        enabled: root._settled
         NumberAnimation {
             duration: Motion.extraLongMs
             easing.bezierCurve: Motion.easingEmphasizedDecelerate
@@ -123,6 +128,14 @@ PanelWindow {
         if (!root._shown)
             root._slide = 1;
         Qt.callLater(root._applyZone);
+        if (root._loaded)
+            root._settle();
+    }
+    on_LoadedChanged: if (root._loaded) Qt.callLater(root._settle)
+    function _settle() {
+        root._slidingOut = false;
+        root._slide = root._shown ? 0 : 1;
+        root._settled = true;
     }
     Component.onDestruction: Popups.unregisterBar(root)
 

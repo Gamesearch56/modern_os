@@ -26,6 +26,10 @@ Singleton {
     // Bumped on every successful load so Services can react when nested
     // JsonObject ints (idleTimings) do not emit their own changed signals.
     property int generation: 0
+    // False until config.json was read once (or could not be). Until then
+    // every value is a QML fallback, so chrome that depends on a saved
+    // choice, like auto-hide, waits for this before it shows.
+    property bool loaded: false
 
     FileView {
         id: file
@@ -36,6 +40,7 @@ Singleton {
         onLoaded: {
             root._configMisses = 0
             root.generation++
+            root.loaded = true
         }
         onLoadFailed: (error) => {
             // FileNotFound (2): atomic replace can fire the watcher between
@@ -46,6 +51,7 @@ Singleton {
                 return;
             }
             Logger.error("Config", "failed to load config.json: " + error);
+            root.loaded = true;
         }
 
         JsonAdapter {
