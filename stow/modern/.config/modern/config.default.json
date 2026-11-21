@@ -94,7 +94,16 @@
     "gap": 8,
     "theme": "floating",
     "hover": "zoom",
-    "apps": []
+    "apps": [
+      "vivaldi-stable",
+      "whatsapp",
+      "spotify-launcher",
+      "steam",
+      "kitty",
+      "shell:files",
+      "shell:store",
+      "shell:settings"
+    ]
   },
   "widgets": {
     "clock": {

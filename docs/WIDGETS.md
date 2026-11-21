@@ -56,7 +56,7 @@ Settings → Bar (`docs/SETTINGS.md`).
 The dock is a centered row of pinned applications on the edge opposite
 the bar: a top bar puts the dock on the bottom, a left bar puts it on
 the right, and the reverse. It stays hidden until `dock.enabled` is on.
-`dock.apps` starts empty.
+`dock.apps` starts as Vivaldi, WhatsApp, Spotify, Steam, Kitty, the file manager, the app store, and Settings.
 
 Three styles, all from tokens: **edge dash** (`beam`, a short primary
 mark on the outer edge of each icon), **plate** (`inventory`, each icon

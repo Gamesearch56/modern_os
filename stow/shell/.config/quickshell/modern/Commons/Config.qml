@@ -137,7 +137,10 @@ Singleton {
                 property int gap: 8
                 property string theme: "floating"
                 property string hover: "zoom"
-                property list<string> apps: []
+                property list<string> apps: [
+                    "vivaldi-stable", "whatsapp", "spotify-launcher", "steam",
+                    "kitty", "shell:files", "shell:store", "shell:settings"
+                ]
             }
 
             // Per-widget settings blobs — shape varies per widget, each

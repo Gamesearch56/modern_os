@@ -46,6 +46,24 @@ else
     err "the full list must include settings, the store, and the file manager"
 fi
 
+PRUNE="$ROOT/stow/shell/.config/quickshell/modern/Services/AppsPrune.qml"
+APPS="$ROOT/stow/shell/.config/quickshell/modern/Services/Apps.qml"
+if grep -Fq 'singleton AppsPrune 1.0 AppsPrune.qml' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Services/qmldir" \
+    && grep -Fq 'Object.keys(have).length === 0' "$PRUNE" \
+    && grep -Fq 'indexOf("shell:") === 0' "$PRUNE" \
+    && grep -Fq 'ConfigWrite.set("dock.apps"' "$PRUNE" \
+    && grep -Fq 'ConfigWrite.set("general.autostart"' "$PRUNE" \
+    && grep -Fq 'apps.defaults.' "$PRUNE" \
+    && grep -Fq 'Launcher.dropMissing' "$PRUNE" \
+    && grep -Fq 'function dropMissing' "$LAUNCHER" \
+    && grep -Fq 'void AppsPrune.rev' "$LAUNCHER" \
+    && grep -Fq 'void AppsPrune.rev' "$APPS"; then
+    ok "a removed desktop file leaves the dock, autostart, defaults, and the launcher"
+else
+    err "removing an app must drop it from the dock, autostart, defaults, and launcher lists"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

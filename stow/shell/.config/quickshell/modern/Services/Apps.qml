@@ -32,6 +32,7 @@ Singleton {
     }
 
     function _list(role: string): var {
+        void AppsPrune.rev;
         const entries = DesktopEntries.applications.values;
         const keep = {};
         if (role.length > 0) {

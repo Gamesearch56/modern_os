@@ -63,6 +63,7 @@ singleton Session 1.0 Session.qml
 SessionAuth 1.0 SessionAuth.qml
 singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
+singleton AppsPrune 1.0 AppsPrune.qml
 singleton Dock 1.0 Dock.qml
 singleton DefaultApps 1.0 DefaultApps.qml
 AppsIcons 1.0 AppsIcons.qml
