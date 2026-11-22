@@ -63,4 +63,9 @@ if [ "$(wc -c <"$log" 2>/dev/null || printf 0)" -gt 2097152 ]; then
     mv -f "$log" "$log.1"
 fi
 printf '\n== login screen %s\n' "$(date -Is)" >>"$log"
+# The panel shows its firmware logo while no CRTC is scanning. Paint one
+# frame and drop master before Hyprland opens the device.
+if [ "${MODERN_SEAT_COVER:-1}" != 0 ] && [ -f /usr/lib/modern/seat-cover.py ]; then
+    python3 /usr/lib/modern/seat-cover.py hold >>"$log" 2>&1 || true
+fi
 exec /usr/bin/env GREETD_SOCK="$sock" /usr/bin/start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua >>"$log" 2>&1

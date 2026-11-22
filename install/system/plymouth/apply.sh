@@ -24,7 +24,7 @@ plymouth_merge_options() {
     read -ra words <<<"$line"
     for word in "${words[@]+"${words[@]}"}"; do
         case "$word" in
-            ""|loglevel=*|systemd.show_status=*|rd.systemd.show_status=*|rd.udev.log_priority=*|udev.log_level=*|vt.global_cursor_default=*|i915.fastboot=*)
+            ""|loglevel=*|systemd.show_status=*|rd.systemd.show_status=*|rd.udev.log_priority=*|udev.log_level=*|vt.global_cursor_default=*|i915.fastboot=*|i915.enable_psr=*)
                 continue ;;
         esac
         keep+=("$word")
@@ -38,10 +38,12 @@ plymouth_merge_options() {
     [ "$has_splash" -eq 1 ] || keep+=(splash)
     # auto prints status on the console whenever Plymouth is not running.
     # That is the terminal text between the splash, the login screen and
-    # the desktop, and on shutdown. A laptop panel paints its firmware
-    # logo into the same gap. 0 keeps the console quiet; the journal
-    # still has the lines. fastboot keeps an Intel panel's current mode.
-    keep+=(loglevel=3 systemd.show_status=0 rd.systemd.show_status=0 rd.udev.log_priority=3 udev.log_level=3 vt.global_cursor_default=0 i915.fastboot=1)
+    # the desktop, and on shutdown. 0 keeps the console quiet; the journal
+    # still has the lines. i915.fastboot was removed in Linux 6.7 (the
+    # driver already keeps the mode, and the parameter is logged as
+    # unknown). Panel self-refresh is what puts the firmware picture back
+    # on an Intel laptop panel while no CRTC is scanning.
+    keep+=(loglevel=3 systemd.show_status=0 rd.systemd.show_status=0 rd.udev.log_priority=3 udev.log_level=3 vt.global_cursor_default=0 i915.enable_psr=0)
     printf '%s\n' "${keep[*]}"
 }
 
