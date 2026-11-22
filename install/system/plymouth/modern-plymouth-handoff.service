@@ -1,0 +1,11 @@
+[Unit]
+Description=Release the boot splash once the login screen has the display
+DefaultDependencies=no
+After=greetd.service
+Conflicts=plymouth-quit.service
+ConditionKernelCommandLine=!plymouth.enable=0
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/modern/plymouth-handoff.sh
+TimeoutStartSec=20

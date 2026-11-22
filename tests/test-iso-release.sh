@@ -19,6 +19,8 @@ has 'rm -f "$AIROOTFS_OUT/usr/lib/modern/deploy_key"' "$ROOT/scripts/iso-build.s
     "iso-build drops a key left over from an earlier private build"
 has 'if [ -n "$PUBLIC" ]; then' "$ROOT/scripts/iso-build.sh" "iso-build --public skips the deploy key"
 has 'iso-release.sh vX.Y.Z' "$ROOT/docs/GIT.md" "docs/GIT.md describes the release ISO"
+has 'sudo -A "$@"' "$ROOT/scripts/iso-release.sh" "a build with no terminal asks through the password window"
+has 'kdialog --title "ModernOS" --password' "$ROOT/scripts/iso-release.sh" "the password window is kdialog when it is installed"
 
 # shellcheck source=../scripts/lib/iso-release.sh
 source "$ROOT/scripts/lib/iso-release.sh"

@@ -362,7 +362,7 @@ need anyone watching it:
 
 ```bash
 git checkout vX.Y.Z
-scripts/iso-release.sh vX.Y.Z    # sudo asks once, for mkarchiso
+scripts/iso-release.sh vX.Y.Z    # sudo asks once; a window asks when there is no terminal
 git checkout dev
 ```
 

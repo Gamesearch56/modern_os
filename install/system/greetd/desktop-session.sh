@@ -12,4 +12,9 @@ if [ "$(wc -c <"$log" 2>/dev/null || printf 0)" -gt 2097152 ]; then
     mv -f "$log" "$log.1"
 fi
 printf '\n== desktop session %s (uid %s, session %s)\n' "$(date -Is)" "$(id -u)" "${XDG_SESSION_ID:-?}" >>"$log"
+if [ -r /usr/lib/modern/display-handoff.sh ]; then
+    # shellcheck disable=SC1091
+    source /usr/lib/modern/display-handoff.sh
+    display_handoff_prepare
+fi
 exec /usr/bin/start-hyprland --no-nixgl >>"$log" 2>&1

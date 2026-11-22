@@ -185,8 +185,9 @@ emit_changes
 cat <<'EOF'
 ### Upgrading
 
-Installed systems: **Settings → Update** offers this release. New
-installations: download the ISO from this page.
+Installed systems: **Settings → Update** offers this release.
+
+New installations: download the ISO from this page.
 
 EOF
 if [ -n "$compare" ]; then
