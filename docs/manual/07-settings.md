@@ -167,7 +167,7 @@ Some widgets have their own options and show a small edit mark. Click the widget
 
 ### Dock (Dock)
 
-The dock is off by default. Turn on **Show dock** (Dock anzeigen) to use it. It sits on the screen edge opposite the bar.
+The dock is on when you first sign in. **Show dock** (Dock anzeigen) turns it off. It sits on the screen edge opposite the bar.
 
 - **Auto-hide** (Automatisch ausblenden): the dock hides until you move to its edge.
 - **Show names** (Namen anzeigen): shows app names under the icons.

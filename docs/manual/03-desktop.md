@@ -191,7 +191,7 @@ On the same Privacy page you can:
 
 ## The dock
 
-The dock is a row of pinned apps. It is **off** when you first sign in. Turn it on with Show dock (Dock anzeigen) in Settings → Dock.
+The dock is a row of pinned apps. It is on when you first sign in. Show dock (Dock anzeigen) in Settings → Dock turns it off.
 
 The dock always sits on the edge opposite the bar, so with the bar at the top it sits at the bottom. Click an icon to open the app. If the app is already open, its window comes to the front.
 
