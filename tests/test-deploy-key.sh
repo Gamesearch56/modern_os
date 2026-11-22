@@ -74,7 +74,7 @@ else
 fi
 # The address is a constant. A key file cannot retarget it.
 case "$GITHUB_SSH_URL" in
-    git@github.com:Gamesearch56/modern_dotfile.git) ok "SSH URL is this repo only" ;;
+    git@github.com:Gamesearch56/modern_os.git) ok "SSH URL is this repo only" ;;
     *) err "SSH URL drifted: $GITHUB_SSH_URL" ;;
 esac
 

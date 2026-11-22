@@ -48,7 +48,7 @@ mkdir -p "$DEST"
 cat > "$DEST/modern.plymouth" <<'EOF'
 [Plymouth Theme]
 Name=modern
-Description=Material Design 3 boot splash for modern_dotfile
+Description=Material Design 3 boot splash for modern_os
 ModuleName=script
 
 [script]

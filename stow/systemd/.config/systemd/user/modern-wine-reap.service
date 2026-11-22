@@ -10,7 +10,7 @@ PartOf=default.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/true
-ExecStop=/bin/sh -c 'r=$(head -n 1 "$$HOME/.config/modern/repo" 2>/dev/null || true); s="$$r/scripts/wine-reap.sh"; if [ ! -x "$$s" ]; then s="$$HOME/modern_dotfile/scripts/wine-reap.sh"; fi; if [ -x "$$s" ]; then exec "$$s"; fi; exit 0'
+ExecStop=/bin/sh -c 'r=$(head -n 1 "$$HOME/.config/modern/repo" 2>/dev/null || true); s="$$r/scripts/wine-reap.sh"; if [ ! -x "$$s" ]; then s="$$HOME/modern_os/scripts/wine-reap.sh"; fi; if [ -x "$$s" ]; then exec "$$s"; fi; exit 0'
 RemainAfterExit=yes
 TimeoutStopSec=5
 

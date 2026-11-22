@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Resolve the clone path. Source, never execute.
-# Order: $MODERN_REPO, ~/.config/modern/repo, $HOME/modern_dotfile.
+# Order: $MODERN_REPO, ~/.config/modern/repo, $HOME/modern_os.
 modern_repo_path() {
     if [ -n "${MODERN_REPO:-}" ]; then
         printf '%s\n' "$MODERN_REPO"
@@ -15,5 +15,5 @@ modern_repo_path() {
             return 0
         fi
     fi
-    printf '%s\n' "${HOME}/modern_dotfile"
+    printf '%s\n' "${HOME}/modern_os"
 }

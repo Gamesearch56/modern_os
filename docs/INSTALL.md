@@ -27,8 +27,8 @@ scripts/check-isolation.sh
 sudo install/system/create-devuser.sh   # default username: devuser
 
 # as that user
-git clone <repo-url> ~/modern_dotfile
-cd ~/modern_dotfile
+git clone <repo-url> ~/modern_os
+cd ~/modern_os
 ./install/install.sh --profile m0 --dry-run
 ./install/install.sh --profile m0
 ```

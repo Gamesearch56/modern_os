@@ -140,8 +140,8 @@ done < <(grep -RIn --include='*.qml' -E 'import ["'\'']\.\./(Bar|Settings|Launch
 
 # --- hardcoded repo scripts path (must go through Commons/Paths.qml) ---
 while IFS= read -r hit; do
-    err "hardcoded modern_dotfile/scripts (use Paths): $hit"
-done < <(grep -RIn --include='*.qml' 'modern_dotfile/scripts' "$SHELL_ROOT" \
+    err "hardcoded modern_os/scripts (use Paths): $hit"
+done < <(grep -RIn --include='*.qml' 'modern_os/scripts' "$SHELL_ROOT" \
     | grep -v '/Commons/Paths.qml' || true)
 
 # --- Config.qml defaults vs config.default.json (var blobs are not deep-merged) ---

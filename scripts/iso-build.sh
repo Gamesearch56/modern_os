@@ -133,7 +133,8 @@ if [ -n "$protect" ]; then
     case "$abs_out" in
         "$protect"|"$protect"/*)
             case "$abs_out" in
-                */modern_dotfile/iso/out|*/modern_dotfile/iso/out/*) ;;
+                # This checkout may still sit in a directory named modern_dotfile.
+                */modern_os/iso/out|*/modern_os/iso/out/*|*/modern_dotfile/iso/out|*/modern_dotfile/iso/out/*) ;;
                 *) die "refusing to write under protected home $protect ($abs_out)" ;;
             esac
             ;;

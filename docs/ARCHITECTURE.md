@@ -73,7 +73,7 @@ Modules/   Bar/ Launcher/ Dock/ PowerMenu/ Notifications/ Wallpaper/
 ## Directory layout
 
 ```
-modern_dotfile/
+modern_os/
 ├── AGENTS.md, README.md, LICENSE
 ├── .cursorrules .cursorignore .gitignore .editorconfig
 ├── docs/

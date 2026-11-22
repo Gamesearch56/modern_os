@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# modern_dotfile installer. Idempotent: safe to re-run. Phased, so a
+# modern_os installer. Idempotent: safe to re-run. Phased, so a
 # failure in phase 3 doesn't repeat phases 1-2's work.
 #
 # Usage:
@@ -121,7 +121,7 @@ _err_trap() {
 }
 trap '_err_trap $LINENO' ERR
 
-log_info "modern_dotfile installer — profile '$PROFILE', gpu='$HW', cpu='$CPU', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN, dotfiles-only=$DOTFILES_ONLY"
+log_info "modern_os installer — profile '$PROFILE', gpu='$HW', cpu='$CPU', extra='$EXTRA', target '$TARGET', dry-run=$DRY_RUN, dotfiles-only=$DOTFILES_ONLY"
 
 case "$PROFILE" in
     m0|gaming|full) ;;
@@ -266,7 +266,7 @@ if [ ! -f "$CONFIG_DIR/config.json" ] && [ -f "$CONFIG_DIR/config.default.json" 
 fi
 
 # Hyprland/Quickshell/scripts exec this clone. ISO Calamares still clones
-# to $HOME/modern_dotfile; a Cursor tree elsewhere needs this pointer.
+# to $HOME/modern_os; a Cursor tree elsewhere needs this pointer.
 if [ "${DRY_RUN:-0}" -eq 1 ]; then
     log_info "would write $CONFIG_DIR/repo -> $REPO_ROOT"
 else

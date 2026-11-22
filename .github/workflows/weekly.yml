@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   manifests:
-    if: github.repository == 'Gamesearch56/modern_dotfile'
+    if: github.repository == 'Gamesearch56/modern_os'
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:

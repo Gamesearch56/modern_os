@@ -21,4 +21,4 @@ The code of ModernOS is free software under the GNU GPL version 3 or later (see 
 
 Pick a new name and a new logo, keep the NOTICE file and the "Based on ModernOS by Gamesearch56" credit, and say clearly that your version is changed. Your fork stays under the GPL, so its source stays open for everyone, just like this one.
 
-Questions or permission requests: open an issue on [GitHub](https://github.com/Gamesearch56/modern_dotfile/issues).
+Questions or permission requests: open an issue on [GitHub](https://github.com/Gamesearch56/modern_os/issues).

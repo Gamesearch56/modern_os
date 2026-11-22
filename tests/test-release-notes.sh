@@ -44,7 +44,7 @@ git_cfg -C "$REPO" commit -q -m "Fix the spaced calamares name"
 printf 'c\n' >>"$REPO/f"
 git_cfg -C "$REPO" add f
 git_cfg -C "$REPO" commit -q -m "Write the ISO onto runner disk instead of tmpfs"
-git_cfg -C "$REPO" remote add origin git@github.com:Gamesearch56/modern_dotfile.git
+git_cfg -C "$REPO" remote add origin git@github.com:Gamesearch56/modern_os.git
 git_cfg -C "$REPO" tag -a v0.1.1 -m "v0.1.1"
 
 out="$("$NOTES" --repo "$REPO" v0.1.1)"

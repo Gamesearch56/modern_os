@@ -26,7 +26,7 @@ _modern_repo="${MODERN_REPO:-}"
 if [ -z "$_modern_repo" ] && [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/modern/repo" ]; then
     IFS= read -r _modern_repo < "${XDG_CONFIG_HOME:-$HOME/.config}/modern/repo" || true
 fi
-_modern_repo="${_modern_repo:-$HOME/modern_dotfile}"
+_modern_repo="${_modern_repo:-$HOME/modern_os}"
 if [ -d "$_modern_repo/scripts" ]; then
     case ":$PATH:" in
         *":$_modern_repo/scripts:"*) ;;
@@ -55,7 +55,7 @@ grep() {
     elif [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/modern/repo" ]; then
         IFS= read -r _repo < "${XDG_CONFIG_HOME:-$HOME/.config}/modern/repo" || true
     fi
-    _snip="${_repo:-$HOME/modern_dotfile}/scripts/lib/grep-snip.awk"
+    _snip="${_repo:-$HOME/modern_os}/scripts/lib/grep-snip.awk"
     _excl=(
         --exclude-dir=.git
         --exclude-dir='*cache*'

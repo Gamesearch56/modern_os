@@ -10,7 +10,7 @@ ok() { printf 'test-update-changelog: ok %s\n' "$*"; }
 
 [ -x "$TOOL" ] || err "update-changelog.sh must be executable"
 
-web="https://github.com/Gamesearch56/modern_dotfile"
+web="https://github.com/Gamesearch56/modern_os"
 got="$("$TOOL" --print desktop ModernOS v0.4.0 v0.5.0)"
 if [ "$got" = "${web}/compare/v0.4.0...v0.5.0" ]; then
     ok "desktop compare uses this repo"

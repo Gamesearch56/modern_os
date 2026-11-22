@@ -11,7 +11,7 @@
   an admin authentication. Never allow_any: this mutates /etc/passwd.
 -->
 <policyconfig>
-  <vendor>modern_dotfile</vendor>
+  <vendor>modern_os</vendor>
   <vendor_url>https://github.com</vendor_url>
   <icon_name>system-users</icon_name>
 

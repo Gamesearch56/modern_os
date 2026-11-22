@@ -16,10 +16,10 @@ strings:
     versionedName:       ModernOS
     shortVersionedName:  ModernOS
     bootloaderEntryName: ModernOS
-    productUrl:          https://github.com/Gamesearch56/modern_dotfile
-    supportUrl:          https://github.com/Gamesearch56/modern_dotfile
-    knownIssuesUrl:      https://github.com/Gamesearch56/modern_dotfile/issues
-    releaseNotesUrl:     https://github.com/Gamesearch56/modern_dotfile
+    productUrl:          https://github.com/Gamesearch56/modern_os
+    supportUrl:          https://github.com/Gamesearch56/modern_os
+    knownIssuesUrl:      https://github.com/Gamesearch56/modern_os/issues
+    releaseNotesUrl:     https://github.com/Gamesearch56/modern_os
     donateUrl:           https://ko-fi.com/gamesearch56
 images:
     productLogo:         "logo.png"

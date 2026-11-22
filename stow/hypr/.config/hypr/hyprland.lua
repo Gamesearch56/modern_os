@@ -1,4 +1,4 @@
--- modern_dotfile — Hyprland entry point.
+-- modern_os — Hyprland entry point.
 --
 -- Every module below reads its behaviour from config.json via
 -- modules/config.lua (see docs/ARCHITECTURE.md's "two data flows"). This
@@ -12,7 +12,7 @@
 -- AGENTS.md's Hyprland Lua rule.
 -- Stow uses a symlink; ConfigWatcher stats that, not the target, so a
 -- repo edit of paths.lua can stay cached from session start (binds then
--- still exec $HOME/modern_dotfile/scripts/…). Drop the cache so reload
+-- still exec $HOME/modern_os/scripts/…). Drop the cache so reload
 -- re-resolves the clone.
 
 do

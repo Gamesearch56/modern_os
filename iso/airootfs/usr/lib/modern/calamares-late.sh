@@ -4,7 +4,7 @@
 # inside the target. Refuses when MODERN_PROTECT_HOME is set and exists.
 set -euo pipefail
 
-ALLOWED_URL="${MODERN_LATE_CLONE_URL:-https://github.com/Gamesearch56/modern_dotfile.git}"
+ALLOWED_URL="${MODERN_LATE_CLONE_URL:-https://github.com/Gamesearch56/modern_os.git}"
 TAG_RE='^v[0-9]+\.[0-9]+\.[0-9]+$'
 LATE_LOG="${MODERN_LATE_LOG:-/var/log/modern-calamares-late.log}"
 BUNDLE="${MODERN_LATE_BUNDLE:-}"
@@ -54,7 +54,7 @@ else
     USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6 || true)"
     [ -n "$USER_HOME" ] || die "no home for $USERNAME"
 fi
-REPO="$USER_HOME/modern_dotfile"
+REPO="$USER_HOME/modern_os"
 
 PIN_FILE="${MODERN_LATE_PIN_FILE:-/usr/lib/modern/iso-pin}"
 PIN="${MODERN_ISO_TAG:-}"

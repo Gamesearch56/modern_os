@@ -555,7 +555,7 @@ git -C "$src" push -q "$origin" v0.9.9
 printf 'v0.9.9\n' >"$WORKDIR/iso-pin"
 rm -rf "${WORKDIR:?}/home"
 if out="$(MODERN_LATE_CLONE_URL="$origin" run_late clone 2>&1)"; then
-    [ -f "$WORKDIR/home/modern_dotfile/README" ] \
+    [ -f "$WORKDIR/home/modern_os/README" ] \
         && printf '%s\n' "$out" | grep -q 'cloned v0.9.9' \
         && ok "clone of local file:// tag lands the tree" \
         || err "clone succeeded but tree missing: $out"
@@ -569,8 +569,8 @@ printf 'from-bundle\n' >"$bundle/README"
 printf 'v0.1.0\n' >"$WORKDIR/iso-pin"
 rm -rf "${WORKDIR:?}/home"
 if out="$(MODERN_LATE_BUNDLE="$bundle" MODERN_LATE_CLONE_URL="$missing" run_late clone 2>&1)"; then
-    [ -f "$WORKDIR/home/modern_dotfile/README" ] \
-        && grep -q from-bundle "$WORKDIR/home/modern_dotfile/README" \
+    [ -f "$WORKDIR/home/modern_os/README" ] \
+        && grep -q from-bundle "$WORKDIR/home/modern_os/README" \
         && printf '%s\n' "$out" | grep -q 'using ISO bundle' \
         && ok "ISO bundle copy does not need git" \
         || err "bundle copy succeeded but tree missing: $out"
@@ -623,8 +623,8 @@ git -C "$stripped" update-index --chmod=+x install/system/provision-iso.sh scrip
 chmod -R a-x+X "$stripped/install" "$stripped/scripts"
 rm -rf "${WORKDIR:?}/home"
 if out="$(MODERN_LATE_BUNDLE="$stripped" MODERN_LATE_CLONE_URL="$missing" run_late clone 2>&1)"; then
-    if [ -x "$WORKDIR/home/modern_dotfile/install/system/provision-iso.sh" ] \
-        && [ -x "$WORKDIR/home/modern_dotfile/scripts/theme-apply.sh" ]; then
+    if [ -x "$WORKDIR/home/modern_os/install/system/provision-iso.sh" ] \
+        && [ -x "$WORKDIR/home/modern_os/scripts/theme-apply.sh" ]; then
         ok "clone phase restores exec bits mkarchiso stripped"
     else
         err "exec bits not restored on the mode-stripped bundle: $out"

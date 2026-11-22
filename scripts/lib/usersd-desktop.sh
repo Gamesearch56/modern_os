@@ -40,8 +40,8 @@ _usersd_invoker_repo() {
                 return 0
             fi
         fi
-        if _usersd_repo_ok "$home/modern_dotfile"; then
-            _usersd_canon "$home/modern_dotfile"
+        if _usersd_repo_ok "$home/modern_os"; then
+            _usersd_canon "$home/modern_os"
             return 0
         fi
     done < <(invoker_names)
@@ -64,7 +64,7 @@ _usersd_session_groups() {
 _usersd_clone_tree() {
     local src="$1" dest="$2"
     case "$dest" in
-        */modern_dotfile) ;;
+        */modern_os) ;;
         *) return 1 ;;
     esac
     local d
@@ -238,7 +238,7 @@ provision_new_user_desktop() {
     home="$(getent passwd -- "$username" | cut -d: -f6)"
     [ -n "$home" ] && [ -d "$home" ] || return 1
     src="$(_usersd_invoker_repo)" || return 1
-    dest="$home/modern_dotfile"
+    dest="$home/modern_os"
     _usersd_clone_tree "$src" "$dest" || return 1
     _usersd_copy_deploy_key "$home" || true
     grp="$(id -gn -- "$username")"

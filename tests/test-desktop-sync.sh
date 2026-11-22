@@ -112,19 +112,19 @@ else
     err "config watch was not paused before checkout: $(cat "$watchlog" 2>/dev/null || true)"
 fi
 
-# A release checkout at ~/modern_dotfile is the installed system. The
+# A release checkout at ~/modern_os is the installed system. The
 # ISO overlay dirties tracked files; apply must drop that and still
 # refuse an untracked file.
 old_home="$HOME"
 old_repo="$MODERN_DESKTOP_REPO"
 inst_home="$TMP/home"
 mkdir -p "$inst_home"
-cp -a "$CLONE" "$inst_home/modern_dotfile"
+cp -a "$CLONE" "$inst_home/modern_os"
 export HOME="$inst_home"
-export MODERN_DESKTOP_REPO="$inst_home/modern_dotfile"
-printf 'overlay\n' >>"$inst_home/modern_dotfile/readme"
+export MODERN_DESKTOP_REPO="$inst_home/modern_os"
+printf 'overlay\n' >>"$inst_home/modern_os/readme"
 if "$SYNC" apply >/dev/null 2>"$TMP/apply-overlay.err"; then
-    if ! grep -q overlay "$inst_home/modern_dotfile/readme"; then
+    if ! grep -q overlay "$inst_home/modern_os/readme"; then
         ok "installed release checkout drops installer edits"
     else
         err "installer edit survived apply"
@@ -132,13 +132,13 @@ if "$SYNC" apply >/dev/null 2>"$TMP/apply-overlay.err"; then
 else
     err "installed release checkout refused installer edits: $(cat "$TMP/apply-overlay.err")"
 fi
-printf 'stray\n' >"$inst_home/modern_dotfile/stray.txt"
+printf 'stray\n' >"$inst_home/modern_os/stray.txt"
 if "$SYNC" apply >/dev/null 2>"$TMP/apply-stray.err"; then
     err "untracked file in the home clone should still refuse apply"
 else
     ok "untracked file in the home clone still refuses apply"
 fi
-rm -f "$inst_home/modern_dotfile/stray.txt"
+rm -f "$inst_home/modern_os/stray.txt"
 export HOME="$old_home"
 export MODERN_DESKTOP_REPO="$old_repo"
 

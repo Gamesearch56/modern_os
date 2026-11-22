@@ -7,7 +7,7 @@
 **A calm, modern desktop for Arch Linux.**
 Material Design 3, colors that follow your wallpaper, and everything set up for you.
 
-[![Latest release](https://img.shields.io/github/v/release/Gamesearch56/modern_dotfile?label=release&color=7c6fd0)](https://github.com/Gamesearch56/modern_dotfile/releases)
+[![Latest release](https://img.shields.io/github/v/release/Gamesearch56/modern_os?label=release&color=7c6fd0)](https://github.com/Gamesearch56/modern_os/releases)
 [![License: GPL v3+](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Arch Linux](https://img.shields.io/badge/based%20on-Arch%20Linux-1793d1?logo=archlinux&logoColor=white)](https://archlinux.org/)
 [![Hyprland](https://img.shields.io/badge/window%20manager-Hyprland-58e1ff)](https://hypr.land/)
@@ -104,7 +104,7 @@ ModernOS is available in English and German.
 ### Install from the USB stick (recommended)
 
 1. **Download** the newest `.iso` file from the
-   [Releases page](https://github.com/Gamesearch56/modern_dotfile/releases).
+   [Releases page](https://github.com/Gamesearch56/modern_os/releases).
 2. **Write it to a USB stick** with [balenaEtcher](https://etcher.balena.io/)
    or [Fedora Media Writer](https://flathub.org/apps/org.fedoraproject.MediaWriter).
    Copying the file onto the stick does not work; it has to be written as an image.
@@ -130,8 +130,8 @@ If you already run Arch Linux, you can install ModernOS onto your user.
 Use a **release tag** (`vX.Y.Z`, see Releases), not the development branch:
 
 ```bash
-git clone --branch vX.Y.Z https://github.com/Gamesearch56/modern_dotfile.git ~/modern_dotfile
-cd ~/modern_dotfile
+git clone --branch vX.Y.Z https://github.com/Gamesearch56/modern_os.git ~/modern_os
+cd ~/modern_os
 ./install/install.sh --profile m0 --dry-run   # shows what it would do
 ./install/install.sh --profile m0
 ```
@@ -221,9 +221,9 @@ code.
 
 - **Found a bug?** Press **SUPER + #** in ModernOS to file a report with
   the relevant logs (personal data is removed first), or open an
-  [issue](https://github.com/Gamesearch56/modern_dotfile/issues/new/choose).
+  [issue](https://github.com/Gamesearch56/modern_os/issues/new/choose).
 - **Have an idea?** Open a
-  [feature request](https://github.com/Gamesearch56/modern_dotfile/issues/new/choose).
+  [feature request](https://github.com/Gamesearch56/modern_os/issues/new/choose).
 - **Want to write code?** Read [CONTRIBUTING.md](CONTRIBUTING.md) and
   [AGENTS.md](AGENTS.md) (the architecture rules), then open a pull
   request against the `dev` branch. Every pull request is reviewed by the

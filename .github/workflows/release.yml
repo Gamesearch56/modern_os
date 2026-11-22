@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   notes:
-    if: github.repository == 'Gamesearch56/modern_dotfile' && !github.event.repository.fork
+    if: github.repository == 'Gamesearch56/modern_os' && !github.event.repository.fork
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

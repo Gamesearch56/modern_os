@@ -81,7 +81,7 @@ repo_ok() {
     local resolved owner fallback pointer
     [ -d "$REPO/.git" ] || return 1
     resolved="$(readlink -f "$REPO")"
-    fallback="$(readlink -f "$HOME/modern_dotfile" 2>/dev/null || true)"
+    fallback="$(readlink -f "$HOME/modern_os" 2>/dev/null || true)"
     pointer="$(readlink -f "$(modern_repo_path)" 2>/dev/null || true)"
     case "$resolved" in
         "$fallback"|"$fallback"/*|"$pointer"|"$pointer"/*) ;;
@@ -168,7 +168,7 @@ cmd_status() {
 discard_installer_edits() {
     local resolved home_repo tag
     resolved="$(readlink -f "$REPO")"
-    home_repo="$(readlink -f "$HOME/modern_dotfile" 2>/dev/null || true)"
+    home_repo="$(readlink -f "$HOME/modern_os" 2>/dev/null || true)"
     tag="$(installed_tag)"
     [ -n "$home_repo" ] && [ "$resolved" = "$home_repo" ] || return 0
     [[ "$tag" =~ $TAG_RE ]] || return 0
