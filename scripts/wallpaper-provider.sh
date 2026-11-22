@@ -4,13 +4,17 @@
 # on QCoreApplication, and the shell starts without one.
 set -euo pipefail
 
+# THEME and LABELS come from the shell (Commons/ExternalTheme.qml) so the
+# window uses the live tokens; without them it reads tokens.json.
 URL="${1:-}"
 DEST="${2:-}"
+THEME="${3:-}"
+LABELS="${4:-}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 if [ -z "$URL" ] || [ -z "$DEST" ]; then
-    echo "Usage: wallpaper-provider.sh URL DEST" >&2
+    echo "Usage: wallpaper-provider.sh URL DEST [THEME_JSON] [LABELS_JSON]" >&2
     exit 2
 fi
 
@@ -178,6 +182,9 @@ start_filter_proxy
 ) &
 watch_pid=$!
 
-"$QML" -f "$SCRIPT_DIR/wallpaper-provider.qml" -- "$URL" "$DEST" "$(theme_json)" "$(i18n_json)" &
+case "$THEME" in "{"*) ;; *) THEME="$(theme_json)" ;; esac
+case "$LABELS" in "{"*) ;; *) LABELS="$(i18n_json)" ;; esac
+
+"$QML" -f "$SCRIPT_DIR/wallpaper-provider.qml" -- "$URL" "$DEST" "$THEME" "$LABELS" &
 qml_pid=$!
 wait "$qml_pid"

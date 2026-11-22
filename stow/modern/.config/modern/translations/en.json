@@ -243,7 +243,9 @@
     "fetchedHint": "Set it as active from the gallery.",
     "fetchFailed": "Could not save that image",
     "providerBrowser": "Opened in the browser",
-    "providerBrowserHint": "Save images into your wallpaper folder, then pick them in the gallery."
+    "providerBrowserHint": "Save images into your wallpaper folder, then pick them in the gallery.",
+    "providerBack": "Back",
+    "providerForward": "Forward"
   },
   "folderPicker": {
     "title": "Choose folder"

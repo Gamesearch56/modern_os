@@ -243,7 +243,9 @@
     "fetchedHint": "Lege es in der Galerie als aktiv fest.",
     "fetchFailed": "Bild konnte nicht gespeichert werden",
     "providerBrowser": "Im Browser geöffnet",
-    "providerBrowserHint": "Speichere Bilder in den Hintergrundordner und wähle sie in der Galerie."
+    "providerBrowserHint": "Speichere Bilder in den Hintergrundordner und wähle sie in der Galerie.",
+    "providerBack": "Zurück",
+    "providerForward": "Vorwärts"
   },
   "folderPicker": {
     "title": "Ordner wählen"

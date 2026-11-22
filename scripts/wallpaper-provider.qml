@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.impl
 import QtQuick.Layouts
 import QtWebEngine
 
@@ -35,6 +36,12 @@ ApplicationWindow {
     readonly property real chromeBtn: Number((win.theme.spacing || {}).xxl || 32)
     readonly property real chromeHair: Number((win.theme.stroke || {}).hairline || 1)
     readonly property real chromeHeight: win.chromePad * 2 + win.chromeBtn + win.chromeHair
+    readonly property real chromeIcon: Number((win.theme.icon || {}).md || 24)
+    readonly property real chromeFocus: Number((win.theme.stroke || {}).focus || 2)
+    readonly property real hoverLayer: Number((win.theme.interaction || {}).hover || 0.08)
+    readonly property real pressLayer: Number((win.theme.interaction || {}).press || 0.12)
+    readonly property int motionShort: Number((win.theme.motion || {}).short || 100)
+    readonly property var typeFace: win.theme.font || ({})
 
     function _url(): string {
         const a = Qt.application.arguments;
@@ -134,74 +141,89 @@ ApplicationWindow {
             spacing: Number((win.theme.spacing || {}).xs || 4)
 
             NavBtn {
-                glyph: "\u2190"
+                iconName: "go-previous-symbolic"
                 label: String(win.i18n.back || "")
-                ink: String(win.theme.color.onSurface || "#ebdfe9")
-                fill: String(win.theme.color.outlineVariant || "#4e4350")
                 enabled: web.canGoBack
                 onClicked: web.goBack()
             }
             NavBtn {
-                glyph: "\u2192"
+                iconName: "go-next-symbolic"
                 label: String(win.i18n.forward || "")
-                ink: String(win.theme.color.onSurface || "#ebdfe9")
-                fill: String(win.theme.color.outlineVariant || "#4e4350")
                 enabled: web.canGoForward
                 onClicked: web.goForward()
             }
             Text {
                 Layout.fillWidth: true
-                Layout.leftMargin: Number((win.theme.spacing || {}).xl || 24)
+                Layout.leftMargin: Number((win.theme.spacing || {}).md || 12)
                 elide: Text.ElideRight
                 text: String(web.url)
                 color: String(win.theme.color.onSurfaceVariant || "#d2c2d2")
-                font.pixelSize: Number((win.theme.spacing || {}).md || 12)
+                font.family: String(win.typeFace.family || "Inter")
+                font.pixelSize: Number(win.typeFace.pixelSize || 14)
+                font.weight: Number(win.typeFace.weight || 400)
+                font.letterSpacing: Number(win.typeFace.letterSpacing || 0)
                 verticalAlignment: Text.AlignVCenter
                 Accessible.ignored: true
             }
             NavBtn {
-                glyph: "\u00D7"
+                iconName: "window-close-symbolic"
                 label: String(win.i18n.close || "")
                 ink: String(win.theme.color.error || "#ffb4ab")
-                fill: String(win.theme.color.error || "#ffb4ab")
-                fillOpacity: 0.16
+                layerColor: String(win.theme.color.error || "#ffb4ab")
                 onClicked: Qt.quit()
             }
         }
     }
 
+    // Same look as the shell's MIconButton: a tinted symbolic icon on a
+    // state layer that only shows on hover and press.
     component NavBtn: AbstractButton {
         id: btn
-        property string glyph: ""
+        property string iconName: ""
         property string label: ""
-        property color ink
-        property color fill
-        property real fillOpacity: 1
+        property color ink: String(win.theme.color.onSurface || "#ebdfe9")
+        property color layerColor: String(win.theme.color.primary || "#74d7ca")
+        readonly property real _layer: !btn.enabled ? 0 : btn.pressed ? win.pressLayer : btn.hovered ? win.hoverLayer : 0
         implicitWidth: win.chromeBtn
         implicitHeight: win.chromeBtn
+        padding: 0
         opacity: btn.enabled ? 1 : 0.38
+        hoverEnabled: true
+        focusPolicy: Qt.TabFocus
         Accessible.name: btn.label
         Accessible.role: Accessible.Button
-        hoverEnabled: true
-        contentItem: Text {
-            text: btn.glyph
-            color: btn.ink
-            font.pixelSize: Number((win.theme.spacing || {}).xl || 24)
-            font.bold: true
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+
+        HoverHandler {
+            enabled: btn.enabled
+            cursorShape: Qt.PointingHandCursor
         }
-        background: Rectangle {
-            radius: Number((win.theme.radius || {}).full || 9999)
-            color: btn.fill
-            opacity: {
-                const hover = Number((win.theme.interaction || {}).hover || 0.08);
-                const press = Number((win.theme.interaction || {}).press || 0.12);
-                if (btn.pressed)
-                    return Math.min(1, btn.fillOpacity + press);
-                if (btn.hovered && btn.enabled)
-                    return Math.min(1, btn.fillOpacity + hover);
-                return btn.fillOpacity;
+
+        contentItem: IconImage {
+            name: btn.iconName
+            color: btn.ink
+            sourceSize.width: win.chromeIcon
+            sourceSize.height: win.chromeIcon
+            fillMode: Image.Pad
+            horizontalAlignment: Image.AlignHCenter
+            verticalAlignment: Image.AlignVCenter
+        }
+        background: Item {
+            Rectangle {
+                anchors.fill: parent
+                radius: Number((win.theme.radius || {}).full || 9999)
+                color: btn.layerColor
+                opacity: btn._layer
+                Behavior on opacity {
+                    NumberAnimation { duration: win.motionShort }
+                }
+            }
+            Rectangle {
+                anchors.fill: parent
+                radius: Number((win.theme.radius || {}).full || 9999)
+                color: "transparent"
+                border.width: win.chromeFocus
+                border.color: btn.layerColor
+                visible: btn.visualFocus
             }
         }
     }

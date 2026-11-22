@@ -194,5 +194,7 @@ log "light effects"
 "$ROOT/tests/test-app-package.sh"
 log "wallpaper color sync"
 "$ROOT/tests/test-wallpaper-color-sync.sh"
+log "wallpaper provider"
+"$ROOT/tests/test-wallpaper-provider.sh"
 
 log "ok"
