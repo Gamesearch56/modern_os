@@ -130,6 +130,7 @@ run_join() {
 if printf '%s\n' 'correct pass\x' | run_join connect 'Cafe Net' -; then
     if grep -F 'connection delete uuid home-uuid' "$LOG" >/dev/null \
         && grep -F 'connection add type wifi con-name Cafe Net ssid Cafe Net wifi-sec.key-mgmt wpa-psk' "$LOG" >/dev/null \
+        && grep -F '802-11-wireless-security.psk-flags 0' "$LOG" >/dev/null \
         && ! grep -F 'correct' "$LOG" >/dev/null \
         && [[ $(cat "$STATE.mode") == 600 ]] \
         && [[ $(cat "$STATE.secret") == '802-11-wireless-security.psk:correct\ pass\\x' ]] \
