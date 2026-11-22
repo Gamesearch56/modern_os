@@ -216,6 +216,7 @@ fi
 if [ "$EXTRA" = "proton" ]; then
     mapfile -t -O "${#aur_pkgs[@]}" aur_pkgs < <(parse_manifest "$MANIFEST_DIR/90-accounts.aur.txt")
 fi
+ensure_jq || true
 if ! default_app_packages >/dev/null; then
     die "default-apps.json could not be read"
 fi

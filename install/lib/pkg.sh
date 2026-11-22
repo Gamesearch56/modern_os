@@ -60,6 +60,23 @@ bootstrap_yay() {
     log_ok "yay installed"
 }
 
+# default-apps.json is read with jq before the base layer that ships jq
+# is installed, and the live ISO root that becomes the target had no jq.
+# Installed directly, not deferred: the manifest is read right after.
+ensure_jq() {
+    command -v jq >/dev/null 2>&1 && return 0
+    if [ "${DRY_RUN:-0}" -eq 1 ]; then
+        log_warn "jq missing — a real run installs it before reading default-apps.json"
+        return 1
+    fi
+    log_info "Installing jq to read the package manifests"
+    if [ -n "${MODERN_PACMAN_NOSANDBOX:-}" ]; then
+        run sudo pacman --disable-sandbox -S --needed --noconfirm jq
+    else
+        run sudo pacman -S --needed --noconfirm jq
+    fi
+}
+
 install_native() {
     local pkgs=("$@") providers=() rest=() p
     [ "${DOTFILES_ONLY:-0}" -eq 1 ] && return 0
