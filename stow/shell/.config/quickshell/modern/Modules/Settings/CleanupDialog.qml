@@ -8,16 +8,9 @@ import "../../Services"
 MDialog {
     id: root
 
+    // A direct child of the Settings FloatingWindow, so the parent is
+    // already its content item.
     anchors.fill: parent
-    // Binding parent to this item while the window is still null makes
-    // the dialog a child of itself.
-    Binding {
-        when: root.Window.window !== null
-        target: root
-        property: "parent"
-        value: root.Window.window ? root.Window.window.contentItem : root.parent
-        restoreMode: Binding.RestoreNone
-    }
     open: StorageClean.open
     wide: true
     titleKey: StorageClean.phase === "done"

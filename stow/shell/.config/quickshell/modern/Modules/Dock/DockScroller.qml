@@ -101,7 +101,7 @@ Item {
             : (Math.abs(dx) >= Math.abs(dy) ? dx : dy);
     }
 
-    function mapPoint(item, x: real, y: real): point {
+    function mapPoint(item: var, x: real, y: real): point {
         return row.mapFromItem(item, x, y);
     }
 

@@ -18,7 +18,7 @@ QtObject {
         };
     }
 
-    function same(a, b): bool {
+    function same(a: var, b: var): bool {
         return a && b && a.categoryId === b.categoryId
             && a.query === b.query && a.detailName === b.detailName;
     }

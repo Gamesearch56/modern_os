@@ -47,7 +47,13 @@ mkdir -p "$TMP/bin"
 printf '%s\n' '#!/bin/sh' 'echo "$*" >>"$STUB/journal"' >"$TMP/bin/logger"
 # shellcheck disable=SC2016
 printf '%s\n' '#!/bin/sh' 'case "$1" in start) exit 0 ;; *) exit 1 ;; esac' >"$TMP/bin/systemctl"
-printf '%s\n' '#!/bin/sh' 'exit 0' >"$TMP/bin/hyprctl"
+# Stubbed so the logout test cannot stop this desktop's own daemons.
+# shellcheck disable=SC2016
+printf '%s\n' '#!/bin/sh' 'echo "hyprctl $*" >>"$STUB/journal"' >"$TMP/bin/hyprctl"
+# shellcheck disable=SC2016
+printf '%s\n' '#!/bin/sh' 'echo "pkill $*" >>"$STUB/journal"' >"$TMP/bin/pkill"
+# shellcheck disable=SC2016
+printf '%s\n' '#!/bin/sh' 'echo "awww $*" >>"$STUB/journal"' >"$TMP/bin/awww"
 chmod +x "$TMP/bin/"*
 rc=0
 STUB="$TMP" PATH="$TMP/bin:$PATH" "$ROOT/scripts/splash-hold.sh" reboot || rc=$?
@@ -62,6 +68,12 @@ if STUB="$TMP" PATH="$TMP/bin:$PATH" "$ROOT/scripts/splash-hold.sh" logout \
     ok "logout is logged"
 else
     err "splash-hold logout: $(cat "$TMP/journal" 2>/dev/null)"
+fi
+if awk '/^pkill .*-x hypridle/ { idle = NR } /^awww kill/ { wall = NR } /^hyprctl dispatch/ { exit_at = NR }
+        END { exit !(idle && wall && exit_at > idle && exit_at > wall) }' "$TMP/journal"; then
+    ok "logout stops hypridle and the wallpaper daemon before Hyprland exits"
+else
+    err "logout must stop session clients before hl.dsp.exit: $(cat "$TMP/journal")"
 fi
 
 [ "$FAIL" -eq 0 ] || exit 1

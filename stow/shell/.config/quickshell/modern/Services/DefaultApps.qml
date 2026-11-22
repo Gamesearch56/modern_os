@@ -78,7 +78,7 @@ Singleton {
     property string _probe: ""
     property var _wait: []
 
-    function openable(entry): int {
+    function openable(entry: var): int {
         if (!entry)
             return 0;
         if (entry.readable === false || entry.canRead === false)

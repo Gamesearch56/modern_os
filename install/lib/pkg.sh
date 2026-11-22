@@ -29,7 +29,7 @@ collect_packages() {
 # would fail. MODERN_ROOT_PLAN names a file the update's single pkexec
 # (scripts/update-apply.sh --root-plan) executes as root afterwards:
 # `pkg NAME` per missing package, `greetd` for the login screen,
-# `splash` for the boot loader.
+# `splash` for the boot loader, `nvidia-stray` for gpu-stray.sh.
 defer_native() {
     local missing=() p
     mapfile -t missing < <(pacman -T "$@" 2>/dev/null || true)

@@ -41,6 +41,14 @@ write_users /var/lib/modern/session/users.json || true
 # hyprland-guiutils is missing even when hyprland-dialog is in /usr/bin.
 export PATH="/usr/bin:/bin:${PATH:-/usr/bin}"
 
+# greetd hands the greeter no LANG, so Qt starts in the C locale and warns
+# that it is not UTF-8.
+if [ -z "${LANG:-}" ]; then
+    lang=""
+    [ -r /etc/locale.conf ] && lang="$(sed -n 's/^LANG=//p' /etc/locale.conf | tr -d '"' | head -n1)"
+    export LANG="${lang:-C.UTF-8}"
+fi
+
 # A coredump while greetd reaps this compositor leaves a black seat.
 ulimit -c 0
 

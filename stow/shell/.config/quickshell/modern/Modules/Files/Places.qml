@@ -227,7 +227,7 @@ Flickable {
         return rows;
     }
 
-    function _current(row): bool {
+    function _current(row: var): bool {
         if (row.kind === "favorites")
             return Files.place === "favorites";
         if (row.kind === "recent")

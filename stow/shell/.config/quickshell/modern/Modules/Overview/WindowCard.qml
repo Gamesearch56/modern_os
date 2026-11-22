@@ -99,14 +99,16 @@ Item {
                     return Math.ceil(sh * Math.max(bw / sw, bh / sh));
                 }
 
+                // The capture context is set up asynchronously and only then
+                // reports a source size; a frame asked for earlier is dropped
+                // with a warning.
                 function _freeze() {
-                    if (!capture.live && capture.captureSource)
+                    if (!capture.live && capture.captureSource && capture.sourceSize.width > 0)
                         capture.captureFrame();
                 }
 
-                Component.onCompleted: capture._freeze()
                 onLiveChanged: capture._freeze()
-                onCaptureSourceChanged: capture._freeze()
+                onSourceSizeChanged: capture._freeze()
             }
 
             MIcon {

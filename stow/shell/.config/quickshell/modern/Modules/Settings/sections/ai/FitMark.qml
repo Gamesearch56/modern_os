@@ -40,7 +40,7 @@ Item {
         vram: root._gb(root.info.vram)
     })
 
-    function _gb(n): string {
+    function _gb(n: var): string {
         const v = Number(n) || 0;
         const label = v >= 10 ? String(Math.round(v)) : String(Math.round(v * 10) / 10);
         return I18n.t("units.gb", { n: label });

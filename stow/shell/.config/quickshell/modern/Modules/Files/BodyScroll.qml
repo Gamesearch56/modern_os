@@ -65,7 +65,7 @@ Item {
         return -1;
     }
 
-    function _placed(index, item): bool {
+    function _placed(index: var, item: var): bool {
         if (!item || item.height < 1)
             return false;
         if (item.y > 1 || index === 0)
@@ -78,7 +78,7 @@ Item {
         return index < cols;
     }
 
-    function _reveal(item): bool {
+    function _reveal(item: var): bool {
         const flick = root.flick;
         const p = item.mapToItem(flick.contentItem, 0, 0);
         const pad = Tokens.spacing.sm;

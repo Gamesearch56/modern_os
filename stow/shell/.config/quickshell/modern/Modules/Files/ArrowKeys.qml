@@ -44,7 +44,7 @@ Item {
             root.view.reveal(next);
     }
 
-    function _locked(row): bool {
+    function _locked(row: var): bool {
         return !!(row && (row.readable === false || row.canRead === false));
     }
 }

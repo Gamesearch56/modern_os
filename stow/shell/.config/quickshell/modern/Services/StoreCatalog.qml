@@ -166,7 +166,7 @@ Item {
         return out;
     }
 
-    function _take(list, n: int): var {
+    function _take(list: var, n: int): var {
         const src = list || [];
         const out = [];
         for (let i = 0; i < src.length && out.length < n; i++) {

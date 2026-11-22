@@ -211,6 +211,10 @@ if missing:
 PY
 fi
 
+if command -v python3 >/dev/null 2>&1; then
+    python3 "$ROOT/scripts/qml-annotations.py" "$ROOT/stow" "$ROOT/scripts" || FAIL=1
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     printf 'lint-layers: FAILED\n' >&2
     exit 1

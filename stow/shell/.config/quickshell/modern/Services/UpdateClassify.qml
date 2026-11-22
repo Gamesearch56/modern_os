@@ -26,7 +26,7 @@ QtObject {
 
     // A desktop release already showed its own progress overlay, so a
     // run that carried one stays quiet here.
-    function doneSummary(ran): string {
+    function doneSummary(ran: var): string {
         const list = ran || [];
         if (list.some(p => String(p && p.kind || "") === "desktop"))
             return "";
@@ -48,7 +48,7 @@ QtObject {
 
     // A desktop release replaces the package count. The version is the
     // pending card's `to` field from desktop-sync.
-    function availableNotice(pending): string {
+    function availableNotice(pending: var): string {
         const list = pending || [];
         for (let i = 0; i < list.length; i++) {
             const p = list[i];
@@ -64,7 +64,7 @@ QtObject {
         return String(id || "").replace(/\.desktop$/i, "").replace(/^org\.kde\./, "").replace(/^org\.gnome\./, "").replace(/-stable$/, "").toLowerCase();
     }
 
-    function isSystem(name: string, shipped): bool {
+    function isSystem(name: string, shipped: var): bool {
         const n = String(name || "");
         if (shipped && shipped[n])
             return true;
@@ -86,7 +86,7 @@ QtObject {
         return "pipewire wireplumber systemd greetd grim slurp matugen matugen-bin cliphist pacman reflector bluez networkmanager polkit stow qt6-base qt6-declarative kitty vivaldi neovim".split(" ").indexOf(n) !== -1;
     }
 
-    function parseCheck(text: string, shipped): var {
+    function parseCheck(text: string, shipped: var): var {
         const all = [];
         const sys = [];
         const other = [];

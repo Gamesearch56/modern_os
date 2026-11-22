@@ -43,7 +43,7 @@ Item {
         }
     }
 
-    function reset(query: string, strict) {
+    function reset(query: string, strict: var) {
         hold.stop();
         proc.running = false;
         root._query = String(query || "").trim();

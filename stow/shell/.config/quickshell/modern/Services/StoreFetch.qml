@@ -56,7 +56,7 @@ Item {
         root._start([Paths.script("pkg-search.sh"), q].concat(curated), "search");
     }
 
-    function loadNames(names, mode: string) {
+    function loadNames(names: var, mode: string) {
         const argv = [Paths.script("pkg-info.sh")];
         const list = names || [];
         for (let i = 0; i < list.length; i++) {
@@ -88,7 +88,7 @@ Item {
         return out;
     }
 
-    function _start(cmd, mode: string) {
+    function _start(cmd: var, mode: string) {
         try {
             proc.running = false;
             root._mode = mode;

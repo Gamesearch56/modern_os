@@ -94,6 +94,8 @@ source "$REPO_ROOT/install/lib/ui.sh"
 source "$REPO_ROOT/install/lib/pkg.sh"
 # shellcheck source=lib/default-apps.sh
 source "$REPO_ROOT/install/lib/default-apps.sh"
+# shellcheck source=lib/gpu-stray.sh
+source "$REPO_ROOT/install/lib/gpu-stray.sh"
 # shellcheck source=lib/stow.sh
 source "$REPO_ROOT/install/lib/stow.sh"
 # shellcheck source=lib/preflight.sh
@@ -224,6 +226,7 @@ mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(default_app_packages)
 
 install_native "${native_pkgs[@]}"
 install_aur "${aur_pkgs[@]}"
+prune_stray_nvidia
 
 if [ "$PROFILE" = "full" ]; then
     flatpak_ids=()

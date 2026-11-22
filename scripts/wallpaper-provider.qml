@@ -80,12 +80,12 @@ ApplicationWindow {
         }
     }
 
-    function _isImage(url): bool {
+    function _isImage(url: var): bool {
         const u = String(url || "").split("?")[0].split("#")[0].toLowerCase();
         return u.endsWith(".jpg") || u.endsWith(".jpeg") || u.endsWith(".png") || u.endsWith(".webp");
     }
 
-    function _leavePage(url): bool {
+    function _leavePage(url: var): bool {
         const u = String(url || "");
         if (win._isImage(u))
             return true;

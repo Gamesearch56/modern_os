@@ -259,7 +259,7 @@ Flickable {
         if (kind.length)
             Files.openMenu(kind, Files.path, "", x, y);
     }
-    function menu(row, x: real, y: real) {
+    function menu(row: var, x: real, y: real) {
         const id = row.modelData.path || row.modelData.uri;
         const many = !row._locked && FilesSelect.retain(id);
         const name = Files.place === "network" ? String(row.modelData.uri || "") : row.modelData.name;

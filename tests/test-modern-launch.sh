@@ -364,7 +364,7 @@ else
     err "anonymous browser notification windows must close into a system notification"
 fi
 
-activate="$(awk '/function activate\(item\)/,/^    }$/' \
+activate="$(awk '/function activate\(item: var\)/,/^    }$/' \
     "$ROOT/stow/shell/.config/quickshell/modern/Services/Notifications.qml")"
 invoke_at="$(grep -n 'invokeDefault(live)' <<<"$activate" | head -n1 | cut -d: -f1)"
 raise_at="$(grep -n 'Hypr.raiseApp' <<<"$activate" | head -n1 | cut -d: -f1)"

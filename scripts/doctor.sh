@@ -78,8 +78,11 @@ else
 fi
 
 section "firewall"
+# `ufw status` needs root and fails for this account even when the firewall
+# is up; the unit and ufw.conf are readable.
 if command -v ufw >/dev/null 2>&1; then
-    if ufw status 2>/dev/null | grep -qi 'Status: active'; then
+    if systemctl is-active --quiet ufw.service 2>/dev/null \
+        && grep -qx 'ENABLED=yes' /etc/ufw/ufw.conf 2>/dev/null; then
         ok "ufw active"
     else
         warn "ufw present but not active"
@@ -120,7 +123,11 @@ if [ -f "$PHYLAX_CSS" ]; then
 else
     warn "phylax/style.css missing — run scripts/theme-apply.sh so the password prompt matches overlay chrome"
 fi
-if [ -f /etc/polkit-1/rules.d/50-modern-greeter.rules ]; then
+# rules.d is root:polkitd 0750, so from this account a present file looks
+# missing.
+if [ ! -x /etc/polkit-1/rules.d ] || [ ! -r /etc/polkit-1/rules.d ]; then
+    printf '  --    greeter polkit rules not checked (/etc/polkit-1/rules.d is readable by root only)\n'
+elif [ -f /etc/polkit-1/rules.d/50-modern-greeter.rules ]; then
     ok "greeter polkit rules present (login restart/shutdown)"
 else
     warn "missing /etc/polkit-1/rules.d/50-modern-greeter.rules — login power actions need greetd_apply / install.sh"

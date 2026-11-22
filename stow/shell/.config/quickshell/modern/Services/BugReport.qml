@@ -104,7 +104,7 @@ Singleton {
         root.categories = list;
     }
 
-    function _toggle(list, name: string): var {
+    function _toggle(list: var, name: string): var {
         return list.map(f => f.name === name ? Object.assign({}, f, { include: !f.include }) : f);
     }
     function toggleShot(name: string) { root.shots = root._toggle(root.shots, name); }
@@ -146,7 +146,7 @@ Singleton {
         root.hide();
     }
 
-    function _picked(list): var {
+    function _picked(list: var): var {
         return list.filter(f => f.include).map(f => f.name);
     }
 

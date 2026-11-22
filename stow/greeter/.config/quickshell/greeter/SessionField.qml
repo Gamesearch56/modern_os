@@ -23,9 +23,10 @@ Item {
     implicitWidth: root._c ? root._c.formWidth : 384
     opacity: root.enabled ? 1 : 0.38
     activeFocusOnTab: root.enabled && root.tabFocus
-    Accessible.role: root.echoMode === TextInput.Password
-        ? Accessible.PasswordEdit
-        : Accessible.EditableText
+    // QAccessible has no password role; a password field is editable text
+    // with the passwordEdit state.
+    Accessible.role: Accessible.EditableText
+    Accessible.passwordEdit: root.echoMode === TextInput.Password
     Accessible.name: root.placeholder
     Accessible.editable: true
     Accessible.onPressAction: {

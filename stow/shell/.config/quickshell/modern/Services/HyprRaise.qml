@@ -124,7 +124,7 @@ Item {
         return false;
     }
 
-    function raiseApp(desktopId: string, appName: string, onMiss): bool {
+    function raiseApp(desktopId: string, appName: string, onMiss: var): bool {
         const hints = [desktopId, appName];
         const lookup = String(desktopId || appName || "").replace(/\.desktop$/i, "");
         if (lookup.length) {

@@ -30,7 +30,7 @@ Singleton {
         return "";
     }
 
-    function glyph(entry): string {
+    function glyph(entry: var): string {
         if (!entry || entry.dir)
             return "folder";
         const ext = root._ext(entry);
@@ -46,7 +46,7 @@ Singleton {
         return "text-x-generic";
     }
 
-    function _named(ext): string {
+    function _named(ext: var): string {
         const rows = [
             ["|exe|msi|bat|cmd|com|appimage|", "application-x-executable"],
             ["|dll|so|dylib|", "application-x-sharedlib"],
@@ -65,7 +65,7 @@ Singleton {
         return "";
     }
 
-    function video(entry): bool {
+    function video(entry: var): bool {
         return !!(entry && !entry.dir && root._has(root._videos, root._ext(entry)));
     }
 
@@ -83,7 +83,7 @@ Singleton {
         proc.running = false;
     }
 
-    function _ext(entry): string {
+    function _ext(entry: var): string {
         const raw = String(entry && (entry.path || entry.name) || "");
         const base = raw.slice(raw.lastIndexOf("/") + 1);
         const dot = base.lastIndexOf(".");
@@ -92,11 +92,11 @@ Singleton {
         return base.slice(dot + 1).toLowerCase();
     }
 
-    function _has(set, ext): bool {
+    function _has(set: var, ext: var): bool {
         return ext.length > 0 && set.indexOf("|" + ext + "|") >= 0;
     }
 
-    function _thumbable(ext): bool {
+    function _thumbable(ext: var): bool {
         return root._has(root._images, ext) || root._has(root._videos, ext) || root._has(root._files, ext);
     }
 

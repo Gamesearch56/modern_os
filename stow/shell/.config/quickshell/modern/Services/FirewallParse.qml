@@ -4,7 +4,7 @@ import QtQuick
 QtObject {
     id: root
 
-    function portOk(s): bool {
+    function portOk(s: var): bool {
         const m = String(s || "").trim().match(/^(\d{1,5})(?::(\d{1,5}))?$/);
         if (!m)
             return false;
@@ -17,14 +17,14 @@ QtObject {
         return (b - a + 1) <= 512;
     }
 
-    function commentOk(s): bool {
+    function commentOk(s: var): bool {
         const t = String(s || "").trim();
         if (t.length === 0)
             return true;
         return t.length <= 40 && t.charAt(0) !== "-" && /^[A-Za-z0-9._: -]+$/.test(t);
     }
 
-    function fromOk(s): bool {
+    function fromOk(s: var): bool {
         const t = String(s || "").trim();
         if (t.length === 0)
             return true;
@@ -94,7 +94,7 @@ QtObject {
         };
     }
 
-    function _v4(s): bool {
+    function _v4(s: var): bool {
         const m = String(s).match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?:\/(\d{1,2}))?$/);
         if (!m)
             return false;
@@ -106,7 +106,7 @@ QtObject {
         return m[5] === undefined || Number(m[5]) <= 32;
     }
 
-    function _v6(s): bool {
+    function _v6(s: var): bool {
         const m = String(s).match(/^([0-9a-fA-F:]+)(?:\/(\d{1,3}))?$/);
         if (!m || String(m[1]).indexOf(":::") !== -1)
             return false;

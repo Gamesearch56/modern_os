@@ -33,18 +33,18 @@ Singleton {
         myGroupsProc.running = true;
     }
 
-    function nameOk(s): bool { return rules.nameOk(s); }
-    function gecosOk(s): bool { return rules.gecosOk(s); }
-    function passwordOk(s): bool { return rules.passwordOk(s); }
-    function isAdmin(person): bool { return rules.isAdmin(person); }
-    function groupProtected(grp): bool { return rules.groupProtected(grp); }
-    function canRenameGroup(grp): bool { return root.canManage && rules.canRenameGroup(grp, root.users); }
-    function canDeleteGroup(grp): bool { return root.canManage && rules.canDeleteGroup(grp, root.users); }
+    function nameOk(s: var): bool { return rules.nameOk(s); }
+    function gecosOk(s: var): bool { return rules.gecosOk(s); }
+    function passwordOk(s: var): bool { return rules.passwordOk(s); }
+    function isAdmin(person: var): bool { return rules.isAdmin(person); }
+    function groupProtected(grp: var): bool { return rules.groupProtected(grp); }
+    function canRenameGroup(grp: var): bool { return root.canManage && rules.canRenameGroup(grp, root.users); }
+    function canDeleteGroup(grp: var): bool { return root.canManage && rules.canDeleteGroup(grp, root.users); }
     function userByLogin(login: string): var {
         return rules.findUser(root.users, login);
     }
 
-    function canDemote(person): bool {
+    function canDemote(person: var): bool {
         return rules.canDemote(person, root.users, root.loginName);
     }
     function assignableGroups(login: string): var {
@@ -165,7 +165,7 @@ Singleton {
         root._start({ action: "delete", username: u, removeHome: !!removeHome });
     }
 
-    function createGroup(name: string, members) {
+    function createGroup(name: string, members: var) {
         if (!root._requireManage())
             return;
         const g = String(name || "").trim();
