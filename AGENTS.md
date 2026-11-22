@@ -150,7 +150,13 @@ scripts/check-isolation.sh    # confirm gated /etc is untouched
 ```
 
 Run `scripts/ci-check.sh` before every commit and push. Git hooks in
-`.githooks/` call it (copy to `.git/hooks/` if this clone does not).
+`.githooks/` call it (copy to `.git/hooks/` if this clone does not):
+`pre-commit` runs `ci-check.sh lint`, `pre-push` the whole suite.
+
+Work on one topic branch per issue (`scripts/issue-branch.sh <n>`), PR
+titles are Conventional Commits (`scripts/check-pr-title.sh`), and
+release notes come from them (`scripts/release-notes.sh`). The full
+flow: `docs/GIT.md`.
 
 `iso-build.sh --mkarchiso` may write `iso/out/` on this PC. Do not run
 `provision-iso.sh` or Calamares on a machine you live on. Existing-account

@@ -181,8 +181,19 @@ cmd_quick() {
     esac
 }
 
+# The Device section of a report, for pasting into an issue by hand.
+cmd_device() {
+    local tmp
+    tmp="$(mktemp -d)"
+    OUT="$tmp" _collect_device
+    python3 "$SCRIPT_DIR/lib/report-redact.py" "$tmp" >/dev/null
+    sed 's/^\([^:]*\): /- **\1:** /' "$tmp/device.txt"
+    rm -rf "$tmp"
+}
+
 case "${1:-}" in
     new) cmd_new ;;
+    device) cmd_device ;;
     capture) [ -n "${2:-}" ] || die "usage: capture <id>"; cmd_capture "$2" ;;
     collect) [ -n "${2:-}" ] || die "usage: collect <id> [now|today|earlier]"; cmd_collect "$2" "${3:-now}" ;;
     send) [ -n "${2:-}" ] || die "usage: send <id> [request-json]"; cmd_send "$2" "${3:-}" ;;
@@ -191,5 +202,5 @@ case "${1:-}" in
     prune) cmd_prune ;;
     status) cmd_status ;;
     quick) cmd_quick "${2:-}" ;;
-    *) die "usage: bug-report.sh new|capture|collect|send|export|outbox|prune|status|quick" ;;
+    *) die "usage: bug-report.sh new|capture|collect|send|export|outbox|prune|status|quick|device" ;;
 esac

@@ -191,6 +191,7 @@ bug_report_collect() {
     mkdir -p "$OUT"
     rm -f "$OUT"/*
     _collect_system "$repo"
+    _collect_device
     _collect_hyprland
     _collect_logs "$since"
     _collect_update "$repo"

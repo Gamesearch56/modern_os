@@ -74,4 +74,51 @@ else
     ok "no ISO footer"
 fi
 
+commit() {
+    printf '%s\n' "$1" >>"$REPO/f"
+    git_cfg -C "$REPO" add f
+    git_cfg -C "$REPO" commit -q -m "$1" ${2:+-m "$2"}
+}
+commit "feat(audio): headset profile switch in the panel (#12)"
+commit "fix: lock screen keeps the keyboard layout (#14)"
+commit "remove: the old wallpaper picker (#15)"
+commit "feat(config)!: settings live in config.json only (#16)"
+commit "refactor(bar): one model for all widgets" "BREAKING CHANGE: bar.left ids changed"
+commit "feat(launcher): calculator provider (#17)" "Removed: the old calc prefix
+  Fixed: indented example lines are not entries"
+commit "docs: explain the release flow"
+commit "ci: split lint from tests"
+out="$("$NOTES" --repo "$REPO" --pr v0.2.0)"
+expect '^- \*\*audio:\*\* Headset profile switch in the panel (#12)$' "feat with scope is Added, scope bold" "feat(audio) not rendered"
+expect '^### Removed$' "remove: has a Removed section" "missing Removed"
+expect '^- The old wallpaper picker (#15)$' "type prefix is stripped" "remove subject kept its prefix"
+expect '^### Breaking changes$' "breaking changes section" "missing Breaking changes"
+expect 'Settings live in config.json only' "type! is breaking" "feat! not listed"
+expect 'One model for all widgets' "BREAKING CHANGE footer is breaking" "footer breaking not listed"
+expect '^- The old calc prefix$' "Changelog lines in the body add entries" "body entry missing"
+if printf '%s\n' "$out" | grep -q 'indented example'; then
+    err "an indented example line became an entry"
+else
+    ok "only column-0 Changelog lines count"
+fi
+expect '<summary>Maintenance' "ci/build/test collapse into Maintenance" "missing Maintenance details"
+expect '## Release checklist' "--pr adds the release checklist" "missing checklist"
+if [ "$(printf '%s\n' "$out" | grep -c 'Settings live in config.json only')" = 1 ]; then
+    ok "a breaking change is listed once"
+else
+    err "breaking change listed twice"
+fi
+if printf '%s\n' "$out" | awk '/^### Breaking/{b=NR} /^### Added/{a=NR} END{exit !(b && a && b < a)}'; then
+    ok "breaking changes come first"
+else
+    err "Breaking changes are not first"
+fi
+
+git_cfg -C "$REPO" tag -a v0.2.0 -m "ModernOS v0.2.0" -m "Headsets switch profiles from the panel."
+out="$("$NOTES" --repo "$REPO" v0.2.0)"
+expect '^### Highlights$' "tag message body becomes Highlights" "missing Highlights"
+expect 'Headsets switch profiles from the panel.' "highlight text" "highlight text missing"
+expect '^### Upgrading$' "upgrade note" "missing Upgrading"
+expect 'compare/v0.1.1...v0.2.0' "compare link from the previous tag" "wrong compare range"
+
 [ "$FAIL" -eq 0 ]

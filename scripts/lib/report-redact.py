@@ -17,7 +17,7 @@ import sys
 
 SENSITIVE_KEY = re.compile(
     r"(url|uri|account|email|mail|password|passwd|token|secret|apikey|api_key|"
-    r"username|^user$|ssid|latitude|longitude|^lat$|^lon$|location|city|address)",
+    r"username|^user$|ssid|latitude|longitude|^lat$|^lon$|location|city|address|serial|uuid)",
     re.I,
 )
 
@@ -27,6 +27,9 @@ TEXT_RULES = [
     (re.compile(r"(?i)\b(password|passwd|pass|psk|secret|token|api[_-]?key|auth)(\s*[=:]\s*)(\"?)[^\s\",;]+"), r"\1\2\3<redacted>"),
     (re.compile(r"(https?://[^\s?\"'<>]+)\?[^\s\"'<>]+"), r"\1?<redacted>"),
     (re.compile(r"private-[0-9a-f]{8,}"), "private-<redacted>"),
+    # Monitor and disk serials identify one physical device.
+    (re.compile(r'(?i)("serial"\s*:\s*")[^"]*(")'), r"\1<redacted>\2"),
+    (re.compile(r"(?im)^(\s*(?:serial(?: number)?|ID_SERIAL(?:_SHORT)?)\s*[:=]\s*).+$"), r"\1<redacted>"),
     (re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"), "<email>"),
     (re.compile(r"\b(?:[0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})\b"), r"xx:xx:xx:xx:xx:\1"),
     (re.compile(r"\bdev_(?:[0-9A-Fa-f]{2}_){5}([0-9A-Fa-f]{2})\b"), r"dev_xx_xx_xx_xx_xx_\1"),

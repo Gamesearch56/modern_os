@@ -8,6 +8,82 @@ BUG_REPORT_PACKAGES=(linux linux-zen linux-lts hyprland quickshell aquamarine me
     vulkan-radeon vulkan-intel nvidia nvidia-open nvidia-open-dkms nvidia-utils
     pipewire wireplumber bluez networkmanager)
 
+_dmi() {
+    local v
+    v="$(tr -d '\n' <"/sys/class/dmi/id/$1" 2>/dev/null || true)"
+    case "$v" in
+        ""|"To Be Filled By O.E.M."|"Default string"|"System Product Name"|"Not Applicable") ;;
+        *) printf '%s' "$v" ;;
+    esac
+}
+
+_chassis() {
+    case "$(_dmi chassis_type)" in
+        8|9|10|14|31|32) printf 'laptop' ;;
+        30) printf 'tablet' ;;
+        3|4|5|6|7|15|16|35|36) printf 'desktop' ;;
+        13) printf 'all-in-one' ;;
+        *) printf 'unknown' ;;
+    esac
+}
+
+_boot_mode() {
+    local sb
+    [ -d /sys/firmware/efi ] || { printf 'BIOS (legacy)'; return; }
+    sb="$(od -An -tu1 -j4 -N1 /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c 2>/dev/null | tr -d ' ')"
+    case "$sb" in
+        1) printf 'UEFI, Secure Boot on' ;;
+        0) printf 'UEFI, Secure Boot off' ;;
+        *) printf 'UEFI' ;;
+    esac
+}
+
+# Graphics cards with the kernel driver bound to each.
+_gpus() {
+    local dev class name driver
+    for dev in /sys/bus/pci/devices/*; do
+        class="$(cat "$dev/class" 2>/dev/null || true)"
+        case "$class" in 0x03*) ;; *) continue ;; esac
+        name="$(lspci -s "${dev##*/}" 2>/dev/null | cut -d' ' -f2- | sed 's/^[^:]*: //')"
+        driver="$(basename "$(readlink "$dev/driver" 2>/dev/null)" 2>/dev/null || true)"
+        printf 'gpu: %s (driver %s)\n' "${name:-${dev##*/}}" "${driver:-none}"
+    done
+}
+
+# The facts a maintainer reads first, one "key: value" per line. Model
+# names only: DMI serials and UUIDs, and monitor serials, stay out.
+_collect_device() {
+    local f="$OUT/device.txt" os=""
+    [ -r /etc/os-release ] && os="$(. /etc/os-release && printf '%s' "${PRETTY_NAME:-}")"
+    {
+        printf 'os: %s (%s)\n' "${os:-unknown}" "$(uname -m)"
+        printf 'machine: %s\n' "$(printf '%s %s %s' "$(_dmi sys_vendor)" "$(_dmi product_name)" "$(_dmi product_version)" | xargs)"
+        printf 'form: %s\n' "$(_chassis)"
+        printf 'firmware: %s\n' "$(printf '%s %s %s' "$(_dmi bios_vendor)" "$(_dmi bios_version)" "$(_dmi bios_date)" | xargs)"
+        printf 'boot: %s\n' "$(_boot_mode)"
+        printf 'virtualization: %s\n' "$(systemd-detect-virt 2>/dev/null || true)"
+        printf 'cpu: %s (%s threads)\n' \
+            "$(awk -F': ' '/^model name/ { print $2; exit }' /proc/cpuinfo 2>/dev/null)" "$(nproc 2>/dev/null)"
+        printf 'memory: %s\n' "$(awk '/^MemTotal:/ { printf "%.1f GiB", $2 / 1048576 }' /proc/meminfo 2>/dev/null)"
+        command -v lspci >/dev/null 2>&1 && _gpus
+        command -v glxinfo >/dev/null 2>&1 \
+            && printf 'renderer: %s\n' "$(timeout "$BUG_REPORT_TIMEOUT" glxinfo -B 2>/dev/null | awk -F': ' '/OpenGL renderer string/ { print $2; exit }')"
+        printf 'graphics-packages: %s\n' "$(pacman -Q mesa nvidia-utils 2>/dev/null | tr '\n' ' ' | xargs)"
+        if command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+            timeout "$BUG_REPORT_TIMEOUT" hyprctl monitors -j 2>/dev/null | jq -r '.[] |
+                "display: \(.make) \(.model) \(.width)x\(.height)@\(.refreshRate | floor)Hz scale \(.scale)\(if .vrr then " VRR" else "" end)"' 2>/dev/null || true
+        fi
+        printf 'root-filesystem: %s\n' "$(findmnt -no FSTYPE / 2>/dev/null)"
+        printf 'audio-server: %s\n' "$(pactl info 2>/dev/null | awk -F': ' '/^Server Name/ { print $2; exit }')"
+        if [ -e /var/log/modern-calamares-late.log ]; then
+            printf 'installed-with: ISO installer\n'
+        else
+            printf 'installed-with: install.sh\n'
+        fi
+    } >"$f" 2>/dev/null
+    return 0
+}
+
 _collect_hardware() {
     _grab hardware.txt lspci -k
     _grab hardware.txt lsusb

@@ -188,6 +188,31 @@ def _tail(text):
     return "\n".join(out[-80:]).replace("```", "'''")[:6000]
 
 
+DEVICE_ROWS = (
+    ("machine", "Machine"), ("form", "Form factor"), ("cpu", "CPU"), ("memory", "Memory"),
+    ("gpu", "GPU"), ("renderer", "Renderer"), ("graphics-packages", "Graphics packages"),
+    ("display", "Display"), ("firmware", "Firmware"), ("boot", "Boot"),
+    ("virtualization", "Virtualization"), ("os", "OS"), ("root-filesystem", "Root filesystem"),
+    ("audio-server", "Audio server"), ("installed-with", "Installed with"),
+)
+
+
+def device_lines(root, req):
+    """device.txt as a bullet list; GPUs and displays may repeat."""
+    if "device.txt" not in (req.get("files") or []):
+        return []
+    seen = {}
+    for line in _read(os.path.join(root, "files", "device.txt")).splitlines():
+        key, sep, val = line.partition(": ")
+        if sep and val.strip():
+            seen.setdefault(key.strip(), []).append(val.strip())
+    out = []
+    for key, label in DEVICE_ROWS:
+        for val in seen.get(key, []):
+            out.append("- **%s:** `%s`" % (label, val.replace("`", "'")))
+    return ["## Device", ""] + out + [""] if out else []
+
+
 def _excerpt(root, req, name, title):
     if name not in (req.get("files") or []):
         return ""
@@ -209,6 +234,7 @@ def issue_body(root, req, version, bundle_url, shot_urls):
         ("Quickshell", _product(_read(os.path.join(files, "quickshell.txt")), "quickshell ")
          or _product(_read(os.path.join(files, "quickshell.txt")), "Quickshell ")),
         ("Session", facts.get("session", "")),
+        ("Language", facts.get("lang", "")),
         ("When", WHEN.get(req.get("when") or "", req.get("when") or "Just now")),
         ("Happens", REPEAT.get(req.get("repeat") or "", "")),
         ("Areas", ", ".join(req.get("categories") or []) or "other"),
@@ -216,6 +242,7 @@ def issue_body(root, req, version, bundle_url, shot_urls):
     lines = ["## Steps", "", steps, "", "## Environment", ""]
     lines.extend("- **%s:** `%s`" % (key, val.replace("`", "'")) for key, val in rows if val)
     lines.append("")
+    lines += device_lines(root, req)
     if shot_urls:
         lines += ["## Screenshots", ""]
         for name, url in shot_urls:
@@ -278,7 +305,8 @@ def send(root, repo, tok):
                 url = upload(tok, repo, "%s/%s" % (base, os.path.basename(name)), fh.read(), "Report %s screenshot" % rid)
             shots.append((os.path.splitext(os.path.basename(name))[0], url))
     title = (req.get("title") or "").strip() or "Problem report"
-    labels = sorted({LABELS.get(c, "area:other") for c in req.get("categories") or ["other"]})
+    labels = sorted({LABELS.get(c, "area:other") for c in req.get("categories") or ["other"]}
+                    | {"bug", "needs-triage"})
     ensure_labels(tok, repo, labels)
     body = {
         "title": "[%s] %s" % (version or "?", title[:200]),

@@ -1,17 +1,27 @@
+# Every PR into dev or main, and every push to them. Stages, cheapest
+# first, so a lint error does not wait for the Arch container:
+#   lint -> unit
+#        -> install-dry (profile x GPU matrix)
+#   ci-ok: the one required status check (docs/GIT.md "Rulesets").
+# The ISO build and the QEMU install test stay local (docs/GIT.md "Release").
 name: CI
 
 on:
   pull_request:
     branches: [main, dev]
   push:
-    tags: ["v*"]
     branches: [dev, main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  checks:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -33,12 +43,32 @@ jobs:
           sudo tar -xJf /tmp/shellcheck.tar.xz --strip-components=1 -C /usr/local/bin \
             "shellcheck-$SHELLCHECK_VERSION/shellcheck"
           shellcheck --version
-      - name: Layer lint, shellcheck, and tests
-        run: scripts/ci-check.sh
+      - name: Layer lint, translations, shellcheck
+        run: scripts/ci-check.sh lint
+
+  unit:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq python3 git lua5.4
+      - name: Unit tests
+        run: scripts/ci-check.sh test
 
   install-dry:
+    needs: lint
     runs-on: ubuntu-latest
     container: archlinux:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { profile: m0, gpu: amd }
+          - { profile: m0, gpu: intel }
+          - { profile: gaming, gpu: nvidia }
+          - { profile: full, gpu: amd }
+    name: install-dry (${{ matrix.profile }}, ${{ matrix.gpu }})
     steps:
       - uses: actions/checkout@v7
       - name: Pacman + builder user
@@ -47,7 +77,23 @@ jobs:
           useradd -m builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
       - name: install.sh dry-run
+        env:
+          PROFILE: ${{ matrix.profile }}
+          GPU: ${{ matrix.gpu }}
         run: |
-          sudo -u builder ./install/install.sh --dry-run --profile m0 \
-            --target /tmp/modern-dry
+          sudo -u builder ./install/install.sh --dry-run --profile "$PROFILE" \
+            --gpu "$GPU" --target /tmp/modern-dry
         # check-isolation.sh is local only — do not run it here.
+
+  ci-ok:
+    name: CI passed
+    if: always()
+    needs: [lint, unit, install-dry]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All stages succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "stages: $RESULTS"
+          for r in $RESULTS; do [ "$r" = success ] || exit 1; done
