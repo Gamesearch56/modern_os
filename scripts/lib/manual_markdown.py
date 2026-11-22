@@ -5,17 +5,23 @@ instead. Colors, sizes and fonts are left as {{name}} placeholders that
 the app fills from the theme tokens; nothing here knows the palette.
 
 Covers what the docs use: ATX headings, paragraphs, nested lists, fenced
-code, tables, block quotes, rules, links, inline code, bold and italic.
+code, tables, block quotes, rules, links, inline code, bold and italic,
+plus the README's HTML, images and badges (lib/manual_html.py).
 """
 
 import html
 import re
+
+from manual_html import Html
 
 FENCE = re.compile(r"^\s*(```|~~~)")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 RULE = re.compile(r"^\s*([-*_])(\s*\1){2,}\s*$")
 ITEM = re.compile(r"^(\s*)([-*+]|\d+[.)])\s+(.*)$")
 TABLE_RULE = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$")
+IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)\)")
+# Set per document by to_html: images resolve against its folder.
+_doc = Html("")
 
 
 def _inline(text: str) -> str:
@@ -25,8 +31,16 @@ def _inline(text: str) -> str:
         codes.append(m.group(1))
         return f"\x00{len(codes) - 1}\x00"
 
+    pictures: list[str] = []
+
+    def picture(m: re.Match) -> str:
+        pictures.append(_doc.image(m.group(2), m.group(1)))
+        return f"\x01{len(pictures) - 1}\x01"
+
     text = re.sub(r"`([^`]+)`", keep, text)
+    text = IMAGE.sub(picture, _doc.badges(text))
     text = html.escape(text, quote=False)
+    text = re.sub("\x01(\\d+)\x01", lambda m: pictures[int(m.group(1))], text)
     text = re.sub(r"&lt;((?:https?|mailto):[^\s&]+)&gt;", r'<a href="\1">\1</a>', text)
     text = re.sub(
         r"\[([^\]]+)\]\(([^)\s]+)(?:\s+&quot;[^)]*&quot;)?\)",
@@ -60,7 +74,7 @@ def _indent(line: str) -> int:
 
 def _starts_block(line: str) -> bool:
     return bool(FENCE.match(line) or HEADING.match(line) or RULE.match(line)
-                or ITEM.match(line) or line.lstrip().startswith(">"))
+                or ITEM.match(line) or line.lstrip().startswith(">") or _doc.starts(line))
 
 
 def _code(lines: list[str], i: int) -> tuple[str, int]:
@@ -144,6 +158,10 @@ def render(lines: list[str]) -> str:
             block, i = _code(lines, i)
             out.append(block)
             continue
+        if _doc.starts(line):
+            out.append(_doc.line(line.strip(), _inline))
+            i += 1
+            continue
         m = HEADING.match(line)
         if m:
             level = len(m.group(1))
@@ -188,5 +206,8 @@ def plain(text: str) -> str:
     return re.sub(r"[`*]|(?<!\w)_|_(?!\w)", "", text).strip()
 
 
-def to_html(text: str) -> str:
+def to_html(text: str, base: str = "") -> str:
+    """base is the document's folder, for its relative image paths."""
+    global _doc
+    _doc = Html(base)
     return render(text.replace("\r", "").replace("\t", "    ").split("\n"))

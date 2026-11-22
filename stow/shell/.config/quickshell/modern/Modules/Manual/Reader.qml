@@ -21,6 +21,8 @@ FocusScope {
     readonly property var _style: Typography.style("bodyLarge")
     readonly property real _scale: root.zoom / 100
     readonly property real _step: root._style.lineHeight * 3
+    // {{measure:N}} is N % of the text column, for pictures sized in percent.
+    readonly property real _measure: Math.min(Tokens.window.manualMeasure, flick.width - Tokens.spacing.md * 2)
     readonly property var _fills: ({
         heading: String(Colors.color.onSurface),
         muted: String(Colors.color.onSurfaceVariant),
@@ -40,7 +42,9 @@ FocusScope {
         leading: Math.round(100 * root._style.lineHeight / root._style.pixelSize)
     })
     readonly property string _html: root.doc
-        ? String(root.doc.html || "").replace(/\{\{(\w+)\}\}/g, (m, k) => String(root._fills[k] ?? ""))
+        ? String(root.doc.html || "").replace(/\{\{(\w+)(?::(\d+))?\}\}/g, (m, k, pct) => pct
+            ? String(Math.round(root._measure * Number(pct) / 100))
+            : String(root._fills[k] ?? ""))
         : ""
 
     signal linkActivated(string link)
@@ -149,7 +153,7 @@ FocusScope {
             id: body
             x: Math.max(Tokens.spacing.md, (flick.width - width) / 2)
             y: Tokens.spacing.xl
-            width: Math.min(Tokens.window.manualMeasure, flick.width - Tokens.spacing.md * 2)
+            width: root._measure
             text: root._html
             textFormat: TextEdit.RichText
             readOnly: true

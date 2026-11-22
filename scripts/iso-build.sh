@@ -237,7 +237,8 @@ bundle="$AIROOTFS_OUT/usr/share/modern/dotfile"
 rm -rf "$bundle"
 git clone --depth 1 --single-branch --sparse --branch "$pin" "$ROOT" "$bundle" \
     || die "could not bundle $pin into the live image"
-git -C "$bundle" sparse-checkout set --cone install stow scripts \
+# docs/ is what the Manual app reads on the installed system.
+git -C "$bundle" sparse-checkout set --cone install stow scripts docs \
     || die "could not sparse-checkout the ISO bundle"
 # Installer languages, regional locales and keyboard defaults follow the
 # bundle, i.e. what the installed desktop can actually show. --strict: the

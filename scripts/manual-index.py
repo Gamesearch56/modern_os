@@ -79,7 +79,7 @@ def entry(repo: str, rel: str, group: str) -> dict | None:
         "group": group,
         "title": title_of(text, name),
         "text": text,
-        "html": to_html(text),
+        "html": to_html(text, os.path.dirname(path)),
     }
 
 
