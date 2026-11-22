@@ -18,29 +18,31 @@
     { "context": "ModernNetPage", "source": "You're connected with Ethernet", "key": "installer.net.viaEthernet" },
     { "context": "ModernNetPage", "source": "You're connected with Wi-Fi", "key": "installer.net.viaWifi" },
     { "context": "ModernNetPage", "source": "You can continue to the next step.", "key": "installer.net.canContinue" },
-    { "context": "ModernNetPage", "source": "Connecting…", "key": "installer.net.connecting" },
     { "context": "ModernNetPage", "source": "Enter the password to connect.", "key": "installer.net.enterPassword" },
-    { "context": "ModernNetPage", "source": "Connect to Wi-Fi to continue.", "key": "installer.net.needWifi" },
-    { "context": "ModernNetPage", "source": "Searching for networks…", "key": "installer.net.searching" },
+    { "context": "ModernNetPage", "source": "Pick a network to get online.", "key": "installer.net.needWifi" },
+    { "context": "ModernNetPage", "source": "Looking for networks…", "key": "installer.net.searching" },
+    { "context": "ModernNetPage", "source": "Looking for %1…", "key": "installer.net.lookingFor" },
+    { "context": "ModernNetPage", "source": "Checking the password…", "key": "installer.net.checkingPassword" },
+    { "context": "ModernNetPage", "source": "Waiting for an address from %1…", "key": "installer.net.waitingAddress" },
     { "context": "ModernNetPage", "source": "No networks found.", "key": "installer.net.noneFound" },
     {
       "context": "ModernNetPage",
-      "source": "No networks found. Move closer to the router, then choose Refresh.",
+      "source": "No networks showed up. Move closer to the router, then tap Refresh.",
       "key": "installer.net.noneFoundHint"
     },
-    { "context": "ModernNetPage", "source": "Could not connect. Check the password.", "key": "installer.net.badPassword" },
+    { "context": "ModernNetPage", "source": "Couldn't join. Check the password and try again.", "key": "installer.net.badPassword" },
     {
       "context": "ModernNetPage",
-      "source": "The network is out of range. Move closer or search again.",
+      "source": "Can't see that network from here. Move closer, then tap Refresh.",
       "key": "installer.net.outOfRange"
     },
-    { "context": "ModernNetPage", "source": "The network did not answer in time. Try again.", "key": "installer.net.timeout" },
+    { "context": "ModernNetPage", "source": "The router didn't answer. You can try again.", "key": "installer.net.timeout" },
     {
       "context": "ModernNetPage",
       "source": "This network needs a sign-in the installer cannot enter. Choose another network.",
       "key": "installer.net.portal"
     },
-    { "context": "ModernNetPage", "source": "The password was not accepted. Type it again.", "key": "installer.net.rejected" },
+    { "context": "ModernNetPage", "source": "That password didn't work. Type it again.", "key": "installer.net.rejected" },
     { "context": "ModernNetPage", "source": "Choose another network", "key": "installer.net.another" },
     {
       "context": "ModernNetPage",

@@ -5,6 +5,7 @@
 
 #include <QAbstractItemView>
 #include <QHBoxLayout>
+#include <QSize>
 #include <QIcon>
 #include <QLabel>
 #include <QLineEdit>
@@ -115,7 +116,8 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     m_list = new QListWidget;
     m_list->setObjectName( QStringLiteral( "wifiList" ) );
     m_list->setSelectionMode( QAbstractItemView::SingleSelection );
-    m_list->setSpacing( 4 );
+    m_list->setSpacing( 12 );
+    m_list->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
     wifi->addWidget( m_list, 1 );
 
     m_passCard = new QWidget;
@@ -148,6 +150,21 @@ ModernNetPage::ModernNetPage( QWidget* parent )
 
     connect( m_nm, &ModernNetNm::changed, this, &ModernNetPage::syncUi );
     connect( m_nm, &ModernNetNm::connectFinished, this, &ModernNetPage::onConnectFinished );
+    connect( m_nm, &ModernNetNm::joinProgress, this, [ this ]( const QString& phase ) {
+        const QString name = m_passTitle->text();
+        if ( phase == QLatin1String( "lookup" ) )
+        {
+            m_hint->setText( tr( "Looking for %1…" ).arg( name ) );
+        }
+        else if ( phase == QLatin1String( "password" ) )
+        {
+            m_hint->setText( tr( "Checking the password…" ) );
+        }
+        else if ( phase == QLatin1String( "address" ) )
+        {
+            m_hint->setText( tr( "Waiting for an address from %1…" ).arg( name ) );
+        }
+    } );
 
     auto* tick = new QTimer( this );
     tick->setInterval( 2000 );
@@ -169,6 +186,12 @@ ModernNetPage::setOnline( bool on )
 void
 ModernNetPage::refresh()
 {
+    // A scan or a connect owns nmcli. Another list from this timer waits
+    // on that scan, so the bar never clears.
+    if ( m_nm->scanning() || m_nm->connecting() )
+    {
+        return;
+    }
     m_nm->refresh();
 }
 
@@ -244,11 +267,11 @@ ModernNetPage::syncUi()
     fillWifi();
     if ( m_nm->connecting() )
     {
-        m_hint->setText( tr( "Connecting…" ) );
+        // joinProgress writes the sentence while a password is being tried.
     }
     else if ( m_nm->scanning() )
     {
-        m_hint->setText( tr( "Searching for networks…" ) );
+        m_hint->setText( tr( "Looking for networks…" ) );
     }
     else if ( m_nm->networks().isEmpty() )
     {
@@ -256,7 +279,7 @@ ModernNetPage::syncUi()
     }
     else
     {
-        m_hint->setText( tr( "Connect to Wi-Fi to continue." ) );
+        m_hint->setText( tr( "Pick a network to get online." ) );
     }
     m_stack->setCurrentWidget( m_wifiPage );
     if ( !m_askedScan && m_nm->networks().isEmpty() && !m_nm->scanning() )
@@ -285,7 +308,7 @@ ModernNetPage::emptyHint() const
     {
         return tr( "No Wi-Fi adapter was found. %1" ).arg( wired );
     }
-    return tr( "No networks found. Move closer to the router, then choose Refresh." );
+    return tr( "No networks showed up. Move closer to the router, then tap Refresh." );
 }
 
 QString
@@ -325,7 +348,7 @@ ModernNetPage::fillWifi()
     if ( nets.isEmpty() )
     {
         auto* empty = new QListWidgetItem(
-            m_nm->scanning() ? tr( "Searching for networks…" ) : tr( "No networks found." ) );
+            m_nm->scanning() ? tr( "Looking for networks…" ) : tr( "No networks found." ) );
         empty->setFlags( Qt::NoItemFlags );
         m_list->addItem( empty );
         if ( !keepPass )
@@ -352,9 +375,9 @@ ModernNetPage::fillWifi()
         connect( row, &ModernNetRow::disconnectClicked, this, [ this ]() {
             m_nm->disconnectWifi();
         } );
-        item->setSizeHint( row->sizeHint() );
         m_list->addItem( item );
         m_list->setItemWidget( item, row );
+        item->setSizeHint( QSize( m_list->viewport()->width(), qMax( 72, row->sizeHint().height() ) ) );
         if ( w.ssid == selected || w.ssid == passSsid || w.inUse )
         {
             m_list->setCurrentItem( item );
@@ -421,7 +444,7 @@ ModernNetPage::connectWifi()
     const QString password = m_passCard->isVisible() ? m_password->text() : QString();
     m_connect->setEnabled( false );
     m_refresh->setEnabled( false );
-    m_hint->setText( tr( "Connecting…" ) );
+    m_hint->setText( tr( "Looking for %1…" ).arg( ssid ) );
     m_nm->connectSsid( ssid, password );
 }
 
@@ -435,26 +458,32 @@ ModernNetPage::onConnectFinished( bool ok, int code )
         showPassword( false );
         return;
     }
+    QString hint;
+    bool again = false;
     switch ( code )
     {
     case 4:
-        m_hint->setText( tr( "The network is out of range. Move closer or search again." ) );
-        return;
-    case 5:
-        m_hint->setText( tr( "The network did not answer in time. Try again." ) );
-        return;
+        hint = tr( "Can't see that network from here. Move closer, then tap Refresh." );
+        break;
     case 6:
-        m_hint->setText( tr( "This network needs a sign-in the installer cannot enter. Choose another network." ) );
-        return;
+        hint = tr( "This network needs a sign-in the installer cannot enter. Choose another network." );
+        break;
+    case 5:
+        hint = tr( "The router didn't answer. You can try again." );
+        again = true;
+        break;
     case 3:
-        m_hint->setText( tr( "The password was not accepted. Type it again." ) );
+        hint = tr( "That password didn't work. Type it again." );
+        again = true;
         break;
     default:
-        m_hint->setText( tr( "Could not connect. Check the password." ) );
+        hint = tr( "Couldn't join. Check the password and try again." );
+        again = true;
         break;
     }
+    m_hint->setText( hint );
     auto* item = m_list->currentItem();
-    if ( item && item->data( Qt::UserRole + 1 ).toBool() )
+    if ( again && item && item->data( Qt::UserRole + 1 ).toBool() )
     {
         m_passTitle->setText( currentSsid() );
         showPassword( true );

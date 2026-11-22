@@ -37,7 +37,7 @@ if [[ $* == *'connection delete uuid new-uuid'* ]]; then
     rm -f "${state}.left"
     exit 0
 fi
-if [[ $* == '-t -e no -f SECURITY,SSID device wifi list' ]]; then
+if [[ $* == '-t -e no -f SECURITY,SSID device wifi list' || $* == '-t -e no -f SECURITY,SSID device wifi list --rescan no' ]]; then
     printf 'WPA2 WPA3:Cafe Net\nWPA2 802.1X:Office\n'
     exit 0
 fi
@@ -298,6 +298,17 @@ if grep -Fq 'forgetSsid' "$NM" && grep -Fq 'Forget' "$ROW" && grep -Fq 'Choose a
     ok "installer can forget a saved network and leave a Wi-Fi session"
 else
     err "installer wifi actions were not updated"
+fi
+
+if grep -Fq 'connection.auth-retries 1' "$JOIN" \
+    && grep -Fq 'stop_wifi_attempt' "$JOIN" \
+    && grep -Fq -- '--rescan no' "$NM" \
+    && grep -Fq 'scanLimit->start( 25000 )' "$NM" \
+    && grep -Fq 'joinLimit->start( 20000 )' "$NM" \
+    && grep -Fq 'm_nm->scanning() || m_nm->connecting()' "$PAGE"; then
+    ok "a wrong password and a scan both stop so another try can start"
+else
+    err "wifi connect or scan can stay running"
 fi
 
 if grep -Fq '/usr/lib/modern/wifi-join.sh' "$NM" && grep -Fq 'closeWriteChannel' "$NM" \
