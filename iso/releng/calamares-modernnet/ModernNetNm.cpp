@@ -7,6 +7,9 @@
 #include <QSet>
 #include <QTimer>
 
+#include <csignal>
+#include <unistd.h>
+
 namespace
 {
 const QString kWifiUp = QStringLiteral( "/usr/lib/modern/live-wifi-up.sh" );
@@ -76,31 +79,53 @@ ModernNetNm::run( const QString& bin, const QStringList& args, int timeoutMs )
     return QString::fromUtf8( out );
 }
 
+// A shell killed on its own leaves nmcli running. That client holds
+// NetworkManager, the next call waits, and the screen stays on
+// "Checking the password…". The child is its own process group.
+static void
+groupKill( QProcess* proc )
+{
+    if ( !proc )
+    {
+        return;
+    }
+    const qint64 pid = proc->processId();
+    if ( pid > 0 )
+    {
+        ::kill( -pid, SIGKILL );
+    }
+    proc->kill();
+}
+
+static void
+leadGroup( QProcess* proc )
+{
+    proc->setChildProcessModifier( [] {
+        ::setpgid( 0, 0 );
+    } );
+}
+
 QVector< QPair< QString, QString > >
 ModernNetNm::wirelessProfiles() const
 {
     QVector< QPair< QString, QString > > out;
+    // One call. A second nmcli per profile runs on the UI thread, and a
+    // busy NetworkManager makes every one of them wait out its timeout.
     const QString text = run( QStringLiteral( "nmcli" ),
                               { QStringLiteral( "-t" ),
                                 QStringLiteral( "-f" ),
-                                QStringLiteral( "UUID,TYPE" ),
+                                QStringLiteral( "UUID,TYPE,802-11-wireless.ssid" ),
                                 QStringLiteral( "connection" ),
                                 QStringLiteral( "show" ) } );
     for ( const QString& line : text.split( QLatin1Char( '\n' ), Qt::SkipEmptyParts ) )
     {
         const QStringList f = splitNmcli( line );
-        if ( f.size() < 2 || f.at( 1 ) != QLatin1String( "802-11-wireless" ) )
+        if ( f.size() < 3 || f.at( 1 ) != QLatin1String( "802-11-wireless" ) )
         {
             continue;
         }
-        const QString ssid = run( QStringLiteral( "nmcli" ),
-                                  { QStringLiteral( "-g" ),
-                                    QStringLiteral( "802-11-wireless.ssid" ),
-                                    QStringLiteral( "connection" ),
-                                    QStringLiteral( "show" ),
-                                    f.at( 0 ) } )
-                                  .trimmed();
-        if ( !ssid.isEmpty() )
+        const QString ssid = f.mid( 2 ).join( QLatin1Char( ':' ) ).trimmed();
+        if ( !ssid.isEmpty() && ssid != QLatin1String( "--" ) )
         {
             out.append( qMakePair( f.at( 0 ), ssid ) );
         }
@@ -312,12 +337,10 @@ ModernNetNm::scan()
     auto* scanLimit = new QTimer( m_scan );
     scanLimit->setSingleShot( true );
     connect( scanLimit, &QTimer::timeout, m_scan, [ this ]() {
-        if ( m_scan )
-        {
-            m_scan->kill();
-        }
+        groupKill( m_scan );
     } );
     scanLimit->start( 25000 );
+    leadGroup( m_scan );
     // A bare rescan cannot recover a radio that appeared late, was
     // soft-blocked, or was taken by iwd again; the helper does that first.
     if ( QFileInfo( kWifiUp ).isExecutable() )
@@ -419,6 +442,43 @@ ModernNetNm::disconnectWifi()
 }
 
 void
+ModernNetNm::settleJoin( int code )
+{
+    if ( m_joinSettled )
+    {
+        return;
+    }
+    m_joinSettled = true;
+    m_connecting = false;
+    QProcess* proc = m_join;
+    m_join = nullptr;
+    if ( proc && proc->state() != QProcess::NotRunning )
+    {
+        groupKill( proc );
+    }
+    if ( proc )
+    {
+        proc->deleteLater();
+    }
+    // The hint changes before any further nmcli. refresh() used to run
+    // first and, while the old client was still alive, never returned.
+    if ( code != 0 )
+    {
+        emit connectFinished( false, code );
+        QTimer::singleShot( 0, this, [ this ]() {
+            stopConnecting();
+            refresh();
+        } );
+        return;
+    }
+    QTimer::singleShot( 0, this, [ this ]() {
+        refresh();
+        const bool joined = m_wifiUp || m_hasRoute;
+        emit connectFinished( joined, joined ? 0 : 5 );
+    } );
+}
+
+void
 ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QString& security )
 {
     if ( m_join || ssid.isEmpty() )
@@ -426,13 +486,11 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QS
         return;
     }
     m_connecting = true;
+    m_joinSettled = false;
     // The list scan holds NetworkManager. Leaving it running makes the
     // password check wait until that scan ends, which on this screen is
-    // indistinguishable from a hang.
-    if ( m_scan )
-    {
-        m_scan->kill();
-    }
+    // indistinguishable from a hang. Kill the scan's nmcli too.
+    groupKill( m_scan );
     emit changed();
     m_join = new QProcess( this );
     connect( m_join, &QProcess::readyReadStandardOutput, this, [ this ]() {
@@ -453,29 +511,23 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QS
              QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ),
              this,
              [ this ]( int code, QProcess::ExitStatus status ) {
-                 const int result = status == QProcess::NormalExit ? code : 1;
-                 m_join->deleteLater();
-                 m_join = nullptr;
-                 m_connecting = false;
-                 if ( result != 0 )
-                 {
-                     stopConnecting();
-                 }
-                 refresh();
-                 const bool joined = result == 0 && ( m_wifiUp || m_hasRoute );
-                 emit connectFinished( joined, joined ? 0 : ( result == 0 ? 5 : result ) );
+                 settleJoin( status == QProcess::NormalExit ? code : 1 );
              } );
-    // A wrong password can leave nmcli running. Kill it so the field
-    // accepts another try instead of staying on Connecting.
-    auto* joinLimit = new QTimer( m_join );
-    joinLimit->setSingleShot( true );
-    connect( joinLimit, &QTimer::timeout, m_join, [ this ]() {
-        if ( m_join )
+    connect( m_join, &QProcess::errorOccurred, this, [ this ]( QProcess::ProcessError error ) {
+        if ( error == QProcess::FailedToStart )
         {
-            m_join->kill();
+            settleJoin( 1 );
         }
     } );
-    joinLimit->start( 40000 );
+    // A wrong password or a client that never returns used to leave this
+    // screen on "Checking the password…". The script has its own limits;
+    // this one fires even when those do not, and it kills nmcli as well.
+    auto* joinLimit = new QTimer( m_join );
+    joinLimit->setSingleShot( true );
+    connect( joinLimit, &QTimer::timeout, this, [ this ]() {
+        settleJoin( 5 );
+    } );
+    joinLimit->start( 30000 );
     // The password goes on stdin; argv is readable by every process in
     // /proc. wifi-join.sh also drops a profile a failed password created.
     QStringList args { QStringLiteral( "connect" ), ssid };
@@ -489,6 +541,7 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QS
         env.insert( QStringLiteral( "WIFI_JOIN_SECURITY" ), security );
         m_join->setProcessEnvironment( env );
     }
+    leadGroup( m_join );
     m_join->start( kWifiJoin, args );
     if ( !password.isEmpty() )
     {

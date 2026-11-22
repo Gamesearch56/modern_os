@@ -55,7 +55,8 @@ signals:
 
 private:
     static QStringList splitNmcli( const QString& line );
-    static QString run( const QString& bin, const QStringList& args, int timeoutMs = 8000 );
+    static QString run( const QString& bin, const QStringList& args, int timeoutMs = 3000 );
+    void settleJoin( int code );
     QVector< QPair< QString, QString > > wirelessProfiles() const;
     QSet< QString > knownWifi() const;
     QStringList uuidsForSsid( const QString& ssid ) const;
@@ -74,6 +75,7 @@ private:
     QVector< Wifi > m_networks;
     QProcess* m_scan = nullptr;
     QProcess* m_join = nullptr;
+    bool m_joinSettled = false;
 };
 
 #endif

@@ -297,14 +297,17 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
     background-color: {highest};
     border: none;
     border-radius: 12px;
-    padding: 8px;
+    padding: 8px 4px 8px 8px;
     outline: 0;
+}}
+#networkWifiRow {{
+    background: transparent;
 }}
 #wifiList::item {{
     background-color: transparent;
     color: {on_surface};
-    min-height: 56px;
-    padding: 4px 8px;
+    padding: 0;
+    margin: 2px 0;
     border-radius: 12px;
 }}
 #wifiList::item:selected, #wifiList::item:hover {{

@@ -17,8 +17,10 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     // The name must be allowed to shrink. Its minimum width otherwise
     // pushes Connect past the row and the list clips the button.
     setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Preferred );
-    row->setContentsMargins( 8, 4, 12, 4 );
-    row->setSpacing( 8 );
+    // The list item's own padding left the button high and against the
+    // scrollbar. The row owns its insets, with room for that bar.
+    row->setContentsMargins( 12, 6, 28, 6 );
+    row->setSpacing( 12 );
 
     auto* icon = new QLabel;
     const QString name = wifi.locked ? QStringLiteral( "network-wireless-encrypted" )
@@ -72,6 +74,20 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
         button->setFixedWidth( button->sizeHint().width() );
         button->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
     };
+    // AlignVCenter on the row is not enough: the item is taller than the
+    // button and Qt keeps the button at the top of that item.
+    const auto place = [ &row, &pin ]( QPushButton* button ) {
+        pin( button );
+        auto* box = new QWidget;
+        box->setStyleSheet( QStringLiteral( "background: transparent;" ) );
+        auto* col = new QVBoxLayout( box );
+        col->setContentsMargins( 0, 0, 0, 0 );
+        col->setSpacing( 0 );
+        col->addStretch();
+        col->addWidget( button, 0, Qt::AlignRight );
+        col->addStretch();
+        row->addWidget( box, 0 );
+    };
 
     if ( wifi.inUse )
     {
@@ -79,8 +95,7 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
         btn->setObjectName( QStringLiteral( "networkRowDisconnect" ) );
         btn->setCursor( Qt::PointingHandCursor );
         connect( btn, &QPushButton::clicked, this, &ModernNetRow::disconnectClicked );
-        pin( btn );
-        row->addWidget( btn, 0, Qt::AlignRight | Qt::AlignVCenter );
+        place( btn );
         return;
     }
     if ( wifi.known )
@@ -89,13 +104,11 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
         forget->setObjectName( QStringLiteral( "networkRowForget" ) );
         forget->setCursor( Qt::PointingHandCursor );
         connect( forget, &QPushButton::clicked, this, &ModernNetRow::forgetClicked );
-        pin( forget );
-        row->addWidget( forget, 0, Qt::AlignRight | Qt::AlignVCenter );
+        place( forget );
     }
     auto* btn = new QPushButton( tr( "Connect" ) );
     btn->setObjectName( QStringLiteral( "networkRowConnect" ) );
     btn->setCursor( Qt::PointingHandCursor );
     connect( btn, &QPushButton::clicked, this, &ModernNetRow::connectClicked );
-    pin( btn );
-    row->addWidget( btn, 0, Qt::AlignRight | Qt::AlignVCenter );
+    place( btn );
 }

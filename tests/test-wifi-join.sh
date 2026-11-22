@@ -312,12 +312,15 @@ if grep -Fq 'connection.auth-retries 1' "$JOIN" \
     && grep -Fq 'stop_wifi_attempt' "$JOIN" \
     && grep -Fq -- '--rescan no' "$NM" \
     && grep -Fq 'scanLimit->start( 25000 )' "$NM" \
-    && grep -Fq 'joinLimit->start( 40000 )' "$NM" \
+    && grep -Fq 'joinLimit->start( 30000 )' "$NM" \
+    && grep -Fq 'settleJoin' "$NM" \
+    && grep -Fq 'setpgid' "$NM" \
+    && grep -Fq 'WIFI_JOIN_LINEBUF' "$JOIN" \
     && grep -Fq 'WIFI_JOIN_SECURITY' "$NM" \
     && grep -Fq 'WIFI_JOIN_SECURITY' "$JOIN" \
     && grep -Fq 'm_nm->scanning() || m_nm->connecting()' "$PAGE" \
     && grep -Fq 'if ( m_connecting )' "$NM" \
-    && grep -Fq 'm_scan->kill()' "$NM"; then
+    && grep -Fq 'groupKill( m_scan )' "$NM"; then
     ok "a wrong password and a scan both stop so another try can start"
 else
     err "wifi connect or scan can stay running"
