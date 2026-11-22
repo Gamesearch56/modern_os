@@ -400,20 +400,14 @@ public.
 its own `vX.Y.Z/` folder and is compared with `rclone check`. rclone
 keeps its credentials in its own config, never in this repo.
 
-With two-factor login, the code is needed once, not per release: the
-first successful login stores a session (`client_uid`,
-`client_access_token`, `client_refresh_token`, `client_salted_key_pass`)
-in rclone's config, and later runs refresh it without a code. Log in
-right after reading a fresh code, before it rotates:
-
-```bash
-rclone about proton: --protondrive-2fa=123456
-```
-
-Only if Proton ends that session (a password change, a revoked session
-in the Proton account settings) does an upload fail with a login error;
-run the same command again with a new code. Proton rate-limits repeated
-logins (HTTP 429): wait a few minutes rather than retrying in a loop.
+The image upload and the Proton copy each open a progress window when
+a desktop session is available. With two-factor login, the code is
+needed once, not per release: the first successful login stores a
+session in rclone's config, and later runs refresh it without a code.
+When Proton asks again, the script opens a window for the code, the
+same way it asks for the sudo password when there is no terminal.
+Proton rate-limits repeated logins: wait a few minutes rather than
+retrying in a loop.
 
 **Signing key, once.** A key used only for ModernOS releases, not your
 personal one. Its user ID is public, so give it a project address (or
