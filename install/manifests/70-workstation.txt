@@ -1,0 +1,52 @@
+# Workstation (`full` profile): development, virtual machines, ISO
+# building, file sharing and the remaining desktop apps of the
+# maintainer's machine. Services are enabled by install/lib/workstation.sh.
+
+# Development
+docker                  # containers (docker.socket, docker group)
+docker-compose
+nodejs
+npm
+typescript
+rustup                  # Rust toolchains
+jdk17-openjdk
+jdk21-openjdk
+gradle
+maven
+godot                   # game engine
+
+# Virtual machines and ISO building (scripts/iso-build.sh, iso-qemu.sh)
+qemu-desktop
+libvirt                 # libvirtd.socket, libvirt group
+virt-viewer
+dnsmasq                 # libvirt's default NAT network
+edk2-ovmf               # UEFI firmware for VMs
+archiso                 # mkarchiso
+
+# Network shares — installed, not enabled: smb.conf holds the shares
+samba
+wsdd                    # lets Windows see the Samba host
+
+# Local AI (Settings → AI enables the service)
+ollama
+
+# Apps
+discord
+lutris
+goverlay                # MangoHud configurator
+shotcut                 # video editor
+timeshift
+seahorse                # keyring browser
+flatpak                 # for 60-flatpak.txt
+
+# Command-line tools
+rclone                  # cloud sync (scripts/iso-release.sh --archive)
+wget
+bc
+gdu                     # disk usage
+dmidecode
+lshw
+sbctl                   # Secure Boot keys
+kdialog
+wtype                   # Wayland key input
+sassc

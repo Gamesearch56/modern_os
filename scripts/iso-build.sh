@@ -8,6 +8,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${MODERN_ISO_OUT:-$ROOT/iso/out}"
 DO_MKARCHISO=0
 ALLOW_STALE_BUNDLE="${MODERN_ISO_STALE_BUNDLE:-}"
+PUBLIC=""
 WALLPAPER="$ROOT/stow/modern/.config/modern/wallpapers/default.jpg"
 LOGO="$ROOT/iso/airootfs/etc/calamares/branding/modern/logo.png"
 PROFILE_JSON="$ROOT/stow/modern/.config/modern/themes/tonal-spot-dark.json"
@@ -75,7 +76,7 @@ EOF
 
 usage() {
     cat <<'EOF'
-Usage: iso-build.sh [--mkarchiso] [--out DIR] [--tag vX.Y.Z] [--stale-bundle]
+Usage: iso-build.sh [--mkarchiso] [--out DIR] [--tag vX.Y.Z] [--stale-bundle] [--public]
 
 Generates Calamares QSS/tokens from default.jpg under a throwaway HOME.
 Copies branding/modern/logo.png (fixed brand mark, not wallpaper-tinted).
@@ -90,6 +91,8 @@ mkarchiso is not an error without the flag (branding still succeeds).
 Only iso/ comes from your working tree. install/, stow/ and scripts/ reach
 the installed system through a clone of the pin, so the build stops if
 those differ from it. --stale-bundle builds the pin's copy anyway.
+--public leaves the GitHub deploy key out, for an image anyone may
+download (scripts/iso-release.sh). Installs from it update over HTTPS.
 Boot the result with scripts/iso-qemu.sh (--headless for no display).
 EOF
 }
@@ -106,6 +109,7 @@ while [ $# -gt 0 ]; do
             shift
             ;;
         --stale-bundle) ALLOW_STALE_BUNDLE=1 ;;
+        --public) PUBLIC=1 ;;
         -h|--help)
             usage
             exit 0
@@ -258,7 +262,12 @@ export ISO_INSTALLER_LOCALES
 log "installer languages: $(jq -r '[.locales[] | .calamares] | join(" ")' "$ISO_INSTALLER_LOCALES")"
 # shellcheck source=lib/deploy-key.sh
 source "$ROOT/scripts/lib/deploy-key.sh"
-if ! stage_deploy_key "$AIROOTFS_OUT/usr/lib/modern/deploy_key" \
+# $AIROOTFS_OUT outlives a build, so a key from an earlier private build
+# would otherwise still be in it.
+rm -f "$AIROOTFS_OUT/usr/lib/modern/deploy_key"
+if [ -n "$PUBLIC" ]; then
+    log "public image — no deploy key; installs update over HTTPS"
+elif ! stage_deploy_key "$AIROOTFS_OUT/usr/lib/modern/deploy_key" \
     "$ROOT/secrets/github-deploy-key"; then
     die "secrets/github-deploy-key must be an OpenSSH private key owned by you, mode 600, not a symlink"
 fi

@@ -1,0 +1,9 @@
+# Workstation AUR packages (`full` profile).
+cursor-bin              # Cursor editor
+downgrade               # roll a package back from the Arch archive
+ventoy-bin              # multi-ISO USB sticks
+exiled-exchange-2-bin   # Path of Exile 2 trade overlay
+rusty-path-of-building  # Path of Building
+lua51-curl              # Path of Building's update and trade requests
+wowup-cf-bin            # World of Warcraft addons
+lib32-extest            # Steam Input under Wayland (XTEST for 32-bit games)

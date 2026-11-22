@@ -128,9 +128,14 @@ def cmd_install(root, home):
     src = os.path.join(root, "install", "share", "bug-report.token")
     if not os.path.isfile(src):
         return 0
+    keys = _key_paths(root)
+    if not keys:
+        # A public ISO carries no deploy key, so the sealed token is
+        # unreadable by design there, not broken.
+        return 0
     blob = _read(src)
     token = ""
-    for key in _key_paths(root):
+    for key in keys:
         token = open_bytes(blob, _read(key)) or ""
         if token:
             break
