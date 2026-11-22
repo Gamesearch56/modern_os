@@ -3,7 +3,8 @@
 # (see install/lib/pkg.sh defer_native). Source; needs pkg-name.sh.
 #
 # Sets ROOT_PLAN_PKGS (array), ROOT_PLAN_GREETD (0/1),
-# ROOT_PLAN_SPLASH (0/1), and ROOT_PLAN_MIRRORS (0/1). The plan sits in
+# ROOT_PLAN_SPLASH (0/1), ROOT_PLAN_MIRRORS (0/1), and ROOT_PLAN_PORTAL
+# (0/1). The plan sits in
 # the user's state dir and is read by root, so anything that is not a
 # plain package name or one of those steps is dropped rather than
 # handed to pacman.
@@ -40,12 +41,30 @@ assert_root_plan_file() {
     return 1
 }
 
+# The file chooser portal is the one package root installs from a file:
+# modern-portal.pkg.tar.zst in the caller's state dir, owned by the
+# caller, not a symlink, and named modern-portal inside. Prints its path.
+root_plan_portal_pkg() {
+    local uid="${PKEXEC_UID:-${SUDO_UID:-}}" home file owner name
+    [ -n "$uid" ] && [ "$uid" != "0" ] || return 1
+    home="$(getent passwd "$uid" | cut -d: -f6 || true)"
+    [ -n "$home" ] || return 1
+    file="$home/.local/state/modern/packages/modern-portal.pkg.tar.zst"
+    [ -f "$file" ] && [ ! -L "$file" ] || return 1
+    owner="$(stat -c '%u' -- "$file" 2>/dev/null || true)"
+    [ "$owner" = "$uid" ] || return 1
+    name="$(pacman -Qqp -- "$file" 2>/dev/null || true)"
+    [ "$name" = "modern-portal" ] || return 1
+    printf '%s\n' "$file"
+}
+
 read_root_plan() {
     local file="$1" kind name
     ROOT_PLAN_PKGS=()
     ROOT_PLAN_GREETD=0
     ROOT_PLAN_SPLASH=0
     ROOT_PLAN_MIRRORS=0
+    ROOT_PLAN_PORTAL=0
     [ -s "$file" ] || return 0
     while read -r kind name _; do
         case "$kind" in
@@ -59,6 +78,7 @@ read_root_plan() {
             greetd) ROOT_PLAN_GREETD=1 ;;
             splash) ROOT_PLAN_SPLASH=1 ;;
             mirrors) ROOT_PLAN_MIRRORS=1 ;;
+            portal) ROOT_PLAN_PORTAL=1 ;;
         esac
     done <"$file"
 }

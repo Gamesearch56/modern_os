@@ -16,6 +16,10 @@ Item {
     property int _epoch: 0
     // The exit of a listing we just stopped must not finish the next one.
     property bool _stopping: false
+    // proc.running reads false until the process has actually started, so
+    // two jobs queued back to back would both launch into the same Process
+    // and the first one would be lost.
+    property bool _busy: false
 
     function cancelLists() {
         root._epoch += 1;
@@ -28,9 +32,9 @@ Item {
         root._queue = kept;
         if (!(root._job && root._job.kind === "list"))
             return;
-        const live = proc.running;
         root._job = null;
-        if (!live)
+        // Not started yet: let it run out. Its result has no job and is dropped.
+        if (!proc.running)
             return;
         root._stopping = true;
         proc.running = false;
@@ -44,11 +48,12 @@ Item {
     }
 
     function _pump() {
-        if (proc.running || root._stopping || !root._queue.length)
+        if (root._busy || root._stopping || !root._queue.length)
             return;
         const q = root._queue.slice();
         root._job = q.shift();
         root._queue = q;
+        root._busy = true;
         proc.command = [Paths.script("files-ops.sh")].concat(root._job.args);
         proc.running = true;
     }
@@ -68,6 +73,7 @@ Item {
         stdout: StdioCollector { id: outBuf }
         stderr: StdioCollector { id: errBuf }
         onExited: (code) => {
+            root._busy = false;
             if (root._stopping) {
                 root._stopping = false;
                 root._pump();

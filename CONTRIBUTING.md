@@ -1,5 +1,9 @@
 # Contributing
 
+For developers who want to send changes to ModernOS: the branch
+workflow, local checks to run, and the layer rules a pull request must
+follow.
+
 Work happens on `dev`. Open pull requests **into `dev`**. A release is a
 PR **`dev` → `main`**. Do not open `feature/*` or `fix/*` branches.
 Details: [`docs/GIT.md`](docs/GIT.md).
@@ -18,7 +22,7 @@ scripts/ci-check.sh           # deps, layer lint, shellcheck, unit tests
 ./install/install.sh --dry-run --profile m0 --target /tmp/modern-install-dryrun
 ```
 
-`iso-build.sh --mkarchiso` may write `iso/out/` on this PC. Do not run
+`iso-build.sh --mkarchiso` may write `iso/out/` on your machine. Do not run
 `provision-iso.sh`, Calamares, or a live `install.sh` on a machine you
 live on. Isolation: [`docs/ISOLATION.md`](docs/ISOLATION.md).
 
@@ -42,5 +46,9 @@ See [`AGENTS.md`](AGENTS.md) and [`.cursorrules`](.cursorrules). Short version:
 
 ## License
 
-By contributing, you agree your work is licensed under Apache-2.0
-(see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE)).
+By contributing, you agree your work is licensed under
+GPL-3.0-or-later with the additional terms in [`NOTICE`](NOTICE), the
+same as the rest of ModernOS (see [`LICENSE`](LICENSE)). You keep the
+copyright to your contribution. Every pull request is reviewed and
+approved by the maintainer before it is merged
+([`.github/CODEOWNERS`](.github/CODEOWNERS)).

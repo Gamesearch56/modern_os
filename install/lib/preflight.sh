@@ -72,7 +72,7 @@ preflight_checks() {
         fi
     fi
 
-    # Disk space floor — see docs/BACKUP.md, the audited root was 82% full.
+    # Snapshots and the package cache need headroom; see docs/BACKUP.md.
     local avail_pct
     avail_pct="$(df --output=pcent / | tail -1 | tr -dc '0-9')"
     if [ -n "$avail_pct" ] && [ "$avail_pct" -ge 90 ]; then

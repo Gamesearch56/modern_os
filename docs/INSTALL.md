@@ -1,5 +1,9 @@
 # Install
 
+How to install ModernOS, for admins and developers: onto an existing
+Arch user with `install.sh`, onto bare metal, or from the live ISO, plus
+the internals of the ISO installer (Calamares) and its test harness.
+
 Three paths: packages + stow onto an Arch user (`install.sh`), a live-ISO
 bootstrap that **prints** partitioning (`scripts/bootstrap.sh`), or an
 **ISO** (Calamares + late `install.sh --profile m0 --yes`).
@@ -41,8 +45,10 @@ or `F2`. Existing-account install: `docs/CUTOVER.md`.
 ./install/install.sh --profile m0 --target /home/otheruser
 ```
 
-Profiles: `m0` (bar/launcher/session), `dev` (+ Cursor/toolchain),
-`gaming` (+ Proton/MangoHud), `full`. Manifests:
+Profiles: `m0` (bar/launcher/session and the default apps, the
+default), `gaming` (+ 32-bit Mesa, Proton tools, MangoHud), `full`
+(+ flatpak apps). Hardware layers follow `--hw` / `--cpu` (auto-detected
+by default); `--extra proton` adds Proton Mail. Manifests:
 `install/manifests/README.md`.
 
 `install.sh` installs packages, stows listed packages into
@@ -56,7 +62,7 @@ conflict backups go under `$TARGET/.local/state/modern/stow-backups`.
 Calamares late on a new machine is `./install/install.sh --profile m0 --yes`
 as the new user, then `MODERN_ISO_PROVISION=1 install/system/provision-iso.sh`
 (NVIDIA initramfs, keyboard/locale seed). Do not run `provision-iso.sh`
-on a machine you live on unless you want those extras.
+on your everyday machine unless you want those extras.
 
 Clone + install is the **designed** desktop (`config.default.json`:
 English UI, `kbLayout` `us`).
@@ -93,7 +99,22 @@ arch-chroot → chain `install.sh`). Disks are not wiped unless you pass
 
 ## ISO (Calamares)
 
-Build on this PC or CI. Output is gitignored `iso/out/` (throwaway
+### Firmware settings before booting the ISO
+
+- **Start in UEFI mode.** Set the boot mode to UEFI only (CSM / Legacy
+  off). The ISO also boots on Legacy BIOS through Calamares' GRUB path,
+  but UEFI with systemd-boot is the tested and recommended setup.
+- **Disable Secure Boot.** Neither the ISO nor the installed boot loader
+  is signed, so Secure Boot firmware refuses to start them. Some
+  firmware only unlocks the option once a supervisor password is set.
+- Choose the stick's **UEFI** entry in the one-time boot menu.
+
+The step-by-step version for end users, with firmware keys per maker, is
+in [First steps](manual/02-first-steps.md).
+
+### Building and testing the ISO
+
+Build locally; CI never builds the ISO. Output is gitignored `iso/out/` (throwaway
 `HOME` for matugen). `--mkarchiso` needs **root**, `archiso`, and about
 **8G free** on that directory — not `/tmp`. It does **not** run
 `provision-iso.sh` or touch live `/etc` except a throwaway AUR builder
@@ -105,7 +126,7 @@ sudo ./scripts/iso-build.sh --mkarchiso
 ./scripts/iso-qemu.sh          # UEFI live image + 64G qcow2 (Calamares needs ≥ 16 GiB)
 ./scripts/iso-qemu.sh --headless   # no GTK; serial still goes to iso/out/vm-serial.log
 ./scripts/iso-qemu.sh --reset-disk # wipe a previous VM install, still boot the ISO
-./scripts/test-iso-qemu-install.sh # unattended QEMU until late install finishes
+./tests/test-iso-qemu-install.sh # unattended QEMU until late install finishes
 ```
 
 The **live** ISO is this clone (kiosk, branding, Calamares). After
@@ -126,7 +147,7 @@ Calamares' GRUB path: an msdos table, then `shellprocess@biosboot` puts
 covered by `test-calamares-late.sh`, not a VM run.
 `--unattended` sets QEMU fw_cfg `opt/org.modernos/unattended`; the live
 wrapper writes `/etc/calamares/unattended` so Calamares auto-advances
-and fills user `modern` / password `modern`. `scripts/test-iso-qemu-install.sh`
+and fills user `modern` / password `modern`. `tests/test-iso-qemu-install.sh`
 runs that until serial shows `late install finished` (about an hour;
 not part of `ci-check.sh`).
 
@@ -168,7 +189,7 @@ the bootloader job wrote survives, and it does not need an ISO in
 Installer checks are two gates. Every PR runs `scripts/ci-check.sh`
 (QSS/config/schema, AUR patch fixtures, `calamares-late.sh` clone against
 a local git tag). The ISO itself is built locally, never by CI
-(`sudo ./scripts/iso-build.sh --mkarchiso`); `scripts/test-iso-qemu-install.sh`
+(`sudo ./scripts/iso-build.sh --mkarchiso`); `tests/test-iso-qemu-install.sh`
 then clicks through an unattended install.
 
 `stylesheet.qss` paints scroll viewports, Summary `#summaryContent` /
@@ -232,20 +253,79 @@ of German still left the test field on `us`: cage's Xwayland ignores
 because it is in `non-ascii-layouts`). The same patch now always sends
 `-option` and runs `setxkbmap` twice.
 
-The Keyboard step opens on the Welcome language's layout. English stays
-`us`, German is `de`, from `installer-locales.json`. `guessLayout: false`
-stays off: Calamares' own guess flipped this page when the Location step
-settled on a timezone, including while Welcome was still English.
-Startup detection only sees the live ISO locale (`setxkbmap -print` is
-`pc+us`), so the same detection runs again when the Keyboard page opens.
-A layout picked on that page is kept. Do not treat the combo's first row
-as the default — Calamares sorts by description, so Arabic would lead the
-shared catalog.
+### Languages, countries and keyboard layouts
 
-The Keyboard combo lists the common layouts in
-`iso/releng/installer-locales.json` `layouts` (same ids as Settings →
-Keyboard / `keyboard-layouts.json`). Welcome languages stay English and
-German only.
+One catalog drives the installer and the desktop:
+`stow/modern/.config/modern/languages.json`. Each entry is a UI language
+(one per `translations/<id>.json`), its default country, and the
+countries it is offered in with the keyboard layout each country uses:
+
+```json
+{ "id": "de", "country": "DE", "countries": { "DE": "de", "AT": "at", "CH": "ch" } }
+```
+
+An optional `"calamares"` names the Calamares translation when it is not
+the bare id (`"pt"` → `"pt_BR"`). Settings → Language lists the same
+entries (`Commons/Languages.qml`). `iso-build.sh` runs
+`scripts/installer-locales.py --strict` on the **bundle** (the tag the
+installed system comes from) and generates:
+
+| Output | Used by |
+|---|---|
+| `/usr/lib/modern/installer-locales.json` | AUR Calamares hook, `live-setup.sh`, `live-i18n.sh`, `live-xkb-filter.py` |
+| `/etc/locale.gen` | the installed system: defaults on, every language + country commented for `localecfg` |
+| `branding/modern/lang/calamares-modern_<code>.ts` | slideshow translations, compiled with `lrelease6` |
+
+The installer then follows the combination the user picks:
+
+1. **Welcome** lists every catalog language.
+2. **Location** turns Welcome language + timezone country into the
+   locale: German + Vienna installs `de_AT.UTF-8`, English + London
+   `en_GB.UTF-8`. A country the language does not list (English + Berlin)
+   uses the language's default (`en_US.UTF-8`). Changing the zone
+   re-runs this.
+3. **Keyboard** opens on that country's layout (`de_AT` → `at`,
+   `de_CH` → `ch`), else the language default. A layout the user picked
+   on that page is kept.
+
+`guessLayout: false` stays off: Calamares' own guess flipped this page
+when the Location step settled on a timezone. Startup detection only sees
+the live ISO locale (`setxkbmap -print` is `pc+us`), so detection runs
+again when the Keyboard page opens. Do not treat the combo's first row as
+the default — Calamares sorts by description, so Arabic would lead.
+
+The live `SUPPORTED` lists every combination (so Location can pick
+`de_AT`), the live `locale.gen` only the defaults (generating the rest
+slowed boot). After `localecfg`, `calamares-late.sh strip` checks every
+`LANG`/`LC_*` in the target's `/etc/locale.conf`, enables any that is not
+active from glibc's `SUPPORTED`, runs `locale-gen`, and logs each locale
+to `/var/log/modern-calamares-late.log`. An unknown locale is a logged
+warning, never a failed install.
+
+Installer strings our patches and the Network step add, and the
+slideshow, are keys under `installer.*` in the translation files.
+`iso/releng/installer-strings.json` maps each Calamares source string to
+its key, and the hook writes every language's values into
+`lang/calamares_<code>.ts` before the build. These strings come from the
+working tree (the installer code is the working tree's too), so an ISO
+pinned to an older tag still gets them; the bundle only supplies a
+language the working tree lacks. A language missing a key shows that
+string in English.
+
+**What fails, and where.** `scripts/lint-layers.sh` and
+`tests/test-installer-locales.py` (both in `ci-check.sh`) reject: a
+translation without a catalog entry or the reverse, a layout outside
+`keyboard-layouts.json` or unknown to xkb, a country not in `zone.tab`, a
+language + country glibc has no UTF-8 locale for, a language Calamares
+3.4.2 does not compile, an `installer.*` English value that no longer
+matches the code, and a new `tr()` / `qsTr()` string without a mapping.
+The AUR build re-checks the languages against the real Calamares
+`CMakeLists.txt` and stops with the list of valid codes. The test also
+adds French and Brazilian Portuguese to a scratch copy and compiles and
+runs the generated Welcome C++ against Qt6, so adding a language needs
+no ISO test install. With an unpacked Calamares tarball,
+`MODERN_CALAMARES_SRC=/path/to/calamares-3.4.2 python3
+tests/test-installer-locales.py` also patches the real source.
 
 The Keyboard step's own job only writes `/etc/vconsole.conf` (the TTY) and
 `/etc/X11/xorg.conf.d/00-keyboard.conf` (Xwayland clients). Hyprland reads
@@ -289,7 +369,7 @@ that call has to come after `language.ui` and `kbLayout` are in
 `config.json`. An earlier bake left the login screen in English on a `us`
 layout even when the desktop later followed the install. The second
 wallpaper-sync still refreshes the same files.
-`scripts/test-calamares-late.sh` pins that ordering.
+`tests/test-calamares-late.sh` pins that ordering.
 
 The **Network** / **Netzwerk** page sits after Keyboard. Next stays off
 until Ethernet or Wi-Fi is up (or a default route exists). Wi-Fi turns
@@ -355,8 +435,8 @@ Order matters in both directions: `striplive` reads the account the
 `initrd_generator=mkinitcpio` — and that is what actually builds the
 initramfs. There is no `initcpio` job after `initcpiocfg` for the same
 reason: a preset-driven `mkinitcpio -P` would only add an unused second
-image to the ESP. `scripts/test-iso-live-kiosk.sh` asserts the ordering
-and `scripts/test-calamares-late.sh` asserts that every live-only file
+image to the ESP. `tests/test-iso-live-kiosk.sh` asserts the ordering
+and `tests/test-calamares-late.sh` asserts that every live-only file
 tracked under `iso/airootfs` is on the strip list.
 
 The Calamares packages job does not `pacman -S` anything (no sync db on the
@@ -452,6 +532,10 @@ A VM has virtio Ethernet, no radio and UEFI. A laptop differs here:
 
 - **Secure Boot off.** The ISO and the installed systemd-boot/GRUB are
   unsigned. Prefer UEFI mode; Legacy/CSM works through the GRUB path.
+- **Boot menu is hidden.** systemd-boot starts the default entry at once
+  (`timeout 0` in Calamares `bootloader.conf`); hold Space while the
+  machine starts to open the menu. A kernel that fails to boot falls
+  back to the recovery kernel on its own.
 - **Network during install is required** — the desktop phase downloads
   packages. Wi-Fi in the Network step goes through NetworkManager.
   The live image builds `wl.ko` for its linux-zen and loads it only for
@@ -485,11 +569,12 @@ A VM has virtio Ethernet, no radio and UEFI. A laptop differs here:
 `install.sh` phase 5 applies `~/.config/modern/wallpapers/default.jpg`
 (tokens, GTK/Qt/kitty). `wallpaper-sync.sh` writes lock/login assets to
 `/var/lib/modern/session` after greetd apply (else
-`$XDG_STATE_HOME/modern/session`). Nautilus sidebar starts with Downloads, Pictures, and Videos
-(`nautilus-prefs.sh`, XDG dirs for the target user). First-hour UI is
-**English**. Power-menu lock is `WlSessionLock` and checks the session
-password with PAM. Titlebars need a one-time `hyprpm` + pkexec
-in a graphical session (`docs/TROUBLESHOOTING.md`).
+`$XDG_STATE_HOME/modern/session`). If Nautilus is installed, its sidebar
+starts with Downloads, Pictures, and Videos (`nautilus-prefs.sh`, XDG
+dirs for the target user); it is skipped otherwise. A git install starts
+with an **English** UI. Power-menu lock is `WlSessionLock` and checks the
+session password with PAM. There are no compositor titlebars
+(`docs/DECISIONS.md` #20).
 
 To use a different image later:
 
@@ -506,10 +591,6 @@ To use a different image later:
    same function.
 
 Hand-edit reference is `config.default.json` (no `config.schema.json`).
-
-Firewall reminder if a later mobile/LAN API is involved: listen on
-`0.0.0.0` and `sudo ufw allow <port>/tcp` — not needed for this desktop
-shell itself.
 
 ## Verify
 

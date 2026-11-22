@@ -28,7 +28,8 @@ Item {
             root._parse(text());
             root.loaded();
         }
-        onLoadFailed: {
+        onLoadFailed: (error) => {
+            Logger.warn("StoreCatalog", `catalog not loaded (${error})`);
             root._parse("");
             root.loaded();
         }
@@ -165,7 +166,7 @@ Item {
         return out;
     }
 
-    function _take(list, n: int) {
+    function _take(list, n: int): var {
         const src = list || [];
         const out = [];
         for (let i = 0; i < src.length && out.length < n; i++) {
@@ -219,7 +220,7 @@ Item {
 
     // Every word must hit the name, title, tags (en + de) or the
     // translated description. Title hits rank first.
-    function search(query: string) {
+    function search(query: string): var {
         const q = String(query || "").toLowerCase().trim();
         const words = q.replace(/[\s,.;:()\/+-]+/g, " ").split(" ").filter((w) => w.length > 0);
         if (!words.length)

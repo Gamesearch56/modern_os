@@ -79,10 +79,11 @@ iso_aur_ensure_rustup() {
 iso_calamares_limit_languages() {
     local src="$1"
     local hook="$ROOT/iso/releng/calamares-limit-languages.py"
-    local locales="$ROOT/iso/releng/installer-locales.json"
+    local locales="${ISO_INSTALLER_LOCALES:-}"
     local net="$ROOT/iso/releng/calamares-modernnet"
     [ -f "$hook" ] || die "missing $hook"
-    [ -f "$locales" ] || die "missing $locales"
+    [ -n "$locales" ] && [ -f "$locales" ] \
+        || die "ISO_INSTALLER_LOCALES unset or missing (iso-build.sh generates it)"
     [ -d "$net" ] || die "missing $net"
     install -m 0644 "$hook" "$src/calamares-limit-languages.py"
     install -m 0644 "$locales" "$src/installer-locales.json"
@@ -112,7 +113,7 @@ iso_aur_pkg_stamp() {
         {
             cat "$src/PKGBUILD" \
                 "$ROOT/iso/releng/calamares-limit-languages.py" \
-                "$ROOT/iso/releng/installer-locales.json"
+                "${ISO_INSTALLER_LOCALES:?iso-build.sh generates it}"
             find "$ROOT/iso/releng/calamares-modernnet" -type f -print0 \
                 | sort -z \
                 | xargs -0 -r cat
@@ -221,6 +222,7 @@ iso_attach_aur_repo() {
             printf '%s\n' "$pkg" >>"$profile/packages.x86_64"
         fi
     done <"$list"
+    iso_local_packages "$repo" "$build" "$profile"
 
     shopt -s nullglob
     local pkgs=("$repo"/*.pkg.tar.*)

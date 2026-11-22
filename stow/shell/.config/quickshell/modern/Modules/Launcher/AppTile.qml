@@ -72,7 +72,7 @@ Item {
         onDragBegan: (x, y) => {
             const p = Dock.pointerToScreen(root, "top", x, y);
             const screen = root.Window.window && root.Window.window.screen ? root.Window.window.screen.name : "";
-            Dock.beginDrag(root.appId, false, -1, p.x, p.y, screen);
+            Dock.beginGridDrag(root.appId, p.x, p.y, screen);
         }
         onDragMoved: (x, y) => {
             const p = Dock.pointerToScreen(root, "top", x, y);

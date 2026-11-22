@@ -224,15 +224,6 @@ Singleton {
         root.source.audio.muted = !root.source.audio.muted;
     }
 
-    function cycleSink() {
-        const list = root.sinks;
-        if (list.length < 2)
-            return;
-        let idx = list.findIndex(n => root.sink && n.id === root.sink.id);
-        const next = list[(idx + 1) % list.length];
-        root.setDefaultSink(next);
-    }
-
     function setDefaultSink(node: var) {
         Pipewire.preferredDefaultAudioSink = node;
         btAuto.remember(node, true);

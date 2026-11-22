@@ -1,7 +1,8 @@
 # Theming pipeline
 
 How a wallpaper (or a fixed brand color) becomes every color in the
-system, and how to add a new consumer. See `docs/ARCHITECTURE.md`'s
+system, and how to add a new consumer. For developers and anyone
+debugging colors that look wrong in one app. See `docs/ARCHITECTURE.md`'s
 "Theme layer" for the one-paragraph summary and `docs/DESIGN.md` for the
 Material Design 3 color roles themselves.
 
@@ -45,7 +46,7 @@ motion for toolkit chrome (`01-chrome.css`, QSS placeholders,
 `application-style.conf`, `hyprtoolkit.conf`, `phylax/style.css`) are patched afterwards from `config.json`.
 `tokens.json` is also readable directly
 by anything that isn't a matugen template consumer (e.g. a shell script
-via `jq`, or the future Settings > Diagnostics color preview).
+via `jq`).
 
 ## Files
 
@@ -57,9 +58,8 @@ via `jq`, or the future Settings > Diagnostics color preview).
   syntax (`hex`, `hex_stripped`, `red`/`green`/`blue`, `rgb`, `rgba`, ...).
   Verified against matugen v4.2.0 — see `docs/DECISIONS.md`.
 - `stow/modern/.config/modern/themes/*.json` — switchable profiles, see
-  `stow/modern/.config/modern/themes/README.md` for the schema. This is
-  the "create one file and use it instead" mechanism from the original
-  design brief.
+  `stow/modern/.config/modern/themes/README.md` for the schema. A new
+  profile is one new file; nothing else changes.
 - `scripts/theme-apply.sh` — the only thing that ever invokes `matugen`
   for the live system. Resolves which profile to use (from
   `config.json`'s `design.activeProfile`, or `--profile`), resolves the
@@ -68,8 +68,8 @@ via `jq`, or the future Settings > Diagnostics color preview).
 `tokens.json` and restyles the bar/overlays immediately. GTK apps pick
 up `gtk.css` on restart. Vivaldi's CSS overlay is already on disk
 (reload the tab). The native theme object is created on a fresh home
-and merged later only while Vivaldi is not running. Nautilus
-must be fully quit after `theme-apply.sh`.
+and merged later only while Vivaldi is not running. Nautilus, if
+installed, must be fully quit after `theme-apply.sh`.
 
 ## Profile resolution
 
@@ -140,7 +140,8 @@ kdeglobals. KF6 apps ignore that QPalette: KColorSchemeManager
 treats qt6ct's `ColorScheme::Unknown` as light, so a focused window goes
 white. `kdeglobals` `[UiSettings] ColorScheme=modern` pins
 `~/.local/share/color-schemes/modern.colors`. Widget style is
-`qt6ct-style`. Nautilus is an opaque overlay card (`nautilus-opaque`).
+`qt6ct-style`. Nautilus is not installed by default (`docs/DECISIONS.md`
+#5); when it is, it is an opaque overlay card (`nautilus-opaque`).
 Nautilus Space preview is
 GNOME Sushi (`nautilus-previewer`: float, center, `dim_around`),
 colored from the same `gtk.css` GTK3 Adwaita aliases. GTK icon theme is
@@ -165,7 +166,8 @@ account). Upstream Phylax rebuilds that DropDown on every Relm4 watch,
 so the selected admin resets to the first wheel uid and cannot be
 changed; `scripts/build-phylax.sh` installs a patched binary to
 `~/.local/bin/phylax` and `phylax.service` prefers it over the AUR
-file. `install.sh` runs that build when `cargo` is present so destuser
+file. `install.sh` runs that build when `cargo` is present and otherwise
+installs the prebuilt `install/prebuilt/phylax`, so the target user
 does not silently keep the AUR UI. `theme-apply.sh` starts `phylax.service` if it is down and stops
 `hyprpolkitagent` so only one agent is registered. Preview with
 `PHYLAX_DEMO=1 phylax` or `pkexec true`. The files these templates

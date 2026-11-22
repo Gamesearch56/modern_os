@@ -51,6 +51,7 @@ Item {
         MButton {
             visible: root.actionKey.length > 0
             Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: Tokens.spacing.lg
             kind: "tonal"
             key: root.actionKey
             onClicked: root.actionClicked()

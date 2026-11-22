@@ -1,5 +1,9 @@
 # Backups
 
+For admins: the btrfs/Snapper layout ModernOS expects, how Settings →
+Backup and `modern update` use snapshots, and what to copy by hand
+after a reinstall.
+
 Layout and restore notes. Snapper/restic and the ESP hook are **gated**
 (`install/system/`, `docs/ISOLATION.md`) — nothing here runs from
 `install.sh`.
@@ -63,14 +67,14 @@ filesystem (`/var/lib/modern/esp-backup`) and enable `AbortOnFail` so a
 failed copy blocks the kernel upgrade. **Do not enable until that dest
 exists.**
 
-## restic (later)
+## restic (not implemented)
 
-`backup.resticEnabled` is reserved. When wired:
-
-- repo and password live in gitignored `secrets.json`, never in
-  `config.default.json`
-- exclude `.steam/steamapps`, `~/.cache`, `@pkg`, `@swap`
-- a timer under `stow/systemd` (not shipped in this milestone)
+`backup.resticEnabled` is reserved; ModernOS does not configure restic.
+If it is added, the repository and password belong in the gitignored
+`secrets.json` (owned by `Services/Secrets.qml`), never in
+`config.default.json`; backups should exclude `.steam/steamapps`,
+`~/.cache`, `@pkg` and `@swap`; and the timer would live under
+`stow/systemd`.
 
 `scripts/doctor.sh` warns when restic is missing or unconfigured.
 
@@ -103,16 +107,16 @@ Nothing the desktop does can cut pacman off halfway:
 ## Restore kit
 
 After a bare-metal reinstall, copy these onto the new `$HOME` **before**
-expecting mail, git, or Proton to work. None of them belong in git:
+expecting AI chat, the calendar, git, or SSH to work. None of them
+belong in git:
 
 | Item | Why |
 |------|-----|
-| `~/.config/modern/secrets.json` | API tokens; gitignored |
+| `~/.config/modern/secrets.json` | AI keys, calendar credentials (`Services/Secrets.qml`) and the problem-report token; gitignored |
 | `~/.ssh/` | keys and `known_hosts` |
-| Proton / Bridge state | `~/.config/protonmail/` or the Bridge data dir |
 | `~/.bashrc.local` | machine-local shell (gitignored) |
 | `~/.gitconfig.local` | `user.name` / `user.email` |
-| `~/.local/share/modern/` | notes, OptiScaler cache, launcher frecency |
+| `~/.local/share/modern/` | OptiScaler cache, launcher frecency, other app data |
 
 Then: `install/install.sh --profile …`, `scripts/theme-apply.sh`,
 `scripts/doctor.sh`.

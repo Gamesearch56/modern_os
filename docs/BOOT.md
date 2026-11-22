@@ -1,5 +1,9 @@
 # Boot and session
 
+For admins and developers debugging startup: how a ModernOS session
+starts from boot to desktop, where the lock and login screens live, and
+which log to read at each stage.
+
 How a graphical session starts, where the lock/login surfaces live, and
 what is shared with an unprivileged greeter. Plymouth stays gated
 (`install/system/`, `docs/ISOLATION.md`). Greetd is applied by
@@ -14,7 +18,7 @@ Getty fallback if greetd is down:
   TTY login → .bash_profile on tty1 execs start-hyprland
                               →  Hyprland (stow/hypr)
                               ├─ autostart.lua
-                              │     exec qs -c modern  (compositor child)
+                              │     exec scripts/shell-run.sh → qs -c modern  (compositor child)
                               ├─ modern-shell.service  (optional UWSM watchdog)
                               └─ portals (xdg-desktop-portal-hyprland + gtk/kde)
 ```
@@ -44,7 +48,7 @@ like from the outside: plain Hyprland, no greeter, no shell, and a
 tell that `$HOME` was `/`. The greetd command is therefore `/etc/greetd/kiosk.sh`, which re-exports
 `GREETD_SOCK` (Quickshell will not connect without it) and execs
 `start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua`.
-`scripts/test-calamares-late.sh` asserts both. Greetd sets
+`tests/test-calamares-late.sh` asserts both. Greetd sets
 `source_profile = false` so `~/.bashrc` (fastfetch) does not run on the
 seat before Hyprland. The kiosk sets `ulimit -c 0` so a crash dump cannot
 block reaping. Greeter wallpaper is the Quickshell Image — no `awww`
@@ -66,8 +70,8 @@ target — a TTY start without UWSM never reaches it, and `PartOf` would
 stop the shell immediately. TTY testing does **not** need this unit
 enabled.
 
-`modules/autostart.lua` **exec**s `qs -c modern` as a child of this
-compositor (logs: `~/.local/state/modern/quickshell.log`) **before**
+`modules/autostart.lua` **exec**s `scripts/shell-run.sh`, which runs
+`qs -c modern` as a child of this compositor (logs: `~/.local/state/modern/quickshell.log`) **before**
 wallpaper and any `systemctl --user` call. After greetd the user bus is
 often still coming up; waiting on it delayed the first shell frame. Do not
 wrap qs in a `while` loop: Hyprland then tracks `sh` instead of Quickshell,
@@ -145,7 +149,7 @@ the solid installer colors.
 | Boot entry, splash, greetd | `journalctl -b -u plymouth-start -u modern-splash -u modern-boot-confirm -u greetd` |
 | Login screen | `/var/lib/modern/session/greeter.log` (greeter shell), `auth-trace.json` (last 20 auth events, no password data) |
 | Desktop session | `~/.local/state/modern/hyprland.log` (one `== desktop session` header per login) |
-| Shell and lock | `~/.local/state/modern/quickshell.log`, journal tag `modern-shell` |
+| Shell and lock | `~/.local/state/modern/quickshell.log` (moved to `.log.1` at login once past 5 MB), journal tag `modern-shell` |
 | Idle and sleep | `~/.local/state/modern/hypridle.log`, journal tag `modern-power` |
 | Logout, reboot, power off | journal tag `modern-session` (request and any refusal) |
 | Last shutdown | `journalctl -b -1 -n 300` |
@@ -160,16 +164,18 @@ Preferred backends are in both:
 - `stow/xdg/.config/xdg-desktop-portal/hyprland-portals.conf` (user)
 - `install/system/portals/hyprland-portals.conf` (staged system copy)
 
-FileChooser is the KDE portal (Qt apps). Folders open in the
-ModernOS File Manager (`docs/DECISIONS.md` #5).
+FileChooser is ModernOS Files (`modern;gtk`: the `modern-portal`
+package, with GTK as fallback until it is installed;
+`docs/DECISIONS.md` #28). Folders open in the ModernOS File Manager
+(`docs/DECISIONS.md` #5).
 Screenshot and ScreenCast are Hyprland.
 
 ## Troubleshooting a black session / no bar
 
 If the graphical session is up (wallpaper, `SUPER+B`) but you have no
 terminal, try `SUPER+RETURN` (emergency `/usr/bin/kitty`). Do **not**
-wait only on `SUPER+T` if `modern-launch` is broken. From the
-another TTY:
+wait only on `SUPER+T` if `modern-launch` is broken. From another
+TTY:
 
 1. `loginctl list-sessions` — note the session id for this user
 2. Optional: `loginctl terminate-session <id>`

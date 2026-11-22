@@ -73,11 +73,42 @@ the catalog — a folder alone is not enough. See `docs/SETTINGS.md`.
 `Modules/Launcher/providers/<name>.qml` implementing `query(text) -> results[]`
 and register its prefix in `config.default.json` under `launcher.providers`.
 
+**A new ModernOS app (own window, own process).** Follow the Texteditor
+(`docs/EDITOR.md`), the Imageviewer (`docs/VIEWER.md`), the Mediaplayer
+(`docs/PLAYER.md`) or the Manual (`docs/MANUAL.md`): a root `<app>.qml` with `//@ pragma AppId modern.<app>`,
+a launcher script started with `qs -p`, a `modern.<app>.desktop` under
+`stow/xdg`, a row in `Commons/ModernApps.qml` (short name and icon for the
+launcher, dock and Overview), a `SystemIcons` glyph, and — only if it
+should float at a fixed size, like the Texteditor — a `class` entry in
+`stow/hypr/.config/hypr/modules/windows.lua`. Without one it tiles, like
+the Imageviewer and the Mediaplayer.
+
 **A new translation key.** Add it to both
 `stow/modern/.config/modern/translations/en.json` and `de.json` in the same
 change, in the same nested path. Reference it with `I18n.t("path.to.key")`.
 Never leave a key in one file and not the other — `scripts/lint-layers.sh`
 checks for this.
+
+**A new language.** Add `translations/<id>.json` with every key `en.json`
+has (same `%1` / `{name}` placeholders, including `installer.*`), a
+`settings.langs.<id>` name in every translation file, and an entry in
+`stow/modern/.config/modern/languages.json`: `id`, default `country`, and
+`countries` mapping each country code to its keyboard layout. Add
+`"calamares": "pt_BR"` only when Calamares' translation is not the bare
+id. Settings → Language, the installer's Welcome list, the regional locale
+per timezone and the Keyboard default all follow from that entry; no
+installer file changes. Run `python3 scripts/installer-locales.py --check`
+— it names anything glibc, xkb, `zone.tab` or Calamares cannot do. See
+`docs/INSTALL.md` → *Languages, countries and keyboard layouts*.
+
+**A new keyboard layout.** Add the xkb id to `keyboard-layouts.json` and
+`settings.kbLayouts.<id>` to every translation file. To make it a
+country's default, put it in that country's slot in `languages.json`.
+
+**A new installer string.** A `tr()` in `iso/releng/calamares-modernnet`
+or a `qsTr()` in the slideshow needs an `installer.*` key in every
+translation file and a row in `iso/releng/installer-strings.json`;
+`tests/test-installer-locales.py` fails until both exist.
 
 **A new theme profile (color template).** Drop a JSON file in
 `stow/modern/.config/modern/themes/<name>.json` with `{ variant, mode,
@@ -130,4 +161,5 @@ stow: `docs/CUTOVER.md`.
 See the tree in `docs/ARCHITECTURE.md`. Short version: `stow/` is
 everything that becomes a dotfile on the target user; `install/` is the
 installer, manifests and gated system files; `scripts/` is standalone
-tooling; `docs/` is reference material.
+tooling; `tests/` holds every `test-*` script `scripts/ci-check.sh` runs
+(a new test needs a line there); `docs/` is reference material.

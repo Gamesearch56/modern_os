@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Runs `modern update` for Settings outside Quickshell. The shell only
 # follows the log: a reload (the release rewrites the shell's own files)
-# or a crash (Qt upgraded underneath it) used to kill the update through
-# its Process and pipe, halfway through pacman.
+# or a crash (Qt upgraded underneath it) would otherwise kill the update
+# through its Process and pipe, halfway through pacman.
 #
 #   start   start unless running, then follow
 #   attach  follow a running update, or report one that finished while

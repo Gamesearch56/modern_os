@@ -25,7 +25,6 @@ Singleton {
 
     // UI blocks only while applying a user write — list/get must not freeze sliders.
     readonly property bool setting: setProc.running || writeDebounce.running || root._pending >= 0
-    readonly property bool probing: getProc.running || listProc.running
     readonly property bool busy: root.setting
     readonly property string script: Paths.script("brightness.sh")
 

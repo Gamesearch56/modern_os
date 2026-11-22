@@ -13,6 +13,9 @@ Singleton {
     property bool dragActive: false
     property string dragId: ""
     property bool dragFromDock: false
+    // The launcher's all-apps grid: there the trash uninstalls instead.
+    property bool dragFromGrid: false
+    readonly property bool trashShown: root.dragActive && (root.dragFromDock || root.dragFromGrid)
     property int dragIndex: -1
     property real dragX: 0
     property real dragY: 0
@@ -41,7 +44,8 @@ Singleton {
             return I18n.t("store.title");
         if (id === "shell:files")
             return I18n.t("files.launcherName");
-        return Apps.labelForId(id);
+        const own = ModernApps.shortName(id);
+        return own.length ? own : Apps.labelForId(id);
     }
 
     function iconFor(id: string): string {
@@ -126,79 +130,12 @@ Singleton {
         root._save(list);
     }
 
-    function screenOrigin(screen: var): point {
-        const mon = screen ? Hypr.monitorForScreen(screen) : null;
-        const ipc = mon && mon.lastIpcObject ? mon.lastIpcObject : null;
-        if (ipc && ipc.x !== undefined && ipc.y !== undefined)
-            return Qt.point(Number(ipc.x), Number(ipc.y));
-        return Qt.point(screen ? (screen.virtualX || 0) : 0, screen ? (screen.virtualY || 0) : 0);
-    }
-
-    // A layer-shell window does not learn its place on the screen, so
-    // mapToGlobal stays inside the window. The edge and margins rebuild
-    // the compositor position the pointer events are missing.
-    function layerToScreen(screen: var, edge: string, ml: real, mt: real, mr: real, mb: real, ww: real, wh: real, lx: real, ly: real): point {
-        const o = root.screenOrigin(screen);
-        const sw = screen ? screen.width : 0;
-        const sh = screen ? screen.height : 0;
-        let x = o.x + ml + lx;
-        let y = o.y + mt + ly;
-        if (edge === "bottom")
-            y = o.y + Math.max(0, sh - mb - wh) + ly;
-        else if (edge === "right")
-            x = o.x + Math.max(0, sw - mr - ww) + lx;
-        return Qt.point(x, y);
-    }
-
-    function _screenByName(name: string): var {
-        const screens = Quickshell.screens;
-        const key = String(name || "");
-        for (let i = 0; i < screens.length; i++) {
-            if (String(screens[i].name || "") === key)
-                return screens[i];
-        }
-        return null;
-    }
-
-    // Items live under the backing window, which has no screen. The dock
-    // row carries the output name. Without it a bottom strip is drawn at y=0.
-    function _panelScreen(item: var): var {
-        let node = item;
-        while (node) {
-            const named = node.screenName ? root._screenByName(node.screenName) : null;
-            if (named)
-                return named;
-            if (node.screen && Number(node.screen.height) > 0)
-                return node.screen;
-            node = node.parent;
-        }
-        return null;
-    }
-
+    readonly property DockPlace _place: DockPlace {}
+    function screenOrigin(screen: var): point { return root._place.screenOrigin(screen); }
     function pointerToScreen(item: var, edge: string, gx: real, gy: real): point {
-        const win = item && item.Window ? item.Window.window : null;
-        if (!win || !win.contentItem)
-            return Qt.point(gx, gy);
-        const zero = win.contentItem.mapToGlobal(0, 0);
-        const m = win.margins;
-        const strip = DockLayout.cross;
-        return root.layerToScreen(root._panelScreen(item), edge,
-            m ? Number(m.left) || 0 : 0, m ? Number(m.top) || 0 : 0,
-            m ? Number(m.right) || 0 : 0, m ? Number(m.bottom) || 0 : 0,
-            Number(win.width) || strip, Number(win.height) || strip,
-            gx - zero.x, gy - zero.y);
+        return root._place.pointerToScreen(item, edge, gx, gy);
     }
-
-    function screenAt(x: real, y: real): var {
-        const screens = Quickshell.screens;
-        for (let i = 0; i < screens.length; i++) {
-            const s = screens[i];
-            const o = root.screenOrigin(s);
-            if (x >= o.x && y >= o.y && x < o.x + s.width && y < o.y + s.height)
-                return s;
-        }
-        return screens.length ? screens[0] : null;
-    }
+    function screenAt(x: real, y: real): var { return root._place.screenAt(x, y); }
 
     readonly property bool _shown: DockLayout.enabled
     on_ShownChanged: {
@@ -225,6 +162,14 @@ Singleton {
             root.dragScreen = hit ? String(hit.name || "") : "";
         }
         root.dragActive = root.dragId.length > 0;
+    }
+
+    function beginGridDrag(id: string, x: real, y: real, screenName: string) {
+        root.beginDrag(id, false, -1, x, y, screenName);
+        if (!root.dragActive)
+            return;
+        root.dragFromGrid = true;
+        AppUninstall.check(root.dragId);
     }
 
     function moveDrag(x: real, y: real) {
@@ -257,6 +202,7 @@ Singleton {
     function finish() {
         const id = root.dragId;
         const fromDock = root.dragFromDock;
+        const fromGrid = root.dragFromGrid;
         const from = root.dragIndex;
         const kind = root.hoverKind;
         const to = root.hoverIndex;
@@ -265,6 +211,10 @@ Singleton {
             return;
         if (kind === "trash" && fromDock) {
             root.removeAt(from);
+            return;
+        }
+        if (kind === "trash" && fromGrid) {
+            AppUninstall.drop(id);
             return;
         }
         if (kind === "row") {
@@ -279,6 +229,7 @@ Singleton {
         root.dragActive = false;
         root.dragId = "";
         root.dragFromDock = false;
+        root.dragFromGrid = false;
         root.dragIndex = -1;
         root.dragScreen = "";
         root._clearHover();

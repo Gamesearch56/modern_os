@@ -2,8 +2,8 @@
 hyprland                       # the compositor
 hyprland-guiutils               # hyprland-dialog; without it Hyprland shows a 15s login overlay
 mesa                           # OpenGL/EGL (Hyprland also pulls this; listed so m0 is explicit)
-libdisplay-info                # di-edid-decode: Settings > Displays reads HDR/wide-gamut support
-libdrm                         # modetest: Settings > Displays reads the connector's vrr_capable
+libdisplay-info                # di-edid-decode: Settings > Displays reads HDR/wide-gamut support (Services/MonitorCaps)
+libdrm                         # modetest: Settings > Displays reads the connector's vrr_capable (Services/MonitorCaps)
 greetd                         # login (enabled by install.sh on a real user home)
 plymouth                        # boot and shutdown splash (enabled by provision, not install.sh)
 gnome-keyring                  # login keyring via greetd PAM; without it Electron/libsecret prompt for Default Keyring
@@ -14,7 +14,9 @@ gvfs-smb                       # SMB file servers in the file manager
 hypridle                       # idle handling (screen off, suspend) — see Services/Power
 hyprland-qt-support             # org.hyprland.style QML chrome (application-style.conf); polkit UI is phylax-git (10-desktop.aur.txt)
 xdg-desktop-portal-hyprland     # screen share / screenshot portal backend
-xdg-desktop-portal-gtk          # fallback portal backend (file chooser when KDE one is absent)
+xdg-desktop-portal-gtk          # fallback portal backend (file chooser before modern-portal is installed)
+python-dbus                     # FileManager1 bus (file-manager-bus.py)
+python-gobject                  # Gio/GLib for the file chooser portal and the FileManager1 main loop
 quickshell                      # the shell itself — bar, panels, launcher, lock, greeter
 qt6-wayland                     # native Wayland for Qt6 apps (Quickshell, Settings)
 qt6-declarative                 # qml6 for wallpaper-provider.sh
@@ -41,8 +43,7 @@ ddcutil                         # DDC/CI brightness for external displays — se
 brightnessctl                    # XF86 brightness keys in modules/keybinds.lua
 upower                           # battery state for Services/Battery (laptops)
 playerctl                        # XF86 / KDE Connect play-pause via MPRIS (scripts/modern media)
-kdialog                          # Qt file picker (wallpaper Add; pick-directory.sh)
-hyprpicker                       # color picker widget backend
+hyprpicker                       # color picker shortcut (colorPicker in modules/keybinds.lua)
 inotify-tools                    # wallpaper-provider.sh watches the download folder
 # Desktop defaults the keybinds and scripts call directly.
 kitty                   # terminal — SUPER+T

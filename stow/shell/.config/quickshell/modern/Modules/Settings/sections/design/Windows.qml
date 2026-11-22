@@ -12,9 +12,15 @@ ColumnLayout {
     property string draftRules: JSON.stringify(Config.windowRules || [], null, 2)
     property string rulesError: ""
 
+    MHint {
+        visible: Chrome.lightEffects
+        key: "settings.hints.lightEffects"
+        Layout.fillWidth: true
+    }
     MField {
         labelKey: "settings.fields.transparency"
         MSlider {
+            enabled: !Chrome.lightEffects
             from: 0.4
             to: 1
             decimals: 2
@@ -65,6 +71,7 @@ ColumnLayout {
     MField {
         labelKey: "settings.fields.windowOpacity"
         MSlider {
+            enabled: !Chrome.lightEffects
             from: 0
             to: 100
             value: Math.round((Config.windows?.opacity ?? 1) * 100)

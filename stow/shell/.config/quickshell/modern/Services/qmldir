@@ -39,9 +39,9 @@ singleton KdeConnect 1.0 KdeConnect.qml
 singleton FirstRun 1.0 FirstRun.qml
 singleton Overview 1.0 Overview.qml
 singleton Plugins 1.0 Plugins.qml
-singleton Mail 1.0 Mail.qml
 singleton Weather 1.0 Weather.qml
 singleton WeatherGeocode 1.0 WeatherGeocode.qml
+singleton Secrets 1.0 Secrets.qml
 singleton CalendarAccount 1.0 CalendarAccount.qml
 singleton Calendar 1.0 Calendar.qml
 singleton Ai 1.0 Ai.qml
@@ -65,6 +65,8 @@ singleton User 1.0 User.qml
 singleton Apps 1.0 Apps.qml
 singleton AppsPrune 1.0 AppsPrune.qml
 singleton Dock 1.0 Dock.qml
+DockPlace 1.0 DockPlace.qml
+singleton AppUninstall 1.0 AppUninstall.qml
 singleton DefaultApps 1.0 DefaultApps.qml
 AppsIcons 1.0 AppsIcons.qml
 singleton IdleInhibit 1.0 IdleInhibit.qml
@@ -108,8 +110,11 @@ StoreBrowse 1.0 StoreBrowse.qml
 StoreDetail 1.0 StoreDetail.qml
 StoreFetch 1.0 StoreFetch.qml
 singleton BugReport 1.0 BugReport.qml
+BugReportProc 1.0 BugReportProc.qml
 singleton Files 1.0 Files.qml
 singleton FilesChoose 1.0 FilesChoose.qml
+singleton FilesRequest 1.0 FilesRequest.qml
+singleton FilesSaveAs 1.0 FilesSaveAs.qml
 FilesOps 1.0 FilesOps.qml
 singleton FilesSearch 1.0 FilesSearch.qml
 singleton FilesSizes 1.0 FilesSizes.qml
@@ -129,3 +134,14 @@ singleton FilesDrag 1.0 FilesDrag.qml
 singleton FilesHistory 1.0 FilesHistory.qml
 singleton FilesLocate 1.0 FilesLocate.qml
 singleton GamesLibrary 1.0 GamesLibrary.qml
+singleton EditorIo 1.0 EditorIo.qml
+singleton EditorDoc 1.0 EditorDoc.qml
+singleton EditorPrefs 1.0 EditorPrefs.qml
+JsonJobs 1.0 JsonJobs.qml
+singleton ViewerIo 1.0 ViewerIo.qml
+singleton ViewerDoc 1.0 ViewerDoc.qml
+singleton ViewerPrefs 1.0 ViewerPrefs.qml
+singleton PlayerIo 1.0 PlayerIo.qml
+singleton PlayerDoc 1.0 PlayerDoc.qml
+singleton PlayerPrefs 1.0 PlayerPrefs.qml
+singleton ManualDocs 1.0 ManualDocs.qml

@@ -282,6 +282,25 @@
     "showNetwork": false,
     "favorites": []
   },
+  "editor": {
+    "wordWrap": true,
+    "statusBar": true,
+    "monospace": true,
+    "zoom": 100,
+    "maxMegabytes": 8
+  },
+  "viewer": {
+    "scaling": "shrink",
+    "info": false,
+    "slideshowSeconds": 4
+  },
+  "player": {
+    "volume": 1,
+    "muted": true,
+    "loop": true,
+    "seekSeconds": 5,
+    "jumpSeconds": 60
+  },
   "backup": {
     "snapperEnabled": false,
     "resticEnabled": false,
@@ -344,6 +363,7 @@
     "screenshotWindow": "SHIFT + PRINT",
     "screenshotFull": "SUPER + PRINT",
     "colorPicker": "SUPER + SHIFT + C",
+    "manual": "SUPER + Y",
     "filePreview": "SPACE",
     "bugReport": "SUPER + #"
   },
@@ -354,9 +374,9 @@
       "mail": "proton-mail.desktop",
       "communication": "whatsapp.desktop",
       "fileManager": "modern.files.desktop",
-      "videoPlayer": "mpv.desktop",
-      "imageViewer": "imv.desktop",
-      "textEditor": "org.gnome.gedit.desktop",
+      "videoPlayer": "modern.mediaplayer.desktop",
+      "imageViewer": "modern.imageviewer.desktop",
+      "textEditor": "modern.editor.desktop",
       "terminal": "kitty.desktop"
     }
   },

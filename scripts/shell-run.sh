@@ -39,6 +39,13 @@ other_shell() {
 exec 9>"$LOCK"
 flock -n 9 || exit 0
 
+# Rotated once per login, under the lock and before a shell holds the
+# file open. A tray app that fails a D-Bus property on every update grew
+# it to tens of megabytes across sessions; the bug report reads the tail.
+if [ "$(wc -c 2>/dev/null <"$LOG" || printf 0)" -gt "${MODERN_SHELL_LOG_CAP:-5242880}" ]; then
+    mv -f -- "$LOG" "$LOG.1"
+fi
+
 child=0
 stop() {
     [ "$child" -gt 0 ] && kill -TERM "$child" 2>/dev/null

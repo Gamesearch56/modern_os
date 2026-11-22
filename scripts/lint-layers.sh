@@ -5,8 +5,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SHELL_ROOT="$ROOT/stow/shell/.config/quickshell/modern"
-EN="$ROOT/stow/modern/.config/modern/translations/en.json"
-DE="$ROOT/stow/modern/.config/modern/translations/de.json"
+TRANSLATIONS="$ROOT/stow/modern/.config/modern/translations"
+EN="$TRANSLATIONS/en.json"
 FAIL=0
 
 err() { printf 'lint-layers: %s\n' "$*" >&2; FAIL=1; }
@@ -60,40 +60,62 @@ while IFS= read -r hit; do
 done < <(grep -RIn --include='*.qml' -E 'duration:\s*[0-9]+' "$SHELL_ROOT/Modules" "$SHELL_ROOT/Widgets" || true)
 
 # --- i18n key parity -------------------------------------------------
+# Every translations/<lang>.json carries exactly en.json's keys and the
+# same %1 / {name} placeholders, and every language has a catalog entry
+# (languages.json) that the installer can turn into a locale + keyboard.
 if ! command -v jq >/dev/null 2>&1; then
     err "jq not on PATH — cannot check i18n parity"
 else
-    python3 - "$EN" "$DE" <<'PY' || FAIL=1
-import json, sys
-en = json.load(open(sys.argv[1]))
-de = json.load(open(sys.argv[2]))
+    python3 - "$TRANSLATIONS" <<'PY' || FAIL=1
+import json, re, sys
+from pathlib import Path
 
-def keys(obj, prefix=""):
-    out = set()
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            path = f"{prefix}.{k}" if prefix else k
-            if isinstance(v, dict):
-                out |= keys(v, path)
-            else:
-                out.add(path)
+tdir = Path(sys.argv[1])
+PLACEHOLDER = re.compile(r"%\d|\{[A-Za-z_][A-Za-z0-9_]*\}")
+
+
+def flat(obj, prefix=""):
+    out = {}
+    for k, v in obj.items():
+        path = f"{prefix}.{k}" if prefix else k
+        if isinstance(v, dict):
+            out.update(flat(v, path))
+        else:
+            out[path] = v
     return out
 
-ke, kd = keys(en), keys(de)
-missing_de = sorted(ke - kd)
-missing_en = sorted(kd - ke)
-if missing_de:
-    print("lint-layers: keys in en.json missing from de.json:", file=sys.stderr)
-    for k in missing_de:
-        print("  ", k, file=sys.stderr)
-    sys.exit(1)
-if missing_en:
-    print("lint-layers: keys in de.json missing from en.json:", file=sys.stderr)
-    for k in missing_en:
-        print("  ", k, file=sys.stderr)
-    sys.exit(1)
+
+en = flat(json.loads((tdir / "en.json").read_text(encoding="utf-8")))
+bad = False
+for path in sorted(tdir.glob("*.json")):
+    if path.stem == "en":
+        continue
+    other = flat(json.loads(path.read_text(encoding="utf-8")))
+    for label, keys in (
+        (f"keys in en.json missing from {path.name}", sorted(set(en) - set(other))),
+        (f"keys in {path.name} missing from en.json", sorted(set(other) - set(en))),
+        (
+            f"{path.name} changes the %1 / {{name}} placeholders of",
+            sorted(
+                k for k in set(en) & set(other)
+                if isinstance(en[k], str) and isinstance(other[k], str)
+                and sorted(PLACEHOLDER.findall(en[k])) != sorted(PLACEHOLDER.findall(other[k]))
+            ),
+        ),
+    ):
+        if keys:
+            bad = True
+            print(f"lint-layers: {label}:", file=sys.stderr)
+            for k in keys:
+                print("  ", k, file=sys.stderr)
+for lang in sorted(p.stem for p in tdir.glob("*.json")):
+    if f"settings.langs.{lang}" not in en:
+        bad = True
+        print(f"lint-layers: en.json has no settings.langs.{lang} (language name for Settings)", file=sys.stderr)
+sys.exit(1 if bad else 0)
 PY
 fi
+python3 "$ROOT/scripts/installer-locales.py" --check >/dev/null || err "languages.json / keyboard-layouts.json invalid (scripts/installer-locales.py --check)"
 
 # --- file size (Config.qml is a JsonAdapter; do not size-fail it) ---
 MAX_LINES=290

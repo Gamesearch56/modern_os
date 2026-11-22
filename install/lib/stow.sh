@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 # Stow wrapper with non-destructive conflict handling. Source, never
-# execute directly. Fixes the audited bug where the old install.sh's
-# "desktop" package silently wiped every .desktop file on each run: we
-# never delete anything, we move conflicts to a timestamped backup
-# directory and log exactly what moved.
+# execute directly. Never deletes anything: a conflict moves to a
+# timestamped backup directory and every move is logged.
 #
 # Conflict detection walks the package tree. A path is a real conflict
 # when it exists as a regular file or as a symlink that does *not*
@@ -132,6 +130,33 @@ _stow_prune() {
     done
     for f in "$dir"/* "$dir"/.[!.]*; do
         [ -d "$f" ] && [ ! -L "$f" ] && _stow_prune "$f" "$pkg_dir" "$target"
+    done
+    return 0
+}
+
+# Packages that left the repo, with the folder their links lived in. Once
+# the package is gone nothing stows it again, so _stow_prune never visits
+# those links; only broken ones pointing into the old package go, and the
+# user's own files there stay.
+STOW_RETIRED=("imv:.config/imv" "mpv:.config/mpv")
+
+stow_retire() {
+    local target="${1:-$HOME}"
+    local stow_resolved entry pkg dir link
+    stow_resolved="$(readlink -m "$STOW_DIR")"
+    for entry in "${STOW_RETIRED[@]}"; do
+        pkg="${entry%%:*}"
+        dir="$target/${entry#*:}"
+        [ -d "$dir" ] && [ ! -L "$dir" ] || continue
+        while IFS= read -r -d '' link; do
+            [ -L "$link" ] && [ ! -e "$link" ] || continue
+            case "$(readlink -m "$link")" in
+                "$stow_resolved/$pkg"/*)
+                    log_info "Removing retired link $link"
+                    run rm -f "$link"
+                    ;;
+            esac
+        done < <(_stow_walk "$dir")
     done
     return 0
 }

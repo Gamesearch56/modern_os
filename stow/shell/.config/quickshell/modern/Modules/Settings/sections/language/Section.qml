@@ -34,12 +34,9 @@ ColumnLayout {
 
     MField {
         labelKey: "settings.fields.languageUi"
-        MSegmented {
-            value: Config.language.ui || "de"
-            model: [
-                { value: "en", titleKey: "settings.langEn" },
-                { value: "de", titleKey: "settings.langDe" }
-            ]
+        MSelect {
+            value: Config.language.ui || "en"
+            model: Languages.options
             onSelected: (v) => ConfigWrite.set("language.ui", v)
         }
     }

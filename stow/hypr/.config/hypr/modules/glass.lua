@@ -68,6 +68,9 @@ local function surface_hex()
 end
 
 local function wash()
+    if require("modules.light_effects") then
+        return 1
+    end
     local t = tonumber(config.value("design.transparency", 0.85)) or 0.85
     if t < 0 then
         t = 0

@@ -42,8 +42,13 @@ Singleton {
     // leave it unset, so glass and blur stay as designed.
     readonly property bool softwareGpu: Quickshell.env("MODERN_SOFTWARE_GPU") === "1"
 
+    // Settings -> Gaming -> Performance. Hyprland drops blur behind the
+    // shell with the same key (modules/light_effects.lua), and a
+    // see-through panel without frost is just hard to read.
+    readonly property bool lightEffects: Config.gaming.autoOptimize === true
+
     readonly property real washOpacity: {
-        if (root.softwareGpu)
+        if (root.softwareGpu || root.lightEffects)
             return 1;
         void Config.design.transparency;
         void Tokens.glass;

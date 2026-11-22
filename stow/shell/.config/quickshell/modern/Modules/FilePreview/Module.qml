@@ -43,6 +43,12 @@ Scope {
     }
 
     LazyLoader {
+        active: FilePreview.open && FilePreview.kind === "video"
+
+        VideoWindow {}
+    }
+
+    LazyLoader {
         active: FilePreview.showOverlay
 
         PanelWindow {

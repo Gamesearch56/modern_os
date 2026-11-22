@@ -219,8 +219,13 @@ Singleton {
 
     function suppressAutostartRespawn(desktopId: string) {
         const skip = String(desktopId || "").replace(/\.desktop$/i, "");
-        if (!skip.length)
+        // The id lands inside a Lua long string; anything outside the
+        // desktop-file-id alphabet could close it and run as Lua.
+        if (!/^[A-Za-z0-9._+@-]+$/.test(skip)) {
+            if (skip.length)
+                Logger.warn("Hypr", `refusing autostart id ${JSON.stringify(skip)}`);
             return;
+        }
         Quickshell.execDetached([
             "hyprctl", "eval",
             "do local n=[=[" + skip + "]=]; local b=_G.__modern_as_busy; "
@@ -472,11 +477,6 @@ Singleton {
         if (fw && Number(fw.id) === id && root._onMonitor(fw, mon))
             return true;
         return false;
-    }
-
-    function taskbarCount(screen: var): int {
-        void root.toplevelList;
-        return (root.toplevelList || []).length;
     }
 
     function refreshToplevels() {

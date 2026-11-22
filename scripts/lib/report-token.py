@@ -151,7 +151,7 @@ def cmd_install(root, home):
     bug["githubToken"] = token
     data["bugReport"] = bug
     tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as fh:
+    with os.fdopen(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=2)
         fh.write("\n")
     os.chmod(tmp, 0o600)

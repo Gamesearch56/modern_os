@@ -146,15 +146,17 @@ apply({
     suppress_event = "fullscreen maximize",
 })
 
--- Current external image viewer only. The role list names this rule
--- (install/manifests/default-apps.json imageViewer.windowRule). The
--- viewer fills its tile. On a virtual GPU the acrylic pass replaces
--- that tile with black, so the picture never shows. A real GPU is
--- unchanged because the viewer background is already opaque. Delete
--- this rule with that manifest entry.
+-- The Imageviewer and the Mediaplayer fill their tile with the picture.
+-- On a virtual GPU the acrylic pass replaces that tile with black, so the
+-- picture never shows. A real GPU is unchanged because both are opaque.
 apply({
-    name = "imv-no-blur",
-    match = { class = "imv" },
+    name = "modern-imageviewer-no-blur",
+    match = { class = "modern.imageviewer" },
+    no_blur = true,
+})
+apply({
+    name = "modern-mediaplayer-no-blur",
+    match = { class = "modern.mediaplayer" },
     no_blur = true,
 })
 
@@ -216,15 +218,8 @@ apply({
     opaque = true,
 })
 
--- Spacebar Quick Look. Video is mpv (class). Image is a plain window
--- with the same title, so it floats and dims the same way.
-apply({
-    name = "modern-quicklook",
-    match = { class = "modern.quicklook" },
-    float = true,
-    center = true,
-    dim_around = true,
-})
+-- Spacebar Quick Look. Picture and video are plain shell windows with
+-- this title (Modules/FilePreview), so both float and dim the same way.
 apply({
     name = "modern-quicklook-title",
     match = { title = "modern.quicklook" },
@@ -250,7 +245,7 @@ apply({
 for _, w in ipairs(overlays) do
     local rule = {
         name = w.name,
-        match = { title = w.title },
+        match = w.class and { class = w.class } or { title = w.title },
         float = true,
         center = true,
         dim_around = w.dim ~= false,

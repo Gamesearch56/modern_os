@@ -9,6 +9,14 @@ body:
       description: The problem this would solve, not only the implementation.
     validations:
       required: true
+  - type: dropdown
+    id: paid
+    attributes:
+      label: Would you fund this feature?
+      description: Paid requests are arranged through Ko-fi (https://ko-fi.com/gamesearch56). Free requests are welcome too.
+      options:
+        - "No, just a suggestion"
+        - "Yes, I'd like to fund it"
   - type: textarea
     id: notes
     attributes:

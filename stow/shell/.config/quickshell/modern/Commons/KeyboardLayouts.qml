@@ -1,6 +1,6 @@
-// Shared XKB catalog with the live installer. File is the same list
-// iso/releng/installer-locales.json `layouts` keeps — Settings must not
-// invent a second set. Default stays us until the user picks another.
+// Shared XKB catalog with the live installer: the ISO build copies this
+// list into its Keyboard step (scripts/installer-locales.py), so Settings
+// must not invent a second set. Default stays us until the user picks another.
 pragma Singleton
 
 import Quickshell
@@ -39,6 +39,9 @@ Singleton {
                 root._ids = ["us"];
             }
         }
-        onLoadFailed: root._ids = ["us"]
+        onLoadFailed: (error) => {
+            Logger.warn("KeyboardLayouts", `keyboard-layouts.json not loaded (${error}); offering us only`);
+            root._ids = ["us"];
+        }
     }
 }

@@ -1,7 +1,7 @@
 // Settings-like nav. Widget ProgressTreeView cannot round the current
 // step (C++ delegate); this QML file is the branding escape hatch.
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Layouts
 import io.calamares.core 1.0
 import io.calamares.ui 1.0
 

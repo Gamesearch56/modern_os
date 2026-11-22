@@ -74,28 +74,11 @@ Scope {
                             anchors.topMargin: Tokens.spacing.lg
                             anchors.bottom: parent.bottom
 
-                            Row {
+                            SearchHead {
                                 id: searchHead
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.top: parent.top
-                                height: FilesSearch.active ? implicitHeight : 0
-                                opacity: FilesSearch.active ? 1 : 0
-                                spacing: Tokens.spacing.md
-                                MText {
-                                    width: Math.max(0, searchHead.width - found.implicitWidth - searchHead.spacing)
-                                    key: "files.search.heading"
-                                    params: ({ query: FilesSearch.query })
-                                    styleName: "titleSmall"
-                                    color: Colors.color.onSurfaceVariant
-                                    elide: Text.ElideRight
-                                }
-                                MText {
-                                    id: found
-                                    key: "files.search.found"
-                                    params: ({ count: (FilesSearch.results || []).length })
-                                    styleName: "titleSmall"
-                                }
                             }
 
                             FileGrid {
@@ -104,6 +87,7 @@ Scope {
                                 anchors.right: parent.right
                                 anchors.top: searchHead.bottom
                                 anchors.bottom: parent.bottom
+                                anchors.bottomMargin: choose.reserve
                                 visible: Files.view === "grid"
                             }
                             List {
@@ -112,7 +96,14 @@ Scope {
                                 anchors.right: parent.right
                                 anchors.top: searchHead.bottom
                                 anchors.bottom: parent.bottom
+                                anchors.bottomMargin: choose.reserve
                                 visible: Files.view === "list"
+                            }
+                            ChooseBar {
+                                id: choose
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
                             }
                             MText {
                                 anchors.centerIn: parent
@@ -149,8 +140,7 @@ Scope {
             }
             ContextMenu {}
             Properties {}
-            Confirm {}
-            NamePrompt {}
+            Dialogs {}
         }
     }
 

@@ -94,8 +94,10 @@ Singleton {
     function choose(mode: string) {
         if (!root.open && !(root._create && mode === "cancel"))
             return;
-        if (root._create)
-            return root._createChoose(mode);
+        if (root._create) {
+            root._createChoose(mode);
+            return;
+        }
         if (mode === "cancel") {
             root.open = false;
             root._hits = [];

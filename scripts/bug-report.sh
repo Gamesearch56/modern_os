@@ -66,7 +66,10 @@ cmd_capture() {
     while IFS= read -r name; do
         [ -n "$name" ] || continue
         out="$dir/${name//[^A-Za-z0-9._-]/_}-$stamp.jpg"
-        grim -o "$name" -t jpeg -q 80 "$out" 2>/dev/null || rm -f "$out"
+        if ! grim -o "$name" -t jpeg -q 80 "$out" 2>/dev/null; then
+            rm -f "$out"
+            printf 'bug-report: no screenshot of %s\n' "$name" >&2
+        fi
     done < <(hyprctl monitors -j 2>/dev/null | jq -r '.[].name' 2>/dev/null || true)
     list_json "$dir"
 }
@@ -125,6 +128,7 @@ cmd_outbox() {
         if [ "$rc" -eq 0 ]; then
             printf 'sent %s %s\n' "$id" "$(jq -r '.number' "$REPORTS/$id/sent.json" 2>/dev/null || true)"
         elif [ "$rc" -ne 20 ]; then
+            printf 'bug-report: outbox stopped at %s (send exit %s)\n' "$id" "$rc" >&2
             break
         fi
     done
@@ -145,7 +149,7 @@ cmd_status() {
     local secrets="$MODERN_DIR/secrets.json" ready=false n=0 q
     if [ -f "$secrets" ] && jq -e '(.bugReport.githubToken // "") | length > 0' "$secrets" >/dev/null 2>&1; then
         ready=true
-    elif [ -z "${BUG_REPORT_API:-}" ] && command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+    elif [ "${MODERN_REPORT_GH:-}" = 1 ] && command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
         ready=true
     fi
     for q in "$REPORTS"/*/queued; do [ -f "$q" ] && n=$((n + 1)); done
@@ -171,7 +175,9 @@ cmd_quick() {
     case "$rc" in
         0) notify "$(t bugReport.sentQuick)" ;;
         20) notify "$(t bugReport.queued)" ;;
-        *) notify "$(t bugReport.notSetUp) $(cmd_export "$id")" ;;
+        21) notify "$(t bugReport.notSetUp) $(cmd_export "$id")" ;;
+        22) notify "$(t bugReport.refused) $(cmd_export "$id")" ;;
+        *) notify "$(t bugReport.failed) $(cmd_export "$id")" ;;
     esac
 }
 

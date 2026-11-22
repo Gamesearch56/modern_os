@@ -77,7 +77,7 @@ Singleton {
     }
 
     function _kick() {
-        // Do not SIGTERM an in-flight write: slider drags used to kill
+        // Do not SIGTERM an in-flight write: a slider drag would kill
         // `mv` mid-rename (exit 15) and toast a Shell error.
         if (proc.running)
             return;

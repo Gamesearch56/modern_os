@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shell-side counterpart to Commons/I18n.qml. Reads the same
-# translations/{en,de}.json files so install.sh and scripts/ speak the
+# translations/<lang>.json files so install.sh and scripts/ speak the
 # configured language without a second, duplicated string table.
 # Source, never execute directly. Requires jq.
 
@@ -10,7 +10,9 @@ TRANSLATIONS_DIR="${TRANSLATIONS_DIR:-$REPO_ROOT/stow/modern/.config/modern/tran
 I18N_LANG="${I18N_LANG:-${LANG-}}"
 I18N_LANG="${I18N_LANG%%_*}"
 I18N_LANG="${I18N_LANG%%.*}"
-[ "$I18N_LANG" = "de" ] || I18N_LANG="en"
+if ! [[ $I18N_LANG =~ ^[a-z]{2,3}$ ]] || [ ! -f "$TRANSLATIONS_DIR/$I18N_LANG.json" ]; then
+    I18N_LANG="en"
+fi
 
 # t "cli.usage" -> looks up translations/<lang>.json's nested "cli.usage"
 # (dot-path), falling back to English, then to the key itself if neither

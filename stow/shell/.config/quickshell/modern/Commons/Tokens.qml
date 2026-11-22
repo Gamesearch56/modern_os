@@ -117,6 +117,18 @@ Singleton {
                 + win.filesCell * 5
                 + root.spacing.md * 4
         readonly property real filesHeight: root.spacing.xxl * 22
+        // Keep windows.lua modern-editor size in sync.
+        readonly property real editorWidth: root.spacing.xxl * 26
+        readonly property real editorHeight: root.spacing.xxl * 20
+        readonly property real viewerWidth: root.spacing.xxl * 24
+        readonly property real viewerHeight: root.spacing.xxl * 18
+        readonly property real manualWidth: root.spacing.xxl * 30
+        readonly property real manualHeight: root.spacing.xxl * 21
+        // About 80 characters of body text, past which lines get hard to track.
+        readonly property real manualMeasure: root.spacing.xxl * 19
+        readonly property real playerWidth: root.spacing.xxl * 24
+        readonly property real playerHeight: root.spacing.xxl * 15
+        readonly property real seekPreviewWidth: root.spacing.xxl * 7
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real reportWidth: root.spacing.xxl * 24 + root.spacing.lg
@@ -196,8 +208,8 @@ Singleton {
     function elevationFor(level: int): var {
         const raw = elevation[Math.max(0, Math.min(level, elevation.length - 1))];
         return {
-            // Full strength at slider 1 read as a bright veil. The top
-            // of the slider now sits near what the middle used to be.
+            // Full tint strength reads as a bright veil, so the top of
+            // the slider stays well below it.
             tintOpacity: Math.min(1, raw.tintOpacity * root.surfaceTint * 0.55),
             shadowOpacity: raw.shadowOpacity,
             shadowRadius: raw.shadowRadius

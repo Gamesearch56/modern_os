@@ -69,7 +69,7 @@ install_native() {
         return 0
     fi
     log_info "Installing ${#pkgs[@]} native package(s): ${pkgs[*]}"
-    # ffmpeg/mpv depend on virtual `jack`; pipewire-pulse replaces
+    # ffmpeg depends on virtual `jack`; pipewire-pulse replaces
     # pulseaudio. --noconfirm answers No to "Remove jack2?".
     run sudo pacman -Rdd --noconfirm \
         jack2 jack2-dbus lib32-jack2 \
@@ -194,7 +194,7 @@ detect_nvidia_family() {
 }
 
 # Same PCI ids as wifi-wl.sh. sysfs, not lspci: a fresh install has no
-# pciutils yet, and a missing lspci used to skip the driver entirely.
+# pciutils yet, and a missing lspci would skip the driver entirely.
 detect_wifi_wl() {
     wifi_needs_wl
 }

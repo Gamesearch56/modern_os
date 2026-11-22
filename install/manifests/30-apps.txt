@@ -2,9 +2,9 @@
 # usable day to day. Store lists these as removable apps, not system
 # packages (scripts/pkg-manifest-names.sh --core).
 fastfetch                # terminal banner, themed via matugen (docs/DECISIONS.md, .bashrc)
-ffmpeg                    # mpv_thumbnail_script stills (prefer_mpv=no)
+ffmpeg                    # Mediaplayer "save frame" (scripts/lib/player_io.py)
 ffmpegthumbnailer         # Nautilus video thumbnails
-gst-plugins-base          # GStreamer codecs for mpv/browser media
+gst-plugins-base          # GStreamer codecs for GTK and browser media
 gst-plugins-good
 gst-plugins-bad
 gst-plugins-ugly

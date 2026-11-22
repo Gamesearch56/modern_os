@@ -1,7 +1,8 @@
 # Gaming
 
-System tweaks and helpers for Proton / native games on this Hyprland
-setup. Kernel sysctls live under `install/system/` and are **gated** —
+For players and admins: how ModernOS handles games — automatic
+fullscreen and optimization, Battle.net, OptiScaler, HDR — and the
+optional system tweaks for Proton and native games. Kernel sysctls live under `install/system/` and are **gated** —
 `install.sh` never applies them. Read `docs/ISOLATION.md` first.
 
 ## Kernel: `vm.max_map_count`
@@ -15,7 +16,7 @@ Staged file: `install/system/sysctl.d/99-modern-gaming.conf`
 vm.max_map_count = 1048576
 ```
 
-Apply only when you intend this machine-wide:
+Apply only when you want it system-wide:
 
 ```bash
 sudo cp install/system/sysctl.d/99-modern-gaming.conf /etc/sysctl.d/
@@ -39,11 +40,8 @@ DefaultLimitNOFILE=524288:524288
 ```
 
 After stow: `systemctl --user daemon-reexec` (or log out/in), then restart
-Steam. Optional gated `/etc/security/limits.d/` raise remains in
-`docs/GAMING.md` history for machines that do not use systemd --user.
-
-`config.json` → `gaming.systemFixes.fileDescriptorLimits` records the
-preference; it does not write limits files.
+Steam. On a system without a systemd user instance, raise `nofile` in
+`/etc/security/limits.d/` yourself; ModernOS ships no file for that.
 
 ### Too many Proton tools
 
@@ -59,8 +57,8 @@ delete them).
 The kernel's split-lock mitigation can add large stalls on some games.
 The staged sysctl sets `kernel.split_lock_mitigate = 0`. Measure frame
 times before and after; this is a throughput trade against a class of
-buggy userspace, not a free lunch. Default in `config.json` is
-`gaming.systemFixes.splitLockMitigate: false` (do not assume it is on).
+buggy userspace, not a free lunch. It only takes effect once you copy
+the staged sysctl file; `config.json` has no switch for it.
 
 ## HDR environment variables
 
@@ -68,7 +66,8 @@ buggy userspace, not a free lunch. Default in `config.json` is
 on every child (Steam CEF, browsers) causes lag and video crashes.
 `env.lua` intentionally leaves them unset.
 
-Enable **Settings → Gaming → HDR for Proton games** (`gaming.hdrSession`)
+Enable **Settings → Gaming → HDR for games** ("HDR für Spiele",
+`gaming.hdrSession`)
 so `scripts/battlenet` exports them into that Proton prefix (WoW/WC3
 inherit them). For Steam titles, paste the same vars into each game’s
 launch options. Also turn **HDR on for the display** under Settings →
@@ -183,7 +182,9 @@ as the launcher and control panel — instead of bar-anchored popups.
 
 ## Slow hardware
 
-Settings → Gaming → Slow hardware. The switch defaults off.
+Settings → Gaming → Performance → "Drop effects for speed" ("Effekte für
+Tempo weglassen"). The switch defaults off; it turns on
+`gaming.autoOptimize` and `gaming.browserLight` together.
 
 Steam starts from its own launcher entry, unwrapped. Its first start
 bootstraps `~/.local/share/Steam`, and anything in front of it (extra
@@ -214,7 +215,7 @@ Wayland often white-screens on Hyprland, so the launcher keeps Wayland off.
 
 - `steam`, `gamemode`, `gamescope`, `umu-launcher` (`30-apps.txt`, every profile)
 - `lib32-gamemode` (`50-gaming.txt`)
-- `protonup-qt` (AUR), for other titles. Do not register the private
+- `protonup-qt` (AUR, `50-gaming.aur.txt`), for other titles. Do not register the private
   GE-Proton tree with Steam.
 - AMD: `vulkan-radeon` + `lib32-vulkan-radeon` (RADV). Prefer RADV over
   `amdvlk` if both are installed (`AMD_VULKAN_ICD=RADV`).
@@ -273,10 +274,12 @@ A `PROTONPATH` line in `battlenet.env` still selects a different build.
   `battlenet-launcher` floats, centers, and sizes to `1280 800`.
 - **World of Warcraft / Warcraft III:** matched by title (and common
   Proton classes) for Settings → Gaming `autoFullscreen` +
-  `autoOptimize` — exclusive FS, tearing, opaque game content.
+  `autoOptimize` — exclusive FS, tearing, direct scanout, opaque game
+  content. The same switch also drops blur, shadows, and wobble on the
+  whole desktop for slow laptops (`modules/light_effects.lua`).
   Relaunch the game after a Hyprland reload if an older session still
   maps them windowed.
-- **HDR:** enable Settings → Gaming → HDR for Proton games (and Displays
+- **HDR:** enable Settings → Gaming → HDR for games (and Displays
   HDR on the panel). Restart Battle.net so the Proton prefix inherits
   `DXVK_HDR` / `ENABLE_HDR_WSI` / `PROTON_ENABLE_HDR`. Turn HDR on in
   the game’s graphics menu when available.
@@ -302,5 +305,4 @@ differs; tighten the rule. WoW’s title must not match Battle.net.
 
 - Desktop: `stow/xdg/.local/share/applications/battlenet.desktop`
 - Icon: `stow/xdg/.local/share/icons/hicolor/scalable/apps/battlenet.svg`
-  (replace with your branded SVG if you have one)
 - After restow: Super+Space → **Battle.net**

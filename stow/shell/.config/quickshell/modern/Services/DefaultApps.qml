@@ -65,7 +65,10 @@ Singleton {
                 Logger.warn("DefaultApps", "manifest is not valid JSON");
             }
         }
-        onLoadFailed: root._roles = ({})
+        onLoadFailed: (error) => {
+            Logger.warn("DefaultApps", `manifest not loaded (${error})`);
+            root._roles = ({});
+        }
     }
 
     // 1 can open, 0 cannot, -1 still unknown. Cached by extension so a

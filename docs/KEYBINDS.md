@@ -1,5 +1,9 @@
 # Keybinds
 
+Every default keyboard and mouse shortcut in ModernOS, for end users,
+plus where developers find and change them. The in-session cheatsheet
+(`SUPER + K`) shows the same list.
+
 Combos are strings in `config.json` → `keybinds`, in Hyprland Lua
 `hl.bind()` form (`SUPER + SHIFT + T`). Settings > Keyboard **lists**
 that object; it does not write combos. `Modules/Cheatsheet` reads the
@@ -18,6 +22,7 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + SHIFT + M` | Exit compositor | `hyprctl dispatch "hl.dsp.exit()"` |
 | `SUPER + K` | Cheatsheet | `qs -c modern ipc call cheatsheet toggle` |
 | `SUPER + #` | Report a problem | `modern report` |
+| `SUPER + Y` | ModernOS Manual | `scripts/modern-manual` |
 | `SUPER + I` | System Settings (Hyprland window) | `qs -c modern ipc call settings toggle` |
 | `SUPER + W` | Wallpaper picker | `qs -c modern ipc call wallpaper toggle` |
 | `SUPER + DELETE` | Applications (taskbar) | `qs -c modern ipc call taskbar toggle` |
@@ -31,6 +36,9 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | `SUPER + R` | Spotify | `modern-launch --on-active spotify-launcher` (moves an open window here) |
 | `SUPER + Q` | Close HUD/popup/control panel, else focused window | `modern window close` |
 | `SUPER + F` | Fullscreen | |
+| `SUPER + V` | Toggle floating | `hl.dsp.window.float({ action = "toggle" })` |
+| `SUPER + P` | Pseudo-tile | `hl.dsp.window.pseudo()` |
+| `SUPER + J` | Toggle split direction | |
 | `PRINT` | Screenshot region (HUD: still or video) | `modern screenshot region` → stills `~/Pictures/Screenshots`, recordings `~/Videos/Recordings` |
 | `SHIFT + PRINT` | Screenshot window | `modern screenshot window` |
 | `SUPER + PRINT` | Screenshot full; stops an active recording | `modern screenshot full` |
@@ -51,15 +59,74 @@ Defaults (also in `stow/modern/.config/modern/config.default.json`):
 | Applications right-click | Float, fullscreen, togglesplit, close | |
 | `SUPER + SHIFT + C` | Color picker | |
 
-Gaming mode is a switch in Settings, not a shortcut. Scroll on Super no longer changes workspace.
+Gaming mode is a switch in Settings, not a shortcut. Scrolling with Super held does not change workspace.
 
-A side press shorter than 250 ms is always a click, even while the mouse is moving; only a held side button starts a move or resize. The middle button is only taken while a side button is held. The side buttons stay plain back/forward in games and fullscreen windows; forward + middle still toggles fullscreen there. Settings → Keyboard → "Mouse control" turns the side-button controls off (`input.mouseSideButtons`). `scripts/test-mouse-windows-live.py` checks them against the running session with a virtual mouse.
+A side press shorter than 250 ms is always a click, even while the mouse is moving; only a held side button starts a move or resize. The middle button is only taken while a side button is held. The side buttons stay plain back/forward in games and fullscreen windows; forward + middle still toggles fullscreen there. Settings → Keyboard → "Mouse control" ("Maussteuerung") turns the side-button controls off (`input.mouseSideButtons`). `tests/test-mouse-windows-live.py` checks them against the running session with a virtual mouse.
 
 Workspace `SUPER + 1`…`0` and `SUPER + SHIFT + 1`…`0` (move window to
 that workspace) match the cheatsheet categories. Three fingers up or
 down on the trackpad fade the overview with the swipe; two fingers
 then move between the windows. Three fingers sideways still change
 workspace.
+
+## Texteditor
+
+Inside a Texteditor window (`docs/EDITOR.md`); the menus show the same keys.
+
+| Combo | Action |
+|---|---|
+| `CTRL + N` / `CTRL + SHIFT + N` | New document / new window |
+| `CTRL + O` / `CTRL + S` / `CTRL + SHIFT + S` | Open / save / save as |
+| `CTRL + W` | Close the window (asks about unsaved changes) |
+| `CTRL + Z` / `CTRL + Y` | Undo / redo |
+| `CTRL + F` / `F3` / `SHIFT + F3` | Find / next / previous |
+| `CTRL + H` / `CTRL + G` | Replace / go to line |
+| `F5` | Insert time and date |
+| `ALT + Z` | Word wrap |
+| `CTRL + +` / `CTRL + -` / `CTRL + 0`, `CTRL + wheel` | Zoom in / out / reset |
+
+## Imageviewer
+
+Inside an Imageviewer window (`docs/VIEWER.md`); the menu shows the same keys.
+
+| Combo | Action |
+|---|---|
+| `→` `SPACE` `PAGE DOWN` `N` / `←` `BACKSPACE` `PAGE UP` `P` | Next / previous picture (wraps) |
+| `HOME` `G G` / `END` `SHIFT + G` | First / last picture |
+| `↑` `+` `=` `I` / `↓` `-` `O`, wheel, pinch | Zoom in / out around the pointer |
+| `R` `CTRL + 0` / `A` `1` / `S` | Fit / actual size / switch scaling (shrink, fit, 1:1) |
+| double-click | Toggle fit and 100 % |
+| `H` `J` `K` `L`, drag | Move the zoomed view |
+| `SHIFT + R` `]` / `CTRL + SHIFT + R` `[` | Turn right / left (view only) |
+| `CTRL + S` | Save the turn into the file |
+| `F` `F11` / `ESC` | Fullscreen / leave fullscreen or stop the slideshow |
+| `T` / `CTRL + SPACE` / `D` `CTRL + I` | Slideshow / pause animation / details |
+| `CTRL + O` / `CTRL + N` / `CTRL + E` | Open / new window / show in Files |
+| `CTRL + C` / `CTRL + SHIFT + C` | Copy picture / copy path |
+| `X` / `DEL` | Remove from the list / move to trash (asks) |
+| `Q` `CTRL + W` | Close |
+
+## Mediaplayer
+
+Inside a Mediaplayer window (`docs/PLAYER.md`); the menu shows the same keys. Keys follow mpv.
+
+| Combo | Action |
+|---|---|
+| `SPACE` `K` `P`, click | Play / pause |
+| `→` / `←` | Forward / back by `player.seekSeconds` (5 s) |
+| `↑` / `↓` | Jump forward / back by `player.jumpSeconds` (60 s) |
+| `.` / `,` | Next / previous frame (pauses) |
+| `]` / `[` / `BACKSPACE` | Faster / slower / normal speed |
+| `0` `*` `CTRL + ↑` / `9` `/` `CTRL + ↓`, wheel | Louder / quieter |
+| `M` | Mute |
+| `CTRL` + wheel, pinch / drag | Zoom around the pointer / pan while zoomed |
+| `J` `V` / `#` | Next subtitles (then off) / next audio track |
+| `>` `N` `PAGE DOWN` / `<` `SHIFT + N` `PAGE UP` | Next / previous file (wraps) |
+| `SHIFT + L` | Repeat the file |
+| `S` | Save the frame to Pictures/Screenshots |
+| `F` `F11`, double-click / `ESC` | Fullscreen / leave fullscreen |
+| `CTRL + O` / `CTRL + N` / `CTRL + E` / `CTRL + SHIFT + C` | Open / new window / show in Files / copy path |
+| `Q` `CTRL + W` | Close |
 
 Live list: press `SUPER + K`. Media lists the hardware keys. Mouse lists Super+mouse and the window edge. CLI: `scripts/modern <target> <function>`
 (`qs -c modern ipc` wrapper).

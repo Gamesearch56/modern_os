@@ -1,0 +1,126 @@
+{
+  "calamares": [
+    { "context": "UsersViewStep", "source": "User", "key": "installer.steps.user" },
+    { "context": "Config", "source": "Summary", "comment": "@label", "key": "installer.steps.summary" },
+    {
+      "context": "FinishedPage",
+      "source": "<h1>All done.</h1><br/>%1 is installed and ready.<br/>Restart to start using your new desktop.",
+      "comment": "@info",
+      "key": "installer.finished.done"
+    },
+    { "context": "ModernNetViewStep", "source": "Network", "comment": "@title", "key": "installer.net.title" },
+    { "context": "ModernNetPage", "source": "Ethernet", "key": "installer.net.ethernet" },
+    { "context": "ModernNetPage", "source": "Nearby networks", "key": "installer.net.nearby" },
+    { "context": "ModernNetPage", "source": "Refresh", "key": "installer.net.refresh" },
+    { "context": "ModernNetPage", "source": "Password", "key": "installer.net.password" },
+    { "context": "ModernNetPage", "source": "Connect", "key": "installer.net.connect" },
+    { "context": "ModernNetPage", "source": "Not connected", "key": "installer.net.notConnected" },
+    { "context": "ModernNetPage", "source": "You're connected with Ethernet", "key": "installer.net.viaEthernet" },
+    { "context": "ModernNetPage", "source": "You're connected with Wi-Fi", "key": "installer.net.viaWifi" },
+    { "context": "ModernNetPage", "source": "You can continue to the next step.", "key": "installer.net.canContinue" },
+    { "context": "ModernNetPage", "source": "Connecting…", "key": "installer.net.connecting" },
+    { "context": "ModernNetPage", "source": "Enter the password to connect.", "key": "installer.net.enterPassword" },
+    { "context": "ModernNetPage", "source": "Connect to Wi-Fi to continue.", "key": "installer.net.needWifi" },
+    { "context": "ModernNetPage", "source": "Searching for networks…", "key": "installer.net.searching" },
+    { "context": "ModernNetPage", "source": "No networks found.", "key": "installer.net.noneFound" },
+    {
+      "context": "ModernNetPage",
+      "source": "No networks found. Move closer to the router, then choose Refresh.",
+      "key": "installer.net.noneFoundHint"
+    },
+    { "context": "ModernNetPage", "source": "Could not connect. Check the password.", "key": "installer.net.badPassword" },
+    {
+      "context": "ModernNetPage",
+      "source": "The network is out of range. Move closer or search again.",
+      "key": "installer.net.outOfRange"
+    },
+    { "context": "ModernNetPage", "source": "The network did not answer in time. Try again.", "key": "installer.net.timeout" },
+    {
+      "context": "ModernNetPage",
+      "source": "This network needs a sign-in the installer cannot enter. Choose another network.",
+      "key": "installer.net.portal"
+    },
+    { "context": "ModernNetPage", "source": "The password was not accepted. Type it again.", "key": "installer.net.rejected" },
+    { "context": "ModernNetPage", "source": "Choose another network", "key": "installer.net.another" },
+    {
+      "context": "ModernNetPage",
+      "source": "This computer's Wi-Fi chip (%1) has no driver in the installer. %2",
+      "key": "installer.net.noDriver"
+    },
+    { "context": "ModernNetPage", "source": "No Wi-Fi adapter was found. %1", "key": "installer.net.noAdapter" },
+    {
+      "context": "ModernNetPage",
+      "source": "Connect an Ethernet cable or share your phone's connection over USB.",
+      "key": "installer.net.wiredHint"
+    },
+    { "context": "ModernNetRow", "source": "Connected", "key": "installer.net.connected" },
+    { "context": "ModernNetRow", "source": "Saved", "key": "installer.net.saved" },
+    { "context": "ModernNetRow", "source": "Password required", "key": "installer.net.passwordRequired" },
+    { "context": "ModernNetRow", "source": "Open network", "key": "installer.net.openNetwork" },
+    { "context": "ModernNetRow", "source": "Connect", "key": "installer.net.connect" },
+    { "context": "ModernNetRow", "source": "Forget", "key": "installer.net.forget" },
+    { "context": "ModernNetRow", "source": "Disconnect", "key": "installer.net.disconnect" }
+  ],
+  "branding": [
+    { "context": "show", "source": "Assistant", "key": "installer.slides.assistantTitle" },
+    {
+      "context": "show",
+      "source": "Super+A opens AI chat. Ask in your language. Replies come from a local model or Gemini.",
+      "key": "installer.slides.assistant"
+    },
+    { "context": "show", "source": "Colors from your wallpaper", "key": "installer.slides.colorsTitle" },
+    {
+      "context": "show",
+      "source": "Pick a wallpaper with Super+W. Bars, apps, and login restyle from that image.",
+      "key": "installer.slides.colors"
+    },
+    { "context": "show", "source": "Keyboard helper", "key": "installer.slides.keysTitle" },
+    {
+      "context": "show",
+      "source": "Forget a shortcut? Super+K lists every bind. Search, then press the combo.",
+      "key": "installer.slides.keys"
+    },
+    { "context": "show", "source": "App Store", "key": "installer.slides.storeTitle" },
+    {
+      "context": "show",
+      "source": "Install programs from the official repositories. Search, confirm, done.",
+      "key": "installer.slides.store"
+    },
+    { "context": "show", "source": "Launcher", "key": "installer.slides.launcherTitle" },
+    {
+      "context": "show",
+      "source": "Super+Space finds apps, runs commands, and does quick sums.",
+      "key": "installer.slides.launcher"
+    },
+    { "context": "show", "source": "Settings", "key": "installer.slides.settingsTitle" },
+    {
+      "context": "show",
+      "source": "Super+I opens System Settings. One file holds every preference.",
+      "key": "installer.slides.settings"
+    },
+    { "context": "show", "source": "Your language", "key": "installer.slides.languageTitle" },
+    {
+      "context": "show",
+      "source": "The desktop starts in the language you picked here. Switch it in Settings any time.",
+      "key": "installer.slides.language"
+    },
+    { "context": "show", "source": "Everyday shortcuts", "key": "installer.slides.shortcutsTitle" },
+    {
+      "context": "show",
+      "source": "Super+T terminal. Super+B browser. Super+E files. Print takes a screenshot.",
+      "key": "installer.slides.shortcuts"
+    },
+    { "context": "show", "source": "Windows and workspaces", "key": "installer.slides.windowsTitle" },
+    {
+      "context": "show",
+      "source": "Super+arrows move focus. Super+Shift+arrows move the window. Super+Tab shows an overview.",
+      "key": "installer.slides.windows"
+    },
+    { "context": "show", "source": "After reboot", "key": "installer.slides.rebootTitle" },
+    {
+      "context": "show",
+      "source": "Sign in with the user you just created. Super+N is the control panel. Super+L locks.",
+      "key": "installer.slides.reboot"
+    }
+  ]
+}

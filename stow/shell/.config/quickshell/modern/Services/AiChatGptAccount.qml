@@ -15,17 +15,12 @@ Item {
     property string block: ""
     property bool _fileHasKey: false
 
-    FileView {
-        id: secretsFile
-        path: Paths.configHome + "/modern/secrets.json"
-        watchChanges: true
-        printErrors: false
-        onLoaded: root._ingest(text())
-        onLoadFailed: {
-            root._fileHasKey = false;
-            root._syncHasKey();
-        }
+    Connections {
+        target: Secrets
+        function onStoreChanged() { root._ingest(); }
     }
+
+    Component.onCompleted: root._ingest()
 
     function probe() {
         root._syncHasKey();
@@ -41,33 +36,8 @@ Item {
     }
 
     function setKey(raw: string) {
-        const k = String(raw || "").trim();
-        const rawFile = String(secretsFile.text() || "").trim();
-        let obj = ({});
-        if (rawFile.length) {
-            try {
-                obj = JSON.parse(rawFile) || ({});
-            } catch (e) {
-                Logger.error("Ai", "secrets write failed");
-                return;
-            }
-        }
-        if (!obj.openai || typeof obj.openai !== "object")
-            obj.openai = ({});
-        if (k.length)
-            obj.openai.apiKey = k;
-        else
-            delete obj.openai.apiKey;
-        try {
-            secretsFile.setText(JSON.stringify(obj, null, 2) + "\n");
-        } catch (err) {
-            Logger.error("Ai", "secrets write failed");
-            return;
-        }
-        root._fileHasKey = k.length > 0;
-        root.block = "";
-        root._syncHasKey();
-        root.probe();
+        if (Secrets.put("openai", { apiKey: raw }))
+            root.block = "";
     }
 
     function openKeys() {
@@ -113,14 +83,8 @@ Item {
         }
     }
 
-    function _ingest(raw: string) {
-        let on = false;
-        try {
-            const data = JSON.parse(String(raw || "{}")) || ({});
-            on = String((data.openai && data.openai.apiKey) || "").trim().length > 0;
-        } catch (e) {
-            on = false;
-        }
+    function _ingest() {
+        const on = Secrets.value("openai", "apiKey").length > 0;
         root._fileHasKey = on;
         root._syncHasKey();
         if (root.hasKey)

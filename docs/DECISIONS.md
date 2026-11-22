@@ -1,5 +1,9 @@
 # Decisions (ADR log)
 
+For developers: why ModernOS is built the way it is. Each entry records
+a decision, the alternatives that were rejected, and why; entries that
+were later replaced say so.
+
 Chronological. Each entry: decision, rejected alternatives, why.
 
 ## 1. Quickshell over AGS / Waybar+SwayNC+Rofi / EWW
@@ -35,7 +39,8 @@ since everything consumes `tokens.json`, not matugen's CLI directly.
 
 **Decision:** `config.json` is the only thing the Settings app writes.
 `hyprland.lua` reads it via a small dependency-free JSON decoder
-(`install/lib`'s shell equivalent, `Commons/config.lua`'s Lua equivalent).
+(`install/lib`'s shell equivalent; in Lua, `lib/json.lua` read through
+`modules/config.lua`).
 
 **Rejected:** Settings app templating/rewriting Lua files directly — any
 GUI bug could corrupt `hyprland.lua` and break the compositor on next
@@ -73,7 +78,7 @@ MD3-over-Quickshell, but forking means inheriting its architecture,
 its bugs, and a large upstream codebase not written to this project's
 "files under 200 lines, one pattern everywhere" maintainability bar, plus
 ongoing merge conflicts against upstream churn. Slower to reach parity,
-but every line is understood and owned, per the user's explicit choice.
+but every line is understood and owned, per the maintainer's explicit choice.
 
 ## 7. `WlSessionLock` over hyprlock
 
@@ -95,11 +100,15 @@ plus `scripts/autologin-apply.sh` (pkexec) writes greetd
 `[initial_session]` or a `getty@tty1` drop-in so the next reboot opens
 the session account. Settings still never writes `/etc` itself.
 
-**Rejected:** keeping autologin + hyprlock-as-a-workaround (current
+**Rejected:** keeping autologin + hyprlock-as-a-workaround (the earlier
 setup) — works, but isn't a login screen, and blocks a themed boot→login
 handoff.
 
 ## 9. Official `proton-drive` CLI over `rclone`'s protondrive backend
+
+**Status:** not shipped. There is no `Services/Drive`; Proton Drive is a
+launcher-only desktop entry (`docs/SETTINGS.md` → Applications). Kept
+for the reasoning in case a Drive integration returns.
 
 **Decision:** `Services/Drive` wraps the official Proton-shipped
 `proton-drive` CLI (June 2026, JSON output, OS-keyring sessions).
@@ -134,6 +143,9 @@ land in the native list, where `pacman -S` hard-fails on them.
 manually instead.
 
 ## 12. Local-first notes with a custom reconciliation loop
+
+**Status:** not shipped, depends on #9. No notes service or Drive sync
+exists.
 
 **Decision:** plain markdown files with YAML front-matter locally;
 `Services/Drive`'s own list-and-diff sync against Proton Drive, since the
@@ -172,7 +184,8 @@ one small set of derived, non-sensitive images is strictly less exposure.
 ## 15. Hand-curated layered manifests over a single package list
 
 **Decision:** `00-base` through `60-flatpak`, each entry commented with
-why it's there. `50-gaming` is the optional layer, deferred to M6. The
+why it's there. `50-gaming` is the optional layer (`gaming` and `full`
+profiles). The
 old `40-dev` layer (Docker, JDKs, Cursor, …) was dropped; those install
 from Settings → Store or the AUR when wanted.
 
@@ -192,7 +205,7 @@ assign a value to a signal (expecting a script to be run)"), not just
 the bare `onX: <value>` shorthand. Half of MD3's role names are exactly
 that shape (`onPrimary`, `onSurface`, `onError`, ...), so this wasn't a
 one-off rename — confirmed empirically by running the real `quickshell`
-binary (v0.3.1, already installed) against the generated file. A plain
+binary (v0.3.1) against the generated file. A plain
 object literal's keys aren't QML property declarations, so it sidesteps
 the restriction entirely while keeping the exact same consumer syntax
 (`Colors.color.onPrimary`).
@@ -248,11 +261,11 @@ wonder about the inherited `tr()` again) but is not fixing a real bug.
 
 ## 19. Hand-written `qmldir` in every QML layer directory, not auto-synthesis
 
-**Decision:** every layer directory (`Commons/`, `Widgets/`, and `Services/`/`Modules/` once they exist) ships a hand-written `qmldir` file explicitly listing `singleton Name 1.0 Name.qml` (or plain `Name 1.0 Name.qml` for non-singleton `Widgets`) for every QML file in that directory. New files are not visible until added here — this is a deliberate manual checklist step, not an oversight to fix later.
+**Decision:** every layer directory (`Commons/`, `Services/`, `Widgets/`) ships a hand-written `qmldir` file explicitly listing `singleton Name 1.0 Name.qml` (or plain `Name 1.0 Name.qml` for non-singleton `Widgets`) for every QML file in that directory. New files are not visible until added here — this is a deliberate manual checklist step, not an oversight to fix later.
 
 **Rejected:** relying on Quickshell's implicit directory-import auto-synthesis (what `import "Commons"` does with no `qmldir` present — it scans the directory and synthesizes one on the fly, auto-detecting `pragma Singleton`). This works for most files but was caught, by this project's mandatory real-`quickshell`-runtime-testing practice (decision #16), silently mis-detecting `Commons/I18n.qml` specifically: the synthesized qmldir registered it as a plain type (`I18n 1.0 I18n.qml`) instead of a singleton (missing the `singleton` keyword), even though the file is byte-for-byte a normal `pragma Singleton` file matching every other Commons file's shape. The failure mode is brutal to diagnose from the call site — `I18n.t(...)` throws `TypeError: Property 't' of object I18n is not a function` with no indication the actual problem is the type registration, not the function itself; `typeof I18n.t` reads `"undefined"` and every property on the singleton reads `undefined` too, permanently (a binding that throws once during its first, synchronous evaluation never gets a retry once its dependency — `Config`, in this case — finishes loading, since QML's dependency tracking for that binding never got established). This was root-caused by grepping the session's own `log.qslog` for `qmldir`/`singleton`, not by reasoning about the QML source. Confirmed fix: an explicit `qmldir` in the same directory makes Quickshell log `Found qmldir file, qmldir synthesization will be disabled for directory ".../Commons"` and skip the buggy scan entirely.
 
-**Consequence:** `AGENTS.md`'s "add a new Commons/Widgets file" instructions must include "add it to that directory's `qmldir`" as a required step, not an optional one — forgetting it doesn't error at all for most files (auto-synthesis still finds them), so this is an easy step to skip and only surfous as this exact class of silent, hard-to-diagnose bug for whichever file the scanner happens to mis-detect next.
+**Consequence:** `AGENTS.md`'s "add a new Commons/Widgets file" instructions must include "add it to that directory's `qmldir`" as a required step, not an optional one — forgetting it doesn't error at all for most files (auto-synthesis still finds them), so this is an easy step to skip and only surfaces as this exact class of silent, hard-to-diagnose bug for whichever file the scanner happens to mis-detect next.
 
 ## 20. No compositor titlebars
 
@@ -282,11 +295,39 @@ Overview is a full-screen layer-shell surface. A floating window capped at a fix
 
 ## 24. Side mouse buttons move, resize, close, float and fullscreen windows
 
-**Decision:** Without titlebars (#20) a window like WhatsApp could only move with Super held. `modules/mouse_windows.lua` captures the side buttons: hold back and move to move, hold forward and move to resize, both together to close (the `modern window close` path SUPER+Q uses), back + middle toggles floating, forward + middle toggles fullscreen. A side press shorter than 250 ms is a click however far the pointer moved: people click back while the hand is still travelling, and a 10 px threshold alone turned about half of real back clicks into window moves. Hyprland can only start a drag from inside the bind, so the module raises `binds.drag_threshold` to 100000 px on the press and drops it back to 10 px after 250 ms; Hyprland reads the threshold live. The middle button is bound only while a side button is held, so middle click, paste and middle drag stay with the app. A click is handed back to the window as the real button by `scripts/mouse-replay`, so back/forward still work in browsers, file managers and IDEs. Over the bar or dock nothing is replayed, since the replay targets the focused window, not what is under the pointer. Games (`modules/game_match.lua`, shared with `games.lua`) and fullscreen windows get the side buttons untouched (tracked non-consuming), and forward + middle still toggles fullscreen there so a game can leave fullscreen with the mouse alone. `input.mouseSideButtons` turns it off. Middle click on an Applications entry closes it. `scripts/test-mouse-windows-live.py` drives all of it with a uinput mouse.
+**Decision:** Without titlebars (#20) a window like WhatsApp could only move with Super held. `modules/mouse_windows.lua` captures the side buttons: hold back and move to move, hold forward and move to resize, both together to close (the `modern window close` path SUPER+Q uses), back + middle toggles floating, forward + middle toggles fullscreen. A side press shorter than 250 ms is a click however far the pointer moved: people click back while the hand is still travelling, and a 10 px threshold alone turned about half of real back clicks into window moves. Hyprland can only start a drag from inside the bind, so the module raises `binds.drag_threshold` to 100000 px on the press and drops it back to 10 px after 250 ms; Hyprland reads the threshold live. The middle button is bound only while a side button is held, so middle click, paste and middle drag stay with the app. A click is handed back to the window as the real button by `scripts/mouse-replay`, so back/forward still work in browsers, file managers and IDEs. Over the bar or dock nothing is replayed, since the replay targets the focused window, not what is under the pointer. Games (`modules/game_match.lua`, shared with `games.lua`) and fullscreen windows get the side buttons untouched (tracked non-consuming), and forward + middle still toggles fullscreen there so a game can leave fullscreen with the mouse alone. `input.mouseSideButtons` turns it off. Middle click on an Applications entry closes it. `tests/test-mouse-windows-live.py` drives all of it with a uinput mouse.
 
 The replay has three Hyprland quirks, each measured: `send_shortcut` inside a click/release bind only delivers the key-up, so the replay runs as a separate process. One dispatch (or one `--batch`) delivers the press and drops the release, so down and up are two `send_key_state` calls. Replayed buttons carry no pointer frame, so the app holds the release until the next motion, so the script ends with a cursor move onto itself.
 
-**Rejected:** passing the press through and only grabbing on drag (`pass_mouse_when_bound`, `non_consuming`) — Chromium, and so Vivaldi and WhatsApp, navigates back on the press, so every window drag also went back a page. `non_consuming` on the drag bind also moved windows on a plain click. Sending Alt+Left/Right as back/forward — not back in Cursor, IntelliJ or kitty, and wrong in games. A virtual uinput mouse for the replay — needs `/dev/uinput` access a normal account does not have. `long_press` on the drag bind — its delay is the keyboard repeat delay, so a fast keyboard setting would make clicks drag again. Starting the drag from a timer — `window.drag` only starts while a bind is being pressed. Capturing middle all the time to replay it — breaks middle drag (autoscroll, panning). Turning it off whenever gaming mode is on — gaming mode stays on for days here, and game windows are already matched one by one.
+**Rejected:** passing the press through and only grabbing on drag (`pass_mouse_when_bound`, `non_consuming`) — Chromium, and so Vivaldi and WhatsApp, navigates back on the press, so every window drag also went back a page. `non_consuming` on the drag bind also moved windows on a plain click. Sending Alt+Left/Right as back/forward — not back in Cursor, IntelliJ or kitty, and wrong in games. A virtual uinput mouse for the replay — needs `/dev/uinput` access a normal account does not have. `long_press` on the drag bind — its delay is the keyboard repeat delay, so a fast keyboard setting would make clicks drag again. Starting the drag from a timer — `window.drag` only starts while a bind is being pressed. Capturing middle all the time to replay it — breaks middle drag (autoscroll, panning). Turning it off whenever gaming mode is on — gaming mode can stay on for days, and game windows are already matched one by one.
+
+## 25. The Texteditor is one qs process per window
+
+**Decision:** ModernOS Texteditor (`modern.editor`) replaces gedit as the default text editor. `scripts/modern-editor` starts `qs -p editor.qml` once per window; `//@ pragma AppId modern.editor` gives it its own window class, so the dock, launcher, and Overview treat it as an app. All file access goes through `scripts/editor-io.sh` (Python, one JSON line per call): atomic save with fsync that keeps mode, group, and xattrs; in-place write for hard links, foreign owners, and unwritable folders; `--expect` mtime against overwriting a file changed elsewhere; refusal of FIFOs, devices, binaries, and files over `editor.maxMegabytes`. A per-file claim under `$XDG_RUNTIME_DIR/modern-editor` makes a second open focus the window that already has the file. Open uses the file manager's chooser inside the editor process (`MODERN_FILE_WINDOW=1`). `ShellRoot.settings.watchFiles` is off so an update to the repo never live-reloads unsaved text away. When the compositor closes a window with unsaved text, the text is stashed in `EditorDoc`, an identical window is recreated (`LazyLoader` off and on from a timer outside it), and it asks before quitting.
+
+A QML `TextEdit` hands back NBSP as a space and U+2028/U+2029 as newlines. The codec swaps NBSP for U+2007 FIGURE SPACE on load when the file has none and back on save, so an untouched save is byte-identical. A file with line/paragraph separators, or NBSP alongside U+2007, opens read-only rather than being silently rewritten.
+
+**Rejected:** the editor inside the main shell (a 500 MB paste or a QML error would take the bar and lock screen with it); one process for all editor windows (one crash closes every unsaved document); `FileView` for loading (no encoding detection, no refusal of FIFOs before blocking); GtkSourceView or another toolkit (not styled by the token pipeline). Printing and tabs are left for later; the command table in `Modules/Editor/actions.js` is where they go.
+
+## 26. The Imageviewer replaces imv the same way the Texteditor replaced gedit
+
+**Decision:** ModernOS Imageviewer (`modern.imageviewer`) is the default image viewer. Like the Texteditor it is one `qs -p imageviewer.qml` process per window (`scripts/modern-imageviewer`, a new window per launch as imv did), with its own window class and no `windows.lua` entry, so it tiles. All file work goes through `scripts/viewer-io.sh` (Python, one JSON line per call): folder listing in natural order, facts, trash through `files_trash`, clipboard through `wl-copy`, and saving a turn through ImageMagick on stdin/stdout with `--expect` mtime and `safe_write`. Turning is a view change until Ctrl+S, because rewriting a JPEG re-encodes it. Decoding is Qt's (`Image` / `AnimatedImage` with `autoTransform` for EXIF orientation); `qt6-imageformats` adds WebP, TIFF, TGA, and ICNS. The controls show only while the pointer moves in the window and for three seconds after (longer while it rests on a control, plus key focus, open menus and dialogs, and the empty state), so a picture is never covered while you look at it. Qt repeats hover events whenever the scene repaints, so only a changed pointer position counts as movement. The command table, menu, and key handling are shared with the Texteditor (`MActionMenu`, `MActionKeys`, `KeyLabel`, `JsonJobs`), so a third app starts from those pieces.
+
+**Rejected:** keeping imv (not styled by the token pipeline, no Files chooser, no trash); viewing inside the main shell (a 200-megapixel picture or a decoder crash would take the bar with it); Quick Look as the viewer (it is a floating preview tied to the Files window, not a window of its own); a C++ decoder plugin for AVIF/HEIC/JXL (not in the official Qt packages; a format is one row in `viewer_formats.py` once Qt reads it); auto-saving turns (silent quality loss).
+
+## 27. The Mediaplayer replaces mpv, on Qt Multimedia rather than mpv
+
+**Decision:** ModernOS Mediaplayer (`modern.mediaplayer`) is the default video player, built like the Imageviewer: one `qs -p mediaplayer.qml` process per window (`scripts/modern-mediaplayer`), its own window class, no `windows.lua` entry so it tiles, the same hover-only controls, and the shared command table (`MActionMenu`, `MActionKeys`, `JsonJobs`). Playback is Qt Multimedia's `MediaPlayer` with the FFmpeg backend (`qt6-multimedia-ffmpeg`): seeking, speed, audio and subtitle tracks, hardware decoding, and subtitles rendered into `VideoOutput` all come with it. Keys follow mpv's. The only file work is `scripts/player-io.sh` (folder playlist, facts, saving a frame through ffmpeg on a pipe); `scripts/lib/media_files.py` holds the listing and refusal code it shares with `viewer_io.py`. Quick Look's video preview moved to the same engine (`Modules/FilePreview/VideoWindow.qml`), so mpv, imv, and gedit are no longer installed or stowed; `stow_retire` removes links left in `~/.config/mpv` and `~/.config/imv`, and `mime-defaults.sh` drops defaults it once pinned to them.
+
+**Rejected:** mpv as the engine under a custom interface (embedding it in QML needs a C++ plugin built against the installed Qt and libmpv; driving a separate mpv window over its IPC socket cannot put our controls over its video); keeping mpv for Quick Look (a second player just for previews); GStreamer through Qt (the FFmpeg backend is Qt's default and reads more formats); playing inside the main shell (a decoder crash would take the bar with it).
+
+## 28. Other apps choose files in ModernOS Files, through a one-file package
+
+**Decision:** `scripts/file-chooser-portal.py` is an `org.freedesktop.impl.portal.FileChooser` backend. `hyprland-portals.conf` names it first (`modern;gtk`), and the session bus starts it on demand from `org.freedesktop.impl.portal.desktop.modern.service`, which runs the repo's script the same way the FileManager1 service does. For each OpenFile / SaveFile / SaveFiles it starts one `qs -p files-window.qml` with the request in `MODERN_FILE_CHOOSE`: start folder, multiple, folder mode, suggested name, and the app's filters turned into globs (MIME types through `/usr/share/mime/globs2`). The window is the normal Files chooser (`FilesChoose`) plus a filter menu, a name field for saving, and a replace question (`FilesSaveAs`). It writes the chosen paths atomically to `MODERN_FILE_CHOOSE_OUT` and quits. No answer is a cancel; the app closing the request kills the window. The request and answer translation lives in `scripts/lib/file_chooser_spec.py`. The bus side uses Gio from `python-gobject`.
+
+xdg-desktop-portal reads backend descriptions only from `/usr/share/xdg-desktop-portal/portals/`, so `modern.portal` ships as the `modern-portal` pacman package (`install/packages/modern-portal`). A fresh install gets it from the ISO: `iso-build.sh` builds every `install/packages/*` into its local repo (`scripts/lib/iso-local-pkgs.sh`), the live image installs them, and unpackfs copies that system onto the disk, so the repo pin Calamares clones does not need to know the package. `calamares-late.sh` reports whether it is there. `install.sh` builds it with makepkg and installs it with `sudo pacman -U` on a live user home. A terminal-less update from Settings builds it as the user into `~/.local/state/modern/packages/` and adds `portal` to the root plan. `update-apply.sh` installs only that fixed file, owned by the caller, not a symlink, and named `modern-portal` by `pacman -Qqp`.
+
+**Rejected:** writing `modern.portal` into `/usr/share` from `install.sh` (an untracked file pacman does not know about, never removed); `XDG_DESKTOP_PORTAL_DIR` (a test override, not read in a normal session); asking apps to use Files directly (Chromium, Firefox and Flatpak only talk to the portal); a chooser inside the main shell process (a hung request or a huge folder would stall the bar); dbus-python for the bus (one more dependency, and Gio is already there for the main loop). Hiding files that do not match the filter is left for later; today they show but cannot be used.
 
 ## Open decisions
 
@@ -296,6 +337,5 @@ The replay has three Hyprland quirks, each measured: `send_shortcut` inside a cl
   only ever consumes `tokens.json`, so this is swappable later without
   touching a single consumer.
 - Spotify queue: MPRIS's `TrackList` interface isn't implemented by the
-  Spotify Linux client, so the media widget's queue section is a
-  self-contained, optional provider (see `docs/WIDGETS.md`) pending a
-  possible future Spotify Web API integration.
+  Spotify Linux client, so the media widget shows no queue. A Spotify
+  Web API integration could add one later.

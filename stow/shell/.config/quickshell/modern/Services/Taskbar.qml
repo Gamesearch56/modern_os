@@ -31,7 +31,10 @@ Singleton {
         );
     }
 
-    readonly property int count: (root.entries || []).length
+    // Set from onEntriesChanged, not bound: a reload tears the old binding
+    // down mid-evaluation and it would assign undefined to an int.
+    property int count: 0
+    onEntriesChanged: root.count = Array.isArray(root.entries) ? root.entries.length : 0
 
     property string _raiseAfter: ""
 
@@ -162,8 +165,8 @@ Singleton {
                     Hypr.killWindow(a);
             }
         } else {
-            // A headless row is its own process. Parking every login app
-            // here used to return before that process was killed.
+            // A headless row is its own process: kill it here instead of
+            // parking it with the login apps.
             RunningApps.killEntry(entry);
             if (entry.kind === "tray")
                 Tray.dismiss(entry.item);

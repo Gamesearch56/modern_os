@@ -23,6 +23,10 @@ PanelWindow {
     property bool _peek: false
     property bool _slidingOut: false
     property real _slide: 0
+    // Off until the saved auto-hide choice is known, so a hidden strip
+    // starts hidden instead of sliding away after the shell starts.
+    property bool _settled: false
+    readonly property bool _loaded: Config.loaded
 
     // The launcher is a full-screen overlay. Stay above it so a pin can
     // be grabbed, but give the pointer back while a launcher drag is
@@ -67,13 +71,14 @@ PanelWindow {
         root.exclusiveZone = Math.round(Math.max(0, root._zone));
     }
     on_ZoneChanged: Qt.callLater(root._applyZone)
-    visible: DockLayout.enabled && !root._cover
+    visible: Config.loaded && DockLayout.enabled && !root._cover
     color: Chrome.softwareGpu ? Colors.color.surface : "transparent"
     // Stay focusable while the launcher is open. Turning keyboard
     // interactivity off here destroys the grab and Super+Space closes it.
     focusable: DockLayout.enabled && (Launcher.open || !Dock.dragActive)
 
     Behavior on _slide {
+        enabled: root._settled
         NumberAnimation {
             duration: Motion.extraLongMs
             easing.bezierCurve: Motion.easingEmphasizedDecelerate
@@ -117,6 +122,14 @@ PanelWindow {
         if (!root._shown)
             root._slide = 1;
         Qt.callLater(root._applyZone);
+        if (root._loaded)
+            root._settle();
+    }
+    on_LoadedChanged: if (root._loaded) Qt.callLater(root._settle)
+    function _settle() {
+        root._slidingOut = false;
+        root._slide = root._shown ? 0 : 1;
+        root._settled = true;
     }
     Component.onDestruction: Popups.unregisterDock(root)
 
@@ -252,14 +265,11 @@ PanelWindow {
                     }
                 }
 
-                // On top of everything so the whole strip scrolls, the gaps
-                // between pins and the screen margins included. No buttons
-                // and no hover: clicks, drags and pin hover pass through.
-                MouseArea {
-                    anchors.fill: parent
-                    z: 10
-                    acceptedButtons: Qt.NoButton
-                    hoverEnabled: false
+                // The gaps between pins and the screen margins scroll too; a
+                // pin forwards its own wheel. A MouseArea on top would force
+                // its arrow cursor over the pins' hand.
+                WheelHandler {
+                    target: null
                     onWheel: (event) => scroller.scrollWheel(event)
                 }
 

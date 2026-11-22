@@ -185,11 +185,6 @@ Singleton {
         }
     }
 
-    function pairedAudio(): var {
-        return Array.from(root._list(root.devices)).filter(d => d && d.paired && !d.blocked
-            && String(d.address || "").length > 0 && root.isAudioDevice(d));
-    }
-
     function _stampSeen() {
         const list = root._list(root.devices);
         const present = {};

@@ -48,6 +48,12 @@ fi
 SECRETS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/secrets.json"
 if [ -f "$SECRETS" ]; then
     ok "secrets.json present (gitignored — good)"
+    mode="$(stat -c %a "$SECRETS" 2>/dev/null || echo "?")"
+    if [ "$mode" = 600 ]; then
+        ok "secrets.json mode 600"
+    else
+        warn "secrets.json mode $mode — run: chmod 600 $SECRETS"
+    fi
 else
     warn "secrets.json missing — API tokens will not be available until you create it"
 fi

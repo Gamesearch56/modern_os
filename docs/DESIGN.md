@@ -1,7 +1,9 @@
 # Design language
 
 Material Design 3, applied consistently across the shell, GTK, Qt and
-Vivaldi. This document is the visual reference; `docs/MOTION.md` covers
+Vivaldi. This document is the visual reference for developers and
+designers: color roles, type, shape, elevation, and the widget
+primitives; `docs/MOTION.md` covers
 animation and `AGENTS.md` covers the code structure.
 
 ## Color
@@ -25,8 +27,8 @@ live in their own singleton rather than the hand-written `Tokens.qml`
 Plus the full tonal palette (0–100 steps) per key color, for anything that
 needs a specific tone rather than a semantic role (e.g. a chart series).
 
-**Default profile:** `tonal-spot-dark` (less chroma on wide-gamut HDR).
-Expressive remains in Settings → Design.
+**Default profile:** `tonal-spot-dark` (`design.activeProfile`; less
+chroma on wide-gamut HDR). Expressive remains in Settings → Design.
 
 **Switchable variants** (matugen scheme types), selectable in Settings →
 Design: `Auto` (matches wallpaper mood), `Content`, `Expressive`,
@@ -63,10 +65,10 @@ component defines its own shadow.
 
 ## Wallpaper chroma in chrome
 
-The default theme profile is **expressive-dark** (`design.activeProfile`)
-so secondary/tertiary pick up wallpaper hue. `Tokens.elevation` tint
+The `expressive-*` profiles let secondary/tertiary pick up more
+wallpaper hue than the default `tonal-spot-dark`. `Tokens.elevation` tint
 opacities are ~2× the MD3 resting values, then multiplied by
-`design.surfaceTint` (default `1`, Design slider ~0.5–2). Selected /
+`design.surfaceTint` (default `0.7`, Design slider ~0.5–2). Selected /
 checked / focused chrome uses `primaryContainer` / `onPrimaryContainer`
 (or filled `primary`), not a grey `secondaryContainer`. `MIcon` tints
 symbolic icons onto the role; launcher app icons set `tint: false`.
@@ -88,9 +90,10 @@ token-only, listed in `Widgets/qmldir`):
 `MText`, `MIcon`, `MButton`, `MIconButton`, `MSwitch`, `MSlider`, `MChip`,
 `MTextField`, `MCard`, `MPopup`, `MDialog`, `MTooltip`, `MListItem`
 (trailing slot), `MOverlay` (shared overlay chrome + fade/zoom),
-`MSectionHeader`, `MHint`, `MField`, `MSelect`, `MCheckbox`,
-`MSearchField`, `MKeycap`, `MTable`, `MEmptyState`, `MDivider`,
-`MImageTile`, `MAvatar`.
+`MSectionHeader`, `MHint`, `MField`, `MSelect`, `MSegmented`,
+`MSearchField`, `MKeycap`, `MEmptyState`, `MDivider`, `MImageTile`,
+`MAvatar`, and the window primitives `MWindowShell` / `MWindowChrome`.
+`Widgets/qmldir` is the full list.
 
 Chrome contract: bar **bubbles** are `BarIsland` pills (`surfaceContainer`,
 primary tint, `radius.full`, hover state-layer, equal `Tokens.spacing.sm`
@@ -109,15 +112,15 @@ Transparent `PanelWindow` with **islands**, not one full-width pill.
 Equal top/bottom margin (`Tokens.spacing.sm` when floating). Defaults in
 `config.default.json`:
 
-- **Left:** own bubbles for launcher, AI, workspaces, media (only while
-  something is playing, or Spotify is open), and taskbar
+- **Left:** own bubbles for launcher, AI, workspaces, and media (only
+  while something is playing, or Spotify is open)
 - **Center:** Date and time bubble
 - **Right:** own bubbles for weather, connectivity (wifi + bluetooth),
-  and audio; battery (when a pack is present, including while charging)
+  audio, and taskbar; battery (when a pack is present, including while charging)
   + control-center gear + power share one pill. Gear opens the control
   center, not the Settings app
 
-Tray, mic, performance, vpn, kdeconnect, and the notification
+Tray, mic, performance, kdeconnect, and the notification
 bell stay on disk under `Modules/Bar/widgets/` if a leftover
 `config.json` still lists them; they are **not** in Settings → Bar.
 
@@ -147,13 +150,11 @@ bell stay on disk under `Modules/Bar/widgets/` if a leftover
   `design.bootScreen.wallpaperOnVivaldi` is on. Fresh installs seed
   `Preferences` and the CSS-mods labs flag (no account data). See
   `docs/THEMING.md`.
-- **Plymouth** — boot/shutdown splash themed from the same tokens, see
-  `docs/BOOT.md`.
+- **Plymouth** — boot/shutdown splash in the solid installer colors, not
+  the wallpaper palette; see `docs/BOOT.md`.
 
 ## Reference images
 
-The original design references (Google Material Design 3 color system,
-Material You palettes) were supplied by the user at project kickoff and
-are described, not stored, in this repo — see `.cursorignore` (image
-assets are excluded from the repository) and `docs/DECISIONS.md` for the
-kickoff notes.
+The design references (the Google Material Design 3 color system and
+Material You palettes) are described here, not stored in the
+repository.

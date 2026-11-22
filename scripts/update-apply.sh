@@ -300,6 +300,15 @@ if [ "${ROOT_PLAN_SPLASH:-0}" -eq 1 ]; then
     fi
 fi
 
+if [ "${ROOT_PLAN_PORTAL:-0}" -eq 1 ]; then
+    if portal_pkg="$(root_plan_portal_pkg)"; then
+        "$PACMAN" -U --needed --noconfirm "$portal_pkg" \
+            || printf 'update-apply: WARN the file chooser portal was not installed\n' >&2
+    else
+        printf 'update-apply: WARN refusing the file chooser portal package\n' >&2
+    fi
+fi
+
 if [ "${ROOT_PLAN_MIRRORS:-0}" -eq 1 ]; then
     # shellcheck source=../install/lib/mirrors.sh
     source "$REPO_ROOT/install/lib/mirrors.sh"

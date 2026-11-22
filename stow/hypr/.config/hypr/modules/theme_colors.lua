@@ -1,7 +1,7 @@
 -- Border colors. Prefer the matugen file (gitignored
--- `modules/colors.lua`); checking out a commit that `git rm`'d that
--- tracked file used to abort hyprland.lua and leave the emergency
--- overlay. tokens.json is the same palette. Surface fills the
+-- `modules/colors.lua`) but never require it: a missing module aborts
+-- hyprland.lua and leaves the emergency overlay. tokens.json is the
+-- same palette. Surface fills the
 -- compositor so the greetd handoff is not a black frame.
 
 local json = require("lib.json")

@@ -44,11 +44,6 @@ Singleton {
     readonly property bool full: root.hasBattery && root.charging && root.percent >= 99
     readonly property string remainingLabel: root.formatDuration(root.timeEmptySeconds)
     readonly property string untilFullLabel: root.formatDuration(root.timeFullSeconds)
-    readonly property string timeLabel: {
-        if (root.timeToFull)
-            return root._span(root.timeFullSeconds, true);
-        return root._span(root.timeEmptySeconds, false);
-    }
 
     function watch() {
         root._watchers += 1;
@@ -73,19 +68,6 @@ Singleton {
 
     function formatWh(n: real): string {
         return String(Math.round(Number(n) * 10) / 10);
-    }
-
-    function _span(sec: int, full: bool): string {
-        if (sec <= 0)
-            return "";
-        const mins = Math.max(1, Math.round(sec / 60));
-        const h = Math.floor(mins / 60);
-        const m = mins % 60;
-        if (h > 0 && m > 0)
-            return I18n.t(full ? "settings.energy.untilFullHm" : "settings.energy.remainingHm", ({ h: h, m: m }));
-        if (h > 0)
-            return I18n.t(full ? "settings.energy.untilFullHours" : "settings.energy.remainingHours", ({ n: h }));
-        return I18n.t(full ? "settings.energy.untilFullMin" : "settings.energy.remainingMin", ({ n: m }));
     }
 
     function _clear() {

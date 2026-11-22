@@ -38,21 +38,9 @@
     "clock": "Datum und Uhrzeit",
     "workspaceAdd": "Nächster Arbeitsbereich"
   },
-  "media": {
-    "notPlaying": "Keine Wiedergabe",
-    "launch": "Spotify öffnen",
-    "play": "Wiedergeben",
-    "pause": "Pause",
-    "stop": "Stopp",
-    "next": "Weiter",
-    "previous": "Zurück",
-    "shuffle": "Zufall",
-    "repeat": "Wiederholen"
-  },
   "audio": {
     "output": "Lautsprecher",
     "input": "Mikrofon",
-    "applications": "Anwendungen",
     "noOutputs": "Keine Ausgabegeräte",
     "noInputs": "Keine Eingabegeräte",
     "fallback": "Standard festlegen",
@@ -62,13 +50,7 @@
     "fallbackInputBody": "Wenn ein Bluetooth-Mikrofon getrennt wird, dieses Eingabegerät verwenden. Keine verwendet das zuletzt gewählte Mikrofon."
   },
   "network": {
-    "disconnected": "Getrennt",
-    "ethernet": "Ethernet",
-    "bitrateValue": "{rx} / {tx} Mbit/s"
-  },
-  "bluetooth": {
-    "off": "Bluetooth aus",
-    "connected": "{count} verbunden"
+    "disconnected": "Getrennt"
   },
   "kdeconnect": {
     "off": "Keine Geräte",
@@ -80,7 +62,6 @@
     "unavailableHint": "Wähle den aktuellen Standort oder eine Stadt, um die Vorhersage zu zeigen.",
     "setup": "Einrichten",
     "detailTitle": "Wetter",
-    "condition": "Aktuelle Lage",
     "refresh": "Aktualisieren",
     "clear": "Klar",
     "partlyCloudy": "Teilweise bewölkt",
@@ -117,7 +98,6 @@
   },
   "calendar": {
     "title": "Kalender",
-    "today": "Heute",
     "empty": "Heute keine Termine",
     "open": "Kalender öffnen",
     "monthTab": "Kalender",
@@ -177,14 +157,9 @@
     "errorOffline": "Der Kalenderserver ist nicht erreichbar. Prüfe deine Internetverbindung und versuche es erneut.",
     "errorGeneric": "Der Kalender konnte nicht geladen werden. Versuche es gleich noch einmal."
   },
-  "mail": {
-    "open": "Mail öffnen"
-  },
   "ai": {
     "title": "Assistent",
     "placeholder": "Frag etwas...",
-    "you": "Du",
-    "assistant": "Assistent",
     "empty": "Noch keine Nachrichten",
     "hint": "Stell eine Frage. Antworten kommen vom lokalen Ollama-Modell.",
     "hintGemini": "Stell eine Frage. Antworten kommen von Gemini.",
@@ -194,14 +169,11 @@
     "settings": "Assistent-Einstellungen",
     "clear": "Chat leeren",
     "send": "Senden",
-    "thinking": "Denkt nach…",
     "generating": "Schreibt eine Antwort…",
     "reasoning": "Überlegung",
     "timeout": "Der Assistent hat nicht rechtzeitig geantwortet. Nochmal versuchen, oder in Einstellungen → KI ein anderes Modell wählen.",
     "error": "Der Assistent konnte nicht antworten.",
-    "errorMissing": "Ollama ist nicht installiert oder nicht im PATH.",
     "errorModel": "Dieses Modell ist nicht verfügbar. Mit ollama laden oder unter Einstellungen → KI ein anderes wählen.",
-    "errorStderr": "Der Assistent meldete: {detail}",
     "errorEmpty": "Der Assistent hat eine leere Antwort geliefert.",
     "errorTooLong": "Die Nachricht ist zu lang.",
     "errorGeminiAuth": "Dieser Google-AI-Schlüssel wurde abgelehnt. In Google AI Studio einen neuen Schlüssel erzeugen.",
@@ -216,7 +188,6 @@
     "errorChatGptRate": "ChatGPT begrenzt Anfragen. Kurz warten und erneut versuchen.",
     "errorNoModel": "Unter Einstellungen → KI ein Modell wählen.",
     "stop": "Stopp",
-    "stopped": "Abgebrochen.",
     "systemBrief": "Antworte in der Sprache der Frage. Behalte den freundlichen Karten-Stil: Emoji in kurzen Überschriften, nummerierte Liste für die Schritte, Leerzeile zwischen den Abschnitten. Bleib kurz: nur ein paar Listenpunkte, kein Aufsatz, keine Einleitung. Wenn eine Angabe sich geändert haben kann oder du unsicher bist, rufe web_search auf, bevor du antwortest.",
     "systemRoom": "Antworte in der Sprache der Frage. Behalte den freundlichen Karten-Stil: Emoji in kurzen Überschriften, nummerierte Liste für die Schritte, Leerzeile zwischen den Abschnitten. Wenn eine Angabe sich geändert haben kann oder du unsicher bist, rufe web_search auf, bevor du antwortest."
   },
@@ -231,19 +202,16 @@
     "welcome": "Willkommen",
     "loginFailed": "Anmeldung fehlgeschlagen",
     "unavailable": "Anmeldung nicht verfügbar",
-    "capsLock": "Feststelltaste aktiv",
-    "admin": "Admin"
+    "capsLock": "Feststelltaste aktiv"
   },
   "alarm": {
     "title": "Wecker",
-    "running": "Wecker läuft",
     "start": "Start",
     "fired": "Wecker",
     "minutesHint": "Die Zahl ist die Weckdauer in Minuten"
   },
   "cli": {
     "usage": "Aufruf: modern <Befehl>",
-    "snapperMissing": "snapper ist nicht installiert. Siehe docs/BACKUP.md",
     "snapperUnconfigured": "The backup tool has not been set up. Update at your own risk.",
     "snapshotting": "Erstelle Snapper-Snapshot…",
     "snapshotFailed": "Snapper-Snapshot fehlgeschlagen",
@@ -266,19 +234,11 @@
     "hint": "Wähle ein Hintergrundbild mit den Pfeiltasten und übernimm es mit Enter, oder füge ein neues Bild hinzu.",
     "alreadyInLibrary": "Diese Datei liegt schon im Hintergrundordner",
     "importFailed": "Hintergrund konnte nicht importiert werden",
-    "importTitle": "Hintergrund hinzufügen",
-    "importImages": "Bilder",
-    "importAll": "Alle Dateien",
-    "needChooser": "Dieses Bild konnte nicht ausgewählt werden.",
     "remove": "Löschen",
     "removeTitle": "Hintergrund löschen?",
     "removeBody": "Dieses Bild wird aus deinem Hintergrundordner gelöscht.",
     "removeFailed": "Hintergrund konnte nicht gelöscht werden",
     "get": "Hintergründe holen",
-    "providerTitle": "Hintergrund-Anbieter",
-    "providerHint": "Speichere ein Bild von der Seite, um es in den Hintergrundordner zu legen.",
-    "providerBack": "Zurück",
-    "providerForward": "Vor",
     "fetched": "Hintergrund gespeichert",
     "fetchedHint": "Lege es in der Galerie als aktiv fest.",
     "fetchFailed": "Bild konnte nicht gespeichert werden",
@@ -286,8 +246,7 @@
     "providerBrowserHint": "Speichere Bilder in den Hintergrundordner und wähle sie in der Galerie."
   },
   "folderPicker": {
-    "title": "Ordner wählen",
-    "needChooser": "Dieser Ordner konnte nicht ausgewählt werden."
+    "title": "Ordner wählen"
   },
   "filePreview": {
     "title": "Schnellansicht",
@@ -296,7 +255,8 @@
     "noSelection": "Keine Datei ausgewählt",
     "loadFailed": "Datei konnte nicht geladen werden",
     "emptyFolder": "Dieser Ordner ist leer",
-    "emptyFile": "Diese Datei ist leer"
+    "emptyFile": "Diese Datei ist leer",
+    "openFull": "Im Player öffnen"
   },
   "notifications": {
     "empty": "Keine Benachrichtigungen",
@@ -305,18 +265,11 @@
     "shellError": "Shell-Fehler",
     "shellWarning": "Shell-Warnung"
   },
-  "notes": {
-    "title": "Notizen",
-    "empty": "Keine Notizen"
-  },
   "quickSettings": {
-    "title": "Schnelleinstellungen",
     "brightness": "Helligkeit",
-    "brightnessFailed": "Helligkeit konnte nicht gesetzt werden",
-    "caffeine": "Caffeine"
+    "brightnessFailed": "Helligkeit konnte nicht gesetzt werden"
   },
   "overview": {
-    "title": "Übersicht",
     "workspace": "Arbeitsbereich {id}",
     "empty": "Keine offenen Fenster",
     "emptyHint": "Geöffnete Apps erscheinen hier. Mit dem Trackpad oder den Pfeiltasten auswählen."
@@ -328,12 +281,6 @@
     "bootTime": "Startzeit",
     "hardware": "Hardware",
     "software": "Software"
-  },
-  "users": {
-    "title": "Benutzer"
-  },
-  "backup": {
-    "snapshotNow": "Jetzt Snapshot"
   },
   "powerMenu": {
     "title": "Ein/Aus",
@@ -430,7 +377,8 @@
       "mouseFullscreenSide": "Vollbild umschalten",
       "mouseCloseApp": "In Anwendungen schließen",
       "mouseToggleSplit": "Teilung umschalten",
-      "bugReport": "Problem melden"
+      "bugReport": "Problem melden",
+      "manual": "ModernOS-Handbuch"
     },
     "category": {
       "applications": "Anwendungen",
@@ -447,9 +395,13 @@
     "placeholder": "Apps suchen, Befehl ausführen, rechnen...",
     "mostUsed": "Meistgenutzt",
     "results": "Ergebnisse",
-    "open": "Öffnen",
     "allApps": "Alle Anwendungen",
-    "noResults": "Keine Ergebnisse"
+    "noResults": "Keine Ergebnisse",
+    "uninstall": {
+      "trash": "Deinstallieren",
+      "blocked": "{name} kann nicht deinstalliert werden",
+      "busy": "Der App Store ändert gerade eine Anwendung. Versuche es danach erneut."
+    }
   },
   "settings": {
     "title": "Systemeinstellungen",
@@ -457,8 +409,6 @@
     "selectSearch": "Suchen",
     "selectNone": "Keine",
     "refresh": "Aktualisieren",
-    "noResults": "Keine passenden Einstellungen",
-    "loadError": "Dieser Abschnitt konnte nicht geladen werden. Siehe qs -c modern log.",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "done": "Fertig",
@@ -466,32 +416,8 @@
       "web": "Web und Konten",
       "files": "Dateien und System"
     },
-    "themeCreate": "Neues Thema",
-    "themeName": "Name (Buchstaben, Zahlen, Bindestriche)",
-    "themeCreated": "Thema gespeichert",
     "themeModeDark": "Dunkel",
     "themeModeLight": "Hell",
-    "themeModeAuto": "Auto",
-    "themeContrastStandard": "Standardkontrast",
-    "themeContrastMedium": "Mittlerer Kontrast",
-    "themeContrastHigh": "Hoher Kontrast",
-    "themeProfileHint": "{mode} · {contrast}",
-    "themePalette": "Palette {n}",
-    "paletteHint": "{hue}-Töne aus dem Hintergrundbild, abweichend von den anderen Karten.",
-    "paletteHue": {
-      "rose": "Rosa",
-      "orange": "Orange",
-      "yellow": "Gelb",
-      "green": "Grün",
-      "teal": "Petrol",
-      "cyan": "Cyan",
-      "blue": "Blau",
-      "indigo": "Indigo",
-      "violet": "Violett",
-      "magenta": "Magenta",
-      "neutral": "Neutral",
-      "accent": "Akzent"
-    },
     "wallpaperFade": "Überblenden",
     "wallpaperGrow": "Wachsen",
     "wallpaperWipe": "Wischen",
@@ -508,18 +434,14 @@
     "restoreDone": "{name}-Einstellungen wurden zurückgesetzt",
     "restoreFailed": "{name}-Einstellungen konnten nicht zurückgesetzt werden",
     "saving": "Wird gespeichert…",
-    "typePreview": "Schriftvorschau",
-    "typePreviewBody": "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.",
     "barTop": "Oben",
     "barBottom": "Unten",
     "barLeft": "Links",
     "barRight": "Rechts",
-    "on": "An",
-    "off": "Aus",
-    "cliNote": "Änderungen laufen über ConfigWrite → modern config set (jq). Nur diese App schreibt config.json.",
-    "gated": "Kontenänderungen nutzen den abgeschotteten Helfer modern-usersd (docs/SECURITY.md). Er wird standardmäßig nicht nach /usr installiert.",
-    "langEn": "English",
-    "langDe": "Deutsch",
+    "langs": {
+      "en": "Englisch",
+      "de": "Deutsch"
+    },
     "kbLayouts": {
       "us": "Englisch (US)",
       "gb": "Englisch (UK)",
@@ -757,9 +679,6 @@
     "motionOff": "Aus",
     "motionDefault": "Standard",
     "motionSlow": "Langsam",
-    "overlayFade": "Einblenden",
-    "overlayZoom": "Zoom",
-    "overlayBoth": "Einblenden und Zoom",
     "weekMon": "Montag",
     "weekSun": "Sonntag",
     "wsDynamic": "Dynamisch",
@@ -767,9 +686,6 @@
     "cmSrgb": "sRGB",
     "cmWide": "Wide",
     "cmEdid": "Nativ (EDID)",
-    "btAsk": "Fragen",
-    "btOn": "An",
-    "btOff": "Aus",
     "aiOllama": "Ollama",
     "aiGemini": "Gemini",
     "aiChatGpt": "ChatGPT",
@@ -831,7 +747,6 @@
       "installed": "{name} ist installiert.",
       "removed": "{name} wurde entfernt.",
       "jobFailed": "Das wurde für {name} nicht fertig.",
-      "searching": "Suche…",
       "empty": "Keine passenden Modelle.",
       "needRunning": "Ollama unten starten, bevor ein Modell geladen wird.",
       "fitGoodGpu": "Passt in den Grafikspeicher ({vram}) und sollte auf diesem Computer flüssig laufen.",
@@ -855,7 +770,6 @@
       }
     },
     "powerAsk": "Power-Menü",
-    "weatherLocationPlaceholder": "Stadt oder lat, lon",
     "weatherSearchCity": "Stadt suchen",
     "weatherMetric": "Celsius",
     "weatherImperial": "Fahrenheit",
@@ -865,12 +779,9 @@
     "speedTestResult": "{n} Mbit/s",
     "mirrorsUpdate": "Mirrors aktualisieren",
     "updateStep": "Aktualisiere…",
-    "restoreHint": "Stellt die Systemplatte aus diesem Snapshot wieder her. Dein Home-Ordner bleibt. Danach folgt ein Neustart.",
     "snapshotDelete": "Löschen",
     "snapshotEmpty": "Noch keine Snapshots",
-    "energyNow": "Verbrauch",
     "energyBattery": "{n} %",
-    "providerPrefixPlaceholder": ">",
     "nav": {
       "general": "Allgemein",
       "session": "Allgemein",
@@ -883,7 +794,6 @@
     "themes": {
       "expressive": "Expressiv",
       "tonalSpot": "Tonal Spot",
-      "tonalSpotAuto": "Tonal Spot (auto)",
       "fidelity": "Fidelity",
       "content": "Inhalt",
       "fruitSalad": "Fruchtsalat",
@@ -893,8 +803,7 @@
       "monochrome": "Monochrom"
     },
     "empty": {
-      "autostart": "Keine Autostart-Apps",
-      "rules": "Keine Fensterregeln"
+      "autostart": "Keine Autostart-Apps"
     },
     "windows": {
       "rulesNotArray": "Fensterregeln müssen ein JSON-Array sein.",
@@ -902,20 +811,13 @@
     },
     "hints": {
       "animations": "Wie lange Menüs, die Leiste und Fenster brauchen. Aus ist sofort.",
-      "overlayMotion": "Ein-/Ausblenden, Zoom beim Öffnen/Schließen, oder beides.",
       "wallpaperProvider": "Die Seite, die aus der Hintergrundauswahl zum Holen neuer Bilder geöffnet wird. Heruntergeladene Bilder landen bei den eigenen Hintergründen.",
       "wallpaperColor": "Hellt Flächen, Schaltflächen und Symbole mit der Farbe des Hintergrunds auf. Höher ist heller.",
       "wallpaperTransition": "Wie der Desktop zu einem neuen Hintergrundbild wechselt. Die Auswahl spielt diese Animation einmal auf dem aktuellen Bild ab.",
-      "activeProfile": "Jede Karte ist eine andere Palette, die matugen aus dem aktuellen Hintergrundbild gezogen hat.",
       "themeVariant": "Wie stark Tapetenfarben auftauchen. Jede Karte entsteht aus dem aktuellen Hintergrundbild im gewählten Hell- oder Dunkelmodus.",
       "workspaceMode": "Dynamisch öffnet einen Workspace auf dem Bildschirm unter dem Zeiger; jede Leiste zeigt nur dessen Workspaces. Fixiert hält 1–5, 6–10, 11–15, … von links nach rechts.",
-      "primaryMonitor": "Neue Fenster und Spiele öffnen auf dieser Anzeige. Ohne Auswahl gilt die zuerst verbundene Anzeige.",
-      "hdr": "Wide-Gamut-HDR-Panels (QD-OLED) brauchen das. Hyprland mappt sRGB-Sättigung nur im HDR-Modus; 10-Bit-PQ.",
-      "storageGated": "Snapshots liegen unter den abgeschotteten install/system-Helfern.",
-      "timeMerged": "Datums- und Zeitformate liegen unter Sprache & Zeit.",
       "weatherLocation": "Wenn aktiv, nutzt Wetter diesen Standort. Wenn nicht, eine Stadt wählen.",
       "frecency": "Sortiert Apps danach, wie oft und wie kürzlich sie gestartet wurden.",
-      "ollamaModel": "Lokal mit ollama pull. Nutzt der Leisten-Assistent.",
       "aiThinking": "Das Modell denkt die Frage durch, bevor es antwortet. Das dauert länger.",
       "aiBrief": "Hält Antworten auf ein paar Zeilen. Aus erlaubt eine längere Antwort.",
       "braveKey": "Brave-Search-Schlüssel einfügen. Der Assistent nutzt ihn, wenn eine Antwort das Web braucht.",
@@ -924,24 +826,20 @@
       "geminiModel": "Nutzt der Leisten-Assistent, wenn Gemini gewählt ist.",
       "chatgptAccount": "API-Schlüssel von der OpenAI-Plattform einfügen. Antworten nutzen das API-Guthaben dieses Kontos.",
       "chatgptModel": "Nutzt der Leisten-Assistent, wenn ChatGPT gewählt ist.",
-      "audioDevices": "Das markierte Gerät ist die Standardausgabe. Tippe ein anderes an, um den Ton dorthin zu schicken.",
       "windowRulesJson": "JSON-Array der Hyprland-Fensterregeln. Speichern prüft vor dem Schreiben.",
       "gameFullscreen": "Erzwingt exklusives Vollbild, sobald das Spielfenster erscheint, statt auf die Anfrage der Engine zu warten.",
-      "gameOptimize": "Schaltet zusätzliche Fenstereffekte am Spiel aus, damit es flüssiger läuft. Andere Fenster behalten ihr gewohntes Aussehen.",
       "gameHdr": "Spiele können HDR nutzen, der restliche Bildschirm bleibt normal. HDR zuerst unter Anzeigen einschalten. Battle.net-Spiele übernehmen es beim nächsten Start. Bei einem Steam-Spiel gehört es in die Startoptionen dieses Spiels.",
-      "browserLight": "Vivaldi startet ohne eigenen Grafikprozess, und die Fenster lassen Weichzeichner und Schatten weg. Einschalten, wenn der Browser auf einem langsamen Prozessor mehrere Sekunden braucht. Gilt beim nächsten Start von Vivaldi.",
       "gameMode": "Hält die Sitzung wach, solange ein Spiel offen ist, und kennzeichnet dieses Fenster als Spiel.",
-      "easePc": "Schaltet Weichzeichner und Schatten an Spielen und im Browser aus, damit sie schneller laufen. Andere Fenster behalten diese Effekte. Den Browser einmal neu starten, damit es gilt.",
+      "lightEffects": "Transparenz ist aus, solange „Effekte für Tempo weglassen“ unter Spiele eingeschaltet ist.",
+      "easePc": "Für langsame PCs und Laptops. Schaltet Weichzeichner, Schatten und das Nachfedern beim Verschieben auf dem ganzen Desktop aus und macht Leisten und Fenster deckend. Spiele zeigen ihre Bilder direkt an, und der Browser läuft sparsamer, sobald er einmal neu gestartet wurde.",
       "gameHdrOff": "Kein HDR-Bildschirm ist angeschlossen.",
       "repeatRate": "Wie oft pro Sekunde eine gehaltene Taste wiederholt wird, sobald die Verzögerung vorbei ist. Ein höherer Wert tippt schneller.",
       "repeatDelay": "Wartezeit, bis eine gehaltene Taste zu wiederholen beginnt.",
       "numlockOnBoot": "Schaltet Num-Lock ein, wenn das System startet.",
       "mouseSideButtons": "Aktiviert die Maussteuerung für Fenster über die Seitentasten: verschieben, Größe ändern, schließen, schwebend und Vollbild. Alle Steuerungen zeigt „Tastenkombinationen anzeigen“.",
       "autoSwitchBluetooth": "Verbinden sich Kopfhörer oder ein Lautsprecher per Bluetooth, wechselt der Ton dorthin. Trennen sie sich, kehrt er zum vorherigen Lautsprecher zurück.",
-      "restoreGated": "Stellt die Systemplatte auf diesen Snapshot zurück. Dein Home-Ordner bleibt. Ein Neustart ist nötig.",
       "preUpdateSnapshot": "Legt vor einem Systemupdate einen Snapper-Snapshot von / an, damit du zurückrollen kannst.",
       "backupPrune": "Gibt es mehr als {n} Snapshots, werden die ältesten gelöscht.",
-      "snapperReady": "Zeitpunkte der Systemplatte (btrfs).",
       "snapperMissing": "Snapper ist nicht installiert. Die Einrichtung ist abgeschottet und wird nicht aus den Einstellungen gesetzt.",
       "snapperUnconfigured": "Snapper braucht eine root-Config, bevor Snapshots möglich sind. Config anlegen fragt nach dem Admin-Passwort und schreibt die Config.",
       "speedTest": "Lädt etwa 15 Sekunden lang vom Arch-Geo-Mirror über mehrere Verbindungen. Keine Speedtest-Website.",
@@ -954,10 +852,6 @@
       "firewallInactive": "UFW ist installiert, filtert aber nicht. Einschalten setzt deny incoming, allow outgoing, deny routed.",
       "firewallMissing": "UFW ist nicht installiert. Das Firewall-Paket steht im Basis-Manifest und wird nicht aus den Einstellungen gesetzt."
     },
-    "hub": {
-      "title": "Kurzbefehle",
-      "hint": "Sprung zu den häufigsten Seiten. Die Editoren liegen dort."
-    },
     "users": {
       "editTitle": "Benutzer bearbeiten",
       "displayName": "Anzeigename",
@@ -969,7 +863,6 @@
       "thisAccount": "Du",
       "chooseFace": "Bild auswählen",
       "clearFace": "Bild entfernen",
-      "faceImages": "Bilder",
       "faceFailed": "Dieses Bild kann nicht verwendet werden.",
       "faceChooser": "Es ist kein Dateiauswahlfenster verfügbar.",
       "faceHover": "Bild ändern",
@@ -981,8 +874,6 @@
       "faceRotateRight": "Nach rechts drehen",
       "faceResize": "Größe",
       "faceHint": "Ziehe das Bild. Der Kreis wird gespeichert.",
-      "all": "Benutzer auf diesem Rechner",
-      "settings": "Einstellungen",
       "others": "Andere Personen",
       "addUser": "Benutzer hinzufügen",
       "addGroup": "Gruppe hinzufügen",
@@ -1003,10 +894,6 @@
       "colAdmin": "Admin",
       "adminYes": "Admin",
       "adminNo": "Standard",
-      "login": "Anmelden",
-      "terminalLogin": "Anmelden",
-      "terminalConfirmTitle": "Terminal als {user} öffnen?",
-      "terminalConfirmBody": "Öffnet das Standardterminal und führt su zu {user} aus. Du wirst nach dem Passwort dieses Kontos gefragt.",
       "changePassword": "Passwort ändern",
       "members": "Mitglieder",
       "memberCount": "{n} Mitglieder",
@@ -1036,7 +923,6 @@
       "disk": "Bibliothek",
       "running": "Gerade offen",
       "none": "Keine",
-      "lastBoth": "{name} · {when}",
       "hoursValue": "{n} h",
       "diskValue": "{n} GB",
       "countValue": "{n}"
@@ -1067,17 +953,10 @@
       "durationM": "{n} Min.",
       "remainingIn": "noch {t}",
       "untilFullIn": "{t} bis voll",
-      "remainingMin": "noch {n} Min.",
-      "remainingHours": "noch {n} Std.",
-      "remainingHm": "noch {h} Std. {m} Min.",
-      "untilFullMin": "{n} Min. bis voll",
-      "untilFullHours": "{n} Std. bis voll",
-      "untilFullHm": "{h} Std. {m} Min. bis voll",
       "watts": "{n} W",
       "volts": "{n} V",
       "energyWh": "{n} Wh",
       "energyOf": "{now} von {full} Wh",
-      "minSuffix": " Min.",
       "idleMin": "{n} Min.",
       "idleHour": "{n} Std.",
       "idleNever": "Nie"
@@ -1103,7 +982,6 @@
       "remembered": "Gemerkt"
     },
     "storage": {
-      "internal": "Intern",
       "external": "Extern",
       "otherDrives": "Weitere Laufwerke",
       "system": "Systemplatte",
@@ -1197,7 +1075,6 @@
       "deleteBody": "{to} von {from} entfernen?",
       "emptyAllow": "Keine Allow-Regeln",
       "emptyDeny": "Keine Deny-Regeln",
-      "colTo": "Ziel",
       "colProto": "Protokoll",
       "colFrom": "Von",
       "port": "Port",
@@ -1291,7 +1168,6 @@
     },
     "bar": {
       "available": "Verfügbare Widgets",
-      "editWidget": "Widget",
       "emptySlot": "Widget hier ablegen",
       "customize": "Hat Optionen"
     },
@@ -1306,7 +1182,6 @@
       "remembered": "Gemerkt",
       "forget": "Vergessen",
       "connectBody": "Mit diesem Netzwerk verbinden.",
-      "connectSavedBody": "Mit dem gespeicherten Passwort verbinden, oder ein neues eingeben.",
       "disconnectBody": "Verbindung trennen. Das Netzwerk bleibt gespeichert, bis du es vergisst.",
       "nearby": "Netzwerke in der Nähe",
       "wifiEmpty": "Keine Netzwerke in der Nähe",
@@ -1412,7 +1287,6 @@
     "install": "Installieren",
     "remove": "Entfernen",
     "update": "Aktualisieren",
-    "installed": "Installiert",
     "back": "Zurück",
     "featured": "Empfohlen",
     "official": "Offiziell",
@@ -1425,13 +1299,9 @@
     "description": "Über",
     "screenshots": "Bilder",
     "screenshotsEmpty": "Für dieses Paket sind keine Bilder verfügbar.",
-    "reviews": "Bewertungen",
-    "reviewsEmpty": "Bewertungen gibt es hier nicht. Die Projektseite hat oft eine Diskussion.",
-    "ratingVotes": "{n} Stimmen",
     "version": "Version",
     "size": "Größe",
     "license": "Lizenz",
-    "openPage": "Projektseite öffnen",
     "confirmInstall": "{name} installieren?",
     "confirmInstallBody": "{name} wird aus den offiziellen Repositories installiert. Du kannst es später wieder entfernen.",
     "confirmUpdate": "{name} aktualisieren?",
@@ -1439,7 +1309,6 @@
     "confirmRemove": "{name} entfernen?",
     "confirmRemoveBody": "{name} wird von diesem System entfernt. Du kannst es später wieder über den App Store installieren.",
     "updates": "Updates verfügbar",
-    "working": "Pakete werden geändert…",
     "installing": "{name} wird installiert",
     "updating": "{name} wird aktualisiert",
     "removing": "{name} wird entfernt",
@@ -1459,10 +1328,8 @@
     "doneRemove": "{name} entfernt",
     "popular": "Beliebt",
     "seeAll": "Alle anzeigen",
-    "viewDetails": "Details anzeigen",
     "resultsTitle": "Ergebnisse für {q}",
     "systemPackages": "Systempakete",
-    "systemPackage": "Systempaket",
     "categories": {
       "discover": "Entdecken",
       "internet": "Internet",
@@ -1685,6 +1552,10 @@
       "quickshell-log": "Shell-Protokoll",
       "quickshell-journal": "Shell-Journal",
       "update-log": "Update-Protokoll",
+      "update": "Update-Zustand",
+      "install-log": "Installationsprotokoll",
+      "boot": "Systemstart und letztes Herunterfahren",
+      "apps": "Protokoll von Texteditor, Imageviewer und Mediaplayer",
       "pacman-log": "Paketverlauf",
       "hardware": "Hardware",
       "audio": "Audiogeräte",
@@ -1714,12 +1585,6 @@
     "back": "Zurück",
     "close": "Schließen",
     "needSummary": "Gib zuerst eine kurze Zusammenfassung ein",
-    "reportThis": "Dieses Problem melden",
-    "settingsTitle": "Problemberichte",
-    "screenshotsDefault": "Bildschirmfotos standardmäßig mitsenden",
-    "ready": "Das Melden ist eingerichtet",
-    "missing": "Das Melden ist noch nicht eingerichtet: kein Zugangstoken auf diesem Computer",
-    "waiting": "{n} Berichte warten auf den Versand",
     "whenOptions": {
       "now": "Gerade eben",
       "today": "Heute",
@@ -1748,7 +1613,16 @@
       "fileTitle": "Datei auswählen",
       "useFile": "Diese Datei verwenden",
       "folderTitle": "Ordner auswählen",
-      "useFolder": "Diesen Ordner verwenden"
+      "useFolder": "Diesen Ordner verwenden",
+      "mediaTitle": "Video oder Lied auswählen",
+      "useMedia": "Diese Datei abspielen",
+      "filesTitle": "Dateien auswählen",
+      "useFiles": "Diese Dateien verwenden",
+      "saveTitle": "Speichern unter",
+      "useSave": "Speichern",
+      "replaceTitle": "Diese Datei ersetzen?",
+      "replaceBody": "{name} gibt es in diesem Ordner schon. Beim Ersetzen wird der bisherige Inhalt überschrieben.",
+      "replace": "Ersetzen"
     },
     "loading": "Wird geladen",
     "emptyDir": "Dieser Ordner ist leer",
@@ -1904,5 +1778,432 @@
       "setgid": "Setgid",
       "sticky": "Sticky"
     }
+  },
+  "editor": {
+    "launcherName": "Texteditor",
+    "untitled": "Unbenannt",
+    "windowTitle": "{name} – Texteditor",
+    "dirtyName": "• {name}",
+    "notSaved": "Noch nicht gespeichert",
+    "cancel": "Abbrechen",
+    "ok": "OK",
+    "menu": {
+      "file": "Datei",
+      "edit": "Bearbeiten",
+      "view": "Ansicht"
+    },
+    "actions": {
+      "new": "Neu",
+      "newWindow": "Neues Fenster",
+      "open": "Öffnen…",
+      "save": "Speichern",
+      "saveAs": "Speichern unter…",
+      "reveal": "In Dateien anzeigen",
+      "trash": "In den Papierkorb",
+      "close": "Schließen",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
+      "cut": "Ausschneiden",
+      "copy": "Kopieren",
+      "paste": "Einfügen",
+      "delete": "Löschen",
+      "find": "Suchen…",
+      "findNext": "Weitersuchen",
+      "findPrevious": "Rückwärts suchen",
+      "replace": "Ersetzen…",
+      "goTo": "Gehe zu Zeile…",
+      "selectAll": "Alles auswählen",
+      "timeDate": "Uhrzeit/Datum",
+      "wordWrap": "Zeilenumbruch",
+      "monospace": "Schrift mit fester Breite",
+      "statusBar": "Statusleiste",
+      "zoomIn": "Vergrößern",
+      "zoomOut": "Verkleinern",
+      "zoomReset": "Zoom zurücksetzen"
+    },
+    "eol": {
+      "lf": "Unix (LF)",
+      "crlf": "Windows (CRLF)",
+      "cr": "Klassisches Mac (CR)"
+    },
+    "encoding": {
+      "utf8": "UTF-8",
+      "utf8bom": "UTF-8 mit BOM",
+      "utf16le": "UTF-16 LE",
+      "utf16be": "UTF-16 BE",
+      "windows1252": "Westeuropäisch (Windows-1252)",
+      "iso88591": "Westeuropäisch (ISO-8859-1)"
+    },
+    "status": {
+      "position": "Z. {line}, Sp. {column}",
+      "characters": "{count} Zeichen",
+      "zoom": "{percent} %",
+      "lineEnding": "Zeilenende",
+      "encoding": "Kodierung"
+    },
+    "readOnly": {
+      "denied": "Schreibgeschützt",
+      "lossy": "Schreibgeschützt: besondere Zeilenumbrüche",
+      "claimed": "In einem anderen Fenster geöffnet"
+    },
+    "find": {
+      "placeholder": "Suchen",
+      "replacePlaceholder": "Ersetzen durch",
+      "none": "Keine Treffer",
+      "count": "{count} Treffer",
+      "matchCase": "Groß-/Kleinschreibung beachten",
+      "wrap": "Am Ende von vorn beginnen",
+      "close": "Suche schließen",
+      "replaceOne": "Ersetzen",
+      "replaceAll": "Alle ersetzen"
+    },
+    "goTo": {
+      "title": "Gehe zu Zeile",
+      "body": "Zeilennummer (1 – {last})",
+      "go": "Gehe zu",
+      "placeholder": "Zeile"
+    },
+    "unsaved": {
+      "title": "Änderungen speichern?",
+      "body": "Möchtest du die Änderungen an „{name}“ speichern?",
+      "save": "Speichern",
+      "discard": "Nicht speichern"
+    },
+    "changed": {
+      "title": "Datei wurde geändert",
+      "body": "„{name}“ wurde seit dem Öffnen von einem anderen Programm geändert. Mit deiner Fassung überschreiben?",
+      "overwrite": "Überschreiben"
+    },
+    "exists": {
+      "title": "Datei ersetzen?",
+      "body": "„{name}“ gibt es in diesem Ordner schon. Ersetzen?",
+      "replace": "Ersetzen"
+    },
+    "trash": {
+      "title": "In den Papierkorb verschieben?",
+      "body": "„{name}“ wird in den Papierkorb verschoben und dieses Fenster geschlossen. In Dateien kannst du sie aus dem Papierkorb wiederherstellen.",
+      "confirm": "In den Papierkorb"
+    },
+    "notice": {
+      "title": "Texteditor"
+    },
+    "saveAs": {
+      "title": "Speichern unter",
+      "save": "Speichern",
+      "name": "Dateiname",
+      "namePlaceholder": "Name.txt",
+      "defaultName": "Unbenannt.txt",
+      "folder": "Ordner",
+      "encoding": "Kodierung",
+      "lineEnding": "Zeilenende"
+    },
+    "errors": {
+      "failed": "„{name}“ konnte nicht geöffnet oder gespeichert werden.",
+      "missing": "„{name}“ gibt es nicht mehr.",
+      "directory": "„{name}“ ist ein Ordner, keine Datei.",
+      "special": "„{name}“ ist keine normale Datei und kann nicht geöffnet werden.",
+      "tooLarge": "„{name}“ ist größer als {megabytes} MB und kann hier nicht geöffnet werden.",
+      "binary": "„{name}“ ist keine Textdatei.",
+      "encoding": "Die Textkodierung von „{name}“ wird nicht unterstützt.",
+      "denied": "Du hast keine Berechtigung für „{name}“. Mit „Speichern unter“ kannst du eine Kopie behalten.",
+      "readOnlyFs": "„{name}“ liegt auf einem schreibgeschützten Laufwerk. Mit „Speichern unter“ kannst du eine Kopie behalten.",
+      "full": "Das Laufwerk ist voll. „{name}“ wurde nicht gespeichert.",
+      "badName": "Dieser Dateiname ist nicht erlaubt.",
+      "changed": "„{name}“ wurde von einem anderen Programm geändert.",
+      "exists": "Eine Datei mit diesem Namen gibt es schon.",
+      "unencodable": "Einige Zeichen in „{name}“ passen nicht in die gewählte Kodierung. Wähle UTF-8 unter „Speichern unter“.",
+      "protected": "„{name}“ ist geschützt und kann nicht in den Papierkorb verschoben werden.",
+      "busy": "Die letzte Aktion läuft noch. Versuch es gleich noch einmal."
+    }
+  },
+  "viewer": {
+    "launcherName": "Imageviewer",
+    "windowTitle": "{name} – Imageviewer",
+    "windowTitleEmpty": "Imageviewer",
+    "position": "{index} / {count}",
+    "percent": "{percent} %",
+    "more": "Mehr",
+    "ok": "OK",
+    "cancel": "Abbrechen",
+    "actions": {
+      "open": "Öffnen…",
+      "newWindow": "Neues Fenster",
+      "reveal": "In Dateien zeigen",
+      "copy": "Bild kopieren",
+      "copyPath": "Pfad kopieren",
+      "saveRotation": "Drehung speichern",
+      "remove": "Aus der Liste nehmen",
+      "trash": "In den Papierkorb",
+      "close": "Schließen",
+      "next": "Nächstes Bild",
+      "previous": "Vorheriges Bild",
+      "first": "Erstes Bild",
+      "last": "Letztes Bild",
+      "slideshow": "Diashow",
+      "zoomIn": "Vergrößern",
+      "zoomOut": "Verkleinern",
+      "fit": "An Fenster anpassen",
+      "actual": "Originalgröße",
+      "scaling": "Skalierung wechseln",
+      "rotateRight": "Nach rechts drehen",
+      "rotateLeft": "Nach links drehen",
+      "pause": "Animation anhalten",
+      "info": "Bilddetails",
+      "fullscreen": "Vollbild",
+      "leave": "Vollbild verlassen",
+      "panLeft": "Ansicht nach links",
+      "panRight": "Ansicht nach rechts",
+      "panUp": "Ansicht nach oben",
+      "panDown": "Ansicht nach unten"
+    },
+    "a11y": {
+      "image": "{name}, Bild {index} von {count}",
+      "size": "{width} × {height} Pixel, angezeigt mit {percent} %"
+    },
+    "empty": {
+      "title": "Kein Bild geöffnet",
+      "hint": "Öffne ein Bild oder zieh eines hierher.",
+      "open": "Bild öffnen"
+    },
+    "info": {
+      "title": "Details",
+      "dimensions": "Abmessungen",
+      "pixels": "{width} × {height} px",
+      "size": "Dateigröße",
+      "type": "Typ",
+      "modified": "Geändert",
+      "folder": "Ordner"
+    },
+    "units": {
+      "byte": "{value} Bytes",
+      "kb": "{value} KB",
+      "mb": "{value} MB",
+      "gb": "{value} GB",
+      "tb": "{value} TB"
+    },
+    "trash": {
+      "title": "In den Papierkorb?",
+      "body": "„{name}“ kommt in den Papierkorb. Von dort kannst du es wiederherstellen.",
+      "confirm": "In den Papierkorb"
+    },
+    "notice": {
+      "title": "Imageviewer"
+    },
+    "errors": {
+      "missing": "„{name}“ gibt es nicht mehr.",
+      "directory": "Das ist ein Ordner, kein Bild.",
+      "special": "Das ist keine normale Datei.",
+      "empty": "Hier sind keine Bilder.",
+      "denied": "Du darfst „{name}“ nicht ändern.",
+      "readOnlyFs": "Dieses Laufwerk ist schreibgeschützt.",
+      "full": "Das Laufwerk ist voll.",
+      "badName": "Der Name ist zu lang.",
+      "changed": "„{name}“ wurde von einem anderen Programm geändert. Öffne es vor dem Speichern neu.",
+      "unsupported": "Diese Bildart kann hier nicht geändert werden.",
+      "tooLarge": "„{name}“ ist dafür zu groß.",
+      "protected": "Diese Datei ist geschützt und bleibt, wo sie ist.",
+      "failed": "Das hat nicht geklappt.",
+      "cannotShow": "Dieses Bild kann nicht angezeigt werden",
+      "cannotShowHint": "Die Datei ist vielleicht beschädigt oder in einem Format, das dieser Betrachter nicht liest."
+    }
+  },
+  "player": {
+    "launcherName": "Mediaplayer",
+    "windowTitle": "{name} – Mediaplayer",
+    "windowTitleEmpty": "Mediaplayer",
+    "position": "{index} / {count}",
+    "time": "{position} / {duration}",
+    "speed": "{speed}×",
+    "more": "Mehr",
+    "ok": "OK",
+    "actions": {
+      "open": "Öffnen…",
+      "newWindow": "Neues Fenster",
+      "reveal": "In Dateien zeigen",
+      "copyPath": "Pfad kopieren",
+      "close": "Schließen",
+      "play": "Abspielen",
+      "pause": "Pause",
+      "forward": "Vorspulen",
+      "back": "Zurückspulen",
+      "jumpForward": "Weit vorspringen",
+      "jumpBack": "Weit zurückspringen",
+      "nextFrame": "Nächstes Bild",
+      "previousFrame": "Vorheriges Bild",
+      "faster": "Schneller",
+      "slower": "Langsamer",
+      "normalSpeed": "Normale Geschwindigkeit",
+      "volumeUp": "Lauter",
+      "volumeDown": "Leiser",
+      "mute": "Stumm",
+      "next": "Nächste Datei",
+      "previous": "Vorherige Datei",
+      "loop": "Wiederholen",
+      "subtitles": "Nächste Untertitel",
+      "audioTrack": "Nächste Tonspur",
+      "screenshot": "Bild als Foto speichern",
+      "fullscreen": "Vollbild",
+      "leave": "Vollbild verlassen"
+    },
+    "menu": {
+      "speed": "Geschwindigkeit",
+      "audio": "Tonspur",
+      "subtitles": "Untertitel",
+      "off": "Aus",
+      "track": "Spur {number}",
+      "normal": "Normal"
+    },
+    "osd": {
+      "volume": "Lautstärke {percent} %",
+      "muted": "Stumm",
+      "loopOn": "Wiederholen an",
+      "loopOff": "Wiederholen aus",
+      "subtitles": "Untertitel: {name}",
+      "subtitlesOff": "Untertitel aus",
+      "audio": "Ton: {name}",
+      "saved": "Bild in Bilder gespeichert",
+      "zoom": "Zoom {percent} %"
+    },
+    "a11y": {
+      "video": "{name}, Datei {index} von {count}",
+      "seek": "Position",
+      "volume": "Lautstärke",
+      "progress": "{position} von {duration}"
+    },
+    "empty": {
+      "title": "Nichts wird abgespielt",
+      "hint": "Öffne ein Video oder ein Lied, oder zieh es hierher.",
+      "open": "Video öffnen"
+    },
+    "notice": {
+      "title": "Mediaplayer"
+    },
+    "errors": {
+      "missing": "„{name}“ gibt es nicht mehr.",
+      "directory": "Das ist ein Ordner, kein Video.",
+      "special": "Das ist keine normale Datei.",
+      "empty": "Hier gibt es nichts zum Abspielen.",
+      "denied": "Du darfst hier nicht speichern.",
+      "readOnlyFs": "Dieses Laufwerk ist schreibgeschützt.",
+      "full": "Das Laufwerk ist voll.",
+      "badName": "Der Name ist zu lang.",
+      "unsupported": "Nur ein Videobild kann gespeichert werden.",
+      "tooLarge": "„{name}“ ist dafür zu groß.",
+      "failed": "Das hat nicht geklappt.",
+      "cannotPlay": "Diese Datei kann nicht abgespielt werden",
+      "cannotPlayHint": "Die Datei ist vielleicht beschädigt oder in einem Format, das dieser Player nicht liest."
+    }
+  },
+  "keys": {
+    "ctrl": "Strg",
+    "shift": "Umschalt",
+    "alt": "Alt",
+    "delete": "Entf",
+    "space": "Leertaste",
+    "enter": "Eingabe",
+    "escape": "Esc",
+    "backspace": "Rücktaste",
+    "left": "←",
+    "right": "→",
+    "up": "↑",
+    "down": "↓",
+    "home": "Pos1",
+    "end": "Ende",
+    "pageUp": "Bild auf",
+    "pageDown": "Bild ab"
+  },
+  "installer": {
+    "steps": {
+      "user": "Benutzer",
+      "summary": "Übersicht"
+    },
+    "finished": {
+      "done": "<h1>Alles erledigt.</h1><br/>%1 ist installiert und einsatzbereit.<br/>Starte neu, um deinen neuen Desktop zu nutzen."
+    },
+    "net": {
+      "title": "Netzwerk",
+      "ethernet": "Ethernet",
+      "nearby": "Netzwerke in der Nähe",
+      "refresh": "Aktualisieren",
+      "password": "Passwort",
+      "connect": "Verbinden",
+      "connected": "Verbunden",
+      "notConnected": "Nicht verbunden",
+      "viaEthernet": "Du bist per Ethernet verbunden",
+      "viaWifi": "Du bist per WLAN verbunden",
+      "canContinue": "Du kannst mit dem nächsten Schritt fortfahren.",
+      "passwordRequired": "Passwort erforderlich",
+      "openNetwork": "Offenes Netzwerk",
+      "connecting": "Verbinden…",
+      "enterPassword": "Gib das Passwort ein, um dich zu verbinden.",
+      "needWifi": "Verbinde dich mit WLAN, um fortzufahren.",
+      "searching": "Suche nach Netzwerken…",
+      "noneFound": "Keine Netzwerke gefunden.",
+      "noneFoundHint": "Keine Netzwerke gefunden. Geh näher an den Router und wähle dann Aktualisieren.",
+      "badPassword": "Verbinden fehlgeschlagen. Passwort prüfen.",
+      "outOfRange": "Das Netzwerk ist außer Reichweite. Geh näher heran oder suche erneut.",
+      "timeout": "Das Netzwerk hat nicht rechtzeitig geantwortet. Versuche es erneut.",
+      "portal": "Dieses Netzwerk braucht eine Anmeldung, die das Installationsprogramm nicht eingeben kann. Wähle ein anderes Netzwerk.",
+      "rejected": "Das Passwort wurde nicht angenommen. Gib es erneut ein.",
+      "another": "Anderes Netzwerk wählen",
+      "noDriver": "Für den WLAN-Chip dieses Computers (%1) hat das Installationsprogramm keinen Treiber. %2",
+      "noAdapter": "Es wurde kein WLAN-Adapter gefunden. %1",
+      "wiredHint": "Schließe ein Netzwerkkabel an oder teile die Verbindung deines Handys per USB.",
+      "saved": "Gespeichert",
+      "forget": "Vergessen",
+      "disconnect": "Trennen"
+    },
+    "slides": {
+      "assistantTitle": "Assistent",
+      "assistant": "Super+A öffnet den KI-Chat. Frag in deiner Sprache. Antworten kommen von einem lokalen Modell oder Gemini.",
+      "colorsTitle": "Farben von deinem Hintergrundbild",
+      "colors": "Wähle ein Hintergrundbild mit Super+W. Leisten, Apps und Anmeldung passen sich dem Bild an.",
+      "keysTitle": "Tastaturhilfe",
+      "keys": "Shortcut vergessen? Super+K listet alle Tastenkürzel. Suchen, dann die Kombination drücken.",
+      "storeTitle": "App Store",
+      "store": "Programme aus den offiziellen Paketquellen installieren. Suchen, bestätigen, fertig.",
+      "launcherTitle": "Launcher",
+      "launcher": "Super+Leertaste findet Apps, führt Befehle aus und rechnet schnell.",
+      "settingsTitle": "Einstellungen",
+      "settings": "Super+I öffnet die Systemeinstellungen. Eine Datei speichert alle Vorgaben.",
+      "languageTitle": "Deine Sprache",
+      "language": "Der Desktop startet in der Sprache, die du hier gewählt hast. Du kannst sie jederzeit in den Einstellungen wechseln.",
+      "shortcutsTitle": "Tägliche Tastenkürzel",
+      "shortcuts": "Super+T Terminal. Super+B Browser. Super+E Dateien. Drucken macht einen Screenshot.",
+      "windowsTitle": "Fenster und Arbeitsflächen",
+      "windows": "Super+Pfeile wechseln den Fokus. Super+Umschalt+Pfeile verschieben das Fenster. Super+Tab zeigt die Übersicht.",
+      "rebootTitle": "Nach dem Neustart",
+      "reboot": "Melde dich mit dem gerade angelegten Konto an. Super+N ist die Steuerzentrale. Super+L sperrt."
+    }
+  },
+  "manual": {
+    "title": "ModernOS Handbuch",
+    "launcherName": "Handbuch",
+    "windowTitle": "{name} – Handbuch",
+    "back": "Zurück",
+    "forward": "Vorwärts",
+    "search": "Handbuch durchsuchen...",
+    "noResults": "Kein Dokument passt zu deiner Suche",
+    "groups": {
+      "manual": "Benutzerhandbuch",
+      "reference": "Technische Referenz"
+    },
+    "sections": {
+      "start": "Los geht's",
+      "desktop": "Den Desktop nutzen",
+      "personal": "Einstellungen und Aussehen",
+      "apps": "Apps",
+      "care": "Updates, Sicherheit und Hilfe",
+      "project": "Das Projekt",
+      "look": "Design und Sprache",
+      "shell": "Oberfläche und Apps",
+      "system": "Installation und System",
+      "more": "Weitere"
+    },
+    "unavailable": "Das Handbuch konnte nicht geladen werden",
+    "unavailableHint": "Die Dokumentationsdateien fehlen im ModernOS-Ordner.",
+    "contents": "Inhalt",
+    "chapter": "{number}. {title}",
+    "link": "Link: {name}. Mit Enter öffnen."
   }
 }

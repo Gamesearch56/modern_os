@@ -16,9 +16,12 @@ passwd -d liveuser >/dev/null 2>&1 || true
 
 # Calamares loadLocales() prefers this file over locale.gen and would
 # otherwise offer every glibc locale. Overlay only — unpackfs still
-# ships the distro copy from the squashfs. Lines come from
-# installer-locales.json `locales` (Welcome languages). Keyboard layouts
-# are a separate `layouts` key in that file.
+# ships the distro copy from the squashfs. SUPPORTED lists every
+# language + country from installer-locales.json so the Location step can
+# pick de_AT for Vienna; the live locale.gen keeps only each language's
+# default, because generating every regional locale here slowed boot and
+# the live session never uses them. The installed system gets its own
+# locale.gen with all of them commented in (scripts/installer-locales.py).
 install -d -m 0755 /usr/share/i18n
 python3 - <<'PY'
 import json
@@ -35,16 +38,20 @@ for p in paths:
         break
 if not data:
     raise SystemExit("live-setup: missing installer-locales.json")
-lines = []
+defaults, supported = [], []
 for loc in data.get("locales") or []:
     glibc = str(loc.get("glibc") or "").strip()
     if glibc:
-        lines.append(f"{glibc} UTF-8")
-if not lines:
+        defaults.append(f"{glibc} UTF-8")
+    for c in loc.get("countries") or []:
+        line = f"{str(c.get('glibc') or '').strip()} UTF-8"
+        if c.get("glibc") and line not in supported:
+            supported.append(line)
+if not defaults:
     raise SystemExit("live-setup: installer-locales.json has no glibc entries")
-text = "\n".join(lines) + "\n"
-Path("/usr/share/i18n/SUPPORTED").write_text(text, encoding="utf-8")
-Path("/etc/locale.gen").write_text(text, encoding="utf-8")
+supported = defaults + [line for line in supported if line not in defaults]
+Path("/usr/share/i18n/SUPPORTED").write_text("\n".join(supported) + "\n", encoding="utf-8")
+Path("/etc/locale.gen").write_text("\n".join(defaults) + "\n", encoding="utf-8")
 PY
 
 install -d -m 0755 /home/liveuser/.config/hypr /root/.config/hypr

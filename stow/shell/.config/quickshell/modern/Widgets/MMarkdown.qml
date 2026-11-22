@@ -191,25 +191,6 @@ QtObject {
         return { next: k, chunk: { type: "table", rows: rows, align: align } };
     }
 
-    function _tableHtml(table: var, last: bool): string {
-        const gap = last ? "0" : (root.blockGap + "px");
-        const head = String(Colors.color.surfaceContainer);
-        let html = "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\" width=\"100%\""
-            + " style=\"margin:0 0 " + gap + " 0\">";
-        const rows = table.rows || [];
-        for (let r = 0; r < rows.length; r++) {
-            html += "<tr" + (r === 0 ? " bgcolor=\"" + head + "\"" : "") + ">";
-            const tag = r === 0 ? "th" : "td";
-            for (let c = 0; c < rows[r].length; c++) {
-                const align = (table.align && table.align[c]) || "left";
-                html += "<" + tag + " align=\"" + align + "\">" + root._inline(rows[r][c]) + "</" + tag + ">";
-            }
-            html += "</tr>";
-        }
-        html += "</table>";
-        return html;
-    }
-
     function _escape(s: string): string {
         return String(s || "")
             .replace(/&/g, "&amp;")

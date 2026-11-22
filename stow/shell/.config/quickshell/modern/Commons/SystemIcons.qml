@@ -22,6 +22,14 @@ Singleton {
         if (s === "shell:files" || s === "modern.files" || s === "modern-files"
                 || s === "modern-files-symbolic")
             return "modern-files-symbolic";
+        if (s === "modern.editor" || s === "modern-editor" || s === "modern-editor-symbolic")
+            return "modern-editor-symbolic";
+        if (s === "modern.imageviewer" || s === "modern-imageviewer" || s === "modern-imageviewer-symbolic")
+            return "modern-imageviewer-symbolic";
+        if (s === "modern.mediaplayer" || s === "modern-mediaplayer" || s === "modern-mediaplayer-symbolic")
+            return "modern-mediaplayer-symbolic";
+        if (s === "modern.manual" || s === "modern-manual" || s === "modern-manual-symbolic")
+            return "modern-manual-symbolic";
         if (s === "modern.wallpaper" || s === "modern-wallpaper" || s === "modern-wallpaper-symbolic")
             return "modern-wallpaper-symbolic";
         if (s === "modern.cheatsheet" || s === "modern-cheatsheet" || s === "modern-cheatsheet-symbolic")

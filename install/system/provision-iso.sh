@@ -37,8 +37,8 @@ USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 # Calamares' keyboard job writes the chosen layout to /etc/vconsole.conf and
 # the X11 snippet, which covers the TTY and Xwayland clients. Neither is read
 # by Hyprland (modules/input.lua takes kb_layout from config.json) or by
-# greetd's own Hyprland instance, so a German install used to boot to a us
-# login prompt and a us desktop.
+# greetd's own Hyprland instance; without this step a German install boots
+# to a us login prompt and a us desktop.
 XORG_KB="${MODERN_XORG_KB:-/etc/X11/xorg.conf.d/00-keyboard.conf}"
 GREETD_LUA="${MODERN_GREETD_LUA:-/etc/greetd/hyprland.lua}"
 SESSION_DIR="${MODERN_SESSION_DIR:-/var/lib/modern/session}"
@@ -102,8 +102,8 @@ apply_keyboard_layout
 
 # Calamares' locale job writes LANG= to /etc/locale.conf, which is what PAM
 # sessions and install/lib/i18n.sh read. Commons/I18n.qml does not: it picks
-# its translation file from language.ui in config.json, so a German install
-# used to come up with a German system locale and an English shell.
+# its translation file from language.ui in config.json; without this step a
+# German install has a German system locale and an English shell.
 LOCALE_CONF="${MODERN_LOCALE_CONF:-/etc/locale.conf}"
 
 locale_var() {
@@ -213,6 +213,21 @@ install -D -m 0644 "$PROVISION_ROOT/install/system/sysctl.d/99-modern-zram.conf"
 install -D -m 0644 "$PROVISION_ROOT/install/system/udev/60-modern-rotational-bfq.rules" \
     /etc/udev/rules.d/60-modern-rotational-bfq.rules
 log "zram swap and hard-disk scheduler staged for next boot"
+
+# The ufw package ships ENABLED=no, which left fresh installs with no
+# firewall. ufw.service reads ENABLED at boot, so the installer's own
+# netfilter is never touched. The rule files were written by ufw itself
+# and open only KDE Connect and Steam Remote Play to private ranges.
+install -D -m 0644 "$PROVISION_ROOT/install/system/ufw/user.rules" /etc/ufw/user.rules
+install -D -m 0644 "$PROVISION_ROOT/install/system/ufw/user6.rules" /etc/ufw/user6.rules
+if [ -f /etc/ufw/ufw.conf ]; then
+    sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
+    chmod 0644 /etc/ufw/ufw.conf
+    enable_unit ufw.service optional
+fi
+install -D -m 0644 "$PROVISION_ROOT/install/system/sysctl.d/99-modern-hardening.conf" \
+    /etc/sysctl.d/99-modern-hardening.conf
+log "firewall on with LAN-only KDE Connect and Steam ports; kernel pointers hidden"
 
 log "boot splash — theme and kernel line, initramfs rebuild follows"
 plymouth_apply /

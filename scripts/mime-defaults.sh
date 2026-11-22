@@ -180,6 +180,8 @@ fi
 mkdir -p "$(dirname "$MIMEAPPS")"
 export MIMEAPPS
 export MIME_PAIRS="$pairs"
+export MIME_RETIRED="${DEFAULT_APPS_RETIRED:-}"
+export MIME_CHOSEN="$VIDEO_ID $IMAGE_ID $TEXT_ID"
 python3 - <<'PY'
 import os, tempfile
 
@@ -270,7 +272,14 @@ def drop_removed(lines, mime, desktop):
             out.append(mime + "=" + ";".join(ids) + ";")
     return out
 
-defaults = body["Default Applications"]
+chosen = set(os.environ.get("MIME_CHOSEN", "").split())
+retired = set(os.environ.get("MIME_RETIRED", "").split()) - chosen
+
+def drop_retired(lines):
+    return [l for l in lines if "=" not in l or l.split("=", 1)[0] in pairs
+            or l.split("=", 1)[1].strip().rstrip(";") not in retired]
+
+defaults = drop_retired(body["Default Applications"])
 added = body["Added Associations"]
 removed = body.get("Removed Associations", [])
 for mime, desktop in sorted(pairs.items()):

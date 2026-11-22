@@ -26,6 +26,10 @@ Singleton {
     // Bumped on every successful load so Services can react when nested
     // JsonObject ints (idleTimings) do not emit their own changed signals.
     property int generation: 0
+    // False until config.json was read once (or could not be). Until then
+    // every value is a QML fallback, so chrome that depends on a saved
+    // choice, like auto-hide, waits for this before it shows.
+    property bool loaded: false
 
     FileView {
         id: file
@@ -36,6 +40,7 @@ Singleton {
         onLoaded: {
             root._configMisses = 0
             root.generation++
+            root.loaded = true
         }
         onLoadFailed: (error) => {
             // FileNotFound (2): atomic replace can fire the watcher between
@@ -46,6 +51,7 @@ Singleton {
                 return;
             }
             Logger.error("Config", "failed to load config.json: " + error);
+            root.loaded = true;
         }
 
         JsonAdapter {
@@ -191,9 +197,9 @@ Singleton {
                     // These three match install/manifests/default-apps.json.
                     // test-default-apps.sh rejects drift. Packages and launch
                     // overrides live in that manifest, not here.
-                    property string videoPlayer: "mpv.desktop"
-                    property string imageViewer: "imv.desktop"
-                    property string textEditor: "org.gnome.gedit.desktop"
+                    property string videoPlayer: "modern.mediaplayer.desktop"
+                    property string imageViewer: "modern.imageviewer.desktop"
+                    property string textEditor: "modern.editor.desktop"
                     property string terminal: "kitty.desktop"
                 }
             }
@@ -290,6 +296,28 @@ Singleton {
                 property var favorites: []
             }
 
+            property JsonObject editor: JsonObject {
+                property bool wordWrap: true
+                property bool statusBar: true
+                property bool monospace: true
+                property int zoom: 100
+                property int maxMegabytes: 8
+            }
+
+            property JsonObject viewer: JsonObject {
+                property string scaling: "shrink"
+                property bool info: false
+                property int slideshowSeconds: 4
+            }
+
+            property JsonObject player: JsonObject {
+                property real volume: 1
+                property bool muted: true
+                property bool loop: true
+                property int seekSeconds: 5
+                property int jumpSeconds: 60
+            }
+
             property JsonObject backup: JsonObject {
                 property bool snapperEnabled: false
                 property bool resticEnabled: false
@@ -345,6 +373,7 @@ Singleton {
                 screenshotWindow: "SHIFT + PRINT",
                 screenshotFull: "SUPER + PRINT",
                 colorPicker: "SUPER + SHIFT + C",
+                manual: "SUPER + Y",
                 filePreview: "SPACE",
                 bugReport: "SUPER + #"
             })
@@ -376,4 +405,7 @@ Singleton {
     readonly property alias keybinds: adapter.keybinds
     readonly property alias bugReport: adapter.bugReport
     readonly property alias files: adapter.files
+    readonly property alias editor: adapter.editor
+    readonly property alias viewer: adapter.viewer
+    readonly property alias player: adapter.player
 }

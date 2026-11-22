@@ -97,8 +97,8 @@ EOF
     chmod 0644 "$dest"
 }
 
-# The stock mkinitcpio preset already has this path. strip_live used to
-# replace that file and drop the line; repair either shape.
+# The stock mkinitcpio preset already has this path. A live-image strip
+# can replace that file and drop the line; repair either shape.
 kernel_boot_preset_pin() {
     local root dest
     root="$(kernel_boot_root)"

@@ -36,7 +36,7 @@ Singleton {
         moveToWorkspace9: "workspaces", moveToWorkspace10: "workspaces",
         screenshotRegion: "screenshots", screenshotWindow: "screenshots",
         screenshotFull: "screenshots",
-        colorPicker: "system", bugReport: "system",
+        colorPicker: "system", bugReport: "system", manual: "system",
         cheatsheet: "system", powerMenu: "system", controlCenter: "system",
         lockScreen: "system", exitSession: "system"
     })
@@ -45,7 +45,8 @@ Singleton {
     // object replaces the defaults wholesale, so a missing key would
     // otherwise never appear on the sheet. A saved combo still wins.
     readonly property var shipped: ({
-        bugReport: "SUPER + #"
+        bugReport: "SUPER + #",
+        manual: "SUPER + Y"
     })
 
     // Not in keybinds: the emergency terminal, hardware keys, and mouse

@@ -64,3 +64,6 @@ Thumbs.db
 # ISO artifacts (branding + mkarchiso + AUR pkg cache). Never under a live home.
 iso/out/
 *.iso
+
+# VM disks from local install tests
+*.qcow2

@@ -1,5 +1,9 @@
 # Installing Cursor
 
+Optional developer tooling: how to install the Cursor editor on a
+ModernOS system and open this repository with its agent rules. End users
+do not need it.
+
 Cursor is installed as `cursor-bin` from the AUR. No install profile
 ships it; add it yourself.
 
@@ -31,47 +35,38 @@ yay -S --needed cursor-bin
 cursor
 ```
 
-On a fresh account with no display session yet, run this over SSH or a
-TTY with `cursor --no-sandbox` if the Wayland/X11 session isn't up yet —
-but normally you'll do this after Hyprland is running so the GUI launches
-on the real desktop.
+Launch it once Hyprland is running so the GUI opens on the desktop. On
+a session without a working sandbox, `cursor --no-sandbox` is the
+fallback (see Troubleshooting).
 
 ## 4. Sign in and open the repo
 
 1. Sign in with your Cursor account (settings sync is optional).
-2. `File > Open Folder` → `~/modern_dotfile`.
-3. Cursor should pick up `.cursorrules` and `AGENTS.md` automatically —
+2. `File > Open Folder` → your clone of this repository.
+3. Cursor picks up `.cursorrules` and `AGENTS.md` automatically —
    verify by asking it "what are the layer rules in this repo?" and
    checking the answer matches `AGENTS.md`.
 
 ## 5. Recommended settings for this project
 
 - Enable "Format on Save" for `.qml`/`.lua`/`.sh` if you add formatters
-  later (none are wired up yet — `scripts/lint-layers.sh` is the current
+  later (none are wired up — `scripts/lint-layers.sh` is the
   enforcement mechanism, not a formatter).
 - Terminal default shell: `bash` (matches `stow/bash/.bashrc`).
 - If you use Cursor's own settings sync, check nothing there assumes
   paths from another machine's layout.
 
-## 6. Live-verification checklist
+## 6. Quick check
 
-This guide is marked "live-verified" in `docs/DECISIONS.md`'s milestone
-tracking once each of these has actually been done on the target user, not
-just read:
-
-- [ ] `yay -S cursor-bin` completes without error on a real session
-- [ ] `cursor` launches a window under Hyprland
-- [ ] Cursor opens `~/modern_dotfile` and its file tree matches this repo
-- [ ] `.cursorrules` is detected (ask Cursor to summarize it)
-- [ ] A trivial edit + save round-trips correctly (no permission issues on
-      a freshly-created `$HOME`)
-
-Until these boxes are checked by hand on real hardware, treat this guide
-as "should work, not yet flown" — see `README.md`.
+- `yay -S cursor-bin` completes without error
+- `cursor` opens a window under Hyprland
+- Cursor opens your clone and shows the same file tree as the repo
+- `.cursorrules` is detected (ask Cursor to summarize it)
+- An edit and save round-trips with no permission errors in `$HOME`
 
 ## Troubleshooting
 
-- **AppImage/Electron sandbox errors on Wayland** — add
+- **Electron sandbox errors on Wayland** — add
   `--ozone-platform=wayland` via a `cursor.desktop` override, or launch
   with `cursor --no-sandbox` as a fallback (less secure; prefer the
   Wayland flag first).
@@ -80,4 +75,4 @@ as "should work, not yet flown" — see `README.md`.
   a minimal `base` install.
 - **No `$DISPLAY`/`$WAYLAND_DISPLAY`** — you're on a bare TTY with no
   compositor running yet. Either finish Hyprland setup first, or
-  install/verify Cursor headlessly and launch it once Hyprland is up.
+  install Cursor headlessly and launch it once Hyprland is up.

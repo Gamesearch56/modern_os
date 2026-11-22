@@ -24,7 +24,8 @@ greetd_as_root() {
     fi
 }
 
-# Login homes only. CI / --target /tmp must not enable greetd on this PC.
+# Login homes only: CI and --target /tmp runs must not enable greetd on
+# the machine running them.
 greetd_target_is_live_user() {
     local home="$1" resolved user
     [ -n "$home" ] || return 1
@@ -46,7 +47,7 @@ greetd_user_for_home() {
 }
 
 # One unit per call: `systemctl enable a b c` aborts the whole list on the
-# first missing unit, so one absent package used to take the install down.
+# first missing unit, so one absent package would take the install down.
 # --root=/ reads this filesystem. During install, /run is the live
 # session, where NetworkManager is already enabled. A plain is-enabled
 # then skips the installed copy, systemd-networkd has been removed, and

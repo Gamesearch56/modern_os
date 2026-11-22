@@ -55,13 +55,6 @@ Singleton {
         Quickshell.execDetached(cmd);
     }
 
-    function openFile(path: string) {
-        const target = String(path || "");
-        if (target.charAt(0) !== "/")
-            return;
-        Quickshell.execDetached(["xdg-open", target]);
-    }
-
     function note(place: string) {
         if (place === "recent") root.reloadRecent();
         else if (place === "trash") FilesTrash.refresh();
@@ -139,7 +132,7 @@ Singleton {
         return next;
     }
 
-    function _moved(cur: var, sources: var, dest: string, made: var) {
+    function _moved(cur: var, sources: var, dest: string, made: var): var {
         const landed = made || [];
         if (dest.charAt(0) !== "/" && !landed.length)
             return cur;
@@ -169,7 +162,7 @@ Singleton {
         return next;
     }
 
-    function _renamed(cur: var, oldPath: string, name: string) {
+    function _renamed(cur: var, oldPath: string, name: string): var {
         if (oldPath.charAt(0) !== "/" || !name.length || name.indexOf("/") !== -1)
             return cur;
         const slash = oldPath.lastIndexOf("/");

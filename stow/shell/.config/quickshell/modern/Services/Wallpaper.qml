@@ -22,7 +22,6 @@ Singleton {
     readonly property string home: Quickshell.env("HOME")
     readonly property string libraryDir: XdgDirs.wallpapers
     readonly property string sessionBlur: "/var/lib/modern/session/wallpaper-blur.jpg"
-    readonly property string stateBlur: root.stateHome + "/modern/session/wallpaper-blur.jpg"
     readonly property string stateHome: Paths.stateHome
 
     signal fetched(string path)
@@ -114,8 +113,10 @@ Singleton {
             const reopen = root._reopenPicker && code === 0;
             root._reopenPicker = false;
             root.providerOpen = false;
-            if (code !== 0)
+            if (code !== 0) {
+                Logger.warn("Wallpaper", `provider window exited ${code}; opening the browser instead`);
                 root.openInBrowser();
+            }
             root.chooserFinished(reopen);
         }
     }
@@ -157,11 +158,6 @@ Singleton {
         if (u.indexOf("http://") !== 0 && u.indexOf("https://") !== 0 && u.length > 0)
             u = "https://" + u;
         return u;
-    }
-
-    function isImageUrl(url: string): bool {
-        const u = String(url || "").split("?")[0].split("#")[0].toLowerCase();
-        return u.endsWith(".jpg") || u.endsWith(".jpeg") || u.endsWith(".png") || u.endsWith(".webp");
     }
 
     function openProvider() {

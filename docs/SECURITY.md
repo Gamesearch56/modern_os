@@ -1,5 +1,9 @@
 # Threat model: modern-usersd
 
+For admins and security reviewers: how Settings → Users and Settings →
+Firewall get root rights, what they refuse to do, and which ports stay
+closed. How to report a vulnerability is in the top-level `SECURITY.md`.
+
 Settings → Users mutates accounts through one `pkexec` of
 `scripts/usersd.sh` after **admin** authentication (`auth_admin`). JSON
 on stdin; names as argv arrays; passwords never on argv. The session
@@ -49,16 +53,23 @@ an explicit, separate step (see `docs/ISOLATION.md`).
 - Directory (LDAP/FreeIPA) users
 - Password-quality policy (callers should enforce that before `passwd`)
 
-## KDE Connect ports (staged, not applied)
+## Firewall on a fresh install
 
-Phone pairing uses TCP and UDP **1714–1764**. Rules live in
-`install/system/ufw/kdeconnect.rules` and are **not** applied by
-`install.sh`. Open them on a trusted LAN only:
+The ufw package ships disabled. `provision-iso.sh` turns it on (deny
+incoming, allow outgoing, deny routed — the package defaults) and
+installs `install/system/ufw/user.rules` and `user6.rules`. Those files
+were written by ufw itself and open only:
 
-```bash
-sudo ufw allow 1714:1764/tcp comment kdeconnect
-sudo ufw allow 1714:1764/udp comment kdeconnect
-```
+- KDE Connect, TCP and UDP **1714–1764**
+- Steam Remote Play and LAN game transfer, UDP **27031, 27036** and
+  TCP **27036, 27037, 27040**
+
+each from `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fe80::/10`
+and `fc00::/7` only. Nothing is reachable from a public address.
+`install.sh` on an existing system does not touch `/etc/ufw`.
+
+The same step installs `/etc/sysctl.d/99-modern-hardening.conf`
+(`kernel.kptr_restrict = 1`).
 
 ## Residual risk
 
@@ -82,4 +93,5 @@ build argv onto `/usr/bin/ufw` itself: no shell, no `reset`, no
 A second `pkexec` while another prompt is live is dropped by Phylax
 (one cookie). Add requires a port (or a range of at most 512 ports);
 From is IP/CIDR only. Rules live in `/etc/ufw` and survive reboot.
-KDE Connect ports stay staged and are not opened from this page.
+The fresh-install KDE Connect and Steam rules show up here like any
+other rule and can be deleted from this page.

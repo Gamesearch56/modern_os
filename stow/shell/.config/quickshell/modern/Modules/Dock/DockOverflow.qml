@@ -18,6 +18,8 @@ Item {
         ? root.scroller.pos < root.scroller.span - 1
         : root.scroller.pos > 1)
     readonly property bool _toTrash: root.atEnd && !!root.scroller && root.scroller.dragging
+    readonly property bool _blocked: root._toTrash && Dock.dragFromGrid && AppUninstall.blocked
+    readonly property color _ink: root._blocked ? Colors.color.onSurface : Colors.color.onErrorContainer
     readonly property bool _motion: Motion.scale !== 0
     readonly property string _arrow: root.vertical
         ? (root.atEnd ? "go-down-symbolic" : "go-up-symbolic")
@@ -46,7 +48,7 @@ Item {
         width: root.vertical ? pill._thin : pill._long
         height: root.vertical ? pill._long : pill._thin
         radius: Tokens.radius.full
-        color: root._toTrash ? Colors.color.errorContainer : Colors.color.surfaceContainerHighest
+        color: root._toTrash && !root._blocked ? Colors.color.errorContainer : Colors.color.surfaceContainerHighest
         border.width: root._toTrash ? 0 : 1
         border.color: Colors.color.outlineVariant
 
@@ -56,6 +58,7 @@ Item {
 
         Grid {
             anchors.centerIn: parent
+            opacity: root._blocked ? Tokens.dimmedOpacity : 1
             rows: root.vertical ? 2 : 1
             columns: root.vertical ? 1 : 2
             spacing: 0
@@ -64,13 +67,13 @@ Item {
                 visible: root._toTrash
                 name: "user-trash"
                 size: Tokens.icon.sm
-                color: Colors.color.onErrorContainer
+                color: root._ink
                 tint: true
             }
             MIcon {
                 name: root._arrow
                 size: Tokens.icon.sm
-                color: root._toTrash ? Colors.color.onErrorContainer : Colors.color.onSurfaceVariant
+                color: root._toTrash ? root._ink : Colors.color.onSurfaceVariant
                 tint: true
             }
         }

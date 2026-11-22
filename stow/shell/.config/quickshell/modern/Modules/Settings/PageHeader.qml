@@ -73,7 +73,10 @@ Item {
         iconSource: Qt.resolvedUrl("kofi.svg")
         iconTint: false
         Layout.alignment: Qt.AlignVCenter
-        onClicked: Support.openKoFi()
+        onClicked: {
+            Support.openKoFi();
+            Settings.close();
+        }
     }
     }
 
