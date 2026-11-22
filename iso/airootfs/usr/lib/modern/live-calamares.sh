@@ -55,19 +55,34 @@ export DISPLAY="$display"
         fi
         note "modern-ci: unattended"
     fi
-    set +e
-    if [ "$(id -u)" -eq 0 ]; then
-        /usr/bin/env -u WAYLAND_DISPLAY QT_QPA_PLATFORM=xcb \
-            /usr/bin/calamares "$@" >>"$log" 2>&1
-    else
-        # log is liveuser-writable; sudo only wraps calamares.
-        # shellcheck disable=SC2024
-        sudo -n /usr/bin/env -u WAYLAND_DISPLAY -u QT_QPA_PLATFORMTHEME \
-            DISPLAY="$display" QT_QPA_PLATFORM=xcb /usr/bin/calamares "$@" >>"$log" 2>&1
-    fi
-    rc=$?
-    set -e
-    note "calamares exited $rc"
+    # Cancel quits the process. Start it again until Restart marks a reboot.
+    finished=/run/modern-install-finished
+    tries=0
+    while [ ! -e "$finished" ]; do
+        set +e
+        if [ "$(id -u)" -eq 0 ]; then
+            /usr/bin/env -u WAYLAND_DISPLAY QT_QPA_PLATFORM=xcb \
+                /usr/bin/calamares "$@" >>"$log" 2>&1
+        else
+            # log is liveuser-writable; sudo only wraps calamares.
+            # shellcheck disable=SC2024
+            sudo -n /usr/bin/env -u WAYLAND_DISPLAY -u QT_QPA_PLATFORMTHEME \
+                DISPLAY="$display" QT_QPA_PLATFORM=xcb /usr/bin/calamares "$@" >>"$log" 2>&1
+        fi
+        rc=$?
+        set -e
+        note "calamares exited $rc"
+        if [ -e "$finished" ]; then
+            break
+        fi
+        tries=$((tries + 1))
+        if [ "$tries" -ge 8 ]; then
+            note "calamares restart limit"
+            break
+        fi
+        note "restarting installer"
+        sleep 0.4
+    done
     if [ -s "$log" ] && [ -w /dev/ttyS0 ]; then
         tail -n 40 "$log" >/dev/ttyS0 || true
     fi

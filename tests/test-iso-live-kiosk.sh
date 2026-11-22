@@ -87,6 +87,8 @@ if grep -F 'Xwayland -noreset' "$WRAP" >/dev/null \
     && grep -F 'modern-ci: unattended' "$WRAP" >/dev/null \
     && grep -F '/etc/calamares/unattended' "$WRAP" >/dev/null \
     && grep -F 'calamares exited' "$WRAP" >/dev/null \
+    && grep -F 'restarting installer' "$WRAP" >/dev/null \
+    && grep -F '/run/modern-install-finished' "$WRAP" >/dev/null \
     && grep -F '/dev/ttyS0' "$WRAP" >/dev/null \
     && grep -F 'openbox --config-file /etc/modern/openbox-rc.xml' "$WRAP" >/dev/null \
     && [ -f "$ROOT/iso/airootfs/etc/modern/openbox-rc.xml" ]; then

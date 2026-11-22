@@ -199,7 +199,11 @@ paints Boot/root with `Qt::black`).
 Combo boxes have no QSS radius. Combo lists are drawn in-window as
 `#modernComboOverlay` (see below), styled from the same tokens with
 `padding: 0` so the AUR patch can size them. Cancel is hidden
-during Install (`disable-cancel-during-exec` plus `quitVisible`). Late
+during Install (`disable-cancel-during-exec` plus `quitVisible`). Before
+that, Cancel quits without a confirmation window — Cage does not map
+that dialog — and the live session starts the installer again. Restart
+on the last page writes `/run/modern-install-finished` and reboots, so
+that exit does not come back. Late
 jobs set `verbose: false` so a failure dialog shows stdout (Calamares
 `verbose: true` streams output to the session log and leaves the dialog
 empty). Failures also tee to `/var/log/modern-calamares-late.log`.
