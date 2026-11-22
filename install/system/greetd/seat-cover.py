@@ -140,6 +140,16 @@ class MapDumb(ctypes.Structure):
     ]
 
 
+class GetEncoder(ctypes.Structure):
+    _fields_ = [
+        ("encoder_id", ctypes.c_uint32),
+        ("encoder_type", ctypes.c_uint32),
+        ("crtc_id", ctypes.c_uint32),
+        ("possible_crtcs", ctypes.c_uint32),
+        ("possible_clones", ctypes.c_uint32),
+    ]
+
+
 SET_MASTER = _io(0x1E)
 DROP_MASTER = _io(0x1F)
 GETRESOURCES = _iowr(0xA0, ctypes.sizeof(CardRes))
@@ -149,13 +159,29 @@ GETCONNECTOR = _iowr(0xA7, ctypes.sizeof(GetConnector))
 ADDFB = _iowr(0xAE, ctypes.sizeof(FbCmd))
 CREATE_DUMB = _iowr(0xB2, ctypes.sizeof(CreateDumb))
 MAP_DUMB = _iowr(0xB3, ctypes.sizeof(MapDumb))
+GETENCODER = _iowr(0xA6, ctypes.sizeof(GetEncoder))
 
 CONNECTED = 1
+# LVDS, eDP, DSI and DPI are the internal panel. VIRTUAL and WRITEBACK
+# are not a picture the user is looking at.
+INTERNAL_TYPES = {7, 14, 16, 17}
+SKIP_TYPES = {15, 18}
 
 
-def should_cover(active_crtcs: int) -> bool:
-    """A CRTC that is already scanning out must be left alone."""
-    return active_crtcs == 0
+def output_needs_cover(connector_type: int, scanning: bool) -> bool:
+    """The panel connector, not some other CRTC, decides.
+
+    After the login screen exits, a CRTC can still report its last mode
+    while the panel's connector is attached to none. That is the gap
+    where the panel paints its firmware logo.
+    """
+    if connector_type in SKIP_TYPES:
+        return False
+    return not scanning
+
+
+def cover_rank(connector_type: int) -> int:
+    return 0 if connector_type in INTERNAL_TYPES else 1
 
 
 def splash_pixel() -> bytes:
@@ -191,10 +217,21 @@ def _resources(fd: int) -> tuple[list[int], list[int]]:
 
 
 def _crtc_scanning(fd: int, crtc_id: int) -> bool:
+    if crtc_id == 0:
+        return False
     crtc = Crtc()
     crtc.crtc_id = crtc_id
     _ioctl(fd, GETCRTC, crtc)
     return crtc.mode_valid != 0 and crtc.fb_id != 0
+
+
+def _encoder_link(fd: int, encoder_id: int) -> tuple[int, int]:
+    if encoder_id == 0:
+        return 0, 0
+    enc = GetEncoder()
+    enc.encoder_id = encoder_id
+    _ioctl(fd, GETENCODER, enc)
+    return int(enc.crtc_id), int(enc.possible_crtcs)
 
 
 def _first_mode(fd: int, connector_id: int) -> tuple[int, ModeInfo] | None:
@@ -218,7 +255,9 @@ def _first_mode(fd: int, connector_id: int) -> tuple[int, ModeInfo] | None:
     _ioctl(fd, GETCONNECTOR, info)
     if info.count_modes < 1:
         return None
-    return connector_id, modes[0]
+    crtc_id, possible = _encoder_link(fd, int(info.encoder_id))
+    scanning = _crtc_scanning(fd, crtc_id)
+    return connector_id, int(info.connector_type), modes[0], scanning, possible
 
 
 def _cards() -> list[str]:
@@ -307,54 +346,79 @@ def _hold_fd(fd: int) -> None:
         os._exit(0)
 
 
+def _ordered_crtcs(crtcs: list[int], possible: int) -> list[int]:
+    if possible == 0:
+        return crtcs
+    first = [crtc for index, crtc in enumerate(crtcs) if possible & (1 << index)]
+    rest = [crtc for crtc in crtcs if crtc not in first]
+    return first + rest
+
+
 def hold() -> int:
     if os.environ.get("MODERN_SEAT_COVER") == "0":
         return 0
-    for path in _cards():
-        fd: int | None = None
-        try:
-            fd = os.open(path, os.O_RDWR | os.O_CLOEXEC)
-            crtcs, conns = _resources(fd)
-            active = sum(1 for crtc in crtcs if _crtc_scanning(fd, crtc))
-            if not should_cover(active):
-                print("seat-cover: display already scanning", file=sys.stderr)
-                os.close(fd)
-                return 0
-            chosen = None
-            for conn in conns:
-                chosen = _first_mode(fd, conn)
-                if chosen is not None:
-                    break
-            if chosen is None or not crtcs:
-                os.close(fd)
-                continue
-            connector_id, mode = chosen
-            painted = False
-            last_exc: OSError | None = None
-            for crtc in crtcs:
-                try:
-                    paint(fd, crtc, connector_id, mode)
-                    painted = True
-                    break
-                except OSError as exc:
-                    last_exc = exc
+    opened: list[tuple[str, int]] = []
+    # rank, path, fd, crtcs, connector id, mode, possible crtcs
+    candidates: list[tuple[int, str, int, list[int], int, ModeInfo, int]] = []
+    saw_connected = False
+    try:
+        for path in _cards():
+            fd: int | None = None
+            try:
+                fd = os.open(path, os.O_RDWR | os.O_CLOEXEC)
+                crtcs, conns = _resources(fd)
+                opened.append((path, fd))
+                for conn in conns:
+                    found = _first_mode(fd, conn)
+                    if found is None:
+                        continue
+                    connector_id, kind, mode, scanning, possible = found
+                    saw_connected = True
+                    if not output_needs_cover(kind, scanning):
+                        continue
+                    candidates.append((cover_rank(kind), path, fd, crtcs, connector_id, mode, possible))
+            except Exception as exc:
+                print(f"seat-cover: skipped {path} ({exc})", file=sys.stderr)
+                if fd is not None and all(other != fd for _, other in opened):
                     try:
-                        _ioctl(fd, DROP_MASTER)
+                        os.close(fd)
                     except OSError:
                         pass
-            if not painted:
-                raise last_exc or RuntimeError("no crtc accepted the frame")
-            _hold_fd(fd)
+        if not candidates:
+            if saw_connected:
+                print("seat-cover: display already scanning", file=sys.stderr)
+            else:
+                print("seat-cover: no display to cover", file=sys.stderr)
             return 0
-        except Exception as exc:
-            print(f"seat-cover: skipped {path} ({exc})", file=sys.stderr)
-            if fd is not None:
+        _rank, path, fd, crtcs, connector_id, mode, possible = min(candidates, key=lambda item: item[0])
+        for _other_path, other in opened:
+            if other != fd:
+                os.close(other)
+        opened = [(path, fd)]
+        painted = False
+        last_exc: OSError | None = None
+        for crtc in _ordered_crtcs(crtcs, possible):
+            try:
+                paint(fd, crtc, connector_id, mode)
+                painted = True
+                break
+            except OSError as exc:
+                last_exc = exc
                 try:
-                    os.close(fd)
+                    _ioctl(fd, DROP_MASTER)
                 except OSError:
                     pass
-    print("seat-cover: no display to cover", file=sys.stderr)
-    return 0
+        if not painted:
+            raise last_exc or RuntimeError("no crtc accepted the frame")
+        _hold_fd(fd)
+        opened.clear()
+        return 0
+    finally:
+        for _path, fd in opened:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
 
 
 def self_test() -> int:
@@ -364,11 +428,17 @@ def self_test() -> int:
     if ctypes.sizeof(GetConnector) != 80 or ctypes.sizeof(CardRes) != 64:
         print("seat-cover: connector struct size drifted", file=sys.stderr)
         return 1
-    if not should_cover(0) or should_cover(1):
-        print("seat-cover: cover decision is wrong", file=sys.stderr)
-        return 1
     if ctypes.sizeof(CreateDumb) != 32 or ctypes.sizeof(MapDumb) != 16 or ctypes.sizeof(FbCmd) != 28:
         print("seat-cover: buffer struct size drifted", file=sys.stderr)
+        return 1
+    if ctypes.sizeof(GetEncoder) != 20:
+        print("seat-cover: encoder struct size drifted", file=sys.stderr)
+        return 1
+    if not output_needs_cover(14, False) or output_needs_cover(14, True) or output_needs_cover(15, False):
+        print("seat-cover: cover decision is wrong", file=sys.stderr)
+        return 1
+    if cover_rank(14) >= cover_rank(11):
+        print("seat-cover: internal panel is not chosen first", file=sys.stderr)
         return 1
     if splash_pixel() != bytes((0x14, 0x12, 0x18, 0x00)):
         print("seat-cover: splash pixel is not #141218", file=sys.stderr)
@@ -383,9 +453,11 @@ def self_test() -> int:
             print(f"seat-cover: probe {path} failed ({exc})", file=sys.stderr)
             return 1
         try:
-            crtcs, _conns = _resources(fd)
+            crtcs, conns = _resources(fd)
             for crtc in crtcs:
                 _crtc_scanning(fd, crtc)
+            for conn in conns:
+                _first_mode(fd, conn)
             probed = True
             break
         except OSError as exc:

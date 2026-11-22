@@ -32,7 +32,7 @@ _collect_boot() {
     _grab boot.txt journalctl -b -1 --no-pager -o short-iso -n 300
     if [ -n "$repo" ] && [ -x "$repo/scripts/boot-gaps.sh" ]; then
         gaps="$(mktemp)"
-        "$repo/scripts/boot-gaps.sh" "$OUT/boot.txt" \
+        "$repo/scripts/boot-gaps.sh" "$OUT/boot.txt" "$OUT/hyprland-log.txt" \
             "${XDG_STATE_HOME:-$HOME/.local/state}/modern/hyprland.log" >"$gaps" || true
         {
             printf '$ boot-gaps\n'

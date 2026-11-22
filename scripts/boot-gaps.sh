@@ -33,6 +33,10 @@ fi
 if printf '%s\n' "$text" | grep -q 'getCurrentCRTC: No CRTC'; then
     note "compositor started with no CRTC, so the panel was not scanning"
 fi
+if printf '%s\n' "$text" | grep -q 'display already scanning' \
+    && printf '%s\n' "$text" | grep -q 'getCurrentCRTC: No CRTC'; then
+    note "a cover left the panel connector without a CRTC"
+fi
 if printf '%s\n' "$text" | grep -q 'Cannot commit when a page-flip is awaiting'; then
     note "a frame was dropped because a page-flip was still in flight"
 fi

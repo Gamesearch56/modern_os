@@ -230,9 +230,10 @@ argv = shlex.split(m.group(1))
 assert argv and argv[0].endswith("kiosk.sh"), f"unexpected session command {argv}"
 kiosk = Path(sys.argv[2]).read_text(encoding="utf-8")
 assert "GREETD_SOCK" in kiosk, "kiosk.sh must keep GREETD_SOCK"
-assert "start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua" in kiosk, (
+assert "--no-nixgl -- --config /etc/greetd/hyprland.lua" in kiosk, (
     "kiosk.sh must exec start-hyprland with Hyprland flags after --"
 )
+assert "/usr/bin/start-hyprland" in kiosk, "kiosk.sh must default to start-hyprland"
 lua = Path(sys.argv[3]).read_text(encoding="utf-8")
 assert "GREETD_SOCK" in lua, "hyprland.lua must forward GREETD_SOCK to qs"
 assert "awww-daemon" not in lua, "greeter Hyprland must not start awww"

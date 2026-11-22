@@ -76,5 +76,21 @@ else
     err "logout must stop session clients before hl.dsp.exit: $(cat "$TMP/journal")"
 fi
 
+# shellcheck disable=SC2016
+printf '%s\n' '#!/bin/sh' 'printf started >>"$MODERN_STUB_MARK"' >"$TMP/bin/start-hyprland"
+chmod +x "$TMP/bin/start-hyprland"
+mark="$TMP/started"
+home="$TMP/first-home"
+if HOME="$home" XDG_STATE_HOME="$home/.local/state" XDG_SESSION_ID=7 \
+    MODERN_SEAT_COVER=0 MODERN_START_HYPRLAND="$TMP/bin/start-hyprland" MODERN_STUB_MARK="$mark" \
+    "$GREETD/desktop-session.sh" >"$TMP/session.out" 2>"$TMP/session.err" \
+    && [ ! -s "$TMP/session.err" ] \
+    && [ "$(cat "$mark")" = started ] \
+    && grep -Fq '== desktop session' "$home/.local/state/modern/hyprland.log"; then
+    ok "the first desktop start creates its log without a missing-file error"
+else
+    err "first desktop start: $(cat "$TMP/session.err" 2>/dev/null) log=$(cat "$home/.local/state/modern/hyprland.log" 2>/dev/null)"
+fi
+
 [ "$FAIL" -eq 0 ] || exit 1
 printf 'test-session-safety: ok\n'
