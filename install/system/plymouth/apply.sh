@@ -24,7 +24,7 @@ plymouth_merge_options() {
     read -ra words <<<"$line"
     for word in "${words[@]+"${words[@]}"}"; do
         case "$word" in
-            ""|loglevel=*|systemd.show_status=*|rd.udev.log_priority=*|vt.global_cursor_default=*|i915.fastboot=*)
+            ""|loglevel=*|systemd.show_status=*|rd.systemd.show_status=*|rd.udev.log_priority=*|udev.log_level=*|vt.global_cursor_default=*|i915.fastboot=*)
                 continue ;;
         esac
         keep+=("$word")
@@ -36,9 +36,12 @@ plymouth_merge_options() {
     done
     [ "$has_quiet" -eq 1 ] || keep=(quiet ${keep[@]+"${keep[@]}"})
     [ "$has_splash" -eq 1 ] || keep+=(splash)
-    # An Intel panel retrains its link on a modeset and draws the firmware
-    # logo into that gap. fastboot keeps the mode already on screen.
-    keep+=(loglevel=3 systemd.show_status=auto rd.udev.log_priority=3 vt.global_cursor_default=0 i915.fastboot=1)
+    # auto prints status on the console whenever Plymouth is not running.
+    # That is the terminal text between the splash, the login screen and
+    # the desktop, and on shutdown. A laptop panel paints its firmware
+    # logo into the same gap. 0 keeps the console quiet; the journal
+    # still has the lines. fastboot keeps an Intel panel's current mode.
+    keep+=(loglevel=3 systemd.show_status=0 rd.systemd.show_status=0 rd.udev.log_priority=3 udev.log_level=3 vt.global_cursor_default=0 i915.fastboot=1)
     printf '%s\n' "${keep[*]}"
 }
 
