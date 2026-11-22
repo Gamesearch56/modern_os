@@ -198,27 +198,29 @@ def cover_rank(connector_type: int) -> int:
 
 
 def _crtc_after_gap(plan: str, hold_fd: bool) -> int:
-    """CRTC_ID the next client sees if i915 lastclose runs on the last fd.
+    """CRTC_ID the next client sees if the last fd closes before it opens.
 
-    The previous frame is 112. A splash frame we program is 7. Closing
-    the last fd before the next client opens clears either of them.
+    A splash frame we program is 7. Closing the last fd clears it.
     """
-    crtc = 112 if plan == "keep" else 7
+    del plan
     if not hold_fd:
         return 0
-    return crtc
+    return 7
+
+
+def card_is_firmware_fb(driver: str) -> bool:
+    """simpledrm is the firmware picture, still registered next to i915.
+
+    Keeping that frame is what puts the mainboard logo on screen between
+    the login screen and the desktop. It is not a second firmware boot,
+    and the hidden boot menu is not involved.
+    """
+    return driver in {"simpledrm", "simple-framebuffer", "efifb"}
 
 
 def handoff_plan(attached: int, scanning: bool) -> str:
-    """What to do once the previous client has released the display.
-
-    "keep" leaves the current frame scanning and holds the device open.
-    Closing it here runs i915 lastclose, the panel link drops, and the
-    panel shows its firmware picture. "paint" is the same hold after a
-    splash frame, used when the connector is already idle.
-    """
-    if attached and scanning:
-        return "keep"
+    """Always replace the scanout. A live CRTC can still be the firmware frame."""
+    del attached, scanning
     return "paint"
 
 
@@ -330,6 +332,14 @@ def _cards() -> list[str]:
     if not dri.is_dir():
         return []
     return sorted(str(p) for p in dri.glob("card[0-9]") if p.is_char_device())
+
+
+def _driver_name(path: str) -> str:
+    link = Path("/sys/class/drm") / Path(path).name / "device" / "driver"
+    try:
+        return link.resolve().name
+    except OSError:
+        return ""
 
 
 def paint(fd: int, crtc_id: int, connector_id: int, mode: ModeInfo) -> int:
@@ -450,6 +460,10 @@ def hold() -> int:
         for path in _cards():
             fd: int | None = None
             try:
+                driver = _driver_name(path)
+                if card_is_firmware_fb(driver):
+                    print(f"seat-cover: skipping firmware framebuffer {path} ({driver})", file=sys.stderr)
+                    continue
                 fd = os.open(path, os.O_RDWR | os.O_CLOEXEC)
                 crtcs, conns = _resources(fd)
                 opened.append((path, fd))
@@ -507,7 +521,7 @@ def hold() -> int:
                 _drop_master(fd)
         else:
             _drop_master(fd)
-            print(f"seat-cover: keeping the current frame CRTC_ID={attached}", file=sys.stderr)
+            print(f"seat-cover: no mode to replace CRTC_ID={attached}", file=sys.stderr)
         _hold_fd(fd)
         opened.clear()
         return 0
@@ -543,10 +557,13 @@ def self_test() -> int:
         return 1
     # Issue 24: CRTC 112 was still named, the cover closed the device,
     # and the next client observed no CRTC. Holding the fd keeps the id.
-    if handoff_plan(112, True) != "keep" or handoff_plan(0, False) != "paint":
+    if handoff_plan(112, True) != "paint" or handoff_plan(0, False) != "paint":
         print("seat-cover: handoff plan is wrong", file=sys.stderr)
         return 1
-    if _crtc_after_gap("keep", hold_fd=False) != 0 or _crtc_after_gap("keep", hold_fd=True) == 0:
+    if not card_is_firmware_fb("simpledrm") or card_is_firmware_fb("i915"):
+        print("seat-cover: firmware framebuffer detection is wrong", file=sys.stderr)
+        return 1
+    if _crtc_after_gap("paint", hold_fd=False) != 0 or _crtc_after_gap("paint", hold_fd=True) == 0:
         print("seat-cover: lastclose model is wrong", file=sys.stderr)
         return 1
     if _crtc_after_gap("paint", hold_fd=True) == 0:
@@ -587,6 +604,10 @@ def dry_run() -> int:
     """Read the connectors only. Does not take the display or change a mode."""
     any_card = False
     for path in _cards():
+        driver = _driver_name(path)
+        if card_is_firmware_fb(driver):
+            print(f"seat-cover: skipping firmware framebuffer {path} ({driver})", file=sys.stderr)
+            continue
         try:
             fd = os.open(path, os.O_RDWR | os.O_CLOEXEC)
         except OSError as exc:
