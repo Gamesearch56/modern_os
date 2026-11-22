@@ -147,7 +147,9 @@ ModernNetNm::loadWifi( const QSet< QString >& known )
     // the progress bar never clears and the event loop cannot finish the
     // scan that is already running.
     const QString wifi = run( QStringLiteral( "nmcli" ),
-                              { QStringLiteral( "-t" ),
+                              { QStringLiteral( "-w" ),
+                                QStringLiteral( "4" ),
+                                QStringLiteral( "-t" ),
                                 QStringLiteral( "-f" ),
                                 QStringLiteral( "IN-USE,SSID,SECURITY,SIGNAL" ),
                                 QStringLiteral( "device" ),
@@ -182,6 +184,13 @@ ModernNetNm::loadWifi( const QSet< QString >& known )
 void
 ModernNetNm::refresh()
 {
+    // A scan finishing during a join used to run this on the UI thread.
+    // nmcli then waits on that scan, the password sentence never changes,
+    // and the timer that would give up cannot run.
+    if ( m_connecting )
+    {
+        return;
+    }
     m_ethernetUp = false;
     m_wifiUp = false;
     m_ethernetAddr.clear();
@@ -417,6 +426,13 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QS
         return;
     }
     m_connecting = true;
+    // The list scan holds NetworkManager. Leaving it running makes the
+    // password check wait until that scan ends, which on this screen is
+    // indistinguishable from a hang.
+    if ( m_scan )
+    {
+        m_scan->kill();
+    }
     emit changed();
     m_join = new QProcess( this );
     connect( m_join, &QProcess::readyReadStandardOutput, this, [ this ]() {

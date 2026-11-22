@@ -200,7 +200,7 @@ bug_report_collect() {
     _collect_games
     _collect_apps
     _collect_session "$since"
-    _collect_boot
+    _collect_boot "$repo"
     _collect_config
     for f in "$OUT"/*; do
         [ -f "$f" ] && _cap "$f"

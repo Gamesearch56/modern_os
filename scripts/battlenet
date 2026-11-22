@@ -12,8 +12,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=../install/lib/i18n.sh
 source "$REPO_ROOT/install/lib/i18n.sh"
-# shellcheck source=../install/lib/ge-proton.sh
-source "$REPO_ROOT/install/lib/ge-proton.sh"
 # shellcheck source=lib/wow-hdr.sh
 source "$SCRIPT_DIR/lib/wow-hdr.sh"
 
@@ -126,20 +124,36 @@ find_proton() {
             return 0
         fi
     fi
-    # Install places this outside Steam so a new account does not need
-    # battlenet.env. An explicit PROTONPATH above still wins.
-    local private
-    private="$(ge_proton_dir "$HOME")/proton"
-    if [ -x "$private" ]; then
-        printf '%s\n' "$private"
+    # The newest Proton Steam already installed. Experimental is the
+    # rolling build; otherwise the highest numbered Proton N.N.
+    local common="$STEAM_ROOT/steamapps/common"
+    if [ -x "$common/Proton - Experimental/proton" ]; then
+        printf '%s\n' "$common/Proton - Experimental/proton"
+        return 0
+    fi
+    local d name ver best="" bestver=""
+    shopt -s nullglob
+    for d in "$common"/Proton\ *; do
+        [ -x "$d/proton" ] || continue
+        name="$(basename "$d")"
+        ver="${name#Proton }"
+        case "$ver" in
+            *[!0-9.]*) continue ;;
+        esac
+        if [ -z "$bestver" ] || [ "$(printf '%s\n%s\n' "$bestver" "$ver" | sort -V | tail -n 1)" = "$ver" ]; then
+            best="$d/proton"
+            bestver="$ver"
+        fi
+    done
+    shopt -u nullglob
+    if [ -n "$best" ]; then
+        printf '%s\n' "$best"
         return 0
     fi
     local c
     for c in \
-        "$STEAM_ROOT/steamapps/common/Proton - Experimental/proton" \
-        "$STEAM_ROOT/steamapps/common/Proton Hotfix/proton" \
-        "$STEAM_ROOT/steamapps/common/Proton - Hotfix/proton" \
-        "$STEAM_ROOT/steamapps/common/Proton 9.0/proton"; do
+        "$common/Proton Hotfix/proton" \
+        "$common/Proton - Hotfix/proton"; do
         if [ -x "$c" ]; then
             printf '%s\n' "$c"
             return 0

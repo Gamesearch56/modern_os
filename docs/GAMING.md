@@ -204,19 +204,18 @@ shortcut go through `modern vivaldi`.
 
 ## Battle.net / World of Warcraft (no Lutris)
 
-Preferred stack: **GE-Proton 11-12 (launcher and the games it starts) +
-XWayland**, with a stowed `.desktop` so Super+Space lists Battle.net.
-`install.sh` downloads that runner into the account's
-`~/.local/share/modern/proton/`, outside Steam's `compatibilitytools.d`,
-so Steam does not GPU-probe it. Battle.net's Chromium UI under Proton
-Wayland often white-screens on Hyprland, so the launcher keeps Wayland off.
+Preferred stack: **the newest Proton already installed with Steam
+(Experimental, otherwise the highest numbered Proton) + XWayland**, with
+a stowed `.desktop` so Super+Space lists Battle.net. The system update
+does not download a separate runner. Battle.net's Chromium UI under
+Proton Wayland often white-screens on Hyprland, so the launcher keeps
+Wayland off.
 
 ### Packages
 
 - `steam`, `gamemode`, `gamescope`, `umu-launcher` (`30-apps.txt`, every profile)
 - `lib32-gamemode` (`50-gaming.txt`)
-- `protonup-qt` (AUR, `50-gaming.aur.txt`), for other titles. Do not register the private
-  GE-Proton tree with Steam.
+- `protonup-qt` (AUR, `50-gaming.aur.txt`), for other titles.
 - AMD: `vulkan-radeon` + `lib32-vulkan-radeon` (RADV). Prefer RADV over
   `amdvlk` if both are installed (`AMD_VULKAN_ICD=RADV`).
 
@@ -241,12 +240,11 @@ is needed:
 2. With none found, the first start downloads Blizzard's
    `Battle.net-Setup.exe` into `~/.cache/modern/` and runs it in this
    desktop's prefix; the next start finds the installed client.
-3. The client runs via `umu-run` with the private GE-Proton 11-12.
-   `PROTONPATH` in `battlenet.env` overrides it. With neither that pin
-   nor the private runner, Steam's Proton Experimental/Hotfix is the
-   fallback (otherwise umu downloads its own Proton). Without `umu-run`,
-   the same choice is passed to `proton waitforexitandrun`. GameMode +
-   RADV + XWayland. No gamescope or MangoHud by default.
+3. The client runs via `umu-run` with the newest Proton Steam has
+   already installed. `PROTONPATH` in `battlenet.env` overrides it.
+   Without `umu-run`, the same choice is passed to `proton
+   waitforexitandrun`. GameMode + RADV + XWayland. No gamescope or
+   MangoHud by default.
 
 Started from the app list there is no terminal, so every failure (no
 runner, download failed, client died within 30 s) is a notification. The
@@ -262,9 +260,7 @@ exist. `STEAM_APPID` (`steam://rungameid/`) is only used when no
 `Battle.net Launcher.exe` is found — Non-Steam AppIDs often fail with
 “game configuration is not available” on Linux.
 
-**Battle.net and the games it starts** share that private GE-Proton 11-12.
-Leave Steam’s stock Experimental alone, and do not copy this runner into
-`compatibilitytools.d` — Steam GPU-probes every tool registered there.
+**Battle.net and the games it starts** use that same installed Proton.
 A `PROTONPATH` line in `battlenet.env` still selects a different build.
 
 ### Hyprland behaviour

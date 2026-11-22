@@ -16,6 +16,14 @@ set -euo pipefail
 NMCLI="${MODERN_NMCLI:-nmcli}"
 SECRETS_DIR="${MODERN_WIFI_SECRETS_DIR:-${XDG_RUNTIME_DIR:-/tmp}}"
 
+# nmcli --wait does not return while a scan or a secret prompt holds the
+# client, and the installer then stays on "Checking the password…".
+nmcli_to() {
+    local seconds=$1
+    shift
+    timeout -k 2 "$seconds" "$NMCLI" "$@"
+}
+
 die() { printf 'wifi-join: %s\n' "$*" >&2; exit 2; }
 
 valid_label() {
@@ -31,18 +39,18 @@ wifi_uuids() {
     local want=$1 uuid typ ssid
     while IFS=: read -r uuid typ; do
         [[ -n $uuid && $typ == 802-11-wireless ]] || continue
-        ssid=$("$NMCLI" -g 802-11-wireless.ssid connection show "$uuid" 2>/dev/null || true)
+        ssid=$(nmcli_to 4 -g 802-11-wireless.ssid connection show "$uuid" 2>/dev/null || true)
         ssid=${ssid//[$'\n\r']/}
         [[ $ssid == "$want" ]] || continue
         printf '%s\n' "$uuid"
-    done < <("$NMCLI" -t -f UUID,TYPE connection show 2>/dev/null || true)
+    done < <(nmcli_to 4 -t -f UUID,TYPE connection show 2>/dev/null || true)
 }
 
 forget_ssid() {
     local uuid
     while IFS= read -r uuid; do
         [[ -n $uuid ]] || continue
-        "$NMCLI" connection delete uuid "$uuid" >/dev/null
+        nmcli_to 4 connection delete uuid "$uuid" >/dev/null || true
     done < <(wifi_uuids "$1")
 }
 
@@ -60,10 +68,11 @@ first_uuid() {
 # LC_ALL=C because the reason is only in nmcli's message text.
 nm_up() {
     local err rc=0
-    err=$(LC_ALL=C "$NMCLI" -w 25 "$@" 2>&1 >/dev/null) || rc=$?
+    err=$(LC_ALL=C nmcli_to 25 -w 25 "$@" 2>&1 >/dev/null) || rc=$?
     [[ $rc -ne 0 ]] || return 0
     printf '%s\n' "$err" >&2
-    [[ $rc -ne 3 ]] || return 5
+    # 124 is timeout's own exit. 137 is the kill that follows if nmcli ignores TERM.
+    [[ $rc -ne 3 && $rc -ne 124 && $rc -ne 137 ]] || return 5
     if [[ $rc -eq 10 || $err == *"could not be found"* || $err == *"No network with SSID"* ]]; then
         return 4
     fi
@@ -82,7 +91,7 @@ ap_security() {
     # --rescan no: a plain list waits for a scan that may already be running,
     # and Connect stays on "Connecting…" until that scan ends.
     # -w: even --rescan no can sit on a scan NetworkManager already started.
-    done < <("$NMCLI" -w 4 -t -e no -f SECURITY,SSID device wifi list --rescan no 2>/dev/null || true)
+    done < <(nmcli_to 4 -w 4 -t -e no -f SECURITY,SSID device wifi list --rescan no 2>/dev/null || true)
     return 1
 }
 
@@ -122,16 +131,20 @@ connect_psk() {
     km=$(key_mgmt "$sec") || return 6
     printf 'status:password\n'
     forget_ssid "$ssid"
-    out=$(LC_ALL=C "$NMCLI" -w 8 connection add type wifi con-name "$ssid" ssid "$ssid" \
-        wifi-sec.key-mgmt "$km" 2>&1) || { printf '%s\n' "$out" >&2; return 1; }
+    # psk-flags 2: the secret is not stored and not owned by a secret agent.
+    # Without that, adding the profile opens a password window this screen
+    # cannot show, and a correct password never returns.
+    out=$(LC_ALL=C nmcli_to 12 connection add type wifi con-name "$ssid" ssid "$ssid" \
+        wifi-sec.key-mgmt "$km" 802-11-wireless-security.psk-flags 2 2>&1) || {
+        printf '%s\n' "$out" >&2
+        return 1
+    }
     uuid=$(grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' <<<"$out" | tail -n1 || true)
     [[ -n $uuid ]] || { forget_ssid "$ssid"; return 1; }
     # One try. The default keeps asking, so a wrong password never returns
     # and the installer cannot accept a different one.
-    "$NMCLI" connection modify uuid "$uuid" connection.auth-retries 1 >/dev/null || true
-    # Ask for the secret from the file, not from a password window the
-    # installer cannot show. That window is why a correct password never returns.
-    "$NMCLI" connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 0 >/dev/null || true
+    nmcli_to 8 connection modify uuid "$uuid" connection.auth-retries 1 >/dev/null || true
+    nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 2 >/dev/null || true
     PW_FILE=$(umask 077 && mktemp "$SECRETS_DIR/wifi-join.XXXXXX")
     psk_line "$psk" >"$PW_FILE"
     printf 'status:address\n'

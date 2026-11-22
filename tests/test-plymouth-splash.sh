@@ -68,7 +68,7 @@ printf '%s\n' 'HOOKS=(base udev autodetect microcode kms keyboard keymap console
 printf '%s\n' 'title   ModernOS' 'linux   /vmlinuz-linux-zen' \
     'options quiet root=UUID=abc rw nvidia-drm.modeset=1' \
     >"$TMP/boot/loader/entries/modern.conf"
-printf '%s\n' 'quiet root=UUID=abc rw' >"$TMP/etc/kernel/cmdline"
+printf '%s\n' 'quiet root=UUID=abc rw i915.fastboot=1' >"$TMP/etc/kernel/cmdline"
 
 # Declared here: the apply script assigns it, and shellcheck does not
 # follow a sourced path it was told to skip.
@@ -103,9 +103,10 @@ if printf '%s\n' "$opts" | grep -q 'root=UUID=abc' \
     && printf '%s\n' "$opts" | grep -q 'systemd.show_status=0' \
     && printf '%s\n' "$opts" | grep -q 'rd.systemd.show_status=0' \
     && ! printf '%s\n' "$opts" | grep -q 'systemd.show_status=auto' \
-    && printf '%s\n' "$opts" | grep -q 'i915.fastboot=1' \
+    && ! printf '%s\n' "$opts" | grep -q 'i915.fastboot' \
+    && printf '%s\n' "$opts" | grep -q 'i915.enable_psr=0' \
     && [ "$(printf '%s\n' "$opts" | grep -o 'splash' | wc -l)" -eq 1 ] \
-    && [ "$(printf '%s\n' "$opts" | grep -o 'i915.fastboot=1' | wc -l)" -eq 1 ]; then
+    && [ "$(printf '%s\n' "$opts" | grep -o 'i915.enable_psr=0' | wc -l)" -eq 1 ]; then
     ok "boot entry keeps root= and gains splash once"
 else
     err "boot entry options: $opts"
@@ -115,10 +116,11 @@ cmd="$(cat "$TMP/etc/kernel/cmdline")"
 if printf '%s\n' "$cmd" | grep -q 'root=UUID=abc' \
     && printf '%s\n' "$cmd" | grep -q 'splash' \
     && printf '%s\n' "$cmd" | grep -q 'systemd.show_status=0' \
-    && printf '%s\n' "$cmd" | grep -q 'i915.fastboot=1' \
+    && ! printf '%s\n' "$cmd" | grep -q 'i915.fastboot' \
+    && printf '%s\n' "$cmd" | grep -q 'i915.enable_psr=0' \
     && [ "$(printf '%s\n' "$cmd" | grep -o 'loglevel=3' | wc -l)" -eq 1 ] \
-    && [ "$(printf '%s\n' "$cmd" | grep -o 'i915.fastboot=1' | wc -l)" -eq 1 ]; then
-    ok "kernel cmdline keeps the root device"
+    && [ "$(printf '%s\n' "$cmd" | grep -o 'i915.enable_psr=0' | wc -l)" -eq 1 ]; then
+    ok "kernel cmdline keeps the root device and drops the ignored fastboot parameter"
 else
     err "kernel cmdline: $cmd"
 fi

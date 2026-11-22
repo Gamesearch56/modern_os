@@ -29,6 +29,10 @@ cat >"$TMP/nmcli" <<'EOF'
 set -euo pipefail
 printf '%s\n' "$*" >>"$LOG"
 state=${WIFI_JOIN_STATE:?}
+if [[ ${HANG_SHOW:-0} -eq 1 && $* == *'connection show'* ]]; then
+    sleep 30
+    exit 0
+fi
 if [[ $* == *'connection delete uuid home-uuid'* ]]; then
     printf 'gone\n' >"$state"
     exit 0
@@ -310,7 +314,9 @@ if grep -Fq 'connection.auth-retries 1' "$JOIN" \
     && grep -Fq 'joinLimit->start( 40000 )' "$NM" \
     && grep -Fq 'WIFI_JOIN_SECURITY' "$NM" \
     && grep -Fq 'WIFI_JOIN_SECURITY' "$JOIN" \
-    && grep -Fq 'm_nm->scanning() || m_nm->connecting()' "$PAGE"; then
+    && grep -Fq 'm_nm->scanning() || m_nm->connecting()' "$PAGE" \
+    && grep -Fq 'if ( m_connecting )' "$NM" \
+    && grep -Fq 'm_scan->kill()' "$NM"; then
     ok "a wrong password and a scan both stop so another try can start"
 else
     err "wifi connect or scan can stay running"
@@ -324,6 +330,22 @@ if grep -Fq '/usr/lib/modern/wifi-join.sh' "$NM" && grep -Fq 'closeWriteChannel'
     ok "shell and installer hand the password over stdin"
 else
     err "a Wi-Fi password still reaches nmcli argv"
+fi
+
+printf 'home\n' >"$STATE"
+rm -f "$STATE.left"
+: >"$LOG"
+if timeout 8 env LOG="$LOG" WIFI_JOIN_STATE="$STATE" HANG_SHOW=1 WIFI_JOIN_SECURITY='WPA2' \
+    MODERN_NMCLI="$TMP/nmcli" MODERN_WIFI_SECRETS_DIR="$TMP" \
+    "$JOIN" connect 'Cafe Net' - <<<"right-password" >/dev/null; then
+    if grep -F 'connection up uuid' "$LOG" >/dev/null \
+        && ! grep -F 'right-password' "$LOG" >/dev/null; then
+        ok "a stuck profile listing does not hold the password check"
+    else
+        err "stuck profile listing did not reach activation: $(tr '\n' ' ' <"$LOG")"
+    fi
+else
+    err "password check waited on NetworkManager's profile listing"
 fi
 
 if timeout 5 env LOG="$LOG" WIFI_JOIN_STATE="$STATE" HANG_LIST=1 WIFI_JOIN_SECURITY='WPA2' \

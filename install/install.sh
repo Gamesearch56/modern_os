@@ -102,8 +102,6 @@ source "$REPO_ROOT/install/lib/stow.sh"
 source "$REPO_ROOT/install/lib/preflight.sh"
 # shellcheck source=lib/greetd.sh
 source "$REPO_ROOT/install/lib/greetd.sh"
-# shellcheck source=lib/ge-proton.sh
-source "$REPO_ROOT/install/lib/ge-proton.sh"
 # shellcheck source=lib/kernel-boot.sh
 source "$REPO_ROOT/install/lib/kernel-boot.sh"
 # shellcheck source=lib/mirrors.sh
@@ -301,8 +299,6 @@ if [ "$TARGET" != "$HOME" ]; then
     STATE_DIR="$TARGET/.local/state/modern"
 fi
 run mkdir -p "$STATE_DIR"
-# Battle.net uses this private runner. A pin in battlenet.env still wins.
-ge_proton_ensure "$TARGET"
 if [ "${DRY_RUN:-0}" -eq 1 ]; then
     log_info "would write $STATE_DIR/hw.json gpu=$HW cpu=$CPU"
 else

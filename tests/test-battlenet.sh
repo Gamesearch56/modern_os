@@ -63,10 +63,26 @@ printf '#!/usr/bin/env bash\nexit 0\n' >"$private/proton"
 printf '#!/usr/bin/env bash\nexit 0\n' >"$steam_proton/proton"
 chmod +x "$private/proton" "$steam_proton/proton"
 rc="$(run)"
-if [ "$rc" = 0 ] && [ "$(head -n 1 "$tmp/calls/protonpath")" = "$private" ]; then
-    ok "the private GE-Proton runner wins over Steam Experimental"
+if [ "$rc" = 0 ] && [ "$(head -n 1 "$tmp/calls/protonpath")" = "$steam_proton" ]; then
+    ok "Steam's installed Proton is used instead of a private GE-Proton"
 else
-    err "private GE-Proton preference (rc $rc)"
+    err "Steam Proton preference (rc $rc)"
+fi
+
+reset "umu"
+steam_pfx="$tmp/home/.local/share/Steam/steamapps/compatdata/4242/pfx"
+mkdir -p "$(dirname "$steam_pfx/$EXE_REL")" && : >"$steam_pfx/$EXE_REL"
+oldp="$tmp/home/.local/share/Steam/steamapps/common/Proton 9.0"
+newp="$tmp/home/.local/share/Steam/steamapps/common/Proton 10.0"
+mkdir -p "$oldp" "$newp"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$oldp/proton"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$newp/proton"
+chmod +x "$oldp/proton" "$newp/proton"
+rc="$(run)"
+if [ "$rc" = 0 ] && [ "$(head -n 1 "$tmp/calls/protonpath")" = "$newp" ]; then
+    ok "the highest numbered installed Proton is chosen"
+else
+    err "numbered Proton choice (rc $rc path $(head -n 1 "$tmp/calls/protonpath" 2>/dev/null))"
 fi
 
 reset "umu"

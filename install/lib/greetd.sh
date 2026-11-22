@@ -120,6 +120,9 @@ greetd_apply() {
     greetd_as_root install -m 0755 \
         "$repo/install/system/greetd/desktop-session.sh" \
         /usr/lib/modern/desktop-session.sh
+    greetd_as_root install -m 0755 \
+        "$repo/install/system/greetd/seat-cover.py" \
+        /usr/lib/modern/seat-cover.py
     greetd_as_root install -m 0755 "$repo/install/system/greetd/list-users.py" /etc/greetd/list-users.py
     if [ -f "$repo/stow/hypr/.config/hypr/lib/json.lua" ]; then
         greetd_as_root install -m 0644 "$repo/stow/hypr/.config/hypr/lib/json.lua" /etc/greetd/json.lua

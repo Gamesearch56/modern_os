@@ -15,6 +15,7 @@ _running() {
 }
 
 _collect_boot() {
+    local repo="${1:-}"
     _grab boot.txt cat /proc/cmdline
     _grab boot.txt systemd-analyze
     _grab boot.txt systemd-analyze critical-chain graphical.target --no-pager
@@ -22,9 +23,24 @@ _collect_boot() {
     _grab boot.txt journalctl -b --no-pager -o short-iso -n 300 \
         -u plymouth-start -u plymouth-quit -u plymouth-quit-wait -u plymouth-read-write \
         -u modern-splash -u modern-boot-confirm -u greetd
+    # The firmware-logo gaps are info-level kernel lines (an ignored
+    # i915 parameter, the efifb handover). Warning-only logs hide them.
+    _grab boot.txt journalctl -b -k --no-pager -o short-iso -n 400 \
+        -g 'i915:|fb0:|unknown parameter|drm:'
     # The end of the previous boot is its shutdown: a unit that would not
     # stop, or a crash instead of a clean power-off, shows here.
     _grab boot.txt journalctl -b -1 --no-pager -o short-iso -n 300
+    if [ -n "$repo" ] && [ -x "$repo/scripts/boot-gaps.sh" ]; then
+        gaps="$(mktemp)"
+        "$repo/scripts/boot-gaps.sh" "$OUT/boot.txt" \
+            "${XDG_STATE_HOME:-$HOME/.local/state}/modern/hyprland.log" >"$gaps" || true
+        {
+            printf '$ boot-gaps\n'
+            cat "$gaps"
+            printf '\n'
+        } >>"$OUT/boot.txt"
+        rm -f "$gaps"
+    fi
     return 0
 }
 
@@ -62,7 +78,7 @@ _session_hyprland() {
     {
         printf '# %s (session headers, warnings, errors and crashes only)\n' "$log"
         tail -c 4000000 "$log" | sed 's/\x1b\[[0-9;]*m//g' \
-            | grep -E '^== |^(ERR|WARN|CRITICAL)|start-hyprland|[Ww]atchdog|[Cc]rash|[Ss]afe mode' \
+            | grep -E '^== |^(ERR|WARN|CRITICAL)|drm: |seat-cover: |start-hyprland|[Ww]atchdog|[Cc]rash|[Ss]afe mode' \
             | tail -n 400 || true
         printf '\n'
     } >>"$OUT/session.txt"
