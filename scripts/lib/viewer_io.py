@@ -68,6 +68,14 @@ def cmd_rotate(args):
     if not fmt or not tool:
         raise Fail("unsupported")
     target = os.path.realpath(path)
+    # The installed checkout is not a picture library.
+    import files_safe as safe
+
+    try:
+        if safe.protected(path) or safe.protected(target):
+            raise Fail("protected")
+    except safe.Refuse:
+        raise Fail("badName") from None
     raw = mf.stat_file(target)
     if expect is not None and expect != str(raw.st_mtime_ns):
         raise Fail("changed")

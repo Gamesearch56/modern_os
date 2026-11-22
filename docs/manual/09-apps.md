@@ -32,6 +32,7 @@ Right-click a file or folder for its menu:
 - **Open in new tab** (In neuem Tab öffnen) and **Open in new window** (In neuem Fenster öffnen).
 - Rename (**F2**), copy, cut and paste. **Ctrl + Shift + N** creates a new folder.
 - **Move to trash** (In den Papierkorb, **Del**) or **Delete permanently** (Endgültig löschen, **Shift + Del**).
+- The **modern_os** folder in the home folder is part of this desktop. Rename, Move to trash and Delete leave it where it is.
 - **Add to favorites** (Zu Favoriten, **Ctrl + D**).
 - **Compress to zip** (Als Zip komprimieren) and **Extract** (Entpacken).
 - **Properties** (Eigenschaften), including who may read and change the file.

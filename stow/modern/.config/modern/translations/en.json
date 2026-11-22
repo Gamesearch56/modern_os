@@ -1635,6 +1635,7 @@
     "loading": "Loading",
     "emptyDir": "This folder is empty",
     "refused": "That change is not allowed",
+    "protected": "This is part of the desktop and stays where it is",
     "noAccess": "You don't have access.",
     "networkEmpty": "No network locations",
     "network": {

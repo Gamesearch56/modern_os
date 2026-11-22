@@ -1635,6 +1635,7 @@
     "loading": "Wird geladen",
     "emptyDir": "Dieser Ordner ist leer",
     "refused": "Diese Änderung ist nicht erlaubt",
+    "protected": "Das gehört zum Desktop und bleibt, wo es ist",
     "noAccess": "Du hast keinen Zugriff.",
     "networkEmpty": "Keine Netzwerkorte",
     "network": {
