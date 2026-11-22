@@ -48,7 +48,10 @@ else
     err "seat-cover --self-test failed"
 fi
 
-if MODERN_SEAT_COVER=0 python3 "$COVER" hold; then
+if MODERN_SEAT_COVER=0 python3 "$COVER" hold \
+    && MODERN_SEAT_COVER=0 python3 "$COVER" pin \
+    && grep -Fq 'def pin' "$COVER" \
+    && grep -Fq 'KillMode=process' "$ROOT/install/system/plymouth/modern-splash-pin.service"; then
     ok "seat cover can be turned off without touching the display"
 else
     err "MODERN_SEAT_COVER=0 must skip the display"
@@ -80,6 +83,20 @@ else
     ok "strict mode fails a log that still has the gaps"
 fi
 
+# The match is on the first line and the rest is larger than a pipe
+# buffer, so a SIGPIPE from grep -q used to hide it.
+{
+    printf '%s\n' 'ERR from aquamarine ]: drm: getCurrentCRTC: No CRTC 0'
+    dd if=/dev/zero bs=1024 count=256 status=none | tr '\0' 'x'
+    printf '\n'
+} >"$TMP/long.txt"
+long="$("$GAPS" "$TMP/long.txt" || true)"
+if printf '%s\n' "$long" | grep -Fq 'no CRTC'; then
+    ok "a long boot log still reports a missing CRTC"
+else
+    err "long log hid the gap: $long"
+fi
+
 printf '%s\n' 'quiet splash i915.enable_psr=0' 'seat-cover: display already scanning' >"$TMP/clean.txt"
 clean="$("$GAPS" --strict "$TMP/clean.txt")"
 if [ "$clean" = "boot-gap: none" ]; then
@@ -90,7 +107,8 @@ fi
 
 if grep -Fq 'boot-gaps.sh' "$ROOT/scripts/lib/bug-report-session.sh" \
     && grep -Fq 'journalctl -b -k' "$ROOT/scripts/lib/bug-report-session.sh" \
-    && grep -Fq 'seat-cover:' "$ROOT/scripts/lib/bug-report-session.sh"; then
+    && grep -Fq 'seat-cover:' "$ROOT/scripts/lib/bug-report-session.sh" \
+    && grep -Fq 'modern-splash-pin' "$ROOT/scripts/lib/bug-report-session.sh"; then
     ok "a report keeps the kernel handover and the seat-cover line"
 else
     err "bug reports still drop the lines that identify this gap"

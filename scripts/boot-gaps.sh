@@ -26,21 +26,35 @@ note() {
     found=1
 }
 
-if printf '%s\n' "$text" | grep -q "unknown parameter 'fastboot'" \
-    || printf '%s\n' "$text" | grep -q 'i915.fastboot'; then
+# grep -q on a pipe exits at the first match. With pipefail the writer's
+# SIGPIPE makes a long log look clean, which is how a real report said
+# "none" while Hyprland had already logged no CRTC.
+has() {
+    local rc=0
+    set +e +o pipefail
+    printf '%s\n' "$text" | grep -q -- "$1"
+    rc=$?
+    set -e -o pipefail
+    [ "$rc" -eq 0 ]
+}
+
+if has "unknown parameter 'fastboot'" || has 'i915.fastboot'; then
     note "i915.fastboot is set, and this kernel ignores it"
 fi
-if printf '%s\n' "$text" | grep -q 'getCurrentCRTC: No CRTC'; then
+if has 'getCurrentCRTC: No CRTC'; then
     note "compositor started with no CRTC, so the panel was not scanning"
 fi
-if printf '%s\n' "$text" | grep -q 'display already scanning' \
-    && printf '%s\n' "$text" | grep -q 'getCurrentCRTC: No CRTC'; then
+if { has 'display already scanning' || has 'seat-cover: painted' || has 'seat-cover: frame held'; } \
+    && has 'getCurrentCRTC: No CRTC'; then
     note "a cover left the panel connector without a CRTC"
 fi
-if printf '%s\n' "$text" | grep -q 'Cannot commit when a page-flip is awaiting'; then
+if has 'seat-cover: pin left the splash frame untouched'; then
+    note "the splash pin did not program a frame before the login screen"
+fi
+if has 'Cannot commit when a page-flip is awaiting'; then
     note "a frame was dropped because a page-flip was still in flight"
 fi
-if printf '%s\n' "$text" | grep -q 'Disabled KMS output'; then
+if has 'Disabled KMS output'; then
     note "the previous compositor turned the display off as it exited"
 fi
 

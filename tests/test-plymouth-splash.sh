@@ -139,7 +139,15 @@ if [ -f "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" ] \
     && ! grep -Fq 'display-handoff.sh' "$ROOT/install/system/greetd/kiosk.sh" \
     && [ -x "$TMP/usr/lib/modern/splash-hold.sh" ] \
     && ! grep -Fq 'modern-splash.service' "$ROOT/scripts/splash-hold.sh" \
-    && [ -f "$TMP/etc/systemd/system/modern-splash.service" ]; then
+    && [ -f "$TMP/etc/systemd/system/modern-splash.service" ] \
+    && [ -f "$TMP/etc/systemd/system/modern-splash-pin.service" ] \
+    && grep -Fq 'KillMode=process' "$TMP/etc/systemd/system/modern-splash-pin.service" \
+    && grep -Fq 'Before=plymouth-quit.service' "$TMP/etc/systemd/system/modern-splash-pin.service" \
+    && grep -Fq 'seat-cover.py pin' "$TMP/etc/systemd/system/modern-splash-pin.service" \
+    && [ -f "$TMP/etc/systemd/system/plymouth-quit.service.d/pin.conf" ] \
+    && grep -Fq 'Wants=modern-splash-pin.service' "$TMP/etc/systemd/system/plymouth-quit.service.d/pin.conf" \
+    && ! grep -Fq 'Conflicts=plymouth-quit' "$TMP/etc/systemd/system/plymouth-quit.service.d/pin.conf" \
+    && ! grep -Fq 'Conflicts=plymouth-quit' "$TMP/etc/systemd/system/modern-splash-pin.service"; then
     ok "quit keeps the splash frame, and an update removes the held splash"
 else
     err "plymouth apply must not hold the login screen behind the splash"
