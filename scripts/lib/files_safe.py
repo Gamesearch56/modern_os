@@ -69,6 +69,54 @@ def media_root(user=None):
     return "/run/media/" + (user or user_name())
 
 
+_roots_for = {}
+
+
+def _checkout_pointer(home):
+    # Same order as scripts/lib/repo-path.sh. The session exports
+    # MODERN_REPO, so a file manager started from it sees that path.
+    env = os.environ.get("MODERN_REPO", "").strip()
+    if env:
+        return env
+    cfg = os.environ.get("XDG_CONFIG_HOME") or os.path.join(home, ".config")
+    pointer = os.path.join(cfg, "modern", "repo")
+    try:
+        with open(pointer, encoding="utf-8") as fh:
+            return fh.readline().strip()
+    except OSError:
+        return ""
+
+
+def install_roots(home=None):
+    # The installed checkout sits in the home folder, so Files would
+    # otherwise rename or delete the desktop the session runs from.
+    # A working tree with another name stays editable.
+    home = home or home_dir()
+    cached = _roots_for.get(home)
+    if cached is not None:
+        return cached
+    roots = []
+
+    def add(raw):
+        if not raw:
+            return
+        if not str(raw).startswith("/"):
+            raw = os.path.join(home, raw)
+        try:
+            path = clean(raw)
+        except Refuse:
+            return
+        if not path.startswith(home + "/") or os.path.basename(path) != "modern_os":
+            return
+        if path not in roots:
+            roots.append(path)
+
+    add(os.path.join(home, "modern_os"))
+    add(_checkout_pointer(home))
+    _roots_for[home] = roots
+    return roots
+
+
 def protected(path, home=None, user=None):
     path = clean(path)
     home = home or home_dir()
@@ -83,6 +131,9 @@ def protected(path, home=None, user=None):
             return True
     if path == "/":
         return True
+    for root in install_roots(home):
+        if path == root or path.startswith(root + "/"):
+            return True
     return False
 
 

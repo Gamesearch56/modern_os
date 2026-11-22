@@ -119,22 +119,38 @@ Scope {
             }
 
             MDialog {
+                id: ask
                 parent: win.contentItem
                 anchors.fill: parent
+                // pendingAction is cleared to close this dialog, which
+                // would otherwise fall through to the install label
+                // while the card is still fading out.
+                property string heldAction: ""
+                property string heldName: ""
+                readonly property string action: Store.pendingName.length > 0 && Store.pendingAction.length > 0
+                    ? Store.pendingAction
+                    : heldAction
+                readonly property string pkgName: Store.pendingName.length > 0 ? Store.pendingName : heldName
                 open: Store.pendingName.length > 0
-                titleKey: Store.pendingAction === "remove"
+                onOpenChanged: {
+                    if (ask.open && Store.pendingAction.length > 0) {
+                        ask.heldAction = Store.pendingAction;
+                        ask.heldName = Store.pendingName;
+                    }
+                }
+                titleKey: ask.action === "remove"
                     ? "store.confirmRemove"
-                    : (Store.pendingAction === "update" ? "store.confirmUpdate" : "store.confirmInstall")
-                titleParams: ({ name: Store.pendingName })
-                bodyKey: Store.pendingAction === "remove"
+                    : (ask.action === "update" ? "store.confirmUpdate" : "store.confirmInstall")
+                titleParams: ({ name: ask.pkgName })
+                bodyKey: ask.action === "remove"
                     ? "store.confirmRemoveBody"
-                    : (Store.pendingAction === "update" ? "store.confirmUpdateBody" : "store.confirmInstallBody")
-                bodyParams: ({ name: Store.pendingName })
-                confirmKey: Store.pendingAction === "remove"
+                    : (ask.action === "update" ? "store.confirmUpdateBody" : "store.confirmInstallBody")
+                bodyParams: ({ name: ask.pkgName })
+                confirmKey: ask.action === "remove"
                     ? "store.remove"
-                    : (Store.pendingAction === "update" ? "store.update" : "store.install")
+                    : (ask.action === "update" ? "store.update" : "store.install")
                 confirmEnabled: Store.mutating.length === 0
-                destructive: Store.pendingAction === "remove"
+                destructive: ask.action === "remove"
                 onConfirmed: Store.confirm()
                 onCancelled: Store.cancel()
             }

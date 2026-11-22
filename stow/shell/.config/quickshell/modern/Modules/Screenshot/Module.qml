@@ -30,13 +30,6 @@ Scope {
         }
     }
 
-    Shortcut {
-        sequence: "Escape"
-        context: Qt.ApplicationShortcut
-        enabled: Recording.active
-        onActivated: Recording.stop()
-    }
-
     Variants {
         model: Quickshell.screens
 

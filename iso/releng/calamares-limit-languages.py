@@ -385,6 +385,26 @@ CANCEL_NEW = """        updateCancelEnabled( !settings->disableCancel() && !( ex
                                     && !( executing && settings->disableCancelDuringExec() ) );
         updateBackAndNextVisibility( !( executing && settings->hideBackAndNextDuringExec() ) );"""
 
+# The confirm is a second X11 window. Cage never maps it, so Cancel looks
+# dead. Quit instead; the live session starts Calamares again.
+CANCEL_ASK_OLD = """    // Otherwise, confirm cancel/quit.
+    QString title = settings->isSetupMode() ? tr( "Cancel Setup?", "@title" ) : tr( "Cancel Installation?", "@title" );
+    QString question = settings->isSetupMode() ? tr( "Do you really want to cancel the current setup process?\\n"
+                                                     "The setup program will quit and all changes will be lost." )
+                                               : tr( "Do you really want to cancel the current install process?\\n"
+                                                     "The installer will quit and all changes will be lost." );
+    QMessageBox mb( QMessageBox::Question, title, question, QMessageBox::Yes | QMessageBox::No, m_widget );
+    mb.setDefaultButton( QMessageBox::No );
+    Calamares::fixButtonLabels( &mb );
+    int response = mb.exec();
+    return ( response == QMessageBox::Yes ) ? Confirmation::CancelInstallation : Confirmation::Continue;"""
+CANCEL_ASK_NEW = """    // Otherwise, confirm cancel/quit.
+    // A QMessageBox is another X11 window. Cage does not map it, so
+    // Cancel looked dead. The live session starts this program again
+    // when it exits. The finished page still reboots instead.
+    Q_UNUSED( settings )
+    return Confirmation::CancelInstallation;"""
+
 TOGGLE_OLD = '        "Toggle log" );'
 TOGGLE_NEW = '        tr( "Toggle log" ) );'
 
@@ -444,13 +464,14 @@ KB_APPLY_NEW = """                 m_current.selectedLayout = m_keyboardLayoutsM
 
 # cage/Xwayland ignores the first `setxkbmap -layout de`. India works because
 # non-ascii-layouts adds `-option grp:…` and that rebuilds the map. ASCII
-# layouts (German) never sent -option, so the test field stayed on us until
-# a later non-ASCII pick.
+# layouts (German) never sent -option, so Z still typed Y. A bare -option
+# is a missing argument and setxkbmap then keeps the old map; an empty
+# option clears it and the layout is applied. The first call is still ignored.
 KB_XKB_OLD = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
         QProcess::execute( "setxkbmap", basicArguments );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
 KB_XKB_NEW = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
-        basicArguments << QStringLiteral( "-option" );
+        basicArguments << QStringLiteral( "-option" ) << QString();
         QProcess::execute( "setxkbmap", basicArguments );
         QProcess::execute( "setxkbmap", basicArguments );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
@@ -968,6 +989,7 @@ def main() -> int:
     patch(locale, CHANGE_OLD, CHANGE_NEW, "hide locale Change buttons")
     patch(viewman, VIEW_OLD, VIEW_NEW, "ViewManager dataChanged on language")
     patch(viewman, CANCEL_OLD, CANCEL_NEW, "hide Cancel during exec")
+    patch(viewman, CANCEL_ASK_OLD, CANCEL_ASK_NEW, "Cancel restarts instead of a hidden dialog")
     patch(viewman, VIEW_INC_OLD, VIEW_INC_NEW, "ViewManager QTimer include")
     patch(viewman, VIEW_CTOR_OLD, VIEW_CTOR_NEW, "unattended auto-next")
     patch(viewman, FOOTER_OLD, FOOTER_NEW, "hide footer buttons on the finished page")

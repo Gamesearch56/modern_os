@@ -193,5 +193,20 @@ python3 "$ROOT/scripts/lib/report-redact.py" "$tmp/broken" 2>"$tmp/broken.err"
     && grep -q 'not valid JSON' "$tmp/broken.err" \
     && ok "truncated JSON is still redacted by key and the fallback is logged" || err "broken json: $(cat "$tmp/broken/cut.json")"
 
+python3 - "$ROOT" <<'PY' && ok "the report window is as tall as the first page" || err "bug report window size does not match its token"
+import re, sys
+root = sys.argv[1]
+tokens = open(root + "/stow/shell/.config/quickshell/modern/Commons/Tokens.qml").read()
+windows = open(root + "/stow/hypr/.config/hypr/modules/windows.lua").read()
+xxl = int(re.search(r"readonly property real xxl: (\d+)", tokens).group(1))
+lg = int(re.search(r"readonly property real lg: (\d+)", tokens).group(1))
+xs = int(re.search(r"readonly property real xs: (\d+)", tokens).group(1))
+wide = int(re.search(r"reportWidth: root\.spacing\.xxl \* (\d+)", tokens).group(1))
+tall = int(re.search(r"reportHeight: root\.spacing\.xxl \* (\d+)", tokens).group(1))
+size = "{ %d, %d }" % (wide * xxl + lg, tall * xxl + lg + xs)
+if size not in windows:
+    raise SystemExit(size)
+PY
+
 [ "$FAIL" -eq 0 ] && printf 'test-bug-report: all passed\n'
 exit "$FAIL"

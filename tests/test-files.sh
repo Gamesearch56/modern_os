@@ -94,6 +94,83 @@ else
     err "/etc is missing after a refused delete"
 fi
 
+unset MODERN_REPO
+mkdir -p "$HOME/modern_os/scripts" "$HOME/Documents" "$HOME/Desktop/modern_os" "$HOME/work/modern_dotfile"
+printf 'keep\n' >"$HOME/modern_os/scripts/keep"
+printf 'doc\n' >"$HOME/Documents/note"
+printf 'x\n' >"$HOME/Desktop/modern_os/x"
+printf 'dev\n' >"$HOME/work/modern_dotfile/dev"
+ln -s "$HOME/modern_os" "$HOME/alias"
+if "$OPS" delete "$HOME/modern_os" >/dev/null 2>"$TMP/os.err"; then
+    err "delete of the desktop folder was allowed"
+elif [ -d "$HOME/modern_os" ]; then
+    ok "delete of the desktop folder is refused"
+else
+    err "the desktop folder is missing after a refused delete"
+fi
+if "$OPS" delete "$HOME/modern_os/scripts/keep" >/dev/null 2>"$TMP/osfile.err"; then
+    err "delete inside the desktop folder was allowed"
+elif [ -f "$HOME/modern_os/scripts/keep" ]; then
+    ok "delete inside the desktop folder is refused"
+else
+    err "a file inside the desktop folder is missing"
+fi
+if "$TRASH" move "$HOME/modern_os" >/dev/null 2>"$TMP/ostrash.err"; then
+    err "trashing the desktop folder was allowed"
+elif [ -d "$HOME/modern_os" ]; then
+    ok "trashing the desktop folder is refused"
+else
+    err "the desktop folder is missing after a refused trash"
+fi
+if "$OPS" delete "$HOME/alias/scripts/keep" >/dev/null 2>"$TMP/oslink.err"; then
+    err "delete through a symlink into the desktop folder was allowed"
+elif [ -f "$HOME/modern_os/scripts/keep" ]; then
+    ok "delete through a symlink into the desktop folder is refused"
+else
+    err "a symlinked desktop file is missing"
+fi
+if "$OPS" delete "$HOME/Documents/note" >/dev/null 2>"$TMP/doc.err"; then
+    ok "a home file outside the desktop folder can be deleted"
+else
+    err "a home file outside the desktop folder was refused"
+fi
+listed="$("$OPS" list "$HOME" 0 name 0 0)"
+if python3 -c 'import json,os,sys; rows=json.load(sys.stdin); m={r["name"]: r for r in rows}; assert m["modern_os"]["editable"] is False; assert m["Documents"]["editable"] is True' <<<"$listed"; then
+    ok "the desktop folder is listed as not editable"
+else
+    err "the desktop folder was listed as editable"
+fi
+mkdir -p "$HOME/.config/modern"
+printf '%s\n' "$HOME/Desktop/modern_os" >"$HOME/.config/modern/repo"
+if "$OPS" delete "$HOME/Desktop/modern_os/x" >/dev/null 2>"$TMP/ptr.err"; then
+    err "delete inside a modern_os checkout was allowed"
+elif [ -f "$HOME/Desktop/modern_os/x" ]; then
+    ok "a modern_os checkout stays in place"
+else
+    err "a modern_os checkout lost a file"
+fi
+printf '%s\n' "$HOME/work/modern_dotfile" >"$HOME/.config/modern/repo"
+if "$OPS" delete "$HOME/work/modern_dotfile/dev" >/dev/null 2>"$TMP/dev.err"; then
+    ok "a checkout with another name can be deleted"
+else
+    err "a development checkout was treated as the installed desktop"
+fi
+printf '%s\n' "$HOME" >"$HOME/.config/modern/repo"
+printf 'still\n' >"$HOME/Documents/still"
+if "$OPS" delete "$HOME/Documents/still" >/dev/null 2>"$TMP/homeptr.err"; then
+    ok "a repo pointer at the home directory leaves other files editable"
+else
+    err "a repo pointer at the home directory froze the home"
+fi
+printf 'script\n' >"$HOME/modern_os/scripts/keep"
+edit_reply="$(printf 'changed\n' | "$ROOT/scripts/editor-io.sh" save "$HOME/modern_os/scripts/keep" --encoding utf-8 --eol lf 2>"$TMP/edit.err" || true)"
+if python3 -c 'import json,sys; assert json.loads(sys.argv[1])["error"]=="protected"' "$edit_reply" \
+    && grep -q script "$HOME/modern_os/scripts/keep"; then
+    ok "the text editor leaves the desktop folder unchanged"
+else
+    err "the text editor rewrote the desktop folder (${edit_reply:-no reply})"
+fi
+
 mkdir -p "$TMP/locked"
 printf 'keep\n' >"$TMP/locked/secret"
 chmod 555 "$TMP/locked"

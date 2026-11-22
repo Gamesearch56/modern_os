@@ -4,6 +4,7 @@
 #include <QFileInfo>
 #include <QProcess>
 #include <QSet>
+#include <QTimer>
 
 namespace
 {
@@ -141,13 +142,18 @@ ModernNetNm::loadWifi( const QSet< QString >& known )
     {
         return;
     }
+    // --rescan no: the default list starts a scan and waits for it, so
+    // the progress bar never clears and the event loop cannot finish the
+    // scan that is already running.
     const QString wifi = run( QStringLiteral( "nmcli" ),
                               { QStringLiteral( "-t" ),
                                 QStringLiteral( "-f" ),
                                 QStringLiteral( "IN-USE,SSID,SECURITY,SIGNAL" ),
                                 QStringLiteral( "device" ),
                                 QStringLiteral( "wifi" ),
-                                QStringLiteral( "list" ) } );
+                                QStringLiteral( "list" ),
+                                QStringLiteral( "--rescan" ),
+                                QStringLiteral( "no" ) } );
     QSet< QString > seen;
     for ( const QString& line : wifi.split( QLatin1Char( '\n' ), Qt::SkipEmptyParts ) )
     {
@@ -195,7 +201,8 @@ ModernNetNm::refresh()
         const QString type = f.at( 0 );
         const QString state = f.at( 1 );
         const QString conn = f.size() > 2 ? f.at( 2 ) : QString();
-        const bool up = state == QLatin1String( "connected" );
+        const bool up = state == QLatin1String( "connected" )
+                         || state.startsWith( QLatin1String( "connected" ) );
         if ( type == QLatin1String( "ethernet" ) && up )
         {
             m_ethernetUp = true;
@@ -290,6 +297,17 @@ ModernNetNm::scan()
                  m_scanning = false;
                  refresh();
              } );
+    // live-wifi-up.sh --scan should exit on its own. If it does not, the
+    // Refresh bar would stay up for the rest of the step.
+    auto* scanLimit = new QTimer( m_scan );
+    scanLimit->setSingleShot( true );
+    connect( scanLimit, &QTimer::timeout, m_scan, [ this ]() {
+        if ( m_scan )
+        {
+            m_scan->kill();
+        }
+    } );
+    scanLimit->start( 25000 );
     // A bare rescan cannot recover a radio that appeared late, was
     // soft-blocked, or was taken by iwd again; the helper does that first.
     if ( QFileInfo( kWifiUp ).isExecutable() )
@@ -337,6 +355,33 @@ ModernNetNm::forgetSsid( const QString& ssid )
 }
 
 void
+ModernNetNm::stopConnecting()
+{
+    const QString devices = run( QStringLiteral( "nmcli" ),
+                                 { QStringLiteral( "-t" ),
+                                   QStringLiteral( "-f" ),
+                                   QStringLiteral( "DEVICE,TYPE,STATE" ),
+                                   QStringLiteral( "device" ),
+                                   QStringLiteral( "status" ) } );
+    for ( const QString& line : devices.split( QLatin1Char( '\n' ), Qt::SkipEmptyParts ) )
+    {
+        const QStringList f = splitNmcli( line );
+        if ( f.size() < 3 || f.at( 1 ) != QLatin1String( "wifi" ) )
+        {
+            continue;
+        }
+        const QString state = f.at( 2 );
+        if ( state != QLatin1String( "connecting" ) && state != QLatin1String( "configuring" )
+             && state != QLatin1String( "need-auth" ) )
+        {
+            continue;
+        }
+        run( QStringLiteral( "nmcli" ),
+             { QStringLiteral( "device" ), QStringLiteral( "disconnect" ), f.at( 0 ) } );
+    }
+}
+
+void
 ModernNetNm::disconnectWifi()
 {
     if ( m_connecting )
@@ -373,8 +418,16 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password )
     m_connecting = true;
     emit changed();
     m_join = new QProcess( this );
-    connect( m_join, &QProcess::readyReadStandardOutput, m_join, [ this ]() {
-        m_join->readAllStandardOutput();
+    connect( m_join, &QProcess::readyReadStandardOutput, this, [ this ]() {
+        const QString text = QString::fromUtf8( m_join->readAllStandardOutput() );
+        const QStringList lines = text.split( QLatin1Char( '\n' ), Qt::SkipEmptyParts );
+        for ( const QString& line : lines )
+        {
+            if ( line.startsWith( QLatin1String( "status:" ) ) )
+            {
+                emit joinProgress( line.mid( 7 ).trimmed() );
+            }
+        }
     } );
     connect( m_join, &QProcess::readyReadStandardError, m_join, [ this ]() {
         m_join->readAllStandardError();
@@ -387,9 +440,25 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password )
                  m_join->deleteLater();
                  m_join = nullptr;
                  m_connecting = false;
+                 if ( result != 0 )
+                 {
+                     stopConnecting();
+                 }
                  refresh();
-                 emit connectFinished( result == 0 && m_wifiUp, result );
+                 const bool joined = result == 0 && ( m_wifiUp || m_hasRoute );
+                 emit connectFinished( joined, joined ? 0 : ( result == 0 ? 5 : result ) );
              } );
+    // A wrong password can leave nmcli running. Kill it so the field
+    // accepts another try instead of staying on Connecting.
+    auto* joinLimit = new QTimer( m_join );
+    joinLimit->setSingleShot( true );
+    connect( joinLimit, &QTimer::timeout, m_join, [ this ]() {
+        if ( m_join )
+        {
+            m_join->kill();
+        }
+    } );
+    joinLimit->start( 20000 );
     // The password goes on stdin; argv is readable by every process in
     // /proc. wifi-join.sh also drops a profile a failed password created.
     QStringList args { QStringLiteral( "connect" ), ssid };

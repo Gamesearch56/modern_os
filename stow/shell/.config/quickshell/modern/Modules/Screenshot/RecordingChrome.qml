@@ -24,9 +24,12 @@ Rectangle {
     scale: Motion.overlayScale(root.open)
     transformOrigin: root.origin
 
+    // Behind the button. A fill-size area on top swallows the click,
+    // so Stop never runs and the shortcut is the only way out.
     MouseArea {
         anchors.fill: parent
         enabled: root.open
+        z: -1
     }
 
     Behavior on opacity {

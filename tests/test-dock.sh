@@ -27,11 +27,12 @@ icon_size="$(jq -r '.dock.iconSize' "$DEFAULT")"
 apps="$(jq -c '.dock.apps' "$DEFAULT")"
 
 want_apps='["vivaldi-stable","whatsapp","spotify-launcher","steam","kitty","shell:files","shell:store","shell:settings"]'
-if [ "$enabled" = "false" ] && [ "$auto_hide" = "false" ] && [ "$show_names" = "false" ] \
+if [ "$enabled" = "true" ] && [ "$auto_hide" = "false" ] && [ "$show_names" = "false" ] \
     && [ "$theme" = "floating" ] && [ "$icon_size" = "48" ] && [ "$apps" = "$want_apps" ] \
+    && grep -A1 'property JsonObject dock: JsonObject' "$CONFIG" | grep -Fq 'property bool enabled: true' \
     && grep -Fq '"vivaldi-stable", "whatsapp", "spotify-launcher", "steam"' "$CONFIG" \
     && grep -Fq '"kitty", "shell:files", "shell:store", "shell:settings"' "$CONFIG"; then
-    ok "dock defaults are off, floating, icon size 48, and the eight pinned apps"
+    ok "dock defaults are on, floating, icon size 48, and the eight pinned apps"
 
 if grep -Fq 'readonly property alias dock: adapter.dock' "$CONFIG"; then
     ok "dock settings are read from config.json"

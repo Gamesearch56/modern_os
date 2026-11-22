@@ -135,7 +135,7 @@ Singleton {
 
             // Edge is not stored. DockLayout mirrors the bar.
             property JsonObject dock: JsonObject {
-                property bool enabled: false
+                property bool enabled: true
                 property bool autoHide: false
                 property int iconSize: 48
                 property bool showNames: false

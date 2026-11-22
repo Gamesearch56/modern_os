@@ -175,6 +175,12 @@ local overlay_actions = {
     fullscreen = true,
     closeWindow = true,
     bugReport = true,
+    -- Recording chrome leaves the keyboard with the desktop, so the
+    -- other shortcuts keep working. These three still have to reach
+    -- the compositor, because each one stops a running recording.
+    screenshotRegion = true,
+    screenshotWindow = true,
+    screenshotFull = true,
 }
 
 local function bind_opts(action)

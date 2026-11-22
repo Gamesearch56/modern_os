@@ -356,7 +356,9 @@ For a bug in the current release that cannot wait for the next one:
 
 ## Release ISO
 
-Once the GitHub Release exists, build and attach the image:
+Once the GitHub Release exists, start the image build and leave it
+running. It asks for sudo once, checks the upload itself, and does not
+need anyone watching it:
 
 ```bash
 git checkout vX.Y.Z

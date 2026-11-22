@@ -50,6 +50,8 @@ signals:
     // code is wifi-join.sh's exit code: 3 password, 4 out of range,
     // 5 timed out, 6 unsupported security, anything else failed.
     void connectFinished( bool ok, int code );
+    // lookup, password, address — printed by wifi-join.sh while it works.
+    void joinProgress( const QString& phase );
 
 private:
     static QStringList splitNmcli( const QString& line );
@@ -58,6 +60,7 @@ private:
     QSet< QString > knownWifi() const;
     QStringList uuidsForSsid( const QString& ssid ) const;
     void loadWifi( const QSet< QString >& known );
+    void stopConnecting();
 
     bool m_ethernetUp = false;
     bool m_wifiUp = false;

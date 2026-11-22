@@ -12,7 +12,11 @@ Item {
 
     readonly property bool open: Store.mutating.length > 0 || Store.errorKey.length > 0
     readonly property bool failed: Store.mutating.length === 0 && Store.errorKey.length > 0
-    readonly property string action: Store.mutating.length > 0 ? Store.mutAction : ""
+    // mutAction is cleared when the card starts fading out. doneAction
+    // is the action that just finished, so the headline stays on it.
+    readonly property string action: Store.mutating.length > 0 && Store.mutAction.length > 0
+        ? Store.mutAction
+        : Store.doneAction
 
     visible: root.open || scrim.opacity > 0
     enabled: root.open

@@ -162,6 +162,11 @@ flow: `docs/GIT.md`.
 `provision-iso.sh` or Calamares on a machine you live on. Existing-account
 stow: `docs/CUTOVER.md`.
 
+A release ISO is `scripts/iso-release.sh`, started in the background.
+Do not wait for it or confirm the image, the upload, or the checksum.
+The script already checks the upload. Do not build an ISO during
+ordinary development just to confirm that pipeline.
+
 ## Directory map
 
 See the tree in `docs/ARCHITECTURE.md`. Short version: `stow/` is

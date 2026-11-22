@@ -242,7 +242,7 @@ Scope {
         function onOpenedFile(path) { FilesPlaces.record(path); }
         function onFailed(reason) {
             const why = String(reason || "");
-            const key = why === "denied" ? "files.noAccess" : why === "connect" ? "files.network.refused" : why === "taken" ? "files.zip.taken" : "files.refused";
+            const key = why === "denied" ? "files.noAccess" : why === "protected" ? "files.protected" : why === "connect" ? "files.network.refused" : why === "taken" ? "files.zip.taken" : "files.refused";
             Notifications.toast(I18n.t(key), "");
         }
         function onOpenChanged() {

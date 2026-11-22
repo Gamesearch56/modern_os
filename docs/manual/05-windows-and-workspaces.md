@@ -31,7 +31,7 @@ The gaps between windows and around the screen edge are set in Settings → Desi
 
 ### Closing windows
 
-`SUPER + Q` closes the window that has focus. If a panel, popup, the screenshot selection or a screen recording is active, it closes or stops that first, so pressing it once more then closes the window.
+`SUPER + Q` closes the window that has focus. If a panel, popup or the screenshot selection is open, it closes that first, so pressing it once more then closes the window. A screen recording keeps running, and the other shortcuts keep working.
 
 Apps that start by themselves when you sign in, such as mail, calendar and messenger, are not really closed. They go back to the background, so they can keep showing notifications. See "The background" below.
 

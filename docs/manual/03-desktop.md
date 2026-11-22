@@ -191,7 +191,7 @@ On the same Privacy page you can:
 
 ## The dock
 
-The dock is a row of pinned apps. It is **off** when you first sign in. Turn it on with Show dock (Dock anzeigen) in Settings → Dock.
+The dock is a row of pinned apps. It is on when you first sign in. Show dock (Dock anzeigen) in Settings → Dock turns it off.
 
 The dock always sits on the edge opposite the bar, so with the bar at the top it sits at the bottom. Click an icon to open the app. If the app is already open, its window comes to the front.
 
@@ -286,12 +286,13 @@ After a screenshot, a notification says Screenshot saved (Screenshot gespeichert
 - saved as a PNG in Pictures/Screenshots
 - copied to the clipboard, so you can paste it straight into a chat or document
 
-**Recording.** Choose Record (Aufnehmen) in the toolbar, then a region, window or the full screen, and recording starts. A Stop (Stopp) button appears at the top of the screen and a hint at the bottom. Both fade out after a few seconds so they don't end up in your video. Move the pointer to the top or bottom edge to bring them back.
+**Recording.** Choose Record (Aufnehmen) in the toolbar, then a region, window or the full screen, and recording starts. A Stop (Stopp) button appears at the top of the screen, and a hint sits just above the dock. Both fade out after a few seconds so they don't end up in your video. Move the pointer to the top edge to bring them back. The dock stays clickable.
+
+Keyboard shortcuts keep working while a recording runs. `SUPER + Q` still closes the focused window.
 
 To stop a recording, do any of these:
 
 - click Stop
-- press Esc
 - press `SUPER + PRINT`
 - press any other screenshot key
 - click the Capture tile

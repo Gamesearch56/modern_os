@@ -62,6 +62,12 @@ Singleton {
 
     Process {
         id: stopper
+        // A stop that did not end the recorder must be tryable again.
+        // Leaving _stopping set made the button and the shortcut no-ops.
+        onExited: {
+            if (root.active)
+                root._stopping = false;
+        }
     }
 
     Timer {

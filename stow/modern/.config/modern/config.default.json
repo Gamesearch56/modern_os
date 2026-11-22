@@ -86,7 +86,7 @@
     ]
   },
   "dock": {
-    "enabled": false,
+    "enabled": true,
     "autoHide": false,
     "iconSize": 48,
     "showNames": false,

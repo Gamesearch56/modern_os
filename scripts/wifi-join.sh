@@ -79,7 +79,9 @@ ap_security() {
         [[ ${line#*:} == "$want" ]] || continue
         printf '%s\n' "${line%%:*}"
         return 0
-    done < <("$NMCLI" -t -e no -f SECURITY,SSID device wifi list 2>/dev/null || true)
+    # --rescan no: a plain list waits for a scan that may already be running,
+    # and Connect stays on "Connecting…" until that scan ends.
+    done < <("$NMCLI" -t -e no -f SECURITY,SSID device wifi list --rescan no 2>/dev/null || true)
     return 1
 }
 
@@ -108,6 +110,7 @@ trap '[[ -z $PW_FILE ]] || rm -f "$PW_FILE"' EXIT
 
 connect_psk() {
     local ssid=$1 psk=$2 sec km out uuid rc=0
+    printf 'status:lookup\n'
     sec=$(ap_security "$ssid") || return 4
     km=$(key_mgmt "$sec") || return 6
     forget_ssid "$ssid"
@@ -115,13 +118,37 @@ connect_psk() {
         wifi-sec.key-mgmt "$km" 2>&1) || { printf '%s\n' "$out" >&2; return 1; }
     uuid=$(grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' <<<"$out" | tail -n1 || true)
     [[ -n $uuid ]] || { forget_ssid "$ssid"; return 1; }
+    # One try. The default keeps asking, so a wrong password never returns
+    # and the installer cannot accept a different one.
+    "$NMCLI" connection modify uuid "$uuid" connection.auth-retries 1 >/dev/null || true
+    # Ask for the secret from the file, not from a password window the
+    # installer cannot show. That window is why a correct password never returns.
+    "$NMCLI" connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 0 >/dev/null || true
+    printf 'status:password\n'
     PW_FILE=$(umask 077 && mktemp "$SECRETS_DIR/wifi-join.XXXXXX")
     psk_line "$psk" >"$PW_FILE"
+    printf 'status:address\n'
     nm_up connection up uuid "$uuid" passwd-file "$PW_FILE" || rc=$?
     rm -f "$PW_FILE"
     PW_FILE=""
-    [[ $rc -eq 0 ]] || forget_ssid "$ssid"
+    if [[ $rc -ne 0 ]]; then
+        stop_wifi_attempt
+        forget_ssid "$ssid"
+    fi
     return "$rc"
+}
+
+# A failed activation can stay in "connecting" after nmcli has returned.
+stop_wifi_attempt() {
+    local dev typ state
+    while IFS=: read -r dev typ state; do
+        [[ $typ == wifi && -n $dev && $dev != "--" ]] || continue
+        case $state in
+            connecting | configuring | need-auth | ip-config | ip-check | secondaries) ;;
+            *) continue ;;
+        esac
+        "$NMCLI" device disconnect "$dev" >/dev/null 2>&1 || true
+    done < <("$NMCLI" -t -f DEVICE,TYPE,STATE device status 2>/dev/null || true)
 }
 
 cmd_connect() {

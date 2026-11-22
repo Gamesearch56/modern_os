@@ -180,10 +180,8 @@ ShellRoot {
                 Screenshot.cancelHud();
                 closed = true;
             }
-            if (Recording.active) {
-                Recording.stop();
-                closed = true;
-            }
+            // A recording is not a dialog. Super+Q keeps closing the
+            // focused window, and the other binds keep working.
             if (Popups.dismiss())
                 closed = true;
             if (Plugins.open) {

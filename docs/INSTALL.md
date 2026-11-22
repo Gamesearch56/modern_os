@@ -199,7 +199,11 @@ paints Boot/root with `Qt::black`).
 Combo boxes have no QSS radius. Combo lists are drawn in-window as
 `#modernComboOverlay` (see below), styled from the same tokens with
 `padding: 0` so the AUR patch can size them. Cancel is hidden
-during Install (`disable-cancel-during-exec` plus `quitVisible`). Late
+during Install (`disable-cancel-during-exec` plus `quitVisible`). Before
+that, Cancel quits without a confirmation window — Cage does not map
+that dialog — and the live session starts the installer again. Restart
+on the last page writes `/run/modern-install-finished` and reboots, so
+that exit does not come back. Late
 jobs set `verbose: false` so a failure dialog shows stdout (Calamares
 `verbose: true` streams output to the session log and leaves the dialog
 empty). Failures also tee to `/var/log/modern-calamares-late.log`.
@@ -250,8 +254,10 @@ not used instead). Upstream starts that apply from the *variant* signal;
 calls `Config::somethingChanged()` on a layout change too. A first pick
 of German still left the test field on `us`: cage's Xwayland ignores
 `setxkbmap -layout de` until a call also passes `-option` (India does,
-because it is in `non-ascii-layouts`). The same patch now always sends
-`-option` and runs `setxkbmap` twice.
+because it is in `non-ascii-layouts`). A bare `-option` is a missing
+argument, so the map stays `us` and Z types Y. The patch sends
+`-option` with an empty value, which clears the old options, and runs
+`setxkbmap` twice.
 
 ### Languages, countries and keyboard layouts
 

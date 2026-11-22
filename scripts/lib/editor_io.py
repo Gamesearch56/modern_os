@@ -103,6 +103,14 @@ def cmd_load(args):
 
 def cmd_save(args):
     path = _abs(args[0] if args else "")
+    # Rewriting the installed checkout would change the running desktop.
+    import files_safe as safe
+
+    try:
+        if safe.protected(path) or safe.protected(os.path.realpath(path)):
+            raise Fail("protected")
+    except safe.Refuse:
+        raise Fail("badName") from None
     encoding = _option(args, "--encoding", "utf-8")
     eol = _option(args, "--eol", "lf")
     expect = _option(args, "--expect")

@@ -100,7 +100,9 @@ if printf '%s\n' "$opts" | grep -q 'root=UUID=abc' \
     && printf '%s\n' "$opts" | grep -q 'nvidia-drm.modeset=1' \
     && printf '%s\n' "$opts" | grep -q 'splash' \
     && printf '%s\n' "$opts" | grep -q 'loglevel=3' \
-    && [ "$(printf '%s\n' "$opts" | grep -o 'splash' | wc -l)" -eq 1 ]; then
+    && printf '%s\n' "$opts" | grep -q 'i915.fastboot=1' \
+    && [ "$(printf '%s\n' "$opts" | grep -o 'splash' | wc -l)" -eq 1 ] \
+    && [ "$(printf '%s\n' "$opts" | grep -o 'i915.fastboot=1' | wc -l)" -eq 1 ]; then
     ok "boot entry keeps root= and gains splash once"
 else
     err "boot entry options: $opts"
@@ -109,7 +111,9 @@ fi
 cmd="$(cat "$TMP/etc/kernel/cmdline")"
 if printf '%s\n' "$cmd" | grep -q 'root=UUID=abc' \
     && printf '%s\n' "$cmd" | grep -q 'splash' \
-    && [ "$(printf '%s\n' "$cmd" | grep -o 'loglevel=3' | wc -l)" -eq 1 ]; then
+    && printf '%s\n' "$cmd" | grep -q 'i915.fastboot=1' \
+    && [ "$(printf '%s\n' "$cmd" | grep -o 'loglevel=3' | wc -l)" -eq 1 ] \
+    && [ "$(printf '%s\n' "$cmd" | grep -o 'i915.fastboot=1' | wc -l)" -eq 1 ]; then
     ok "kernel cmdline keeps the root device"
 else
     err "kernel cmdline: $cmd"
@@ -118,9 +122,9 @@ fi
 if [ -f "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" ] \
     && grep -Fq 'quit --retain-splash' "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" \
     && [ -x "$TMP/usr/lib/modern/splash-hold.sh" ] \
-    && grep -Fq 'systemctl start --no-ask-password modern-splash.service' "$ROOT/scripts/splash-hold.sh" \
+    && ! grep -Fq 'modern-splash.service' "$ROOT/scripts/splash-hold.sh" \
     && [ -f "$TMP/etc/systemd/system/modern-splash.service" ]; then
-    ok "quit keeps the splash frame, and a handoff can show it again"
+    ok "quit keeps the splash frame, and a handoff does not start a second splash"
 else
     err "plymouth apply must install the retain drop-in and the splash handoff"
 fi

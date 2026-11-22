@@ -42,8 +42,9 @@ QtObject {
         onTriggered: root.applyAll()
     }
 
+    // Applying a volume from inside streamSig's change re-enters that
+    // binding, which Qt reports as a loop and writes the same volumes again.
     function schedule() {
-        root.applyAll();
         settle.restart();
     }
 

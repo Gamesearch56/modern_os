@@ -58,6 +58,7 @@ def wrap(old: str) -> str:
     wrap(mod.VIEW_INC_OLD)
     + wrap(mod.VIEW_OLD)
     + wrap(mod.CANCEL_OLD)
+    + wrap(mod.CANCEL_ASK_OLD)
     + wrap(mod.VIEW_CTOR_OLD)
     + wrap(mod.FOOTER_OLD),
     encoding="utf-8",
@@ -215,11 +216,13 @@ check "$src/modules/locale/LocalePage.cpp" "new QVBoxLayout" "stacked locale"
 check "$src/modules/locale/LocalePage.cpp" "m_localeChangeButton->hide()" "hide Change"
 check "$src/libcalamaresui/ViewManager.cpp" "dataChanged" "ViewManager dataChanged"
 check "$src/libcalamaresui/ViewManager.cpp" "quitVisible" "hide Cancel during exec"
+check "$src/libcalamaresui/ViewManager.cpp" "return Confirmation::CancelInstallation;" "Cancel leaves so the live session can start the installer again"
+absent "$src/libcalamaresui/ViewManager.cpp" "QMessageBox mb( QMessageBox::Question, title, question" "Cancel does not open a dialog Cage cannot show"
 check "$src/libcalamaresui/ViewManager.cpp" "/etc/calamares/unattended" "unattended auto-next"
 check "$src/libcalamaresui/viewpages/ExecutionViewStep.cpp" 'tr( "Toggle log" )' "Toggle log tr"
 check "$src/modules/keyboard/KeyboardPage.cpp" "physicalModelSelector->hide()" "hide keyboard model"
 check "$src/modules/keyboard/Config.cpp" "somethingChanged();" "layout change applies with no variants"
-check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-option" )' "setxkbmap -option forces Xwayland remap"
+check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-option" ) << QString()' "setxkbmap -option with an empty value forces Xwayland remap"
 check "$src/modules/keyboard/Config.cpp" "#include <QLocale>" "Welcome layout includes QLocale"
 check "$src/modules/keyboard/Config.cpp" "modernWelcomeLayout" "Welcome language keyboard layout"
 check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "de" )' "German Welcome layout is xkb de"

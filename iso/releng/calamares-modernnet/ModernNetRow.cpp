@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QPushButton>
+#include <QSizePolicy>
 #include <QVBoxLayout>
 
 ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
@@ -13,8 +14,10 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
 {
     setObjectName( QStringLiteral( "networkWifiRow" ) );
     auto* row = new QHBoxLayout( this );
-    row->setContentsMargins( 8, 6, 8, 6 );
-    row->setSpacing( 12 );
+    // The name must be allowed to shrink. Its minimum width otherwise
+    // pushes Connect past the row and the list clips the button.
+    row->setContentsMargins( 16, 14, 28, 14 );
+    row->setSpacing( 16 );
 
     auto* icon = new QLabel;
     const QString name = wifi.locked ? QStringLiteral( "network-wireless-encrypted" )
@@ -34,6 +37,8 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     col->setSpacing( 2 );
     auto* title = new QLabel( wifi.ssid );
     title->setObjectName( QStringLiteral( "networkWifiSsid" ) );
+    title->setMinimumWidth( 0 );
+    title->setSizePolicy( QSizePolicy::Ignored, QSizePolicy::Preferred );
     QString status;
     if ( wifi.inUse )
     {
@@ -54,6 +59,8 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     auto* sub = new QLabel( status );
     sub->setObjectName( wifi.locked && !wifi.inUse ? QStringLiteral( "networkWifiLocked" )
                                                    : QStringLiteral( "networkHint" ) );
+    sub->setMinimumWidth( 0 );
+    sub->setSizePolicy( QSizePolicy::Ignored, QSizePolicy::Preferred );
     col->addWidget( title );
     col->addWidget( sub );
     row->addLayout( col, 1 );
