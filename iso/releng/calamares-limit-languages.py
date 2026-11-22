@@ -444,13 +444,14 @@ KB_APPLY_NEW = """                 m_current.selectedLayout = m_keyboardLayoutsM
 
 # cage/Xwayland ignores the first `setxkbmap -layout de`. India works because
 # non-ascii-layouts adds `-option grp:…` and that rebuilds the map. ASCII
-# layouts (German) never sent -option, so the test field stayed on us until
-# a later non-ASCII pick.
+# layouts (German) never sent -option, so Z still typed Y. A bare -option
+# is a missing argument and setxkbmap then keeps the old map; an empty
+# option clears it and the layout is applied. The first call is still ignored.
 KB_XKB_OLD = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
         QProcess::execute( "setxkbmap", basicArguments );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
 KB_XKB_NEW = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
-        basicArguments << QStringLiteral( "-option" );
+        basicArguments << QStringLiteral( "-option" ) << QString();
         QProcess::execute( "setxkbmap", basicArguments );
         QProcess::execute( "setxkbmap", basicArguments );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""

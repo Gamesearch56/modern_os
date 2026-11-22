@@ -250,8 +250,10 @@ not used instead). Upstream starts that apply from the *variant* signal;
 calls `Config::somethingChanged()` on a layout change too. A first pick
 of German still left the test field on `us`: cage's Xwayland ignores
 `setxkbmap -layout de` until a call also passes `-option` (India does,
-because it is in `non-ascii-layouts`). The same patch now always sends
-`-option` and runs `setxkbmap` twice.
+because it is in `non-ascii-layouts`). A bare `-option` is a missing
+argument, so the map stays `us` and Z types Y. The patch sends
+`-option` with an empty value, which clears the old options, and runs
+`setxkbmap` twice.
 
 ### Languages, countries and keyboard layouts
 
