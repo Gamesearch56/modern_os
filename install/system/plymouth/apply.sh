@@ -24,7 +24,7 @@ plymouth_merge_options() {
     read -ra words <<<"$line"
     for word in "${words[@]+"${words[@]}"}"; do
         case "$word" in
-            ""|loglevel=*|systemd.show_status=*|rd.udev.log_priority=*|vt.global_cursor_default=*)
+            ""|loglevel=*|systemd.show_status=*|rd.udev.log_priority=*|vt.global_cursor_default=*|i915.fastboot=*)
                 continue ;;
         esac
         keep+=("$word")
@@ -36,7 +36,9 @@ plymouth_merge_options() {
     done
     [ "$has_quiet" -eq 1 ] || keep=(quiet ${keep[@]+"${keep[@]}"})
     [ "$has_splash" -eq 1 ] || keep+=(splash)
-    keep+=(loglevel=3 systemd.show_status=auto rd.udev.log_priority=3 vt.global_cursor_default=0)
+    # An Intel panel retrains its link on a modeset and draws the firmware
+    # logo into that gap. fastboot keeps the mode already on screen.
+    keep+=(loglevel=3 systemd.show_status=auto rd.udev.log_priority=3 vt.global_cursor_default=0 i915.fastboot=1)
     printf '%s\n' "${keep[*]}"
 }
 
