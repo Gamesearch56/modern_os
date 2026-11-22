@@ -119,17 +119,24 @@ else
     err "kernel cmdline: $cmd"
 fi
 
+mkdir -p "$TMP/etc/systemd/system/greetd.service.d"
+printf '%s\n' 'Conflicts=plymouth-quit.service' \
+    >"$TMP/etc/systemd/system/greetd.service.d/plymouth.conf"
+printf '%s\n' 'AQ_NO_ATOMIC=1' >"$TMP/usr/lib/modern/display-handoff.sh"
+printf '%s\n' '[Service]' >"$TMP/etc/systemd/system/modern-plymouth-handoff.service"
+plymouth_apply "$TMP"
 if [ -f "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" ] \
     && grep -Fq 'quit --retain-splash' "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" \
-    && grep -Fq 'Conflicts=plymouth-quit.service' "$TMP/etc/systemd/system/greetd.service.d/plymouth.conf" \
-    && grep -Fq 'hyprland.lock' "$TMP/usr/lib/modern/plymouth-handoff.sh" \
-    && grep -Fq 'AQ_NO_ATOMIC=1' "$TMP/usr/lib/modern/display-handoff.sh" \
+    && [ ! -e "$TMP/etc/systemd/system/greetd.service.d/plymouth.conf" ] \
+    && [ ! -e "$TMP/usr/lib/modern/display-handoff.sh" ] \
+    && [ ! -e "$TMP/etc/systemd/system/modern-plymouth-handoff.service" ] \
+    && ! grep -Fq 'display-handoff.sh' "$ROOT/install/system/greetd/kiosk.sh" \
     && [ -x "$TMP/usr/lib/modern/splash-hold.sh" ] \
     && ! grep -Fq 'modern-splash.service' "$ROOT/scripts/splash-hold.sh" \
     && [ -f "$TMP/etc/systemd/system/modern-splash.service" ]; then
-    ok "the login screen takes the display before Plymouth quits"
+    ok "quit keeps the splash frame, and an update removes the held splash"
 else
-    err "plymouth apply must keep the splash until the login screen owns the display"
+    err "plymouth apply must not hold the login screen behind the splash"
 fi
 
 if [ -f "$TMP/usr/share/plymouth/themes/modern/modern.script" ] \
