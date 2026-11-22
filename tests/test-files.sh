@@ -717,5 +717,23 @@ else
     err "kitty paste filter did not quote the copied path"
 fi
 
+# xdg-open's generic mode cannot unquote an inline sh -c Exec line, so
+# "Open" on a drive in Settings did nothing. The entry calls a script.
+entry="$ROOT/stow/xdg/.local/share/applications/modern.files.desktop"
+if [ "$(sed -n 's/^Exec=//p' "$entry")" = "modern-files %u" ]; then
+    ok "the Files desktop entry runs modern-files"
+else
+    err "the Files desktop entry must run modern-files %u"
+fi
+mkdir -p "$TMP/qsbin"
+printf '#!/bin/sh\nprintf "%%s|" "$@"\n' >"$TMP/qsbin/qs"
+chmod +x "$TMP/qsbin/qs"
+got="$(PATH="$TMP/qsbin:$PATH" "$ROOT/scripts/modern-files" "/mnt/My Drive")"
+if [ "$got" = "-c|modern|ipc|call|files|open|/mnt/My Drive|" ]; then
+    ok "modern-files hands one path to the shell"
+else
+    err "modern-files passed: $got"
+fi
+
 [ "$FAIL" -eq 0 ]
 printf 'test-files: ok\n'
