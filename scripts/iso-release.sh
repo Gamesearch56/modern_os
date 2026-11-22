@@ -43,6 +43,12 @@ EOF
 
 log() { printf 'iso-release: %s\n' "$*" >&2; }
 die() { printf 'iso-release: ERROR: %s\n' "$*" >&2; exit 1; }
+ISO_PROGRESS_REF=""
+release_cleanup() {
+    iso_progress_close || true
+    rm -f "${ring:-}" "${notes:-}"
+}
+trap release_cleanup EXIT
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -194,7 +200,6 @@ rm -f "$STAGE/SHA256SUMS.asc"
 gpg --batch --yes --local-user "$FPR" --armor --detach-sign \
     --output "$STAGE/SHA256SUMS.asc" "$STAGE/SHA256SUMS"
 ring="$(mktemp)"
-trap 'rm -f "$ring"' EXIT
 gpg --dearmor <"$KEY_FILE" >"$ring"
 gpgv --keyring "$ring" "$STAGE/SHA256SUMS.asc" "$STAGE/SHA256SUMS" 2>/dev/null \
     || die "the signature does not verify against docs/release-key.asc"
@@ -204,12 +209,50 @@ remote_sha() {
     gh api "repos/$NWO/releases/tags/$TAG" \
         --jq ".assets[] | select(.name == \"$ISO_ASSET\") | .digest // \"none\"" 2>/dev/null || true
 }
+
+# curl's bar ends each update with a percentage. Feed that to the window.
+release_curl_progress() {
+    local line pct
+    while IFS= read -r line; do
+        pct="$(printf '%s\n' "$line" | grep -oE '[0-9]+\.[0-9]+' | tail -1 || true)"
+        [ -n "$pct" ] && iso_progress_set "${pct%%.*}"
+    done
+}
+
+# A window tracks the image. The sums are tiny and stay on gh.
+release_upload_image() {
+    local id token url rc=0
+    if ! iso_ui_ready; then
+        gh release upload "$TAG" "$STAGE/$ISO_ASSET" "$STAGE/SHA256SUMS" "$STAGE/SHA256SUMS.asc" --clobber
+        return
+    fi
+    id="$(gh api "repos/$NWO/releases/tags/$TAG" --jq .id)"
+    token="$(gh auth token)"
+    [ -n "$id" ] && [ -n "$token" ] || die "could not start the image upload"
+    gh release delete-asset "$TAG" "$ISO_ASSET" --yes >/dev/null 2>&1 || true
+    url="https://uploads.github.com/repos/${NWO}/releases/${id}/assets?name=${ISO_ASSET}"
+    log "uploading $(awk -v b="$size" 'BEGIN { printf "%.2f GiB", b / 1073741824 }')"
+    iso_progress_open "Uploading the release image"
+    set +e
+    curl --progress-bar -f -S -T "$STAGE/$ISO_ASSET" \
+        -H "Authorization: Bearer ${token}" \
+        -H "Content-Type: application/octet-stream" \
+        -H "Accept: application/vnd.github+json" \
+        -o "$STAGE/upload-response.json" \
+        "$url" 2> >(tr '\r' '\n' | release_curl_progress)
+    rc=$?
+    set -e
+    iso_progress_close
+    rm -f "$STAGE/upload-response.json"
+    [ "$rc" -eq 0 ] || die "the image upload did not finish"
+    gh release upload "$TAG" "$STAGE/SHA256SUMS" "$STAGE/SHA256SUMS.asc" --clobber
+}
+
 if [ "$(remote_sha)" = "sha256:$sha" ]; then
     log "GitHub already has this image"
     gh release upload "$TAG" "$STAGE/SHA256SUMS" "$STAGE/SHA256SUMS.asc" --clobber
 else
-    log "uploading $(awk -v b="$size" 'BEGIN { printf "%.2f GiB", b / 1073741824 }')"
-    gh release upload "$TAG" "$STAGE/$ISO_ASSET" "$STAGE/SHA256SUMS" "$STAGE/SHA256SUMS.asc" --clobber
+    release_upload_image
     got="$(remote_sha)"
     case "$got" in
         "sha256:$sha") log "GitHub's SHA-256 matches" ;;
@@ -219,18 +262,64 @@ else
 fi
 
 notes="$(mktemp)"
-trap 'rm -f "$ring" "$notes"' EXIT
 gh release view "$TAG" --json body -q .body \
     | iso_notes_with_download "$(iso_download_block "$WEB" "$TAG" "$size" "$sha" "$FPR")" >"$notes"
 gh release edit "$TAG" --notes-file "$notes" >/dev/null
 log "release notes link the image: $WEB/releases/tag/$TAG"
 
-if [ -n "$ARCHIVE" ]; then
+# One rclone copy. Percentages from its stats line move the window.
+# The exit status is rclone's, not the parser's.
+release_rclone_copy() {
+    local dest="$1" extra=() rc=0
+    if [ -n "${2:-}" ]; then
+        extra=(--protondrive-2fa "$2")
+    fi
+    iso_progress_open "Saving the release image"
+    set +e
+    rclone copy "${extra[@]}" "$STAGE" "$dest" --stats 1s --stats-one-line 2>&1 \
+        | tr '\r' '\n' | while IFS= read -r line; do
+            printf '%s\n' "$line" >>"$ARCHIVE_LOG"
+            pct="$(printf '%s\n' "$line" | grep -oE '[0-9]+%' | tail -1 || true)"
+            [ -n "$pct" ] && iso_progress_set "${pct%%%}"
+        done
+    rc=${PIPESTATUS[0]}
+    set -e
+    iso_progress_close
+    return "$rc"
+}
+
+release_archive() {
+    local dest rc=0 code=""
     dest="${ARCHIVE%/}/$TAG"
     log "archiving to $dest"
-    rclone copy "$STAGE" "$dest"
+    ARCHIVE_LOG="$(mktemp)"
+    release_rclone_copy "$dest" || rc=$?
+    if [ "$rc" -ne 0 ] && grep -Eiq '2fa|two-factor|two factor|totp' "$ARCHIVE_LOG"; then
+        if grep -Eiq 'too many requests|rate limit|HTTP 429' "$ARCHIVE_LOG"; then
+            rm -f "$ARCHIVE_LOG"
+            die "Proton is limiting logins. Wait a few minutes, then run this again."
+        fi
+        code="$(iso_ask_line "Proton needs a two-factor code to save this release.")" || {
+            rm -f "$ARCHIVE_LOG"
+            die "Proton needs a two-factor code"
+        }
+        [ -n "$code" ] || { rm -f "$ARCHIVE_LOG"; die "Proton needs a two-factor code"; }
+        : >"$ARCHIVE_LOG"
+        rc=0
+        release_rclone_copy "$dest" "$code" || rc=$?
+    fi
+    if [ "$rc" -ne 0 ]; then
+        cat "$ARCHIVE_LOG" >&2
+        rm -f "$ARCHIVE_LOG"
+        die "the archive copy at $dest did not finish — run again"
+    fi
+    rm -f "$ARCHIVE_LOG"
     rclone check --one-way "$STAGE" "$dest" || die "the archive copy at $dest does not match — run again"
     log "archive matches"
+}
+
+if [ -n "$ARCHIVE" ]; then
+    release_archive
 else
     log "no archive remote — skipped (--archive or MODERNOS_ISO_ARCHIVE)"
 fi

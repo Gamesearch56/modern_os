@@ -21,6 +21,9 @@ has 'if [ -n "$PUBLIC" ]; then' "$ROOT/scripts/iso-build.sh" "iso-build --public
 has 'iso-release.sh vX.Y.Z' "$ROOT/docs/GIT.md" "docs/GIT.md describes the release ISO"
 has 'sudo -A "$@"' "$ROOT/scripts/iso-release.sh" "a build with no terminal asks through the password window"
 has 'kdialog --title "ModernOS" --password' "$ROOT/scripts/iso-release.sh" "the password window is kdialog when it is installed"
+has 'Uploading the release image' "$ROOT/scripts/iso-release.sh" "the image upload has a progress window"
+has '--protondrive-2fa' "$ROOT/scripts/iso-release.sh" "Proton can take a two-factor code"
+has 'kdialog --title "ModernOS" --inputbox' "$ROOT/scripts/lib/iso-release.sh" "Proton's code opens an input window"
 
 # shellcheck source=../scripts/lib/iso-release.sh
 source "$ROOT/scripts/lib/iso-release.sh"
@@ -106,6 +109,8 @@ esac
 EOF
 chmod +x "$TMP/bin/"*
 export PATH="$TMP/bin:$PATH" GH_LOG="$TMP/gh.log" NOTES="$TMP/notes.md" UP_ISO="$TMP/clean.iso"
+# A desktop session would open the progress window and upload with curl.
+unset DISPLAY WAYLAND_DISPLAY
 
 if "$repo/scripts/iso-release.sh" v9.9.9 --iso "$TMP/leaky.iso" --no-archive 2>"$TMP/leak.err"; then
     err "a leaking image was released"

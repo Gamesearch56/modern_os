@@ -38,6 +38,89 @@ iso_notes_with_download() {
     printf '\n%s\n' "$block"
 }
 
+# A desktop session can show the password-style windows. A test or a
+# plain terminal without a display cannot.
+iso_ui_ready() {
+    [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] || return 1
+    if command -v kdialog >/dev/null 2>&1 && command -v qdbus6 >/dev/null 2>&1; then
+        return 0
+    fi
+    command -v zenity >/dev/null 2>&1
+}
+
+# One line from the user. A window when there is no terminal, like sudo -A.
+iso_ask_line() {
+    local prompt="$1" line=""
+    if [ ! -t 0 ] && iso_ui_ready; then
+        if command -v kdialog >/dev/null 2>&1; then
+            kdialog --title "ModernOS" --inputbox "$prompt"
+            return
+        fi
+        zenity --entry --title="ModernOS" --text="$prompt"
+        return
+    fi
+    if [ -t 0 ]; then
+        printf '%s\n' "$prompt" >&2
+        IFS= read -r line
+        printf '%s\n' "$line"
+        return 0
+    fi
+    printf 'iso-release: ERROR: %s There is no terminal or window to ask.\n' "$prompt" >&2
+    return 1
+}
+
+# kdialog's ref is "service path". zenity reads percentages on stdin.
+iso_progress_open() {
+    local text="$1"
+    ISO_PROGRESS_REF=""
+    ISO_PROGRESS_FIFO=""
+    iso_ui_ready || return 0
+    if command -v kdialog >/dev/null 2>&1 && command -v qdbus6 >/dev/null 2>&1; then
+        ISO_PROGRESS_REF="$(kdialog --title "ModernOS" --progressbar "$text" 100)"
+        return 0
+    fi
+    ISO_PROGRESS_FIFO="$(mktemp -u)"
+    mkfifo "$ISO_PROGRESS_FIFO"
+    zenity --progress --title="ModernOS" --text="$text" --auto-close --percentage=0 \
+        <"$ISO_PROGRESS_FIFO" &
+    ISO_PROGRESS_REF="zenity:$!"
+    exec 3>"$ISO_PROGRESS_FIFO"
+}
+
+iso_progress_set() {
+    local pct="$1" svc path
+    case "$pct" in
+        ''|*[!0-9]*) return 0 ;;
+    esac
+    [ "$pct" -gt 100 ] && pct=100
+    case "${ISO_PROGRESS_REF:-}" in
+        "") return 0 ;;
+        zenity:*) printf '%s\n' "$pct" >&3 || true ;;
+        *)
+            read -r svc path <<<"$ISO_PROGRESS_REF"
+            qdbus6 "$svc" "$path" Set "" value "$pct" >/dev/null 2>&1 || true
+            ;;
+    esac
+}
+
+iso_progress_close() {
+    local svc path
+    case "${ISO_PROGRESS_REF:-}" in
+        "") return 0 ;;
+        zenity:*)
+            printf '100\n' >&3 || true
+            exec 3>&- || true
+            wait "${ISO_PROGRESS_REF#zenity:}" 2>/dev/null || true
+            rm -f "${ISO_PROGRESS_FIFO:-}"
+            ;;
+        *)
+            read -r svc path <<<"$ISO_PROGRESS_REF"
+            qdbus6 "$svc" "$path" close >/dev/null 2>&1 || true
+            ;;
+    esac
+    ISO_PROGRESS_REF=""
+}
+
 # The download section for one release. Backticks are markdown code.
 # shellcheck disable=SC2016
 iso_download_block() {
