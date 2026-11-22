@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Paint one splash-colored frame when nothing is scanning out, then drop
-# DRM master. The login screen turns the CRTC off as it exits, and an
-# Intel laptop panel draws its firmware logo into that blank until the
-# next compositor presents. Holding master until Hyprland has painted
-# left the splash up forever, because Hyprland never got the device.
+# Program one splash-colored frame and drop DRM master. Plymouth's quit
+# closes its device before the login screen has one, and the login
+# compositor turns the panel off as it exits. An Intel laptop panel draws
+# its firmware picture into either gap. Holding master until Hyprland has
+# painted left the splash up forever, because Hyprland never got the device.
 # This process keeps the buffer alive and is not the DRM master.
 """seat-cover: hold a frame across the compositor handoff."""
 
@@ -361,14 +361,13 @@ def paint(fd: int, crtc_id: int, connector_id: int, mode: ModeInfo) -> int:
         offset=mapped.offset,
     )
     try:
+        # One write. A row loop on a Celeron leaves the firmware picture
+        # up for the whole fill, which is the flash this frame exists to hide.
         pixel = splash_pixel()
         row = pixel * width
-        pad = b"\x00" * (dumb.pitch - width * 4)
-        for y in range(height):
-            view.seek(y * dumb.pitch)
-            view.write(row)
-            if pad:
-                view.write(pad)
+        if dumb.pitch > width * 4:
+            row += b"\x00" * (dumb.pitch - width * 4)
+        view.write(row * height)
     finally:
         view.close()
     fb = FbCmd(width=width, height=height, pitch=dumb.pitch, bpp=32, depth=24, handle=dumb.handle)
@@ -387,17 +386,99 @@ def paint(fd: int, crtc_id: int, connector_id: int, mode: ModeInfo) -> int:
     return fd
 
 
-def _wait_for_compositor() -> None:
+def _hypr_visible() -> bool:
+    roots: list[Path] = []
     runtime = os.environ.get("XDG_RUNTIME_DIR", "")
-    root = Path(runtime) / "hypr" if runtime else None
+    if runtime:
+        roots.append(Path(runtime) / "hypr")
+    # The boot pin runs as root, before the login screen has a runtime dir.
+    run_user = Path("/run/user")
+    if run_user.is_dir():
+        roots.extend(run_user.glob("*/hypr"))
+    for root in roots:
+        try:
+            if root.is_dir() and any(root.iterdir()):
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def _wait_for_compositor() -> None:
     start = time.monotonic()
     seen: float | None = None
     while time.monotonic() - start < HOLD_SECONDS:
-        if seen is None and root is not None and any(root.glob("*")):
+        if seen is None and _hypr_visible():
             seen = time.monotonic()
         if seen is not None and time.monotonic() - seen >= AFTER_SOCKET:
             return
         time.sleep(0.1)
+
+
+def _hyprland_running() -> bool:
+    proc = Path("/proc")
+    try:
+        entries = list(proc.iterdir())
+    except OSError:
+        return False
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            comm = (entry / "comm").read_text(encoding="ascii", errors="replace").strip()
+        except OSError:
+            continue
+        if comm in {"Hyprland", "hyprland"}:
+            return True
+    return False
+
+
+def _wait_previous_compositor() -> bool:
+    """True once the previous Hyprland has exited.
+
+    The login compositor turns the panel off as it leaves. Painting before
+    that exit is overwritten, and the panel shows its firmware picture.
+    """
+    deadline = time.monotonic() + 2
+    while _hyprland_running():
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.05)
+    return True
+
+
+def _paint_best(fd: int) -> int:
+    """Program the preferred connector. The attached CRTC_ID, -1 if busy, else 0."""
+    crtcs, conns = _resources(fd)
+    outputs: list[tuple[int, int, ModeInfo, int]] = []
+    for conn in conns:
+        found = _first_mode(fd, conn)
+        if found is None:
+            continue
+        connector_id, kind, mode, _scanning, possible, _attached = found
+        if kind in SKIP_TYPES:
+            continue
+        outputs.append((cover_rank(kind), connector_id, mode, possible))
+    if not outputs:
+        return 0
+    _rank, connector_id, mode, possible = min(outputs, key=lambda item: item[0])
+    for crtc in _ordered_crtcs(crtcs, possible):
+        try:
+            paint(fd, crtc, connector_id, mode)
+        except OSError as exc:
+            _drop_master(fd)
+            if exc.errno == errno.EBUSY:
+                return -1
+            print(f"seat-cover: paint failed ({exc})", file=sys.stderr)
+            continue
+        found = _first_mode(fd, connector_id)
+        attached = int(found[5]) if found is not None else 0
+        if attached:
+            print(f"seat-cover: frame held CRTC_ID={attached}", file=sys.stderr)
+            return attached
+        print(f"seat-cover: paint did not attach connector {connector_id}", file=sys.stderr)
+        _drop_master(fd)
+    return 0
 
 
 def _hold_fd(fd: int) -> None:
@@ -490,38 +571,26 @@ def hold() -> int:
             if other != fd:
                 os.close(other)
         opened = [(path, fd)]
-        # Become master only long enough to see the connector after the
-        # previous client has let go, then drop it. Hyprland must be able
-        # to open the device. The fd stays open so i915 does not run
-        # lastclose and blank the panel in between.
+        # The login compositor disables the panel as it exits. A frame
+        # programmed before that exit is gone by the time Hyprland looks,
+        # and the panel draws its firmware picture. Two seconds is the
+        # cap so a stuck login screen cannot block the desktop.
+        if not _wait_previous_compositor():
+            print("seat-cover: previous compositor still exiting", file=sys.stderr)
+        # Become master only long enough to program the frame, then drop
+        # it. Hyprland must be able to open the device. The fd stays open
+        # so i915 does not run lastclose and restore the firmware picture.
         if not _acquire_master(fd):
             print("seat-cover: previous display owner still active", file=sys.stderr)
             _hold_fd(fd)
             opened.clear()
             return 0
-        found = _first_mode(fd, connector_id)
-        plan = "paint"
-        attached = 0
-        if found is not None:
-            _cid, _kind, mode, scanning, possible, attached = found
-            plan = handoff_plan(attached, scanning)
-        if plan == "paint" and found is not None:
-            painted = False
-            last_exc: OSError | None = None
-            for crtc in _ordered_crtcs(crtcs, possible):
-                try:
-                    paint(fd, crtc, connector_id, mode)
-                    painted = True
-                    break
-                except OSError as exc:
-                    last_exc = exc
-                    _drop_master(fd)
-            if not painted:
-                print(f"seat-cover: paint failed ({last_exc})", file=sys.stderr)
-                _drop_master(fd)
-        else:
+        attached = _paint_best(fd)
+        if attached < 0:
+            print("seat-cover: previous display owner still active", file=sys.stderr)
+        elif attached == 0:
             _drop_master(fd)
-            print(f"seat-cover: no mode to replace CRTC_ID={attached}", file=sys.stderr)
+            print("seat-cover: no mode to replace", file=sys.stderr)
         _hold_fd(fd)
         opened.clear()
         return 0
@@ -531,6 +600,64 @@ def hold() -> int:
                 os.close(fd)
             except OSError:
                 pass
+
+
+def pin() -> int:
+    """Hold the real GPU across Plymouth's quit, then paint once it lets go.
+
+    Quit closes Plymouth's device and the kernel puts the firmware picture
+    back. The parent returns at once so the quit is not delayed and the
+    login screen is not stuck behind the splash. The child is not master
+    while it waits, and it drops master after the frame.
+    """
+    if os.environ.get("MODERN_SEAT_COVER") == "0":
+        return 0
+    if _hyprland_running():
+        print("seat-cover: pin skipped, a compositor already owns the display", file=sys.stderr)
+        return 0
+    opened: list[int] = []
+    for path in _cards():
+        driver = _driver_name(path)
+        if card_is_firmware_fb(driver):
+            print(f"seat-cover: skipping firmware framebuffer {path} ({driver})", file=sys.stderr)
+            continue
+        try:
+            opened.append(os.open(path, os.O_RDWR | os.O_CLOEXEC))
+        except OSError as exc:
+            print(f"seat-cover: pin skipped {path} ({exc})", file=sys.stderr)
+    if not opened:
+        print("seat-cover: no display to pin", file=sys.stderr)
+        return 0
+    pid = os.fork()
+    if pid > 0:
+        for fd in opened:
+            os.close(fd)
+        return 0
+    os.setsid()
+    try:
+        deadline = time.monotonic() + 8
+        attached = 0
+        while time.monotonic() < deadline and attached <= 0:
+            busy = False
+            for fd in opened:
+                attached = _paint_best(fd)
+                if attached > 0:
+                    break
+                if attached < 0:
+                    busy = True
+            if attached > 0 or not busy:
+                break
+            time.sleep(0.02)
+        if attached <= 0:
+            print("seat-cover: pin left the splash frame untouched", file=sys.stderr)
+        _wait_for_compositor()
+    finally:
+        for fd in opened:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+        os._exit(0)
 
 
 def self_test() -> int:
@@ -645,6 +772,8 @@ def main(argv: list[str]) -> int:
         return dry_run()
     if cmd == "hold":
         return hold()
+    if cmd == "pin":
+        return pin()
     print(f"seat-cover: unknown command {cmd}", file=sys.stderr)
     return 2
 

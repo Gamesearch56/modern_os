@@ -22,7 +22,7 @@ _collect_boot() {
     _grab boot.txt bootctl list --no-pager
     _grab boot.txt journalctl -b --no-pager -o short-iso -n 300 \
         -u plymouth-start -u plymouth-quit -u plymouth-quit-wait -u plymouth-read-write \
-        -u modern-splash -u modern-boot-confirm -u greetd
+        -u modern-splash -u modern-splash-pin -u modern-boot-confirm -u greetd
     # The firmware-logo gaps are info-level kernel lines (an ignored
     # i915 parameter, the efifb handover). Warning-only logs hide them.
     _grab boot.txt journalctl -b -k --no-pager -o short-iso -n 400 \

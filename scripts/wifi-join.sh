@@ -13,6 +13,14 @@
 #   4 network not in range  5 timed out  6 unsupported security
 set -euo pipefail
 
+# Status lines are how the installer leaves "Checking the password…".
+# On a pipe, bash buffers them until the script exits, so a slow join
+# looks stuck on that sentence the whole time.
+if [[ -z ${WIFI_JOIN_LINEBUF:-} ]] && command -v stdbuf >/dev/null 2>&1; then
+    export WIFI_JOIN_LINEBUF=1
+    exec stdbuf -oL -eL "$0" "$@"
+fi
+
 NMCLI="${MODERN_NMCLI:-nmcli}"
 SECRETS_DIR="${MODERN_WIFI_SECRETS_DIR:-${XDG_RUNTIME_DIR:-/tmp}}"
 
@@ -68,7 +76,7 @@ first_uuid() {
 # LC_ALL=C because the reason is only in nmcli's message text.
 nm_up() {
     local err rc=0
-    err=$(LC_ALL=C nmcli_to 25 -w 25 "$@" 2>&1 >/dev/null) || rc=$?
+    err=$(LC_ALL=C nmcli_to 18 -w 18 "$@" 2>&1 >/dev/null) || rc=$?
     [[ $rc -ne 0 ]] || return 0
     printf '%s\n' "$err" >&2
     # 124 is timeout's own exit. 137 is the kill that follows if nmcli ignores TERM.
@@ -148,6 +156,9 @@ connect_psk() {
     nmcli_to 8 connection modify uuid "$uuid" connection.auth-retries 1 >/dev/null || true
     nmcli_to 8 connection modify uuid "$uuid" connection.autoconnect yes >/dev/null || true
     nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 0 >/dev/null || true
+    # Powersave drops the association on the Realtek chips in these
+    # laptops, so a correct password never finishes.
+    nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless.powersave 2 >/dev/null || true
     PW_FILE=$(umask 077 && mktemp "$SECRETS_DIR/wifi-join.XXXXXX")
     psk_line "$psk" >"$PW_FILE"
     printf 'status:address\n'
@@ -170,8 +181,8 @@ stop_wifi_attempt() {
             connecting | configuring | need-auth | ip-config | ip-check | secondaries) ;;
             *) continue ;;
         esac
-        "$NMCLI" device disconnect "$dev" >/dev/null 2>&1 || true
-    done < <("$NMCLI" -t -f DEVICE,TYPE,STATE device status 2>/dev/null || true)
+        nmcli_to 4 device disconnect "$dev" >/dev/null 2>&1 || true
+    done < <(nmcli_to 4 -t -f DEVICE,TYPE,STATE device status 2>/dev/null || true)
 }
 
 cmd_connect() {

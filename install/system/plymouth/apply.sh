@@ -140,6 +140,13 @@ plymouth_apply() {
         "$root/usr/lib/modern" "$root/etc/polkit-1/rules.d"
     install -m 0644 "$repo/install/system/plymouth/retain.conf" \
         "$root/etc/systemd/system/plymouth-quit.service.d/retain.conf"
+    # Opens the real GPU before Plymouth quits, so that quit cannot put
+    # the firmware picture back. It does not delay quit and does not stay
+    # master. The old handoff that blocked quit is still removed below.
+    install -m 0644 "$repo/install/system/plymouth/modern-splash-pin.service" \
+        "$root/etc/systemd/system/modern-splash-pin.service"
+    install -m 0644 "$repo/install/system/plymouth/pin.conf" \
+        "$root/etc/systemd/system/plymouth-quit.service.d/pin.conf"
     # Holding Plymouth until the login compositor painted left some
     # laptops on the loading screen: the compositor never got the
     # display, and the splash stayed. Remove that handoff on update.

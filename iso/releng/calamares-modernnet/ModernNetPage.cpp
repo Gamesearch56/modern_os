@@ -270,6 +270,11 @@ ModernNetPage::syncUi()
     {
         // joinProgress writes the sentence while a password is being tried.
     }
+    else if ( m_passCard->isVisible() )
+    {
+        // onConnectFinished wrote why the attempt stopped. A refresh in
+        // the same moment must not put "Pick a network" back over it.
+    }
     else if ( m_nm->scanning() )
     {
         m_hint->setText( tr( "Looking for networks…" ) );
@@ -449,7 +454,7 @@ ModernNetPage::connectWifi()
     const QString security = item->data( Qt::UserRole + 4 ).toString();
     m_connect->setEnabled( false );
     m_refresh->setEnabled( false );
-    m_hint->setText( tr( "Checking the password…" ) );
+    m_hint->setText( tr( "Looking for %1…" ).arg( ssid ) );
     m_nm->connectSsid( ssid, password, security );
 }
 
