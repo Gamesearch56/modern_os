@@ -724,8 +724,8 @@ fi
 if grep -F 'import calamares.slideshow' "$SLIDE" >/dev/null \
     && grep -F 'function onActivate' "$SLIDE" >/dev/null \
     && grep -F 'wallpaper.jpg' "$SLIDE" >/dev/null \
-    && grep -F 'qsTr("Assistant")' "$SLIDE" >/dev/null \
-    && grep -F 'qsTr("App Store")' "$SLIDE" >/dev/null \
+    && grep -F 'qsTr("The Super key")' "$SLIDE" >/dev/null \
+    && grep -F 'qsTr("Install an app")' "$SLIDE" >/dev/null \
     && grep -F 'interval: 8000' "$SLIDE" >/dev/null \
     && grep -F 'Super+K' "$SLIDE" >/dev/null \
     && grep -F 'Super+W' "$SLIDE" >/dev/null \
