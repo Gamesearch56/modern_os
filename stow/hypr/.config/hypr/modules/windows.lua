@@ -12,7 +12,9 @@ return {
     -- Width/height match Tokens.window.filesWidth / filesHeight.
     { name = "modern-files", title = "modern.files", size = { 1172, 704 }, opaque = false, dim = false },
     { name = "modern-store", title = "modern.store", size = { 1040, 720 }, opaque = false },
-    { name = "modern-bugreport", title = "modern.bugreport", size = { 784, 788 }, opaque = false },
+    -- Width/height match Tokens.window.reportWidth / reportHeight.
+    -- A shorter rule clips the last chip row on the first page.
+    { name = "modern-bugreport", title = "modern.bugreport", size = { 784, 916 }, opaque = false },
     { name = "modern-wallpaper", title = "modern.wallpaper", size = { 1040, 720 }, opaque = false },
     { name = "modern-cheatsheet", title = "modern.cheatsheet", size = { 1040, 720 }, opaque = false },
     { name = "modern-wallpaper-provider", title = "modern.wallpaper-provider", size = { 1200, 800 }, opaque = false },
