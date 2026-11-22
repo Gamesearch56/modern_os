@@ -51,7 +51,8 @@ See [`AGENTS.md`](AGENTS.md) and [`.cursorrules`](.cursorrules). Short version:
 
 ## Pull requests
 
-- Target **`dev`**, not `main`.
+- Target **`dev`**, not `main`. GitHub suggests `main` (the default
+  branch); change the base before you create the PR.
 - Title: a Conventional Commit, for example
   `fix(audio): keep the headset profile after resume`. It becomes the
   release-notes line, so write it for users. Types and examples:
