@@ -43,6 +43,16 @@ else
     err "RecordingChrome's mouse area must stay behind the stop button"
 fi
 
+SHELL="$ROOT/stow/shell/.config/quickshell/modern/shell.qml"
+MOD="$ROOT/stow/shell/.config/quickshell/modern/Modules/Screenshot/Module.qml"
+if ! grep -Fq 'Recording.stop' "$SHELL" \
+    && ! grep -Fq 'ApplicationShortcut' "$MOD" \
+    && ! grep -Fq 'sequence: "Escape"' "$BAR"; then
+    ok "Super+Q and the other shortcuts keep working during a recording"
+else
+    err "a recording must not eat close or install its own shortcut"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

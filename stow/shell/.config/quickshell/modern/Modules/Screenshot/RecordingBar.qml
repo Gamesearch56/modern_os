@@ -114,16 +114,13 @@ Scope {
                         key: "recording.stop"
                         iconName: "media-playback-stop"
                         enabled: root.chromeOpen
+                        // The chrome must not join the focus chain. A focused
+                        // stop button would take Return and Space.
+                        tabFocus: false
                         onClicked: Recording.stop()
                     }
                 }
             }
-        }
-
-        Shortcut {
-            sequence: "Escape"
-            enabled: Recording.active
-            onActivated: Recording.stop()
         }
     }
 
@@ -185,12 +182,6 @@ Scope {
                     styleName: "labelLarge"
                 }
             }
-        }
-
-        Shortcut {
-            sequence: "Escape"
-            enabled: Recording.active
-            onActivated: Recording.stop()
         }
     }
 }

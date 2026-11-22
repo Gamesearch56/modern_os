@@ -288,10 +288,11 @@ After a screenshot, a notification says Screenshot saved (Screenshot gespeichert
 
 **Recording.** Choose Record (Aufnehmen) in the toolbar, then a region, window or the full screen, and recording starts. A Stop (Stopp) button appears at the top of the screen, and a hint sits just above the dock. Both fade out after a few seconds so they don't end up in your video. Move the pointer to the top edge to bring them back. The dock stays clickable.
 
+Keyboard shortcuts keep working while a recording runs. `SUPER + Q` still closes the focused window.
+
 To stop a recording, do any of these:
 
 - click Stop
-- press Esc
 - press `SUPER + PRINT`
 - press any other screenshot key
 - click the Capture tile
