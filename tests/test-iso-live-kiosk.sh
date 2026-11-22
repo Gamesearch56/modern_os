@@ -64,6 +64,7 @@ if grep -F 'vm-serial.log' "$QEMU" >/dev/null \
     && grep -F -- '--unattended' "$QEMU" >/dev/null \
     && grep -F 'opt/org.modernos/unattended' "$QEMU" >/dev/null \
     && grep -F -- '--no-iso) NO_ISO=1; KEEP_NVRAM=1' "$QEMU" >/dev/null \
+    && grep -F 'iso_newest_release' "$QEMU" >/dev/null \
     && grep -F -- '--wifi-sim) WIFI_SIM=1' "$QEMU" >/dev/null \
     && grep -F 'opt/org.modernos/wifi-sim' "$QEMU" >/dev/null \
     && ! grep -F 'INSTALL_DISK' "$QEMU" >/dev/null; then

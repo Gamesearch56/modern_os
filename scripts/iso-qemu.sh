@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Boot the newest ISO under iso/out/ in QEMU. Does not run mkarchiso,
+# Boot the newest ModernOS release ISO in QEMU. Does not run mkarchiso,
 # Calamares, or provision-iso.sh.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib/iso-images.sh
+source "$ROOT/scripts/lib/iso-images.sh"
 OUT="${MODERN_ISO_OUT:-$ROOT/iso/out}"
 HEADLESS=0
 KEEP_NVRAM=0
@@ -19,7 +21,9 @@ usage() {
 Usage: iso-qemu.sh [--disk] [--headless] [--keep-nvram] [--reset-disk]
                    [--unattended] [--no-iso] [--wifi-sim]
 
-Boots the newest *.iso in iso/out/ (or $MODERN_ISO_OUT).
+Boots the newest modernos-v*-x86_64.iso already on this computer
+(the repo, iso/out, or a release build cache). $MODERN_ISO_OUT is
+searched too.
 Always attaches iso/out/vm-disk.qcow2 (created at 64G if missing)
 so Calamares has a 16 GiB+ target. --disk is accepted and ignored.
 Boots OVMF (edk2-ovmf) so the guest is UEFI; BIOS QEMU makes
@@ -85,15 +89,8 @@ done
 
 newest=""
 if [ "$NO_ISO" -eq 0 ]; then
-    shopt -s nullglob
-    isos=("$OUT"/*.iso)
-    shopt -u nullglob
-    [ ${#isos[@]} -gt 0 ] || die "no ISO in $OUT — sudo ./scripts/iso-build.sh --mkarchiso"
-
-    newest="${isos[0]}"
-    for f in "${isos[@]}"; do
-        [[ "$f" -nt "$newest" ]] && newest="$f"
-    done
+    newest="$(iso_newest_release "$ROOT" "$OUT")" \
+        || die "no modernos-v*-x86_64.iso — build one, or set MODERN_ISO_OUT"
 fi
 
 serial="$OUT/vm-serial.log"

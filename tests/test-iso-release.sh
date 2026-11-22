@@ -22,6 +22,8 @@ has 'iso-release.sh vX.Y.Z' "$ROOT/docs/GIT.md" "docs/GIT.md describes the relea
 has 'sudo -A "$@"' "$ROOT/scripts/iso-release.sh" "a build with no terminal asks through the password window"
 has 'kdialog --title "ModernOS" --password' "$ROOT/scripts/iso-release.sh" "the password window is kdialog when it is installed"
 has 'Uploading the release image' "$ROOT/scripts/iso-release.sh" "the image upload has a progress window"
+has 'ModernOS ${TAG}' "$ROOT/scripts/iso-release.sh" "the progress window is titled with the image version"
+has 'modern-release-progress' "$ROOT/scripts/lib/iso-release.sh" "the progress window floats instead of tiling"
 has '--protondrive-2fa' "$ROOT/scripts/iso-release.sh" "Proton can take a two-factor code"
 has 'kdialog --title "ModernOS" --inputbox' "$ROOT/scripts/lib/iso-release.sh" "Proton's code opens an input window"
 

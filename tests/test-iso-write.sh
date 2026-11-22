@@ -104,6 +104,32 @@ else
     err "--yes did not target /dev/sdb: $(cat "$LOG" 2>/dev/null || true)"
 fi
 
+if run "$ONE" --dry-run --iso 'https://example.invalid/modernos-v0.0.0-x86_64.iso' >/dev/null 2>"$TMP/url.err"; then
+    err "a bad link was accepted"
+elif grep -F 'could not download' "$TMP/url.err" >/dev/null; then
+    ok "a link is downloaded instead of the newest local image"
+else
+    err "a link was not downloaded: $(cat "$TMP/url.err")"
+fi
+
+CACHE="$TMP/cache/modern-v1.2.3/iso/out"
+mkdir -p "$CACHE"
+cp "$ISO" "$CACHE/modernos-v1.2.3-x86_64.iso"
+out="$(XDG_CACHE_HOME="$TMP/cache" run "$ONE" --dry-run)"
+if printf '%s\n' "$out" | grep -F 'modernos-v' >/dev/null \
+    && printf '%s\n' "$out" | grep -F '/dev/sdb' >/dev/null; then
+    ok "with no path, the newest image on this computer is used"
+else
+    err "newest image was not found: $out"
+fi
+
+if grep -Fq 'iso_newest_release' "$ROOT/scripts/iso-qemu.sh" \
+    && grep -Fq 'iso_newest_release' "$WRITE"; then
+    ok "qemu and write share the newest release image"
+else
+    err "iso-qemu.sh must use the same newest-image search as iso-write.sh"
+fi
+
 if grep -F 'oflag=dsync' "$WRITE" >/dev/null \
     && grep -F 'tr "\r" "\n"' "$WRITE" >/dev/null; then
     ok "progress is a new line as the stick receives each block"

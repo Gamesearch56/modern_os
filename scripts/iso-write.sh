@@ -6,6 +6,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib/iso-images.sh
+source "$ROOT/scripts/lib/iso-images.sh"
 MODEL_NEEDLE="DataTraveler"
 ISO=""
 DISK=""
@@ -16,10 +18,13 @@ die() { printf 'iso-write: ERROR: %s\n' "$*" >&2; exit 1; }
 
 usage() {
     cat <<'EOF'
-Usage: iso-write.sh [--iso FILE] [--disk /dev/sdX] [--yes] [--dry-run]
+Usage: iso-write.sh [--iso FILE|URL] [--disk /dev/sdX] [--yes] [--dry-run]
+           iso-write.sh [FILE|URL]
 
-Writes the newest modernos-v*-x86_64.iso in the repo (or --iso) onto a
-USB disk. With no --disk, the disk must be the only one whose model
+Writes an image onto a USB disk. --iso may be a local file or an
+https link. With no --iso, the newest modernos-v*-x86_64.iso already
+on this computer is used (the repo, iso/out, or the release build
+cache). With no --disk, the disk must be the only one whose model
 contains DataTraveler. --disk may name another whole USB disk. NVMe
 and partitions are refused. You must type the device name (sdb) before
 anything is erased, unless --yes is given. --dry-run only prints the
@@ -45,7 +50,18 @@ while [ $# -gt 0 ]; do
             usage
             exit 0
             ;;
-        *) die "unknown argument: $1" ;;
+        http://*|https://*|/*|./*|*.iso)
+            [ -z "$ISO" ] || die "only one image: $1"
+            ISO="$1"
+            ;;
+        *)
+            if [ -e "$1" ]; then
+                [ -z "$ISO" ] || die "only one image: $1"
+                ISO="$1"
+            else
+                die "unknown argument: $1"
+            fi
+            ;;
     esac
     shift
 done
@@ -71,9 +87,42 @@ human() {
 
 latest_iso() {
     local found
-    found="$(find "$ROOT" "$ROOT/iso/out" -maxdepth 1 -type f -name 'modernos-v*-x86_64.iso' 2>/dev/null | sort -V | tail -n 1 || true)"
-    [ -n "$found" ] || die "no modernos-v*-x86_64.iso in $ROOT"
+    found="$(iso_newest_release "$ROOT")" || die "no modernos image found. Pass --iso PATH or --iso https://…"
     printf '%s\n' "$found"
+}
+
+# A link is downloaded once into the cache. A later run reuses it when
+# it is already a real ISO.
+fetch_iso() {
+    local url="$1" name dest magic
+    case "$url" in
+        https://*|http://*) ;;
+        *) die "not a link: $url" ;;
+    esac
+    command -v curl >/dev/null 2>&1 || die "curl is required to download an image"
+    name="${url%%\?*}"
+    name="$(basename "$name")"
+    case "$name" in
+        *.iso) ;;
+        *) name="modernos-download.iso" ;;
+    esac
+    dest="${XDG_CACHE_HOME:-$HOME/.cache}/modern/iso-write/$name"
+    mkdir -p "${dest%/*}"
+    if [ -f "$dest" ]; then
+        magic="$(dd if="$dest" bs=1 skip=32769 count=5 2>/dev/null || true)"
+        if [ "$magic" = "CD001" ]; then
+            printf '%s\n' "$dest"
+            return 0
+        fi
+        rm -f "$dest"
+    fi
+    printf 'iso-write: downloading %s\n' "$url" >&2
+    curl -fL --retry 2 -o "$dest.partial" "$url" || {
+        rm -f "$dest.partial"
+        die "could not download $url"
+    }
+    mv -f "$dest.partial" "$dest"
+    printf '%s\n' "$dest"
 }
 
 iso_ok() {
@@ -155,6 +204,8 @@ as_root() {
 
 if [ -z "$ISO" ]; then
     ISO="$(latest_iso)"
+elif [[ "$ISO" == http://* || "$ISO" == https://* ]]; then
+    ISO="$(fetch_iso "$ISO")"
 fi
 iso_ok "$ISO"
 ISO="$(readlink -f "$ISO")"

@@ -232,7 +232,7 @@ release_upload_image() {
     gh release delete-asset "$TAG" "$ISO_ASSET" --yes >/dev/null 2>&1 || true
     url="https://uploads.github.com/repos/${NWO}/releases/${id}/assets?name=${ISO_ASSET}"
     log "uploading $(awk -v b="$size" 'BEGIN { printf "%.2f GiB", b / 1073741824 }')"
-    iso_progress_open "Uploading the release image"
+    iso_progress_open "Uploading the release image" "ModernOS ${TAG}"
     set +e
     curl --progress-bar -f -S -T "$STAGE/$ISO_ASSET" \
         -H "Authorization: Bearer ${token}" \
@@ -274,7 +274,7 @@ release_rclone_copy() {
     if [ -n "${2:-}" ]; then
         extra=(--protondrive-2fa "$2")
     fi
-    iso_progress_open "Saving the release image"
+    iso_progress_open "Saving the release image" "ModernOS ${TAG}"
     set +e
     rclone copy "${extra[@]}" "$STAGE" "$dest" --stats 1s --stats-one-line 2>&1 \
         | tr '\r' '\n' | while IFS= read -r line; do
