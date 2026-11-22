@@ -131,9 +131,11 @@ connect_psk() {
     km=$(key_mgmt "$sec") || return 6
     printf 'status:password\n'
     forget_ssid "$ssid"
-    # psk-flags 2: the secret is not stored and not owned by a secret agent.
-    # Without that, adding the profile opens a password window this screen
-    # cannot show, and a correct password never returns.
+    # Flags 2 only while the profile is created, so adding it does not open
+    # a password window this screen cannot show. Flags 0 before activation:
+    # the system stores the secret from the passwd-file. Leaving 2 in place
+    # drops the password, so the network never reconnects and the next try
+    # is reported as a wrong password.
     out=$(LC_ALL=C nmcli_to 12 connection add type wifi con-name "$ssid" ssid "$ssid" \
         wifi-sec.key-mgmt "$km" 802-11-wireless-security.psk-flags 2 2>&1) || {
         printf '%s\n' "$out" >&2
@@ -144,7 +146,8 @@ connect_psk() {
     # One try. The default keeps asking, so a wrong password never returns
     # and the installer cannot accept a different one.
     nmcli_to 8 connection modify uuid "$uuid" connection.auth-retries 1 >/dev/null || true
-    nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 2 >/dev/null || true
+    nmcli_to 8 connection modify uuid "$uuid" connection.autoconnect yes >/dev/null || true
+    nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 0 >/dev/null || true
     PW_FILE=$(umask 077 && mktemp "$SECRETS_DIR/wifi-join.XXXXXX")
     psk_line "$psk" >"$PW_FILE"
     printf 'status:address\n'
