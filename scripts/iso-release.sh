@@ -95,13 +95,76 @@ image_problems() {
     [ -z "$found" ] || printf 'credential: %s\n' "$found"
 }
 
+# No terminal: sudo cannot read a password. -A asks a graphical helper
+# instead, which is the password window.
+release_sudo() {
+    local askpass="" own=0 tool
+    if [ -n "${SUDO_ASKPASS:-}" ] && [ -x "$SUDO_ASKPASS" ]; then
+        askpass="$SUDO_ASKPASS"
+    elif [ ! -t 0 ]; then
+        if command -v kdialog >/dev/null 2>&1; then
+            tool=kdialog
+        elif command -v zenity >/dev/null 2>&1; then
+            tool=zenity
+        else
+            die "sudo needs a password and there is no terminal or password window"
+        fi
+        askpass="$(mktemp)"
+        own=1
+        if [ "$tool" = kdialog ]; then
+            cat >"$askpass" <<'EOF'
+#!/bin/sh
+# sudo may start this with a cleaned environment. Find the session
+# so the password window can open.
+uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$uid}"
+if [ -z "${WAYLAND_DISPLAY:-}" ] && [ -z "${DISPLAY:-}" ]; then
+    for sock in "$XDG_RUNTIME_DIR"/wayland-*; do
+        [ -S "$sock" ] || continue
+        WAYLAND_DISPLAY="${sock##*/}"
+        export WAYLAND_DISPLAY
+        break
+    done
+fi
+exec kdialog --title "ModernOS" --password "${1:-Password:}"
+EOF
+        else
+            cat >"$askpass" <<'EOF'
+#!/bin/sh
+uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$uid}"
+if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
+    for sock in "$XDG_RUNTIME_DIR"/wayland-*; do
+        [ -S "$sock" ] || continue
+        WAYLAND_DISPLAY="${sock##*/}"
+        export WAYLAND_DISPLAY
+        break
+    done
+fi
+exec zenity --password --title="ModernOS" --text="${1:-Password:}"
+EOF
+        fi
+        chmod 700 "$askpass"
+    fi
+    if [ -n "$askpass" ]; then
+        log "building the image (a window asks for your password once)"
+        set +e
+        SUDO_ASKPASS="$askpass" sudo -A "$@"
+        local rc=$?
+        set -e
+        [ "$own" -eq 1 ] && rm -f "$askpass"
+        return "$rc"
+    fi
+    log "building the image (sudo asks for your password once)"
+    sudo "$@"
+}
+
 build_args=(--mkarchiso --tag "$TAG" --out "$OUT")
 [ "$WITH_KEY" -eq 1 ] || build_args+=(--public)
 if [ -z "$ISO" ]; then
     ISO="$OUT/modernos-$TAG-x86_64.iso"
     if [ "$REBUILD" -eq 1 ] || [ ! -f "$ISO" ] || [ -n "$(image_problems "$ISO")" ]; then
-        log "building the image (sudo asks for your password once)"
-        sudo ${SUDO_ASKPASS:+-A} "$ROOT/scripts/iso-build.sh" "${build_args[@]}"
+        release_sudo "$ROOT/scripts/iso-build.sh" "${build_args[@]}"
     else
         log "reusing $ISO (--rebuild to build it again)"
     fi
