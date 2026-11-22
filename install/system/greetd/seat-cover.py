@@ -197,6 +197,31 @@ def cover_rank(connector_type: int) -> int:
     return 0 if connector_type in INTERNAL_TYPES else 1
 
 
+def _crtc_after_gap(plan: str, hold_fd: bool) -> int:
+    """CRTC_ID the next client sees if i915 lastclose runs on the last fd.
+
+    The previous frame is 112. A splash frame we program is 7. Closing
+    the last fd before the next client opens clears either of them.
+    """
+    crtc = 112 if plan == "keep" else 7
+    if not hold_fd:
+        return 0
+    return crtc
+
+
+def handoff_plan(attached: int, scanning: bool) -> str:
+    """What to do once the previous client has released the display.
+
+    "keep" leaves the current frame scanning and holds the device open.
+    Closing it here runs i915 lastclose, the panel link drops, and the
+    panel shows its firmware picture. "paint" is the same hold after a
+    splash frame, used when the connector is already idle.
+    """
+    if attached and scanning:
+        return "keep"
+    return "paint"
+
+
 def splash_pixel() -> bytes:
     return SPLASH.to_bytes(4, "little")
 
@@ -386,6 +411,27 @@ def _hold_fd(fd: int) -> None:
         os._exit(0)
 
 
+def _acquire_master(fd: int) -> bool:
+    # The client that is exiting still owns the device for a moment.
+    # EBUSY is that wait. Anything else means we must not block login.
+    deadline = time.monotonic() + 2
+    while True:
+        try:
+            _ioctl(fd, SET_MASTER)
+            return True
+        except OSError as exc:
+            if exc.errno != errno.EBUSY or time.monotonic() >= deadline:
+                return False
+            time.sleep(0.05)
+
+
+def _drop_master(fd: int) -> None:
+    try:
+        _ioctl(fd, DROP_MASTER)
+    except OSError:
+        pass
+
+
 def _ordered_crtcs(crtcs: list[int], possible: int) -> list[int]:
     if possible == 0:
         return crtcs
@@ -399,9 +445,7 @@ def hold() -> int:
         return 0
     opened: list[tuple[str, int]] = []
     # rank, path, fd, crtcs, connector id, mode, possible crtcs
-    candidates: list[tuple[int, str, int, list[int], int, ModeInfo, int]] = []
-    saw_connected = False
-    attached_ids: list[int] = []
+    outputs: list[tuple[int, str, int, list[int], int, ModeInfo, int]] = []
     try:
         for path in _cards():
             fd: int | None = None
@@ -413,12 +457,10 @@ def hold() -> int:
                     found = _first_mode(fd, conn)
                     if found is None:
                         continue
-                    connector_id, kind, mode, scanning, possible, attached = found
-                    saw_connected = True
-                    if not output_needs_cover(kind, scanning):
-                        attached_ids.append(attached)
+                    connector_id, kind, mode, _scanning, possible, _attached = found
+                    if kind in SKIP_TYPES:
                         continue
-                    candidates.append((cover_rank(kind), path, fd, crtcs, connector_id, mode, possible))
+                    outputs.append((cover_rank(kind), path, fd, crtcs, connector_id, mode, possible))
             except Exception as exc:
                 print(f"seat-cover: skipped {path} ({exc})", file=sys.stderr)
                 if fd is not None and all(other != fd for _, other in opened):
@@ -426,35 +468,46 @@ def hold() -> int:
                         os.close(fd)
                     except OSError:
                         pass
-        if not candidates:
-            if saw_connected:
-                print(
-                    f"seat-cover: display already scanning CRTC_ID={attached_ids}",
-                    file=sys.stderr,
-                )
-            else:
-                print("seat-cover: no display to cover", file=sys.stderr)
+        if not outputs:
+            print("seat-cover: no display to cover", file=sys.stderr)
             return 0
-        _rank, path, fd, crtcs, connector_id, mode, possible = min(candidates, key=lambda item: item[0])
+        _rank, path, fd, crtcs, connector_id, mode, possible = min(outputs, key=lambda item: item[0])
         for _other_path, other in opened:
             if other != fd:
                 os.close(other)
         opened = [(path, fd)]
-        painted = False
-        last_exc: OSError | None = None
-        for crtc in _ordered_crtcs(crtcs, possible):
-            try:
-                paint(fd, crtc, connector_id, mode)
-                painted = True
-                break
-            except OSError as exc:
-                last_exc = exc
+        # Become master only long enough to see the connector after the
+        # previous client has let go, then drop it. Hyprland must be able
+        # to open the device. The fd stays open so i915 does not run
+        # lastclose and blank the panel in between.
+        if not _acquire_master(fd):
+            print("seat-cover: previous display owner still active", file=sys.stderr)
+            _hold_fd(fd)
+            opened.clear()
+            return 0
+        found = _first_mode(fd, connector_id)
+        plan = "paint"
+        attached = 0
+        if found is not None:
+            _cid, _kind, mode, scanning, possible, attached = found
+            plan = handoff_plan(attached, scanning)
+        if plan == "paint" and found is not None:
+            painted = False
+            last_exc: OSError | None = None
+            for crtc in _ordered_crtcs(crtcs, possible):
                 try:
-                    _ioctl(fd, DROP_MASTER)
-                except OSError:
-                    pass
-        if not painted:
-            raise last_exc or RuntimeError("no crtc accepted the frame")
+                    paint(fd, crtc, connector_id, mode)
+                    painted = True
+                    break
+                except OSError as exc:
+                    last_exc = exc
+                    _drop_master(fd)
+            if not painted:
+                print(f"seat-cover: paint failed ({last_exc})", file=sys.stderr)
+                _drop_master(fd)
+        else:
+            _drop_master(fd)
+            print(f"seat-cover: keeping the current frame CRTC_ID={attached}", file=sys.stderr)
         _hold_fd(fd)
         opened.clear()
         return 0
@@ -488,6 +541,17 @@ def self_test() -> int:
     if splash_pixel() != bytes((0x14, 0x12, 0x18, 0x00)):
         print("seat-cover: splash pixel is not #141218", file=sys.stderr)
         return 1
+    # Issue 24: CRTC 112 was still named, the cover closed the device,
+    # and the next client observed no CRTC. Holding the fd keeps the id.
+    if handoff_plan(112, True) != "keep" or handoff_plan(0, False) != "paint":
+        print("seat-cover: handoff plan is wrong", file=sys.stderr)
+        return 1
+    if _crtc_after_gap("keep", hold_fd=False) != 0 or _crtc_after_gap("keep", hold_fd=True) == 0:
+        print("seat-cover: lastclose model is wrong", file=sys.stderr)
+        return 1
+    if _crtc_after_gap("paint", hold_fd=True) == 0:
+        print("seat-cover: a painted frame must survive until the next client", file=sys.stderr)
+        return 1
     probed = False
     for path in _cards():
         try:
@@ -519,10 +583,45 @@ def self_test() -> int:
     return 0
 
 
+def dry_run() -> int:
+    """Read the connectors only. Does not take the display or change a mode."""
+    any_card = False
+    for path in _cards():
+        try:
+            fd = os.open(path, os.O_RDWR | os.O_CLOEXEC)
+        except OSError as exc:
+            print(f"seat-cover: {path} not opened ({exc})", file=sys.stderr)
+            continue
+        any_card = True
+        try:
+            _crtcs, conns = _resources(fd)
+            for conn in conns:
+                found = _first_mode(fd, conn)
+                if found is None:
+                    continue
+                connector_id, kind, mode, scanning, _possible, attached = found
+                if kind in SKIP_TYPES:
+                    continue
+                plan = handoff_plan(attached, scanning)
+                print(
+                    f"seat-cover: {path} connector {connector_id} type {kind} "
+                    f"{mode.hdisplay}x{mode.vdisplay} CRTC_ID={attached} "
+                    f"scanning={scanning} plan={plan}",
+                    file=sys.stderr,
+                )
+        finally:
+            os.close(fd)
+    if not any_card:
+        print("seat-cover: no card to read", file=sys.stderr)
+    return 0
+
+
 def main(argv: list[str]) -> int:
     cmd = argv[1] if len(argv) > 1 else "hold"
     if cmd == "--self-test":
         return self_test()
+    if cmd == "--dry-run":
+        return dry_run()
     if cmd == "hold":
         return hold()
     print(f"seat-cover: unknown command {cmd}", file=sys.stderr)
