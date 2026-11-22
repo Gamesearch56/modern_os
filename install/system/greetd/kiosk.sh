@@ -63,4 +63,9 @@ if [ "$(wc -c <"$log" 2>/dev/null || printf 0)" -gt 2097152 ]; then
     mv -f "$log" "$log.1"
 fi
 printf '\n== login screen %s\n' "$(date -Is)" >>"$log"
+if [ -r /usr/lib/modern/display-handoff.sh ]; then
+    # shellcheck disable=SC1091
+    source /usr/lib/modern/display-handoff.sh
+    display_handoff_prepare
+fi
 exec /usr/bin/env GREETD_SOCK="$sock" /usr/bin/start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua >>"$log" 2>&1

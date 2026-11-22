@@ -132,9 +132,18 @@ plymouth_apply() {
     [ -f "$theme/modern.script" ] || return 1
     install -d -m 0755 "$dest" "$root/etc/plymouth" "$root/usr/share/plymouth/themes" \
         "$root/etc/systemd/system/plymouth-quit.service.d" \
+        "$root/etc/systemd/system/greetd.service.d" \
         "$root/usr/lib/modern" "$root/etc/polkit-1/rules.d"
     install -m 0644 "$repo/install/system/plymouth/retain.conf" \
         "$root/etc/systemd/system/plymouth-quit.service.d/retain.conf"
+    install -m 0644 "$repo/install/system/plymouth/greetd.conf" \
+        "$root/etc/systemd/system/greetd.service.d/plymouth.conf"
+    install -m 0644 "$repo/install/system/plymouth/modern-plymouth-handoff.service" \
+        "$root/etc/systemd/system/modern-plymouth-handoff.service"
+    install -m 0755 "$repo/install/system/plymouth/handoff.sh" \
+        "$root/usr/lib/modern/plymouth-handoff.sh"
+    install -m 0755 "$repo/install/system/plymouth/display-handoff.sh" \
+        "$root/usr/lib/modern/display-handoff.sh"
     install -m 0644 "$repo/install/system/plymouth/modern-splash.service" \
         "$root/etc/systemd/system/modern-splash.service"
     install -m 0755 "$repo/scripts/splash-hold.sh" \

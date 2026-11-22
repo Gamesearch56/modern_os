@@ -121,12 +121,15 @@ fi
 
 if [ -f "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" ] \
     && grep -Fq 'quit --retain-splash' "$TMP/etc/systemd/system/plymouth-quit.service.d/retain.conf" \
+    && grep -Fq 'Conflicts=plymouth-quit.service' "$TMP/etc/systemd/system/greetd.service.d/plymouth.conf" \
+    && grep -Fq 'hyprland.lock' "$TMP/usr/lib/modern/plymouth-handoff.sh" \
+    && grep -Fq 'AQ_NO_ATOMIC=1' "$TMP/usr/lib/modern/display-handoff.sh" \
     && [ -x "$TMP/usr/lib/modern/splash-hold.sh" ] \
     && ! grep -Fq 'modern-splash.service' "$ROOT/scripts/splash-hold.sh" \
     && [ -f "$TMP/etc/systemd/system/modern-splash.service" ]; then
-    ok "quit keeps the splash frame, and a handoff does not start a second splash"
+    ok "the login screen takes the display before Plymouth quits"
 else
-    err "plymouth apply must install the retain drop-in and the splash handoff"
+    err "plymouth apply must keep the splash until the login screen owns the display"
 fi
 
 if [ -f "$TMP/usr/share/plymouth/themes/modern/modern.script" ] \
