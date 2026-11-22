@@ -1,5 +1,5 @@
 // Repo and XDG paths. Services use these instead of concatenating
-// `$HOME/modern_dotfile/scripts` in every file.
+// `$HOME/modern_os/scripts` in every file.
 pragma Singleton
 
 import Quickshell
@@ -32,7 +32,7 @@ Singleton {
             return root._envRepo;
         if (root._fileRepo.length > 0)
             return root._fileRepo;
-        return root.home + "/modern_dotfile";
+        return root.home + "/modern_os";
     }
     readonly property string scripts: root.repo + "/scripts"
     readonly property string modern: root.scripts + "/modern"

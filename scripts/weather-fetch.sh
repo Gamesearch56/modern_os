@@ -79,6 +79,6 @@ trap 'rm -f "$tmp"' EXIT
 lat4="$(LC_NUMERIC=C printf '%.4f' "$lat")"
 lon4="$(LC_NUMERIC=C printf '%.4f' "$lon")"
 curl -fsS --max-time 12 --retry 2 --retry-delay 2 -o "$tmp" \
-    -A "ModernOS-weather/1.0 https://github.com/Gamesearch56/modern_dotfile" \
+    -A "ModernOS-weather/1.0 https://github.com/Gamesearch56/modern_os" \
     "https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${lat4}&lon=${lon4}"
 python3 "$(dirname "$0")/weather-metno.py" "$tmp" "$lat4" "$lon4" "$UNITS"

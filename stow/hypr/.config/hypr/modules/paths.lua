@@ -1,7 +1,7 @@
 -- Repo and script locations. Hyprland Lua must not concatenate
--- `$HOME/modern_dotfile/scripts` in every module.
+-- `$HOME/modern_os/scripts` in every module.
 -- Live path: $XDG_CONFIG_HOME/modern/repo (one line, written by install.sh).
--- Fallback: $HOME/modern_dotfile (ISO Calamares clone location).
+-- Fallback: $HOME/modern_os (ISO Calamares clone location).
 
 local home = os.getenv("HOME") or ""
 
@@ -45,12 +45,12 @@ end
 
 local function resolve_repo()
     -- Prefer a path that actually exists. A stale MODERN_REPO from
-    -- hl.env at session start (or a missing ~/modern_dotfile) must not
+    -- hl.env at session start (or a missing ~/modern_os) must not
     -- win over ~/.config/modern/repo.
     local candidates = {
         trim(os.getenv("MODERN_REPO")),
         read_first_line(config_home() .. "/modern/repo") or "",
-        home .. "/modern_dotfile",
+        home .. "/modern_os",
     }
     for i = 1, #candidates do
         if has_scripts(candidates[i]) then
@@ -62,7 +62,7 @@ local function resolve_repo()
             return candidates[i]
         end
     end
-    return home .. "/modern_dotfile"
+    return home .. "/modern_os"
 end
 
 local repo = resolve_repo()

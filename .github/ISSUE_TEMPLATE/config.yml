@@ -1,10 +1,10 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security report
-    url: https://github.com/Gamesearch56/modern_dotfile/security/advisories/new
+    url: https://github.com/Gamesearch56/modern_os/security/advisories/new
     about: Private vulnerability reporting (do not file a public issue)
   - name: Questions and ideas
-    url: https://github.com/Gamesearch56/modern_dotfile/discussions
+    url: https://github.com/Gamesearch56/modern_os/discussions
     about: Ask how something works or share an idea before it becomes a request
   - name: Paid feature request or support
     url: https://ko-fi.com/gamesearch56

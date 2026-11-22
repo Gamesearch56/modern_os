@@ -21,8 +21,8 @@ If `MODERN_PROTECT_HOME` is set to this home, pass `--allow-live-home`.
 Unset, the guard is idle and `--target` defaults to `$HOME`.
 
 ```bash
-git clone --branch vX.Y.Z https://github.com/Gamesearch56/modern_dotfile.git
-cd modern_dotfile
+git clone --branch vX.Y.Z https://github.com/Gamesearch56/modern_os.git
+cd modern_os
 ./install/install.sh --profile full --dry-run
 ./install/install.sh --profile full
 ```
@@ -89,7 +89,7 @@ If a role in `install/manifests/default-apps.json` has a `stow` name
 shipped defaults are ModernOS apps and have none.
 
 ```bash
-cd /path/to/modern_dotfile/stow
+cd /path/to/modern_os/stow
 stow -D -t "$HOME" hypr shell theme kitty gtk qt bash git modern systemd xdg fontconfig fastfetch pipewire
 ```
 

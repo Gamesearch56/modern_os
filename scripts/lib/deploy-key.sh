@@ -6,8 +6,8 @@
 # decides whether it is safe to use and builds the ssh command.
 # The repo address is fixed: a key file cannot point git anywhere else.
 
-GITHUB_HTTPS_URL="https://github.com/Gamesearch56/modern_dotfile.git"
-GITHUB_SSH_URL="git@github.com:Gamesearch56/modern_dotfile.git"
+GITHUB_HTTPS_URL="https://github.com/Gamesearch56/modern_os.git"
+GITHUB_SSH_URL="git@github.com:Gamesearch56/modern_os.git"
 
 _deploy_key_lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Health check for a modern_dotfile checkout and the account that would
+# Health check for a modern_os checkout and the account that would
 # run it. Never mutates the machine. Exit 0 if only warnings; exit 1 if
 # critical repo files are missing (the tree cannot install from here).
 set -euo pipefail

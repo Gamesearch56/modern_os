@@ -37,4 +37,4 @@ The renderer supports ATX headings (`#` to `####`), paragraphs, nested bullet an
 
 `tests/test-manual.sh` checks the launcher, the desktop entry, the keybind, and the renderer. It also checks that every relative link in the docs points at a file that exists.
 
-On an installed system the documents are read from the ModernOS checkout (`Paths.repo`, normally `~/modern_dotfile`), so an update of the desktop updates the manual too. The ISO installs a sparse checkout; `docs` must stay in its cone (`scripts/iso-build.sh`), and `scripts/desktop-sync.sh` adds it to checkouts from ISOs up to v0.7.5 that left it out.
+On an installed system the documents are read from the ModernOS checkout (`Paths.repo`, normally `~/modern_os`), so an update of the desktop updates the manual too. The ISO installs a sparse checkout; `docs` must stay in its cone (`scripts/iso-build.sh`), and `scripts/desktop-sync.sh` adds it to checkouts from ISOs up to v0.7.5 that left it out.

@@ -25,7 +25,7 @@ Before you start, check these points:
 ### 1. Download ModernOS
 
 Download the newest `.iso` file from the
-[Releases page](https://github.com/Gamesearch56/modern_dotfile/releases).
+[Releases page](https://github.com/Gamesearch56/modern_os/releases).
 
 ### 2. Write it to a USB stick
 

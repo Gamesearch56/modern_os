@@ -46,7 +46,7 @@ for g in "${requested[@]}"; do
     fi
 done
 
-useradd -m -G "$existing_groups" -s /bin/bash -c "modern_dotfile dev account" "$USERNAME"
+useradd -m -G "$existing_groups" -s /bin/bash -c "modern_os dev account" "$USERNAME"
 passwd "$USERNAME"
 
 echo
@@ -57,8 +57,8 @@ echo "another TTY to start a session."
 echo
 echo "Next steps (as $USERNAME — clone a copy if the other home is 700):"
 echo "  sudo -iu $USERNAME"
-echo "  git clone <this-repo-url> ~/modern_dotfile"
-echo "  cd ~/modern_dotfile && ./install/install.sh --profile m0 --dry-run"
+echo "  git clone <this-repo-url> ~/modern_os"
+echo "  cd ~/modern_os && ./install/install.sh --profile m0 --dry-run"
 echo "  ./install/install.sh --profile m0"
 echo
 echo "Start a test session without leaving another desktop:"

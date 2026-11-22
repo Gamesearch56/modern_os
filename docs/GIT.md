@@ -378,7 +378,7 @@ The asset name has no version, so one link always serves the newest
 image, for the website or anywhere else:
 
 ```
-https://github.com/Gamesearch56/modern_dotfile/releases/latest/download/modernos-x86_64.iso
+https://github.com/Gamesearch56/modern_os/releases/latest/download/modernos-x86_64.iso
 ```
 
 `--with-deploy-key` builds without `--public` and lets exactly
@@ -428,7 +428,7 @@ fingerprint they cannot tell from an attacker's.
 
 ## What a release installs
 
-The ISO clones `https://github.com/Gamesearch56/modern_dotfile.git` at
+The ISO clones `https://github.com/Gamesearch56/modern_os.git` at
 the baked-in tag. Settings → Update lists **ModernOS** first. It is
 pending only when a **newer** `vX.Y.Z` exists on GitHub. It never tracks
 `dev` or the tip of `main`.
@@ -470,7 +470,7 @@ Settings → Deploy keys, and leave **Allow write access** off.
 file exists, root-owned and mode 600. Calamares then moves it to
 `~/.config/modern/deploy_key` for the new user and deletes the system
 copy. Settings → Update uses it for
-`git@github.com:Gamesearch56/modern_dotfile.git` only: no other SSH key,
+`git@github.com:Gamesearch56/modern_os.git` only: no other SSH key,
 no `~/.ssh/config`, and GitHub's host key checked against
 `scripts/lib/github-known-hosts`. With no key file, updates stay on
 HTTPS.
@@ -624,7 +624,7 @@ Classic API calls, if you prefer them over the Rulesets UI. Run these
 yourself after the repo is public, not before the optional squash:
 
 ```bash
-gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/main/protection \
+gh api --method PUT repos/Gamesearch56/modern_os/branches/main/protection \
   --input - <<'EOF'
 {
   "required_status_checks": {
@@ -648,7 +648,7 @@ EOF
 ```
 
 ```bash
-gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/dev/protection \
+gh api --method PUT repos/Gamesearch56/modern_os/branches/dev/protection \
   --input - <<'EOF'
 {
   "required_status_checks": {
@@ -670,6 +670,6 @@ EOF
 ```
 
 ```bash
-gh api --method PUT repos/Gamesearch56/modern_dotfile/actions/permissions/fork-pr-contributor-approval \
+gh api --method PUT repos/Gamesearch56/modern_os/actions/permissions/fork-pr-contributor-approval \
   -f approval_policy=first_time_contributors_new_to_github
 ```

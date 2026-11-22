@@ -76,7 +76,7 @@ Re-run `./install/install.sh --profile full` as the target user (idempotent).
 If a re-run logged hundreds of "backing up" lines under `.config/hypr`
 or `quickshell`, an older walker treated Stow folded directories as
 conflicts and may have moved files out of the git clone. Restore with
-`git checkout -- stow/` in your clone (`~/modern_dotfile` on an ISO
+`git checkout -- stow/` in your clone (`~/modern_os` on an ISO
 install), then re-run install.
 Current stow.sh skips paths that already resolve inside the package and
 uses `--no-folding`.
@@ -88,7 +88,7 @@ That flag never existed. Phase 5 now runs
 set, and does not abort the install if matugen fails.
 
 ```bash
-cd ~/modern_dotfile
+cd ~/modern_os
 git pull
 ./install/install.sh --profile full
 # or only the missing step:

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # From a live Arch ISO: print (default) or optionally run the steps that
-# turn a blank disk into a bootable modern_dotfile install. Default is
+# turn a blank disk into a bootable modern_os install. Default is
 # dry-run — nothing is partitioned unless BOTH --yes and --disk /dev/X
 # are given. Reads install/hardware.conf (or hardware.conf.example).
 #
@@ -113,7 +113,7 @@ Plan (hostname=${HOSTNAME} user=${USERNAME} tz=${TIMEZONE} locale=${LOCALE} disk
   4. mount, pacstrap -K /mnt base linux linux-firmware btrfs-progs
   5. genfstab -U /mnt >> /mnt/etc/fstab
   6. arch-chroot /mnt  (locale, timezone, user ${USERNAME}, bootloader)
-  7. chain: /mnt/home/${USERNAME}/modern_dotfile/install/install.sh --profile m0
+  7. chain: /mnt/home/${USERNAME}/modern_os/install/install.sh --profile m0
 
 Default is dry-run. Wipe only with: $0 --yes --disk /dev/X
 EOF
