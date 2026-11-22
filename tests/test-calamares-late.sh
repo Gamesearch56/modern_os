@@ -165,6 +165,34 @@ if grep -F 'zram-generator.conf' "$PROVISION" >/dev/null \
 else
     err "provision-iso.sh must install zram + zram sysctl + rotational bfq, and must not sysctl the installer"
 fi
+
+UFW_DIR="$ROOT/install/system/ufw"
+if grep -F 'install/system/ufw/user.rules" /etc/ufw/user.rules' "$PROVISION" >/dev/null \
+    && grep -F 'install/system/ufw/user6.rules" /etc/ufw/user6.rules' "$PROVISION" >/dev/null \
+    && grep -F "s/^ENABLED=.*/ENABLED=yes/" "$PROVISION" >/dev/null \
+    && grep -F 'enable_unit ufw.service optional' "$PROVISION" >/dev/null \
+    && grep -F '99-modern-hardening.conf' "$PROVISION" >/dev/null \
+    && grep -Fx 'kernel.kptr_restrict = 1' "$ROOT/install/system/sysctl.d/99-modern-hardening.conf" >/dev/null \
+    && ! grep -E '^### tuple ### allow .* (0\.0\.0\.0/0|::/0) in' "$UFW_DIR/user.rules" "$UFW_DIR/user6.rules" >/dev/null \
+    && [ "$(grep -c '^### tuple ### allow' "$UFW_DIR/user.rules")" -eq 12 ] \
+    && [ "$(grep -c '^### tuple ### allow' "$UFW_DIR/user6.rules")" -eq 8 ]; then
+    ok "ISO provision turns the firewall on with LAN-only KDE Connect and Steam rules"
+else
+    err "provision-iso.sh must enable ufw with install/system/ufw/user*.rules (private sources only) and the hardening sysctl"
+fi
+# A user namespace grants CAP_NET_ADMIN over its own empty ruleset, so
+# the shipped files load exactly as ufw-init would load them at boot.
+if command -v unshare >/dev/null 2>&1 && command -v iptables-restore >/dev/null 2>&1 \
+    && unshare -rn true 2>/dev/null; then
+    if unshare -rn iptables-restore --test "$UFW_DIR/user.rules" \
+        && unshare -rn ip6tables-restore --test "$UFW_DIR/user6.rules"; then
+        ok "shipped ufw rule files load in iptables-restore"
+    else
+        err "install/system/ufw/user*.rules do not load in iptables-restore"
+    fi
+else
+    ok "iptables-restore load check skipped (no unprivileged netns here)"
+fi
 if grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$GREETD_LIB" >/dev/null \
     || grep -E '^[[:space:]]*systemctl enable [^ ]+ [^ ]+' "$PROVISION" >/dev/null; then
     err "greetd enable_unit must enable one unit per call — one missing unit aborts the rest"

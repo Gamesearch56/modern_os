@@ -1,0 +1,51 @@
+*filter
+:ufw6-user-input - [0:0]
+:ufw6-user-output - [0:0]
+:ufw6-user-forward - [0:0]
+:ufw6-before-logging-input - [0:0]
+:ufw6-before-logging-output - [0:0]
+:ufw6-before-logging-forward - [0:0]
+:ufw6-user-logging-input - [0:0]
+:ufw6-user-logging-output - [0:0]
+:ufw6-user-logging-forward - [0:0]
+:ufw6-after-logging-input - [0:0]
+:ufw6-after-logging-output - [0:0]
+:ufw6-after-logging-forward - [0:0]
+:ufw6-logging-deny - [0:0]
+:ufw6-logging-allow - [0:0]
+### RULES ###
+
+### tuple ### allow tcp 1714:1764 ::/0 any fe80::/10 in comment=6b6465636f6e6e656374
+-A ufw6-user-input -p tcp -m multiport --dports 1714:1764 -s fe80::/10 -j ACCEPT
+
+### tuple ### allow udp 1714:1764 ::/0 any fe80::/10 in comment=6b6465636f6e6e656374
+-A ufw6-user-input -p udp -m multiport --dports 1714:1764 -s fe80::/10 -j ACCEPT
+
+### tuple ### allow tcp 27036,27037,27040 ::/0 any fe80::/10 in comment=737465616d
+-A ufw6-user-input -p tcp -m multiport --dports 27036,27037,27040 -s fe80::/10 -j ACCEPT
+
+### tuple ### allow udp 27031,27036 ::/0 any fe80::/10 in comment=737465616d
+-A ufw6-user-input -p udp -m multiport --dports 27031,27036 -s fe80::/10 -j ACCEPT
+
+### tuple ### allow tcp 1714:1764 ::/0 any fc00::/7 in comment=6b6465636f6e6e656374
+-A ufw6-user-input -p tcp -m multiport --dports 1714:1764 -s fc00::/7 -j ACCEPT
+
+### tuple ### allow udp 1714:1764 ::/0 any fc00::/7 in comment=6b6465636f6e6e656374
+-A ufw6-user-input -p udp -m multiport --dports 1714:1764 -s fc00::/7 -j ACCEPT
+
+### tuple ### allow tcp 27036,27037,27040 ::/0 any fc00::/7 in comment=737465616d
+-A ufw6-user-input -p tcp -m multiport --dports 27036,27037,27040 -s fc00::/7 -j ACCEPT
+
+### tuple ### allow udp 27031,27036 ::/0 any fc00::/7 in comment=737465616d
+-A ufw6-user-input -p udp -m multiport --dports 27031,27036 -s fc00::/7 -j ACCEPT
+
+### END RULES ###
+
+### LOGGING ###
+-A ufw6-after-logging-input -j LOG --log-prefix "[UFW BLOCK] " -m limit --limit 3/min --limit-burst 10
+-A ufw6-after-logging-forward -j LOG --log-prefix "[UFW BLOCK] " -m limit --limit 3/min --limit-burst 10
+-I ufw6-logging-deny -m conntrack --ctstate INVALID -j RETURN -m limit --limit 3/min --limit-burst 10
+-A ufw6-logging-deny -j LOG --log-prefix "[UFW BLOCK] " -m limit --limit 3/min --limit-burst 10
+-A ufw6-logging-allow -j LOG --log-prefix "[UFW ALLOW] " -m limit --limit 3/min --limit-burst 10
+### END LOGGING ###
+COMMIT

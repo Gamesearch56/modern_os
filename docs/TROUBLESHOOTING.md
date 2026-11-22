@@ -307,8 +307,11 @@ the switch.
 
 ## KDE Connect phone does not see the PC
 
-Ports 1714–1764 TCP/UDP. Staged rules:
-`install/system/ufw/kdeconnect.rules`. Not applied by `install.sh`.
+Ports 1714–1764 TCP/UDP. A fresh install allows them from private
+ranges only (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`,
+`fe80::/10`, `fc00::/7`). Settings → Firewall lists the rules. If the
+phone is on a guest Wi-Fi or a VPN with another range, add its
+network there.
 
 ## Games stutter / Proton fails to start
 

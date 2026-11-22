@@ -214,6 +214,21 @@ install -D -m 0644 "$PROVISION_ROOT/install/system/udev/60-modern-rotational-bfq
     /etc/udev/rules.d/60-modern-rotational-bfq.rules
 log "zram swap and hard-disk scheduler staged for next boot"
 
+# The ufw package ships ENABLED=no, which left fresh installs with no
+# firewall. ufw.service reads ENABLED at boot, so the installer's own
+# netfilter is never touched. The rule files were written by ufw itself
+# and open only KDE Connect and Steam Remote Play to private ranges.
+install -D -m 0644 "$PROVISION_ROOT/install/system/ufw/user.rules" /etc/ufw/user.rules
+install -D -m 0644 "$PROVISION_ROOT/install/system/ufw/user6.rules" /etc/ufw/user6.rules
+if [ -f /etc/ufw/ufw.conf ]; then
+    sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
+    chmod 0644 /etc/ufw/ufw.conf
+    enable_unit ufw.service optional
+fi
+install -D -m 0644 "$PROVISION_ROOT/install/system/sysctl.d/99-modern-hardening.conf" \
+    /etc/sysctl.d/99-modern-hardening.conf
+log "firewall on with LAN-only KDE Connect and Steam ports; kernel pointers hidden"
+
 log "boot splash — theme and kernel line, initramfs rebuild follows"
 plymouth_apply /
 
