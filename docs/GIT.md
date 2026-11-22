@@ -173,9 +173,11 @@ PR. Write it for someone who does not know the code:
 
 1. **Summary**: what changes for the user and why, one or two
    sentences. Then `Fixes #57` (or `Refs #57` when it does not fully
-   fix it). With `dev` as the default branch (Repository settings),
-   GitHub closes the issue when the PR is merged and links the fix
-   from it. A hotfix PR goes into `main`, so close its issue by hand.
+   fix it). `main` is the default branch, so merging into `dev` does
+   not close the issue yet: the squash commit carries `Fixes #57` in
+   its body, and GitHub closes the issue when the release PR brings
+   that commit into `main`. An issue stays open until its fix ships.
+   A hotfix PR targets `main` and closes its issue on merge.
 2. **Type of change**: tick one or more boxes.
 3. **Changelog**: the title is the main release-notes line. If the PR
    has more user-visible changes, add one line per change, starting at
@@ -345,8 +347,7 @@ For a bug in the current release that cannot wait for the next one:
 1. `scripts/issue-branch.sh 63 --hotfix` cuts `hotfix/63-<slug>` from
    the newest tag on `main`.
 2. Fix it, then open the PR **into `main`** with a normal title
-   (`fix(lock): …`) and `Fixes #63`. Squash-merge when CI is green and
-   close the issue (it only closes itself on the default branch, `dev`).
+   (`fix(lock): …`) and `Fixes #63`. Squash-merge when CI is green.
 3. Tag the PATCH version on `main` exactly as in Release step 4
    (`v0.8.1`), push it, and attach the ISO if the bug affects
    installation.
@@ -396,6 +397,21 @@ public.
 `MODERNOS_ISO_ARCHIVE=proton:ModernOS/releases`. Each release lands in
 its own `vX.Y.Z/` folder and is compared with `rclone check`. rclone
 keeps its credentials in its own config, never in this repo.
+
+With two-factor login, the code is needed once, not per release: the
+first successful login stores a session (`client_uid`,
+`client_access_token`, `client_refresh_token`, `client_salted_key_pass`)
+in rclone's config, and later runs refresh it without a code. Log in
+right after reading a fresh code, before it rotates:
+
+```bash
+rclone about proton: --protondrive-2fa=123456
+```
+
+Only if Proton ends that session (a password change, a revoked session
+in the Proton account settings) does an upload fail with a login error;
+run the same command again with a new code. Proton rate-limits repeated
+logins (HTTP 429): wait a few minutes rather than retrying in a loop.
 
 **Signing key, once.** A key used only for ModernOS releases, not your
 personal one. Its user ID is public, so give it a project address (or
@@ -543,9 +559,12 @@ never with `provision-iso.sh` / Calamares on your everyday machine.
 **Pull requests** (Settings → General):
 
 - Allow **squash merging**, default message **Pull request title and
-  description**; allow **merge commits**; turn **rebase merging** off.
+  description** (so `Fixes #N` and the Changelog lines reach the
+  commit); allow **merge commits**; turn **rebase merging** off.
 - **Automatically delete head branches**: on.
-- Default branch: `dev`, so forks and new PRs target it.
+- Default branch: `main`. It is what visitors see and what releases
+  are cut from. GitHub preselects it as the base of a new PR, so switch
+  the base to `dev` for topic branches; the template's checklist asks.
 
 **Labels**, once:
 
