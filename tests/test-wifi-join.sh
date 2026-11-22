@@ -37,11 +37,14 @@ if [[ $* == *'connection delete uuid new-uuid'* ]]; then
     rm -f "${state}.left"
     exit 0
 fi
-if [[ $* == '-t -e no -f SECURITY,SSID device wifi list' || $* == '-t -e no -f SECURITY,SSID device wifi list --rescan no' ]]; then
+if [[ $* == *'device wifi list'* ]]; then
+    if [[ ${HANG_LIST:-0} -eq 1 ]]; then
+        sleep 30
+    fi
     printf 'WPA2 WPA3:Cafe Net\nWPA2 802.1X:Office\n'
     exit 0
 fi
-if [[ $* == 'connection add '* ]]; then
+if [[ $* == *'connection add '* ]]; then
     printf 'left\n' >"${state}.left"
     printf "Connection '%s' (00000000-0000-4000-8000-00000000abcd) successfully added.\n" Cafe
     exit 0
@@ -304,7 +307,9 @@ if grep -Fq 'connection.auth-retries 1' "$JOIN" \
     && grep -Fq 'stop_wifi_attempt' "$JOIN" \
     && grep -Fq -- '--rescan no' "$NM" \
     && grep -Fq 'scanLimit->start( 25000 )' "$NM" \
-    && grep -Fq 'joinLimit->start( 20000 )' "$NM" \
+    && grep -Fq 'joinLimit->start( 40000 )' "$NM" \
+    && grep -Fq 'WIFI_JOIN_SECURITY' "$NM" \
+    && grep -Fq 'WIFI_JOIN_SECURITY' "$JOIN" \
     && grep -Fq 'm_nm->scanning() || m_nm->connecting()' "$PAGE"; then
     ok "a wrong password and a scan both stop so another try can start"
 else
@@ -319,6 +324,20 @@ if grep -Fq '/usr/lib/modern/wifi-join.sh' "$NM" && grep -Fq 'closeWriteChannel'
     ok "shell and installer hand the password over stdin"
 else
     err "a Wi-Fi password still reaches nmcli argv"
+fi
+
+if timeout 5 env LOG="$LOG" WIFI_JOIN_STATE="$STATE" HANG_LIST=1 WIFI_JOIN_SECURITY='WPA2' \
+    MODERN_NMCLI="$TMP/nmcli" MODERN_WIFI_SECRETS_DIR="$TMP" \
+    "$JOIN" connect 'Cafe Net' - <<<"right-password" >/dev/null; then
+    if ! grep -F 'device wifi list' "$LOG" >/dev/null \
+        && grep -F 'wifi-sec.key-mgmt wpa-psk' "$LOG" >/dev/null \
+        && ! grep -F 'right-password' "$LOG" >/dev/null; then
+        ok "a known network is joined without waiting for another scan"
+    else
+        err "known security still listed or leaked the password: $(tr '\n' ' ' <"$LOG")"
+    fi
+else
+    err "joining with a known security waited on the scan"
 fi
 
 if [[ $FAIL -ne 0 ]]; then

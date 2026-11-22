@@ -81,7 +81,8 @@ ap_security() {
         return 0
     # --rescan no: a plain list waits for a scan that may already be running,
     # and Connect stays on "Connecting…" until that scan ends.
-    done < <("$NMCLI" -t -e no -f SECURITY,SSID device wifi list --rescan no 2>/dev/null || true)
+    # -w: even --rescan no can sit on a scan NetworkManager already started.
+    done < <("$NMCLI" -w 4 -t -e no -f SECURITY,SSID device wifi list --rescan no 2>/dev/null || true)
     return 1
 }
 
@@ -110,11 +111,18 @@ trap '[[ -z $PW_FILE ]] || rm -f "$PW_FILE"' EXIT
 
 connect_psk() {
     local ssid=$1 psk=$2 sec km out uuid rc=0
+    # The installer already showed this network, so it knows the security.
+    # Listing again waits on a scan and the screen stays on "Looking for…".
     printf 'status:lookup\n'
-    sec=$(ap_security "$ssid") || return 4
+    if [[ -n ${WIFI_JOIN_SECURITY:-} && ${WIFI_JOIN_SECURITY} != -- ]]; then
+        sec=$WIFI_JOIN_SECURITY
+    else
+        sec=$(ap_security "$ssid") || return 4
+    fi
     km=$(key_mgmt "$sec") || return 6
+    printf 'status:password\n'
     forget_ssid "$ssid"
-    out=$(LC_ALL=C "$NMCLI" connection add type wifi con-name "$ssid" ssid "$ssid" \
+    out=$(LC_ALL=C "$NMCLI" -w 8 connection add type wifi con-name "$ssid" ssid "$ssid" \
         wifi-sec.key-mgmt "$km" 2>&1) || { printf '%s\n' "$out" >&2; return 1; }
     uuid=$(grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' <<<"$out" | tail -n1 || true)
     [[ -n $uuid ]] || { forget_ssid "$ssid"; return 1; }
@@ -124,7 +132,6 @@ connect_psk() {
     # Ask for the secret from the file, not from a password window the
     # installer cannot show. That window is why a correct password never returns.
     "$NMCLI" connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 0 >/dev/null || true
-    printf 'status:password\n'
     PW_FILE=$(umask 077 && mktemp "$SECRETS_DIR/wifi-join.XXXXXX")
     psk_line "$psk" >"$PW_FILE"
     printf 'status:address\n'

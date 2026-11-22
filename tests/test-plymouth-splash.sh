@@ -100,6 +100,9 @@ if printf '%s\n' "$opts" | grep -q 'root=UUID=abc' \
     && printf '%s\n' "$opts" | grep -q 'nvidia-drm.modeset=1' \
     && printf '%s\n' "$opts" | grep -q 'splash' \
     && printf '%s\n' "$opts" | grep -q 'loglevel=3' \
+    && printf '%s\n' "$opts" | grep -q 'systemd.show_status=0' \
+    && printf '%s\n' "$opts" | grep -q 'rd.systemd.show_status=0' \
+    && ! printf '%s\n' "$opts" | grep -q 'systemd.show_status=auto' \
     && printf '%s\n' "$opts" | grep -q 'i915.fastboot=1' \
     && [ "$(printf '%s\n' "$opts" | grep -o 'splash' | wc -l)" -eq 1 ] \
     && [ "$(printf '%s\n' "$opts" | grep -o 'i915.fastboot=1' | wc -l)" -eq 1 ]; then
@@ -111,6 +114,7 @@ fi
 cmd="$(cat "$TMP/etc/kernel/cmdline")"
 if printf '%s\n' "$cmd" | grep -q 'root=UUID=abc' \
     && printf '%s\n' "$cmd" | grep -q 'splash' \
+    && printf '%s\n' "$cmd" | grep -q 'systemd.show_status=0' \
     && printf '%s\n' "$cmd" | grep -q 'i915.fastboot=1' \
     && [ "$(printf '%s\n' "$cmd" | grep -o 'loglevel=3' | wc -l)" -eq 1 ] \
     && [ "$(printf '%s\n' "$cmd" | grep -o 'i915.fastboot=1' | wc -l)" -eq 1 ]; then

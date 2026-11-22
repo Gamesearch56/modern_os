@@ -69,20 +69,30 @@ iso_ask_line() {
     return 1
 }
 
+# A tiled progress dialog fills the screen. Ask Hyprland to float the
+# versioned title before the window maps.
+iso_progress_float() {
+    command -v hyprctl >/dev/null 2>&1 || return 0
+    hyprctl eval 'hl.window_rule({ name = "modern-release-progress", match = { title = "^ModernOS v[0-9]" }, float = true, center = true, size = { 560, 180 } })' \
+        >/dev/null 2>&1 || true
+}
+
 # kdialog's ref is "service path". zenity reads percentages on stdin.
+# $1 is the line under the bar, $2 is the window title (ModernOS vX.Y.Z).
 iso_progress_open() {
-    local text="$1"
+    local text="$1" title="${2:-ModernOS}"
     ISO_PROGRESS_REF=""
     ISO_PROGRESS_FIFO=""
     iso_ui_ready || return 0
+    iso_progress_float
     if command -v kdialog >/dev/null 2>&1 && command -v qdbus6 >/dev/null 2>&1; then
-        ISO_PROGRESS_REF="$(kdialog --title "ModernOS" --progressbar "$text" 100)"
+        ISO_PROGRESS_REF="$(kdialog --title "$title" --progressbar "$text" 100)"
         return 0
     fi
     ISO_PROGRESS_FIFO="$(mktemp -u)"
     mkfifo "$ISO_PROGRESS_FIFO"
-    zenity --progress --title="ModernOS" --text="$text" --auto-close --percentage=0 \
-        <"$ISO_PROGRESS_FIFO" &
+    zenity --progress --title="$title" --text="$text" --width=560 --height=120 \
+        --auto-close --percentage=0 <"$ISO_PROGRESS_FIFO" &
     ISO_PROGRESS_REF="zenity:$!"
     exec 3>"$ISO_PROGRESS_FIFO"
 }

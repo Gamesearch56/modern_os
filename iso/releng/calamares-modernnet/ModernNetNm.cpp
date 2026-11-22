@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QProcess>
+#include <QProcessEnvironment>
 #include <QSet>
 #include <QTimer>
 
@@ -409,7 +410,7 @@ ModernNetNm::disconnectWifi()
 }
 
 void
-ModernNetNm::connectSsid( const QString& ssid, const QString& password )
+ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QString& security )
 {
     if ( m_join || ssid.isEmpty() )
     {
@@ -458,13 +459,19 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password )
             m_join->kill();
         }
     } );
-    joinLimit->start( 20000 );
+    joinLimit->start( 40000 );
     // The password goes on stdin; argv is readable by every process in
     // /proc. wifi-join.sh also drops a profile a failed password created.
     QStringList args { QStringLiteral( "connect" ), ssid };
     if ( !password.isEmpty() )
     {
         args << QStringLiteral( "-" );
+    }
+    if ( !security.isEmpty() )
+    {
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert( QStringLiteral( "WIFI_JOIN_SECURITY" ), security );
+        m_join->setProcessEnvironment( env );
     }
     m_join->start( kWifiJoin, args );
     if ( !password.isEmpty() )
