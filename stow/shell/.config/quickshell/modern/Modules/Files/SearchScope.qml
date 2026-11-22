@@ -49,7 +49,7 @@ MIconButton {
         return rows;
     }
 
-    function _on(row): bool {
+    function _on(row: var): bool {
         if (!row || FilesSearch.scope !== row.scope)
             return false;
         if (row.scope !== "folder")

@@ -24,7 +24,7 @@ ColumnLayout {
     spacing: Tokens.spacing.md
     Layout.fillWidth: true
 
-    function _disk(bytes): string {
+    function _disk(bytes: var): string {
         const n = Number(bytes || 0);
         if (!(n > 0))
             return "";

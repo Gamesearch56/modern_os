@@ -94,6 +94,8 @@ source "$REPO_ROOT/install/lib/ui.sh"
 source "$REPO_ROOT/install/lib/pkg.sh"
 # shellcheck source=lib/default-apps.sh
 source "$REPO_ROOT/install/lib/default-apps.sh"
+# shellcheck source=lib/gpu-stray.sh
+source "$REPO_ROOT/install/lib/gpu-stray.sh"
 # shellcheck source=lib/stow.sh
 source "$REPO_ROOT/install/lib/stow.sh"
 # shellcheck source=lib/preflight.sh
@@ -216,6 +218,7 @@ fi
 if [ "$EXTRA" = "proton" ]; then
     mapfile -t -O "${#aur_pkgs[@]}" aur_pkgs < <(parse_manifest "$MANIFEST_DIR/90-accounts.aur.txt")
 fi
+ensure_jq || true
 if ! default_app_packages >/dev/null; then
     die "default-apps.json could not be read"
 fi
@@ -223,6 +226,7 @@ mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(default_app_packages)
 
 install_native "${native_pkgs[@]}"
 install_aur "${aur_pkgs[@]}"
+prune_stray_nvidia
 
 if [ "$PROFILE" = "full" ]; then
     flatpak_ids=()

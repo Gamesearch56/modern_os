@@ -53,7 +53,7 @@ Singleton {
             Qt.callLater(() => { if (root._hover === 0 && root.foreign) root.end(); });
     }
 
-    function _listed(drag): var {
+    function _listed(drag: var): var {
         const out = [];
         const urls = (drag && drag.urls) || [];
         let lines = [];

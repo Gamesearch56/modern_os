@@ -149,7 +149,7 @@ QtObject {
         return root.raise.raiseDesktop(desktopId);
     }
 
-    function raiseApp(desktopId: string, appName: string, onMiss): bool {
+    function raiseApp(desktopId: string, appName: string, onMiss: var): bool {
         return root.raise.raiseApp(desktopId, appName, onMiss);
     }
 

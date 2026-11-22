@@ -89,7 +89,7 @@ Item {
             root.loading = false;
     }
 
-    function _shotUrl(value): string {
+    function _shotUrl(value: var): string {
         let u = String(value || "");
         if (u.indexOf("https://screenshots.debian.net/") !== 0)
             return "";

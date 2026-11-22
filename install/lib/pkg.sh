@@ -29,7 +29,7 @@ collect_packages() {
 # would fail. MODERN_ROOT_PLAN names a file the update's single pkexec
 # (scripts/update-apply.sh --root-plan) executes as root afterwards:
 # `pkg NAME` per missing package, `greetd` for the login screen,
-# `splash` for the boot loader.
+# `splash` for the boot loader, `nvidia-stray` for gpu-stray.sh.
 defer_native() {
     local missing=() p
     mapfile -t missing < <(pacman -T "$@" 2>/dev/null || true)
@@ -58,6 +58,23 @@ bootstrap_yay() {
     run makepkg --dir "$build_dir/yay-bin" -si --noconfirm
     rm -rf "$build_dir"
     log_ok "yay installed"
+}
+
+# default-apps.json is read with jq before the base layer that ships jq
+# is installed, and the live ISO root that becomes the target had no jq.
+# Installed directly, not deferred: the manifest is read right after.
+ensure_jq() {
+    command -v jq >/dev/null 2>&1 && return 0
+    if [ "${DRY_RUN:-0}" -eq 1 ]; then
+        log_warn "jq missing — a real run installs it before reading default-apps.json"
+        return 1
+    fi
+    log_info "Installing jq to read the package manifests"
+    if [ -n "${MODERN_PACMAN_NOSANDBOX:-}" ]; then
+        run sudo pacman --disable-sandbox -S --needed --noconfirm jq
+    else
+        run sudo pacman -S --needed --noconfirm jq
+    fi
 }
 
 install_native() {

@@ -95,6 +95,20 @@ else
     err "install.sh and pkg-manifest-names.sh must expand default-apps.json"
 fi
 
+# A fresh ISO target has no jq until the base layer installs it, and the
+# manifest is read before that layer.
+if grep -Fxq 'jq' "$ROOT/iso/releng/packages.x86_64" \
+    && grep -Fq 'ensure_jq()' "$ROOT/install/lib/pkg.sh" \
+    && awk '
+        /^ensure_jq/ && !seen { ensured = NR }
+        /default_app_packages/ && !seen { seen = NR }
+        END { exit !(ensured && seen && ensured < seen) }
+    ' "$ROOT/install/install.sh"; then
+    ok "the live root ships jq and install.sh ensures it before reading the manifest"
+else
+    err "packages.x86_64 must list jq and install.sh must call ensure_jq before default_app_packages"
+fi
+
 image_desktop="$(default_app_desktop imageViewer)"
 image_stem="${image_desktop%.desktop}"
 mapfile -t image_exec < <(default_app_exec_for_desktop "$image_stem")

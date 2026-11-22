@@ -54,7 +54,7 @@ Singleton {
         root.screen = screens.length ? screens[0] : null;
     }
 
-    function _body(event): string {
+    function _body(event: var): string {
         if (!event)
             return "";
         const marker = "modernoverview";

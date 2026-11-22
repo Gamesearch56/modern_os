@@ -62,7 +62,7 @@ MPopup {
         }
     }
 
-    function _place(row, on: bool) {
+    function _place(row: var, on: bool) {
         Files.setDetail(row.name, on);
         if (!on && Files.place === row.place)
             Files.home();

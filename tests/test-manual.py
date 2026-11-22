@@ -46,6 +46,17 @@ check("&lt;script&gt;" in html("<script>alert(1)</script>"), "raw HTML is shown,
 check("<code" in html("`a*b*c`") and "<i>" not in html("`a*b*c`"), "inline code is literal")
 check(not re.search(r"#[0-9a-fA-F]{6}", table + code) and "{{rule}}" in table, "colors are placeholders, never literal")
 check(plain("Isolation: stays out of `install.sh`") == "Isolation: stays out of install.sh", "plain titles")
+readme = to_html(open(os.path.join(ROOT, "README.md"), encoding="utf-8").read(), ROOT)
+check(not re.search(r"&lt;/?(div|img|table|tr|td)\b", readme) and "![" not in readme,
+      "the README's HTML and badges are rendered, not shown as text")
+check(f'src="file://{ROOT}/docs/screenshots/desktop.jpg"' in readme and 'width="{{measure:100}}"' in readme,
+      "a local picture resolves against the document and sizes to the column")
+check(re.search(r'<p align="center"[^>]*>&nbsp;<img src="[^"]*logo\.png"', readme) is not None,
+      "a centred picture stays inline so Qt does not float it left")
+check('<a href="https://archlinux.org/"' in readme and "img.shields.io" not in readme,
+      "a badge becomes a plain link with its alt text")
+check(to_html('<img src="https://example.org/x.png" alt="web">') == "web", "a web picture shows its alt text")
+check("onclick" not in to_html('<div onclick="x()" align="center">hi</div>'), "only known attributes pass")
 
 docs = json.loads(subprocess.run(
     [sys.executable, os.path.join(ROOT, "scripts", "manual-index.py"), ROOT],

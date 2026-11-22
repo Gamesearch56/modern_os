@@ -3,8 +3,8 @@
 # (see install/lib/pkg.sh defer_native). Source; needs pkg-name.sh.
 #
 # Sets ROOT_PLAN_PKGS (array), ROOT_PLAN_GREETD (0/1),
-# ROOT_PLAN_SPLASH (0/1), ROOT_PLAN_MIRRORS (0/1), and ROOT_PLAN_PORTAL
-# (0/1). The plan sits in
+# ROOT_PLAN_SPLASH (0/1), ROOT_PLAN_MIRRORS (0/1), ROOT_PLAN_PORTAL (0/1)
+# and ROOT_PLAN_NVIDIA_STRAY (0/1). The plan sits in
 # the user's state dir and is read by root, so anything that is not a
 # plain package name or one of those steps is dropped rather than
 # handed to pacman.
@@ -65,6 +65,7 @@ read_root_plan() {
     ROOT_PLAN_SPLASH=0
     ROOT_PLAN_MIRRORS=0
     ROOT_PLAN_PORTAL=0
+    ROOT_PLAN_NVIDIA_STRAY=0
     [ -s "$file" ] || return 0
     while read -r kind name _; do
         case "$kind" in
@@ -79,6 +80,7 @@ read_root_plan() {
             splash) ROOT_PLAN_SPLASH=1 ;;
             mirrors) ROOT_PLAN_MIRRORS=1 ;;
             portal) ROOT_PLAN_PORTAL=1 ;;
+            nvidia-stray) ROOT_PLAN_NVIDIA_STRAY=1 ;;
         esac
     done <"$file"
 }

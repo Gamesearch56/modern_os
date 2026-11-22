@@ -1,6 +1,7 @@
 #include "ModernNetViewStep.h"
 
 #include "ModernNetPage.h"
+#include "ModernPointer.h"
 
 CALAMARES_PLUGIN_FACTORY_DEFINITION( ModernNetViewStepFactory,
                                      registerPlugin< ModernNetViewStep >(); )
@@ -9,6 +10,7 @@ ModernNetViewStep::ModernNetViewStep( QObject* parent )
     : Calamares::ViewStep( parent )
     , m_widget( new ModernNetPage )
 {
+    ModernPointer::install();
     connect( m_widget, &ModernNetPage::onlineChanged, this, [ this ]( bool on ) {
         Q_UNUSED( on )
         emit nextStatusChanged( isNextEnabled() );

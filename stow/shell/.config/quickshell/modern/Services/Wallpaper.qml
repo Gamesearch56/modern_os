@@ -234,7 +234,9 @@ Singleton {
         const k = String(kind || "");
         if (k === "import") { FilesChoose.ask(XdgDirs.pictures, "image", "wallpaper"); return; }
         if (k === "provider") {
-            providerProc.command = [Paths.script("wallpaper-provider.sh"), root.providerUrl(), root.libraryDir];
+            const labels = { back: "wallpaper.providerBack", forward: "wallpaper.providerForward", close: "bar.close" };
+            providerProc.command = [Paths.script("wallpaper-provider.sh"), root.providerUrl(), root.libraryDir,
+                ExternalTheme.json(), ExternalTheme.strings(labels)];
             providerProc.running = true;
         }
     }

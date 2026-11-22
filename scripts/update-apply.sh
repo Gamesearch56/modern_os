@@ -314,5 +314,17 @@ if [ "${ROOT_PLAN_MIRRORS:-0}" -eq 1 ]; then
     source "$REPO_ROOT/install/lib/mirrors.sh"
     mirrors_apply || printf 'update-apply: WARN mirror refresh was not enabled\n' >&2
 fi
+
+# The plan only asks; root checks the hardware again and picks the names,
+# so the plan file cannot name what gets removed.
+if [ "${ROOT_PLAN_NVIDIA_STRAY:-0}" -eq 1 ]; then
+    # shellcheck source=../install/lib/gpu-stray.sh
+    source "$REPO_ROOT/install/lib/gpu-stray.sh"
+    mapfile -t stray < <(stray_nvidia_packages)
+    if [ ${#stray[@]} -gt 0 ]; then
+        "$PACMAN" -Rn --noconfirm "${stray[@]}" \
+            || printf 'update-apply: WARN kept %s: another package still needs it\n' "${stray[*]}" >&2
+    fi
+fi
 STEP=""
 progress finish

@@ -28,7 +28,7 @@ The Manual opens with **SUPER + Y** (`keybinds.manual`) or from the launcher. It
 
 ## Writing documentation
 
-The renderer supports ATX headings (`#` to `####`), paragraphs, nested bullet and numbered lists, fenced code blocks, GitHub tables, block quotes, horizontal rules, links, `inline code`, **bold** and *italic*. It does not support raw HTML, images, footnotes, or diagrams: a `mermaid` block shows as plain code.
+The renderer supports ATX headings (`#` to `####`), paragraphs, nested bullet and numbered lists, fenced code blocks, GitHub tables, block quotes, horizontal rules, links, `inline code`, **bold** and *italic*. For the README it also takes the HTML GitHub shows (`div`, `p`, `br`, `table`, `tr`, `td`, `th`, `img`, `center`, with only `align`, `width`, `src` and `alt`; `scripts/lib/manual_html.py`), local pictures, and badges: `[![alt](badge)](url)` becomes a link named by its alt text, and a web picture shows its alt text, since the window never loads from the network. Any other tag stays visible as text. Footnotes and diagrams are not supported: a `mermaid` block shows as plain code.
 
 - Start every file with one `# Title` line. The list and the window title use it.
 - A new user-manual chapter is a new `docs/manual/NN-name.md`. The number sets its place in the list; add it to a section in `MANUAL_SECTIONS` and keep the numbers counting up through the sections. Link to it from `docs/manual/01-welcome.md`. A new reference document goes into `REFERENCE_SECTIONS`; `tests/test-manual.py` fails while a document has no section.
@@ -37,4 +37,4 @@ The renderer supports ATX headings (`#` to `####`), paragraphs, nested bullet an
 
 `tests/test-manual.sh` checks the launcher, the desktop entry, the keybind, and the renderer. It also checks that every relative link in the docs points at a file that exists.
 
-On an installed system the documents are read from the ModernOS checkout (`Paths.repo`, normally `~/modern_dotfile`), so an update of the desktop updates the manual too.
+On an installed system the documents are read from the ModernOS checkout (`Paths.repo`, normally `~/modern_dotfile`), so an update of the desktop updates the manual too. The ISO installs a sparse checkout; `docs` must stay in its cone (`scripts/iso-build.sh`), and `scripts/desktop-sync.sh` adds it to checkouts from ISOs up to v0.7.5 that left it out.

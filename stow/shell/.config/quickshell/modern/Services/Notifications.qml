@@ -226,7 +226,7 @@ Singleton {
         root._push(root._local(I18n.t(summaryKey), message, "", expire));
     }
 
-    function toast(summary: string, body: string, imagePath) {
+    function toast(summary: string, body: string, imagePath: var) {
         if (root.effectiveDnd)
             return;
         root._push(root._local(summary, body || "", imagePath || "", root._timeoutMs()));
@@ -293,7 +293,7 @@ Singleton {
         return p.charAt(0) === "/" ? ("file://" + p) : "";
     }
 
-    function displayImage(item): string {
+    function displayImage(item: var): string {
         const live = root._live(item) || item;
         if (!live)
             return "";
@@ -313,7 +313,7 @@ Singleton {
         return named;
     }
 
-    function displayIcon(item): string {
+    function displayIcon(item: var): string {
         const live = root._live(item) || item;
         if (!live)
             return "dialog-information-symbolic";
@@ -331,7 +331,7 @@ Singleton {
 
     // Durable app icon (theme file or on-disk SVG). Notification pixmaps
     // under /tmp are valid for the banner and often gone in the list.
-    function displayIconSource(item): string {
+    function displayIconSource(item: var): string {
         const live = root._live(item) || item;
         if (!live)
             return "";
@@ -343,7 +343,7 @@ Singleton {
             || root._iconFile(root._str(live.desktopEntry).replace(/\.desktop$/i, ""));
     }
 
-    function _hintUrls(v): var {
+    function _hintUrls(v: var): var {
         if (v && typeof v === "object" && v.length !== undefined) {
             const out = [];
             for (let i = 0; i < v.length; i++)
@@ -366,7 +366,7 @@ Singleton {
         return t;
     }
 
-    function attachmentPath(item): string {
+    function attachmentPath(item: var): string {
         const live = root._live(item) || item;
         if (!live)
             return "";
@@ -389,7 +389,7 @@ Singleton {
         return root._openablePath(root._str(h["image-path"] || h["image_path"]));
     }
 
-    function invokeDefault(item): bool {
+    function invokeDefault(item: var): bool {
         const live = root._live(item) || item;
         const raw = live ? live.raw : null;
         const acts = raw ? raw.actions : null;
@@ -452,7 +452,7 @@ Singleton {
     // Chromium puts the site on the first line, or in a class-shaped
     // desktop entry (vivaldi-mail.proton.me__-Default). The browser's
     // own desktop id is the http handler, and raising that opens http://-.
-    function _originHost(live): string {
+    function _originHost(live: var): string {
         const body = root._str(live.body);
         const linked = body.match(/https?:\/\/[^\/"'<>\s]+/i);
         if (linked)
@@ -479,7 +479,7 @@ Singleton {
         return "";
     }
 
-    function _appDesktopId(live): string {
+    function _appDesktopId(live: var): string {
         const byHost = root._desktopForHost(root._originHost(live));
         if (byHost.length)
             return byHost;
@@ -495,7 +495,7 @@ Singleton {
         return "";
     }
 
-    function activate(item): bool {
+    function activate(item: var): bool {
         const live = root._live(item) || item;
         if (!live)
             return false;

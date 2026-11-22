@@ -243,6 +243,27 @@ fi
 BUILD="$ROOT/scripts/iso-build.sh"
 QSS="$ROOT/scripts/lib/iso-calamares-qss.py"
 AUR_REPO="$ROOT/scripts/lib/iso-aur-repo.sh"
+NET="$ROOT/iso/releng/calamares-modernnet"
+
+# Every enabled installer button gets an MD3 hover and press layer, and
+# the hand cursor (a stylesheet cannot set one, so the module does).
+qss_out="$(mktemp)"
+if printf '{"color":{}}' >"$qss_out.json" \
+    && python3 "$QSS" "$qss_out.json" "$qss_out" \
+    && grep -Fq 'QPushButton:enabled:hover {' "$qss_out" \
+    && grep -Fq 'QPushButton:enabled:pressed {' "$qss_out" \
+    && grep -Fq '#view-button-next:enabled:hover' "$qss_out" \
+    && grep -Fq 'QToolButton:enabled:hover {' "$qss_out" \
+    && grep -Fq '#finishedRestart:enabled:hover {' "$qss_out" \
+    && ! grep -Eq 'QPushButton:hover|QToolButton:hover' "$qss_out" \
+    && grep -Fq 'ModernPointer.cpp' "$NET/CMakeLists.txt" \
+    && grep -Fq 'ModernPointer::install();' "$NET/ModernNetViewStep.cpp" \
+    && grep -Fq 'Qt::PointingHandCursor' "$NET/ModernPointer.cpp"; then
+    ok "installer buttons have hover and press layers and the hand cursor"
+else
+    err "iso-calamares-qss.py needs :enabled:hover/:pressed layers and modernnet must install ModernPointer"
+fi
+rm -f "$qss_out" "$qss_out.json"
 if grep -F 'iso-calamares-qss.py' "$BUILD" >/dev/null \
     && grep -F 'QLabel, QCheckBox, QRadioButton, QFrame, QGroupBox' "$QSS" >/dev/null \
     && grep -F 'background-color: transparent;' "$QSS" >/dev/null \
@@ -258,7 +279,7 @@ if grep -F 'iso-calamares-qss.py' "$BUILD" >/dev/null \
     && grep -F '#finishedRestart' "$QSS" >/dev/null \
     && grep -F '#finishedMainText' "$QSS" >/dev/null \
     && grep -F 'QAbstractScrollArea::viewport' "$QSS" >/dev/null \
-    && grep -F 'QToolButton:hover' "$QSS" >/dev/null \
+    && grep -F 'states("QToolButton"' "$QSS" >/dev/null \
     && ! grep -F 'QFrame, QListView, QTreeView' "$QSS" >/dev/null; then
     ok "Calamares QSS keeps labels unfilled, paints viewports, spaces form fields"
 else

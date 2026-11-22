@@ -7,41 +7,41 @@ QtObject {
 
     readonly property var reserved: ["root", "nobody", "greeter", "daemon", "bin", "sys", "sync", "shutdown", "halt", "mail", "ftp"]
 
-    function nameOk(s): bool {
+    function nameOk(s: var): bool {
         const t = String(s || "");
         if (!/^[a-z_][a-z0-9_-]{0,31}$/.test(t))
             return false;
         return root.reserved.indexOf(t) === -1;
     }
 
-    function gecosOk(s): bool {
+    function gecosOk(s: var): bool {
         const t = String(s || "");
         return t.length > 0 && t.length <= 64 && t.indexOf(":") === -1 && t.indexOf("\n") === -1;
     }
 
-    function passwordOk(s): bool {
+    function passwordOk(s: var): bool {
         const t = String(s || "");
         return t.length > 0 && t.length <= 256 && t.indexOf("\n") === -1;
     }
 
-    function isAdmin(person): bool {
+    function isAdmin(person: var): bool {
         const g = (person && person.groups) ? person.groups : [];
         return g.indexOf("wheel") !== -1 || g.indexOf("sudo") !== -1;
     }
 
-    function groupProtected(grp): bool {
+    function groupProtected(grp: var): bool {
         const gid = Number(grp && grp.gid);
         return !(gid >= 1000);
     }
 
-    function canRenameGroup(grp, people): bool {
+    function canRenameGroup(grp: var, people: var): bool {
         if (root.groupProtected(grp))
             return false;
         const n = grp && grp.name ? String(grp.name) : "";
         return !!n && !root.isUserPrivateGroup(n, people);
     }
 
-    function canDeleteGroup(grp, people): bool {
+    function canDeleteGroup(grp: var, people: var): bool {
         return root.canRenameGroup(grp, people);
     }
 
@@ -58,7 +58,7 @@ QtObject {
         return I18n.t("settings.users.failed");
     }
 
-    function findUser(people, login: string): var {
+    function findUser(people: var, login: string): var {
         const rows = people || [];
         for (let i = 0; i < rows.length; i++) {
             if (rows[i].login === login)
@@ -67,7 +67,7 @@ QtObject {
         return null;
     }
 
-    function findGroup(rows, name: string): var {
+    function findGroup(rows: var, name: string): var {
         const list = rows || [];
         for (let i = 0; i < list.length; i++) {
             if (list[i].name === name)
@@ -80,7 +80,7 @@ QtObject {
         return name === "wheel" || name === "sudo";
     }
 
-    function primaryName(person): string {
+    function primaryName(person: var): string {
         if (!person)
             return "";
         const g = person.groups || [];
@@ -89,11 +89,11 @@ QtObject {
         return person.login || "";
     }
 
-    function isUserPrivateGroup(name: string, people): bool {
+    function isUserPrivateGroup(name: string, people: var): bool {
         return !!root.findUser(people, name);
     }
 
-    function adminGroupName(groups): string {
+    function adminGroupName(groups: var): string {
         const rows = groups || [];
         for (let i = 0; i < rows.length; i++) {
             if (rows[i].name === "wheel")
@@ -104,7 +104,7 @@ QtObject {
         return "wheel";
     }
 
-    function canDemote(person, people, sessionLogin: string): bool {
+    function canDemote(person: var, people: var, sessionLogin: string): bool {
         if (!person || person.login === sessionLogin)
             return false;
         if (!root.isAdmin(person))
@@ -112,7 +112,7 @@ QtObject {
         return root.adminCount(people) > 1;
     }
 
-    function assignableGroups(people, groups, login: string): var {
+    function assignableGroups(people: var, groups: var, login: string): var {
         const person = root.findUser(people, login);
         const prim = root.primaryName(person) || login;
         const out = [];
@@ -126,7 +126,7 @@ QtObject {
         return out;
     }
 
-    function canToggleMember(groupName: string, login: string, people, sessionLogin: string): bool {
+    function canToggleMember(groupName: string, login: string, people: var, sessionLogin: string): bool {
         const g = String(groupName || "");
         const u = String(login || "");
         if (!g || !u)
@@ -141,7 +141,7 @@ QtObject {
         return true;
     }
 
-    function sanitizeGroups(login: string, selected, admin: bool, people, groups, sessionLogin: string): var {
+    function sanitizeGroups(login: string, selected: var, admin: bool, people: var, groups: var, sessionLogin: string): var {
         const person = root.findUser(people, login);
         const allow = root.assignableGroups(people, groups, login);
         const want = selected || [];
@@ -163,7 +163,7 @@ QtObject {
         return out;
     }
 
-    function sanitizeMembers(groupName: string, members, people): var {
+    function sanitizeMembers(groupName: string, members: var, people: var): var {
         const g = String(groupName || "");
         if (root.isUserPrivateGroup(g, people))
             return [g];
@@ -186,7 +186,7 @@ QtObject {
         return out;
     }
 
-    function adminCount(people): int {
+    function adminCount(people: var): int {
         const rows = people || [];
         let n = 0;
         for (let i = 0; i < rows.length; i++) {

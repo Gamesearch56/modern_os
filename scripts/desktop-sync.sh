@@ -205,6 +205,12 @@ cmd_apply() {
             || die "${latest} does not follow the installed version; the checkout has local commits"
         log "updated to ${latest}"
     fi
+    # ISOs up to v0.7.5 installed a sparse clone without docs/, so the
+    # Manual listed only README and CONTRIBUTING.
+    if [ "$(git_safe -C "$REPO" config --bool core.sparseCheckout 2>/dev/null || true)" = true ]; then
+        git_safe -C "$REPO" sparse-checkout add docs \
+            || log "could not add docs/ to the sparse checkout; the Manual stays incomplete"
+    fi
     mkdir -p "$(dirname "$INCOMPLETE")"
     printf '%s\n' "$latest" >"$INCOMPLETE"
     # Fixture releases may ship a fake install.sh to exercise the root plan.

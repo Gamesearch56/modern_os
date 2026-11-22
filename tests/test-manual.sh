@@ -74,4 +74,17 @@ for lang in en de; do
     done
 done
 
+# The installed checkout is sparse; without docs/ the Manual lists only
+# README and CONTRIBUTING.
+if grep -Eq 'sparse-checkout set --cone .*\bdocs\b' "$ROOT/scripts/iso-build.sh"; then
+    ok "the ISO bundle checks out docs/"
+else
+    err "the ISO bundle must check out docs/ for the Manual"
+fi
+if grep -Fq 'sparse-checkout add docs' "$ROOT/scripts/desktop-sync.sh"; then
+    ok "an update adds docs/ to an older sparse checkout"
+else
+    err "desktop-sync must add docs/ to a sparse checkout"
+fi
+
 exit "$FAIL"

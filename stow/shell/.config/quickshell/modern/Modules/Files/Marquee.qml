@@ -143,7 +143,7 @@ MouseArea {
         return hits;
     }
 
-    function _same(a, b): bool {
+    function _same(a: var, b: var): bool {
         if (a.length !== b.length)
             return false;
         for (let i = 0; i < a.length; i++) {

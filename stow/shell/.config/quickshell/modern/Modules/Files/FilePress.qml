@@ -98,7 +98,7 @@ MouseArea {
     }
 
     // Same physical press as history. Opening here would push that folder onto the route the button is walking.
-    function _side(mouse): bool {
+    function _side(mouse: var): bool {
         if (Date.now() - FilesHistory.sideAt < Motion.durationLong)
             return true;
         if (!mouse)

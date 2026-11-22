@@ -151,9 +151,9 @@ Singleton {
         root._start("comment", [argv]);
     }
 
-    function portOk(s): bool { return rules.portOk(s); }
-    function fromOk(s): bool { return rules.fromOk(s); }
-    function commentOk(s): bool { return rules.commentOk(s); }
+    function portOk(s: var): bool { return rules.portOk(s); }
+    function fromOk(s: var): bool { return rules.fromOk(s); }
+    function commentOk(s: var): bool { return rules.commentOk(s); }
 
     function _start(kind: string, cmds: var) {
         if (root.running || !Array.isArray(cmds) || cmds.length === 0)

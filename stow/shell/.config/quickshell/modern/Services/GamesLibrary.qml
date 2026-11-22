@@ -32,7 +32,7 @@ Singleton {
         Qt.callLater(() => { proc.running = true; });
     }
 
-    function _title(win): string {
+    function _title(win: var): string {
         if (!win)
             return "";
         const ipc = win.lastIpcObject || ({});

@@ -9,5 +9,6 @@ calamares_add_plugin(modernnet
         ModernNetPage.cpp
         ModernNetNm.cpp
         ModernNetRow.cpp
+        ModernPointer.cpp
     SHARED_LIB
 )

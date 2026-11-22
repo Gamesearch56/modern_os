@@ -30,6 +30,22 @@ ask_splash() {
         || note "splash service did not start before $1 (exit $?)"
 }
 
+# Clients still connected when Hyprland exits abort on the broken Wayland
+# socket and each leaves a coredump. autostart.lua starts hypridle,
+# awww-daemon and phylax again with the next session; D-Bus starts the
+# portals when something asks for one.
+stop_clients() {
+    local uid
+    uid="$(id -u)"
+    if command -v awww >/dev/null 2>&1; then
+        timeout 1 awww kill >/dev/null 2>&1 || true
+    fi
+    pkill -u "$uid" -x awww-daemon 2>/dev/null || true
+    pkill -u "$uid" -x hypridle 2>/dev/null || true
+    timeout 2 systemctl --user stop xdg-desktop-portal-hyprland.service \
+        xdg-desktop-portal-gtk.service phylax.service 2>/dev/null || true
+}
+
 case "${1:-show}" in
     show)
         splash_show
@@ -39,6 +55,7 @@ case "${1:-show}" in
         # laptop paints the terminal in the gap.
         note "logout requested by $(id -un)"
         ask_splash logout
+        stop_clients
         hyprctl dispatch 'hl.dsp.exit()' || {
             rc=$?
             note "logout failed: hyprctl exit $rc"

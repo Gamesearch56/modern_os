@@ -205,7 +205,7 @@ Item {
         color: Colors.color.onSurfaceVariant
     }
 
-    function _pathCopy(event): bool {
+    function _pathCopy(event: var): bool {
         if (!root.copyWhole || !event || event.key !== Qt.Key_C)
             return false;
         const mods = event.modifiers;

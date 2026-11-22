@@ -236,7 +236,7 @@ Item {
         return item.mapToItem(host, x, y);
     }
 
-    function menu(cell, x: real, y: real) {
+    function menu(cell: var, x: real, y: real) {
         const id = cell.modelData.path || cell.modelData.uri;
         const many = !cell._locked && FilesSelect.retain(id);
         const kind = many ? "selection" : root._kind(cell.modelData);

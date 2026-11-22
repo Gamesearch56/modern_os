@@ -37,6 +37,7 @@ wireless-regdb
 dnsmasq
 sudo
 git
+jq
 base-devel
 openssh
 less
