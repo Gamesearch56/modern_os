@@ -185,11 +185,13 @@ case "$MODE" in
         ;;
 esac
 
-echo $$ > "$PIDFILE"
 printf '%s\n' "$FILE"
 
 "${REC[@]}" >&2 &
 WF_PID=$!
+# The shell can inherit an ignored SIGINT from the session, so the
+# pid that stop signals is wf-recorder. It finalizes the file on SIGINT.
+echo "$WF_PID" > "$PIDFILE"
 wait "$WF_PID" || true
 WF_PID=""
 rm -f "$PIDFILE"

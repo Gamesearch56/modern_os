@@ -286,7 +286,7 @@ After a screenshot, a notification says Screenshot saved (Screenshot gespeichert
 - saved as a PNG in Pictures/Screenshots
 - copied to the clipboard, so you can paste it straight into a chat or document
 
-**Recording.** Choose Record (Aufnehmen) in the toolbar, then a region, window or the full screen, and recording starts. A Stop (Stopp) button appears at the top of the screen and a hint at the bottom. Both fade out after a few seconds so they don't end up in your video. Move the pointer to the top or bottom edge to bring them back.
+**Recording.** Choose Record (Aufnehmen) in the toolbar, then a region, window or the full screen, and recording starts. A Stop (Stopp) button appears at the top of the screen, and a hint sits just above the dock. Both fade out after a few seconds so they don't end up in your video. Move the pointer to the top edge to bring them back. The dock stays clickable.
 
 To stop a recording, do any of these:
 

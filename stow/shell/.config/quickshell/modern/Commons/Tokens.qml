@@ -132,7 +132,7 @@ Singleton {
         readonly property real storeWidth: root.spacing.xxl * 32 + root.spacing.lg
         readonly property real storeHeight: root.spacing.xxl * 22 + root.spacing.lg
         readonly property real reportWidth: root.spacing.xxl * 24 + root.spacing.lg
-        readonly property real reportHeight: root.spacing.xxl * 24 + root.spacing.lg + root.spacing.xs
+        readonly property real reportHeight: root.spacing.xxl * 28 + root.spacing.lg + root.spacing.xs
         readonly property real overlayWidth: root.spacing.xxl * 24
         readonly property real overlayHeight: root.spacing.xxl * 20
         // Same frame the video preview uses for autofit.

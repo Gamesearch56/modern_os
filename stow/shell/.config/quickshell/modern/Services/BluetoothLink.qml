@@ -168,7 +168,11 @@ Singleton {
             try {
                 if (!d.trusted)
                     d.trusted = true;
-                if (d.connect)
+                // Pairing already brought the link up. Connect on that
+                // link is what BlueZ logs as "already connected".
+                if (d.connected)
+                    BluetoothAudio.ask(d);
+                else if (d.connect)
                     d.connect();
                 attempt.interval = Math.max(Motion.bluetoothConnectMs, 1);
                 attempt.restart();

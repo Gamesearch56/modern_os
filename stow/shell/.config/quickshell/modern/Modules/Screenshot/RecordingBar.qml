@@ -17,6 +17,11 @@ Scope {
     readonly property real _barReserve: BarLayout.position !== "top"
         ? Tokens.spacing.xl : BarLayout.windowInset
     readonly property real _hot: Tokens.spacing.xl
+    // The dock sits on the bottom by default. A full-width overlay there
+    // takes every click meant for a pin.
+    readonly property bool _dockBottom: DockLayout.enabled && !DockLayout.autoHide
+        && DockLayout.position === "bottom"
+    readonly property real _dockClear: root._dockBottom ? DockLayout.cross + Tokens.spacing.md : 0
     property bool chromeOpen: true
     property bool topHot: false
     property bool bottomHot: false
@@ -62,12 +67,15 @@ Scope {
         anchors.left: true
         anchors.right: true
         exclusionMode: ExclusionMode.Ignore
-        focusable: Recording.active
+        // Keyboard stays with the app being recorded. Stop is the button
+        // and the screenshot keys, which the compositor still receives.
+        focusable: false
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         aboveWindows: true
         WlrLayershell.namespace: "modern-recording"
         WlrLayershell.layer: WlrLayer.Overlay
         mask: Region {
-            item: root.chromeOpen ? strip : hotTop
+            item: root.chromeOpen ? card : hotTop
         }
 
         Item {
@@ -97,6 +105,7 @@ Scope {
 
                 RowLayout {
                     id: inner
+                    z: 1
                     anchors.centerIn: parent
                     spacing: Tokens.spacing.sm
 
@@ -123,22 +132,23 @@ Scope {
         screen: root.screen
         visible: Recording.active
         color: "transparent"
-        implicitHeight: Math.max(hint.height + Tokens.spacing.xl * 2, root._hot)
+        implicitHeight: Math.max(hint.height + Tokens.spacing.xl * 2 + root._dockClear, root._hot)
         anchors.bottom: true
         anchors.left: true
         anchors.right: true
         exclusionMode: ExclusionMode.Ignore
+        focusable: false
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         aboveWindows: true
         WlrLayershell.namespace: "modern-recording"
         WlrLayershell.layer: WlrLayer.Overlay
         mask: Region {
-            item: root.chromeOpen ? hintBand : hotBottom
+            item: root.chromeOpen ? hint : (root._dockBottom ? noInput : hotBottom)
         }
 
         Item {
             id: hintBand
-            width: hintWin.width
-            height: Math.max(hint.height + Tokens.spacing.xl * 2, root._hot)
+            anchors.fill: parent
 
             HoverHandler {
                 onHoveredChanged: root.bottomHot = hovered
@@ -151,13 +161,19 @@ Scope {
                 anchors.bottom: parent.bottom
             }
 
+            Item {
+                id: noInput
+                width: 0
+                height: 0
+            }
+
             RecordingChrome {
                 id: hint
                 open: root.chromeOpen
                 origin: Item.Bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: Tokens.spacing.xl
+                anchors.bottomMargin: Tokens.spacing.xl + root._dockClear
                 width: hintLabel.implicitWidth + Tokens.spacing.md * 2
                 height: hintLabel.implicitHeight + Tokens.spacing.sm * 2
                 radius: Tokens.radius.full
