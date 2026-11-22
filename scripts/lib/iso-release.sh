@@ -25,17 +25,17 @@ iso_leaks() {
     printf '%s\n' "$listing" | sed 's|^squashfs-root||' | grep -E "$ISO_LEAK_PATTERN" || true
 }
 
-# Release notes from stdin with the download section first. An older
-# section is replaced, so a re-run does not stack them.
+# Release notes from stdin, then the download section. An older section
+# is dropped wherever it sat, so a re-run moves it instead of stacking.
 iso_notes_with_download() {
     local block="$1"
-    printf '%s\n\n' "$block"
     awk -v start="$ISO_NOTES_START" -v end="$ISO_NOTES_END" '
         $0 == start { skip = 1; next }
         $0 == end { skip = 0; next }
         skip { next }
         /^[[:space:]]*$/ { if (seen) blank++; next }
         { for (; blank > 0; blank--) print ""; seen = 1; print }'
+    printf '\n%s\n' "$block"
 }
 
 # The download section for one release. Backticks are markdown code.

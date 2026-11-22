@@ -27,8 +27,10 @@ block="$(iso_download_block https://github.com/o/r v1.0.0 1073741824 abc FPR)"
 iso_notes_with_download "$block" <"$TMP/body" >"$TMP/once"
 iso_notes_with_download "$block" <"$TMP/once" >"$TMP/twice"
 if cmp -s "$TMP/once" "$TMP/twice" && [ "$(grep -c '### Download' "$TMP/twice")" = 1 ] \
-    && head -1 "$TMP/twice" | grep -Fxq "$ISO_NOTES_START" && grep -Fq -- '- thing' "$TMP/twice"; then
-    ok "the Download section comes first and a re-run replaces it"
+    && head -1 "$TMP/twice" | grep -Fxq '## [1.0.0]' \
+    && tail -1 "$TMP/twice" | grep -Fxq "$ISO_NOTES_END" \
+    && grep -Fq -- '- thing' "$TMP/twice"; then
+    ok "the Download section follows the notes and a re-run replaces it"
 else
     err "release notes after two runs: $(cat "$TMP/twice")"
 fi

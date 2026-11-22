@@ -370,7 +370,7 @@ credential is in it: a deploy key, `secrets/`, `secrets.json`, SSH or
 GnuPG private keys. It writes `SHA256SUMS` and signs it with the key in
 `docs/release-key.asc`. It uploads `modernos-x86_64.iso`, `SHA256SUMS`
 and `SHA256SUMS.asc`, compares GitHub's SHA-256 of the upload with the
-local one, and puts a Download section at the top of the release notes.
+local one, and puts a Download section after the full changelog.
 Re-running is safe: a matching upload is not sent again, and the
 Download section is replaced, not added twice.
 
