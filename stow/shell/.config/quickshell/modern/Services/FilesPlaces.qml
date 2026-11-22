@@ -132,7 +132,7 @@ Singleton {
         return next;
     }
 
-    function _moved(cur: var, sources: var, dest: string, made: var) {
+    function _moved(cur: var, sources: var, dest: string, made: var): var {
         const landed = made || [];
         if (dest.charAt(0) !== "/" && !landed.length)
             return cur;
@@ -162,7 +162,7 @@ Singleton {
         return next;
     }
 
-    function _renamed(cur: var, oldPath: string, name: string) {
+    function _renamed(cur: var, oldPath: string, name: string): var {
         if (oldPath.charAt(0) !== "/" || !name.length || name.indexOf("/") !== -1)
             return cur;
         const slash = oldPath.lastIndexOf("/");

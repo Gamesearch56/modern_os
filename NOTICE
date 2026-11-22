@@ -34,3 +34,16 @@ conveys ModernOS or a work based on it must keep them in place.
    a modified version or to suggest endorsement. A modified version
    that is distributed must use a different name and logo. See
    TRADEMARKS.md.
+
+Third-party components
+----------------------
+
+install/prebuilt/phylax is the Phylax polkit authentication agent by
+jakeb-grant (https://github.com/jakeb-grant/phylax), licensed under the
+Apache License 2.0; the full text is in install/prebuilt/phylax.LICENSE.
+It is built from upstream commit 4946e2465edad3c441af81cfc543c04807902ef4
+with ModernOS changes to its dialog: the session user preselected, the
+identity dropdown hidden, keyboard navigation, the Authenticating label
+and the button row. scripts/build-phylax.sh fetches the source, applies
+those changes and rebuilds the binary, so the changes and the way to
+reproduce it are both part of this repository.

@@ -47,6 +47,27 @@ local function send_to_workspace(win, n)
     adopting = false
 end
 
+-- hl.get_workspace warns "Workspace not found" for every workspace that
+-- does not exist yet, which is all of them while the config loads.
+local function existing_workspace(n)
+    if not hl.get_workspaces then
+        return nil
+    end
+    local list = hl.get_workspaces()
+    if type(list) ~= "table" then
+        return nil
+    end
+    for _, w in pairs(list) do
+        local ok, id = pcall(function()
+            return tonumber(w.id)
+        end)
+        if ok and id == n then
+            return w
+        end
+    end
+    return nil
+end
+
 local function pin(n, mon)
     local dest = mon or layout.assigned_monitor(n)
     local sel = layout.selector(dest)
@@ -54,7 +75,7 @@ local function pin(n, mon)
         return
     end
     local home = layout.live_match(dest) or dest
-    local ws = hl.get_workspace and hl.get_workspace(n)
+    local ws = existing_workspace(n)
     local cur = ws and ws.monitor
     if cur and layout.same_output(cur, home) then
         return

@@ -214,6 +214,13 @@ Singleton {
     }
 
     function _parse(text: string) {
+        // A failed fetch prints nothing here; curl's own error already says why.
+        if (!String(text || "").trim().length) {
+            root._clear();
+            root._fromUser = false;
+            root.busy = false;
+            return;
+        }
         try {
             const j = JSON.parse(text);
             const t = j?.current?.temperature_2m;

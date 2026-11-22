@@ -321,8 +321,10 @@ EOF
             /^icon_theme=/ { print "icon_theme=" icon; next }
             /^style=/ { print "style=qt6ct-style"; next }
             /^stylesheets=/ { print "stylesheets="; next }
-            /^general=/ { print "general=@ByteArray(" font "," pt ",-1,5,50,0,0,0,0,0)"; next }
-            /^fixed=/ { print "fixed=@ByteArray(" mono "," mpt ",-1,5,50,0,0,0,0,0)"; next }
+            # qt6ct 0.11 reads plain font strings; @ByteArray(...) logs
+            # "QFont::fromString: Invalid description" in every Qt app.
+            /^general=/ { print "general=\"" font "," pt ",-1,5,50,0,0,0,0,0\""; next }
+            /^fixed=/ { print "fixed=\"" mono "," mpt ",-1,5,50,0,0,0,0,0\""; next }
             { print }
         ' "$qtconf" > "$qtconf.tmp" && mv "$qtconf.tmp" "$qtconf"
     fi

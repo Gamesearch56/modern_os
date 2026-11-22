@@ -145,7 +145,7 @@ Singleton {
         root.forward = [];
     }
 
-    function _pop(backward: bool, spot: var) {
+    function _pop(backward: bool, spot: var): var {
         const from = (backward ? root.back : root.forward).slice();
         if (!from.length)
             return null;

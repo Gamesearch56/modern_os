@@ -67,7 +67,7 @@ QtObject {
         return null;
     }
 
-    function findGroup(rows, name: string) {
+    function findGroup(rows, name: string): var {
         const list = rows || [];
         for (let i = 0; i < list.length; i++) {
             if (list[i].name === name)
@@ -141,7 +141,7 @@ QtObject {
         return true;
     }
 
-    function sanitizeGroups(login: string, selected, admin: bool, people, groups, sessionLogin: string) {
+    function sanitizeGroups(login: string, selected, admin: bool, people, groups, sessionLogin: string): var {
         const person = root.findUser(people, login);
         const allow = root.assignableGroups(people, groups, login);
         const want = selected || [];
@@ -163,7 +163,7 @@ QtObject {
         return out;
     }
 
-    function sanitizeMembers(groupName: string, members, people) {
+    function sanitizeMembers(groupName: string, members, people): var {
         const g = String(groupName || "");
         if (root.isUserPrivateGroup(g, people))
             return [g];

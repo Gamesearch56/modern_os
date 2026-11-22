@@ -18,7 +18,7 @@ Scope {
     readonly property bool canGoBack: root.history.length > 0
     readonly property bool canGoForward: root.future.length > 0
 
-    function open(path: string) {
+    function open(path: string): bool {
         if (!path.length || path === root.current || !ManualDocs.byPath(path))
             return false;
         if (root.current.length)

@@ -31,7 +31,10 @@ Singleton {
         );
     }
 
-    readonly property int count: Array.isArray(root.entries) ? root.entries.length : 0
+    // Set from onEntriesChanged, not bound: a reload tears the old binding
+    // down mid-evaluation and it would assign undefined to an int.
+    property int count: 0
+    onEntriesChanged: root.count = Array.isArray(root.entries) ? root.entries.length : 0
 
     property string _raiseAfter: ""
 
