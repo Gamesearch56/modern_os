@@ -79,11 +79,64 @@ git push origin v0.1.0
 The `Release` Action writes [Keep a Changelog](https://keepachangelog.com/)
 notes (Added / Changed / Fixed / …) from commits since the previous
 tag and publishes the GitHub Release. It does not build or attach an
-ISO. Build the image locally with `sudo ./scripts/iso-build.sh
---mkarchiso`, test it with `./scripts/iso-qemu.sh`, and upload it to the
-Release by hand (`gh release upload vX.Y.Z iso/out/*.iso`) if you want it
-there. Never run `provision-iso.sh` or Calamares on
-the session you live in.
+ISO; that is the next section. Never run `provision-iso.sh` or
+Calamares on the session you live in.
+
+## Release ISO
+
+Once the GitHub Release exists, build and attach the image:
+
+```bash
+git checkout vX.Y.Z
+scripts/iso-release.sh vX.Y.Z    # sudo asks once, for mkarchiso
+git checkout dev
+```
+
+It builds with `iso-build.sh --mkarchiso --public`, which leaves the
+deploy key out. Then it lists the image's squashfs and stops if any
+credential is in it: a deploy key, `secrets/`, `secrets.json`, SSH or
+GnuPG private keys. It writes `SHA256SUMS` and signs it with the key in
+`docs/release-key.asc`. It uploads `modernos-x86_64.iso`, `SHA256SUMS`
+and `SHA256SUMS.asc`, compares GitHub's SHA-256 of the upload with the
+local one, and puts a Download section at the top of the release notes.
+Re-running is safe: a matching upload is not sent again, and the
+Download section is replaced, not added twice.
+
+The asset name has no version, so one link always serves the newest
+image, for the website or anywhere else:
+
+```
+https://github.com/Gamesearch56/modern_dotfile/releases/latest/download/modernos-x86_64.iso
+```
+
+`--with-deploy-key` builds without `--public` and lets exactly
+`/usr/lib/modern/deploy_key` through the check (and requires it). Use it
+while the repository is private or bug reports still depend on the
+sealed token: whoever has the image can read the repository and open
+that token. Drop the flag once bug reports go through a relay.
+
+GitHub takes assets under 2 GiB; the script refuses a larger image
+before uploading. Downloads are public only while the repository is
+public.
+
+**Archive copy (Proton Drive).** With an rclone remote configured
+(`rclone config`, type `protondrive`), pass
+`--archive proton:ModernOS/releases` or export
+`MODERNOS_ISO_ARCHIVE=proton:ModernOS/releases`. Each release lands in
+its own `vX.Y.Z/` folder and is compared with `rclone check`. rclone
+keeps its credentials in its own config, never in this repo.
+
+**Signing key, once.** A key used only for ModernOS releases, not your
+personal one:
+
+```bash
+gpg --quick-gen-key "ModernOS Releases <bastiweigand@gmail.com>" ed25519 sign 3y
+gpg --armor --export "ModernOS Releases" >docs/release-key.asc
+```
+
+Commit `docs/release-key.asc`. Back up the secret key offline
+(`gpg --export-secret-keys --armor`); a lost key means users see a new
+fingerprint they cannot tell from an attacker's.
 
 That tag is what Settings → Update and the ISO pin look at.
 
