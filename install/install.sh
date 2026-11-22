@@ -21,7 +21,7 @@
 # Profiles (see install/manifests/README.md for exact layer membership):
 #   m0       base + desktop + theming + minimal apps  (default)
 #   gaming   m0 + 50-gaming
-#   full     gaming + 60-flatpak
+#   full     gaming + 60-flatpak + 70-workstation
 #
 # This script installs packages, stows this repo's dotfiles into $TARGET
 # (default $HOME), and enables the greetd login screen on a real user
@@ -110,6 +110,8 @@ source "$REPO_ROOT/install/lib/kernel-boot.sh"
 source "$REPO_ROOT/install/lib/mirrors.sh"
 # shellcheck source=lib/portal.sh
 source "$REPO_ROOT/install/lib/portal.sh"
+# shellcheck source=lib/workstation.sh
+source "$REPO_ROOT/install/lib/workstation.sh"
 
 : > "$LOG_FILE"
 _err_trap() {
@@ -177,7 +179,8 @@ log_phase "Phase 3/5: package manifests (profile: $PROFILE)"
 MANIFEST_DIR="$REPO_ROOT/install/manifests"
 layers=(00-base 10-desktop 20-theming 30-apps)
 case "$PROFILE" in
-    gaming|full) layers+=(50-gaming) ;;
+    gaming) layers+=(50-gaming) ;;
+    full) layers+=(50-gaming 70-workstation) ;;
 esac
 
 native_pkgs=()
@@ -214,6 +217,10 @@ if [ "$PROFILE" = "gaming" ] || [ "$PROFILE" = "full" ]; then
     if [ -f "$hw_game" ]; then
         mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_game")
     fi
+fi
+hw_work="$MANIFEST_DIR/70-hw-gpu-${GPU_FAMILY}.txt"
+if [ "$PROFILE" = "full" ] && [ -f "$hw_work" ]; then
+    mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_work")
 fi
 if [ "$EXTRA" = "proton" ]; then
     mapfile -t -O "${#aur_pkgs[@]}" aur_pkgs < <(parse_manifest "$MANIFEST_DIR/90-accounts.aur.txt")
@@ -472,6 +479,17 @@ elif greetd_target_is_live_user "$TARGET"; then
     mirrors_apply || log_warn "mirror refresh was not enabled"
 else
     log_info "skipping mirror refresh (target '$TARGET' is not a login home)"
+fi
+
+if [ "$PROFILE" != "full" ] || [ "$DOTFILES_ONLY" -eq 1 ]; then
+    :
+elif [ "$DRY_RUN" -eq 1 ]; then
+    log_info "workstation: would enable docker.socket and libvirtd.socket"
+elif greetd_target_is_live_user "$TARGET" && [ -z "${MODERN_ROOT_PLAN:-}" ]; then
+    workstation_apply "$(greetd_user_for_home "$TARGET")" \
+        || log_warn "workstation services were not enabled"
+else
+    log_info "skipping workstation services (run install.sh --profile full from a terminal)"
 fi
 
 if [ "$DOTFILES_ONLY" -eq 1 ]; then

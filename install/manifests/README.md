@@ -36,7 +36,9 @@ Layers, applied in order by `install.sh --profile <name>` (profiles:
 | `30-hw-gpu-*` | with `30-apps`, auto or `--hw` | Steam's 32-bit Vulkan driver for this GPU (else pacman picks `lib32-vulkan-radeon`) |
 | `50-gaming` | `gaming`, `full` | 32-bit Mesa and GameMode, protontricks, Proton VPN, MangoHud |
 | `50-hw-*` | `gaming`, `full`; GPU auto or `--hw` | 32-bit GPU libraries (`lib32-*`) |
-| `60-flatpak` | `full` | flatpak-distributed apps |
+| `60-flatpak` | `full` | flatpak-distributed apps (Bottles) |
+| `70-workstation` | `full` | development (Docker, Node, Rust, Java, Godot), VMs and ISO building (QEMU, libvirt, archiso), Samba, Ollama, Discord, Lutris, Shotcut, command-line tools. AUR: Cursor, Ventoy, downgrade, game companions (`70-workstation.aur.txt`). `install/lib/workstation.sh` enables `docker.socket` and `libvirtd.socket` and adds the `docker` and `libvirt` groups; Samba stays off until it has shares. |
+| `70-hw-gpu-*` | `full`; GPU auto or `--hw` | GPU compute (ROCm on AMD, for Ollama) |
 | `90-accounts.aur` | `--extra proton` | Proton Mail |
 
 Run `scripts/snapshot-packages.sh --diff` any time to see drift between
