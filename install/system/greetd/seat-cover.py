@@ -150,6 +150,18 @@ class GetEncoder(ctypes.Structure):
     ]
 
 
+class GetProperty(ctypes.Structure):
+    _fields_ = [
+        ("values_ptr", ctypes.c_uint64),
+        ("enum_blob_ptr", ctypes.c_uint64),
+        ("prop_id", ctypes.c_uint32),
+        ("flags", ctypes.c_uint32),
+        ("name", ctypes.c_char * 32),
+        ("count_values", ctypes.c_uint32),
+        ("count_enum_blobs", ctypes.c_uint32),
+    ]
+
+
 SET_MASTER = _io(0x1E)
 DROP_MASTER = _io(0x1F)
 GETRESOURCES = _iowr(0xA0, ctypes.sizeof(CardRes))
@@ -160,6 +172,7 @@ ADDFB = _iowr(0xAE, ctypes.sizeof(FbCmd))
 CREATE_DUMB = _iowr(0xB2, ctypes.sizeof(CreateDumb))
 MAP_DUMB = _iowr(0xB3, ctypes.sizeof(MapDumb))
 GETENCODER = _iowr(0xA6, ctypes.sizeof(GetEncoder))
+GETPROPERTY = _iowr(0xAA, ctypes.sizeof(GetProperty))
 
 CONNECTED = 1
 # LVDS, eDP, DSI and DPI are the internal panel. VIRTUAL and WRITEBACK
@@ -169,11 +182,11 @@ SKIP_TYPES = {15, 18}
 
 
 def output_needs_cover(connector_type: int, scanning: bool) -> bool:
-    """The panel connector, not some other CRTC, decides.
+    """The panel connector's CRTC_ID, not a leftover controller, decides.
 
-    After the login screen exits, a CRTC can still report its last mode
-    while the panel's connector is attached to none. That is the gap
-    where the panel paints its firmware logo.
+    After logout the old controller can still report a mode while the
+    connector property Hyprland reads is 0. The panel paints its firmware
+    logo into that gap.
     """
     if connector_type in SKIP_TYPES:
         return False
@@ -234,7 +247,23 @@ def _encoder_link(fd: int, encoder_id: int) -> tuple[int, int]:
     return int(enc.crtc_id), int(enc.possible_crtcs)
 
 
-def _first_mode(fd: int, connector_id: int) -> tuple[int, ModeInfo] | None:
+def _prop_name(fd: int, prop_id: int) -> str:
+    prop = GetProperty()
+    prop.prop_id = prop_id
+    _ioctl(fd, GETPROPERTY, prop)
+    return bytes(prop.name).split(b"\x00", 1)[0].decode("ascii", "replace")
+
+
+def _attached_crtc(fd: int, info: GetConnector, prop_ids: ctypes.Array, prop_values: ctypes.Array) -> int | None:
+    """The CRTC_ID property. None when the connector has no such property."""
+    for index in range(int(info.count_props)):
+        if _prop_name(fd, int(prop_ids[index])) != "CRTC_ID":
+            continue
+        return int(prop_values[index])
+    return None
+
+
+def _first_mode(fd: int, connector_id: int) -> tuple | None:
     # count_modes of 0 force-probes and can blank the panel. Ask for one
     # mode so the kernel only reports what it already knows.
     scratch = ModeInfo()
@@ -245,19 +274,30 @@ def _first_mode(fd: int, connector_id: int) -> tuple[int, ModeInfo] | None:
     _ioctl(fd, GETCONNECTOR, info)
     if info.connection != CONNECTED or info.count_modes < 1:
         return None
-    modes = (ModeInfo * info.count_modes)()
+    mode_count = int(info.count_modes)
+    prop_count = int(info.count_props)
+    modes = (ModeInfo * mode_count)()
+    prop_ids = (ctypes.c_uint32 * max(prop_count, 1))()
+    prop_values = (ctypes.c_uint64 * max(prop_count, 1))()
     info.modes_ptr = ctypes.addressof(modes)
-    info.count_props = 0
+    info.count_modes = mode_count
+    info.count_props = prop_count
     info.count_encoders = 0
-    info.props_ptr = 0
-    info.prop_values_ptr = 0
     info.encoders_ptr = 0
+    if prop_count:
+        info.props_ptr = ctypes.addressof(prop_ids)
+        info.prop_values_ptr = ctypes.addressof(prop_values)
     _ioctl(fd, GETCONNECTOR, info)
     if info.count_modes < 1:
         return None
-    crtc_id, possible = _encoder_link(fd, int(info.encoder_id))
-    scanning = _crtc_scanning(fd, crtc_id)
-    return connector_id, int(info.connector_type), modes[0], scanning, possible
+    _encoder_crtc, possible = _encoder_link(fd, int(info.encoder_id))
+    # Hyprland uses this property and ignores a controller the encoder
+    # still names. Matching it is what tells a real scanout from a leftover.
+    attached = _attached_crtc(fd, info, prop_ids, prop_values)
+    if attached is None:
+        attached = _encoder_crtc
+    scanning = _crtc_scanning(fd, attached)
+    return connector_id, int(info.connector_type), modes[0], scanning, possible, attached
 
 
 def _cards() -> list[str]:
@@ -361,6 +401,7 @@ def hold() -> int:
     # rank, path, fd, crtcs, connector id, mode, possible crtcs
     candidates: list[tuple[int, str, int, list[int], int, ModeInfo, int]] = []
     saw_connected = False
+    attached_ids: list[int] = []
     try:
         for path in _cards():
             fd: int | None = None
@@ -372,9 +413,10 @@ def hold() -> int:
                     found = _first_mode(fd, conn)
                     if found is None:
                         continue
-                    connector_id, kind, mode, scanning, possible = found
+                    connector_id, kind, mode, scanning, possible, attached = found
                     saw_connected = True
                     if not output_needs_cover(kind, scanning):
+                        attached_ids.append(attached)
                         continue
                     candidates.append((cover_rank(kind), path, fd, crtcs, connector_id, mode, possible))
             except Exception as exc:
@@ -386,7 +428,10 @@ def hold() -> int:
                         pass
         if not candidates:
             if saw_connected:
-                print("seat-cover: display already scanning", file=sys.stderr)
+                print(
+                    f"seat-cover: display already scanning CRTC_ID={attached_ids}",
+                    file=sys.stderr,
+                )
             else:
                 print("seat-cover: no display to cover", file=sys.stderr)
             return 0
@@ -431,7 +476,7 @@ def self_test() -> int:
     if ctypes.sizeof(CreateDumb) != 32 or ctypes.sizeof(MapDumb) != 16 or ctypes.sizeof(FbCmd) != 28:
         print("seat-cover: buffer struct size drifted", file=sys.stderr)
         return 1
-    if ctypes.sizeof(GetEncoder) != 20:
+    if ctypes.sizeof(GetProperty) != 64 or ctypes.sizeof(GetEncoder) != 20:
         print("seat-cover: encoder struct size drifted", file=sys.stderr)
         return 1
     if not output_needs_cover(14, False) or output_needs_cover(14, True) or output_needs_cover(15, False):
