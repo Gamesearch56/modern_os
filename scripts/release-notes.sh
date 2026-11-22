@@ -165,8 +165,9 @@ if [ "$PR" -eq 1 ]; then
     cat <<EOF
 ## Release checklist
 
+- [ ] CI is green on this PR
 - [ ] \`scripts/ci-check.sh\` passes on \`dev\`
-- [ ] The Calamares installer and the boot are tested from a local image
+- [ ] The ISO built from \`dev\` installs in QEMU (\`scripts/iso-qemu.sh\`)
 - [ ] Breaking changes, if any, explain what users have to do
 - [ ] Highlights for the tag message are written
 EOF
