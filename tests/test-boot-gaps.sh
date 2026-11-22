@@ -59,6 +59,7 @@ trap 'rm -rf "$TMP"' EXIT
 cat >"$TMP/bad.txt" <<'EOF'
 initrd=\initramfs-linux-zen.img quiet splash i915.fastboot=1
 kernel: i915: unknown parameter 'fastboot' ignored
+seat-cover: display already scanning
 ERR from aquamarine ]: drm: getCurrentCRTC: No CRTC 0
 ERR from aquamarine ]: drm: Cannot commit when a page-flip is awaiting
 drm: Disabled KMS output eDP-1 before disconnect
@@ -67,7 +68,8 @@ bad="$("$GAPS" "$TMP/bad.txt" || true)"
 if printf '%s\n' "$bad" | grep -Fq 'i915.fastboot is set' \
     && printf '%s\n' "$bad" | grep -Fq 'no CRTC' \
     && printf '%s\n' "$bad" | grep -Fq 'page-flip was still in flight' \
-    && printf '%s\n' "$bad" | grep -Fq 'turned the display off'; then
+    && printf '%s\n' "$bad" | grep -Fq 'turned the display off' \
+    && printf '%s\n' "$bad" | grep -Fq 'panel connector without a CRTC'; then
     ok "a boot log like the reported one names each gap"
 else
     err "bad log was not fully reported: $bad"
