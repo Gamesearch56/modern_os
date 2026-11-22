@@ -32,7 +32,9 @@ LABELS = {
     "display": "area:display", "hyprland": "area:hyprland", "shell": "area:quickshell",
     "sound": "area:audio", "bluetooth": "area:bluetooth", "network": "area:network",
     "games": "area:games", "updates": "area:updates", "lock": "area:session",
-    "apps": "area:apps", "other": "area:other",
+    "apps": "area:apps", "systemApps": "area:system-apps",
+    "files": "area:files", "keyboard": "area:keyboard", "power": "area:power",
+    "appearance": "area:appearance", "other": "area:other",
 }
 WHEN = {"now": "Just now", "today": "Today", "earlier": "Earlier"}
 REPEAT = {"always": "Every time", "sometimes": "Sometimes", "once": "Once"}
