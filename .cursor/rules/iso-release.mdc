@@ -1,16 +1,18 @@
 ---
-description: Start a release ISO without waiting on the build
+description: Releases test the installer and boot, without an image upload
 alwaysApply: true
 ---
 
-# Release ISO runs in the background
+# Releases do not upload an image
 
-The image build and the GitHub attachment already work. When a release
-needs an ISO, start `scripts/iso-release.sh` in the background and
-continue.
+A release is the pull request, the tag, and the GitHub release notes.
+Do not wait on GitHub Actions. Local `scripts/ci-check.sh` is the check
+that already ran on the push.
 
-Do not poll the build, wait for it to finish, or report back about the
-image, the upload, or the checksum. The script checks the upload itself.
+Do not start `scripts/iso-release.sh`. Do not upload an image, sign a
+checksum for upload, or copy a deploy key into a release worktree.
 
-Do not start an ISO build during ordinary development just to confirm
-the pipeline.
+The image, when one is asked for, is only for testing the Calamares
+installer and the boot. Build it locally with
+`scripts/iso-build.sh --mkarchiso` and leave it on disk. Do not attach
+it. Do not start that build during ordinary development.

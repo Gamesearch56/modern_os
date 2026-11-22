@@ -214,7 +214,7 @@ merge commit**, so `main` and `dev` keep sharing history.
 | `git push` | `.githooks/pre-push` | `ci-check.sh`: lint, then every unit test | The push |
 | PR opened, updated or retitled | GitHub Actions `PR title` | `check-pr-title.sh` | The merge |
 | PR into `dev` or `main`, push to them | GitHub Actions `CI` | `lint` → `unit` and `install-dry` (below) → **CI passed** | The merge |
-| Before the release PR is merged | Your machine | `iso-build.sh --mkarchiso`, install in QEMU (`scripts/iso-qemu.sh`) | The release |
+| Before the release PR is merged | Your machine | Local `ci-check.sh` already ran on the push. An image, when wanted, is `iso-build.sh --mkarchiso` for the Calamares installer and the boot. It is not uploaded. | The release |
 | Tag `vX.Y.Z` pushed | GitHub Actions `Release` | Tag is on `main`, then release notes | The GitHub Release |
 | Mondays, or by hand | GitHub Actions `Weekly` | `check-manifests.sh`: every manifest package still exists in the Arch repos and the AUR | Opens an issue |
 
@@ -257,10 +257,10 @@ since the last tag:
 
 ### 2. Release candidate
 
-On an up-to-date `dev`: `scripts/ci-check.sh`, build the ISO with
-`sudo ./scripts/iso-build.sh --mkarchiso`, and install it in QEMU
-(`scripts/iso-qemu.sh`). Fix what breaks through the usual topic
-branches first.
+On an up-to-date `dev`, `scripts/ci-check.sh` already ran on the push.
+Do not wait on GitHub Actions. The Calamares installer and the boot
+are tested from a local image (`sudo ./scripts/iso-build.sh
+--mkarchiso`) when that test is wanted. The image stays on disk.
 
 ### 3. Release PR
 
@@ -280,7 +280,8 @@ fix now, by editing the PR text, than after the tag. The manual
 alternative is `.github/PULL_REQUEST_TEMPLATE/release.md`
 (`?template=release.md` on the compare page).
 
-Merge with **Create a merge commit** when CI is green.
+Merge with **Create a merge commit**. Local `ci-check.sh` already ran
+on the push. Do not wait on GitHub Actions.
 
 ### 4. Tag
 
@@ -356,9 +357,19 @@ For a bug in the current release that cannot wait for the next one:
 
 ## Release ISO
 
-Once the GitHub Release exists, start the image build and leave it
-running. It asks for sudo once, checks the upload itself, and does not
-need anyone watching it:
+A release stops at the GitHub release notes. Do not wait on GitHub
+Actions, and do not run `scripts/iso-release.sh` or upload the image.
+
+The image is for testing the Calamares installer and the boot. Build
+it locally and leave it on disk:
+
+```bash
+sudo ./scripts/iso-build.sh --mkarchiso
+```
+
+`scripts/iso-release.sh` still builds, signs, and uploads an image when
+someone explicitly asks to attach one. It asks for sudo once, checks
+the upload itself, and does not need anyone watching it:
 
 ```bash
 git checkout vX.Y.Z
