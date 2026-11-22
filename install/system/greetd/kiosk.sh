@@ -59,7 +59,8 @@ export GREETD_SOCK="$sock"
 log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
 log="$log_dir/hyprland.log"
 mkdir -p "$log_dir"
-if [ "$(wc -c <"$log" 2>/dev/null || printf 0)" -gt 2097152 ]; then
+# Same as the desktop session: the first login has no log file yet.
+if [ -f "$log" ] && [ "$(wc -c <"$log")" -gt 2097152 ]; then
     mv -f "$log" "$log.1"
 fi
 printf '\n== login screen %s\n' "$(date -Is)" >>"$log"
@@ -68,4 +69,4 @@ printf '\n== login screen %s\n' "$(date -Is)" >>"$log"
 if [ "${MODERN_SEAT_COVER:-1}" != 0 ] && [ -f /usr/lib/modern/seat-cover.py ]; then
     python3 /usr/lib/modern/seat-cover.py hold >>"$log" 2>&1 || true
 fi
-exec /usr/bin/env GREETD_SOCK="$sock" /usr/bin/start-hyprland --no-nixgl -- --config /etc/greetd/hyprland.lua >>"$log" 2>&1
+exec /usr/bin/env GREETD_SOCK="$sock" "${MODERN_START_HYPRLAND:-/usr/bin/start-hyprland}" --no-nixgl -- --config /etc/greetd/hyprland.lua >>"$log" 2>&1
