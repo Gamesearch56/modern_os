@@ -71,8 +71,10 @@ FocusScope {
 
     MPanelSurface {
         id: card
+        // Grows past the token width when translated actions are longer.
         width: Math.min(parent.width - Tokens.spacing.xxl,
-            root.wide ? Tokens.panel.dialogWide : Tokens.panel.dialogWidth)
+            Math.max(root.wide ? Tokens.panel.dialogWide : Tokens.panel.dialogWidth,
+                actions.implicitWidth + Tokens.spacing.lg * 2))
         implicitHeight: dialogCol.implicitHeight + Tokens.spacing.lg * 2
         anchors.centerIn: parent
         scale: Motion.overlayScale(root.open)
@@ -165,6 +167,7 @@ FocusScope {
             }
 
             RowLayout {
+                id: actions
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.sm
 
