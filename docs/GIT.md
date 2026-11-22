@@ -1,86 +1,357 @@
 # Git workflow
 
-For contributors and maintainers: how branches, pull requests, release
-tags and GitHub settings work for ModernOS, and how installed systems
-pick up a release.
+For contributors and maintainers: how issues become branches, how pull
+requests are titled and described, where the automated tests run, and
+how a release is tagged and published.
 
-Installers use a **version** (`v1.2.3`), not every commit. Daily work
-is on `dev`. A PR into `main` plus a tag is what they get.
+Installed systems follow **release tags** (`v1.2.3`), never a branch.
+Work lands on `dev` through short-lived topic branches; a release is a
+PR `dev` → `main` plus a tag. Urgent fixes for the current release go
+through a `hotfix/` branch straight into `main`.
+
+```
+           fix/12-…  feat/15-…  docs/…           hotfix/30-…
+              \         |        /                    |
+  dev ─────────●────────●───────●───── Release PR ──┐ |
+                                                     v v
+  main ───────────────────────────────────────────── ● ●──> tags vX.Y.Z
+                                                        └─> merged back into dev
+```
 
 Do **not** test a release on your everyday machine. Build the ISO
 locally and try Calamares on a spare machine or in QEMU. Isolation:
 `docs/ISOLATION.md`.
 
-```
-dev  --PR, CI green-->  main  -->  tag vX.Y.Z  -->  Releases
-```
+## Branches
 
-## The two branches
+| Branch | Cut from | Merged into | How | Lives |
+|--------|----------|-------------|-----|-------|
+| `main` | — | — | PRs only | Forever. Every commit on it is released or about to be tagged |
+| `dev` | — | `main` (release PR) | Merge commit | Forever. The integration branch; always installable |
+| `fix/<issue>-<slug>` | `origin/dev` | `dev` | Squash | Until the PR is merged |
+| `feat/<issue>-<slug>` | `origin/dev` | `dev` | Squash | Until the PR is merged |
+| `docs/<slug>`, `chore/<slug>` | `origin/dev` | `dev` | Squash | Until the PR is merged |
+| `hotfix/<issue>-<slug>` | newest tag on `main` | `main` | Squash | Until the hotfix is tagged |
 
-| Branch | Who lands here | What a release tag sees |
-|--------|----------------|-------------------------|
-| `dev` | Direct commits | Nothing until you release |
-| `main` | PRs from `dev` only | The commit you tag |
+One issue, one branch, one PR. A branch that grows a second concern
+becomes two branches. Delete the branch when its PR is merged (GitHub's
+"Automatically delete head branches" does it for you).
 
-Do **not** create `feature/*` or `fix/*` branches. Commit on `dev` and
-push it. Never commit on `main`. Never `git push --force` to `main` or
-`dev` **except the optional flip-day rewrite below**.
+Never commit on `main`. Never `git push --force` to `main` or `dev`
+(the only exception is the optional flip-day rewrite below). Force-pushing
+your own topic branch after a rebase is fine.
 
-## Daily work
+## From a report to a branch
+
+Bug reports arrive two ways:
+
+1. **In-app reports** (Super+# or `modern report`, see
+   `docs/BUGREPORT.md`) open a **private** issue in the reports
+   repository (`bugReport.repo` in `config.default.json`). They carry
+   redacted logs, screenshots, the environment and a device summary.
+2. **Public issues** through the bug form in this repository
+   (`.github/ISSUE_TEMPLATE/bug.yml`). It asks for the version, the
+   install type and the output of `modern device` (machine model,
+   firmware and boot mode, CPU, memory, GPUs with driver, displays,
+   audio server; serial numbers removed).
+
+Triage, once per new issue:
+
+1. Read it, reproduce it if you can, and replace `needs-triage` with an
+   `area:*` label (and `confirmed` once reproduced).
+2. A private report you will work on gets a public twin, so the fix,
+   the discussion and the release notes can point at a public number:
+
+   ```bash
+   scripts/report-to-issue.sh 42            # print the public draft
+   scripts/report-to-issue.sh 42 --create   # edit it, file it, link it
+   ```
+
+   Only the Steps, Environment and Device sections cross over. Logs,
+   screenshots and the bundle stay private. The draft opens in
+   `$EDITOR` first: the steps are the reporter's own words, so remove
+   anything personal (names, addresses, network names) before saving.
+3. Start the branch from the public issue number:
+
+   ```bash
+   scripts/issue-branch.sh 57              # fix/57-<slug> from origin/dev
+   scripts/issue-branch.sh 61 --type feat  # feat/61-<slug>
+   scripts/issue-branch.sh 63 --hotfix     # hotfix/63-<slug> from the newest tag
+   ```
+
+   The type follows the issue's labels (`bug` → `fix`, `enhancement` →
+   `feat`, `documentation` → `docs`) unless `--type` says otherwise. The
+   script refuses to run with uncommitted changes and fetches first, so
+   the branch starts from the current `dev`.
+
+## Several issues at once
+
+Each issue has its own branch, so switching is `git switch fix/57-…`.
+To keep two branches checked out side by side (one building while you
+edit the other), use worktrees instead of stashing:
 
 ```bash
-git checkout dev
-git pull
-# edit, commit, push
+git worktree add ../modern-57 fix/57-bar-disappears-after-resume
+git worktree remove ../modern-57      # when the PR is merged
+```
+
+Keep a long-running branch current by rebasing it on `dev`, not by
+merging `dev` into it; the PR is squashed anyway:
+
+```bash
+git fetch origin
+git rebase origin/dev
+git push --force-with-lease
+```
+
+Open the PR early as a **draft** when you want CI to run on work in
+progress; mark it ready when it is.
+
+## Commit messages
+
+Commits on a topic branch are yours: write what helps you. Only the
+**PR title** has to follow the convention below, because squash merging
+turns the PR into one commit on `dev` whose subject is the PR title.
+
+Commits made directly on `dev` (maintainer only, see Rulesets) follow
+the same convention as PR titles.
+
+## PR title and description
+
+### Title
+
+The title is a [Conventional Commit](https://www.conventionalcommits.org/):
+
+```
+type(scope): what changes, in the imperative, lower case, no full stop
+```
+
+`scripts/check-pr-title.sh` enforces it in CI (job **Conventional PR
+title**); run it locally with the title as its argument. At most 72
+characters. The scope is optional, lower case, and names the area:
+`audio`, `bar`, `launcher`, `settings`, `installer`, `iso`, `update`…
+
+The type decides where the change appears in the release notes:
+
+| Type | Use for | Release-notes section |
+|------|---------|-----------------------|
+| `feat` | A new feature or option | Added |
+| `fix` | A bug fix | Fixed |
+| `remove` | A removed feature, setting or package | Removed |
+| `deprecate` | A feature that will be removed later | Deprecated |
+| `security` | A security fix | Security |
+| `perf` | Faster or lighter, same behaviour | Changed |
+| `docs` | Documentation only | Documentation |
+| `refactor`, `style` | Code changes users cannot see | Maintenance |
+| `build`, `ci`, `test`, `chore` | Packaging, CI, tests, housekeeping | Maintenance |
+| `revert` | Undoing an earlier change | Changed |
+
+A **breaking change** (users or their `config.json` must do something)
+adds `!` after the type or scope: `feat(config)!: settings live in
+config.json only`. It is listed under **Breaking changes**, at the top
+of the release notes, instead of its type's section.
+
+Examples:
+
+```
+fix(audio): keep the headset profile after resume
+feat(launcher): calculator provider
+remove(bar): the legacy clock widget
+deprecate(theme): the fixed-brand profile
+security(update): verify the tag signature before applying
+feat(config)!: move bar layout into bar.sections
+docs: explain the release flow
+```
+
+Release PRs are titled `Release vX.Y.Z`. GitHub's own `Revert "…"`
+titles pass unchanged.
+
+### Description
+
+`.github/pull_request_template.md` fills itself in when you open the
+PR. Write it for someone who does not know the code:
+
+1. **Summary**: what changes for the user and why, one or two
+   sentences. Then `Fixes #57` (or `Refs #57` when it does not fully
+   fix it). With `dev` as the default branch (Repository settings),
+   GitHub closes the issue when the PR is merged and links the fix
+   from it. A hotfix PR goes into `main`, so close its issue by hand.
+2. **Type of change**: tick one or more boxes.
+3. **Changelog**: the title is the main release-notes line. If the PR
+   has more user-visible changes, add one line per change, starting at
+   the beginning of the line with the section name and a colon:
+
+   ```
+   Removed: the old calculator prefix
+   Fixed: the launcher no longer loses focus on a second monitor
+   ```
+
+   Accepted names: `Breaking`, `Added`, `Changed`, `Deprecated`,
+   `Removed`, `Fixed`, `Security`. `scripts/release-notes.sh` reads
+   these lines from the squash commit's body.
+4. **Breaking changes**: what users have to do, or "None".
+5. **Screenshots** for visible UI changes, before and after. Crop out
+   names, email addresses, hostnames, Wi-Fi networks and notifications.
+6. **How to test**: steps a reviewer can follow on an install or a VM.
+7. **Checklist**: base branch, `scripts/ci-check.sh`, both translation
+   files, docs, and no personal data.
+
+### Merging
+
+Topic and hotfix PRs: **Squash and merge**. Keep the title as the
+commit subject. In the commit body keep `Fixes #N` and the Changelog
+lines; the rest of the template can be deleted in the merge dialog.
+Release PRs (`dev` → `main`) and the merge back into `dev`: **Create a
+merge commit**, so `main` and `dev` keep sharing history.
+
+## Where the automated tests run
+
+| When | Where | What runs | Blocks |
+|------|-------|-----------|--------|
+| `git commit` | `.githooks/pre-commit` | `ci-check.sh lint`: layer lint, translations, shellcheck | The commit |
+| `git push` | `.githooks/pre-push` | `ci-check.sh`: lint, then every unit test | The push |
+| PR opened, updated or retitled | GitHub Actions `PR title` | `check-pr-title.sh` | The merge |
+| PR into `dev` or `main`, push to them | GitHub Actions `CI` | `lint` → `unit` and `install-dry` (below) → **CI passed** | The merge |
+| Before the release PR is merged | Your machine | `iso-build.sh --mkarchiso`, install in QEMU (`scripts/iso-qemu.sh`) | The release |
+| Tag `vX.Y.Z` pushed | GitHub Actions `Release` | Tag is on `main`, then release notes | The GitHub Release |
+| Mondays, or by hand | GitHub Actions `Weekly` | `check-manifests.sh`: every manifest package still exists in the Arch repos and the AUR | Opens an issue |
+
+Install the hooks once per clone: `cp .githooks/* .git/hooks/`.
+
+The `CI` workflow, cheapest stage first, so a lint error never waits for
+the Arch container:
+
+1. **lint** (Ubuntu, pinned shellcheck): `scripts/ci-check.sh lint`,
+   which runs `lint-layers.sh` (layer imports, hardcoded values,
+   translation keys in both files, file length) and shellcheck on
+   `install/`, `scripts/`, `tests/`, `iso/airootfs/`.
+2. **unit** (after lint): `scripts/ci-check.sh test`, every `tests/test-*`
+   script listed in `ci-check.sh`.
+3. **install-dry** (after lint, in parallel with unit): `install.sh
+   --dry-run` in an `archlinux:latest` container for m0/AMD, m0/Intel,
+   gaming/NVIDIA and full/AMD. It catches manifest, profile and
+   GPU-layer mistakes without installing anything.
+4. **CI passed**: succeeds only when all of the above did. It is the one
+   check the rulesets require, so adding a matrix entry never means
+   editing the rulesets.
+
+CI does **not** build the ISO: one image is past the free Actions
+storage quota, and a QEMU install needs KVM. Both stay local, once per
+release candidate. `scripts/check-isolation.sh` is local only as well.
+
+A new test is a `tests/test-<name>.sh` (or `.py`) plus a line in
+`scripts/ci-check.sh`; CI picks it up from there.
+
+## Release
+
+### 1. Pick the version
+
+[Semver](https://semver.org/) `MAJOR.MINOR.PATCH`, from the types merged
+since the last tag:
+
+- any breaking change: MAJOR (while the version is `0.x`, MINOR)
+- any `feat`: MINOR
+- only fixes and maintenance: PATCH
+
+### 2. Release candidate
+
+On an up-to-date `dev`: `scripts/ci-check.sh`, build the ISO with
+`sudo ./scripts/iso-build.sh --mkarchiso`, and install it in QEMU
+(`scripts/iso-qemu.sh`). Fix what breaks through the usual topic
+branches first.
+
+### 3. Release PR
+
+Generate the description, then open the PR `dev` → `main`:
+
+```bash
+git switch dev && git pull
+scripts/release-notes.sh --pr v0.8.0 >/tmp/release-pr.md
+gh pr create --base main --head dev --title "Release v0.8.0" --body-file /tmp/release-pr.md
+```
+
+`--pr` lists everything on `dev` since the newest tag in the release
+sections (Breaking changes, Added, Changed, Deprecated, Removed, Fixed,
+Security, Documentation, and Maintenance folded away) and appends the
+release checklist. Read it as a user would: a vague title is easier to
+fix now, by editing the PR text, than after the tag. The manual
+alternative is `.github/PULL_REQUEST_TEMPLATE/release.md`
+(`?template=release.md` on the compare page).
+
+Merge with **Create a merge commit** when CI is green.
+
+### 4. Tag
+
+An annotated tag on the merge commit. The first line of its message is
+the release title; everything after the first blank line becomes the
+**Highlights** at the top of the release notes, two to five sentences on
+what matters most to users:
+
+```bash
+git switch main && git pull
+cat >/tmp/tag.txt <<'EOF'
+ModernOS v0.8.0
+
+Headsets switch between music and call profiles from the volume panel.
+The launcher calculates as you type. The legacy clock widget is gone;
+the clock in the bar replaces it.
+EOF
+git tag -a v0.8.0 -F /tmp/tag.txt
+git push origin v0.8.0
+```
+
+### 5. GitHub Release
+
+Title: `ModernOS vX.Y.Z`. Body: `scripts/release-notes.sh vX.Y.Z`,
+which prints
+
+```
+## [0.8.0] - 2026-11-29
+### Highlights          from the tag message
+### Breaking changes    with what to do
+### Added / Changed / Deprecated / Removed / Fixed / Security / Documentation
+<details> Maintenance </details>
+### Upgrading           Settings → Update, or download the ISO
+[Full changelog](…/compare/v0.7.7...v0.8.0)
+```
+
+The `Release` workflow publishes it on the tag push, after checking the
+tag is on `main`. It only creates releases: one that already exists is
+left alone. When Actions cannot run, publish it by hand:
+
+```bash
+scripts/release-notes.sh v0.8.0 >/tmp/notes.md
+gh release create v0.8.0 --verify-tag --title "ModernOS v0.8.0" --notes-file /tmp/notes.md
+```
+
+Then attach the image (next section), which adds a Download section to
+the top of these notes.
+
+### 6. Merge back
+
+`main` now has a merge commit `dev` does not. Bring it back, so the next
+release PR starts from this tag:
+
+```bash
+git switch dev && git pull
+git merge --ff-only origin/main || git merge --no-edit origin/main
 git push origin dev
 ```
 
-## Open a PR
+## Hotfix
 
-When `dev` should become a release (or a hotfix), open a PR
-**`dev` → `main`**. Title says why. Description says how to try it.
-Wait until CI is green, then merge.
+For a bug in the current release that cannot wait for the next one:
 
-Forks open their PRs into `dev` as well. Only the maintainer opens
-`dev` → `main`. See `CONTRIBUTING.md`.
-
-## What “CI green” means
-
-GitHub Actions on every PR to `main` or `dev`, on pushes to `dev` /
-`main`, and on tags `v*`:
-
-- `scripts/ci-check.sh` (jq / python3 / git / shellcheck, then
-  `lint-layers.sh`, `shellcheck` on `install/` `scripts/` `iso/airootfs/`,
-  and the catalog / sync / nautilus / ISO kiosk / Calamares late / Calamares
-  patch / release-notes tests)
-- `./install/install.sh --dry-run --profile m0 --target $RUNNER_TEMP/…`
-
-CI does **not** build the ISO: one 1.8 GB image is past the free
-Actions storage quota. Build it locally with
-`sudo ./scripts/iso-build.sh --mkarchiso` (output in `iso/out/`), and
-for an unattended install test run `tests/test-iso-qemu-install.sh`.
-
-`scripts/check-isolation.sh` is **local only**. Do not add it to GitHub.
-
-## How to cut a release
-
-1. Open a PR **`dev` → `main`**. Title: `Release vX.Y.Z`.
-2. Merge when CI is green.
-3. Annotated tag on that `main` commit, then push the tag. Do **not**
-   write the GitHub Release by hand.
-
-```bash
-git checkout main
-git pull
-git tag -a v0.1.0 -m "ModernOS v0.1.0"
-git push origin v0.1.0
-```
-
-The `Release` Action writes [Keep a Changelog](https://keepachangelog.com/)
-notes (Added / Changed / Fixed / …) from commits since the previous
-tag and publishes the GitHub Release. It does not build or attach an
-ISO; that is the next section. Never run `provision-iso.sh` or
-Calamares on the session you live in.
+1. `scripts/issue-branch.sh 63 --hotfix` cuts `hotfix/63-<slug>` from
+   the newest tag on `main`.
+2. Fix it, then open the PR **into `main`** with a normal title
+   (`fix(lock): …`) and `Fixes #63`. Squash-merge when CI is green and
+   close the issue (it only closes itself on the default branch, `dev`).
+3. Tag the PATCH version on `main` exactly as in Release step 4
+   (`v0.8.1`), push it, and attach the ISO if the bug affects
+   installation.
+4. Merge back into `dev` as in Release step 6. A conflict there means
+   `dev` changed the same code; resolve it on `dev`.
 
 ## Release ISO
 
@@ -127,10 +398,11 @@ its own `vX.Y.Z/` folder and is compared with `rclone check`. rclone
 keeps its credentials in its own config, never in this repo.
 
 **Signing key, once.** A key used only for ModernOS releases, not your
-personal one:
+personal one. Its user ID is public, so give it a project address (or
+none), never a private one:
 
 ```bash
-gpg --quick-gen-key "ModernOS Releases <bastiweigand@gmail.com>" ed25519 sign 3y
+gpg --quick-gen-key "ModernOS Releases <releases@example.org>" ed25519 sign 3y
 gpg --armor --export "ModernOS Releases" >docs/release-key.asc
 ```
 
@@ -138,24 +410,30 @@ Commit `docs/release-key.asc`. Back up the secret key offline
 (`gpg --export-secret-keys --armor`); a lost key means users see a new
 fingerprint they cannot tell from an attacker's.
 
-That tag is what Settings → Update and the ISO pin look at.
-
-**Semver:** `MAJOR.MINOR.PATCH`. Breaking desktop/install behavior bumps
-MAJOR; features MINOR; fixes PATCH. Start at `v0.1.0` until you want
-`v1.0.0`.
-
-**Hotfix:** same path — commit on `dev`, PR into `main`, tag `vX.Y.Z+1`.
-After a release, `git checkout dev && git merge main` so `dev` is not
-behind.
-
-No `release/*` branches unless tagging from `main` becomes painful.
-
 ## What a release installs
 
 The ISO clones `https://github.com/Gamesearch56/modern_dotfile.git` at
 the baked-in tag. Settings → Update lists **ModernOS** first. It is
 pending only when a **newer** `vX.Y.Z` exists on GitHub. It never tracks
 `dev` or the tip of `main`.
+
+## Keeping personal data out
+
+Everything in this repository, its issues, PRs and releases can become
+public. Before you push or publish:
+
+- No secrets: API keys and tokens live in the gitignored `secrets.json`,
+  deploy keys in `secrets/`. `iso-release.sh` refuses an image that
+  contains either.
+- No personal addresses, real names of reporters, hostnames, usernames,
+  home paths, Wi-Fi names or serial numbers in code, docs, examples, PR
+  text or release notes. Use `example.org`, `user`, `/home/user`.
+- Screenshots: crop notifications, account names and network lists.
+- Logs pasted into a public issue: the in-app reporter redacts them
+  (`scripts/lib/report-redact.py`); anything pasted by hand is checked
+  by you.
+- Private reports reach the public only through
+  `scripts/report-to-issue.sh`, which leaves logs and screenshots behind.
 
 ## Private repo, while you are still testing
 
@@ -192,8 +470,10 @@ HTTPS and nothing else changes.
 
 ## What not to do
 
-- Commit on `main`.
-- Open PRs from `feature/*` / `fix/*` branches.
+- Commit on `main`, or open a topic PR into `main` (only release and
+  hotfix PRs go there).
+- Mix two issues in one branch.
+- Squash a release PR, or the merge back into `dev`.
 - `git push --force` to `main` or `dev` except the optional flip-day
   rewrite (below).
 - Point an installed machine at `dev` (`git pull` / Settings against
@@ -214,11 +494,12 @@ force-push is blocked after that.
    [TruffleHog](https://github.com/trufflesecurity/trufflehog) (or
    equivalent) against the full git history. The working tree can be
    clean and history still not. Also path-scan for `secrets.json`,
-   `secrets/github-deploy-key`, `.env`, and API-shaped strings.
+   `secrets/github-deploy-key`, `.env`, and API-shaped strings, and grep
+   history for personal email addresses.
 2. Optional: orphan-squash `main` and `dev` onto a new root (one commit
    each, or `dev` replayed on the squashed `main`). This is the only
    allowed force-push to those branches.
-3. Delete leftover `feature/*` / `fix/*` remotes if any remain.
+3. Delete merged topic branches on the remote.
 4. Revoke the read-only deploy key (Settings → Deploy keys) and delete
    `secrets/github-deploy-key` so later ISOs do not embed it.
 5. GitHub → Settings → Danger Zone → Change visibility → Public.
@@ -242,7 +523,7 @@ airootfs layout, then **replaces** `packages.x86_64` with
 copies `airootfs.sfs` with `rsync`, and the AUR package declares
 neither. Exit 127 is a missing binary. Rescue tools (Clonezilla, TestDisk,
 `archinstall`, extra filesystems) stay off the squashfs. Stock `linux`
-stays off so the image fits GitHub's 2 GiB release-asset cap; live boot
+stays off so the image fits GitHub's 2 GiB release-asset cap; live boot
 is `linux-zen` (`iso-build.sh` rewrites releng `vmlinuz-linux` paths).
 `linux-zen-headers` stay off the ISO; `install.sh` /
 `00-base.txt` still have them for DKMS. Firefox stays (live kiosk). AUR
@@ -257,59 +538,71 @@ the copy-the-live-root installer. Do not drop `linux-firmware` if
 real-hardware Wi-Fi still matters. Build and try the image in QEMU,
 never with `provision-iso.sh` / Calamares on your everyday machine.
 
-## After the repo is public (you apply)
+## Repository settings (you apply)
+
+**Pull requests** (Settings → General):
+
+- Allow **squash merging**, default message **Pull request title and
+  description**; allow **merge commits**; turn **rebase merging** off.
+- **Automatically delete head branches**: on.
+- Default branch: `dev`, so forks and new PRs target it.
+
+**Labels**, once:
+
+```bash
+for l in needs-triage confirmed breaking area:display area:hyprland \
+         area:quickshell area:audio area:bluetooth area:network area:games \
+         area:updates area:session area:apps area:other; do
+  gh label create "$l" --force
+done
+```
+
+`bug`, `enhancement` and `documentation` exist by default. The `area:*`
+names match what the in-app reporter sets.
+
+### Rulesets
 
 Use **Settings → Rules → Rulesets** (preferred) or classic
 **Settings → Branches**. Do this **after** any history rewrite, and
 **after** the repo is public. Private user repos on the free plan
 cannot use branch protection.
 
-**`main` (release branch)**
+**`main`**
 
-- Target: branch named `main`
-- Block force pushes (only after the optional squash)
-- Restrict deletions
-- Require a pull request before merging, **0** approving reviews (a
-  required review of 1 would block your own `dev` → `main` PRs unless
-  you add a bypass)
-- Require status checks to pass: `checks` and `install-dry` (job names
-  in `.github/workflows/ci.yml`)
-- Optionally “Require branches to be up to date”
-- Bypass list: **empty** if even your account should go through a PR;
-  or add yourself only if you still want a `main` hotfix hatch (that
-  fights “never commit on `main`”)
+- Block force pushes (only after the optional squash), restrict deletions
+- Require a pull request, **0** approving reviews (a required review
+  would block your own PRs unless you add a bypass)
+- Required status checks: **CI passed** and **Conventional PR title**
+- Require branches to be up to date
+- Bypass list: empty
 
-**`dev` (daily push branch)**
+**`dev`**
 
-- Target: branch named `dev`
-- Block force pushes (only after the optional squash)
-- Restrict deletions
-- **Do not** require a pull request (you push `dev` directly)
-- Do not require status checks on push (CI still runs after push;
-  requiring checks would block `git push origin dev` until Actions
-  finishes)
+- Block force pushes (only after the optional squash), restrict deletions
+- Require a pull request, **0** approving reviews
+- Required status checks: **CI passed** and **Conventional PR title**
+- Bypass list: your account, for the merge back after a release and
+  the odd one-line fix. Everything with an issue goes through a branch.
 
 **Repository / Actions**
 
 - **Collaborators:** leave empty (solo). User-owned repos cannot use
   the org-only `restrictions` “who can push” object.
 - **Actions → General:** workflow permissions **Read** repository
-  contents (already the intent in `ci.yml`). Do not grant GITHUB_TOKEN
-  write/approve.
+  contents. `release.yml` and `weekly.yml` ask for the extra
+  `contents: write` / `issues: write` they need themselves.
 - **Actions → Fork pull request workflows:** require approval for
   first-time contributors (`first_time_contributors_new_to_github`).
 - **Code security:** enable secret scanning and push protection. Keep
   private vulnerability reporting (`SECURITY.md`).
-- **Dependabot:** keep `.github/dependabot.yml`; its PRs should target
-  `dev`.
+- **Dependabot:** keep `.github/dependabot.yml`; its PRs target `dev`.
 - Optional: turn off Wiki / Projects if unused; leave Issues on for
   public bug reports.
 
 Do **not** add `pull_request_target` workflows.
 
 Classic API calls, if you prefer them over the Rulesets UI. Run these
-yourself after the repo is public — not before the optional squash
-enables force-push block:
+yourself after the repo is public, not before the optional squash:
 
 ```bash
 gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/main/protection \
@@ -318,8 +611,8 @@ gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/main/protection \
   "required_status_checks": {
     "strict": true,
     "checks": [
-      {"context": "checks"},
-      {"context": "install-dry"}
+      {"context": "CI passed"},
+      {"context": "Conventional PR title"}
     ]
   },
   "enforce_admins": true,
@@ -339,9 +632,17 @@ EOF
 gh api --method PUT repos/Gamesearch56/modern_dotfile/branches/dev/protection \
   --input - <<'EOF'
 {
-  "required_status_checks": null,
-  "enforce_admins": true,
-  "required_pull_request_reviews": null,
+  "required_status_checks": {
+    "strict": false,
+    "checks": [
+      {"context": "CI passed"},
+      {"context": "Conventional PR title"}
+    ]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 0
+  },
   "restrictions": null,
   "allow_force_pushes": false,
   "allow_deletions": false

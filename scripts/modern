@@ -35,6 +35,7 @@ $(t cli.usage)
   modern config set motion.scale 1.2
   modern config restore design typography
   modern report [sound|display|...]
+  modern device
   modern battlenet
   modern vivaldi
 EOF
@@ -236,6 +237,9 @@ case "$TARGET" in
         if ! timeout 3 qs -c modern ipc call bugReport open "${1:-}" >/dev/null 2>&1; then
             exec "$SCRIPT_DIR/bug-report.sh" quick "${1:-}"
         fi
+        ;;
+    device)
+        exec "$SCRIPT_DIR/bug-report.sh" device
         ;;
     config)
         SUB="${1:-}"

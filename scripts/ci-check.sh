@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Same gates as .github/workflows/ci.yml `checks` (minus the Arch
-# install-dry job). Run before commit and push. Exits non-zero on the
-# first failure.
+# Same gates as .github/workflows/ci.yml `lint` and `unit` (minus the
+# Arch install-dry matrix). Run before commit and push. Exits non-zero on
+# the first failure.
+#
+#   ci-check.sh         lint, then unit tests (what the git hooks run)
+#   ci-check.sh lint    layer lint, translations, shellcheck
+#   ci-check.sh test    unit tests only
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,7 +16,14 @@ PATH="${HOME}/.local/bin:${PATH}"
 die() { printf 'ci-check: ERROR: %s\n' "$*" >&2; exit 1; }
 log() { printf 'ci-check: %s\n' "$*"; }
 
-need=(jq python3 git shellcheck)
+STAGE="${1:-all}"
+case "$STAGE" in
+    all|lint|test) ;;
+    *) die "unknown stage '$STAGE' (all, lint or test)" ;;
+esac
+
+need=(jq python3 git)
+[ "$STAGE" = test ] || need+=(shellcheck)
 missing=()
 for cmd in "${need[@]}"; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -24,14 +35,20 @@ if [ ${#missing[@]} -gt 0 ]; then
 fi
 log "dependencies ok (${need[*]})"
 
-log "layer lint"
-"$ROOT/scripts/lint-layers.sh"
+if [ "$STAGE" != test ]; then
+    log "layer lint"
+    "$ROOT/scripts/lint-layers.sh"
 
-log "shellcheck"
-mapfile -t files < <(git ls-files '*.sh' | grep -E '^(install/|scripts/|tests/|iso/airootfs/)')
-[ ${#files[@]} -gt 0 ] || die "no shell scripts matched CI's git ls-files filter"
-shellcheck "${files[@]}"
-log "shellcheck ok (${#files[@]} files)"
+    log "shellcheck"
+    mapfile -t files < <(git ls-files '*.sh' | grep -E '^(install/|scripts/|tests/|iso/airootfs/)')
+    [ ${#files[@]} -gt 0 ] || die "no shell scripts matched CI's git ls-files filter"
+    shellcheck "${files[@]}"
+    log "shellcheck ok (${#files[@]} files)"
+fi
+if [ "$STAGE" = lint ]; then
+    log "ok (lint)"
+    exit 0
+fi
 
 log "settings catalog"
 "$ROOT/tests/test-settings-catalog.sh"
@@ -43,6 +60,8 @@ log "report token"
 python3 "$ROOT/tests/test-report-token.py"
 log "bug report"
 "$ROOT/tests/test-bug-report.sh"
+python3 "$ROOT/tests/test-report-device.py"
+"$ROOT/tests/test-report-to-issue.sh"
 log "nautilus prefs"
 "$ROOT/tests/test-nautilus-prefs.sh"
 log "files"
@@ -115,6 +134,9 @@ log "translation keys in use"
 python3 "$ROOT/tests/test-i18n-keys.py"
 log "release notes"
 "$ROOT/tests/test-release-notes.sh"
+"$ROOT/tests/test-pr-title.sh"
+"$ROOT/tests/test-issue-branch.sh"
+"$ROOT/tests/test-check-manifests.sh"
 log "release ISO"
 "$ROOT/tests/test-iso-release.sh"
 log "autologin apply"

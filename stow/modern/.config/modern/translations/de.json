@@ -1545,6 +1545,7 @@
     "view": "Öffnen",
     "files": {
       "system": "System und Version",
+      "device": "Geräteübersicht",
       "hyprland": "Fenster und Bildschirme",
       "hyprland-log": "Fenstermanager-Protokoll",
       "journal-user": "Desktop-Protokoll",

@@ -1,5 +1,8 @@
-# Keep a Changelog (keepachangelog.com) on every vX.Y.Z tag.
-# No ISO: it is built locally (scripts/iso-build.sh --mkarchiso).
+# Release notes on every vX.Y.Z tag (Keep a Changelog sections from
+# scripts/release-notes.sh). Creates the release only when none exists:
+# a release published by hand, or one scripts/iso-release.sh already
+# added the Download section to, stays as it is.
+# No ISO: it is built locally (scripts/iso-release.sh).
 name: Release
 
 on:
@@ -19,19 +22,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Publish patch notes
+      # checkout can leave a lightweight copy of the tag; the Highlights
+      # come from the annotated tag's message.
+      - name: Annotated tags
+        run: git fetch --force --tags origin
+
+      - name: Tag is on main
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME is not on main; tag the merged release commit" >&2
+            exit 1
+          fi
+
+      - name: Publish release notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
         run: |
-          tag="${GITHUB_REF_NAME}"
-          case "$tag" in
-            v[0-9]*.[0-9]*.[0-9]*) ;;
-            *) echo "skip $tag" >&2; exit 0 ;;
-          esac
-          notes="$(mktemp)"
-          ./scripts/release-notes.sh "$tag" >"$notes"
-          if gh release view "$tag" >/dev/null 2>&1; then
-            gh release edit "$tag" --notes-file "$notes"
-          else
-            gh release create "$tag" --title "ModernOS $tag" --notes-file "$notes"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release $TAG exists; notes left as they are"
+            exit 0
           fi
+          notes="$(mktemp)"
+          ./scripts/release-notes.sh "$TAG" >"$notes"
+          gh release create "$TAG" --verify-tag --title "ModernOS $TAG" --notes-file "$notes"

@@ -1545,6 +1545,7 @@
     "view": "Open",
     "files": {
       "system": "System and version",
+      "device": "Device summary",
       "hyprland": "Windows and monitors",
       "hyprland-log": "Window manager log",
       "journal-user": "Desktop log",

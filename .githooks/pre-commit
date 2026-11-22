@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Installed as .git/hooks/pre-commit. Same gates as pre-push / CI checks.
+# Installed as .git/hooks/pre-commit. The lint stage only, so commits on
+# a topic branch stay quick; pre-push runs the unit tests as well.
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 # ci-check.sh runs suites that build throwaway git fixtures. Git exports
@@ -7,4 +8,4 @@ ROOT="$(git rev-parse --show-toplevel)"
 # them, so a fixture's `add`/`commit` lands in the repository being verified
 # — observed staging a fixture file and moving the branch to a fixture commit.
 exec env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE -u GIT_PREFIX \
-    "$ROOT/scripts/ci-check.sh"
+    "$ROOT/scripts/ci-check.sh" lint

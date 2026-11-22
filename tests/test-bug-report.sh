@@ -139,7 +139,7 @@ num="$("$BR" send "$id" "$req")" && [ "$num" = 7 ] && ok "send prints the issue 
 jq -se '[.[] | select(.method == "PUT")] | length == 2' "$tmp/gh.log" >/dev/null \
     && ok "bundle and the one ticked screenshot uploaded" || err "uploads: $(cat "$tmp/gh.log")"
 jq -se '.[] | select(.path == "/repos/owner/reports/issues") | .body
-    | (.labels == ["area:audio"]) and (.body | test("## Steps")) and (.body | test("## Environment"))
+    | (.labels == ["area:audio", "bug", "needs-triage"]) and (.body | test("## Steps")) and (.body | test("## Environment"))
       and (.body | test("eDP-1-[0-9]+\\.jpg\\?raw=true")) and (.title | startswith("["))' "$tmp/gh.log" >/dev/null \
     && ok "issue carries label, steps, environment, screenshot and version title" || err "issue: $(tail -1 "$tmp/gh.log")"
 jq -se '.[0].auth == "Bearer tok-'"$SECRET"'"' "$tmp/gh.log" >/dev/null && ok "token from secrets.json" || err "auth header"

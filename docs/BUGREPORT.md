@@ -39,6 +39,7 @@ the `BugReport` tag (`Services/BugReportProc.qml`).
 | File | Contents |
 |------|----------|
 | `system.txt`, `failed-units.txt`, `coredumps.txt`, `doctor.txt` | Version, commit, kernel, failed units, recent crashes |
+| `device.txt` | One-screen device summary, quoted as the issue's **Device** section: machine model and form factor, firmware and boot mode (Secure Boot), virtualization, CPU and threads, memory, each GPU with its driver, OpenGL renderer, graphics package versions, displays (make, model, mode, scale, VRR; no serial), root filesystem, audio server, install type. `modern device` prints it, redacted, for a hand-written issue |
 | `hyprland.txt`, `hyprland-log.txt` | Monitors, workspaces, window class and geometry (no titles), layers, input device names, log warnings |
 | `journal-*.txt`, `quickshell-log.txt` | User journal, system warnings, previous boot errors, shell log |
 | `audio.txt` | `wpctl status`, sinks, cards, PipeWire quantum/rate, Bluetooth card profile and codec |
@@ -56,9 +57,16 @@ Every file name needs a `bugReport.files.<name>` label in `en.json` and
 Never collected (`_forbidden`): `secrets.json`, `.env`, keyrings, SSH
 and GnuPG, browser profiles. Redacted in every text file: tokens,
 `key=value` secrets, URL queries, mail addresses, IPs, MAC addresses
-(last byte kept), Wi-Fi names (quoted, `SSID:` fields, `ssid=`), the
+(last byte kept), Wi-Fi names (quoted, `SSID:` fields, `ssid=`), serial
+numbers (`"serial"` fields, `Serial Number:`, `ID_SERIAL`), the
 hostname, the username and the home path. JSON loses every value under
-an account, location or secret key.
+an account, location, serial, UUID or secret key.
+
+Reports are private issues labelled `bug`, `needs-triage` and one
+`area:*` per chosen category. Turning one into a public issue to work
+on: `scripts/report-to-issue.sh` (`docs/GIT.md`, "From a report to a
+branch").
 
 Tests: `tests/test-bug-report.sh` (stubbed tools, fake GitHub server in
-`tests/lib/fake-github.py`).
+`tests/lib/fake-github.py`), `tests/test-report-device.py`,
+`tests/test-report-to-issue.sh`.

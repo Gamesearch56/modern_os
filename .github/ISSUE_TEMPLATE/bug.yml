@@ -1,20 +1,23 @@
 name: Bug report
 description: Something does not work as documented
-labels: ["bug"]
+labels: ["bug", "needs-triage"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        On ModernOS the quickest way is **Super+#** (Super+\ on a US
+        layout) or `modern report` in a terminal: it attaches the device
+        summary and redacted logs for you. Use this form when that does
+        not work.
+
+        Remove names, email addresses, hostnames, Wi-Fi network names and
+        serial numbers from anything you paste. Security problems go to the
+        private advisory form instead (see the issue chooser).
   - type: textarea
     id: what
     attributes:
       label: What happened
-      description: What you expected vs what you saw.
-    validations:
-      required: true
-  - type: input
-    id: version
-    attributes:
-      label: Version
-      description: Latest release tag (vX.Y.Z on the Releases page), ISO name, or git commit.
-      placeholder: vX.Y.Z
+      description: What you expected and what you saw instead.
     validations:
       required: true
   - type: textarea
@@ -27,8 +30,53 @@ body:
         3.
     validations:
       required: true
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often
+      options:
+        - Every time
+        - Sometimes
+        - Once
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ModernOS version
+      description: Settings → System shows it, or the ISO file you installed from.
+      placeholder: vX.Y.Z
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installed with
+      options:
+        - ISO installer
+        - install.sh on an existing Arch system
+        - Live ISO session (not installed)
+        - Don't know
+    validations:
+      required: true
+  - type: textarea
+    id: device
+    attributes:
+      label: Device
+      description: |
+        Run `modern device` in a terminal and paste the output. It lists
+        the machine model, firmware and boot mode, CPU, memory, GPUs with
+        their driver, displays and the audio server, with serial numbers
+        removed. If that does not work, give at least the CPU, GPU and
+        whether it is a laptop or a desktop.
+      render: markdown
+    validations:
+      required: true
   - type: textarea
     id: logs
     attributes:
       label: Logs
-      description: doctor.sh, quickshell.log, or journalctl -t modern-install as relevant.
+      description: |
+        `scripts/doctor.sh`, `~/.local/state/modern/quickshell.log`, or
+        `journalctl -t modern-install -b` as relevant.
+      render: text
