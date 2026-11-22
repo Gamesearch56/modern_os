@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# install.sh fetches a private GE-Proton for Battle.net, and a second
-# run does not download it again. A failed fetch must not fail the install.
+# The library can still install a private runner. The system update does
+# not: install.sh must not download it. A failed fetch must not fail.
 # shellcheck disable=SC2016
 set -euo pipefail
 
@@ -14,12 +14,12 @@ err() {
 
 INSTALL="$ROOT/install/install.sh"
 BN="$ROOT/scripts/battlenet"
-if grep -Fq 'ge_proton_ensure "$TARGET"' "$INSTALL" \
-    && grep -Fq 'install/lib/ge-proton.sh' "$INSTALL" \
-    && grep -Fq 'ge_proton_dir "$HOME"' "$BN"; then
-    ok "install places GE-Proton and battlenet prefers that private runner"
+if ! grep -Fq 'ge_proton_ensure' "$INSTALL" \
+    && ! grep -Fq 'ge-proton.sh' "$INSTALL" \
+    && ! grep -Fq 'ge_proton_dir' "$BN"; then
+    ok "the system update does not download GE-Proton"
 else
-    err "install.sh must call ge_proton_ensure and battlenet must use ge_proton_dir"
+    err "install.sh or battlenet still fetches a private GE-Proton"
 fi
 
 tmp="$(mktemp -d)"
