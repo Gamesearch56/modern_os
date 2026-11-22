@@ -12,6 +12,9 @@ Item {
     property string pendingAction: ""
     property string mutating: ""
     property string mutAction: ""
+    // Kept after mutAction is cleared so a closing dialog still names
+    // the action that just finished.
+    property string doneAction: ""
     property string lastName: ""
     property string errorKey: ""
     property string log: ""
@@ -138,6 +141,7 @@ Item {
     function _done(code: int) {
         const name = root.mutating;
         const action = root.mutAction;
+        root.doneAction = action;
         if (root._userCancel) {
             root._userCancel = false;
             code = 126;

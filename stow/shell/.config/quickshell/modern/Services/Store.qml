@@ -27,6 +27,7 @@ Singleton {
     readonly property alias pendingAction: mutate.pendingAction
     readonly property alias mutating: mutate.mutating
     readonly property alias mutAction: mutate.mutAction
+    readonly property alias doneAction: mutate.doneAction
     readonly property alias errorKey: mutate.errorKey
     readonly property alias lastName: mutate.lastName
     readonly property alias log: mutate.log
@@ -59,6 +60,9 @@ Singleton {
         onFinished: (ok) => {
             if (!ok)
                 return;
+            // The follow-up package query is what used to leave the
+            // button on Remove until it returned.
+            fetch.noteInstalled(mutate.lastName, mutate.doneAction !== "remove");
             Update.drop(mutate.lastName);
             Update.refresh();
             root.reload();

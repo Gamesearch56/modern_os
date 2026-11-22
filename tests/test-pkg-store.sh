@@ -118,6 +118,19 @@ else
     err "pkg-mutate update must -Sy and StoreMutate must pass update through"
 fi
 
+PROG="$ROOT/stow/shell/.config/quickshell/modern/Modules/Store/Progress.qml"
+ASK="$ROOT/stow/shell/.config/quickshell/modern/Modules/Store/Module.qml"
+FETCH="$ROOT/stow/shell/.config/quickshell/modern/Services/StoreFetch.qml"
+if grep -F 'Store.doneAction' "$PROG" >/dev/null \
+    && grep -F 'heldAction' "$ASK" >/dev/null \
+    && grep -F 'function noteInstalled' "$FETCH" >/dev/null \
+    && grep -F 'fetch.noteInstalled' "$STORE" >/dev/null \
+    && grep -F 'root.doneAction = action' "$MUTATE_QML" >/dev/null; then
+    ok "a finished remove keeps its label while the dialog closes, and the list updates at once"
+else
+    err "uninstall must not fall through to the install label, and the list must update before the next query"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

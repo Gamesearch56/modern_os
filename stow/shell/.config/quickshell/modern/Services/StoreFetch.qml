@@ -77,6 +77,49 @@ Item {
         root._start(argv, mode);
     }
 
+    // Pacman has already finished. The lists still say installed until
+    // the next query returns, and the installed page forces that label.
+    function noteInstalled(name: string, on: bool) {
+        const h = root.host;
+        if (!h)
+            return;
+        const n = String(name || "");
+        if (!n.length)
+            return;
+        const drop = !on && h.categoryId === "installed" && h.query.trim().length === 0;
+        const rewrite = (rows, remove) => {
+            const src = rows || [];
+            const out = [];
+            for (let i = 0; i < src.length; i++) {
+                const row = src[i];
+                if (!row || String(row.name || "") !== n) {
+                    out.push(row);
+                    continue;
+                }
+                if (remove)
+                    continue;
+                const next = Object.assign({}, row);
+                next.installed = on;
+                out.push(next);
+            }
+            return out;
+        };
+        h.results = rewrite(h.results, drop);
+        h.systemPkgs = rewrite(h.systemPkgs, drop);
+        const sections = h.sections || [];
+        const nextSections = [];
+        for (let i = 0; i < sections.length; i++) {
+            const sec = sections[i] || {};
+            const pkgs = rewrite(sec.packages, false);
+            if (!pkgs.length)
+                continue;
+            const next = Object.assign({}, sec);
+            next.packages = pkgs;
+            nextSections.push(next);
+        }
+        h.sections = nextSections;
+    }
+
     function seen() {
         const out = [];
         const list = root.host.results || [];
