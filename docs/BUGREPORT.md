@@ -49,7 +49,7 @@ the `BugReport` tag (`Services/BugReportProc.qml`).
 | `session.txt` | Lock marker, whether shell/supervisor/hypridle/inhibitor run, logind session, inhibitors, `modern-session`/`modern-power`/`modern-shell` journal, greetd, login screen log and auth trace, desktop session log (headers, warnings, errors only), hypridle log |
 | `boot.txt` | Kernel command line, boot timing and critical chain, boot entries, splash/boot-confirm/greetd units, the end of the previous boot (its shutdown) |
 | `update.txt`, `update-log.txt`, `install-log.txt` | Update exit status and markers, system-update unit, release history, update logs, `install.sh` log and the ISO installer's late-phase log |
-| `apps.txt` | Texteditor, Imageviewer and Mediaplayer logs: launcher notes plus each window's own qs output (`scripts/lib/app-log.sh`, 1 MB, one previous file kept). An "Apps" report quotes it in the issue |
+| `apps.txt` | System application logs (Texteditor, Imageviewer and Mediaplayer): launcher notes plus each window's own qs output (`scripts/lib/app-log.sh`, 1 MB, one previous file kept). A "System applications" report quotes it in the issue |
 
 Every file name needs a `bugReport.files.<name>` label in `en.json` and
 `de.json`; `tests/test-bug-report.sh` fails on one without.

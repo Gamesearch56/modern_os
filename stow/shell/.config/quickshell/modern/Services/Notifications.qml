@@ -110,9 +110,42 @@ Singleton {
         return root.timeoutMs;
     }
 
+    // Chromium-family browsers send expire_timeout 0, and often the
+    // resident hint, so a site notification stays until the page closes
+    // it. The banner uses the same timer as every other toast. The
+    // entry stays in the list.
+    function _bannerMs(n: var): int {
+        if (!root._fromBrowser(n)) {
+            const protocol = Number(n.expireTimeout);
+            if (n.resident === true || protocol === 0)
+                return 0;
+        }
+        return root._timeoutMs();
+    }
+
+    function _fromBrowser(n: var): bool {
+        const fields = [n.appName, n.desktopEntry, n.appIcon, n.image];
+        for (let i = 0; i < fields.length; i++) {
+            const raw = root._str(fields[i]);
+            if (!raw.length)
+                continue;
+            if (root._browserId(raw))
+                return true;
+            const norm = root._normApp(raw);
+            if (norm.indexOf("vivaldi") === 0 || norm.indexOf("chromium") === 0
+                || norm.indexOf("googlechrome") === 0 || norm.indexOf("brave") === 0
+                || norm.indexOf("firefox") === 0 || norm.indexOf("librewolf") === 0)
+                return true;
+            const low = raw.toLowerCase();
+            if (low.indexOf("/tmp/.com.vivaldi") !== -1
+                || low.indexOf("/tmp/.org.chromium") !== -1
+                || low.indexOf("/tmp/.com.google.chrome") !== -1)
+                return true;
+        }
+        return false;
+    }
+
     function _wrap(n) {
-        const protocol = n.expireTimeout;
-        const resident = n.resident === true || protocol === 0;
         const item = {
             uid: root._nextId++,
             raw: n,
@@ -126,7 +159,7 @@ Singleton {
             local: false,
             toastVisible: true,
             read: false,
-            expireTimeout: resident ? 0 : root._timeoutMs(),
+            expireTimeout: root._bannerMs(n),
             shownAt: Date.now()
         };
         try {

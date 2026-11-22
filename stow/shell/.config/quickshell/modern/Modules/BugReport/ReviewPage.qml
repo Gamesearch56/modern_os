@@ -20,6 +20,54 @@ ColumnLayout {
         return I18n.t("units.b", { n: String(n) });
     }
 
+    function _icon(name: string): string {
+        const id = String(name || "").replace(/\.(txt|json)$/, "");
+        switch (id) {
+        case "quickshell":
+        case "quickshell-log":
+        case "quickshell-journal":
+            return "applications-system";
+        case "system":
+        case "device":
+            return "computer";
+        case "hyprland":
+        case "hyprland-log":
+            return "preferences-system-windows";
+        case "audio":
+            return "audio-volume-high";
+        case "bluetooth":
+            return "bluetooth";
+        case "network":
+            return "network-wireless";
+        case "games":
+            return "input-gaming";
+        case "apps":
+            return "applications-other";
+        case "update":
+        case "update-log":
+        case "pacman-log":
+        case "install-log":
+            return "system-software-update";
+        case "boot":
+        case "journal-previous-boot":
+            return "system-reboot";
+        case "hardware":
+            return "drive-harddisk";
+        case "session":
+            return "system-lock-screen";
+        case "config":
+            return "preferences-system";
+        case "doctor":
+            return "utilities-system-monitor";
+        case "failed-units":
+            return "dialog-warning";
+        case "coredumps":
+            return "dialog-error";
+        default:
+            return "text-x-generic";
+        }
+    }
+
     MHint {
         Layout.fillWidth: true
         key: "bugReport.reviewHint"
@@ -50,7 +98,8 @@ ColumnLayout {
         delegate: MListItem {
             required property var modelData
             width: ListView.view.width
-            iconName: "text-x-generic"
+            iconName: root._icon(modelData.name)
+            preferSymbolic: false
             titleKey: "bugReport.files." + String(modelData.name).replace(/\.(txt|json)$/, "")
             subtitleValue: root._size(modelData.size)
             onClicked: BugReport.toggleFile(modelData.name)

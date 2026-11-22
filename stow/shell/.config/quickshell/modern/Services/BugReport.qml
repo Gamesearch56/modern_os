@@ -13,7 +13,7 @@ import "../Commons"
 Singleton {
     id: root
 
-    readonly property var areas: ["display", "hyprland", "shell", "sound", "bluetooth", "network", "games", "updates", "lock", "apps", "other"]
+    readonly property var areas: ["display", "hyprland", "shell", "sound", "bluetooth", "network", "games", "updates", "lock", "apps", "systemApps", "files", "keyboard", "power", "appearance", "other"]
     property bool open: false
     property string reportId: ""
     property int step: 0

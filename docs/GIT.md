@@ -571,7 +571,8 @@ never with `provision-iso.sh` / Calamares on your everyday machine.
 ```bash
 for l in needs-triage confirmed breaking area:display area:hyprland \
          area:quickshell area:audio area:bluetooth area:network area:games \
-         area:updates area:session area:apps area:other; do
+         area:updates area:session area:apps area:system-apps area:files \
+         area:keyboard area:power area:appearance area:other; do
   gh label create "$l" --force
 done
 ```
