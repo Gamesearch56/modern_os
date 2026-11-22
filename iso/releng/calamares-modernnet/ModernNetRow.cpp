@@ -16,8 +16,9 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     auto* row = new QHBoxLayout( this );
     // The name must be allowed to shrink. Its minimum width otherwise
     // pushes Connect past the row and the list clips the button.
-    row->setContentsMargins( 16, 14, 28, 14 );
-    row->setSpacing( 16 );
+    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Preferred );
+    row->setContentsMargins( 8, 4, 12, 4 );
+    row->setSpacing( 8 );
 
     auto* icon = new QLabel;
     const QString name = wifi.locked ? QStringLiteral( "network-wireless-encrypted" )
@@ -65,13 +66,21 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     col->addWidget( sub );
     row->addLayout( col, 1 );
 
+    // A click must not change the button's width. A narrower pressed
+    // style otherwise slides the button toward the name.
+    const auto pin = []( QPushButton* button ) {
+        button->setFixedWidth( button->sizeHint().width() );
+        button->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
+    };
+
     if ( wifi.inUse )
     {
         auto* btn = new QPushButton( tr( "Disconnect" ) );
         btn->setObjectName( QStringLiteral( "networkRowDisconnect" ) );
         btn->setCursor( Qt::PointingHandCursor );
         connect( btn, &QPushButton::clicked, this, &ModernNetRow::disconnectClicked );
-        row->addWidget( btn, 0, Qt::AlignVCenter );
+        pin( btn );
+        row->addWidget( btn, 0, Qt::AlignRight | Qt::AlignVCenter );
         return;
     }
     if ( wifi.known )
@@ -80,11 +89,13 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
         forget->setObjectName( QStringLiteral( "networkRowForget" ) );
         forget->setCursor( Qt::PointingHandCursor );
         connect( forget, &QPushButton::clicked, this, &ModernNetRow::forgetClicked );
-        row->addWidget( forget, 0, Qt::AlignVCenter );
+        pin( forget );
+        row->addWidget( forget, 0, Qt::AlignRight | Qt::AlignVCenter );
     }
     auto* btn = new QPushButton( tr( "Connect" ) );
     btn->setObjectName( QStringLiteral( "networkRowConnect" ) );
     btn->setCursor( Qt::PointingHandCursor );
     connect( btn, &QPushButton::clicked, this, &ModernNetRow::connectClicked );
-    row->addWidget( btn, 0, Qt::AlignVCenter );
+    pin( btn );
+    row->addWidget( btn, 0, Qt::AlignRight | Qt::AlignVCenter );
 }

@@ -223,6 +223,8 @@ check "$src/libcalamaresui/viewpages/ExecutionViewStep.cpp" 'tr( "Toggle log" )'
 check "$src/modules/keyboard/KeyboardPage.cpp" "physicalModelSelector->hide()" "hide keyboard model"
 check "$src/modules/keyboard/Config.cpp" "somethingChanged();" "layout change applies with no variants"
 check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-option" ) << QString()' "setxkbmap -option with an empty value forces Xwayland remap"
+check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-query" )' "setxkbmap -query finishes the ignored first layout"
+check "$src/modules/keyboard/Config.cpp" "QTimer::singleShot( 400" "the first German pick is applied again after Xwayland drops it"
 check "$src/modules/keyboard/Config.cpp" "#include <QLocale>" "Welcome layout includes QLocale"
 check "$src/modules/keyboard/Config.cpp" "modernWelcomeLayout" "Welcome language keyboard layout"
 check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "de" )' "German Welcome layout is xkb de"

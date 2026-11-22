@@ -41,7 +41,7 @@ public:
     void refresh();
     void scan();
     void setWifiRadio( bool on );
-    void connectSsid( const QString& ssid, const QString& password );
+    void connectSsid( const QString& ssid, const QString& password, const QString& security = {} );
     void forgetSsid( const QString& ssid );
     void disconnectWifi();
 

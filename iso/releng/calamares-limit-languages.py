@@ -466,14 +466,21 @@ KB_APPLY_NEW = """                 m_current.selectedLayout = m_keyboardLayoutsM
 # non-ascii-layouts adds `-option grp:…` and that rebuilds the map. ASCII
 # layouts (German) never sent -option, so Z still typed Y. A bare -option
 # is a missing argument and setxkbmap then keeps the old map; an empty
-# option clears it and the layout is applied. The first call is still ignored.
+# option clears it. Two calls back to back are still one burst: the first
+# pick of German stays on us until the user leaves and comes back. A query
+# finishes that burst, and a later call applies the layout.
 KB_XKB_OLD = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
         QProcess::execute( "setxkbmap", basicArguments );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
 KB_XKB_NEW = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
         basicArguments << QStringLiteral( "-option" ) << QString();
         QProcess::execute( "setxkbmap", basicArguments );
+        QProcess::execute( "setxkbmap", { QStringLiteral( "-query" ) } );
         QProcess::execute( "setxkbmap", basicArguments );
+        const QStringList again = basicArguments;
+        QTimer::singleShot( 400, [ again ]() {
+            QProcess::execute( "setxkbmap", again );
+        } );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
 
 # setConfigurationMap() detects the layout while Welcome is still the live
@@ -495,7 +502,8 @@ KB_LOCALE_INC_OLD = """#include <QGuiApplication>
 #include <QProcess>"""
 KB_LOCALE_INC_NEW = """#include <QGuiApplication>
 #include <QLocale>
-#include <QProcess>"""
+#include <QProcess>
+#include <QTimer>"""
 
 # Prefer the Welcome language over setxkbmap -print. A fresh Xwayland
 # reports pc+us even after the Welcome combo is German, and detect runs

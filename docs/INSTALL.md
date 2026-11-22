@@ -256,8 +256,11 @@ of German still left the test field on `us`: cage's Xwayland ignores
 `setxkbmap -layout de` until a call also passes `-option` (India does,
 because it is in `non-ascii-layouts`). A bare `-option` is a missing
 argument, so the map stays `us` and Z types Y. The patch sends
-`-option` with an empty value, which clears the old options, and runs
-`setxkbmap` twice.
+`-option` with an empty value. Two calls in a row are still ignored as
+one burst, so the first pick of German stays on `us` until another
+layout is chosen and German is picked again. A `setxkbmap -query`
+between them finishes that burst, and the layout is applied once more
+a moment later.
 
 ### Languages, countries and keyboard layouts
 

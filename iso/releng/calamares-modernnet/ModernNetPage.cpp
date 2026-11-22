@@ -115,8 +115,9 @@ ModernNetPage::ModernNetPage( QWidget* parent )
 
     m_list = new QListWidget;
     m_list->setObjectName( QStringLiteral( "wifiList" ) );
-    m_list->setSelectionMode( QAbstractItemView::SingleSelection );
-    m_list->setSpacing( 12 );
+    m_list->setSpacing( 4 );
+    m_list->setSelectionMode( QAbstractItemView::NoSelection );
+    m_list->setFocusPolicy( Qt::NoFocus );
     m_list->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
     wifi->addWidget( m_list, 1 );
 
@@ -364,6 +365,7 @@ ModernNetPage::fillWifi()
         item->setData( Qt::UserRole + 1, QVariant( w.locked && !w.inUse ) );
         item->setData( Qt::UserRole + 2, QVariant( w.inUse ) );
         item->setData( Qt::UserRole + 3, QVariant( w.known ) );
+        item->setData( Qt::UserRole + 4, w.security );
         auto* row = new ModernNetRow( w );
         connect( row, &ModernNetRow::connectClicked, this, [ this, ssid = w.ssid ]() {
             selectSsid( ssid );
@@ -377,7 +379,9 @@ ModernNetPage::fillWifi()
         } );
         m_list->addItem( item );
         m_list->setItemWidget( item, row );
-        item->setSizeHint( QSize( m_list->viewport()->width(), qMax( 72, row->sizeHint().height() ) ) );
+        const int wide = qMax( 1, m_list->viewport()->width() );
+        row->setMinimumWidth( wide );
+        item->setSizeHint( QSize( wide, row->sizeHint().height() ) );
         if ( w.ssid == selected || w.ssid == passSsid || w.inUse )
         {
             m_list->setCurrentItem( item );
@@ -442,10 +446,11 @@ ModernNetPage::connectWifi()
         return;
     }
     const QString password = m_passCard->isVisible() ? m_password->text() : QString();
+    const QString security = item->data( Qt::UserRole + 4 ).toString();
     m_connect->setEnabled( false );
     m_refresh->setEnabled( false );
-    m_hint->setText( tr( "Looking for %1…" ).arg( ssid ) );
-    m_nm->connectSsid( ssid, password );
+    m_hint->setText( tr( "Checking the password…" ) );
+    m_nm->connectSsid( ssid, password, security );
 }
 
 void
