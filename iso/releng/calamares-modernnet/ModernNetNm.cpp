@@ -573,7 +573,7 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QS
     connect( m_join, &QProcess::errorOccurred, this, [ this ]( QProcess::ProcessError error ) {
         if ( error == QProcess::FailedToStart )
         {
-            noteJoin( QStringLiteral( "calamares join failed to start" ) );
+            noteJoin( QStringLiteral( "calamares join failed to start: %1" ).arg( m_join->errorString() ) );
             settleJoin( 1 );
         }
     } );
@@ -622,5 +622,10 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QS
         m_join->closeWriteChannel();
     } );
     leadGroup( m_join );
-    m_join->start( kWifiJoin, args );
+    // bash reads the script. mkarchiso drops the execute bit on any
+    // file that profiledef does not list, and QProcess then reports
+    // that the script failed to start before it can read the password.
+    m_join->setProgram( QStringLiteral( "/bin/bash" ) );
+    m_join->setArguments( QStringList{ kWifiJoin } + args );
+    m_join->start();
 }

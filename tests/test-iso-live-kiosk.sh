@@ -165,11 +165,11 @@ else
     err "live greetd config must autologin liveuser"
 fi
 
-if grep -F 'Xwayland -noreset' "$WRAP" >/dev/null \
+if grep -F 'Xwayland -nokeymap' "$WRAP" >/dev/null \
     && grep -F 'xhost +SI:localuser:root' "$WRAP" >/dev/null \
     && grep -F 'sudo -n' "$WRAP" >/dev/null \
     && grep -F 'QT_QPA_PLATFORM=xcb' "$WRAP" >/dev/null \
-    && grep -F 'exec Xwayland' "$WRAP" >/dev/null \
+    && grep -F 'exec Xwayland -nokeymap -noreset' "$WRAP" >/dev/null \
     && grep -F 'modern-ci: calamares' "$WRAP" >/dev/null \
     && grep -F 'modern-ci: unattended' "$WRAP" >/dev/null \
     && grep -F '/etc/calamares/unattended' "$WRAP" >/dev/null \
@@ -231,10 +231,13 @@ else
     err "99-liveuser must NOPASSWD and env_keep WAYLAND_DISPLAY"
 fi
 
-if grep -F '/usr/lib/modern/live-calamares.sh' "$PROFILE" >/dev/null; then
-    ok "profiledef ships the wrapper mode 755"
+if grep -F '/usr/lib/modern/live-calamares.sh' "$PROFILE" >/dev/null \
+    && grep -F '["/usr/lib/modern/live-xkb.sh"]="0:0:755"' "$PROFILE" >/dev/null \
+    && grep -F '["/usr/lib/modern/wifi-join.sh"]="0:0:755"' "$PROFILE" >/dev/null \
+    && grep -F '["/usr/lib/modern/wifi-join-add.py"]="0:0:755"' "$PROFILE" >/dev/null; then
+    ok "profiledef keeps the installer scripts executable"
 else
-    err "profiledef.sh missing live-calamares.sh permissions"
+    err "profiledef.sh must mark live-calamares.sh, live-xkb.sh and wifi-join executable"
 fi
 
 if grep -F 'live-calamares.sh' "$ROOT/scripts/iso-build.sh" >/dev/null; then

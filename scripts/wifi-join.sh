@@ -164,7 +164,13 @@ trap cleanup_pw EXIT
 add_keyfile() {
     local file=$1 helper
     helper=${MODERN_WIFI_ADD:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wifi-join-add.py}
-    "$helper" "$file"
+    # The image build drops the execute bit unless the path is listed.
+    # python3 can still read the helper. A test double is run directly.
+    if [[ -x $helper ]]; then
+        "$helper" "$file"
+    else
+        python3 "$helper" "$file"
+    fi
 }
 
 # python-gobject is what libnm needs. The live image did not ship it, so

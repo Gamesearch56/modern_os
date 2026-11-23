@@ -101,5 +101,10 @@ export DISPLAY="$display"
     fi
 ) &
 
-note "exec Xwayland -noreset $display"
-exec Xwayland -noreset "$display"
+# Without -nokeymap, Cage's keymap replaces whatever setxkbmap just
+# compiled, so the query can say "de" while the next key is still US.
+# This Xwayland does not call libxkbcommon, so a preload cannot
+# translate the key. Ignoring the compositor map leaves setxkbmap in
+# charge, which is the layout the keyboard page already applies.
+note "exec Xwayland -nokeymap -noreset $display"
+exec Xwayland -nokeymap -noreset "$display"
