@@ -249,6 +249,26 @@ gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -pthread \
     || die "could not compile the installer keyboard helper"
 chmod 0755 "$AIROOTFS_OUT/usr/lib/modern/live-xkb-cage.so"
 log "installer keyboard helper compiled"
+# The installed system runs the release pin's greeter, which modesets a
+# dark panel and shows the firmware picture. These copies are applied
+# after that pin's install, from calamares-late.sh.
+if ! pkg-config --exists libdrm; then
+    die "libdrm is required for the login handoff (pacman -S --needed libdrm)"
+fi
+read -r -a drm_cflags < <(pkg-config --cflags --libs libdrm)
+gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -pthread \
+    -o "$AIROOTFS_OUT/usr/lib/modern/seat-nomodeset.next" \
+    "$ROOT/install/system/greetd/seat-nomodeset.c" \
+    "${drm_cflags[@]}" \
+    || die "could not compile the login handoff helper"
+chmod 0755 "$AIROOTFS_OUT/usr/lib/modern/seat-nomodeset.next"
+install -m 0755 "$ROOT/install/system/greetd/seat-cover.py" \
+    "$AIROOTFS_OUT/usr/lib/modern/seat-cover.next"
+install -m 0755 "$ROOT/install/system/greetd/desktop-session.sh" \
+    "$AIROOTFS_OUT/usr/lib/modern/desktop-session.next"
+install -m 0755 "$ROOT/install/system/greetd/kiosk.sh" \
+    "$AIROOTFS_OUT/etc/greetd/kiosk.next"
+log "login handoff helper compiled"
 install -m 0644 "$ROOT/install/lib/wifi-wl.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/wifi-wl.sh"
 install -d -m 0755 "$AIROOTFS_OUT/usr/local/bin"

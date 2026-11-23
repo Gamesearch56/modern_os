@@ -123,6 +123,23 @@ greetd_apply() {
     greetd_as_root install -m 0755 \
         "$repo/install/system/greetd/seat-cover.py" \
         /usr/lib/modern/seat-cover.py
+    # The greeter turns the panel off as it exits, and the desktop's
+    # first frame modesets it back on. Both show the firmware picture
+    # on this laptop. The helper is a small library, built here so a
+    # checkout does not have to commit the binary.
+    if command -v gcc >/dev/null 2>&1 && pkg-config --exists libdrm; then
+        nomodeset="$(mktemp)"
+        read -r -a drm_cflags < <(pkg-config --cflags --libs libdrm)
+        if gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -pthread \
+            -o "$nomodeset" \
+            "$repo/install/system/greetd/seat-nomodeset.c" \
+            "${drm_cflags[@]}"; then
+            greetd_as_root install -m 0755 "$nomodeset" /usr/lib/modern/seat-nomodeset.so
+        else
+            greetd_log "login handoff helper did not compile"
+        fi
+        rm -f "$nomodeset"
+    fi
     greetd_as_root install -m 0755 "$repo/install/system/greetd/list-users.py" /etc/greetd/list-users.py
     if [ -f "$repo/stow/hypr/.config/hypr/lib/json.lua" ]; then
         greetd_as_root install -m 0644 "$repo/stow/hypr/.config/hypr/lib/json.lua" /etc/greetd/json.lua

@@ -152,6 +152,21 @@ class MapDumb(ctypes.Structure):
     ]
 
 
+class VBlank(ctypes.Structure):
+    _fields_ = [
+        ("type", ctypes.c_uint32),
+        ("sequence", ctypes.c_uint32),
+        ("tval_sec", ctypes.c_int64),
+        ("tval_usec", ctypes.c_int64),
+    ]
+
+
+WAIT_VBLANK = _iowr(0x3A, ctypes.sizeof(VBlank))
+# Set when the splash frame was taken over without dropping master, so
+# Plymouth's quit cannot turn the panel off before the login screen.
+HELD_MASTER = False
+
+
 class PageFlip(ctypes.Structure):
     _fields_ = [
         ("crtc_id", ctypes.c_uint32),
@@ -213,6 +228,9 @@ GETPROPERTY = _iowr(0xAA, ctypes.sizeof(GetProperty))
 PAGE_FLIP = _iowr(0xB0, ctypes.sizeof(PageFlip))
 PAGE_FLIP_EVENT = 1
 FLIP_COMPLETE = 0x02
+# DRM_IOCTL_WAIT_VBLANK. SETCRTC can return while the kernel still has
+# that commit in flight, and the next compositor then refuses to paint.
+_SYS_pidfd_getfd = 438
 # Buffers this process created. A flip is only for someone else's frame.
 OUR_FBS: set[int] = set()
 
@@ -497,6 +515,14 @@ def paint(fd: int, crtc_id: int, connector_id: int, mode: ModeInfo) -> int:
     crtc.mode_valid = 1
     crtc.mode = mode
     _ioctl(fd, SETCRTC, crtc)
+    # The legacy modeset can return before the kernel has finished the
+    # commit. Dropping master then leaves a page-flip in flight and the
+    # next compositor logs that it cannot commit.
+    blank = VBlank(type=1, sequence=1)
+    try:
+        _ioctl(fd, WAIT_VBLANK, blank)
+    except OSError:
+        pass
     _ioctl(fd, DROP_MASTER)
     print(f"seat-cover: painted {mode.hdisplay}x{mode.vdisplay} and dropped master", file=sys.stderr)
     return fd
@@ -656,6 +682,78 @@ def _drop_master(fd: int) -> None:
         pass
 
 
+def _comm_running(name: str) -> bool:
+    root = Path("/proc")
+    try:
+        entries = list(root.iterdir())
+    except OSError:
+        return False
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            comm = (entry / "comm").read_text(encoding="ascii", errors="replace").strip()
+        except OSError:
+            continue
+        if comm == name:
+            return True
+    return False
+
+
+def _plymouth_release_master() -> bool:
+    """Drop Plymouth's DRM master without letting its renderer run.
+
+    `plymouth deactivate` turns the CRTC off. The panel is dark until
+    something programs the mode again, and that retrain is the gap
+    between the splash and the login screen.
+    """
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.syscall.restype = ctypes.c_long
+    libc.syscall.argtypes = [ctypes.c_long, ctypes.c_int, ctypes.c_int, ctypes.c_int]
+    released = False
+    try:
+        entries = list(Path("/proc").iterdir())
+    except OSError:
+        return False
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            comm = (entry / "comm").read_text(encoding="ascii", errors="replace").strip()
+        except OSError:
+            continue
+        if comm != "plymouthd":
+            continue
+        try:
+            pidfd = os.pidfd_open(int(entry.name))
+        except (AttributeError, OSError):
+            continue
+        try:
+            for fdent in (entry / "fd").iterdir():
+                if not fdent.name.isdigit():
+                    continue
+                try:
+                    target = os.readlink(fdent)
+                except OSError:
+                    continue
+                if not target.startswith("/dev/dri/card"):
+                    continue
+                dup = libc.syscall(_SYS_pidfd_getfd, pidfd, int(fdent.name), 0)
+                if dup < 0:
+                    continue
+                try:
+                    _ioctl(int(dup), DROP_MASTER)
+                    released = True
+                    print("seat-cover: plymouth released the display without turning it off", file=sys.stderr)
+                except OSError as exc:
+                    print(f"seat-cover: plymouth master drop failed ({exc})", file=sys.stderr)
+                finally:
+                    os.close(int(dup))
+        finally:
+            os.close(pidfd)
+    return released
+
+
 def _plymouth_drop_master() -> None:
     """Plymouth keeps DRM master until it exits, and exiting destroys the
     buffer that is on screen. Deactivate drops master and leaves that
@@ -685,18 +783,27 @@ def _plymouth_drop_master() -> None:
         pass
 
 
-def _adopt_fd(fd: int, modeset: bool = True) -> str:
+def _adopt_fd(fd: int, modeset: bool = True, hold_master: bool = False) -> str:
     """Caller holds master. A scanning picture is page-flipped. An off
     controller is programmed once, and only when modeset is allowed.
     Logout and login must not modeset: this panel draws its firmware
-    logo for every retrain, and the next compositor retrains again."""
+    logo for every retrain, and the next compositor retrains again.
+    hold_master leaves this process master so Plymouth's quit cannot
+    turn the panel off after the flip."""
+    global HELD_MASTER
     live = _live_crtc(fd)
     if live:
         if _crtc_fb(fd, live) in OUR_FBS:
-            _drop_master(fd)
+            if hold_master:
+                HELD_MASTER = True
+            else:
+                _drop_master(fd)
             return f"seat-cover: keeping live scanout CRTC_ID={live}"
         if _replace_live(fd, live) and _crtc_fb(fd, live) in OUR_FBS:
-            _drop_master(fd)
+            if hold_master:
+                HELD_MASTER = True
+            else:
+                _drop_master(fd)
             return f"seat-cover: replaced scanout without a modeset CRTC_ID={live}"
         # The flip did not land. An empty note makes the first adopt
         # try again. SETCRTC here would be the logo.
@@ -810,7 +917,11 @@ def _first_adopt(fds: list[int]) -> str:
     Putting a frame on a dark controller retrains the link, and the
     firmware logo is what this panel draws during the retrain.
     """
-    _plymouth_drop_master()
+    # deactivate turns the CRTC off, so it is only the fallback when
+    # Plymouth's own fd could not be told to drop master.
+    stole = _plymouth_release_master()
+    if not stole:
+        _plymouth_drop_master()
     deadline = time.monotonic() + ADOPT_SECONDS
     note = ""
     while time.monotonic() < deadline and not note:
@@ -819,7 +930,7 @@ def _first_adopt(fds: list[int]) -> str:
                 _ioctl(fd, SET_MASTER)
             except OSError:
                 continue
-            note = _adopt_fd(fd)
+            note = _adopt_fd(fd, hold_master=stole)
             # "no mode" can be a connector that is not ready yet. A
             # landed flip or a programmed frame is done.
             if note and not note.endswith("no mode"):
@@ -883,6 +994,16 @@ def pin() -> int:
         if note:
             print(note, file=sys.stderr)
         _signal_ready(write_fd)
+        if HELD_MASTER:
+            # Plymouth quit is running now. It cannot disable the CRTC
+            # while this process is still master, and it does not wait
+            # forever for a master it will not get. Drop once it is gone
+            # so the login compositor can open the device.
+            deadline = time.monotonic() + 3
+            while _comm_running("plymouthd") and time.monotonic() < deadline:
+                time.sleep(0.02)
+            for fd in opened:
+                _drop_master(fd)
         # Stay up for logout as well. The previous compositor turns the
         # panel off as it leaves. Reprogramming that dark link retrains
         # it, which is the firmware logo, and the next compositor does
@@ -947,7 +1068,7 @@ def self_test() -> int:
     if ctypes.sizeof(GetProperty) != 64 or ctypes.sizeof(GetEncoder) != 20:
         print("seat-cover: encoder struct size drifted", file=sys.stderr)
         return 1
-    if ctypes.sizeof(PageFlip) != 24 or ctypes.sizeof(DrmEventVblank) != 32:
+    if ctypes.sizeof(PageFlip) != 24 or ctypes.sizeof(DrmEventVblank) != 32 or ctypes.sizeof(VBlank) != 24:
         print("seat-cover: page-flip struct size drifted", file=sys.stderr)
         return 1
     if not output_needs_cover(14, False) or output_needs_cover(14, True) or output_needs_cover(15, False):

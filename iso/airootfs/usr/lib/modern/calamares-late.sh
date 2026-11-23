@@ -1016,6 +1016,27 @@ phase_desktop() {
     log "desktop install finished for $USERNAME"
 }
 
+# install.sh copied the release pin's greeter. That pin modesets a dark
+# panel, which is the firmware picture between the login screen and the
+# desktop. The .next files are this image's copies and are what the
+# installed system has to run.
+install_image_seat() {
+    local pair src dest
+    [ -n "${MODERN_LATE_TEST:-}" ] && return 0
+    for pair in \
+        /usr/lib/modern/seat-cover.next:/usr/lib/modern/seat-cover.py \
+        /usr/lib/modern/seat-nomodeset.next:/usr/lib/modern/seat-nomodeset.so \
+        /usr/lib/modern/desktop-session.next:/usr/lib/modern/desktop-session.sh \
+        /etc/greetd/kiosk.next:/etc/greetd/kiosk.sh
+    do
+        src=${pair%%:*}
+        dest=${pair#*:}
+        [ -f "$src" ] || continue
+        install -m 0755 "$src" "$dest" || log "could not install $dest"
+        log "installed $(basename "$dest") from this image"
+    done
+}
+
 phase_provision() {
     # -f, not -x: the bundle arrives mode-stripped and this runs via bash.
     [ -f "$REPO/install/system/provision-iso.sh" ] || die "clone phase did not leave provision-iso.sh"
@@ -1035,6 +1056,7 @@ phase_provision() {
     fi
     mask_iwd
     restore_boot_dns
+    install_image_seat
     log "late install finished for $USERNAME at $PIN"
 }
 

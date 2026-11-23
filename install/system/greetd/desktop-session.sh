@@ -19,4 +19,11 @@ printf '\n== desktop session %s (uid %s, session %s)\n' "$(date -Is)" "$(id -u)"
 if [ "${MODERN_SEAT_COVER:-1}" != 0 ] && [ -f /usr/lib/modern/seat-cover.py ]; then
     python3 /usr/lib/modern/seat-cover.py hold >>"$log" 2>&1 || true
 fi
+# The first desktop frame is a modeset even when the greeter left a
+# CRTC scanning. The helper makes that frame a page flip. Screen
+# blanking still modesets; only the greeter sets MODERN_SEAT_KEEP_CRTC.
+if [ -f /usr/lib/modern/seat-nomodeset.so ]; then
+    export LD_PRELOAD="/usr/lib/modern/seat-nomodeset.so${LD_PRELOAD:+:$LD_PRELOAD}"
+fi
+unset MODERN_SEAT_KEEP_CRTC
 exec "${MODERN_START_HYPRLAND:-/usr/bin/start-hyprland}" --no-nixgl >>"$log" 2>&1
