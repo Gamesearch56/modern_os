@@ -15,6 +15,8 @@ mkinitcpio-archiso
 # The archiso PXE hooks are in the live preset. Without these, mkinitcpio
 # exits with an error and pacman reports the initramfs hook failed.
 # A USB boot does not run them; the image was still written.
+# ipconfig comes from mkinitcpio-nfs-utils. A copy of that path under
+# airootfs makes pacman abort with "exists in filesystem".
 mkinitcpio-nfs-utils
 nbd
 syslinux

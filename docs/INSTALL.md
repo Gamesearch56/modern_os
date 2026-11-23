@@ -226,16 +226,17 @@ clone copies that tree so Calamares does not depend on a GitHub fetch.
 The ISO pin must be a real `vX.Y.Z` tag (`--tag` or the latest tag in
 the clone).
 
-**Only `iso/` is built from your working tree.** The bundle is
-`git clone --branch <pin>`, so `install/`, `stow/` and `scripts/` reach
-the installed system as the *tag's* copy. Editing `provision-iso.sh` or a
-`stow/` dotfile and rebuilding puts the change on the live ISO and leaves
-it out of the machine you then boot, which reads as the fix silently not
-working. `iso-build.sh` now refuses to build when those three directories
-differ from the pin, listing the files; commit and tag, or pass
-`--stale-bundle` to deliberately ship the pin's copy. An explicit `--tag`
-also skips the check, since naming a pin is a deliberate choice — that is
-how you rebuild an older release with newer ISO scripts.
+**Only `iso/` is built from your working tree**, unless you pass
+`--stale-bundle`. The bundle starts as `git clone --branch <pin>`, so
+without that flag `install/`, `stow/` and `scripts/` would reach the
+installed system as the *tag's* copy. Editing a shell file and rebuilding
+would put the change on the live ISO and leave it out of the machine you
+then boot. `iso-build.sh` refuses that build and lists the files. Commit
+and tag, or pass `--stale-bundle` to copy this working tree's `install/`,
+`stow/` and `scripts/` over the pin, including uncommitted edits. The
+clone's commit stays the pin, so the installed system still reports that
+version. An explicit `--tag` skips the check and keeps the named pin's
+copy — that is how you rebuild an older release with newer ISO scripts.
 
 Because the bundle is cloned from the clone rather than the remote, the
 build needs a real `.git` **with tags**; a shallow clone carries none.

@@ -713,11 +713,43 @@ else
 fi
 
 if grep -qxF 'nbd' "$PKGS" && grep -qxF 'mkinitcpio-nfs-utils' "$PKGS" \
-    && [ -x "$ROOT/iso/airootfs/usr/lib/initcpio/ipconfig" ]; then
-    ok "live initramfs hooks have nbd, nfs, and ipconfig"
+    && [ ! -e "$ROOT/iso/airootfs/usr/lib/initcpio/ipconfig" ]; then
+    ok "live initramfs hooks have nbd and nfs, and do not shadow ipconfig"
 else
-    err "packages.x86_64 must list nbd and mkinitcpio-nfs-utils, and ipconfig must be executable"
+    err "packages.x86_64 must list nbd and mkinitcpio-nfs-utils, and airootfs must not ship ipconfig"
 fi
+
+# shellcheck source=../scripts/lib/iso-bundle.sh
+source "$ROOT/scripts/lib/iso-bundle.sh"
+overlay_tmp="$(mktemp -d)"
+mkdir -p "$overlay_tmp/tree/stow/shell" "$overlay_tmp/tree/install" "$overlay_tmp/tree/scripts" \
+    "$overlay_tmp/bundle/stow/shell" "$overlay_tmp/bundle/install" "$overlay_tmp/bundle/scripts"
+printf 'old\n' >"$overlay_tmp/bundle/stow/shell/Old.qml"
+printf 'pin\n' >"$overlay_tmp/bundle/install/keep.sh"
+printf 'gone\n' >"$overlay_tmp/bundle/scripts/gone.sh"
+git -C "$overlay_tmp/bundle" init -q
+git -C "$overlay_tmp/bundle" add -A
+printf 'artwork\n' >"$overlay_tmp/tree/stow/shell/Widget.qml"
+printf 'local\n' >"$overlay_tmp/tree/install/keep.sh"
+printf 'extra\n' >"$overlay_tmp/tree/scripts/extra.sh"
+printf 'secret\n' >"$overlay_tmp/tree/scripts/secret.key"
+printf 'secret.key\n' >"$overlay_tmp/tree/.gitignore"
+git -C "$overlay_tmp/tree" init -q
+git -C "$overlay_tmp/tree" add stow/shell/Widget.qml install/keep.sh .gitignore
+overlay_worktree_bundle "$overlay_tmp/tree" "$overlay_tmp/bundle"
+if [ "$(cat "$overlay_tmp/bundle/stow/shell/Widget.qml")" = artwork ] \
+    && [ "$(cat "$overlay_tmp/bundle/install/keep.sh")" = local ] \
+    && [ "$(cat "$overlay_tmp/bundle/scripts/extra.sh")" = extra ] \
+    && [ ! -e "$overlay_tmp/bundle/stow/shell/Old.qml" ] \
+    && [ ! -e "$overlay_tmp/bundle/scripts/gone.sh" ] \
+    && [ ! -e "$overlay_tmp/bundle/scripts/secret.key" ] \
+    && grep -F 'overlay_worktree_bundle' "$BUILD" >/dev/null \
+    && grep -F 'ALLOW_STALE_BUNDLE' "$BUILD" >/dev/null; then
+    ok "stale bundle installs this working tree's install, stow and scripts"
+else
+    err "stale bundle must copy this working tree over the pin and drop pin-only files"
+fi
+rm -rf "$overlay_tmp"
 
 if grep -F 'install -m 0644 "$ROOT/iso/releng/packages.x86_64"' "$BUILD" >/dev/null \
     && ! grep -F 'cat "$ROOT/iso/releng/packages.x86_64" >>' "$BUILD" >/dev/null; then
