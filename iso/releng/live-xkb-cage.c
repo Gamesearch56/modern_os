@@ -29,8 +29,14 @@ static int nkeyboards;
 static char applied[160];
 static pthread_mutex_t applied_lock = PTHREAD_MUTEX_INITIALIZER;
 static int wake_pipe[2] = {-1, -1};
-static int seat_needs_push;
 static bool (*real_set_keymap)(struct wlr_keyboard *, struct xkb_keymap *);
+/* The layout last published on each keyboard. A global "applied" flag
+ * can be set by updating the device while the group Cage publishes
+ * still has the previous map, and the first selection then never shows. */
+static struct {
+    struct wlr_keyboard *kb;
+    char spec[160];
+} pushed[8];
 
 /* Tests point this at a temp file. The live image uses the path the
  * installer writes. */
@@ -135,14 +141,66 @@ static int apply_layout(const char *layout, const char *variant)
     xkb_context_unref(ctx);
     if (!ok)
         return -1;
-    /* Cage publishes the group keyboard, not the device, and only when
-     * the next key arrives. The device map can already be the new layout
-     * while the group still has the previous one. The next
-     * wlr_seat_set_keyboard has to install this layout on that keyboard
-     * before the client is told. */
-    seat_needs_push = 1;
     note(layout);
     return 0;
+}
+
+static int read_spec(char *spec, size_t spec_len)
+{
+    FILE *f;
+    char layout[64];
+    char variant[64];
+
+    f = fopen(layout_path(), "r");
+    if (!f)
+        return -1;
+    layout[0] = 0;
+    variant[0] = 0;
+    if (!fgets(layout, sizeof layout, f)) {
+        fclose(f);
+        return -1;
+    }
+    if (!fgets(variant, sizeof variant, f))
+        variant[0] = 0;
+    fclose(f);
+    layout[strcspn(layout, "\r\n")] = 0;
+    variant[strcspn(variant, "\r\n")] = 0;
+    if (!layout_ok(layout) || (variant[0] && !layout_ok(variant)))
+        return -1;
+    snprintf(spec, spec_len, "%s\n%s", layout, variant);
+    return 0;
+}
+
+static int already_pushed(struct wlr_keyboard *kb, const char *spec)
+{
+    int i;
+    for (i = 0; i < 8; i++) {
+        if (pushed[i].kb == kb)
+            return strcmp(pushed[i].spec, spec) == 0;
+    }
+    return 0;
+}
+
+static void mark_pushed(const char *spec)
+{
+    int i;
+    for (i = 0; i < nkeyboards; i++) {
+        int j;
+        int free_slot = -1;
+        for (j = 0; j < 8; j++) {
+            if (pushed[j].kb == keyboards[i]) {
+                snprintf(pushed[j].spec, sizeof pushed[j].spec, "%s", spec);
+                free_slot = -2;
+                break;
+            }
+            if (pushed[j].kb == NULL && free_slot < 0)
+                free_slot = j;
+        }
+        if (free_slot >= 0) {
+            pushed[free_slot].kb = keyboards[i];
+            snprintf(pushed[free_slot].spec, sizeof pushed[free_slot].spec, "%s", spec);
+        }
+    }
 }
 
 /* force is set when some other caller just installed a keymap. The file
@@ -239,19 +297,21 @@ static int in_seat;
 void wlr_seat_set_keyboard(struct wlr_seat *seat, struct wlr_keyboard *keyboard)
 {
     static void (*real)(struct wlr_seat *, struct wlr_keyboard *);
+    char spec[160];
     if (!real)
         real = dlsym(RTLD_NEXT, "wlr_seat_set_keyboard");
-    /* The first key after a layout change is what publishes the group
-     * keyboard. Installing the file there is what makes the first
-     * selection the map the next character uses. Later keys must not
-     * compile again or held Shift is dropped. */
-    if (keyboard && seat_needs_push && !in_seat) {
+    /* Cage publishes the group keyboard on the key, not the device the
+     * file watcher updated. Install the file on this keyboard before
+     * the client is told, and only once per layout so Shift survives. */
+    if (keyboard && !in_seat) {
         in_seat = 1;
         remember(keyboard);
         if (!real_set_keymap)
             real_set_keymap = dlsym(RTLD_NEXT, "wlr_keyboard_set_keymap");
-        if (apply_if_needed(1) == 0)
-            seat_needs_push = 0;
+        if (read_spec(spec, sizeof spec) == 0 && !already_pushed(keyboard, spec)) {
+            if (apply_if_needed(1) == 0)
+                mark_pushed(spec);
+        }
         in_seat = 0;
     }
     if (real)
