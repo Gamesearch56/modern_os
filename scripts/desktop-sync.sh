@@ -18,6 +18,8 @@ source "$SCRIPT_DIR/lib/deploy-key.sh"
 source "$SCRIPT_DIR/lib/hypr-watch.sh"
 # shellcheck source=../install/lib/kernel-boot.sh
 source "$SCRIPT_DIR/../install/lib/kernel-boot.sh"
+# shellcheck source=lib/repo-protect.sh
+source "$SCRIPT_DIR/lib/repo-protect.sh"
 REPO="${MODERN_DESKTOP_REPO:-$(modern_repo_path)}"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/modern-desktop-sync.lock"
 # Holds the tag whose install.sh has not finished. The checkout is
@@ -209,7 +211,23 @@ cmd_apply() {
     flock -n 9 || die "another desktop update is running"
     repo_ok || die "repo check failed"
     pause_hypr_config_watch
-    trap resume_hypr_config_watch EXIT
+    # The installed clone is immutable. Clear that for this update only.
+    # A root step that already cleared it leaves a marker, so this does
+    # not ask for the password a second time. RELOCK is global: the
+    # trap runs after this function returns.
+    RELOCK=0
+    finish_apply() {
+        resume_hypr_config_watch
+        if [ "${RELOCK:-0}" -eq 1 ]; then
+            "$SCRIPT_DIR/repo-protect.sh" lock \
+                || printf 'desktop-sync: could not protect the installed files again\n' >&2
+        fi
+    }
+    trap finish_apply EXIT
+    if home_release_clone && [ ! -f "$(repo_protect_marker)" ]; then
+        "$SCRIPT_DIR/repo-protect.sh" unlock || die "could not unlock the installed files"
+        RELOCK=1
+    fi
     discard_installer_edits
     local latest unfinished
     latest="$(highest_tag)"
@@ -270,5 +288,6 @@ cmd_apply() {
 case "${1:-}" in
     status) cmd_status ;;
     apply) cmd_apply ;;
+    release-clone) home_release_clone ;;
     *) die "usage: desktop-sync.sh status|apply" ;;
 esac

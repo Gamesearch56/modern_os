@@ -27,6 +27,47 @@ do
     end
 end
 
+-- One stat when the user has no extensions. The directory is the only
+-- signal: the script that checks ownership runs only after it exists,
+-- so an unmodded login does not start a process here.
+do
+    local home = os.getenv("HOME") or ""
+    local data = os.getenv("XDG_DATA_HOME")
+    if not data or data == "" then
+        data = home .. "/.local/share"
+    end
+    local ext = data .. "/modern/extensions/stow/hypr/.config/hypr"
+    local probe = io.open(ext, "r")
+    if probe then
+        probe:close()
+        local cfg = os.getenv("XDG_CONFIG_HOME")
+        if not cfg or cfg == "" then
+            cfg = home .. "/.config"
+        end
+        local repo = home .. "/modern_os"
+        local pointer = io.open(cfg .. "/modern/repo", "r")
+        if pointer then
+            local line = pointer:read("*l")
+            pointer:close()
+            if line and line ~= "" then
+                repo = line:gsub("%s+$", "")
+            end
+        end
+        local function sh_quote(s)
+            return "'" .. tostring(s):gsub("'", "'\\''") .. "'"
+        end
+        local script = repo .. "/scripts/extension-apply.sh"
+        local pipe = io.popen(sh_quote(script) .. " hypr-path 2>/dev/null")
+        if pipe then
+            local path = pipe:read("*l")
+            pipe:close()
+            if path and path ~= "" and not path:find("[;?]") then
+                package.path = path .. "/?.lua;" .. path .. "/?/init.lua;" .. package.path
+            end
+        end
+    end
+end
+
 require("modules.permissions")
 require("modules.env")
 require("modules.general")

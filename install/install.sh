@@ -517,6 +517,14 @@ if [ "$DRY_RUN" -eq 0 ]; then
         || log_warn "bug-report token was not installed"
 fi
 
+# The installed release clone cannot be deleted by the account that
+# uses it. An update that already cleared the flag locks it again
+# when that root step exits, so this does not ask a second time.
+if [ "${DRY_RUN:-0}" -eq 0 ] && [ -x "$REPO_ROOT/scripts/repo-protect.sh" ]; then
+    "$REPO_ROOT/scripts/repo-protect.sh" lock-if-release \
+        || log_warn "installed files were not marked immutable"
+fi
+
 log_ok "Install complete for profile '$PROFILE'."
 log_info "Reboot to the login screen, then start-hyprland is launched by greetd — see README.md."
 log_info "Log: $LOG_FILE"

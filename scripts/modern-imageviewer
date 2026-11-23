@@ -12,6 +12,8 @@ config="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/modern/imageviewer.qml"
 log="${XDG_STATE_HOME:-$HOME/.local/state}/modern/imageviewer.log"
 # shellcheck source=lib/app-log.sh
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/app-log.sh"
+# shellcheck source=lib/extensions.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/extensions.sh"
 
 note() {
     app_log_open "$log" || return 0
@@ -54,5 +56,7 @@ fi
 # more than Qt's default 256 MB decode budget.
 out=/dev/null
 app_log_open "$log" && out="$log"
+extension_prefix
+[ -z "${EXT_WARN:-}" ] || note "$EXT_WARN"
 MODERN_FILE_WINDOW=1 MODERN_VIEWER_ARGS="$paths" QT_IMAGEIO_MAXALLOC="${QT_IMAGEIO_MAXALLOC:-1024}" \
-    setsid -f qs -p "$config" >>"$out" 2>&1 </dev/null
+    setsid -f "${EXT_PREFIX[@]}" qs -p "$config" >>"$out" 2>&1 </dev/null
