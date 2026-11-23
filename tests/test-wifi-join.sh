@@ -163,6 +163,7 @@ if printf '%s\n' 'correct pass\x' | run_join connect 'Cafe Net' -; then
     if grep -F 'connection delete uuid home-uuid' "$LOG" >/dev/null \
         && grep -F 'keyfile-add' "$LOG" >/dev/null \
         && grep -F 'connection up uuid' "$LOG" >/dev/null \
+        && grep -F 'passwd-file' "$LOG" >/dev/null \
         && ! grep -F 'correct' "$LOG" >/dev/null \
         && [[ $(cat "$STATE.mode") == 600 ]] \
         && grep -F 'psk=correct pass\\x' "$STATE.secret" >/dev/null \
