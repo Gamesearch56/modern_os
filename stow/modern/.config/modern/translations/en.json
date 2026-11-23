@@ -1562,6 +1562,7 @@
       "update-log": "Update log",
       "update": "Update state",
       "install-log": "Installer log",
+      "installer-session": "Installation session",
       "boot": "Start-up and last shutdown",
       "apps": "System applications",
       "pacman-log": "Package history",

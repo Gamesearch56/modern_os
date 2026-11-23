@@ -174,6 +174,18 @@ _collect_update() {
     # Written once by the ISO installer; the first thing to read when a
     # fresh installation misbehaves.
     _copy install-log.txt /var/log/modern-calamares-late.log 1500
+    # Keyboard and Wi-Fi attempts from the installer, copied onto this
+    # disk before the live system went away.
+    if [ -d /var/log/modern-installer ]; then
+        local inst=""
+        for inst in /var/log/modern-installer/*; do
+            [ -f "$inst" ] || continue
+            case "$(basename "$inst")" in
+                *[!A-Za-z0-9._-]*) continue ;;
+            esac
+            _copy installer-session.txt "$inst" 4000
+        done
+    fi
     return 0
 }
 

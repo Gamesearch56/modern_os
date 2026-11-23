@@ -64,7 +64,18 @@ static int layout_ok(const char *s)
 
 static void note(const char *msg)
 {
-    FILE *f = fopen("/tmp/live-xkb-cage.log", "a");
+    static const char *const paths[] = {
+        "/run/modern/installer/xkb.log",
+        "/tmp/live-xkb-cage.log",
+        NULL
+    };
+    FILE *f = NULL;
+    int i;
+    for (i = 0; paths[i]; i++) {
+        f = fopen(paths[i], "a");
+        if (f)
+            break;
+    }
     if (!f)
         return;
     fputs(msg, f);

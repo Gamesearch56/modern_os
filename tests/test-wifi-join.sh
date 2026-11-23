@@ -237,6 +237,16 @@ rc=0
 printf 'shortpw\n' | run_join connect 'Cafe Net' - 2>/dev/null || rc=$?
 expect_rc 3 "a password WPA cannot use is refused before nmcli" "short password exited $rc"
 
+inst="$TMP/installer"
+mkdir -p "$inst"
+printf 'shortpw\n' | MODERN_INSTALLER_LOG="$inst" run_join connect 'Cafe Net' - >/dev/null 2>&1 || true
+if [[ -f $inst/wifi.log ]] && grep -F 'rc=3' "$inst/wifi.log" >/dev/null \
+    && ! grep -F 'shortpw' "$inst/wifi.log" >/dev/null; then
+    ok "the installer log records the result without the password"
+else
+    err "installer wifi log missing or it contains the password"
+fi
+
 rc=0
 printf 'longenough\n' | run_join connect 'Office' - 2>/dev/null || rc=$?
 expect_rc 6 "an enterprise network reports unsupported security" "enterprise network exited $rc"

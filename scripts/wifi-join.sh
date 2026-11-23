@@ -37,6 +37,15 @@ nmcli_to() {
 
 die() { printf 'wifi-join: %s\n' "$*" >&2; exit 2; }
 
+# The install chroot cannot see the live /tmp. This directory is
+# bind-mounted into it and copied to /var/log/modern-installer.
+installer_log() {
+    local dir=${MODERN_INSTALLER_LOG:-/run/modern/installer} line=$1
+    [[ -d $dir && -w $dir ]] || return 0
+    line=${line//$'\n'/ }
+    printf '%s %s\n' "$(date -Is 2>/dev/null || date)" "${line:0:800}" >>"$dir/wifi.log" 2>/dev/null || true
+}
+
 valid_label() {
     local s=$1
     [[ -n $s ]] || return 1
@@ -82,6 +91,7 @@ nm_up() {
     err=$(LC_ALL=C nmcli_to 18 -w 18 "$@" 2>&1 >/dev/null) || rc=$?
     [[ $rc -ne 0 ]] || return 0
     printf '%s\n' "$err" >&2
+    installer_log "nmcli rc=$rc $err"
     # 124 is timeout's own exit. 137 is the kill that follows if nmcli ignores TERM.
     [[ $rc -ne 3 && $rc -ne 124 && $rc -ne 137 ]] || return 5
     if [[ $rc -eq 10 || $err == *"could not be found"* || $err == *"No network with SSID"* ]]; then
@@ -176,6 +186,7 @@ connect_psk() {
         sec=$(ap_security "$ssid") || return 4
     fi
     km=$(key_mgmt "$sec") || return 6
+    installer_log "connect key-mgmt=$km"
     printf 'status:password\n'
     forget_ssid "$ssid"
     uuid=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || true)
@@ -257,9 +268,13 @@ cmd_connect() {
         IFS= read -r psk || true
         [[ -n $psk ]] || die "missing password"
         # WPA passphrases are 8-63 characters, or 64 hex digits.
-        [[ ${#psk} -ge 8 && ${#psk} -le 64 ]] || exit 3
-        connect_psk "$ssid" "$psk" || exit $?
-        return 0
+        if [[ ${#psk} -lt 8 || ${#psk} -gt 64 ]]; then
+            installer_log "rejected password length rc=3"
+            exit 3
+        fi
+        connect_psk "$ssid" "$psk" || rc=$?
+        installer_log "finished rc=$rc"
+        exit "$rc"
     fi
     [[ -z $from ]] || die "pass the password on stdin with -"
     if saved=$(first_uuid "$ssid"); then

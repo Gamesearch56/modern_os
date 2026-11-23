@@ -666,6 +666,8 @@ if grep -F 'usage: calamares-late.sh strip|biosboot|clone|desktop|provision' "$L
     && grep -F 'timeout 180' "$LATE" >/dev/null \
     && grep -F 'GIT_HTTP_LOW_SPEED_LIMIT' "$LATE" >/dev/null \
     && grep -F '/var/log/modern-calamares-late.log' "$LATE" >/dev/null \
+    && grep -F '/var/log/modern-installer' "$LATE" >/dev/null \
+    && grep -F 'save_installer_log' "$LATE" >/dev/null \
     && grep -F '_emit' "$LATE" >/dev/null \
     && grep -F 'using ISO bundle' "$LATE" >/dev/null \
     && grep -F '/usr/share/modern/dotfile' "$LATE" >/dev/null \
@@ -826,10 +828,14 @@ MOUNT="$ROOT/iso/airootfs/etc/calamares/modules/mount.conf"
 if grep -F 'btrfsSwapSubvol: /@swap' "$MOUNT" >/dev/null \
     && grep -F 'device: proc' "$MOUNT" >/dev/null \
     && grep -F 'mountPoint: /proc' "$MOUNT" >/dev/null \
-    && ! grep -E 'mountPoint:[[:space:]]*/swap' "$MOUNT" >/dev/null; then
+    && ! grep -E 'mountPoint:[[:space:]]*/swap' "$MOUNT" >/dev/null \
+    && grep -F 'device: /run/modern/installer' "$MOUNT" >/dev/null \
+    && grep -F 'mountPoint: /run/modern/installer' "$MOUNT" >/dev/null \
+    && grep -F '/run/modern/installer' "$ROOT/iso/airootfs/usr/lib/modern/live-setup.sh" >/dev/null \
+    && grep -F 'installer-session.txt' "$ROOT/scripts/lib/bug-report-collect.sh" >/dev/null; then
     ok "mount.conf lets Calamares own the swap subvolume"
 else
-    err "mount.conf must not list /swap in btrfsSubvolumes (duplicate create)"
+    err "mount.conf must keep the swap subvolume for Calamares and bind the installer log into the target"
 fi
 
 if grep -F 'import calamares.slideshow' "$SLIDE" >/dev/null \

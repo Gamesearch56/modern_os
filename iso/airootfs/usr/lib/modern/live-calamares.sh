@@ -8,7 +8,11 @@ set -euo pipefail
 # Xwayland and Calamares, which do not have cage's keyboard symbols.
 unset LD_PRELOAD
 
-log=/tmp/live-calamares.log
+if [ -d /run/modern/installer ] && [ -w /run/modern/installer ]; then
+    log=/run/modern/installer/calamares.log
+else
+    log=/tmp/live-calamares.log
+fi
 note() {
     printf '%s\n' "$*" >>"$log" 2>/dev/null || true
     if [ -w /dev/ttyS0 ]; then

@@ -17,7 +17,11 @@ if [ -z "${WLR_RENDERER:-}" ] \
 fi
 
 log() {
-    printf '%s\n' "$*" >>/tmp/live-session.log 2>/dev/null || true
+    local dest=/tmp/live-session.log
+    if [ -d /run/modern/installer ] && [ -w /run/modern/installer ]; then
+        dest=/run/modern/installer/session.log
+    fi
+    printf '%s\n' "$*" >>"$dest" 2>/dev/null || true
     if [ -w /dev/ttyS0 ]; then
         printf '%s\n' "$*" >/dev/ttyS0 || true
     fi

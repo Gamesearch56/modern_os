@@ -826,7 +826,34 @@ strip_live_packages() {
     [ ${#kept[@]} -eq 0 ] || log "kept (still a dependency): ${kept[*]}"
 }
 
+# The live session and this chroot share /run/modern/installer via the
+# mount.conf bind. /var/log is the installed disk, so a problem report
+# after the first boot can still read the keyboard and Wi-Fi attempts.
+save_installer_log() {
+    local src=${MODERN_INSTALLER_LOG:-/run/modern/installer}
+    local dest="${MODERN_LATE_STRIP_ROOT:-}/var/log/modern-installer"
+    local f base
+    [ -d "$src" ] || {
+        log "no installer session log at $src"
+        return 0
+    }
+    install -d -m 0755 "$dest" || {
+        log "could not create $dest"
+        return 0
+    }
+    for f in "$src"/*; do
+        [ -f "$f" ] || continue
+        base=$(basename "$f")
+        case "$base" in
+            *[!A-Za-z0-9._-]*) continue ;;
+        esac
+        install -m 0644 "$f" "$dest/$base" || log "could not keep $base"
+    done
+    log "installer session log kept under /var/log/modern-installer"
+}
+
 phase_strip() {
+    save_installer_log
     log "removing the live-only files unpackfs copied into the target"
     strip_live
     carry_rtw88_quirk

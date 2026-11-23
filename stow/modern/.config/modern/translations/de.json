@@ -1562,6 +1562,7 @@
       "update-log": "Update-Protokoll",
       "update": "Update-Zustand",
       "install-log": "Installationsprotokoll",
+      "installer-session": "Installationssitzung",
       "boot": "Systemstart und letztes Herunterfahren",
       "apps": "Systemanwendungen",
       "pacman-log": "Paketverlauf",
