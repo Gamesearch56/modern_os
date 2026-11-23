@@ -6,10 +6,10 @@
 #
 # A password is read from stdin (`connect SSID -`) and written into a
 # 0600 keyfile. argv is world-readable in /proc, so nmcli never sees the
-# secret on its command line. The keyfile is imported before activation:
-# a passwd-file on `connection up`, with the secret marked not-saved,
-# still fails on these laptops and the installer then says the password
-# was wrong.
+# secret on its command line. `connection import type keyfile` is a VPN
+# plugin name, not this file format, so it fails before the password is
+# checked and a right password looks the same as a wrong one. libnm
+# reads the keyfile and adds the profile over D-Bus instead.
 #
 # Exit codes the shell and the installer map to a message:
 #   0 ok  1 failed  2 rejected input  3 wrong password
@@ -87,7 +87,11 @@ nm_up() {
     if [[ $rc -eq 10 || $err == *"could not be found"* || $err == *"No network with SSID"* ]]; then
         return 4
     fi
-    [[ $err != *[Ss]ecrets* ]] || return 3
+    # A wrong key is "asking for new key" or a supplicant disconnect, not
+    # only the word Secrets. Those used to share the generic failure text.
+    if [[ $err == *[Ss]ecret* || $err == *"new key"* || $err == *supplicant-disconnect* || $err == *supplicant-failed* || $err == *supplicant-config-failed* ]]; then
+        return 3
+    fi
     return 1
 }
 
@@ -131,6 +135,13 @@ cleanup_pw() {
 }
 trap cleanup_pw EXIT
 
+# Prints nothing. Exit 0 once NetworkManager has the profile in the file.
+add_keyfile() {
+    local file=$1 helper
+    helper=${MODERN_WIFI_ADD:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wifi-join-add.py}
+    "$helper" "$file"
+}
+
 connect_psk() {
     local ssid=$1 psk=$2 sec km out uuid rc=0 file
     # The installer already showed this network, so it knows the security.
@@ -160,7 +171,9 @@ connect_psk() {
         printf '%s\n' '[ipv4]' 'method=auto' '' '[ipv6]' 'method=auto' ''
     } >"$file"
     chmod 600 "$file"
-    out=$(nmcli_to 12 connection import type keyfile file "$file" 2>&1) || {
+    # libnm reads the file. nmcli's "import type keyfile" looks for a VPN
+    # plugin of that name and returns before the password is ever tried.
+    out=$(add_keyfile "$file" 2>&1) || {
         printf '%s\n' "$out" >&2
         cleanup_pw
         forget_ssid "$ssid"

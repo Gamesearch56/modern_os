@@ -69,6 +69,10 @@ if [[ $* == *'connection up uuid '* ]]; then
         printf 'Error: Connection activation failed: Secrets were required, but not provided.\n' >&2
         exit 4
     fi
+    if [[ ${FAIL_KEY:-0} -eq 1 ]]; then
+        printf 'Error: Connection activation failed: disconnected during authentication, asking for new key.\n' >&2
+        exit 1
+    fi
     if [[ ${FAIL_GENERIC:-0} -eq 1 ]]; then
         printf 'Error: Connection activation failed: the device is not ready.\n' >&2
         exit 1
@@ -123,7 +127,15 @@ if [[ $* == '-t -f DEVICE,TYPE,STATE device status' ]]; then
 fi
 exit 0
 EOF
-chmod +x "$TMP/nmcli" "$JOIN"
+cat >"$TMP/add" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'keyfile-add %s\n' "$1" >>"$LOG"
+stat -c '%a' "$1" >"${WIFI_JOIN_STATE}.mode"
+cat "$1" >"${WIFI_JOIN_STATE}.secret"
+printf 'left\n' >"${WIFI_JOIN_STATE}.left"
+EOF
+chmod +x "$TMP/nmcli" "$TMP/add" "$JOIN"
 
 expect_rc() {
     if [[ $rc -eq $1 ]]; then ok "$2"; else err "$3"; fi
@@ -132,12 +144,12 @@ expect_rc() {
 run_join() {
     : >"$LOG"
     LOG="$LOG" WIFI_JOIN_STATE="$STATE" MODERN_NMCLI="$TMP/nmcli" \
-        MODERN_WIFI_SECRETS_DIR="$TMP" "$JOIN" "$@"
+        MODERN_WIFI_ADD="$TMP/add" MODERN_WIFI_SECRETS_DIR="$TMP" "$JOIN" "$@"
 }
 
 if printf '%s\n' 'correct pass\x' | run_join connect 'Cafe Net' -; then
     if grep -F 'connection delete uuid home-uuid' "$LOG" >/dev/null \
-        && grep -F 'connection import type keyfile file' "$LOG" >/dev/null \
+        && grep -F 'keyfile-add' "$LOG" >/dev/null \
         && grep -F 'connection up uuid' "$LOG" >/dev/null \
         && ! grep -F 'correct' "$LOG" >/dev/null \
         && [[ $(cat "$STATE.mode") == 600 ]] \
@@ -162,6 +174,16 @@ if [[ $rc -eq 3 && $deletes -ge 2 && ! -f $STATE.left && $(head -n1 "$STATE") ==
     ok "a refused password exits 3 and drops the profile again"
 else
     err "refused password: rc=$rc deletes=$deletes state=$(head -n1 "$STATE")"
+fi
+
+printf 'home\n' >"$STATE"
+rm -f "$STATE.left"
+rc=0
+printf 'wrongpass\n' | FAIL_KEY=1 run_join connect 'Cafe Net' - 2>/dev/null || rc=$?
+if [[ $rc -eq 3 ]]; then
+    ok "a supplicant rejection is a wrong password"
+else
+    err "supplicant rejection exited $rc"
 fi
 
 printf 'home\n' >"$STATE"
@@ -286,7 +308,7 @@ printf 'home\n' >"$STATE"
 rm -f "$STATE.left" "$STATE.waiting"
 : >"$LOG"
 printf 'killed mid connect\n' | LOG="$LOG" WIFI_JOIN_STATE="$STATE" MODERN_NMCLI="$TMP/nmcli" \
-    MODERN_WIFI_SECRETS_DIR="$TMP" SLOW_CONNECT=1 "$JOIN" connect 'Cafe Net' - 2>/dev/null &
+    MODERN_WIFI_ADD="$TMP/add" MODERN_WIFI_SECRETS_DIR="$TMP" SLOW_CONNECT=1 "$JOIN" connect 'Cafe Net' - 2>/dev/null &
 pid=$!
 for _ in $(seq 1 50); do
     [[ -f $STATE.waiting ]] && break
@@ -360,7 +382,7 @@ printf 'home\n' >"$STATE"
 rm -f "$STATE.left"
 : >"$LOG"
 if timeout 8 env LOG="$LOG" WIFI_JOIN_STATE="$STATE" HANG_SHOW=1 WIFI_JOIN_SECURITY='WPA2' \
-    MODERN_NMCLI="$TMP/nmcli" MODERN_WIFI_SECRETS_DIR="$TMP" \
+    MODERN_NMCLI="$TMP/nmcli" MODERN_WIFI_ADD="$TMP/add" MODERN_WIFI_SECRETS_DIR="$TMP" \
     "$JOIN" connect 'Cafe Net' - <<<"right-password" >/dev/null; then
     if grep -F 'connection up uuid' "$LOG" >/dev/null \
         && ! grep -F 'right-password' "$LOG" >/dev/null; then
@@ -373,7 +395,7 @@ else
 fi
 
 if timeout 5 env LOG="$LOG" WIFI_JOIN_STATE="$STATE" HANG_LIST=1 WIFI_JOIN_SECURITY='WPA2' \
-    MODERN_NMCLI="$TMP/nmcli" MODERN_WIFI_SECRETS_DIR="$TMP" \
+    MODERN_NMCLI="$TMP/nmcli" MODERN_WIFI_ADD="$TMP/add" MODERN_WIFI_SECRETS_DIR="$TMP" \
     "$JOIN" connect 'Cafe Net' - <<<"right-password" >/dev/null; then
     if ! grep -F 'device wifi list' "$LOG" >/dev/null \
         && grep -F 'key-mgmt=wpa-psk' "$STATE.secret" >/dev/null \
