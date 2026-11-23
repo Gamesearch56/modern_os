@@ -48,6 +48,8 @@ static const char *layout_path(void)
     return "/run/modern/xkb-layout";
 }
 
+static void push_xwayland(const char *layout, const char *variant);
+
 static int layout_ok(const char *s)
 {
     if (!s || !s[0] || strlen(s) > 32)
@@ -141,8 +143,32 @@ static int apply_layout(const char *layout, const char *variant)
     xkb_context_unref(ctx);
     if (!ok)
         return -1;
+    push_xwayland(layout, variant);
     note(layout);
     return 0;
+}
+
+/* Xwayland can ignore a keymap sent after it has already entered.
+ * setxkbmap updates the X map directly. Only the live session asks for
+ * this; a test must not change the machine it runs on. */
+static void push_xwayland(const char *layout, const char *variant)
+{
+    const char *flag;
+    pid_t pid;
+
+    flag = getenv("MODERN_XKB_PUSH_X");
+    if (!flag || flag[0] != '1')
+        return;
+    pid = fork();
+    if (pid != 0)
+        return;
+    if (!getenv("DISPLAY"))
+        setenv("DISPLAY", ":0", 0);
+    if (variant && variant[0])
+        execlp("setxkbmap", "setxkbmap", "-layout", layout, "-variant", variant, (char *)NULL);
+    else
+        execlp("setxkbmap", "setxkbmap", "-layout", layout, (char *)NULL);
+    _exit(127);
 }
 
 static int read_spec(char *spec, size_t spec_len)

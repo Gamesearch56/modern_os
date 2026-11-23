@@ -76,7 +76,9 @@ def wrap(old: str) -> str:
 (src / "libcalamaresui/viewpages/ExecutionViewStep.cpp").write_text(
     wrap(mod.TOGGLE_OLD), encoding="utf-8"
 )
-(src / "modules/keyboard/KeyboardPage.cpp").write_text(wrap(mod.KB_OLD), encoding="utf-8")
+(src / "modules/keyboard/KeyboardPage.cpp").write_text(
+    wrap(mod.KB_OLD) + wrap(mod.KB_CLICK_OLD), encoding="utf-8"
+)
 (src / "modules/keyboard/KeyboardViewStep.cpp").write_text(
     wrap(mod.KB_ACTIVATE_OLD), encoding="utf-8"
 )
@@ -230,6 +232,7 @@ absent "$src/libcalamaresui/ViewManager.cpp" "QMessageBox mb( QMessageBox::Quest
 check "$src/libcalamaresui/ViewManager.cpp" "/etc/calamares/unattended" "unattended auto-next"
 check "$src/libcalamaresui/viewpages/ExecutionViewStep.cpp" 'tr( "Toggle log" )' "Toggle log tr"
 check "$src/modules/keyboard/KeyboardPage.cpp" "physicalModelSelector->hide()" "hide keyboard model"
+check "$src/modules/keyboard/KeyboardPage.cpp" "QAbstractItemView::pressed" "the first keyboard click applies the layout"
 check "$src/modules/keyboard/Config.cpp" "somethingChanged();" "layout change applies with no variants"
 check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-option" ) << QString()' "setxkbmap -option with an empty value forces Xwayland remap"
 check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-query" )' "setxkbmap -query finishes the ignored first layout"

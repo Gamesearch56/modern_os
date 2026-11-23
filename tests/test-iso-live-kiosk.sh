@@ -41,6 +41,7 @@ XKB_C="$ROOT/iso/releng/live-xkb-cage.c"
 if grep -F '/usr/lib/modern/live-xkb-cage.so' "$SESSION" >/dev/null \
     && grep -F 'unset LD_PRELOAD' "$WRAP" >/dev/null \
     && grep -F '/run/modern/xkb-layout' "$XKB_SH" >/dev/null \
+    && grep -F 'MODERN_XKB_PUSH_X=1' "$SESSION" >/dev/null \
     && grep -F 'wlr_keyboard_set_keymap' "$XKB_C" >/dev/null \
     && grep -F 'wlr_seat_set_keyboard' "$XKB_C" >/dev/null \
     && grep -F 'wlr_scene_output_commit' "$XKB_C" >/dev/null \

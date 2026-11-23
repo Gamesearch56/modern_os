@@ -30,6 +30,9 @@ log "live-session uid=$(id -u) HOME=${HOME:-} RUNTIME=${XDG_RUNTIME_DIR:-} cage=
 # drop the preload themselves.
 if [ -f /usr/lib/modern/live-xkb-cage.so ]; then
     export LD_PRELOAD="/usr/lib/modern/live-xkb-cage.so${LD_PRELOAD:+:$LD_PRELOAD}"
+    # The helper also runs setxkbmap. Xwayland keeps its own map when it
+    # ignores a later keymap event from cage, which is the first selection.
+    export MODERN_XKB_PUSH_X=1
     log "keyboard helper preloaded"
 fi
 

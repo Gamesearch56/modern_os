@@ -451,6 +451,24 @@ KB_NEW = """    ui->setupUi( this );
     // Keyboard Preview
     ui->KBPreviewLayout->addWidget( m_keyboardPreview );"""
 
+# The list's currentChanged signal does not fire for the first click on
+# this page, so the first layout never reaches cage. pressed does.
+KB_CLICK_OLD = """    connect( ui->layoutSelector->selectionModel(),
+             &QItemSelectionModel::currentChanged,
+             [ this ]( const QModelIndex& current )
+             { m_config->keyboardLayouts()->setCurrentIndex( current.row() ); } );"""
+KB_CLICK_NEW = """    auto chooseLayout = [ this ]( const QModelIndex& current ) {
+        if ( current.isValid() )
+        {
+            m_config->keyboardLayouts()->setCurrentIndex( current.row() );
+        }
+    };
+    connect( ui->layoutSelector, &QAbstractItemView::pressed, this, chooseLayout );
+    connect( ui->layoutSelector->selectionModel(),
+             &QItemSelectionModel::currentChanged,
+             this,
+             [ chooseLayout ]( const QModelIndex& current, const QModelIndex& ) { chooseLayout( current ); } );"""
+
 # live-xkb-filter.py drops every variant, so updateVariants() never calls
 # setCurrentIndex and the variant signal that starts apply() never fires.
 # Without this, picking German leaves the installer on the Xwayland us map
@@ -1046,6 +1064,7 @@ def main() -> int:
     patch(finished, FINISHED_TEXT_OLD, FINISHED_TEXT_NEW, "finished success copy")
     patch(execstep, TOGGLE_OLD, TOGGLE_NEW, "Toggle log tr()")
     patch(keyboard, KB_OLD, KB_NEW, "hide Keyboard model row")
+    patch(keyboard, KB_CLICK_OLD, KB_CLICK_NEW, "first keyboard click applies the layout")
     patch(keyboard_cfg, KB_APPLY_OLD, KB_APPLY_NEW, "apply layout when variants are empty")
     patch(keyboard_cfg, KB_NOW_OLD, KB_NOW_NEW, "apply the layout as soon as it is picked")
     patch(keyboard_cfg, KB_XKB_OLD, KB_XKB_NEW, "setxkbmap -option so Xwayland rebuilds")
