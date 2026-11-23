@@ -119,6 +119,11 @@ out="$("$NOTES" --repo "$REPO" v0.2.0)"
 expect '^### Highlights$' "tag message body becomes Highlights" "missing Highlights"
 expect 'Headsets switch profiles from the panel.' "highlight text" "highlight text missing"
 expect '^### Upgrading$' "upgrade note" "missing Upgrading"
+if printf '%s\n' "$out" | grep -Fq 'New installations:'; then
+    err "the ISO sentence is in the notes before an image is attached"
+else
+    ok "the ISO sentence waits until the image is attached"
+fi
 expect 'compare/v0.1.1...v0.2.0' "compare link from the previous tag" "wrong compare range"
 
 [ "$FAIL" -eq 0 ]

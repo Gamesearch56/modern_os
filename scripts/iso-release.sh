@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Build the public ISO for a release tag and attach it to the GitHub
-# Release, signed, with an optional rclone archive copy (Proton Drive).
-# Every step can be re-run: a finished build, upload or archive is
-# checked and kept, not repeated. See docs/GIT.md "Release ISO".
+# Release, signed. The image stays on this machine and on GitHub.
+# Proton Drive is not used unless --archive is passed. Every step can
+# be re-run: a finished build or upload is checked and kept, not
+# repeated. See docs/GIT.md "Release ISO".
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -11,7 +12,7 @@ source "$ROOT/scripts/lib/iso-release.sh"
 
 OUT="${MODERN_ISO_OUT:-$ROOT/iso/out}"
 KEY_FILE="$ROOT/docs/release-key.asc"
-ARCHIVE="${MODERNOS_ISO_ARCHIVE:-}"
+ARCHIVE=""
 TAG=""
 ISO=""
 REBUILD=0
@@ -29,14 +30,14 @@ Run on a clean checkout of the tag, after its GitHub Release exists.
   3. SHA256SUMS, signed with the key in docs/release-key.asc
   4. upload modernos-x86_64.iso, SHA256SUMS, SHA256SUMS.asc and check
      GitHub's SHA-256 of the upload; add a Download section to the notes
-  5. rclone copy to REMOTE:PATH/vX.Y.Z and rclone check it
 
 --with-deploy-key builds without --public and lets exactly the update
 deploy key through step 2, so installs can read a private repo and open
 the sealed bug-report token. Anyone holding the image holds both.
 
---archive defaults to $MODERNOS_ISO_ARCHIVE; without either, step 5 is
-skipped. The stable asset name keeps this link on the newest image:
+--archive REMOTE:PATH also copies the image there with rclone. It is
+off unless that flag is passed. The stable asset name keeps this link
+on the newest image:
   https://github.com/OWNER/REPO/releases/latest/download/modernos-x86_64.iso
 EOF
 }
@@ -321,6 +322,6 @@ release_archive() {
 if [ -n "$ARCHIVE" ]; then
     release_archive
 else
-    log "no archive remote — skipped (--archive or MODERNOS_ISO_ARCHIVE)"
+    log "GitHub has the image; no archive copy"
 fi
 log "done: $WEB/releases/latest/download/$ISO_ASSET"

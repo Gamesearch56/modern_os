@@ -187,8 +187,6 @@ cat <<'EOF'
 
 Installed systems: **Settings → Update** offers this release.
 
-New installations: download the ISO from this page.
-
 EOF
 if [ -n "$compare" ]; then
     printf '[Full changelog](%s)\n\n' "$compare"
