@@ -34,7 +34,8 @@ REFERENCE_SECTIONS = [
     ("shell", ["docs/WIDGETS.md", "docs/SETTINGS.md", "docs/EDITOR.md", "docs/VIEWER.md",
                "docs/PLAYER.md", "docs/MANUAL.md", "docs/BUGREPORT.md"]),
     ("system", ["docs/INSTALL.md", "docs/CUTOVER.md", "docs/BOOT.md", "docs/ISOLATION.md", "docs/SECURITY.md",
-                "docs/BACKUP.md", "docs/GAMING.md", "docs/CURSOR-SETUP.md", "docs/TROUBLESHOOTING.md"]),
+                "docs/BACKUP.md", "docs/GAMING.md", "docs/CURSOR-SETUP.md", "docs/TROUBLESHOOTING.md",
+                "docs/MODDING.md"]),
 ]
 
 
