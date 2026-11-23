@@ -24,7 +24,9 @@ Usage: iso-write.sh [--iso FILE|URL] [--disk /dev/sdX] [--yes] [--dry-run]
 Writes an image onto a USB disk. --iso may be a local file or an
 https link. With no --iso, the newest modernos-v*-x86_64.iso already
 on this computer is used (the repo, iso/out, or the release build
-cache). With no --disk, the disk must be the only one whose model
+cache). Two files of the same version use the one written last, so
+the image just built in iso/out wins over the release copy. With no
+--disk, the disk must be the only one whose model
 contains DataTraveler. --disk may name another whole USB disk. NVMe
 and partitions are refused. You must type the device name (sdb) before
 anything is erased, unless --yes is given. --dry-run only prints the

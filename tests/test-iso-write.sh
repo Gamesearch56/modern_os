@@ -123,6 +123,32 @@ else
     err "newest image was not found: $out"
 fi
 
+# shellcheck source=../scripts/lib/iso-images.sh
+source "$ROOT/scripts/lib/iso-images.sh"
+pick="$TMP/pick"
+mkdir -p "$pick/repo/iso/out" "$pick/home/.cache/modern-v0810/iso/out" \
+    "$pick/home/.cache/modern-v0811/iso/out"
+release_iso="$pick/home/.cache/modern-v0810/iso/out/modernos-v0.8.10-x86_64.iso"
+local_iso="$pick/repo/iso/out/modernos-v0.8.10-x86_64.iso"
+: >"$release_iso"
+touch -d '2020-01-01 00:00:00' "$release_iso"
+: >"$local_iso"
+chosen="$(HOME="$pick/home" XDG_CACHE_HOME="$pick/home/.cache" iso_newest_release "$pick/repo")"
+if [ "$chosen" = "$local_iso" ]; then
+    ok "a local rebuild of the same version beats the release copy"
+else
+    err "same version chose $chosen"
+fi
+high_iso="$pick/home/.cache/modern-v0811/iso/out/modernos-v0.8.11-x86_64.iso"
+: >"$high_iso"
+touch -d '2019-01-01 00:00:00' "$high_iso"
+chosen="$(HOME="$pick/home" XDG_CACHE_HOME="$pick/home/.cache" iso_newest_release "$pick/repo")"
+if [ "$chosen" = "$high_iso" ]; then
+    ok "a higher version still wins over a newer rebuild of an older one"
+else
+    err "higher version chose $chosen"
+fi
+
 if grep -Fq 'iso_newest_release' "$ROOT/scripts/iso-qemu.sh" \
     && grep -Fq 'iso_newest_release' "$WRITE"; then
     ok "qemu and write share the newest release image"
