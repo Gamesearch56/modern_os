@@ -193,7 +193,6 @@ connect_psk() {
     {
         printf '%s\n' '[connection]' "id=$(kf_escape "$ssid")" "uuid=$uuid" 'type=wifi' 'auth-retries=3' 'autoconnect=true' ''
         printf '%s\n' '[wifi]' 'mode=infrastructure' 'powersave=2' \
-            'mac-address-randomization=1' 'cloned-mac-address=permanent' \
             "ssid=$(kf_escape "$ssid")" ''
         printf '%s\n' '[wifi-security]' "key-mgmt=$km" "psk=$(kf_escape "$psk")" ''
         printf '%s\n' '[ipv4]' 'method=auto' '' '[ipv6]' 'method=auto' ''
@@ -207,14 +206,25 @@ connect_psk() {
     # The live image's helper needs python-gobject. When that import
     # fails, root can still load the same keyfile. The secret stays in
     # the file, not on argv, and a wrong password is still exit 3.
-    out=$(add_keyfile "$file" 2>&1) || {
-        printf '%s\n' "$out" >&2
-        if ! load_saved_keyfile "$file" "$uuid"; then
-            cleanup_pw
-            forget_ssid "$ssid"
-            return 1
-        fi
-    }
+    # Activate against the access point from the scan. A profile brought
+    # up on its own never associates on the Realtek chip in these laptops.
+    rc_add=0
+    out=$(WIFI_JOIN_ACTIVATE=1 add_keyfile "$file" 2>&1) || rc_add=$?
+    printf '%s\n' "$out" >&2
+    if [[ $rc_add -eq 0 && $out == *activated* ]]; then
+        cleanup_pw
+        return 0
+    fi
+    if [[ $rc_add -eq 3 ]]; then
+        cleanup_pw
+        forget_ssid "$ssid"
+        return 3
+    fi
+    if [[ $rc_add -ne 0 ]] && ! load_saved_keyfile "$file" "$uuid"; then
+        cleanup_pw
+        forget_ssid "$ssid"
+        return 1
+    fi
     printf 'status:address\n'
     nm_up connection up uuid "$uuid" passwd-file "$PW_DIR/passwd" || rc=$?
     cleanup_pw

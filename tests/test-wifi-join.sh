@@ -143,6 +143,7 @@ cat >"$TMP/add" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'keyfile-add %s\n' "$1" >>"$LOG"
+printf 'activate=%s\n' "${WIFI_JOIN_ACTIVATE:-}" >>"$LOG"
 stat -c '%a' "$1" >"${WIFI_JOIN_STATE}.mode"
 cat "$1" >"${WIFI_JOIN_STATE}.secret"
 printf 'left\n' >"${WIFI_JOIN_STATE}.left"
@@ -162,6 +163,7 @@ run_join() {
 if printf '%s\n' 'correct pass\x' | run_join connect 'Cafe Net' -; then
     if grep -F 'connection delete uuid home-uuid' "$LOG" >/dev/null \
         && grep -F 'keyfile-add' "$LOG" >/dev/null \
+        && grep -F 'activate=1' "$LOG" >/dev/null \
         && grep -F 'connection up uuid' "$LOG" >/dev/null \
         && grep -F 'passwd-file' "$LOG" >/dev/null \
         && ! grep -F 'correct' "$LOG" >/dev/null \
@@ -169,7 +171,7 @@ if printf '%s\n' 'correct pass\x' | run_join connect 'Cafe Net' -; then
         && grep -F 'psk=correct pass\\x' "$STATE.secret" >/dev/null \
         && grep -F 'key-mgmt=wpa-psk' "$STATE.secret" >/dev/null \
         && grep -F 'powersave=2' "$STATE.secret" >/dev/null \
-        && grep -F 'cloned-mac-address=permanent' "$STATE.secret" >/dev/null \
+        && ! grep -F 'cloned-mac-address=' "$STATE.secret" >/dev/null \
         && grep -F 'auth-retries=3' "$STATE.secret" >/dev/null \
         && ! compgen -G "$TMP/wifi-join.*" >/dev/null; then
         ok "password goes through a private keyfile, never argv, and the file is removed"
