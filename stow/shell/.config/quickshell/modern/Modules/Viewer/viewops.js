@@ -3,7 +3,9 @@
 // Pure picture math for Stage.qml, tested with node (scripts/test-viewer.sh).
 // A scale is screen pixels per image pixel.
 
-const step = 1.25;
+// One mouse notch. Small enough that a few clicks walk in on a detail,
+// and a touchpad's pixel deltas stay smaller still.
+const step = 1.1;
 const maxScale = 32;
 
 // The largest scale at which the turned picture still fits the view.
@@ -34,12 +36,15 @@ function zoomed(s, steps, base) {
     return clampScale(s * Math.pow(step, steps), base);
 }
 
-// Wheel delta in notches: a mouse wheel sends 120 per notch, a touchpad
-// sends pixels.
+// Wheel delta in notches. A mouse sends 120 per detent and no pixels.
+// A touchpad sends both; the pixel distance is the smaller movement,
+// so the zoom follows the finger instead of jumping a whole detent.
 function notches(angleY, pixelY) {
-    if (angleY)
-        return angleY / 120;
-    return (pixelY || 0) / 48;
+    const fromAngle = angleY ? angleY / 120 : 0;
+    const fromPixel = pixelY ? pixelY / 48 : 0;
+    if (fromPixel && (!fromAngle || Math.abs(fromPixel) < Math.abs(fromAngle)))
+        return fromPixel;
+    return fromAngle;
 }
 
 // The content offset after zooming from s1 to s2 that keeps the image

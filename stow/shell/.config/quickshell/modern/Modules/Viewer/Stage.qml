@@ -5,8 +5,9 @@ import "../../Widgets"
 import "viewops.js" as Ops
 
 // The picture: scaled by the viewer's scaling mode until the user zooms,
-// then held at that zoom. The wheel and a pinch zoom around the pointer,
-// a drag pans, a double-click toggles between fitting and 100 %.
+// then held at that zoom. The wheel and a pinch zoom around the pointer
+// (the point under the cursor stays put), a drag pans, and a
+// double-click toggles between fitting and 100 %.
 Item {
     id: root
 
@@ -24,16 +25,33 @@ Item {
 
     property bool follow: true
     property real zoom: 1
+    // The scroll position that keeps the zoomed point under the pointer.
+    // Flickable moves contentX itself when the content size changes, so
+    // this is applied again after that layout.
+    property real _aimX: 0
+    property real _aimY: 0
+    property bool _aiming: false
+
+    function _applyAim() {
+        flick.contentX = root._aimX;
+        flick.contentY = root._aimY;
+    }
 
     function setScale(to: real, px: real, py: real) {
         const from = root.scale;
         const next = Ops.clampScale(to, root.baseScale);
-        const x = Ops.anchored(flick.contentX, px, root.width, root.boxW, from, next);
-        const y = Ops.anchored(flick.contentY, py, root.height, root.boxH, from, next);
+        root._aimX = Ops.anchored(flick.contentX, px, root.width, root.boxW, from, next);
+        root._aimY = Ops.anchored(flick.contentY, py, root.height, root.boxH, from, next);
+        root._aiming = true;
         root.zoom = next;
         root.follow = false;
-        flick.contentX = x;
-        flick.contentY = y;
+        root._applyAim();
+        Qt.callLater(() => {
+            if (!root._aiming)
+                return;
+            root._applyAim();
+            root._aiming = false;
+        });
     }
 
     function zoomBy(steps: real, px: real, py: real) {
@@ -85,6 +103,21 @@ Item {
         interactive: contentWidth > width || contentHeight > height
         boundsBehavior: Flickable.StopAtBounds
         pixelAligned: true
+        onContentWidthChanged: if (root._aiming) root._applyAim()
+        onContentHeightChanged: if (root._aiming) root._applyAim()
+
+        // The flick would scroll once the picture is larger than the
+        // view. The wheel zooms around the pointer instead.
+        WheelHandler {
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            onWheel: (event) => {
+                const steps = Ops.notches(event.angleDelta.y, event.pixelDelta.y);
+                if (!steps)
+                    return;
+                root.zoomBy(steps, event.x, event.y);
+                event.accepted = true;
+            }
+        }
 
         Item {
             width: flick.contentWidth
@@ -125,15 +158,6 @@ Item {
             smooth: true
             paused: ViewerDoc.paused
             onStatusChanged: ViewerDoc.failed = status === Image.Error
-        }
-    }
-
-    WheelHandler {
-        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-        onWheel: (event) => {
-            const steps = Ops.notches(event.angleDelta.y, event.pixelDelta.y);
-            if (steps)
-                root.zoomBy(steps, event.x, event.y);
         }
     }
 
