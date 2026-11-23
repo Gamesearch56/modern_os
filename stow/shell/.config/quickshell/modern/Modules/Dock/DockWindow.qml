@@ -283,5 +283,7 @@ PanelWindow {
                 }
             }
         }
+
+        LaunchBusy { anchors.fill: parent }
     }
 }

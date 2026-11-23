@@ -27,6 +27,7 @@ Scope {
     }
     readonly property var catalog: {
         void Launcher.open;
+        void DesktopShortcuts.revision;
         const out = root._shellApps();
         const apps = Launcher.catalog("");
         for (let i = 0; i < apps.length; i++) {

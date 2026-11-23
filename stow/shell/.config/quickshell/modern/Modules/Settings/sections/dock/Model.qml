@@ -12,6 +12,7 @@ QtObject {
 
     readonly property var installed: {
         void Config.generation;
+        void DesktopShortcuts.revision;
         void I18n.t("settings.title");
         // Pinned ids stay in this grid. Removing them reflows the view
         // and jumps the scroll position the moment a pin is added.

@@ -27,6 +27,12 @@ Singleton {
             if (stem.length)
                 have[stem] = true;
         }
+        const extra = DesktopShortcuts.shortcuts || [];
+        for (let j = 0; j < extra.length; j++) {
+            const stem = root._stem(extra[j] && extra[j].id);
+            if (stem.length)
+                have[stem] = true;
+        }
         return have;
     }
 
@@ -54,6 +60,15 @@ Singleton {
     }
 
     function prune() {
+        // The desktop-folder scan is async. Pruning before it finishes
+        // would drop a pin whose .desktop is not in applications/.
+        // An empty DesktopEntries list is the scan that has not started,
+        // not an empty system, so shortcut ids must not make it look full.
+        if (!DesktopShortcuts.ready)
+            return;
+        const entries = DesktopEntries.applications.values || [];
+        if (entries.length === 0)
+            return;
         const have = root._present();
         if (Object.keys(have).length === 0)
             return;
@@ -82,6 +97,11 @@ Singleton {
     Connections {
         target: DesktopEntries
         function onApplicationsChanged() { root.prune(); }
+    }
+
+    Connections {
+        target: DesktopShortcuts
+        function onRevisionChanged() { root.prune(); }
     }
 
     Component.onCompleted: root.prune()

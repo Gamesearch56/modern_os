@@ -7,6 +7,18 @@
 # via its x-scheme-handler, else gtk-launch, on the current workspace.
 # Extra args after the desktop id are appended to Exec= (incognito, etc.).
 set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+# A window that was only raised is already on screen. The watch cursor
+# is for a process that still has to map. A missing helper must not
+# stop the launch.
+arm_busy() {
+    if [[ -x "$SCRIPT_DIR/cursor-busy.sh" ]]; then
+        "$SCRIPT_DIR/cursor-busy.sh" start || true
+    fi
+}
+
 export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
 export QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}"
 export QT_WAYLAND_DISABLE_WINDOWDECORATION="${QT_WAYLAND_DISABLE_WINDOWDECORATION:-1}"
@@ -74,8 +86,10 @@ if [[ "${1:-}" == "--raise" ]]; then
         scheme="$(scheme_for_desktop "$path" || true)"
     fi
     if [[ -n "$scheme" ]]; then
+        arm_busy
         exec xdg-open "${scheme}://-/"
     fi
+    arm_busy
     exec gtk-launch "$desktop"
 fi
 
@@ -123,16 +137,19 @@ if [[ $# -eq 0 ]]; then
             exit 0
         fi
     fi
+    arm_busy
     exec gtk-launch "$desktop"
 fi
 
 path="$(desktop_file "$desktop" || true)"
 if [[ -z "$path" ]]; then
+    arm_busy
     exec gtk-launch "$desktop" "$@"
 fi
 
 exec_line="$(awk -F= '/^Exec=/{ print substr($0, 6); exit }' "$path")"
 if [[ -z "$exec_line" ]]; then
+    arm_busy
     exec gtk-launch "$desktop" "$@"
 fi
 exec_line="${exec_line//%%/__PCT__}"
@@ -140,4 +157,5 @@ exec_line="$(printf '%s\n' "$exec_line" | sed -E 's/ %[fFuUdDnNickvm]//g')"
 exec_line="${exec_line//__PCT__/%}"
 # Exec= comes from a trusted .desktop; extra args are quoted.
 # shellcheck disable=SC2086
+arm_busy
 eval "exec ${exec_line} $(printf '%q ' "$@")"

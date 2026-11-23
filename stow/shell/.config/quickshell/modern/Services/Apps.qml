@@ -114,7 +114,7 @@ Singleton {
         const e = root._entryById(id);
         if (e?.name)
             return String(e.name);
-        return String(id || "").replace(/\.desktop$/, "");
+        return DesktopShortcuts.nameFor(id) || String(id || "").replace(/\.desktop$/, "");
     }
 
     function iconForId(id: string): string {
@@ -142,7 +142,7 @@ Singleton {
             }
             const fallback = root._fallback(role);
             if (fallback) {
-                Quickshell.execDetached(fallback);
+                Quickshell.execDetached([Paths.script("launch-exec.sh")].concat(fallback));
                 return true;
             }
             Logger.warn("Apps", "no desktop entry for role " + role);
@@ -240,7 +240,7 @@ Singleton {
                 cmd = ["kitty", "-e"].concat(args);
             else
                 cmd = [id.split(".").pop() || id, "-e"].concat(args);
-            Quickshell.execDetached(cmd);
+            Quickshell.execDetached([Paths.script("launch-exec.sh")].concat(cmd));
             return true;
         } catch (err) {
             Logger.error("Apps", String(err));

@@ -139,6 +139,11 @@ QtObject {
             return "application-x-executable";
         if (raw.indexOf("://") !== -1 || raw.charAt(0) === "/")
             return raw.charAt(0) === "/" ? ("file://" + raw) : raw;
+        // steam_icon_<id> is written after startup. The theme list from
+        // then is empty, so the png path is the icon that actually paints.
+        const fileIcon = DesktopShortcuts.iconFor(raw);
+        if (fileIcon.length)
+            return fileIcon;
 
         const names = [];
         const seen = ({});
@@ -156,6 +161,9 @@ QtObject {
             const n = names[i];
             if (n.indexOf("://") !== -1 || n.charAt(0) === "/")
                 continue;
+            const namedFile = DesktopShortcuts.iconFor(n);
+            if (namedFile.length)
+                return namedFile;
             if (!Quickshell.hasThemeIcon(n))
                 continue;
             const sc = root._score(n);

@@ -27,6 +27,9 @@ singleton Media 1.0 Media.qml
 singleton Notifications 1.0 Notifications.qml
 singleton Settings 1.0 Settings.qml
 singleton Launcher 1.0 Launcher.qml
+singleton DesktopShortcuts 1.0 DesktopShortcuts.qml
+singleton LaunchCursor 1.0 LaunchCursor.qml
+LaunchBusy 1.0 LaunchBusy.qml
 singleton PowerMenu 1.0 PowerMenu.qml
 singleton Cheatsheet 1.0 Cheatsheet.qml
 singleton CheatsheetModel 1.0 CheatsheetModel.qml
