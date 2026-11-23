@@ -1,17 +1,21 @@
 /* Cage builds its keymap once and Xwayland uses that map for every key.
  * setxkbmap changes the X server, which this compositor ignores, so a
  * German selection still types Y for the key labeled Z. Loaded into
- * cage only. Each frame cage commits reads /run/modern/xkb-layout and,
- * when the file changes, installs that map on the keyboards cage has
- * already created. The commit is called from cage itself, so this
- * interposition runs; a hook inside libwayland would not.
+ * cage only. The installer writes /run/modern/xkb-layout. A static
+ * screen does not commit a frame and the first selection is not a key,
+ * so a thread wakes the compositor loop when the file changes and the
+ * map is installed before the next character.
  */
 #define _GNU_SOURCE
 #include <dlfcn.h>
+#include <fcntl.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <wayland-server-core.h>
 #include <xkbcommon/xkbcommon.h>
 
 struct wlr_keyboard;
@@ -22,6 +26,8 @@ struct wlr_seat;
 static struct wlr_keyboard *keyboards[8];
 static int nkeyboards;
 static char applied[160];
+static pthread_mutex_t applied_lock = PTHREAD_MUTEX_INITIALIZER;
+static int wake_pipe[2] = {-1, -1};
 static bool (*real_set_keymap)(struct wlr_keyboard *, struct xkb_keymap *);
 
 static int layout_ok(const char *s)
@@ -30,8 +36,7 @@ static int layout_ok(const char *s)
         return 0;
     for (; *s; s++) {
         char c = *s;
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-              (c >= '0' && c <= '9') || c == '_' || c == '-'))
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-'))
             return 0;
     }
     return 1;
@@ -62,11 +67,28 @@ static void remember(struct wlr_keyboard *kb)
 
 static int applying;
 
+static int same_applied(const char *spec)
+{
+    int same;
+    pthread_mutex_lock(&applied_lock);
+    same = strcmp(spec, applied) == 0;
+    pthread_mutex_unlock(&applied_lock);
+    return same;
+}
+
+static void store_applied(const char *spec)
+{
+    pthread_mutex_lock(&applied_lock);
+    snprintf(applied, sizeof applied, "%s", spec);
+    pthread_mutex_unlock(&applied_lock);
+}
+
 static int apply_layout(const char *layout, const char *variant)
 {
     struct xkb_context *ctx;
     struct xkb_keymap *map;
     struct xkb_rule_names names;
+    int pass;
     int i;
     int ok = 0;
 
@@ -87,9 +109,14 @@ static int apply_layout(const char *layout, const char *variant)
         return -1;
     }
     applying = 1;
-    for (i = 0; i < nkeyboards; i++) {
-        if (real_set_keymap(keyboards[i], map))
-            ok = 1;
+    /* A keyboard group copies the member map from inside set_keymap and
+     * can put the previous layout back. The second pass runs after that
+     * copy, so the layout just written is the one that stays. */
+    for (pass = 0; pass < 2; pass++) {
+        for (i = 0; i < nkeyboards; i++) {
+            if (real_set_keymap(keyboards[i], map))
+                ok = 1;
+        }
     }
     applying = 0;
     xkb_keymap_unref(map);
@@ -128,11 +155,64 @@ static void apply_if_needed(int force)
     if (!layout_ok(layout) || (variant[0] && !layout_ok(variant)))
         return;
     snprintf(spec, sizeof spec, "%s\n%s", layout, variant);
-    if (!force && strcmp(spec, applied) == 0)
+    if (!force && same_applied(spec))
         return;
     if (apply_layout(layout, variant) != 0)
         return;
-    snprintf(applied, sizeof applied, "%s", spec);
+    store_applied(spec);
+}
+
+static void poke_layout(void)
+{
+    char byte = 'x';
+    if (wake_pipe[1] >= 0)
+        (void)write(wake_pipe[1], &byte, 1);
+}
+
+static void *watch_layout(void *unused)
+{
+    (void)unused;
+    for (;;) {
+        FILE *f;
+        char layout[64];
+        char variant[64];
+        char spec[160];
+
+        usleep(100000);
+        f = fopen("/run/modern/xkb-layout", "r");
+        if (!f)
+            continue;
+        layout[0] = 0;
+        variant[0] = 0;
+        if (!fgets(layout, sizeof layout, f)) {
+            fclose(f);
+            continue;
+        }
+        if (!fgets(variant, sizeof variant, f))
+            variant[0] = 0;
+        fclose(f);
+        layout[strcspn(layout, "\r\n")] = 0;
+        variant[strcspn(variant, "\r\n")] = 0;
+        if (!layout_ok(layout))
+            continue;
+        snprintf(spec, sizeof spec, "%s\n%s", layout, variant);
+        if (!same_applied(spec))
+            poke_layout();
+    }
+    return NULL;
+}
+
+static int on_layout_wake(int fd, uint32_t mask, void *data)
+{
+    char buf[64];
+    (void)mask;
+    (void)data;
+    while (read(fd, buf, sizeof buf) > 0) {
+    }
+    if (!real_set_keymap)
+        real_set_keymap = dlsym(RTLD_NEXT, "wlr_keyboard_set_keymap");
+    apply_if_needed(0);
+    return 0;
 }
 
 bool wlr_keyboard_set_keymap(struct wlr_keyboard *keyboard, struct xkb_keymap *keymap)
@@ -148,14 +228,11 @@ bool wlr_keyboard_set_keymap(struct wlr_keyboard *keyboard, struct xkb_keymap *k
     remember(keyboard);
     if (real_set_keymap)
         ok = real_set_keymap(keyboard, keymap);
-    /* A keyboard group copies the member map and can write the old one
-     * back. The file the installer just wrote is the one the next key uses. */
     apply_if_needed(1);
     return ok;
 }
 
-void wlr_seat_keyboard_notify_key(struct wlr_seat *seat, uint32_t time_msec,
-    uint32_t key, uint32_t state)
+void wlr_seat_keyboard_notify_key(struct wlr_seat *seat, uint32_t time_msec, uint32_t key, uint32_t state)
 {
     static void (*real)(struct wlr_seat *, uint32_t, uint32_t, uint32_t);
     if (!real)
@@ -167,8 +244,7 @@ void wlr_seat_keyboard_notify_key(struct wlr_seat *seat, uint32_t time_msec,
         real(seat, time_msec, key, state);
 }
 
-bool wlr_scene_output_commit(struct wlr_scene_output *scene_output,
-    const struct wlr_scene_output_state_options *options)
+bool wlr_scene_output_commit(struct wlr_scene_output *scene_output, const struct wlr_scene_output_state_options *options)
 {
     static bool (*real)(struct wlr_scene_output *, const struct wlr_scene_output_state_options *);
     if (!real)
@@ -181,7 +257,32 @@ bool wlr_scene_output_commit(struct wlr_scene_output *scene_output,
     return real(scene_output, options);
 }
 
+void wl_display_run(struct wl_display *display)
+{
+    static void (*real)(struct wl_display *);
+    struct wl_event_loop *loop;
+
+    if (!real)
+        real = dlsym(RTLD_NEXT, "wl_display_run");
+    loop = wl_display_get_event_loop(display);
+    if (loop && wake_pipe[0] >= 0)
+        wl_event_loop_add_fd(loop, wake_pipe[0], WL_EVENT_READABLE, on_layout_wake, NULL);
+    if (!real_set_keymap)
+        real_set_keymap = dlsym(RTLD_NEXT, "wlr_keyboard_set_keymap");
+    apply_if_needed(1);
+    if (real)
+        real(display);
+}
+
 __attribute__((constructor)) static void live_xkb_loaded(void)
 {
+    pthread_t thread;
     note("loaded");
+    if (pipe2(wake_pipe, O_CLOEXEC | O_NONBLOCK) != 0) {
+        wake_pipe[0] = -1;
+        wake_pipe[1] = -1;
+        return;
+    }
+    if (pthread_create(&thread, NULL, watch_layout, NULL) == 0)
+        pthread_detach(thread);
 }

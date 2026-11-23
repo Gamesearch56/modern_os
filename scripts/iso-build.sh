@@ -236,11 +236,11 @@ install -m 0755 "$ROOT/scripts/wifi-join.sh" \
 # Cage ignores setxkbmap. This is loaded into cage and switches its
 # keymap when the installer writes a layout. Without it, German still
 # types Y for the key labeled Z, and the Wi-Fi password is the wrong one.
-if ! command -v gcc >/dev/null 2>&1 || ! pkg-config --exists xkbcommon; then
-    die "gcc and libxkbcommon are required for the installer keyboard (pacman -S --needed gcc libxkbcommon)"
+if ! command -v gcc >/dev/null 2>&1 || ! pkg-config --exists xkbcommon || ! pkg-config --exists wayland-server; then
+    die "gcc, libxkbcommon and wayland are required for the installer keyboard (pacman -S --needed gcc libxkbcommon wayland)"
 fi
-read -r -a xkb_cflags < <(pkg-config --cflags --libs xkbcommon)
-gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs \
+read -r -a xkb_cflags < <(pkg-config --cflags --libs xkbcommon wayland-server)
+gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -pthread \
     -o "$AIROOTFS_OUT/usr/lib/modern/live-xkb-cage.so" \
     "$ROOT/iso/releng/live-xkb-cage.c" \
     "${xkb_cflags[@]}" \

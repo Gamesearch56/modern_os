@@ -504,18 +504,19 @@ WELCOME_XKB_NEW = """        Calamares::Locale::insertGS( *Calamares::JobQueue::
     emit localeIndexChanged( m_localeIndex );
 }"""
 
-# live-xkb.sh writes the layout for cage. setxkbmap alone does not change
-# the keys cage delivers to Xwayland, so the helper in the compositor
-# is what makes the next key use the layout that was just chosen.
+# live-xkb.sh writes the layout for cage before setxkbmap runs. setxkbmap
+# makes Xwayland ask cage for a keymap, and cage's helper then reads the
+# file. Writing it afterwards reinstalled the previous layout, so the
+# first selection never became the map the next key used.
 KB_XKB_OLD = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
         QProcess::execute( "setxkbmap", basicArguments );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
 KB_XKB_NEW = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
         basicArguments << QStringLiteral( "-option" ) << QString();
-        QProcess::execute( "setxkbmap", basicArguments );
-        QProcess::execute( "setxkbmap", { QStringLiteral( "-query" ) } );
         QProcess::execute( QStringLiteral( "/usr/lib/modern/live-xkb.sh" ),
                            { settings.selectedLayout, settings.selectedVariant } );
+        QProcess::execute( "setxkbmap", basicArguments );
+        QProcess::execute( "setxkbmap", { QStringLiteral( "-query" ) } );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
 
 # setConfigurationMap() detects the layout while Welcome is still the live

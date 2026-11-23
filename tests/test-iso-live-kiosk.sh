@@ -42,18 +42,20 @@ if grep -F '/usr/lib/modern/live-xkb-cage.so' "$SESSION" >/dev/null \
     && grep -F 'unset LD_PRELOAD' "$WRAP" >/dev/null \
     && grep -F '/run/modern/xkb-layout' "$XKB_SH" >/dev/null \
     && grep -F 'wlr_keyboard_set_keymap' "$XKB_C" >/dev/null \
-    && grep -F 'wlr_scene_output_commit' "$XKB_C" >/dev/null; then
+    && grep -F 'wlr_scene_output_commit' "$XKB_C" >/dev/null \
+    && grep -F 'wl_display_run' "$XKB_C" >/dev/null; then
     ok "installer keyboard is applied by cage, not only setxkbmap"
 else
     err "cage must reload /run/modern/xkb-layout when the layout changes"
 fi
-if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon; then
+if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon && pkg-config --exists wayland-server; then
     so=$(mktemp)
     # shellcheck disable=SC2046
-    if gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -o "$so" "$XKB_C" $(pkg-config --cflags --libs xkbcommon); then
+    if gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -pthread -o "$so" "$XKB_C" $(pkg-config --cflags --libs xkbcommon wayland-server); then
         if nm -D "$so" | grep -q 'wlr_keyboard_set_keymap' \
             && nm -D "$so" | grep -q 'wlr_scene_output_commit' \
-            && nm -D "$so" | grep -q 'wlr_seat_keyboard_notify_key'; then
+            && nm -D "$so" | grep -q 'wlr_seat_keyboard_notify_key' \
+            && nm -D "$so" | grep -q 'wl_display_run'; then
             ok "keyboard helper exports the cage hooks"
         else
             err "keyboard helper is missing cage hooks"
@@ -62,6 +64,8 @@ if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon; then
         err "keyboard helper failed to compile"
     fi
     rm -f "$so"
+elif command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon; then
+    err "keyboard helper needs wayland-server to wake cage when the layout file changes"
 fi
 
 PKGS="$ROOT/iso/releng/packages.x86_64"
