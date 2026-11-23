@@ -5,6 +5,7 @@
 
 #include <QWidget>
 
+class QMouseEvent;
 class QPushButton;
 
 class ModernNetRow : public QWidget
@@ -19,6 +20,9 @@ signals:
     void connectClicked();
     void forgetClicked();
     void disconnectClicked();
+
+protected:
+    void mouseReleaseEvent( QMouseEvent* event ) override;
 
 private:
     QString m_ssid;

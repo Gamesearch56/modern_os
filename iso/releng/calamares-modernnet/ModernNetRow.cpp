@@ -3,6 +3,7 @@
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QPixmap>
 #include <QPushButton>
 #include <QSizePolicy>
@@ -70,7 +71,10 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
 
     // A click must not change the button's width. A narrower pressed
     // style otherwise slides the button toward the name.
+    // A stylesheet on the window does not reach a button inside the list,
+    // so the label stayed dark on the dark row. White is set on the button.
     const auto pin = []( QPushButton* button ) {
+        button->setStyleSheet( QStringLiteral( "color: #ffffff; background: transparent; border: none;" ) );
         button->setFixedWidth( button->sizeHint().width() );
         button->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
     };
@@ -111,4 +115,17 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     btn->setCursor( Qt::PointingHandCursor );
     connect( btn, &QPushButton::clicked, this, &ModernNetRow::connectClicked );
     place( btn );
+    setCursor( Qt::PointingHandCursor );
+}
+
+void
+ModernNetRow::mouseReleaseEvent( QMouseEvent* event )
+{
+    // The row itself chooses the network. The button already does, and
+    // must not do it twice.
+    if ( !qobject_cast< QPushButton* >( childAt( event->position().toPoint() ) ) )
+    {
+        emit connectClicked();
+    }
+    QWidget::mouseReleaseEvent( event );
 }

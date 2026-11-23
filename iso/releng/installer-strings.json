@@ -14,6 +14,9 @@
     { "context": "ModernNetPage", "source": "Refresh", "key": "installer.net.refresh" },
     { "context": "ModernNetPage", "source": "Password", "key": "installer.net.password" },
     { "context": "ModernNetPage", "source": "Connect", "key": "installer.net.connect" },
+    { "context": "ModernNetPage", "source": "Connect to network", "key": "installer.net.connectNetwork" },
+    { "context": "ModernNetPage", "source": "Show", "key": "installer.net.showPassword" },
+    { "context": "ModernNetPage", "source": "Hide", "key": "installer.net.hidePassword" },
     { "context": "ModernNetPage", "source": "Not connected", "key": "installer.net.notConnected" },
     { "context": "ModernNetPage", "source": "You're connected with Ethernet", "key": "installer.net.viaEthernet" },
     { "context": "ModernNetPage", "source": "You're connected with Wi-Fi", "key": "installer.net.viaWifi" },
@@ -54,6 +57,11 @@
       "context": "ModernNetPage",
       "source": "Connect an Ethernet cable or share your phone's connection over USB.",
       "key": "installer.net.wiredHint"
+    },
+    {
+      "context": "ModernNetPage",
+      "source": "If this cannot be fixed here, connect a network cable instead.",
+      "key": "installer.net.useCable"
     },
     { "context": "ModernNetRow", "source": "Connected", "key": "installer.net.connected" },
     { "context": "ModernNetRow", "source": "Saved", "key": "installer.net.saved" },

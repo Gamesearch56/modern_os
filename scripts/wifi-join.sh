@@ -139,15 +139,23 @@ connect_psk() {
     km=$(key_mgmt "$sec") || return 6
     printf 'status:password\n'
     forget_ssid "$ssid"
-    # Flags 2 only while the profile is created, so adding it does not open
-    # a password window this screen cannot show. Flags 0 before activation:
-    # the system stores the secret from the passwd-file. Leaving 2 in place
-    # drops the password, so the network never reconnects and the next try
-    # is reported as a wrong password.
-    out=$(LC_ALL=C nmcli_to 12 connection add type wifi con-name "$ssid" ssid "$ssid" \
-        wifi-sec.key-mgmt "$km" 802-11-wireless-security.psk-flags 2 2>&1) || {
-        printf '%s\n' "$out" >&2
-        return 1
+    # Flags 2 while the profile is created and activated, so this screen
+    # does not open a password window it cannot show. Flags 0 before
+    # activation makes NetworkManager ask that window and then report a
+    # correct password as a failed connection. The flag is stored only
+    # after the network is up.
+    add_conn() {
+        LC_ALL=C nmcli_to 12 connection add type wifi con-name "$ssid" ssid "$ssid" \
+            wifi-sec.key-mgmt "$km" 802-11-wireless-security.psk-flags 2
+    }
+    out=$(add_conn 2>&1) || {
+        # A previous try can leave the name behind. One more delete, then
+        # the add is the connection itself rather than a name clash.
+        nmcli_to 8 connection delete id "$ssid" >/dev/null 2>&1 || true
+        out=$(add_conn 2>&1) || {
+            printf '%s\n' "$out" >&2
+            return 1
+        }
     }
     uuid=$(grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' <<<"$out" | tail -n1 || true)
     [[ -n $uuid ]] || { forget_ssid "$ssid"; return 1; }
@@ -155,7 +163,6 @@ connect_psk() {
     # and the installer cannot accept a different one.
     nmcli_to 8 connection modify uuid "$uuid" connection.auth-retries 1 >/dev/null || true
     nmcli_to 8 connection modify uuid "$uuid" connection.autoconnect yes >/dev/null || true
-    nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 0 >/dev/null || true
     # Powersave drops the association on the Realtek chips in these
     # laptops, so a correct password never finishes.
     nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless.powersave 2 >/dev/null || true
@@ -163,6 +170,9 @@ connect_psk() {
     psk_line "$psk" >"$PW_FILE"
     printf 'status:address\n'
     nm_up connection up uuid "$uuid" passwd-file "$PW_FILE" || rc=$?
+    if [[ $rc -eq 0 ]]; then
+        nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 0 >/dev/null || true
+    fi
     rm -f "$PW_FILE"
     PW_FILE=""
     if [[ $rc -ne 0 ]]; then

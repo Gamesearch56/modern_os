@@ -2136,6 +2136,9 @@
       "refresh": "Refresh",
       "password": "Password",
       "connect": "Connect",
+      "connectNetwork": "Connect to network",
+      "showPassword": "Show",
+      "hidePassword": "Hide",
       "connected": "Connected",
       "notConnected": "Not connected",
       "viaEthernet": "You're connected with Ethernet",
@@ -2161,6 +2164,7 @@
       "noDriver": "This computer's Wi-Fi chip (%1) has no driver in the installer. %2",
       "noAdapter": "No Wi-Fi adapter was found. %1",
       "wiredHint": "Connect an Ethernet cable or share your phone's connection over USB.",
+      "useCable": "If this cannot be fixed here, connect a network cable instead.",
       "saved": "Saved",
       "forget": "Forget",
       "disconnect": "Disconnect"

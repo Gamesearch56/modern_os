@@ -462,6 +462,48 @@ KB_APPLY_NEW = """                 m_current.selectedLayout = m_keyboardLayoutsM
                  updateVariants( QPersistentModelIndex( m_keyboardLayoutsModel->index( index ) ) );
                  somethingChanged();"""
 
+# The stock timer waits a fraction of a second. The layout the user just
+# picked has to be the one the next key uses.
+KB_NOW_OLD = """void
+Config::somethingChanged()
+{
+    if ( m_applyTimer.isActive() )
+    {
+        m_applyTimer.stop();
+    }
+    m_applyTimer.start( QApplication::keyboardInputInterval() );
+    emit prettyStatusChanged();
+}"""
+KB_NOW_NEW = """void
+Config::somethingChanged()
+{
+    apply();
+    emit prettyStatusChanged();
+}"""
+
+WELCOME_INC_OLD = """#include <QFutureWatcher>"""
+WELCOME_INC_NEW = """#include <QFutureWatcher>
+#include <QProcess>"""
+
+WELCOME_XKB_OLD = """        Calamares::Locale::insertGS( *Calamares::JobQueue::instance()->globalStorage(),
+                                     QStringLiteral( "LANG" ),
+                                     Calamares::translatorLocaleName().name );
+    }
+    emit localeIndexChanged( m_localeIndex );
+}"""
+WELCOME_XKB_NEW = """        Calamares::Locale::insertGS( *Calamares::JobQueue::instance()->globalStorage(),
+                                     QStringLiteral( "LANG" ),
+                                     Calamares::translatorLocaleName().name );
+    }
+    const QString layout = modernWelcomeXkb(
+        selectedTranslation.locale().name().section( QLatin1Char( '_' ), 1, 1 ) );
+    if ( !layout.isEmpty() )
+    {
+        QProcess::execute( QStringLiteral( "/usr/lib/modern/live-xkb.sh" ), { layout } );
+    }
+    emit localeIndexChanged( m_localeIndex );
+}"""
+
 # cage/Xwayland ignores the first `setxkbmap -layout de`. India works because
 # non-ascii-layouts adds `-option grp:…` and that rebuilds the map. ASCII
 # layouts (German) never sent -option, so Z still typed Y. A bare -option
@@ -476,11 +518,8 @@ KB_XKB_NEW = """        basicArguments.append( xkbmap_layout_args( settings.sele
         basicArguments << QStringLiteral( "-option" ) << QString();
         QProcess::execute( "setxkbmap", basicArguments );
         QProcess::execute( "setxkbmap", { QStringLiteral( "-query" ) } );
-        QProcess::execute( "setxkbmap", basicArguments );
-        const QStringList again = basicArguments;
-        QTimer::singleShot( 400, [ again ]() {
-            QProcess::execute( "setxkbmap", again );
-        } );
+        QProcess::execute( QStringLiteral( "/usr/lib/modern/live-xkb.sh" ),
+                           { settings.selectedLayout, settings.selectedVariant } );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""
 
 # setConfigurationMap() detects the layout while Welcome is still the live
@@ -974,6 +1013,7 @@ def main() -> int:
     keyboard = src / "modules" / "keyboard" / "KeyboardPage.cpp"
     keyboard_cfg = src / "modules" / "keyboard" / "Config.cpp"
     keyboard_step = src / "modules" / "keyboard" / "KeyboardViewStep.cpp"
+    welcome_cfg = src / "modules" / "welcome" / "Config.cpp"
     locale_cfg = src / "modules" / "locale" / "Config.cpp"
     summary = src / "modules" / "summary" / "SummaryPage.cpp"
     summary_cfg = src / "modules" / "summary" / "Config.h"
@@ -1010,6 +1050,7 @@ def main() -> int:
     patch(execstep, TOGGLE_OLD, TOGGLE_NEW, "Toggle log tr()")
     patch(keyboard, KB_OLD, KB_NEW, "hide Keyboard model row")
     patch(keyboard_cfg, KB_APPLY_OLD, KB_APPLY_NEW, "apply layout when variants are empty")
+    patch(keyboard_cfg, KB_NOW_OLD, KB_NOW_NEW, "apply the layout as soon as it is picked")
     patch(keyboard_cfg, KB_XKB_OLD, KB_XKB_NEW, "setxkbmap -option so Xwayland rebuilds")
     patch(keyboard_cfg, KB_LOCALE_INC_OLD, KB_LOCALE_INC_NEW, "QLocale include for Welcome layout")
     patch(
@@ -1020,6 +1061,14 @@ def main() -> int:
     )
     patch(keyboard_cfg, KB_DETECT_OLD, KB_DETECT_NEW, "detect Welcome layout instead of setxkbmap")
     patch(keyboard_step, KB_ACTIVATE_OLD, KB_ACTIVATE_NEW, "re-detect layout after Welcome")
+    patch(welcome_cfg, WELCOME_INC_OLD, WELCOME_INC_NEW, "Welcome keyboard includes QProcess")
+    patch(
+        welcome_cfg,
+        "void\nConfig::setLocaleIndex( int index )\n",
+        welcome_cpp_fn("modernWelcomeXkb", "xkb", data) + "void\nConfig::setLocaleIndex( int index )\n",
+        "Welcome language keyboard map",
+    )
+    patch(welcome_cfg, WELCOME_XKB_OLD, WELCOME_XKB_NEW, "Welcome language applies the keyboard now")
     patch(
         locale_cfg,
         "LocaleConfiguration\nConfig::automaticLocaleConfiguration() const\n",

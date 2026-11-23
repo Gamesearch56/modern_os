@@ -84,9 +84,18 @@ def wrap(old: str) -> str:
     wrap(mod.KB_LOCALE_INC_OLD)
     + wrap(mod.KB_APPLY_OLD)
     + wrap(mod.KB_XKB_OLD)
+    + wrap(mod.KB_NOW_OLD)
     + "void\nConfig::detectCurrentKeyboardLayout()\n{\n"
     + wrap(mod.KB_DETECT_OLD)
     + "}\n",
+    encoding="utf-8",
+)
+(src / "modules/welcome").mkdir(parents=True, exist_ok=True)
+(src / "modules/welcome/Config.cpp").write_text(
+    wrap(mod.WELCOME_INC_OLD)
+    + "void\nConfig::setLocaleIndex( int index )\n{\n"
+    + mod.WELCOME_XKB_OLD
+    + "\n",
     encoding="utf-8",
 )
 (src / "modules/locale/Config.cpp").write_text(
@@ -224,7 +233,10 @@ check "$src/modules/keyboard/KeyboardPage.cpp" "physicalModelSelector->hide()" "
 check "$src/modules/keyboard/Config.cpp" "somethingChanged();" "layout change applies with no variants"
 check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-option" ) << QString()' "setxkbmap -option with an empty value forces Xwayland remap"
 check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "-query" )' "setxkbmap -query finishes the ignored first layout"
-check "$src/modules/keyboard/Config.cpp" "QTimer::singleShot( 400" "the first German pick is applied again after Xwayland drops it"
+check "$src/modules/keyboard/Config.cpp" "/usr/lib/modern/live-xkb.sh" "the picked layout is compiled into Xwayland"
+check "$src/modules/keyboard/Config.cpp" "apply();" "a layout change is applied immediately"
+check "$src/modules/welcome/Config.cpp" "modernWelcomeXkb" "Welcome language has a keyboard map"
+check "$src/modules/welcome/Config.cpp" "/usr/lib/modern/live-xkb.sh" "Welcome applies the keyboard as soon as the language changes"
 check "$src/modules/keyboard/Config.cpp" "#include <QLocale>" "Welcome layout includes QLocale"
 check "$src/modules/keyboard/Config.cpp" "modernWelcomeLayout" "Welcome language keyboard layout"
 check "$src/modules/keyboard/Config.cpp" 'QStringLiteral( "de" )' "German Welcome layout is xkb de"

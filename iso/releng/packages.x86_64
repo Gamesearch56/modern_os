@@ -59,6 +59,7 @@ cage
 xorg-xwayland
 xorg-xhost
 xorg-setxkbmap
+xorg-xkbcomp
 openbox
 qt6-declarative
 qt6-translations

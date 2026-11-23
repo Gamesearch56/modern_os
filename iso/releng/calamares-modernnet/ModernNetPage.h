@@ -29,6 +29,7 @@ signals:
 private slots:
     void syncUi();
     void connectWifi();
+    void chooseSsid( const QString& ssid );
     void changeWifi();
     void onConnectFinished( bool ok, int code );
 
@@ -38,6 +39,7 @@ private:
     void showPassword( bool on );
     void ensureWifi();
     void showOkPage();
+    void retranslate();
     void selectSsid( const QString& ssid );
     QString currentSsid() const;
     QString emptyHint() const;
@@ -52,14 +54,17 @@ private:
     QLabel* m_okTitle = nullptr;
     QLabel* m_okHint = nullptr;
     QPushButton* m_changeWifi = nullptr;
+    QLabel* m_ethTitle = nullptr;
     QLabel* m_ethStatus = nullptr;
     QLabel* m_ethAddr = nullptr;
+    QLabel* m_nearTitle = nullptr;
     QProgressBar* m_scanBar = nullptr;
     QPushButton* m_refresh = nullptr;
     QListWidget* m_list = nullptr;
     QWidget* m_passCard = nullptr;
     QLabel* m_passTitle = nullptr;
     QLineEdit* m_password = nullptr;
+    QPushButton* m_reveal = nullptr;
     QPushButton* m_connect = nullptr;
     QLabel* m_hint = nullptr;
 };
