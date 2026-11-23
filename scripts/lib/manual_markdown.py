@@ -85,9 +85,13 @@ def _code(lines: list[str], i: int) -> tuple[str, int]:
         body.append(lines[i])
         i += 1
     code = html.escape("\n".join(body), quote=False)
-    out = ('<table width="100%" cellpadding="{{pad}}" cellspacing="0" bgcolor="{{codeBg}}" '
+    # A percentage width is resolved before the column exists, so the
+    # document keeps the unwrapped width and the page opens on a blank
+    # stretch. {{measure:100}} is the column, filled when the window lays out.
+    out = ('<table width="{{measure:100}}" cellpadding="{{pad}}" cellspacing="0" bgcolor="{{codeBg}}" '
            'style="margin-top:{{gap}}px;margin-bottom:{{gap}}px"><tr><td>'
-           f'<pre style="font-family:{{{{mono}}}};font-size:{{{{codeSize}}}}px;white-space:pre-wrap">{code}</pre>'
+           f'<pre style="font-family:{{{{mono}}}};font-size:{{{{codeSize}}}}px;color:{{{{heading}}}};'
+           f'white-space:pre-wrap">{code}</pre>'
            "</td></tr></table>")
     return out, i + 1
 
@@ -99,12 +103,16 @@ def _table(lines: list[str], i: int) -> tuple[str, int]:
     while i < len(lines) and "|" in lines[i] and lines[i].strip():
         rows.append(_cells(lines[i]))
         i += 1
-    out = ['<table width="100%" cellpadding="{{pad}}" cellspacing="0" border="1" '
-           'style="border-collapse:collapse;border-color:{{rule}};border-style:solid;margin-top:{{gap}}px;margin-bottom:{{gap}}px">',
-           "<tr>" + "".join(f'<th align="left">{_inline(c)}</th>' for c in head) + "</tr>"]
+    # border="1" draws the grid in the palette color and leaves the cell
+    # text black. On a dark page that is an empty stretch with a faint
+    # grid at the bottom. The cell color is the same one headings use.
+    cell = 'style="color:{{heading}};border:1px solid {{rule}}"'
+    out = ['<table width="{{measure:100}}" cellpadding="{{pad}}" cellspacing="0" '
+           'style="border-collapse:collapse;margin-top:{{gap}}px;margin-bottom:{{gap}}px">',
+           "<tr>" + "".join(f'<th align="left" {cell}>{_inline(c)}</th>' for c in head) + "</tr>"]
     for r in rows:
         r = (r + [""] * len(head))[: len(head)]
-        out.append("<tr>" + "".join(f"<td>{_inline(c)}</td>" for c in r) + "</tr>")
+        out.append("<tr>" + "".join(f"<td {cell}>{_inline(c)}</td>" for c in r) + "</tr>")
     out.append("</table>")
     return "".join(out), i
 
@@ -141,7 +149,9 @@ def _list(lines: list[str], i: int) -> tuple[str, int]:
     for body in items:
         inner = render(body)
         inner = re.sub(r'^<p style="[^"]*">(.*?)</p>', r"\1", inner, count=1, flags=re.S)
-        out.append(f'<li style="margin-bottom:{{{{tight}}}}px;line-height:{{{{leading}}}}%">{inner}</li>')
+        # A percentage line-height is a multiplier in some Qt versions and
+        # a hundred times that in others, which opens a blank page.
+        out.append(f'<li style="margin-bottom:{{{{tight}}}}px;line-height:{{{{leading}}}}px;color:{{{{heading}}}}">{inner}</li>')
     out.append(f"</{tag}>")
     return "".join(out), i
 
@@ -196,7 +206,7 @@ def render(lines: list[str]) -> str:
                 and not ("|" in lines[i] and i + 1 < len(lines) and TABLE_RULE.match(lines[i + 1])):
             para.append(lines[i].strip())
             i += 1
-        out.append(f'<p style="margin-top:0px;margin-bottom:{{{{gap}}}}px;line-height:{{{{leading}}}}%">{_inline(" ".join(para))}</p>')
+        out.append(f'<p style="margin-top:0px;margin-bottom:{{{{gap}}}}px;line-height:{{{{leading}}}}px;color:{{{{heading}}}}">{_inline(" ".join(para))}</p>')
     return "".join(out)
 
 
