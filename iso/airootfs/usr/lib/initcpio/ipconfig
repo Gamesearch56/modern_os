@@ -1,0 +1,7 @@
+#!/bin/sh
+# mkinitcpio-archiso 73's PXE hook still does
+# `add_binary /usr/lib/initcpio/ipconfig`, and the package does not ship
+# that file. The missing file makes the live initramfs build exit with
+# an error. This image is booted from the ISO, which never passes ip=.
+echo "ipconfig: network boot is not available on this image" >&2
+exit 1

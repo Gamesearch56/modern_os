@@ -702,6 +702,13 @@ else
     err "packages.x86_64 must list linux-zen (not stock linux), rsync, python, yay-bin, m0 AUR, pipewire-jack, pipewire-pulse (no linux-zen-headers)"
 fi
 
+if grep -qxF 'nbd' "$PKGS" && grep -qxF 'mkinitcpio-nfs-utils' "$PKGS" \
+    && [ -x "$ROOT/iso/airootfs/usr/lib/initcpio/ipconfig" ]; then
+    ok "live initramfs hooks have nbd, nfs, and ipconfig"
+else
+    err "packages.x86_64 must list nbd and mkinitcpio-nfs-utils, and ipconfig must be executable"
+fi
+
 if grep -F 'install -m 0644 "$ROOT/iso/releng/packages.x86_64"' "$BUILD" >/dev/null \
     && ! grep -F 'cat "$ROOT/iso/releng/packages.x86_64" >>' "$BUILD" >/dev/null; then
     ok "iso-build.sh replaces the releng package list"

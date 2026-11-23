@@ -12,6 +12,11 @@ intel-ucode
 sof-firmware
 mkinitcpio
 mkinitcpio-archiso
+# The archiso PXE hooks are in the live preset. Without these, mkinitcpio
+# exits with an error and pacman reports the initramfs hook failed.
+# A USB boot does not run them; the image was still written.
+mkinitcpio-nfs-utils
+nbd
 syslinux
 squashfs-tools
 # unpackfs rsyncs airootfs.sfs onto the target. Exit 127 is missing rsync.
