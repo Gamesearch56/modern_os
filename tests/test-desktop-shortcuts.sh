@@ -38,6 +38,9 @@ Exec=true
 Type=Link
 EOF
 printf 'x' > "$TMP/icons/hicolor/128x128/apps/steam_icon_5.png"
+printf 'x' > "$TMP/icons/hicolor/128x128/apps/lutris_doom.png"
+mkdir -p "$TMP/covers"
+printf 'x' > "$TMP/covers/the-witcher-3-wild-hunt-complete-edition.jpg"
 cat > "$TMP/desk/Empty Icon.desktop" << 'EOF'
 [Desktop Entry]
 Name=Empty Icon Game
@@ -46,7 +49,7 @@ Icon=
 Type=Application
 EOF
 
-out="$(MODERN_DESKTOP_DIR="$TMP/desk" MODERN_ICON_ROOTS="$TMP/icons" python3 "$SCAN")"
+out="$(MODERN_DESKTOP_DIR="$TMP/desk" MODERN_ICON_ROOTS="$TMP/icons" MODERN_LUTRIS_COVER="$TMP/covers" python3 "$SCAN")"
 
 name="$(printf '%s' "$out" | jq -r '.shortcuts[] | select(.id == "SILENT HILL Townfall") | .name')"
 icon="$(printf '%s' "$out" | jq -r '.icons["steam_icon_1636440"]')"
@@ -57,6 +60,8 @@ link="$(printf '%s' "$out" | jq -r '.shortcuts[] | select(.name == "Not An App")
 empty_icon="$(printf '%s' "$out" | jq -r '.icons["steam_icon_5"]')"
 empty_argv="$(printf '%s' "$out" | jq -r '.shortcuts[] | select(.id == "Empty Icon") | .argv | length')"
 indexed="$(printf '%s' "$out" | jq -r '.icons["steam_icon_99"]')"
+lutris_png="$(printf '%s' "$out" | jq -r '.icons["lutris_doom"]')"
+witcher="$(printf '%s' "$out" | jq -r '.icons["lutris_the-witcher-3-wild-hunt-complete-edition"]')"
 
 if [[ "$name" == "SILENT HILL: Townfall" && "$argv0" == "steam" && "$argv1" == "steam://rungameid/1636440" ]]; then
     ok "shortcut name and launch command"
@@ -82,6 +87,12 @@ if [[ "$indexed" == "$TMP/icons/hicolor/48x48/apps/steam_icon_99.png" ]]; then
     ok "steam pngs are indexed even without a desktop file"
 else
     err "indexed=$indexed"
+fi
+if [[ "$lutris_png" == "$TMP/icons/hicolor/128x128/apps/lutris_doom.png" \
+    && "$witcher" == "$TMP/covers/the-witcher-3-wild-hunt-complete-edition.jpg" ]]; then
+    ok "lutris icons come from hicolor or the cover picture"
+else
+    err "lutris png=$lutris_png cover=$witcher"
 fi
 
 if grep -Fq 'DesktopShortcuts.iconFor' "$ROOT/stow/shell/.config/quickshell/modern/Services/AppsIcons.qml" \
