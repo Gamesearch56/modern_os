@@ -145,7 +145,7 @@ Singleton {
                 property string hover: "zoom"
                 property list<string> apps: [
                     "vivaldi-stable", "whatsapp", "spotify-launcher", "steam",
-                    "kitty", "shell:files", "shell:store", "shell:settings"
+                    "kitty", "shell:files", "modern.manual", "shell:store", "shell:settings"
                 ]
             }
 

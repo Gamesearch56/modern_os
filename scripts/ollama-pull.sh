@@ -6,6 +6,10 @@
 # this cannot be pointed at a different download.
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/ollama-quiet.sh
+source "$ROOT/lib/ollama-quiet.sh"
+
 if [ "$#" -ne 0 ]; then
     printf 'usage: ollama-pull.sh\n' >&2
     exit 2
@@ -34,4 +38,4 @@ if [ "$ready" -ne 1 ]; then
     exit 1
 fi
 
-exec "$OLLAMA" pull "$model"
+ollama_quiet_pull "$OLLAMA" "$model" "$ROOT/lib/ollama_progress.py"

@@ -142,6 +142,13 @@ else
     err "progress: $(printf '%s' "$progress" | tr '\n' '|')"
 fi
 
+same="$(printf 'pulling abc: 14%% 1 MB\rpulling abc: 14%% 9 MB\rpulling abc: 15%% 20 MB\n' | python3 "$ROOT/scripts/lib/ollama_progress.py")"
+if [ "$same" = $'pulling abc: 14%\npulling abc: 15%' ]; then
+    ok "a pull keeps one line per percent"
+else
+    err "percent lines: $(printf '%s' "$same" | tr '\n' '|')"
+fi
+
 if [ "$dry" = "remove qwen3:4b" ]; then
     ok "remove prints the checked name"
 else

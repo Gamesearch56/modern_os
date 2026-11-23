@@ -132,22 +132,44 @@ Item {
             return;
         root.jobState = "";
         root.jobLog = "";
+        root._pendingLog = "";
         root.jobName = "";
     }
 
-    // Pull prints a progress line until something reads it.
+    // A pull redraws the same line for every packet. Keep the latest
+    // percent and paint it on a timer, so the shell stays responsive.
+    property string _pendingLog: ""
+
     function _append(chunk: string) {
         const bits = String(chunk || "").replace(/\u001b\[[0-9;?]*[A-Za-z]/g, "").split(/\r|\n/);
-        let next = root.jobLog;
+        let lines = root._pendingLog.length ? root._pendingLog.split("\n") : [];
         for (let i = 0; i < bits.length; i++) {
             const line = bits[i].trim();
             if (!line.length)
                 continue;
-            next += line + "\n";
+            const progress = /^pulling\s+\S+:\s+\d+%/.test(line);
+            if (progress && lines.length && /^pulling\s+\S+:\s+\d+%/.test(lines[lines.length - 1]))
+                lines[lines.length - 1] = line;
+            else
+                lines.push(line);
         }
-        if (next.length > 32768)
-            next = next.substring(next.length - 32768);
-        root.jobLog = next;
+        if (lines.length > 12)
+            lines = lines.slice(lines.length - 12);
+        root._pendingLog = lines.join("\n");
+        if (!logTimer.running)
+            logTimer.start();
+    }
+
+    function _flush() {
+        logTimer.stop();
+        root.jobLog = root._pendingLog;
+    }
+
+    Timer {
+        id: logTimer
+        interval: Motion.mediumMs
+        repeat: false
+        onTriggered: root.jobLog = root._pendingLog
     }
 
     function startSetup() {
@@ -157,6 +179,7 @@ Item {
         root.setupBusy = true;
         root.jobName = root.setupModel;
         root.jobLog = "";
+        root._pendingLog = "";
         root.jobState = "run";
         if (!root.ai.running)
             root._enable();
@@ -187,6 +210,7 @@ Item {
         stdout: SplitParser { onRead: line => root._append(line) }
         stderr: SplitParser { onRead: line => root._append(line) }
         onExited: (code) => {
+            root._flush();
             if (code !== 0) {
                 root._setupFail();
                 return;
@@ -203,6 +227,7 @@ Item {
         stdout: SplitParser { onRead: line => root._append(line) }
         stderr: SplitParser { onRead: line => root._append(line) }
         onExited: (code) => {
+            root._flush();
             if (root.ai)
                 root.ai.refreshStatus();
             if (code !== 0) {

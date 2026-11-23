@@ -60,7 +60,7 @@ The dock is a centered row of pinned applications on the edge opposite
 the bar: a top bar puts the dock on the bottom, a left bar puts it on
 the right, and the reverse. A new installation turns `dock.enabled` on.
 It stays hidden while that switch is off.
-`dock.apps` starts as Vivaldi, WhatsApp, Spotify, Steam, Kitty, the file manager, the app store, and Settings.
+`dock.apps` starts as Vivaldi, WhatsApp, Spotify, Steam, Kitty, the file manager, the manual, the app store, and Settings.
 
 Three styles, all from tokens: **edge dash** (`beam`, a short primary
 mark on the outer edge of each icon), **plate** (`inventory`, each icon

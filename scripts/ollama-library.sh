@@ -102,6 +102,8 @@ if [ "${OLLAMA_LIBRARY_DRY:-}" = "1" ]; then
     exit 0
 fi
 
+# shellcheck source=lib/ollama-quiet.sh
+source "$ROOT/lib/ollama-quiet.sh"
 OLLAMA="${MODERN_OLLAMA_BIN:-ollama}"
 CURL="${MODERN_OLLAMA_CURL:-curl}"
 if ! "$CURL" -sf --max-time 1 http://127.0.0.1:11434/api/tags >/dev/null; then
@@ -111,11 +113,7 @@ fi
 if [ "$cmd" = "pull" ]; then
     # Status is drawn on stderr with cursor codes. A pipe sees no plain
     # lines unless those redraws are turned into newlines first.
-    runner=("$OLLAMA")
-    if command -v stdbuf >/dev/null 2>&1; then
-        runner=(stdbuf -oL -eL "$OLLAMA")
-    fi
-    "${runner[@]}" pull "$name" 2>&1 | python3 -u "$ROOT/lib/ollama_progress.py"
+    ollama_quiet_pull "$OLLAMA" "$name" "$ROOT/lib/ollama_progress.py"
     exit $?
 fi
 exec "$OLLAMA" rm "$name"
