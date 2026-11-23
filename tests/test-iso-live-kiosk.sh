@@ -36,6 +36,33 @@ else
     err "live-session.sh must exec cage -s -- live-calamares.sh"
 fi
 
+XKB_SH="$ROOT/iso/airootfs/usr/lib/modern/live-xkb.sh"
+XKB_C="$ROOT/iso/releng/live-xkb-cage.c"
+if grep -F '/usr/lib/modern/live-xkb-cage.so' "$SESSION" >/dev/null \
+    && grep -F 'unset LD_PRELOAD' "$WRAP" >/dev/null \
+    && grep -F '/run/modern/xkb-layout' "$XKB_SH" >/dev/null \
+    && grep -F 'wlr_keyboard_set_keymap' "$XKB_C" >/dev/null \
+    && grep -F 'wlr_scene_output_commit' "$XKB_C" >/dev/null; then
+    ok "installer keyboard is applied by cage, not only setxkbmap"
+else
+    err "cage must reload /run/modern/xkb-layout when the layout changes"
+fi
+if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon; then
+    so=$(mktemp)
+    # shellcheck disable=SC2046
+    if gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -o "$so" "$XKB_C" $(pkg-config --cflags --libs xkbcommon); then
+        if nm -D "$so" | grep -q 'wlr_keyboard_set_keymap' \
+            && nm -D "$so" | grep -q 'wlr_scene_output_commit'; then
+            ok "keyboard helper exports the cage hooks"
+        else
+            err "keyboard helper is missing cage hooks"
+        fi
+    else
+        err "keyboard helper failed to compile"
+    fi
+    rm -f "$so"
+fi
+
 PKGS="$ROOT/iso/releng/packages.x86_64"
 if grep -Fx cage "$PKGS" >/dev/null; then
     ok "live ISO ships cage"

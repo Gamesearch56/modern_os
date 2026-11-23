@@ -14,7 +14,7 @@ Summary title() calls tr() so it follows the Welcome language.
 Partition legend Boot/root names use palette text (not Qt::black).
 Finished success copy drops the live-session offer.
 Keyboard layout changes call apply() even when there are no variants.
-setxkbmap always passes -option so cage/Xwayland rebuilds the map.
+live-xkb.sh writes the layout cage's helper installs; setxkbmap does not.
 Unattended QEMU: /etc/calamares/unattended auto-next + user modern/modern.
 Copies calamares-modernnet/ into src/modules/modernnet (Network step).
 
@@ -504,13 +504,9 @@ WELCOME_XKB_NEW = """        Calamares::Locale::insertGS( *Calamares::JobQueue::
     emit localeIndexChanged( m_localeIndex );
 }"""
 
-# cage/Xwayland ignores the first `setxkbmap -layout de`. India works because
-# non-ascii-layouts adds `-option grp:…` and that rebuilds the map. ASCII
-# layouts (German) never sent -option, so Z still typed Y. A bare -option
-# is a missing argument and setxkbmap then keeps the old map; an empty
-# option clears it. Two calls back to back are still one burst: the first
-# pick of German stays on us until the user leaves and comes back. A query
-# finishes that burst, and a later call applies the layout.
+# live-xkb.sh writes the layout for cage. setxkbmap alone does not change
+# the keys cage delivers to Xwayland, so the helper in the compositor
+# is what makes the next key use the layout that was just chosen.
 KB_XKB_OLD = """        basicArguments.append( xkbmap_layout_args( settings.selectedLayout, settings.selectedVariant ) );
         QProcess::execute( "setxkbmap", basicArguments );
         cDebug() << "xkbmap selection changed to: " << settings.selectedLayout << '-' << settings.selectedVariant;"""

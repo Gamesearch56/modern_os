@@ -4,6 +4,10 @@
 # socket; Hyprland-as-root never painted.
 set -euo pipefail
 
+# The preload belongs to cage. Left set, it is also mapped into
+# Xwayland and Calamares, which do not have cage's keyboard symbols.
+unset LD_PRELOAD
+
 log=/tmp/live-calamares.log
 note() {
     printf '%s\n' "$*" >>"$log" 2>/dev/null || true

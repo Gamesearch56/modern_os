@@ -2155,7 +2155,7 @@
       "waitingAddress": "Warte auf eine Adresse von %1…",
       "noneFound": "Keine Netzwerke gefunden.",
       "noneFoundHint": "Es sind keine Netzwerke aufgetaucht. Geh näher an den Router und tippe dann auf Aktualisieren.",
-      "badPassword": "Verbinden hat nicht geklappt. Passwort prüfen und erneut versuchen.",
+      "badPassword": "Verbinden hat nicht geklappt. Du kannst es erneut versuchen.",
       "outOfRange": "Dieses Netzwerk ist von hier nicht zu sehen. Geh näher heran und tippe auf Aktualisieren.",
       "timeout": "Der Router hat nicht geantwortet. Du kannst es erneut versuchen.",
       "portal": "Dieses Netzwerk braucht eine Anmeldung, die das Installationsprogramm nicht eingeben kann. Wähle ein anderes Netzwerk.",

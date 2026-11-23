@@ -67,6 +67,10 @@ private:
     QPushButton* m_reveal = nullptr;
     QPushButton* m_connect = nullptr;
     QLabel* m_hint = nullptr;
+    // Last list contents. A refresh that did not change them must not
+    // rebuild the rows: the pointer is still, so the new row never
+    // receives enter and the hover disappears.
+    QString m_wifiSig;
 };
 
 #endif

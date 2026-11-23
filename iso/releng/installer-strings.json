@@ -32,7 +32,7 @@
       "source": "No networks showed up. Move closer to the router, then tap Refresh.",
       "key": "installer.net.noneFoundHint"
     },
-    { "context": "ModernNetPage", "source": "Couldn't join. Check the password and try again.", "key": "installer.net.badPassword" },
+    { "context": "ModernNetPage", "source": "Couldn't join that network. You can try again.", "key": "installer.net.badPassword" },
     {
       "context": "ModernNetPage",
       "source": "Can't see that network from here. Move closer, then tap Refresh.",

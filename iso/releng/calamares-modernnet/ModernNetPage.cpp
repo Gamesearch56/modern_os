@@ -400,8 +400,36 @@ ModernNetPage::fillWifi()
     const bool keepPass = m_passCard->isVisible();
     const QString passSsid = m_passTitle->text();
     const QString passText = m_password->text();
-    m_list->clear();
     const auto nets = m_nm->networks();
+    // The translated label is part of the signature so a Welcome language
+    // change rebuilds the row text. A scan that did not change the
+    // networks does not, and the hover stays while the pointer is still.
+    QString sig = tr( "Nearby networks" );
+    sig += QLatin1Char( '\n' );
+    if ( nets.isEmpty() )
+    {
+        sig = m_nm->scanning() ? QStringLiteral( "scan" ) : QStringLiteral( "none" );
+    }
+    else
+    {
+        for ( const auto& w : nets )
+        {
+            sig += w.ssid;
+            sig += QLatin1Char( '\n' );
+            sig += QLatin1Char( w.inUse ? '1' : '0' );
+            sig += QLatin1Char( w.known ? '1' : '0' );
+            sig += QLatin1Char( w.locked ? '1' : '0' );
+            sig += w.security;
+            sig += QLatin1Char( '\n' );
+        }
+    }
+    const int expect = nets.isEmpty() ? 1 : nets.size();
+    if ( sig == m_wifiSig && m_list->count() == expect )
+    {
+        return;
+    }
+    m_wifiSig = sig;
+    m_list->clear();
     if ( nets.isEmpty() )
     {
         auto* empty = new QListWidgetItem(
@@ -577,7 +605,7 @@ ModernNetPage::onConnectFinished( bool ok, int code )
         again = true;
         break;
     default:
-        hint = tr( "Couldn't join. Check the password and try again." );
+        hint = tr( "Couldn't join that network. You can try again." );
         again = true;
         break;
     }

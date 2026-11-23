@@ -246,21 +246,17 @@ from a refusal on ownership.
 
 Location Region/Zone combos stay on the page; the **Change…** locale
 dialogs are hidden. They open a modal X11 window that cage maps as an
-unclosable grey stripe. Keyboard layout changes call `setxkbmap` on
-Xwayland (`xorg-setxkbmap`; `useLocale1: false` so systemd-localed is
+unclosable grey stripe. Keyboard layout changes write
+`/run/modern/xkb-layout` (`useLocale1: false` so systemd-localed is
 not used instead). Upstream starts that apply from the *variant* signal;
 `live-xkb-filter.py` drops every variant, so picking German never ran
-`setxkbmap` and the Users password was typed on `us`. The AUR patch
-calls `Config::somethingChanged()` on a layout change too. A first pick
-of German still left the test field on `us`: cage's Xwayland ignores
-`setxkbmap -layout de` until a call also passes `-option` (India does,
-because it is in `non-ascii-layouts`). A bare `-option` is a missing
-argument, so the map stays `us` and Z types Y. The patch sends
-`-option` with an empty value. Two calls in a row are still ignored as
-one burst, so the first pick of German stays on `us` until another
-layout is chosen and German is picked again. A `setxkbmap -query`
-between them finishes that burst, and the layout is applied once more
-a moment later.
+it and the Users password was typed on `us`. The AUR patch calls
+`Config::somethingChanged()` on a layout change too. Cage, not the X
+server, chooses the character for each key. `setxkbmap` does not change
+that map, so a German selection still typed Y for the key labeled Z and
+a Wi-Fi password entered from the keycaps was not the password that was
+sent. `live-xkb-cage.so` is loaded into cage and installs the layout
+from that file on the next frame.
 
 ### Languages, countries and keyboard layouts
 

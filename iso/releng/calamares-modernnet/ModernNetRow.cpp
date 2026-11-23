@@ -1,5 +1,7 @@
 #include "ModernNetRow.h"
 
+#include <QEnterEvent>
+#include <QEvent>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QLabel>
@@ -14,6 +16,10 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     , m_ssid( wifi.ssid )
 {
     setObjectName( QStringLiteral( "networkWifiRow" ) );
+    // The list's own hover style drops as soon as the pointer rests on
+    // the row widget. The row keeps the highlight until the pointer leaves.
+    setAttribute( Qt::WA_Hover, true );
+    setProperty( "hovered", false );
     auto* row = new QHBoxLayout( this );
     // The name must be allowed to shrink. Its minimum width otherwise
     // pushes Connect past the row and the list clips the button.
@@ -116,6 +122,26 @@ ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
     connect( btn, &QPushButton::clicked, this, &ModernNetRow::connectClicked );
     place( btn );
     setCursor( Qt::PointingHandCursor );
+}
+
+void
+ModernNetRow::enterEvent( QEnterEvent* event )
+{
+    setProperty( "hovered", true );
+    style()->unpolish( this );
+    style()->polish( this );
+    update();
+    QWidget::enterEvent( event );
+}
+
+void
+ModernNetRow::leaveEvent( QEvent* event )
+{
+    setProperty( "hovered", false );
+    style()->unpolish( this );
+    style()->polish( this );
+    update();
+    QWidget::leaveEvent( event );
 }
 
 void

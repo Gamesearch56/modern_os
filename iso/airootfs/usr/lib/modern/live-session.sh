@@ -25,6 +25,14 @@ log() {
 
 log "live-session uid=$(id -u) HOME=${HOME:-} RUNTIME=${XDG_RUNTIME_DIR:-} cage=$(command -v cage || true) renderer=${WLR_RENDERER:-auto}"
 
+# Cage's own keymap is what Xwayland types with. The helper replaces
+# that map when the installer writes a layout. Xwayland and Calamares
+# drop the preload themselves.
+if [ -f /usr/lib/modern/live-xkb-cage.so ]; then
+    export LD_PRELOAD="/usr/lib/modern/live-xkb-cage.so${LD_PRELOAD:+:$LD_PRELOAD}"
+    log "keyboard helper preloaded"
+fi
+
 if ! command -v cage >/dev/null 2>&1; then
     log "cage missing"
     exit 1

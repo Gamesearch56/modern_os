@@ -53,10 +53,14 @@ if [[ $* == *'connection add '* ]]; then
     printf "Connection '%s' (00000000-0000-4000-8000-00000000abcd) successfully added.\n" Cafe
     exit 0
 fi
-if [[ $* == *'connection up uuid 00000000-0000-4000-8000-00000000abcd passwd-file '* ]]; then
+if [[ $* == *'connection import type keyfile file '* ]]; then
     pw=${!#}
     stat -c '%a' "$pw" >"${state}.mode"
     cat "$pw" >"${state}.secret"
+    printf 'left\n' >"${state}.left"
+    exit 0
+fi
+if [[ $* == *'connection up uuid '* ]]; then
     if [[ -n ${SLOW_CONNECT:-} ]]; then
         printf 'up\n' >"${state}.waiting"
         sleep "$SLOW_CONNECT"
@@ -64,6 +68,10 @@ if [[ $* == *'connection up uuid 00000000-0000-4000-8000-00000000abcd passwd-fil
     if [[ ${FAIL_CONNECT:-0} -eq 1 ]]; then
         printf 'Error: Connection activation failed: Secrets were required, but not provided.\n' >&2
         exit 4
+    fi
+    if [[ ${FAIL_GENERIC:-0} -eq 1 ]]; then
+        printf 'Error: Connection activation failed: the device is not ready.\n' >&2
+        exit 1
     fi
     exit 0
 fi
@@ -129,13 +137,15 @@ run_join() {
 
 if printf '%s\n' 'correct pass\x' | run_join connect 'Cafe Net' -; then
     if grep -F 'connection delete uuid home-uuid' "$LOG" >/dev/null \
-        && grep -F 'connection add type wifi con-name Cafe Net ssid Cafe Net wifi-sec.key-mgmt wpa-psk' "$LOG" >/dev/null \
-        && grep -F '802-11-wireless-security.psk-flags 0' "$LOG" >/dev/null \
+        && grep -F 'connection import type keyfile file' "$LOG" >/dev/null \
+        && grep -F 'connection up uuid' "$LOG" >/dev/null \
         && ! grep -F 'correct' "$LOG" >/dev/null \
         && [[ $(cat "$STATE.mode") == 600 ]] \
-        && [[ $(cat "$STATE.secret") == '802-11-wireless-security.psk:correct\ pass\\x' ]] \
+        && grep -F 'psk=correct pass\\x' "$STATE.secret" >/dev/null \
+        && grep -F 'key-mgmt=wpa-psk' "$STATE.secret" >/dev/null \
+        && grep -F 'powersave=2' "$STATE.secret" >/dev/null \
         && ! compgen -G "$TMP/wifi-join.*" >/dev/null; then
-        ok "password goes through a private passwd-file, never argv, and the file is removed"
+        ok "password goes through a private keyfile, never argv, and the file is removed"
     else
         err "password connect leaked or did not activate: $(tr '\n' ' ' <"$LOG")"
     fi
@@ -152,6 +162,16 @@ if [[ $rc -eq 3 && $deletes -ge 2 && ! -f $STATE.left && $(head -n1 "$STATE") ==
     ok "a refused password exits 3 and drops the profile again"
 else
     err "refused password: rc=$rc deletes=$deletes state=$(head -n1 "$STATE")"
+fi
+
+printf 'home\n' >"$STATE"
+rm -f "$STATE.left"
+rc=0
+printf 'longenough\n' | FAIL_GENERIC=1 run_join connect 'Cafe Net' - 2>/dev/null || rc=$?
+if [[ $rc -eq 1 ]]; then
+    ok "an activation failure is not reported as a wrong password"
+else
+    err "generic activation failure exited $rc"
 fi
 
 rc=0
@@ -308,7 +328,7 @@ else
     err "installer wifi actions were not updated"
 fi
 
-if grep -Fq 'connection.auth-retries 1' "$JOIN" \
+if grep -Fq 'auth-retries=1' "$JOIN" \
     && grep -Fq 'stop_wifi_attempt' "$JOIN" \
     && grep -Fq -- '--rescan no' "$NM" \
     && grep -Fq 'scanLimit->start( 25000 )' "$NM" \
@@ -356,7 +376,7 @@ if timeout 5 env LOG="$LOG" WIFI_JOIN_STATE="$STATE" HANG_LIST=1 WIFI_JOIN_SECUR
     MODERN_NMCLI="$TMP/nmcli" MODERN_WIFI_SECRETS_DIR="$TMP" \
     "$JOIN" connect 'Cafe Net' - <<<"right-password" >/dev/null; then
     if ! grep -F 'device wifi list' "$LOG" >/dev/null \
-        && grep -F 'wifi-sec.key-mgmt wpa-psk' "$LOG" >/dev/null \
+        && grep -F 'key-mgmt=wpa-psk' "$STATE.secret" >/dev/null \
         && ! grep -F 'right-password' "$LOG" >/dev/null; then
         ok "a known network is joined without waiting for another scan"
     else

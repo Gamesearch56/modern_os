@@ -5,6 +5,8 @@
 
 #include <QWidget>
 
+class QEnterEvent;
+class QEvent;
 class QMouseEvent;
 class QPushButton;
 
@@ -22,6 +24,8 @@ signals:
     void disconnectClicked();
 
 protected:
+    void enterEvent( QEnterEvent* event ) override;
+    void leaveEvent( QEvent* event ) override;
     void mouseReleaseEvent( QMouseEvent* event ) override;
 
 private:

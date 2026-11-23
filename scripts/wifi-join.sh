@@ -4,9 +4,12 @@
 # profile, which leaves the network saved and inert. nmcli activates it,
 # and a failed password attempt does not keep that profile.
 #
-# A password is read from stdin (`connect SSID -`) and handed to nmcli in
-# a 0600 passwd-file: argv is world-readable in /proc. NetworkManager
-# stores a secret that arrives that way on the first connect.
+# A password is read from stdin (`connect SSID -`) and written into a
+# 0600 keyfile. argv is world-readable in /proc, so nmcli never sees the
+# secret on its command line. The keyfile is imported before activation:
+# a passwd-file on `connection up`, with the secret marked not-saved,
+# still fails on these laptops and the installer then says the password
+# was wrong.
 #
 # Exit codes the shell and the installer map to a message:
 #   0 ok  1 failed  2 rejected input  3 wrong password
@@ -114,20 +117,22 @@ key_mgmt() {
     esac
 }
 
-# passwd-file values are backslash-unescaped and space-trimmed.
-psk_line() {
+# Keyfile values treat a backslash as an escape. A space is literal.
+kf_escape() {
     local s=$1
     s=${s//\\/\\\\}
-    s=${s// /\\ }
-    s=${s//$'\t'/\\t}
-    printf '802-11-wireless-security.psk:%s\n' "$s"
+    printf '%s' "$s"
 }
 
-PW_FILE=""
-trap '[[ -z $PW_FILE ]] || rm -f "$PW_FILE"' EXIT
+PW_DIR=""
+cleanup_pw() {
+    [[ -z $PW_DIR ]] || rm -rf "$PW_DIR"
+    PW_DIR=""
+}
+trap cleanup_pw EXIT
 
 connect_psk() {
-    local ssid=$1 psk=$2 sec km out uuid rc=0
+    local ssid=$1 psk=$2 sec km out uuid rc=0 file
     # The installer already showed this network, so it knows the security.
     # Listing again waits on a scan and the screen stays on "Looking for…".
     printf 'status:lookup\n'
@@ -139,42 +144,31 @@ connect_psk() {
     km=$(key_mgmt "$sec") || return 6
     printf 'status:password\n'
     forget_ssid "$ssid"
-    # Flags 2 while the profile is created and activated, so this screen
-    # does not open a password window it cannot show. Flags 0 before
-    # activation makes NetworkManager ask that window and then report a
-    # correct password as a failed connection. The flag is stored only
-    # after the network is up.
-    add_conn() {
-        LC_ALL=C nmcli_to 12 connection add type wifi con-name "$ssid" ssid "$ssid" \
-            wifi-sec.key-mgmt "$km" 802-11-wireless-security.psk-flags 2
+    uuid=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || true)
+    [[ -n $uuid ]] || return 1
+    # The secret is in the profile before activation, so NetworkManager
+    # does not ask for a password window this screen cannot show. One
+    # auth retry: the default keeps asking and a wrong password never
+    # returns. Powersave drops the association on the Realtek chips in
+    # these laptops, so a correct password never finishes.
+    PW_DIR=$(umask 077 && mktemp -d "$SECRETS_DIR/wifi-join.XXXXXX")
+    file="$PW_DIR/wifi.nmconnection"
+    {
+        printf '%s\n' '[connection]' "id=$(kf_escape "$ssid")" "uuid=$uuid" 'type=wifi' 'auth-retries=1' 'autoconnect=true' ''
+        printf '%s\n' '[wifi]' 'mode=infrastructure' 'powersave=2' "ssid=$(kf_escape "$ssid")" ''
+        printf '%s\n' '[wifi-security]' "key-mgmt=$km" "psk=$(kf_escape "$psk")" ''
+        printf '%s\n' '[ipv4]' 'method=auto' '' '[ipv6]' 'method=auto' ''
+    } >"$file"
+    chmod 600 "$file"
+    out=$(nmcli_to 12 connection import type keyfile file "$file" 2>&1) || {
+        printf '%s\n' "$out" >&2
+        cleanup_pw
+        forget_ssid "$ssid"
+        return 1
     }
-    out=$(add_conn 2>&1) || {
-        # A previous try can leave the name behind. One more delete, then
-        # the add is the connection itself rather than a name clash.
-        nmcli_to 8 connection delete id "$ssid" >/dev/null 2>&1 || true
-        out=$(add_conn 2>&1) || {
-            printf '%s\n' "$out" >&2
-            return 1
-        }
-    }
-    uuid=$(grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' <<<"$out" | tail -n1 || true)
-    [[ -n $uuid ]] || { forget_ssid "$ssid"; return 1; }
-    # One try. The default keeps asking, so a wrong password never returns
-    # and the installer cannot accept a different one.
-    nmcli_to 8 connection modify uuid "$uuid" connection.auth-retries 1 >/dev/null || true
-    nmcli_to 8 connection modify uuid "$uuid" connection.autoconnect yes >/dev/null || true
-    # Powersave drops the association on the Realtek chips in these
-    # laptops, so a correct password never finishes.
-    nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless.powersave 2 >/dev/null || true
-    PW_FILE=$(umask 077 && mktemp "$SECRETS_DIR/wifi-join.XXXXXX")
-    psk_line "$psk" >"$PW_FILE"
     printf 'status:address\n'
-    nm_up connection up uuid "$uuid" passwd-file "$PW_FILE" || rc=$?
-    if [[ $rc -eq 0 ]]; then
-        nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 0 >/dev/null || true
-    fi
-    rm -f "$PW_FILE"
-    PW_FILE=""
+    nm_up connection up uuid "$uuid" || rc=$?
+    cleanup_pw
     if [[ $rc -ne 0 ]]; then
         stop_wifi_attempt
         forget_ssid "$ssid"
