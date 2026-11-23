@@ -18,6 +18,11 @@ import sys
 import time
 from pathlib import Path
 
+try:
+    sys.stderr.reconfigure(line_buffering=True)
+except (AttributeError, OSError):
+    pass
+
 # Plymouth theme surface #141218. A black frame is another flash.
 SPLASH = 0x00181214
 HOLD_SECONDS = 20
@@ -219,8 +224,14 @@ def card_is_firmware_fb(driver: str) -> bool:
 
 
 def handoff_plan(attached: int, scanning: bool) -> str:
-    """Always replace the scanout. A live CRTC can still be the firmware frame."""
-    del attached, scanning
+    """Leave a controller that is already scanning out.
+
+    Programming it again retrains the panel link, and this laptop draws
+    its firmware logo for that retrain. A dark controller still needs one
+    splash frame or the logo stays until the next compositor commits.
+    """
+    if attached and scanning:
+        return "keep"
     return "paint"
 
 
@@ -481,6 +492,23 @@ def _paint_best(fd: int) -> int:
     return 0
 
 
+def _live_crtc(fd: int) -> int:
+    """CRTC_ID of a connector that is already scanning, internal panel first."""
+    _crtcs, conns = _resources(fd)
+    best: tuple[int, int] | None = None
+    for conn in conns:
+        found = _first_mode(fd, conn)
+        if found is None:
+            continue
+        _cid, kind, _mode, scanning, _possible, attached = found
+        if kind in SKIP_TYPES or handoff_plan(attached, scanning) != "keep":
+            continue
+        rank = cover_rank(kind)
+        if best is None or rank < best[0]:
+            best = (rank, attached)
+    return 0 if best is None else best[1]
+
+
 def _hold_fd(fd: int) -> None:
     # Keep the buffer fd above the stdio slots. Replacing stdin must not
     # close the scanout buffer.
@@ -585,6 +613,15 @@ def hold() -> int:
             _hold_fd(fd)
             opened.clear()
             return 0
+        live = _live_crtc(fd)
+        if live:
+            # The guard, or the client that just exited, already has a
+            # frame on the link. Another modeset is the logo flash.
+            print(f"seat-cover: keeping live scanout CRTC_ID={live}", file=sys.stderr)
+            _drop_master(fd)
+            _hold_fd(fd)
+            opened.clear()
+            return 0
         attached = _paint_best(fd)
         if attached < 0:
             print("seat-cover: previous display owner still active", file=sys.stderr)
@@ -603,12 +640,11 @@ def hold() -> int:
 
 
 def pin() -> int:
-    """Hold the real GPU across Plymouth's quit, then paint once it lets go.
+    """Hold the real GPU from Plymouth's quit until the machine stops.
 
-    Quit closes Plymouth's device and the kernel puts the firmware picture
-    back. The parent returns at once so the quit is not delayed and the
-    login screen is not stuck behind the splash. The child is not master
-    while it waits, and it drops master after the frame.
+    The parent returns at once so Plymouth is not delayed. The child
+    paints only while the panel controller is off and no compositor is
+    master, then keeps that frame through login and logout.
     """
     if os.environ.get("MODERN_SEAT_COVER") == "0":
         return 0
@@ -635,22 +671,40 @@ def pin() -> int:
         return 0
     os.setsid()
     try:
-        deadline = time.monotonic() + 8
-        attached = 0
-        while time.monotonic() < deadline and attached <= 0:
-            busy = False
+        # Stay up for the whole boot. Login and logout both turn the
+        # panel off before the next session's cover runs, and that gap
+        # is the logo. A live picture is not reprogrammed: the retrain
+        # is the logo too. Master is only taken while no compositor has
+        # it, so Hyprland can still open the device.
+        reported = ""
+        while True:
+            if _hyprland_running():
+                time.sleep(0.2)
+                continue
+            delay = 0.2
+            note = ""
             for fd in opened:
-                attached = _paint_best(fd)
-                if attached > 0:
-                    break
-                if attached < 0:
-                    busy = True
-            if attached > 0 or not busy:
+                try:
+                    _ioctl(fd, SET_MASTER)
+                except OSError:
+                    delay = 0.02
+                    continue
+                live = _live_crtc(fd)
+                if live:
+                    _drop_master(fd)
+                    note = f"seat-cover: keeping live scanout CRTC_ID={live}"
+                else:
+                    held = _paint_best(fd)
+                    if held == 0:
+                        _drop_master(fd)
+                        note = "seat-cover: guard found no mode"
+                    # One frame. Looping the modeset is the logo again.
+                    delay = 0.3
                 break
-            time.sleep(0.02)
-        if attached <= 0:
-            print("seat-cover: pin left the splash frame untouched", file=sys.stderr)
-        _wait_for_compositor()
+            if note and note != reported:
+                print(note, file=sys.stderr)
+                reported = note
+            time.sleep(delay)
     finally:
         for fd in opened:
             try:
@@ -682,9 +736,9 @@ def self_test() -> int:
     if splash_pixel() != bytes((0x14, 0x12, 0x18, 0x00)):
         print("seat-cover: splash pixel is not #141218", file=sys.stderr)
         return 1
-    # Issue 24: CRTC 112 was still named, the cover closed the device,
-    # and the next client observed no CRTC. Holding the fd keeps the id.
-    if handoff_plan(112, True) != "paint" or handoff_plan(0, False) != "paint":
+    # A scanning controller is left alone. Reprogramming it retrains the
+    # panel and the firmware logo shows for that retrain. A dark one is painted.
+    if handoff_plan(112, True) != "keep" or handoff_plan(0, False) != "paint":
         print("seat-cover: handoff plan is wrong", file=sys.stderr)
         return 1
     if not card_is_firmware_fb("simpledrm") or card_is_firmware_fb("i915"):

@@ -44,7 +44,8 @@ fi
 if has 'getCurrentCRTC: No CRTC'; then
     note "compositor started with no CRTC, so the panel was not scanning"
 fi
-if { has 'display already scanning' || has 'seat-cover: painted' || has 'seat-cover: frame held'; } \
+if { has 'display already scanning' || has 'seat-cover: painted' || has 'seat-cover: frame held' \
+        || has 'seat-cover: keeping live scanout'; } \
     && has 'getCurrentCRTC: No CRTC'; then
     note "a cover left the panel connector without a CRTC"
 fi
