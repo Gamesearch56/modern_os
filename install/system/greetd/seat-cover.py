@@ -242,6 +242,9 @@ FLIP_COMPLETE = 0x02
 _SYS_pidfd_getfd = 438
 # Buffers this process created. A flip is only for someone else's frame.
 OUR_FBS: set[int] = set()
+# Splash pixels copied while Plymouth is still master, keyed by card fd.
+# Copying after it drops master keeps the firmware logo instead.
+PREPARED: dict[int, int] = {}
 
 CONNECTED = 1
 # LVDS, eDP, DSI and DPI are the internal panel. VIRTUAL and WRITEBACK
@@ -571,11 +574,17 @@ def _replace_live(fd: int, crtc_id: int) -> bool:
     if info.mode_valid == 0:
         return False
     current = int(info.fb_id)
-    if current in OUR_FBS:
+    prepared = PREPARED.pop(fd, 0)
+    if current in OUR_FBS and not prepared:
         return True
-    fb_id = _make_splash_fb(
-        fd, int(info.mode.hdisplay), int(info.mode.vdisplay), copy_from=current
-    )
+    if prepared:
+        fb_id = prepared
+        print("seat-cover: flipping the splash copied before Plymouth let go", file=sys.stderr)
+    else:
+        # The buffer on screen after Plymouth drops master is the firmware
+        # logo. Copying it is what put that logo between the splash and
+        # the login screen. A flat frame is the fallback.
+        fb_id = _make_splash_fb(fd, int(info.mode.hdisplay), int(info.mode.vdisplay))
     flip = PageFlip(crtc_id=crtc_id, fb_id=fb_id, flags=PAGE_FLIP_EVENT, reserved=0, user_data=1)
     try:
         _ioctl(fd, PAGE_FLIP, flip)
@@ -998,6 +1007,38 @@ def hold() -> int:
                 pass
 
 
+def _prepare_splash_copies(fds: list[int]) -> None:
+    """Copy the splash while Plymouth is still master.
+
+    Dropping master restores the firmware picture. A copy taken after
+    that is the logo, and the page flip then holds the logo up.
+    """
+    for fd in fds:
+        try:
+            live = _live_crtc(fd)
+        except OSError:
+            continue
+        if not live:
+            continue
+        current = _crtc_fb(fd, live)
+        if current == 0 or current in OUR_FBS:
+            continue
+        info = Crtc()
+        info.crtc_id = live
+        try:
+            _ioctl(fd, GETCRTC, info)
+        except OSError:
+            continue
+        if info.mode_valid == 0:
+            continue
+        try:
+            PREPARED[fd] = _make_splash_fb(
+                fd, int(info.mode.hdisplay), int(info.mode.vdisplay), copy_from=current
+            )
+        except (OSError, RuntimeError) as exc:
+            print(f"seat-cover: could not copy the splash before Plymouth let go ({exc})", file=sys.stderr)
+
+
 def _first_adopt(fds: list[int]) -> str:
     """Take the picture over before Plymouth's process exits.
 
@@ -1005,6 +1046,7 @@ def _first_adopt(fds: list[int]) -> str:
     Putting a frame on a dark controller retrains the link, and the
     firmware logo is what this panel draws during the retrain.
     """
+    _prepare_splash_copies(fds)
     # deactivate turns the CRTC off, so it is only the fallback when
     # Plymouth's own fd could not be told to drop master.
     stole = _plymouth_release_master()

@@ -54,12 +54,27 @@ if grep -Fq 'MODERN_SEAT_KEEP_CRTC=1' "$KIOSK" \
     && ! grep -Fq 'MODERN_SEAT_KEEP_CRTC=1' "$DESKTOP" \
     && grep -Fq '_plymouth_release_master' "$COVER" \
     && grep -Fq '_copy_scanning_picture' "$COVER" \
-    && grep -Fq 'kept the picture that was already scanning' "$COVER" \
+    && grep -Fq '_prepare_splash_copies' "$COVER" \
+    && grep -Fq 'flipping the splash copied before Plymouth let go' "$COVER" \
     && grep -Fq 'install_image_seat' "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" \
     && grep -Fq 'seat-cover.next' "$ROOT/scripts/iso-build.sh"; then
     ok "login keeps the CRTC and the installed system gets this image's handoff"
 else
     err "the greeter must keep the CRTC, and the ISO must install that handoff over the release pin"
+fi
+
+if python3 -c '
+import pathlib, sys
+text = pathlib.Path(sys.argv[1]).read_text()
+start = text.find("def _first_adopt")
+body = text[start:text.find("\ndef ", start + 1)]
+prep = body.find("_prepare_splash_copies")
+drop = body.find("_plymouth_release_master")
+sys.exit(0 if 0 < prep < drop else 1)
+' "$COVER"; then
+    ok "the splash is copied before Plymouth drops the display"
+else
+    err "the splash copy must happen before Plymouth drops master, or the copy is the firmware logo"
 fi
 
 if command -v gcc >/dev/null 2>&1 && pkg-config --exists libdrm; then
