@@ -13,7 +13,6 @@
     { "context": "ModernNetPage", "source": "Nearby networks", "key": "installer.net.nearby" },
     { "context": "ModernNetPage", "source": "Refresh", "key": "installer.net.refresh" },
     { "context": "ModernNetPage", "source": "Password", "key": "installer.net.password" },
-    { "context": "ModernNetPage", "source": "Connect", "key": "installer.net.connect" },
     { "context": "ModernNetPage", "source": "Connect to network", "key": "installer.net.connectNetwork" },
     { "context": "ModernNetPage", "source": "Show", "key": "installer.net.showPassword" },
     { "context": "ModernNetPage", "source": "Hide", "key": "installer.net.hidePassword" },
