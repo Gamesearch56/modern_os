@@ -53,6 +53,8 @@ if grep -Fq 'MODERN_SEAT_KEEP_CRTC=1' "$KIOSK" \
     && grep -Fq 'seat-nomodeset.so' "$DESKTOP" \
     && ! grep -Fq 'MODERN_SEAT_KEEP_CRTC=1' "$DESKTOP" \
     && grep -Fq '_plymouth_release_master' "$COVER" \
+    && grep -Fq '_copy_scanning_picture' "$COVER" \
+    && grep -Fq 'kept the picture that was already scanning' "$COVER" \
     && grep -Fq 'install_image_seat' "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" \
     && grep -Fq 'seat-cover.next' "$ROOT/scripts/iso-build.sh"; then
     ok "login keeps the CRTC and the installed system gets this image's handoff"

@@ -152,6 +152,13 @@ class MapDumb(ctypes.Structure):
     ]
 
 
+class GemClose(ctypes.Structure):
+    _fields_ = [
+        ("handle", ctypes.c_uint32),
+        ("pad", ctypes.c_uint32),
+    ]
+
+
 class VBlank(ctypes.Structure):
     _fields_ = [
         ("type", ctypes.c_uint32),
@@ -162,6 +169,7 @@ class VBlank(ctypes.Structure):
 
 
 WAIT_VBLANK = _iowr(0x3A, ctypes.sizeof(VBlank))
+GEM_CLOSE = _ioc(1, ord("d"), 0x09, ctypes.sizeof(GemClose))
 # Set when the splash frame was taken over without dropping master, so
 # Plymouth's quit cannot turn the panel off before the login screen.
 HELD_MASTER = False
@@ -218,6 +226,7 @@ GETCRTC = _iowr(0xA1, ctypes.sizeof(Crtc))
 SETCRTC = _iowr(0xA2, ctypes.sizeof(Crtc))
 GETCONNECTOR = _iowr(0xA7, ctypes.sizeof(GetConnector))
 ADDFB = _iowr(0xAE, ctypes.sizeof(FbCmd))
+GETFB = _iowr(0xAD, ctypes.sizeof(FbCmd))
 CREATE_DUMB = _iowr(0xB2, ctypes.sizeof(CreateDumb))
 MAP_DUMB = _iowr(0xB3, ctypes.sizeof(MapDumb))
 GETENCODER = _iowr(0xA6, ctypes.sizeof(GetEncoder))
@@ -408,7 +417,76 @@ def _driver_name(path: str) -> str:
         return ""
 
 
-def _make_splash_fb(fd: int, width: int, height: int) -> int:
+def _blit_picture(
+    src: bytes | mmap.mmap,
+    src_pitch: int,
+    dst: bytearray | mmap.mmap,
+    dst_pitch: int,
+    width: int,
+    height: int,
+    src_height: int,
+) -> None:
+    rows = min(height, src_height)
+    row_bytes = min(src_pitch, dst_pitch, width * 4)
+    if rows < 1 or row_bytes < 1:
+        raise ValueError("empty picture")
+    for y in range(rows):
+        start = y * src_pitch
+        dst[y * dst_pitch : y * dst_pitch + row_bytes] = src[start : start + row_bytes]
+
+
+def _gem_close(fd: int, handle: int) -> None:
+    if handle == 0:
+        return
+    try:
+        _ioctl(fd, GEM_CLOSE, GemClose(handle=handle))
+    except OSError:
+        pass
+
+
+def _copy_scanning_picture(
+    fd: int, fb_id: int, dst: mmap.mmap, dst_pitch: int, width: int, height: int
+) -> bool:
+    """Copy the buffer that is on screen into one this process owns.
+
+    Plymouth's buffer is destroyed when Plymouth exits. A flat fill in
+    its place is the black gap before the login screen.
+    """
+    info = FbCmd(fb_id=fb_id)
+    try:
+        _ioctl(fd, GETFB, info)
+    except OSError:
+        return False
+    handle = int(info.handle)
+    pitch = int(info.pitch)
+    src_height = int(info.height)
+    if handle == 0 or pitch < 4 or src_height < 1 or pitch > width * 16 or src_height > height * 4:
+        _gem_close(fd, handle)
+        return False
+    mapped = MapDumb(handle=handle)
+    try:
+        _ioctl(fd, MAP_DUMB, mapped)
+        src = mmap.mmap(
+            fd,
+            pitch * src_height,
+            mmap.MAP_SHARED,
+            mmap.PROT_READ,
+            offset=int(mapped.offset),
+        )
+    except (OSError, ValueError, BufferError):
+        _gem_close(fd, handle)
+        return False
+    try:
+        _blit_picture(src, pitch, dst, dst_pitch, width, height, src_height)
+    except (ValueError, OSError, IndexError):
+        return False
+    finally:
+        src.close()
+        _gem_close(fd, handle)
+    return True
+
+
+def _make_splash_fb(fd: int, width: int, height: int, copy_from: int = 0) -> int:
     if width < 1 or height < 1:
         raise RuntimeError("mode has no size")
     dumb = CreateDumb(height=height, width=width, bpp=32)
@@ -423,13 +501,21 @@ def _make_splash_fb(fd: int, width: int, height: int) -> int:
         offset=mapped.offset,
     )
     try:
-        # One write. A row loop on a Celeron leaves the firmware picture
-        # up for the whole fill, which is the flash this frame exists to hide.
-        pixel = splash_pixel()
-        row = pixel * width
-        if dumb.pitch > width * 4:
-            row += b"\x00" * (dumb.pitch - width * 4)
-        view.write(row * height)
+        copied = False
+        if copy_from:
+            copied = _copy_scanning_picture(fd, copy_from, view, int(dumb.pitch), width, height)
+        if copied:
+            print("seat-cover: kept the picture that was already scanning", file=sys.stderr)
+        else:
+            # One write. A row loop on a Celeron leaves the firmware picture
+            # up for the whole fill, which is the flash this frame exists to hide.
+            if copy_from:
+                print("seat-cover: could not read the scanning picture", file=sys.stderr)
+            pixel = splash_pixel()
+            row = pixel * width
+            if dumb.pitch > width * 4:
+                row += b"\x00" * (dumb.pitch - width * 4)
+            view.write(row * height)
     finally:
         view.close()
     fb = FbCmd(width=width, height=height, pitch=dumb.pitch, bpp=32, depth=24, handle=dumb.handle)
@@ -487,7 +573,9 @@ def _replace_live(fd: int, crtc_id: int) -> bool:
     current = int(info.fb_id)
     if current in OUR_FBS:
         return True
-    fb_id = _make_splash_fb(fd, int(info.mode.hdisplay), int(info.mode.vdisplay))
+    fb_id = _make_splash_fb(
+        fd, int(info.mode.hdisplay), int(info.mode.vdisplay), copy_from=current
+    )
     flip = PageFlip(crtc_id=crtc_id, fb_id=fb_id, flags=PAGE_FLIP_EVENT, reserved=0, user_data=1)
     try:
         _ioctl(fd, PAGE_FLIP, flip)
@@ -1079,6 +1167,12 @@ def self_test() -> int:
         return 1
     if splash_pixel() != bytes((0x14, 0x12, 0x18, 0x00)):
         print("seat-cover: splash pixel is not #141218", file=sys.stderr)
+        return 1
+    src = bytes([1, 2, 3, 4, 9, 9]) + bytes([5, 6, 7, 8, 9, 9])
+    dst = bytearray(16)
+    _blit_picture(src, 6, dst, 8, 1, 2, 2)
+    if dst[:4] != bytes((1, 2, 3, 4)) or dst[8:12] != bytes((5, 6, 7, 8)):
+        print("seat-cover: scanning picture was not copied", file=sys.stderr)
         return 1
     # A scanning controller is left alone. Reprogramming it retrains the
     # panel and the firmware logo shows for that retrain. A dark one is painted.
