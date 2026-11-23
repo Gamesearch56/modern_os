@@ -42,8 +42,13 @@ Singleton {
             return;
         root._toggledAt = now;
         root.open = !root.open;
+        if (root.open)
+            DesktopShortcuts.requestScan();
     }
-    function show() { root.open = true; }
+    function show() {
+        DesktopShortcuts.requestScan();
+        root.open = true;
+    }
     function hide() { root.open = false; }
 
     function score(id: string): real {
@@ -97,6 +102,7 @@ Singleton {
 
     function _matches(text: string): var {
         void AppsPrune.rev;
+        void DesktopShortcuts.revision;
         const entries = DesktopEntries.applications.values;
         const needle = (text || "").trim().toLowerCase();
         const out = [];
@@ -123,6 +129,18 @@ Singleton {
                 score: (Config.launcher.frecencyEnabled ?? true) ? root.score(id) : 0
             });
         }
+        const extra = DesktopShortcuts.rows(needle);
+        const have = {};
+        for (let j = 0; j < out.length; j++)
+            have[String(out[j].name || "").toLowerCase()] = true;
+        for (let k = 0; k < extra.length; k++) {
+            const row = extra[k];
+            const low = String(row.name || "").toLowerCase();
+            if (have[low])
+                continue;
+            row.score = (Config.launcher.frecencyEnabled ?? true) ? root.score(row.id) : 0;
+            out.push(row);
+        }
         return out;
     }
 
@@ -146,13 +164,20 @@ Singleton {
             if (!item)
                 return;
             root.record(item.id);
+            if (item.argv && item.argv.length) {
+                DesktopShortcuts.spawn(item.argv);
+                root.hide();
+                return;
+            }
             const id = String(item.id || item.name || "");
             if (id.length && Hypr.raiseDesktopOrLaunch(id, item.exec)) {
                 root.hide();
                 return;
             }
-            if (item.exec?.execute)
+            if (item.exec?.execute) {
+                Quickshell.execDetached([Paths.script("cursor-busy.sh"), "start"]);
                 item.exec.execute();
+            }
             root.hide();
         } catch (e) {
             Logger.error("Launcher", String(e));

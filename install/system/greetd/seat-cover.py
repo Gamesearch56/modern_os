@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# Program one splash-colored frame and drop DRM master. Plymouth's quit
-# closes its device before the login screen has one, and the login
-# compositor turns the panel off as it exits. An Intel laptop panel draws
-# its firmware picture into either gap. Holding master until Hyprland has
-# painted left the splash up forever, because Hyprland never got the device.
-# This process keeps the buffer alive and is not the DRM master.
+# Keep a splash frame across Plymouth's exit and across logout. Plymouth
+# closes its device as it quits, which turns the panel off, and the login
+# compositor does the same as it leaves. This laptop then draws its
+# firmware picture. A page flip takes over a frame that is already
+# scanning; programming the mode again retrains the link and shows that
+# picture too. Holding master until Hyprland has painted left the splash
+# up forever, because Hyprland never got the device. This process keeps
+# the buffer alive and is not the DRM master.
 """seat-cover: hold a frame across the compositor handoff."""
 
 from __future__ import annotations
@@ -14,14 +16,24 @@ import errno
 import fcntl
 import mmap
 import os
+import select
+import subprocess
 import sys
 import time
 from pathlib import Path
+
+try:
+    sys.stderr.reconfigure(line_buffering=True)
+except (AttributeError, OSError):
+    pass
 
 # Plymouth theme surface #141218. A black frame is another flash.
 SPLASH = 0x00181214
 HOLD_SECONDS = 20
 AFTER_SOCKET = 2
+# The parent waits this long for the first frame, then lets Plymouth quit.
+# Longer than that and the login screen sits behind the splash.
+ADOPT_SECONDS = 1.5
 
 
 def _ioc(direction: int, kind: int, nr: int, size: int) -> int:
@@ -140,6 +152,70 @@ class MapDumb(ctypes.Structure):
     ]
 
 
+class GemClose(ctypes.Structure):
+    _fields_ = [
+        ("handle", ctypes.c_uint32),
+        ("pad", ctypes.c_uint32),
+    ]
+
+
+class VBlank(ctypes.Structure):
+    _fields_ = [
+        ("type", ctypes.c_uint32),
+        ("sequence", ctypes.c_uint32),
+        ("tval_sec", ctypes.c_int64),
+        ("tval_usec", ctypes.c_int64),
+    ]
+
+
+WAIT_VBLANK = _iowr(0x3A, ctypes.sizeof(VBlank))
+GEM_CLOSE = _ioc(1, ord("d"), 0x09, ctypes.sizeof(GemClose))
+# Set when the splash frame was taken over without dropping master, so
+# Plymouth's quit cannot turn the panel off before the login screen.
+HELD_MASTER = False
+
+
+class PageFlip(ctypes.Structure):
+    _fields_ = [
+        ("crtc_id", ctypes.c_uint32),
+        ("fb_id", ctypes.c_uint32),
+        ("flags", ctypes.c_uint32),
+        ("reserved", ctypes.c_uint32),
+        ("user_data", ctypes.c_uint64),
+    ]
+
+
+class GetPlane(ctypes.Structure):
+    _fields_ = [
+        ("plane_id", ctypes.c_uint32),
+        ("crtc_id", ctypes.c_uint32),
+        ("fb_id", ctypes.c_uint32),
+        ("possible_crtcs", ctypes.c_uint32),
+        ("gamma_size", ctypes.c_uint32),
+        ("count_format_types", ctypes.c_uint32),
+        ("format_type_ptr", ctypes.c_uint64),
+    ]
+
+
+class GetPlaneRes(ctypes.Structure):
+    _fields_ = [
+        ("plane_id_ptr", ctypes.c_uint64),
+        ("count_planes", ctypes.c_uint32),
+    ]
+
+
+class DrmEventVblank(ctypes.Structure):
+    _fields_ = [
+        ("type", ctypes.c_uint32),
+        ("length", ctypes.c_uint32),
+        ("user_data", ctypes.c_uint64),
+        ("tv_sec", ctypes.c_uint32),
+        ("tv_usec", ctypes.c_uint32),
+        ("sequence", ctypes.c_uint32),
+        ("crtc_id", ctypes.c_uint32),
+    ]
+
+
 class GetEncoder(ctypes.Structure):
     _fields_ = [
         ("encoder_id", ctypes.c_uint32),
@@ -169,10 +245,27 @@ GETCRTC = _iowr(0xA1, ctypes.sizeof(Crtc))
 SETCRTC = _iowr(0xA2, ctypes.sizeof(Crtc))
 GETCONNECTOR = _iowr(0xA7, ctypes.sizeof(GetConnector))
 ADDFB = _iowr(0xAE, ctypes.sizeof(FbCmd))
+GETFB = _iowr(0xAD, ctypes.sizeof(FbCmd))
 CREATE_DUMB = _iowr(0xB2, ctypes.sizeof(CreateDumb))
 MAP_DUMB = _iowr(0xB3, ctypes.sizeof(MapDumb))
 GETENCODER = _iowr(0xA6, ctypes.sizeof(GetEncoder))
 GETPROPERTY = _iowr(0xAA, ctypes.sizeof(GetProperty))
+# DRM_IOCTL_MODE_PAGE_FLIP. A flip changes the buffer and leaves the
+# mode alone. SETCRTC programs the mode again, and this panel draws its
+# firmware logo for that retrain.
+PAGE_FLIP = _iowr(0xB0, ctypes.sizeof(PageFlip))
+GETPLANERES = _iowr(0xB5, ctypes.sizeof(GetPlaneRes))
+GETPLANE = _iowr(0xB6, ctypes.sizeof(GetPlane))
+PAGE_FLIP_EVENT = 1
+FLIP_COMPLETE = 0x02
+# DRM_IOCTL_WAIT_VBLANK. SETCRTC can return while the kernel still has
+# that commit in flight, and the next compositor then refuses to paint.
+_SYS_pidfd_getfd = 438
+# Buffers this process created. A flip is only for someone else's frame.
+OUR_FBS: set[int] = set()
+# Splash pixels copied while Plymouth is still master, keyed by card fd.
+# Copying after it drops master keeps the firmware logo instead.
+PREPARED: dict[int, int] = {}
 
 CONNECTED = 1
 # LVDS, eDP, DSI and DPI are the internal panel. VIRTUAL and WRITEBACK
@@ -218,9 +311,35 @@ def card_is_firmware_fb(driver: str) -> bool:
     return driver in {"simpledrm", "simple-framebuffer", "efifb"}
 
 
+def choose_scanning_fb(legacy_fb: int, planes: list[tuple[int, int]]) -> int:
+    """The framebuffer the panel is showing.
+
+    Plymouth's splash is a plane. The controller's own id can still be
+    the firmware picture, and copying that id is what put the mainboard
+    logo between the splash and the login screen. A cursor is too small
+    to be that splash.
+    """
+    best = 0
+    best_area = 0
+    floor = 640 * 480
+    for fb_id, area in planes:
+        if fb_id == 0 or fb_id == legacy_fb or area < floor:
+            continue
+        if area > best_area:
+            best_area = area
+            best = fb_id
+    return best or legacy_fb
+
+
 def handoff_plan(attached: int, scanning: bool) -> str:
-    """Always replace the scanout. A live CRTC can still be the firmware frame."""
-    del attached, scanning
+    """Leave a controller that is already scanning out.
+
+    Programming it again retrains the panel link, and this laptop draws
+    its firmware logo for that retrain. A dark controller still needs one
+    splash frame or the logo stays until the next compositor commits.
+    """
+    if attached and scanning:
+        return "keep"
     return "paint"
 
 
@@ -342,13 +461,78 @@ def _driver_name(path: str) -> str:
         return ""
 
 
-def paint(fd: int, crtc_id: int, connector_id: int, mode: ModeInfo) -> int:
-    """Program one frame and return the fd that keeps the buffer alive."""
-    width = int(mode.hdisplay)
-    height = int(mode.vdisplay)
+def _blit_picture(
+    src: bytes | mmap.mmap,
+    src_pitch: int,
+    dst: bytearray | mmap.mmap,
+    dst_pitch: int,
+    width: int,
+    height: int,
+    src_height: int,
+) -> None:
+    rows = min(height, src_height)
+    row_bytes = min(src_pitch, dst_pitch, width * 4)
+    if rows < 1 or row_bytes < 1:
+        raise ValueError("empty picture")
+    for y in range(rows):
+        start = y * src_pitch
+        dst[y * dst_pitch : y * dst_pitch + row_bytes] = src[start : start + row_bytes]
+
+
+def _gem_close(fd: int, handle: int) -> None:
+    if handle == 0:
+        return
+    try:
+        _ioctl(fd, GEM_CLOSE, GemClose(handle=handle))
+    except OSError:
+        pass
+
+
+def _copy_scanning_picture(
+    fd: int, fb_id: int, dst: mmap.mmap, dst_pitch: int, width: int, height: int
+) -> bool:
+    """Copy the buffer that is on screen into one this process owns.
+
+    Plymouth's buffer is destroyed when Plymouth exits. A flat fill in
+    its place is the black gap before the login screen.
+    """
+    info = FbCmd(fb_id=fb_id)
+    try:
+        _ioctl(fd, GETFB, info)
+    except OSError:
+        return False
+    handle = int(info.handle)
+    pitch = int(info.pitch)
+    src_height = int(info.height)
+    if handle == 0 or pitch < 4 or src_height < 1 or pitch > width * 16 or src_height > height * 4:
+        _gem_close(fd, handle)
+        return False
+    mapped = MapDumb(handle=handle)
+    try:
+        _ioctl(fd, MAP_DUMB, mapped)
+        src = mmap.mmap(
+            fd,
+            pitch * src_height,
+            mmap.MAP_SHARED,
+            mmap.PROT_READ,
+            offset=int(mapped.offset),
+        )
+    except (OSError, ValueError, BufferError):
+        _gem_close(fd, handle)
+        return False
+    try:
+        _blit_picture(src, pitch, dst, dst_pitch, width, height, src_height)
+    except (ValueError, OSError, IndexError):
+        return False
+    finally:
+        src.close()
+        _gem_close(fd, handle)
+    return True
+
+
+def _make_splash_fb(fd: int, width: int, height: int, copy_from: int = 0) -> int:
     if width < 1 or height < 1:
         raise RuntimeError("mode has no size")
-    _ioctl(fd, SET_MASTER)
     dumb = CreateDumb(height=height, width=width, bpp=32)
     _ioctl(fd, CREATE_DUMB, dumb)
     mapped = MapDumb(handle=dumb.handle)
@@ -361,28 +545,124 @@ def paint(fd: int, crtc_id: int, connector_id: int, mode: ModeInfo) -> int:
         offset=mapped.offset,
     )
     try:
-        # One write. A row loop on a Celeron leaves the firmware picture
-        # up for the whole fill, which is the flash this frame exists to hide.
-        pixel = splash_pixel()
-        row = pixel * width
-        if dumb.pitch > width * 4:
-            row += b"\x00" * (dumb.pitch - width * 4)
-        view.write(row * height)
+        copied = False
+        if copy_from:
+            copied = _copy_scanning_picture(fd, copy_from, view, int(dumb.pitch), width, height)
+        if copied:
+            print("seat-cover: kept the picture that was already scanning", file=sys.stderr)
+        else:
+            # One write. A row loop on a Celeron leaves the firmware picture
+            # up for the whole fill, which is the flash this frame exists to hide.
+            if copy_from:
+                print("seat-cover: could not read the scanning picture", file=sys.stderr)
+            pixel = splash_pixel()
+            row = pixel * width
+            if dumb.pitch > width * 4:
+                row += b"\x00" * (dumb.pitch - width * 4)
+            view.write(row * height)
     finally:
         view.close()
     fb = FbCmd(width=width, height=height, pitch=dumb.pitch, bpp=32, depth=24, handle=dumb.handle)
     _ioctl(fd, ADDFB, fb)
+    fb_id = int(fb.fb_id)
+    OUR_FBS.add(fb_id)
+    return fb_id
+
+
+def _crtc_fb(fd: int, crtc_id: int) -> int:
+    crtc = Crtc()
+    crtc.crtc_id = crtc_id
+    _ioctl(fd, GETCRTC, crtc)
+    return int(crtc.fb_id)
+
+
+def _wait_flip(fd: int) -> bool:
+    """True once the kernel reports the flip. Hyprland must not start
+    while that flip is still queued."""
+    deadline = time.monotonic() + 0.25
+    pending = b""
+    while time.monotonic() < deadline:
+        remain = max(0.0, deadline - time.monotonic())
+        ready, _, _ = select.select([fd], [], [], remain)
+        if not ready:
+            return False
+        try:
+            chunk = os.read(fd, 256)
+        except OSError:
+            return False
+        if not chunk:
+            return False
+        pending += chunk
+        while len(pending) >= 8:
+            length = int.from_bytes(pending[4:8], "little")
+            if length < 8 or len(pending) < length:
+                break
+            event, pending = pending[:length], pending[length:]
+            if int.from_bytes(event[0:4], "little") == FLIP_COMPLETE:
+                return True
+    return False
+
+
+def _replace_live(fd: int, crtc_id: int) -> bool:
+    """Swap our buffer onto a controller that is already scanning.
+
+    SETCRTC would program the mode again. This panel draws the firmware
+    logo for that retrain, including when the mode did not change.
+    """
+    info = Crtc()
+    info.crtc_id = crtc_id
+    _ioctl(fd, GETCRTC, info)
+    if info.mode_valid == 0:
+        return False
+    current = int(info.fb_id)
+    prepared = PREPARED.pop(fd, 0)
+    if current in OUR_FBS and not prepared:
+        return True
+    if prepared:
+        fb_id = prepared
+        print("seat-cover: flipping the splash copied before Plymouth let go", file=sys.stderr)
+    else:
+        # The buffer on screen after Plymouth drops master is the firmware
+        # logo. Copying it is what put that logo between the splash and
+        # the login screen. A flat frame is the fallback.
+        fb_id = _make_splash_fb(fd, int(info.mode.hdisplay), int(info.mode.vdisplay))
+    flip = PageFlip(crtc_id=crtc_id, fb_id=fb_id, flags=PAGE_FLIP_EVENT, reserved=0, user_data=1)
+    try:
+        _ioctl(fd, PAGE_FLIP, flip)
+    except OSError as exc:
+        print(f"seat-cover: page flip failed ({exc})", file=sys.stderr)
+        return False
+    if not _wait_flip(fd):
+        print("seat-cover: page flip did not finish", file=sys.stderr)
+    return True
+
+
+def paint(fd: int, crtc_id: int, connector_id: int, mode: ModeInfo) -> int:
+    """Program one frame and return the fd that keeps the buffer alive.
+
+    Only for a controller that is off. A scanning one is page-flipped.
+    """
+    fb_id = _make_splash_fb(fd, int(mode.hdisplay), int(mode.vdisplay))
+    _ioctl(fd, SET_MASTER)
     conn = ctypes.c_uint32(connector_id)
     crtc = Crtc()
     crtc.set_connectors_ptr = ctypes.addressof(conn)
     crtc.count_connectors = 1
     crtc.crtc_id = crtc_id
-    crtc.fb_id = fb.fb_id
+    crtc.fb_id = fb_id
     crtc.mode_valid = 1
     crtc.mode = mode
     _ioctl(fd, SETCRTC, crtc)
+    # The legacy modeset can return before the kernel has finished the
+    # commit. Dropping master then leaves a page-flip in flight and the
+    # next compositor logs that it cannot commit.
+    blank = VBlank(type=1, sequence=1)
+    try:
+        _ioctl(fd, WAIT_VBLANK, blank)
+    except OSError:
+        pass
     _ioctl(fd, DROP_MASTER)
-    print(f"seat-cover: painted {width}x{height} and dropped master", file=sys.stderr)
+    print(f"seat-cover: painted {mode.hdisplay}x{mode.vdisplay} and dropped master", file=sys.stderr)
     return fd
 
 
@@ -481,6 +761,23 @@ def _paint_best(fd: int) -> int:
     return 0
 
 
+def _live_crtc(fd: int) -> int:
+    """CRTC_ID of a connector that is already scanning, internal panel first."""
+    _crtcs, conns = _resources(fd)
+    best: tuple[int, int] | None = None
+    for conn in conns:
+        found = _first_mode(fd, conn)
+        if found is None:
+            continue
+        _cid, kind, _mode, scanning, _possible, attached = found
+        if kind in SKIP_TYPES or handoff_plan(attached, scanning) != "keep":
+            continue
+        rank = cover_rank(kind)
+        if best is None or rank < best[0]:
+            best = (rank, attached)
+    return 0 if best is None else best[1]
+
+
 def _hold_fd(fd: int) -> None:
     # Keep the buffer fd above the stdio slots. Replacing stdin must not
     # close the scanout buffer.
@@ -521,6 +818,145 @@ def _drop_master(fd: int) -> None:
         _ioctl(fd, DROP_MASTER)
     except OSError:
         pass
+
+
+def _comm_running(name: str) -> bool:
+    root = Path("/proc")
+    try:
+        entries = list(root.iterdir())
+    except OSError:
+        return False
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            comm = (entry / "comm").read_text(encoding="ascii", errors="replace").strip()
+        except OSError:
+            continue
+        if comm == name:
+            return True
+    return False
+
+
+def _plymouth_release_master() -> bool:
+    """Drop Plymouth's DRM master without letting its renderer run.
+
+    `plymouth deactivate` turns the CRTC off. The panel is dark until
+    something programs the mode again, and that retrain is the gap
+    between the splash and the login screen.
+    """
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.syscall.restype = ctypes.c_long
+    libc.syscall.argtypes = [ctypes.c_long, ctypes.c_int, ctypes.c_int, ctypes.c_int]
+    released = False
+    try:
+        entries = list(Path("/proc").iterdir())
+    except OSError:
+        return False
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            comm = (entry / "comm").read_text(encoding="ascii", errors="replace").strip()
+        except OSError:
+            continue
+        if comm != "plymouthd":
+            continue
+        try:
+            pidfd = os.pidfd_open(int(entry.name))
+        except (AttributeError, OSError):
+            continue
+        try:
+            for fdent in (entry / "fd").iterdir():
+                if not fdent.name.isdigit():
+                    continue
+                try:
+                    target = os.readlink(fdent)
+                except OSError:
+                    continue
+                if not target.startswith("/dev/dri/card"):
+                    continue
+                dup = libc.syscall(_SYS_pidfd_getfd, pidfd, int(fdent.name), 0)
+                if dup < 0:
+                    continue
+                try:
+                    _ioctl(int(dup), DROP_MASTER)
+                    released = True
+                    print("seat-cover: plymouth released the display without turning it off", file=sys.stderr)
+                except OSError as exc:
+                    print(f"seat-cover: plymouth master drop failed ({exc})", file=sys.stderr)
+                finally:
+                    os.close(int(dup))
+        finally:
+            os.close(pidfd)
+    return released
+
+
+def _plymouth_drop_master() -> None:
+    """Plymouth keeps DRM master until it exits, and exiting destroys the
+    buffer that is on screen. Deactivate drops master and leaves that
+    buffer, so a page flip can take the picture over before the exit.
+    """
+    try:
+        ping = subprocess.run(
+            ["plymouth", "--ping"],
+            timeout=1,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return
+    if ping.returncode != 0:
+        return
+    try:
+        subprocess.run(
+            ["plymouth", "deactivate"],
+            timeout=1,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+
+def _adopt_fd(fd: int, modeset: bool = True, hold_master: bool = False) -> str:
+    """Caller holds master. A scanning picture is page-flipped. An off
+    controller is programmed once, and only when modeset is allowed.
+    Logout and login must not modeset: this panel draws its firmware
+    logo for every retrain, and the next compositor retrains again.
+    hold_master leaves this process master so Plymouth's quit cannot
+    turn the panel off after the flip."""
+    global HELD_MASTER
+    live = _live_crtc(fd)
+    if live:
+        if _crtc_fb(fd, live) in OUR_FBS:
+            if hold_master:
+                HELD_MASTER = True
+            else:
+                _drop_master(fd)
+            return f"seat-cover: keeping live scanout CRTC_ID={live}"
+        if _replace_live(fd, live) and _crtc_fb(fd, live) in OUR_FBS:
+            if hold_master:
+                HELD_MASTER = True
+            else:
+                _drop_master(fd)
+            return f"seat-cover: replaced scanout without a modeset CRTC_ID={live}"
+        # The flip did not land. An empty note makes the first adopt
+        # try again. SETCRTC here would be the logo.
+        _drop_master(fd)
+        return ""
+    if not modeset:
+        _drop_master(fd)
+        return ""
+    held = _paint_best(fd)
+    if held > 0:
+        return f"seat-cover: frame held CRTC_ID={held}"
+    if held == 0:
+        _drop_master(fd)
+        return "seat-cover: guard found no mode"
+    return ""
 
 
 def _ordered_crtcs(crtcs: list[int], possible: int) -> list[int]:
@@ -585,12 +1021,22 @@ def hold() -> int:
             _hold_fd(fd)
             opened.clear()
             return 0
-        attached = _paint_best(fd)
-        if attached < 0:
-            print("seat-cover: previous display owner still active", file=sys.stderr)
-        elif attached == 0:
+        live = _live_crtc(fd)
+        if live:
+            # The guard, or the client that just exited, already has a
+            # frame on the link. Another modeset is the logo flash.
+            if _crtc_fb(fd, live) not in OUR_FBS:
+                _replace_live(fd, live)
+            print(f"seat-cover: keeping live scanout CRTC_ID={live}", file=sys.stderr)
             _drop_master(fd)
-            print("seat-cover: no mode to replace", file=sys.stderr)
+            _hold_fd(fd)
+            opened.clear()
+            return 0
+        # The previous compositor already cleared CRTC_ID. Programming a
+        # mode here retrains the panel, which is the firmware logo, and
+        # the next compositor retrains it again. Leave the link alone.
+        _drop_master(fd)
+        print("seat-cover: link already dark, leaving the mode for the next compositor", file=sys.stderr)
         _hold_fd(fd)
         opened.clear()
         return 0
@@ -602,13 +1048,139 @@ def hold() -> int:
                 pass
 
 
-def pin() -> int:
-    """Hold the real GPU across Plymouth's quit, then paint once it lets go.
+def _fb_area(fd: int, fb_id: int) -> int:
+    info = FbCmd(fb_id=fb_id)
+    try:
+        _ioctl(fd, GETFB, info)
+    except OSError:
+        return 0
+    _gem_close(fd, int(info.handle))
+    width = int(info.width)
+    height = int(info.height)
+    if width < 1 or height < 1:
+        return 0
+    return width * height
 
-    Quit closes Plymouth's device and the kernel puts the firmware picture
-    back. The parent returns at once so the quit is not delayed and the
-    login screen is not stuck behind the splash. The child is not master
-    while it waits, and it drops master after the frame.
+
+def _plane_pictures(fd: int, crtc_id: int) -> list[tuple[int, int]]:
+    """(fb id, area) for planes scanning on this controller."""
+    res = GetPlaneRes()
+    try:
+        _ioctl(fd, GETPLANERES, res)
+    except OSError:
+        return []
+    count = int(res.count_planes)
+    if count < 1:
+        return []
+    if count > 32:
+        count = 32
+    ids = (ctypes.c_uint32 * count)()
+    res.plane_id_ptr = ctypes.addressof(ids)
+    res.count_planes = count
+    try:
+        _ioctl(fd, GETPLANERES, res)
+    except OSError:
+        return []
+    found: list[tuple[int, int]] = []
+    for plane_id in ids[: int(res.count_planes)]:
+        info = GetPlane()
+        info.plane_id = int(plane_id)
+        try:
+            _ioctl(fd, GETPLANE, info)
+        except OSError:
+            continue
+        fb_id = int(info.fb_id)
+        if int(info.crtc_id) != crtc_id or fb_id == 0:
+            continue
+        found.append((fb_id, _fb_area(fd, fb_id)))
+    return found
+
+
+def _prepare_splash_copies(fds: list[int]) -> None:
+    """Copy the splash while Plymouth is still master.
+
+    Dropping master restores the firmware picture. A copy taken after
+    that is the logo, and the page flip then holds the logo up.
+    """
+    for fd in fds:
+        try:
+            live = _live_crtc(fd)
+        except OSError:
+            continue
+        if not live:
+            continue
+        current = _crtc_fb(fd, live)
+        if current == 0 or current in OUR_FBS:
+            continue
+        info = Crtc()
+        info.crtc_id = live
+        try:
+            _ioctl(fd, GETCRTC, info)
+        except OSError:
+            continue
+        if info.mode_valid == 0:
+            continue
+        source = choose_scanning_fb(current, _plane_pictures(fd, live))
+        if source != current:
+            print(
+                "seat-cover: copying the splash plane, not the firmware framebuffer",
+                file=sys.stderr,
+            )
+        try:
+            PREPARED[fd] = _make_splash_fb(
+                fd, int(info.mode.hdisplay), int(info.mode.vdisplay), copy_from=source
+            )
+        except (OSError, RuntimeError) as exc:
+            print(f"seat-cover: could not copy the splash before Plymouth let go ({exc})", file=sys.stderr)
+
+
+def _first_adopt(fds: list[int]) -> str:
+    """Take the picture over before Plymouth's process exits.
+
+    After that exit the scanning buffer is gone and the panel is dark.
+    Putting a frame on a dark controller retrains the link, and the
+    firmware logo is what this panel draws during the retrain.
+    """
+    _prepare_splash_copies(fds)
+    # deactivate turns the CRTC off, so it is only the fallback when
+    # Plymouth's own fd could not be told to drop master.
+    stole = _plymouth_release_master()
+    if not stole:
+        _plymouth_drop_master()
+    deadline = time.monotonic() + ADOPT_SECONDS
+    note = ""
+    while time.monotonic() < deadline and not note:
+        for fd in fds:
+            try:
+                _ioctl(fd, SET_MASTER)
+            except OSError:
+                continue
+            note = _adopt_fd(fd, hold_master=stole)
+            # "no mode" can be a connector that is not ready yet. A
+            # landed flip or a programmed frame is done.
+            if note and not note.endswith("no mode"):
+                return note
+        time.sleep(0.02)
+    return note
+
+
+def _signal_ready(write_fd: int) -> None:
+    try:
+        os.write(write_fd, b"\n")
+    except OSError:
+        pass
+    try:
+        os.close(write_fd)
+    except OSError:
+        pass
+
+
+def pin() -> int:
+    """Hold the real GPU from before Plymouth exits until the machine stops.
+
+    The parent waits only until the first frame is in place, then Plymouth
+    is allowed to quit. The child is not master while a compositor is
+    scanning, and it drops master after every frame.
     """
     if os.environ.get("MODERN_SEAT_COVER") == "0":
         return 0
@@ -628,29 +1200,77 @@ def pin() -> int:
     if not opened:
         print("seat-cover: no display to pin", file=sys.stderr)
         return 0
+    read_fd, write_fd = os.pipe()
     pid = os.fork()
     if pid > 0:
+        os.close(write_fd)
         for fd in opened:
             os.close(fd)
+        # Plymouth quit is ordered after this process. Waiting here is
+        # what keeps Plymouth alive until its frame has been replaced.
+        # The cap is so a stuck device cannot hold the splash up.
+        select.select([read_fd], [], [], ADOPT_SECONDS + 0.5)
+        os.close(read_fd)
         return 0
+    os.close(read_fd)
     os.setsid()
     try:
-        deadline = time.monotonic() + 8
-        attached = 0
-        while time.monotonic() < deadline and attached <= 0:
-            busy = False
+        note = _first_adopt(opened)
+        if note:
+            print(note, file=sys.stderr)
+        _signal_ready(write_fd)
+        if HELD_MASTER:
+            # Plymouth quit is running now. It cannot disable the CRTC
+            # while this process is still master, and it does not wait
+            # forever for a master it will not get. Drop once it is gone
+            # so the login compositor can open the device.
+            deadline = time.monotonic() + 3
+            while _comm_running("plymouthd") and time.monotonic() < deadline:
+                time.sleep(0.02)
             for fd in opened:
-                attached = _paint_best(fd)
-                if attached > 0:
-                    break
-                if attached < 0:
-                    busy = True
-            if attached > 0 or not busy:
+                _drop_master(fd)
+        # Stay up for logout as well. The previous compositor turns the
+        # panel off as it leaves. Reprogramming that dark link retrains
+        # it, which is the firmware logo, and the next compositor does
+        # it again. A picture that is still scanning is page-flipped.
+        # A dark one is left for that next compositor.
+        reported = note
+        quiet_until = 0.0
+        while True:
+            if time.monotonic() < quiet_until:
+                time.sleep(0.05)
+                continue
+            # A scanning picture stays untouched. Taking master to look
+            # again races the compositor that is about to open the device.
+            scanning = False
+            for fd in opened:
+                try:
+                    if _live_crtc(fd):
+                        scanning = True
+                        break
+                except OSError:
+                    continue
+            if scanning:
+                time.sleep(0.2 if _hyprland_running() else 0.05)
+                continue
+            delay = 0.05
+            new_note = ""
+            for fd in opened:
+                try:
+                    _ioctl(fd, SET_MASTER)
+                except OSError:
+                    delay = 0.02
+                    continue
+                new_note = _adopt_fd(fd, modeset=False)
                 break
-            time.sleep(0.02)
-        if attached <= 0:
-            print("seat-cover: pin left the splash frame untouched", file=sys.stderr)
-        _wait_for_compositor()
+            if new_note and new_note != reported:
+                print(new_note, file=sys.stderr)
+                reported = new_note
+            # A dark controller was just programmed. Doing it again on
+            # the next tick retrains the link, which is the logo.
+            if new_note.startswith("seat-cover: frame held"):
+                quiet_until = time.monotonic() + 1.0
+            time.sleep(delay)
     finally:
         for fd in opened:
             try:
@@ -673,6 +1293,19 @@ def self_test() -> int:
     if ctypes.sizeof(GetProperty) != 64 or ctypes.sizeof(GetEncoder) != 20:
         print("seat-cover: encoder struct size drifted", file=sys.stderr)
         return 1
+    if ctypes.sizeof(PageFlip) != 24 or ctypes.sizeof(DrmEventVblank) != 32 or ctypes.sizeof(VBlank) != 24:
+        print("seat-cover: page-flip struct size drifted", file=sys.stderr)
+        return 1
+    if ctypes.sizeof(GetPlane) != 32 or ctypes.sizeof(GetPlaneRes) != 16:
+        print("seat-cover: plane struct size drifted", file=sys.stderr)
+        return 1
+    # The legacy id is the firmware picture. The large other id is the splash.
+    if choose_scanning_fb(5, [(5, 1920 * 1080), (9, 64 * 64), (8, 1920 * 1080)]) != 8:
+        print("seat-cover: splash plane was not chosen", file=sys.stderr)
+        return 1
+    if choose_scanning_fb(5, [(5, 1920 * 1080), (9, 64 * 64)]) != 5:
+        print("seat-cover: a cursor must not replace the only full-size picture", file=sys.stderr)
+        return 1
     if not output_needs_cover(14, False) or output_needs_cover(14, True) or output_needs_cover(15, False):
         print("seat-cover: cover decision is wrong", file=sys.stderr)
         return 1
@@ -682,9 +1315,15 @@ def self_test() -> int:
     if splash_pixel() != bytes((0x14, 0x12, 0x18, 0x00)):
         print("seat-cover: splash pixel is not #141218", file=sys.stderr)
         return 1
-    # Issue 24: CRTC 112 was still named, the cover closed the device,
-    # and the next client observed no CRTC. Holding the fd keeps the id.
-    if handoff_plan(112, True) != "paint" or handoff_plan(0, False) != "paint":
+    src = bytes([1, 2, 3, 4, 9, 9]) + bytes([5, 6, 7, 8, 9, 9])
+    dst = bytearray(16)
+    _blit_picture(src, 6, dst, 8, 1, 2, 2)
+    if dst[:4] != bytes((1, 2, 3, 4)) or dst[8:12] != bytes((5, 6, 7, 8)):
+        print("seat-cover: scanning picture was not copied", file=sys.stderr)
+        return 1
+    # A scanning controller is left alone. Reprogramming it retrains the
+    # panel and the firmware logo shows for that retrain. A dark one is painted.
+    if handoff_plan(112, True) != "keep" or handoff_plan(0, False) != "paint":
         print("seat-cover: handoff plan is wrong", file=sys.stderr)
         return 1
     if not card_is_firmware_fb("simpledrm") or card_is_firmware_fb("i915"):

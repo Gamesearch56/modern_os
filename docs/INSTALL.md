@@ -226,16 +226,17 @@ clone copies that tree so Calamares does not depend on a GitHub fetch.
 The ISO pin must be a real `vX.Y.Z` tag (`--tag` or the latest tag in
 the clone).
 
-**Only `iso/` is built from your working tree.** The bundle is
-`git clone --branch <pin>`, so `install/`, `stow/` and `scripts/` reach
-the installed system as the *tag's* copy. Editing `provision-iso.sh` or a
-`stow/` dotfile and rebuilding puts the change on the live ISO and leaves
-it out of the machine you then boot, which reads as the fix silently not
-working. `iso-build.sh` now refuses to build when those three directories
-differ from the pin, listing the files; commit and tag, or pass
-`--stale-bundle` to deliberately ship the pin's copy. An explicit `--tag`
-also skips the check, since naming a pin is a deliberate choice — that is
-how you rebuild an older release with newer ISO scripts.
+**Only `iso/` is built from your working tree**, unless you pass
+`--stale-bundle`. The bundle starts as `git clone --branch <pin>`, so
+without that flag `install/`, `stow/` and `scripts/` would reach the
+installed system as the *tag's* copy. Editing a shell file and rebuilding
+would put the change on the live ISO and leave it out of the machine you
+then boot. `iso-build.sh` refuses that build and lists the files. Commit
+and tag, or pass `--stale-bundle` to copy this working tree's `install/`,
+`stow/` and `scripts/` over the pin, including uncommitted edits. The
+clone's commit stays the pin, so the installed system still reports that
+version. An explicit `--tag` skips the check and keeps the named pin's
+copy — that is how you rebuild an older release with newer ISO scripts.
 
 Because the bundle is cloned from the clone rather than the remote, the
 build needs a real `.git` **with tags**; a shallow clone carries none.
@@ -246,21 +247,17 @@ from a refusal on ownership.
 
 Location Region/Zone combos stay on the page; the **Change…** locale
 dialogs are hidden. They open a modal X11 window that cage maps as an
-unclosable grey stripe. Keyboard layout changes call `setxkbmap` on
-Xwayland (`xorg-setxkbmap`; `useLocale1: false` so systemd-localed is
+unclosable grey stripe. Keyboard layout changes write
+`/run/modern/xkb-layout` (`useLocale1: false` so systemd-localed is
 not used instead). Upstream starts that apply from the *variant* signal;
 `live-xkb-filter.py` drops every variant, so picking German never ran
-`setxkbmap` and the Users password was typed on `us`. The AUR patch
-calls `Config::somethingChanged()` on a layout change too. A first pick
-of German still left the test field on `us`: cage's Xwayland ignores
-`setxkbmap -layout de` until a call also passes `-option` (India does,
-because it is in `non-ascii-layouts`). A bare `-option` is a missing
-argument, so the map stays `us` and Z types Y. The patch sends
-`-option` with an empty value. Two calls in a row are still ignored as
-one burst, so the first pick of German stays on `us` until another
-layout is chosen and German is picked again. A `setxkbmap -query`
-between them finishes that burst, and the layout is applied once more
-a moment later.
+it and the Users password was typed on `us`. The AUR patch calls
+`Config::somethingChanged()` on a layout change too. Cage, not the X
+server, chooses the character for each key. `setxkbmap` does not change
+that map, so a German selection still typed Y for the key labeled Z and
+a Wi-Fi password entered from the keycaps was not the password that was
+sent. `live-xkb-cage.so` is loaded into cage and installs the layout
+from that file on the next frame.
 
 ### Languages, countries and keyboard layouts
 

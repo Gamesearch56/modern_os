@@ -75,6 +75,10 @@ Singleton {
             return;
         }
         Launcher.record(key);
+        if (DesktopShortcuts.spawnId(key)) {
+            Launcher.hide();
+            return;
+        }
         // Mail, calendar, and WhatsApp stay on the background workspace.
         // gtk-launch activates that window and leaves it there.
         const entry = Apps._entryById(key);

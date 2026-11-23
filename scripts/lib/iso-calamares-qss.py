@@ -302,6 +302,10 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
 }}
 #networkWifiRow {{
     background: transparent;
+    border-radius: 12px;
+}}
+#networkWifiRow[hovered="true"] {{
+    background-color: {primary_container};
 }}
 #wifiList::item {{
     background-color: transparent;
@@ -321,14 +325,28 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
 #networkWifiLocked {{
     color: {on_variant};
 }}
-#networkRowConnect, #networkConnect {{
+#networkRowConnect, #networkRowForget, #networkRowDisconnect {{
+    background-color: {primary};
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 18px;
+}}
+#networkConnect {{
     background-color: {primary};
     color: {on_primary};
     border: none;
     border-radius: 20px;
     padding: 10px 18px;
 }}
-{states("#networkRowConnect, #networkConnect", primary, on_primary)}
+QListWidget#wifiList QPushButton#networkRowConnect,
+QListWidget#wifiList QPushButton#networkRowForget,
+QListWidget#wifiList QPushButton#networkRowDisconnect {{
+    color: #ffffff;
+    background-color: {primary};
+}}
+{states("#networkRowConnect, #networkRowForget, #networkRowDisconnect, QListWidget#wifiList QPushButton#networkRowConnect", primary, "#ffffff")}
+{states("#networkConnect", primary, on_primary)}
 #networkRefresh {{
     background-color: {primary_container};
     color: {on_primary_container};

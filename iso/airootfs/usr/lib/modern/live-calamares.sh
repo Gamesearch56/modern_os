@@ -4,7 +4,16 @@
 # socket; Hyprland-as-root never painted.
 set -euo pipefail
 
-log=/tmp/live-calamares.log
+# Xwayland is the process that turns a keycode into a character.
+# Cage's keymap is the one it uses, and setxkbmap only changes the
+# names a query prints. The helper has to stay loaded here. Calamares
+# and openbox are X clients and drop it in the block below.
+
+if [ -d /run/modern/installer ] && [ -w /run/modern/installer ]; then
+    log=/run/modern/installer/calamares.log
+else
+    log=/tmp/live-calamares.log
+fi
 note() {
     printf '%s\n' "$*" >>"$log" 2>/dev/null || true
     if [ -w /dev/ttyS0 ]; then
@@ -18,6 +27,10 @@ sock="/tmp/.X11-unix/X${n}"
 export DISPLAY="$display"
 
 (
+    # These are X clients. The helper is for Xwayland, which is still
+    # the process outside this block.
+    unset LD_PRELOAD
+    unset MODERN_XKB_PUSH_X
     i=0
     while [ ! -S "$sock" ]; do
         i=$((i + 1))
@@ -88,5 +101,10 @@ export DISPLAY="$display"
     fi
 ) &
 
-note "exec Xwayland -noreset $display"
-exec Xwayland -noreset "$display"
+# Without -nokeymap, Cage's keymap replaces whatever setxkbmap just
+# compiled, so the query can say "de" while the next key is still US.
+# This Xwayland does not call libxkbcommon, so a preload cannot
+# translate the key. Ignoring the compositor map leaves setxkbmap in
+# charge, which is the layout the keyboard page already applies.
+note "exec Xwayland -nokeymap -noreset $display"
+exec Xwayland -nokeymap -noreset "$display"

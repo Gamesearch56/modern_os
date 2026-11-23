@@ -27,6 +27,7 @@ Item {
             if (exitCode === 0)
                 return;
             if (entry && entry.execute) {
+                root._armNew(stem);
                 entry.execute();
                 // The class rule parks the new window. Move that one
                 // here once it exists, so the click still opens it.
@@ -79,6 +80,32 @@ Item {
     function _stopParkedOpen() {
         parkedWait.stop();
         parkedOpen.stem = "";
+    }
+
+    function _alreadyOpen(desktopId: string): bool {
+        const stem = String(desktopId || "").replace(/\.desktop$/i, "").toLowerCase();
+        const head = stem.split("-")[0];
+        if (head.length < 3)
+            return false;
+        const list = Hyprland.toplevels?.values ?? [];
+        for (let i = 0; i < list.length; i++) {
+            const t = list[i];
+            const cls = String((t && (t.class || t.initialClass)) || "").toLowerCase();
+            if (!cls.length)
+                continue;
+            if (cls === stem || cls.indexOf(head) !== -1 || head.indexOf(cls) !== -1)
+                return true;
+        }
+        return false;
+    }
+
+    function _armNew(desktopId: string) {
+        // Focusing a window that is already on screen is not a launch.
+        // The watch stays until a new window maps, so an open Steam must
+        // not leave it there.
+        if (root._alreadyOpen(desktopId))
+            return;
+        Quickshell.execDetached([Paths.script("cursor-busy.sh"), "start"]);
     }
 
     function raiseDesktop(desktopId: string): bool {
@@ -169,16 +196,20 @@ Item {
         const id = String(desktopId || "");
         const win = root.windows;
         if (!win || !win.autostart.isAutostartDesktop(id)) {
-            if (entry && entry.execute)
+            if (entry && entry.execute) {
+                root._armNew(id);
                 entry.execute();
+            }
             return !!(entry && entry.execute);
         }
         if (root.raiseDesktop(id))
             return true;
         const stem = id.replace(/\.desktop$/i, "");
         if (!stem.length) {
-            if (entry && entry.execute)
+            if (entry && entry.execute) {
+                root._armNew(stem);
                 entry.execute();
+            }
             return !!(entry && entry.execute);
         }
         if (raiseProc.running)

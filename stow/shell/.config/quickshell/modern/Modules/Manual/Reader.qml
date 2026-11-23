@@ -39,7 +39,9 @@ FocusScope {
         tight: Math.round(Tokens.spacing.xs),
         headGap: Math.round(Tokens.spacing.xl),
         pad: Math.round(Tokens.spacing.sm),
-        leading: Math.round(100 * root._style.lineHeight / root._style.pixelSize)
+        // Pixels, not a percentage. Qt has treated the same percentage as
+        // both 1.5x and 150x, and the larger one is a blank page.
+        leading: Math.round(root._style.lineHeight * root._scale)
     })
     readonly property string _html: root.doc
         ? String(root.doc.html || "").replace(/\{\{(\w+)(?::(\d+))?\}\}/g, (m, k, pct) => pct
@@ -146,7 +148,7 @@ FocusScope {
         visible: !!root.doc
         clip: true
         contentWidth: width
-        contentHeight: body.implicitHeight + Tokens.spacing.xl * 2
+        contentHeight: body.contentHeight + Tokens.spacing.xl * 2
         boundsBehavior: Flickable.StopAtBounds
 
         TextEdit {
@@ -161,6 +163,10 @@ FocusScope {
             activeFocusOnPress: false
             wrapMode: TextEdit.Wrap
             color: Colors.color.onSurface
+            // Table cells read the palette, not this color. Left alone they
+            // stay black on the dark page while the grid stays visible.
+            palette.text: Colors.color.onSurface
+            palette.windowText: Colors.color.onSurface
             selectionColor: Colors.color.primaryContainer
             selectedTextColor: Colors.color.onPrimaryContainer
             font.family: Typography.family.document

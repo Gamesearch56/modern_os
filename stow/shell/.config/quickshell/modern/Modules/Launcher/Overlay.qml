@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../Commons"
+import "../../Services"
 
 Item {
     id: root
@@ -80,9 +81,9 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
+            cursorShape: LaunchCursor.busy ? Qt.BusyCursor : Qt.PointingHandCursor
             HoverHandler {
-                cursorShape: Qt.PointingHandCursor
+                cursorShape: LaunchCursor.busy ? Qt.BusyCursor : Qt.PointingHandCursor
             }
             onClicked: root.closed()
         }

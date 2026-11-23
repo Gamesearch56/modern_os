@@ -25,15 +25,21 @@ has 'Uploading the release image' "$ROOT/scripts/iso-release.sh" "the image uplo
 has 'ModernOS ${TAG}' "$ROOT/scripts/iso-release.sh" "the progress window is titled with the image version"
 has 'modern-release-progress' "$ROOT/scripts/lib/iso-release.sh" "the progress window floats instead of tiling"
 has '--protondrive-2fa' "$ROOT/scripts/iso-release.sh" "Proton can take a two-factor code"
+if grep -Fq 'MODERNOS_ISO_ARCHIVE' "$ROOT/scripts/iso-release.sh"; then
+    err "a release upload must not copy to Proton Drive because the variable is set"
+else
+    ok "a release upload stops at GitHub unless --archive is passed"
+fi
 has 'kdialog --title "ModernOS" --inputbox' "$ROOT/scripts/lib/iso-release.sh" "Proton's code opens an input window"
 
 # shellcheck source=../scripts/lib/iso-release.sh
 source "$ROOT/scripts/lib/iso-release.sh"
-printf '## [1.0.0]\n\n- thing\n' >"$TMP/body"
+printf '## [1.0.0]\n\n### Upgrading\n\nInstalled systems: **Settings → Update** offers this release.\n\n- thing\n' >"$TMP/body"
 block="$(iso_download_block https://github.com/o/r v1.0.0 1073741824 abc FPR)"
 iso_notes_with_download "$block" <"$TMP/body" >"$TMP/once"
 iso_notes_with_download "$block" <"$TMP/once" >"$TMP/twice"
 if cmp -s "$TMP/once" "$TMP/twice" && [ "$(grep -c '### Download' "$TMP/twice")" = 1 ] \
+    && [ "$(grep -cF "$ISO_INSTALL_LINE" "$TMP/twice")" = 1 ] \
     && head -1 "$TMP/twice" | grep -Fxq '## [1.0.0]' \
     && tail -1 "$TMP/twice" | grep -Fxq "$ISO_NOTES_END" \
     && grep -Fq -- '- thing' "$TMP/twice"; then

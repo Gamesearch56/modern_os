@@ -84,9 +84,10 @@ assert(near(fitScale(1000, 500, 4000, 1000), 0.25), "fit uses the tighter side")
 assert(fitScale(0, 500, 10, 10) === 1 && fitScale(100, 100, 0, 0) === 1, "an unknown size fits at 1");
 assert(baseScale("shrink", 3) === 1 && baseScale("shrink", 0.5) === 0.5, "shrink never enlarges");
 assert(baseScale("fit", 3) === 3 && baseScale("actual", 0.2) === 1, "fit fills, actual is 1:1");
-assert(near(zoomed(1, 1, 1), 1.25) && near(zoomed(1, -1, 1), 0.8), "one notch is a 25 % step");
+assert(near(zoomed(1, 1, 1), 1.1) && near(zoomed(1, -1, 1), 1 / 1.1), "one notch is a 10 % step");
 assert(zoomed(30, 5, 1) === maxScale && near(zoomed(0.01, -5, 0.5), 0.5 / 8), "zoom is bounded");
 assert(notches(120, 0) === 1 && notches(0, -48) === -1 && notches(0, 0) === 0, "wheel and touchpad agree");
+assert(notches(120, 24) === 0.5, "a touchpad pixel delta is finer than a detent");
 assert(anchored(0, 50, 100, 100, 1, 2) === 50, "zooming keeps the point under the pointer");
 assert(anchored(0, 50, 100, 100, 2, 0.5) === 0, "zooming out of view clamps to the start");
 assert(anchored(500, 100, 100, 100, 2, 2) === 100, "the offset never runs past the end");

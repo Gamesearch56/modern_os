@@ -192,6 +192,8 @@ PanelWindow {
                 sourceComponent: root.vertical ? vertComp : horizComp
             }
         }
+
+        LaunchBusy { anchors.fill: parent }
     }
 
     Component {

@@ -5,6 +5,9 @@
 ISO_ASSET="modernos-x86_64.iso"
 ISO_NOTES_START="<!-- modernos-iso -->"
 ISO_NOTES_END="<!-- /modernos-iso -->"
+# Only after the image is a release asset. The notes are published
+# before the upload, and this sentence would point at a missing file.
+ISO_INSTALL_LINE="New installations: download the ISO from this page."
 # GitHub refuses release assets of 2 GiB or more.
 # shellcheck disable=SC2034
 ISO_ASSET_MAX=2147483648
@@ -27,14 +30,29 @@ iso_leaks() {
 
 # Release notes from stdin, then the download section. An older section
 # is dropped wherever it sat, so a re-run moves it instead of stacking.
+# The new-installations sentence is inserted here, once, because this
+# runs only after the image is attached.
 iso_notes_with_download() {
     local block="$1"
-    awk -v start="$ISO_NOTES_START" -v end="$ISO_NOTES_END" '
+    awk -v start="$ISO_NOTES_START" -v end="$ISO_NOTES_END" \
+        -v line="$ISO_INSTALL_LINE" '
         $0 == start { skip = 1; next }
         $0 == end { skip = 0; next }
         skip { next }
+        # The sentence is printed again under Installed systems. Dropping
+        # the copy here must not keep the blank line that sat above it,
+        # or a second run adds a blank line.
+        $0 == line { blank = 0; next }
         /^[[:space:]]*$/ { if (seen) blank++; next }
-        { for (; blank > 0; blank--) print ""; seen = 1; print }'
+        {
+            for (; blank > 0; blank--) print ""
+            seen = 1
+            print
+            if ($0 ~ /^Installed systems:/) {
+                print ""
+                print line
+            }
+        }'
     printf '\n%s\n' "$block"
 }
 

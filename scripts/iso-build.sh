@@ -17,6 +17,9 @@ FIXED_JSON="$ROOT/stow/modern/.config/modern/themes/fixed-brand.json"
 die() { printf 'iso-build: ERROR: %s\n' "$*" >&2; exit 1; }
 log() { printf 'iso-build: %s\n' "$*"; }
 
+# shellcheck source=lib/iso-bundle.sh
+source "$ROOT/scripts/lib/iso-bundle.sh"
+
 # A failed customize leaves proc (and friends) mounted. The next
 # arch-chroot refuses to mount them again.
 release_chroot_mounts() {
@@ -88,9 +91,12 @@ image is this clone; Calamares late still clones --tag (or the latest
 vX.Y.Z in the clone). There is no hardcoded fallback pin. Missing
 mkarchiso is not an error without the flag (branding still succeeds).
 
-Only iso/ comes from your working tree. install/, stow/ and scripts/ reach
-the installed system through a clone of the pin, so the build stops if
-those differ from it. --stale-bundle builds the pin's copy anyway.
+Only iso/ comes from your working tree unless you pass --stale-bundle.
+install/, stow/ and scripts/ otherwise reach the installed system as a
+clone of the pin, so the build stops if those differ from it.
+--stale-bundle copies this working tree's install/, stow/ and scripts/
+over that clone, including uncommitted edits. The clone's commit stays
+the pin, so the installed system still reports that version.
 --public leaves the GitHub deploy key out, for an image anyone may
 download (scripts/iso-release.sh). Installs from it update over HTTPS.
 Boot the result with scripts/iso-qemu.sh (--headless for no display).
@@ -184,10 +190,9 @@ if [ "$(id -u)" -eq 0 ]; then
     release_chroot_mounts "$abs_out/work/mkarchiso/x86_64/airootfs"
 fi
 
-# The live ISO is this working tree, but the bundle Calamares installs from
-# is a clone of $pin. Edit install/ or stow/ without tagging and the change
-# is on the ISO yet absent from the installed system, which looks like the
-# fix silently not working.
+# Without --stale-bundle the bundle Calamares installs is a clone of
+# $pin. install/, stow/ and scripts/ from this tree would not be on the
+# machine you then boot, which looks like the fix silently not working.
 stale="$(git -C "$ROOT" diff --name-only "$pin" -- install stow scripts)"
 untracked="$(git -C "$ROOT" ls-files --others --exclude-standard -- install stow scripts)"
 stale="$(printf '%s\n%s\n' "$stale" "$untracked" | sed '/^$/d' | sort -u)"
@@ -195,13 +200,17 @@ if [ -n "$stale" ] && [ -z "$ALLOW_STALE_BUNDLE" ] && [ -z "$pin_was_asked_for" 
     printf 'iso-build: ERROR: these differ from %s and would NOT reach the installed system:\n' \
         "$pin" >&2
     printf '%s\n' "$stale" | while IFS= read -r f; do printf '  %s\n' "$f" >&2; done
-    die "commit and tag, or pass --stale-bundle to install $pin's copy anyway"
+    die "commit and tag, or pass --stale-bundle to install this working tree over $pin"
 fi
 
 WORK="$abs_out/work"
 BRAND_HOME="$WORK/brand-home"
 AIROOTFS_OUT="$abs_out/airootfs"
 rm -rf "$WORK"
+# Staging lives beside work/, so the wipe above leaves it. cp -a merges,
+# and a file removed from iso/airootfs (the ipconfig stand-in) then stays
+# and pacman aborts with "exists in filesystem".
+rm -rf "$AIROOTFS_OUT"
 mkdir -p "$BRAND_HOME/.config/modern/themes" \
     "$BRAND_HOME/.config/matugen/templates" \
     "$BRAND_HOME/.config/modern/wallpapers" \
@@ -233,6 +242,42 @@ install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-wifi-up.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/live-wifi-up.sh"
 install -m 0755 "$ROOT/scripts/wifi-join.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/wifi-join.sh"
+install -m 0755 "$ROOT/scripts/wifi-join-add.py" \
+    "$AIROOTFS_OUT/usr/lib/modern/wifi-join-add.py"
+# Cage ignores setxkbmap. This is loaded into cage and switches its
+# keymap when the installer writes a layout. Without it, German still
+# types Y for the key labeled Z, and the Wi-Fi password is the wrong one.
+if ! command -v gcc >/dev/null 2>&1 || ! pkg-config --exists xkbcommon || ! pkg-config --exists wayland-server; then
+    die "gcc, libxkbcommon and wayland are required for the installer keyboard (pacman -S --needed gcc libxkbcommon wayland)"
+fi
+read -r -a xkb_cflags < <(pkg-config --cflags --libs xkbcommon wayland-server)
+gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -pthread \
+    -o "$AIROOTFS_OUT/usr/lib/modern/live-xkb-cage.so" \
+    "$ROOT/iso/releng/live-xkb-cage.c" \
+    "${xkb_cflags[@]}" \
+    || die "could not compile the installer keyboard helper"
+chmod 0755 "$AIROOTFS_OUT/usr/lib/modern/live-xkb-cage.so"
+log "installer keyboard helper compiled"
+# The installed system runs the release pin's greeter, which modesets a
+# dark panel and shows the firmware picture. These copies are applied
+# after that pin's install, from calamares-late.sh.
+if ! pkg-config --exists libdrm; then
+    die "libdrm is required for the login handoff (pacman -S --needed libdrm)"
+fi
+read -r -a drm_cflags < <(pkg-config --cflags --libs libdrm)
+gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -pthread \
+    -o "$AIROOTFS_OUT/usr/lib/modern/seat-nomodeset.next" \
+    "$ROOT/install/system/greetd/seat-nomodeset.c" \
+    "${drm_cflags[@]}" \
+    || die "could not compile the login handoff helper"
+chmod 0755 "$AIROOTFS_OUT/usr/lib/modern/seat-nomodeset.next"
+install -m 0755 "$ROOT/install/system/greetd/seat-cover.py" \
+    "$AIROOTFS_OUT/usr/lib/modern/seat-cover.next"
+install -m 0755 "$ROOT/install/system/greetd/desktop-session.sh" \
+    "$AIROOTFS_OUT/usr/lib/modern/desktop-session.next"
+install -m 0755 "$ROOT/install/system/greetd/kiosk.sh" \
+    "$AIROOTFS_OUT/etc/greetd/kiosk.next"
+log "login handoff helper compiled"
 install -m 0644 "$ROOT/install/lib/wifi-wl.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/wifi-wl.sh"
 install -d -m 0755 "$AIROOTFS_OUT/usr/local/bin"
@@ -245,6 +290,10 @@ git clone --depth 1 --single-branch --sparse --branch "$pin" "$ROOT" "$bundle" \
 # docs/ is what the Manual app reads on the installed system.
 git -C "$bundle" sparse-checkout set --cone install stow scripts docs \
     || die "could not sparse-checkout the ISO bundle"
+if [ -n "$ALLOW_STALE_BUNDLE" ]; then
+    log "stale bundle: the installed system gets this working tree's install, stow and scripts"
+    overlay_worktree_bundle "$ROOT" "$bundle"
+fi
 # Installer languages, regional locales and keyboard defaults follow the
 # bundle, i.e. what the installed desktop can actually show. --strict: the
 # build host has glibc SUPPORTED, zone.tab and xkb base.lst, so a language

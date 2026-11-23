@@ -748,6 +748,8 @@ LIVE_ONLY_PATHS=(
     usr/lib/modern/live-setup.sh
     usr/lib/modern/live-xdg-open.sh
     usr/lib/modern/live-xkb-filter.py
+    usr/lib/modern/live-xkb.sh
+    usr/lib/modern/live-xkb-cage.so
     usr/lib/modern/live-wifi-sim.sh
     usr/lib/modern/live-wifi-wl.sh
     usr/lib/modern/live-wifi-up.sh
@@ -824,7 +826,34 @@ strip_live_packages() {
     [ ${#kept[@]} -eq 0 ] || log "kept (still a dependency): ${kept[*]}"
 }
 
+# The live session and this chroot share /run/modern/installer via the
+# mount.conf bind. /var/log is the installed disk, so a problem report
+# after the first boot can still read the keyboard and Wi-Fi attempts.
+save_installer_log() {
+    local src=${MODERN_INSTALLER_LOG:-/run/modern/installer}
+    local dest="${MODERN_LATE_STRIP_ROOT:-}/var/log/modern-installer"
+    local f base
+    [ -d "$src" ] || {
+        log "no installer session log at $src"
+        return 0
+    }
+    install -d -m 0755 "$dest" || {
+        log "could not create $dest"
+        return 0
+    }
+    for f in "$src"/*; do
+        [ -f "$f" ] || continue
+        base=$(basename "$f")
+        case "$base" in
+            *[!A-Za-z0-9._-]*) continue ;;
+        esac
+        install -m 0644 "$f" "$dest/$base" || log "could not keep $base"
+    done
+    log "installer session log kept under /var/log/modern-installer"
+}
+
 phase_strip() {
+    save_installer_log
     log "removing the live-only files unpackfs copied into the target"
     strip_live
     carry_rtw88_quirk
@@ -1014,6 +1043,27 @@ phase_desktop() {
     log "desktop install finished for $USERNAME"
 }
 
+# install.sh copied the release pin's greeter. That pin modesets a dark
+# panel, which is the firmware picture between the login screen and the
+# desktop. The .next files are this image's copies and are what the
+# installed system has to run.
+install_image_seat() {
+    local pair src dest
+    [ -n "${MODERN_LATE_TEST:-}" ] && return 0
+    for pair in \
+        /usr/lib/modern/seat-cover.next:/usr/lib/modern/seat-cover.py \
+        /usr/lib/modern/seat-nomodeset.next:/usr/lib/modern/seat-nomodeset.so \
+        /usr/lib/modern/desktop-session.next:/usr/lib/modern/desktop-session.sh \
+        /etc/greetd/kiosk.next:/etc/greetd/kiosk.sh
+    do
+        src=${pair%%:*}
+        dest=${pair#*:}
+        [ -f "$src" ] || continue
+        install -m 0755 "$src" "$dest" || log "could not install $dest"
+        log "installed $(basename "$dest") from this image"
+    done
+}
+
 phase_provision() {
     # -f, not -x: the bundle arrives mode-stripped and this runs via bash.
     [ -f "$REPO/install/system/provision-iso.sh" ] || die "clone phase did not leave provision-iso.sh"
@@ -1033,6 +1083,7 @@ phase_provision() {
     fi
     mask_iwd
     restore_boot_dns
+    install_image_seat
     log "late install finished for $USERNAME at $PIN"
 }
 

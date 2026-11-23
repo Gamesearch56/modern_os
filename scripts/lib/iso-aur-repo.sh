@@ -231,5 +231,33 @@ iso_attach_aur_repo() {
     repo-add "$repo/modern-iso.db.tar.gz" "${pkgs[@]}"
     printf '\n[modern-iso]\nSigLevel = Optional TrustAll\nServer = file://%s\n' \
         "$repo" >>"$profile/pacman.conf"
+    # The host package cache keeps the previous file when the name did
+    # not change. pacman then calls it corrupt and, with no one to answer
+    # "delete it?", the image build stops.
+    iso_drop_stale_pkg_cache "$repo"
     log "AUR repo attached at $repo"
+}
+
+# Replace a cached package that is not the file this repo just built.
+# Same filename, different bytes: the database checksum no longer matches.
+iso_drop_stale_pkg_cache() {
+    local repo="$1" cache f base
+    cache="${ISO_PKG_CACHE:-}"
+    if [ -z "$cache" ]; then
+        cache="$(pacman-conf CacheDir 2>/dev/null | head -n1 || true)"
+    fi
+    [ -n "$cache" ] && [ -d "$cache" ] || return 0
+    shopt -s nullglob
+    for f in "$repo"/*.pkg.tar.*; do
+        case "$f" in
+            *.sig) continue ;;
+        esac
+        base="$(basename "$f")"
+        [ -f "$cache/$base" ] || continue
+        cmp -s "$f" "$cache/$base" && continue
+        log "replacing stale cached package $base"
+        cp -a "$f" "$cache/$base"
+        rm -f "$cache/$base.sig"
+    done
+    shopt -u nullglob
 }

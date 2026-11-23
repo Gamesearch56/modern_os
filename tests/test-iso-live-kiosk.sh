@@ -36,6 +36,92 @@ else
     err "live-session.sh must exec cage -s -- live-calamares.sh"
 fi
 
+XKB_SH="$ROOT/iso/airootfs/usr/lib/modern/live-xkb.sh"
+XKB_C="$ROOT/iso/releng/live-xkb-cage.c"
+if grep -F '/usr/lib/modern/live-xkb-cage.so' "$SESSION" >/dev/null \
+    && grep -F 'unset LD_PRELOAD' "$WRAP" >/dev/null \
+    && grep -F 'xkb_state_key_get_syms' "$XKB_C" >/dev/null \
+    && grep -F '/run/modern/xkb-layout' "$XKB_SH" >/dev/null \
+    && grep -F 'MODERN_XKB_PUSH_X=1' "$SESSION" >/dev/null \
+    && grep -F 'wlr_keyboard_set_keymap' "$XKB_C" >/dev/null \
+    && grep -F 'wlr_seat_set_keyboard' "$XKB_C" >/dev/null \
+    && grep -F 'wlr_scene_output_commit' "$XKB_C" >/dev/null \
+    && grep -F 'wl_display_run' "$XKB_C" >/dev/null; then
+    ok "installer keyboard is applied by cage, not only setxkbmap"
+else
+    err "cage must reload /run/modern/xkb-layout when the layout changes"
+fi
+if python3 -c '
+import pathlib, sys
+text = pathlib.Path(sys.argv[1]).read_text()
+unset = text.find("unset LD_PRELOAD")
+start = text.find("\n(\n")
+end = text.find("\n) &\n", start)
+xwayland = text.find("exec Xwayland")
+sys.exit(0 if 0 <= start < unset < end < xwayland else 1)
+' "$WRAP"; then
+    ok "Xwayland keeps the keyboard helper and Calamares drops it"
+else
+    err "Xwayland must keep LD_PRELOAD; only the X clients may drop it"
+fi
+if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon && pkg-config --exists wayland-server; then
+    so=$(mktemp)
+    # shellcheck disable=SC2046
+    if gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -pthread -o "$so" "$XKB_C" $(pkg-config --cflags --libs xkbcommon wayland-server); then
+        if nm -D "$so" | grep -q 'wlr_keyboard_set_keymap' \
+            && nm -D "$so" | grep -q 'wlr_seat_set_keyboard' \
+            && nm -D "$so" | grep -q 'wlr_scene_output_commit' \
+            && nm -D "$so" | grep -q 'wlr_seat_keyboard_notify_key' \
+            && nm -D "$so" | grep -q 'wl_display_run' \
+            && nm -D "$so" | grep -q 'xkb_state_key_get_syms'; then
+            ok "keyboard helper exports the cage hooks"
+        else
+            err "keyboard helper is missing cage hooks"
+        fi
+        layout=$(mktemp)
+        fake=$(mktemp)
+        call=$(mktemp)
+        seat=$(mktemp)
+        stub=$(mktemp /tmp/modern-xkb-seat-XXXXXX.c)
+        printf 'de\n\n' >"$layout"
+        printf '%s\n' '#include <dlfcn.h>' \
+            'int main(int argc, char **argv) {' \
+            '  void *h = dlopen(argv[1], RTLD_NOW | RTLD_GLOBAL);' \
+            '  int (*fn)(void) = h ? dlsym(h, "modern_seat_test") : 0;' \
+            '  if (!fn) return 9;' \
+            '  return fn();' \
+            '}' >"$stub"
+        # shellcheck disable=SC2046
+        if gcc -shared -fPIC -O2 -o "$fake" "$ROOT/tests/live-xkb-seat.c" \
+            $(pkg-config --cflags --libs xkbcommon) \
+            && gcc -shared -fPIC -O2 -o "$call" "$ROOT/tests/live-xkb-seat-call.c" \
+            $(pkg-config --cflags --libs xkbcommon) \
+            && gcc -O2 -o "$seat" "$stub" -ldl \
+            && MODERN_XKB_LAYOUT="$layout" LD_PRELOAD="$so:$fake" "$seat" "$call"; then
+            ok "the first key publishes the layout that was chosen first"
+        else
+            err "the first key still publishes the previous layout (seat exit $?)"
+        fi
+        rm -f "$layout" "$fake" "$call" "$seat" "$stub"
+        trans=$(mktemp)
+        # shellcheck disable=SC2046
+        if gcc -O2 -o "$trans" "$ROOT/tests/live-xkb-translate.c" \
+            $(pkg-config --cflags --libs xkbcommon) \
+            && printf 'de\n\n' >"$layout" \
+            && MODERN_XKB_LAYOUT="$layout" LD_PRELOAD="$so" "$trans"; then
+            ok "Xwayland keysyms follow the layout file on the first key"
+        else
+            err "Xwayland still translates the first key with the previous layout (exit $?)"
+        fi
+        rm -f "$trans" "$layout"
+    else
+        err "keyboard helper failed to compile"
+    fi
+    rm -f "$so"
+elif command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon; then
+    err "keyboard helper needs wayland-server to wake cage when the layout file changes"
+fi
+
 PKGS="$ROOT/iso/releng/packages.x86_64"
 if grep -Fx cage "$PKGS" >/dev/null; then
     ok "live ISO ships cage"
@@ -79,11 +165,11 @@ else
     err "live greetd config must autologin liveuser"
 fi
 
-if grep -F 'Xwayland -noreset' "$WRAP" >/dev/null \
+if grep -F 'Xwayland -nokeymap' "$WRAP" >/dev/null \
     && grep -F 'xhost +SI:localuser:root' "$WRAP" >/dev/null \
     && grep -F 'sudo -n' "$WRAP" >/dev/null \
     && grep -F 'QT_QPA_PLATFORM=xcb' "$WRAP" >/dev/null \
-    && grep -F 'exec Xwayland' "$WRAP" >/dev/null \
+    && grep -F 'exec Xwayland -nokeymap -noreset' "$WRAP" >/dev/null \
     && grep -F 'modern-ci: calamares' "$WRAP" >/dev/null \
     && grep -F 'modern-ci: unattended' "$WRAP" >/dev/null \
     && grep -F '/etc/calamares/unattended' "$WRAP" >/dev/null \
@@ -145,10 +231,13 @@ else
     err "99-liveuser must NOPASSWD and env_keep WAYLAND_DISPLAY"
 fi
 
-if grep -F '/usr/lib/modern/live-calamares.sh' "$PROFILE" >/dev/null; then
-    ok "profiledef ships the wrapper mode 755"
+if grep -F '/usr/lib/modern/live-calamares.sh' "$PROFILE" >/dev/null \
+    && grep -F '["/usr/lib/modern/live-xkb.sh"]="0:0:755"' "$PROFILE" >/dev/null \
+    && grep -F '["/usr/lib/modern/wifi-join.sh"]="0:0:755"' "$PROFILE" >/dev/null \
+    && grep -F '["/usr/lib/modern/wifi-join-add.py"]="0:0:755"' "$PROFILE" >/dev/null; then
+    ok "profiledef keeps the installer scripts executable"
 else
-    err "profiledef.sh missing live-calamares.sh permissions"
+    err "profiledef.sh must mark live-calamares.sh, live-xkb.sh and wifi-join executable"
 fi
 
 if grep -F 'live-calamares.sh' "$ROOT/scripts/iso-build.sh" >/dev/null; then
@@ -606,6 +695,8 @@ if grep -F 'usage: calamares-late.sh strip|biosboot|clone|desktop|provision' "$L
     && grep -F 'timeout 180' "$LATE" >/dev/null \
     && grep -F 'GIT_HTTP_LOW_SPEED_LIMIT' "$LATE" >/dev/null \
     && grep -F '/var/log/modern-calamares-late.log' "$LATE" >/dev/null \
+    && grep -F '/var/log/modern-installer' "$LATE" >/dev/null \
+    && grep -F 'save_installer_log' "$LATE" >/dev/null \
     && grep -F '_emit' "$LATE" >/dev/null \
     && grep -F 'using ISO bundle' "$LATE" >/dev/null \
     && grep -F '/usr/share/modern/dotfile' "$LATE" >/dev/null \
@@ -674,6 +765,56 @@ else
     err "packages.x86_64 must list linux-zen (not stock linux), rsync, python, yay-bin, m0 AUR, pipewire-jack, pipewire-pulse (no linux-zen-headers)"
 fi
 
+if grep -qxF 'python-gobject' "$PKGS"; then
+    ok "live ISO ships python-gobject for the Wi-Fi join"
+else
+    err "packages.x86_64 must list python-gobject or every Wi-Fi password fails before it is checked"
+fi
+
+if grep -qxF 'nbd' "$PKGS" && grep -qxF 'mkinitcpio-nfs-utils' "$PKGS" \
+    && [ ! -e "$ROOT/iso/airootfs/usr/lib/initcpio/ipconfig" ]; then
+    ok "live initramfs hooks have nbd and nfs, and do not shadow ipconfig"
+else
+    err "packages.x86_64 must list nbd and mkinitcpio-nfs-utils, and airootfs must not ship ipconfig"
+fi
+if grep -F 'rm -rf "$AIROOTFS_OUT"' "$BUILD" >/dev/null; then
+    ok "staging airootfs is replaced, so a removed file cannot linger"
+else
+    err "iso-build must remove the staging airootfs before copying it"
+fi
+
+# shellcheck source=../scripts/lib/iso-bundle.sh
+source "$ROOT/scripts/lib/iso-bundle.sh"
+overlay_tmp="$(mktemp -d)"
+mkdir -p "$overlay_tmp/tree/stow/shell" "$overlay_tmp/tree/install" "$overlay_tmp/tree/scripts" \
+    "$overlay_tmp/bundle/stow/shell" "$overlay_tmp/bundle/install" "$overlay_tmp/bundle/scripts"
+printf 'old\n' >"$overlay_tmp/bundle/stow/shell/Old.qml"
+printf 'pin\n' >"$overlay_tmp/bundle/install/keep.sh"
+printf 'gone\n' >"$overlay_tmp/bundle/scripts/gone.sh"
+git -C "$overlay_tmp/bundle" init -q
+git -C "$overlay_tmp/bundle" add -A
+printf 'artwork\n' >"$overlay_tmp/tree/stow/shell/Widget.qml"
+printf 'local\n' >"$overlay_tmp/tree/install/keep.sh"
+printf 'extra\n' >"$overlay_tmp/tree/scripts/extra.sh"
+printf 'secret\n' >"$overlay_tmp/tree/scripts/secret.key"
+printf 'secret.key\n' >"$overlay_tmp/tree/.gitignore"
+git -C "$overlay_tmp/tree" init -q
+git -C "$overlay_tmp/tree" add stow/shell/Widget.qml install/keep.sh .gitignore
+overlay_worktree_bundle "$overlay_tmp/tree" "$overlay_tmp/bundle"
+if [ "$(cat "$overlay_tmp/bundle/stow/shell/Widget.qml")" = artwork ] \
+    && [ "$(cat "$overlay_tmp/bundle/install/keep.sh")" = local ] \
+    && [ "$(cat "$overlay_tmp/bundle/scripts/extra.sh")" = extra ] \
+    && [ ! -e "$overlay_tmp/bundle/stow/shell/Old.qml" ] \
+    && [ ! -e "$overlay_tmp/bundle/scripts/gone.sh" ] \
+    && [ ! -e "$overlay_tmp/bundle/scripts/secret.key" ] \
+    && grep -F 'overlay_worktree_bundle' "$BUILD" >/dev/null \
+    && grep -F 'ALLOW_STALE_BUNDLE' "$BUILD" >/dev/null; then
+    ok "stale bundle installs this working tree's install, stow and scripts"
+else
+    err "stale bundle must copy this working tree over the pin and drop pin-only files"
+fi
+rm -rf "$overlay_tmp"
+
 if grep -F 'install -m 0644 "$ROOT/iso/releng/packages.x86_64"' "$BUILD" >/dev/null \
     && ! grep -F 'cat "$ROOT/iso/releng/packages.x86_64" >>' "$BUILD" >/dev/null; then
     ok "iso-build.sh replaces the releng package list"
@@ -716,10 +857,14 @@ MOUNT="$ROOT/iso/airootfs/etc/calamares/modules/mount.conf"
 if grep -F 'btrfsSwapSubvol: /@swap' "$MOUNT" >/dev/null \
     && grep -F 'device: proc' "$MOUNT" >/dev/null \
     && grep -F 'mountPoint: /proc' "$MOUNT" >/dev/null \
-    && ! grep -E 'mountPoint:[[:space:]]*/swap' "$MOUNT" >/dev/null; then
+    && ! grep -E 'mountPoint:[[:space:]]*/swap' "$MOUNT" >/dev/null \
+    && grep -F 'device: /run/modern/installer' "$MOUNT" >/dev/null \
+    && grep -F 'mountPoint: /run/modern/installer' "$MOUNT" >/dev/null \
+    && grep -F '/run/modern/installer' "$ROOT/iso/airootfs/usr/lib/modern/live-setup.sh" >/dev/null \
+    && grep -F 'installer-session.txt' "$ROOT/scripts/lib/bug-report-collect.sh" >/dev/null; then
     ok "mount.conf lets Calamares own the swap subvolume"
 else
-    err "mount.conf must not list /swap in btrfsSubvolumes (duplicate create)"
+    err "mount.conf must keep the swap subvolume for Calamares and bind the installer log into the target"
 fi
 
 if grep -F 'import calamares.slideshow' "$SLIDE" >/dev/null \

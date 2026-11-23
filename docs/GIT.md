@@ -313,7 +313,7 @@ which prints
 ### Breaking changes    with what to do
 ### Added / Changed / Deprecated / Removed / Fixed / Security / Documentation
 <details> Maintenance </details>
-### Upgrading           Settings → Update, or download the ISO
+### Upgrading           Settings → Update (the ISO sentence is added with the image)
 [Full changelog](…/compare/v0.7.7...v0.8.0)
 ```
 
@@ -326,8 +326,9 @@ scripts/release-notes.sh v0.8.0 >/tmp/notes.md
 gh release create v0.8.0 --verify-tag --title "ModernOS v0.8.0" --notes-file /tmp/notes.md
 ```
 
-Then attach the image (next section), which adds a Download section to
-the top of these notes.
+Then attach the image (next section). That adds the Download section
+and the line “New installations: download the ISO from this page.”
+The line is not in the notes until the image is a release asset.
 
 ### 6. Merge back
 
@@ -393,21 +394,24 @@ GitHub takes assets under 2 GiB; the script refuses a larger image
 before uploading. Downloads are public only while the repository is
 public.
 
-**Archive copy (Proton Drive).** With an rclone remote configured
-(`rclone config`, type `protondrive`), pass
-`--archive proton:ModernOS/releases` or export
-`MODERNOS_ISO_ARCHIVE=proton:ModernOS/releases`. Each release lands in
-its own `vX.Y.Z/` folder and is compared with `rclone check`. rclone
-keeps its credentials in its own config, never in this repo.
+The command above stops after the GitHub upload. It does not copy the
+image to Proton Drive.
 
-The image upload and the Proton copy each open a progress window when
-a desktop session is available. With two-factor login, the code is
-needed once, not per release: the first successful login stores a
-session in rclone's config, and later runs refresh it without a code.
-When Proton asks again, the script opens a window for the code, the
-same way it asks for the sudo password when there is no terminal.
-Proton rate-limits repeated logins: wait a few minutes rather than
-retrying in a loop.
+**Archive copy (Proton Drive), only when asked.** With an rclone remote
+configured (`rclone config`, type `protondrive`), pass
+`--archive proton:ModernOS/releases`. Each release then lands in its
+own `vX.Y.Z/` folder and is compared with `rclone check`. rclone keeps
+its credentials in its own config, never in this repo. An exported
+`MODERNOS_ISO_ARCHIVE` does not turn this on.
+
+The image upload opens a progress window when a desktop session is
+available. With `--archive` and two-factor login, the code is needed
+once, not per release: the first successful login stores a session in
+rclone's config, and later runs refresh it without a code. When Proton
+asks again, the script opens a window for the code, the same way it
+asks for the sudo password when there is no terminal. Proton
+rate-limits repeated logins: wait a few minutes rather than retrying
+in a loop.
 
 **Signing key, once.** A key used only for ModernOS releases, not your
 personal one. Its user ID is public, so give it a project address (or

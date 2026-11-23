@@ -14,6 +14,11 @@ for g in wheel video audio input render storage optical uucp; do
 done
 passwd -d liveuser >/dev/null 2>&1 || true
 
+# The install chroot has its own /tmp and /run. Keyboard and Wi-Fi logs
+# written here are bind-mounted into that chroot and copied onto the
+# installed /var/log, which is what a problem report can still read.
+install -d -m 1777 /run/modern /run/modern/installer
+
 # Calamares loadLocales() prefers this file over locale.gen and would
 # otherwise offer every glibc locale. Overlay only — unpackfs still
 # ships the distro copy from the squashfs. SUPPORTED lists every

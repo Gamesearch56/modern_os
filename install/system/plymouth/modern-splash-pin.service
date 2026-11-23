@@ -10,7 +10,9 @@ ConditionPathExists=/usr/lib/modern/seat-cover.py
 Type=oneshot
 # The program forks a child that holds the display open. Killing the
 # whole service group would close that device and the panel would show
-# its firmware picture. The parent exits at once, so quit is not delayed.
+# its firmware picture. The parent waits until that child has taken
+# the picture, then exits so Plymouth can quit. It does not wait for
+# the login screen.
 KillMode=process
 ExecStart=/usr/bin/python3 /usr/lib/modern/seat-cover.py pin
 TimeoutStartSec=5

@@ -85,7 +85,8 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     }
     auto* ethCol = new QVBoxLayout;
     ethCol->setSpacing( 2 );
-    ethCol->addWidget( new QLabel( tr( "Ethernet" ) ) );
+    m_ethTitle = new QLabel( tr( "Ethernet" ) );
+    ethCol->addWidget( m_ethTitle );
     m_ethAddr = new QLabel;
     m_ethAddr->setObjectName( QStringLiteral( "networkHint" ) );
     ethCol->addWidget( m_ethAddr );
@@ -97,9 +98,9 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     wifi->addWidget( eth );
 
     auto* near = new QHBoxLayout;
-    auto* nearTitle = new QLabel( tr( "Nearby networks" ) );
-    nearTitle->setObjectName( QStringLiteral( "networkNearbyTitle" ) );
-    near->addWidget( nearTitle, 1 );
+    m_nearTitle = new QLabel( tr( "Nearby networks" ) );
+    m_nearTitle->setObjectName( QStringLiteral( "networkNearbyTitle" ) );
+    near->addWidget( m_nearTitle, 1 );
     m_refresh = new QPushButton( tr( "Refresh" ) );
     m_refresh->setObjectName( QStringLiteral( "networkRefresh" ) );
     connect( m_refresh, &QPushButton::clicked, this, &ModernNetPage::scanWifi );
@@ -132,12 +133,24 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     m_password->setEchoMode( QLineEdit::Password );
     m_password->setPlaceholderText( tr( "Password" ) );
     connect( m_password, &QLineEdit::returnPressed, this, &ModernNetPage::connectWifi );
-    m_connect = new QPushButton( tr( "Connect" ) );
+    m_reveal = new QPushButton( tr( "Show" ) );
+    m_reveal->setObjectName( QStringLiteral( "networkReveal" ) );
+    m_reveal->setCheckable( true );
+    m_reveal->setCursor( Qt::PointingHandCursor );
+    connect( m_reveal, &QPushButton::toggled, this, [ this ]( bool shown ) {
+        m_password->setEchoMode( shown ? QLineEdit::Normal : QLineEdit::Password );
+        m_reveal->setText( shown ? tr( "Hide" ) : tr( "Show" ) );
+    } );
+    m_connect = new QPushButton( tr( "Connect to network" ) );
     m_connect->setObjectName( QStringLiteral( "networkConnect" ) );
     m_connect->setDefault( true );
     connect( m_connect, &QPushButton::clicked, this, &ModernNetPage::connectWifi );
+    auto* passRow = new QHBoxLayout;
+    passRow->setSpacing( 8 );
+    passRow->addWidget( m_password, 1 );
+    passRow->addWidget( m_reveal );
     passCol->addWidget( m_passTitle );
-    passCol->addWidget( m_password );
+    passCol->addLayout( passRow );
     passCol->addWidget( m_connect, 0, Qt::AlignRight );
     wifi->addWidget( m_passCard );
 
@@ -171,6 +184,7 @@ ModernNetPage::ModernNetPage( QWidget* parent )
     tick->setInterval( 2000 );
     connect( tick, &QTimer::timeout, this, &ModernNetPage::refresh );
     tick->start();
+    retranslate();
 }
 
 void
@@ -249,8 +263,45 @@ ModernNetPage::changeWifi()
 }
 
 void
+ModernNetPage::retranslate()
+{
+    // These labels are created with the page, before Welcome has switched
+    // the language. tr() at that moment is English and stays English
+    // unless it is run again.
+    if ( m_ethTitle )
+    {
+        m_ethTitle->setText( tr( "Ethernet" ) );
+    }
+    if ( m_nearTitle )
+    {
+        m_nearTitle->setText( tr( "Nearby networks" ) );
+    }
+    if ( m_refresh )
+    {
+        m_refresh->setText( tr( "Refresh" ) );
+    }
+    if ( m_connect )
+    {
+        m_connect->setText( tr( "Connect to network" ) );
+    }
+    if ( m_reveal )
+    {
+        m_reveal->setText( m_reveal->isChecked() ? tr( "Hide" ) : tr( "Show" ) );
+    }
+    if ( m_changeWifi )
+    {
+        m_changeWifi->setText( tr( "Choose another network" ) );
+    }
+    if ( m_password )
+    {
+        m_password->setPlaceholderText( tr( "Password" ) );
+    }
+}
+
+void
 ModernNetPage::syncUi()
 {
+    retranslate();
     setOnline( m_nm->online() );
     if ( m_nm->ethernetUp() || m_nm->wifiUp() )
     {
@@ -349,8 +400,36 @@ ModernNetPage::fillWifi()
     const bool keepPass = m_passCard->isVisible();
     const QString passSsid = m_passTitle->text();
     const QString passText = m_password->text();
-    m_list->clear();
     const auto nets = m_nm->networks();
+    // The translated label is part of the signature so a Welcome language
+    // change rebuilds the row text. A scan that did not change the
+    // networks does not, and the hover stays while the pointer is still.
+    QString sig = tr( "Nearby networks" );
+    sig += QLatin1Char( '\n' );
+    if ( nets.isEmpty() )
+    {
+        sig = m_nm->scanning() ? QStringLiteral( "scan" ) : QStringLiteral( "none" );
+    }
+    else
+    {
+        for ( const auto& w : nets )
+        {
+            sig += w.ssid;
+            sig += QLatin1Char( '\n' );
+            sig += QLatin1Char( w.inUse ? '1' : '0' );
+            sig += QLatin1Char( w.known ? '1' : '0' );
+            sig += QLatin1Char( w.locked ? '1' : '0' );
+            sig += w.security;
+            sig += QLatin1Char( '\n' );
+        }
+    }
+    const int expect = nets.isEmpty() ? 1 : nets.size();
+    if ( sig == m_wifiSig && m_list->count() == expect )
+    {
+        return;
+    }
+    m_wifiSig = sig;
+    m_list->clear();
     if ( nets.isEmpty() )
     {
         auto* empty = new QListWidgetItem(
@@ -373,8 +452,7 @@ ModernNetPage::fillWifi()
         item->setData( Qt::UserRole + 4, w.security );
         auto* row = new ModernNetRow( w );
         connect( row, &ModernNetRow::connectClicked, this, [ this, ssid = w.ssid ]() {
-            selectSsid( ssid );
-            connectWifi();
+            chooseSsid( ssid );
         } );
         connect( row, &ModernNetRow::forgetClicked, this, [ this, ssid = w.ssid ]() {
             m_nm->forgetSsid( ssid );
@@ -414,6 +492,46 @@ ModernNetPage::showPassword( bool on )
     {
         m_password->clear();
         m_passTitle->clear();
+    }
+}
+
+void
+ModernNetPage::chooseSsid( const QString& ssid )
+{
+    selectSsid( ssid );
+    auto* item = m_list->currentItem();
+    if ( !item || item->data( Qt::UserRole ).toString() != ssid )
+    {
+        return;
+    }
+    if ( item->data( Qt::UserRole + 2 ).toBool() )
+    {
+        showPassword( false );
+        return;
+    }
+    const bool needsPassword = item->data( Qt::UserRole + 1 ).toBool() && !item->data( Qt::UserRole + 3 ).toBool();
+    if ( !needsPassword )
+    {
+        connectWifi();
+        return;
+    }
+    // A second network must replace the name in the form. Connecting
+    // immediately kept the previous name on screen.
+    const bool switching = m_passTitle->text() != ssid;
+    m_passTitle->setText( ssid );
+    showPassword( true );
+    if ( switching )
+    {
+        m_password->clear();
+        if ( m_reveal )
+        {
+            m_reveal->setChecked( false );
+        }
+    }
+    m_password->setFocus();
+    if ( !switching && !m_password->text().isEmpty() )
+    {
+        connectWifi();
     }
 }
 
@@ -487,10 +605,11 @@ ModernNetPage::onConnectFinished( bool ok, int code )
         again = true;
         break;
     default:
-        hint = tr( "Couldn't join. Check the password and try again." );
+        hint = tr( "Couldn't join that network. You can try again." );
         again = true;
         break;
     }
+    hint += QLatin1Char( ' ' ) + tr( "If this cannot be fixed here, connect a network cable instead." );
     m_hint->setText( hint );
     auto* item = m_list->currentItem();
     if ( again && item && item->data( Qt::UserRole + 1 ).toBool() )

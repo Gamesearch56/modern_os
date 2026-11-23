@@ -69,4 +69,11 @@ printf '\n== login screen %s\n' "$(date -Is)" >>"$log"
 if [ "${MODERN_SEAT_COVER:-1}" != 0 ] && [ -f /usr/lib/modern/seat-cover.py ]; then
     python3 /usr/lib/modern/seat-cover.py hold >>"$log" 2>&1 || true
 fi
-exec /usr/bin/env GREETD_SOCK="$sock" "${MODERN_START_HYPRLAND:-/usr/bin/start-hyprland}" --no-nixgl -- --config /etc/greetd/hyprland.lua >>"$log" 2>&1
+# The greeter's exit modesets the panel off. The desktop then modesets
+# from a dark link, and this laptop draws its firmware picture for that
+# retrain. The helper turns that off-commit into a no-op.
+if [ -f /usr/lib/modern/seat-nomodeset.so ]; then
+    export LD_PRELOAD="/usr/lib/modern/seat-nomodeset.so${LD_PRELOAD:+:$LD_PRELOAD}"
+    export MODERN_SEAT_KEEP_CRTC=1
+fi
+exec /usr/bin/env GREETD_SOCK="$sock" MODERN_SEAT_KEEP_CRTC="${MODERN_SEAT_KEEP_CRTC:-}" LD_PRELOAD="${LD_PRELOAD:-}" "${MODERN_START_HYPRLAND:-/usr/bin/start-hyprland}" --no-nixgl -- --config /etc/greetd/hyprland.lua >>"$log" 2>&1

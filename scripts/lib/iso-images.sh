@@ -21,15 +21,16 @@ iso_newest_release() {
     candidates=("${globs[@]}")
     shopt -u nullglob
     [ "${#candidates[@]}" -gt 0 ] || return 1
-    # Sort the version in the file name. A full path would let /tmp/v0.8.1
-    # beat ~/.cache/v0.8.3.
+    # Version first: a full path would let /tmp/v0.8.1 beat ~/.cache/v0.8.3.
+    # The same version then uses the file written last, so a local rebuild
+    # of v0.8.10 is chosen over the release image of that same name.
     found="$(
         for base in "${candidates[@]}"; do
             ver="$(basename "$base")"
             ver="${ver#modernos-}"
             ver="${ver%-x86_64.iso}"
-            printf '%s\t%s\n' "$ver" "$base"
-        done | sort -V | tail -n 1 | cut -f2-
+            printf '%s\t%s\t%s\n' "$ver" "$(stat -c '%Y' "$base")" "$base"
+        done | sort -k1,1V -k2,2n | tail -n 1 | cut -f3-
     )"
     [ -n "$found" ] || return 1
     printf '%s\n' "$found"

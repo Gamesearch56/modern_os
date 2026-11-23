@@ -14,6 +14,7 @@ Singleton {
     readonly property string pictures: root._dir("PICTURES", "Pictures")
     readonly property string videos: root._dir("VIDEOS", "Videos")
     readonly property string documents: root._dir("DOCUMENTS", "Documents")
+    readonly property string desktop: root._dir("DESKTOP", "Desktop")
     readonly property string wallpapers: root.pictures + "/Wallpapers"
     property var _map: ({})
 

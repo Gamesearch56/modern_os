@@ -4,9 +4,12 @@
 # profile, which leaves the network saved and inert. nmcli activates it,
 # and a failed password attempt does not keep that profile.
 #
-# A password is read from stdin (`connect SSID -`) and handed to nmcli in
-# a 0600 passwd-file: argv is world-readable in /proc. NetworkManager
-# stores a secret that arrives that way on the first connect.
+# A password is read from stdin (`connect SSID -`) and written into a
+# 0600 keyfile. argv is world-readable in /proc, so nmcli never sees the
+# secret on its command line. `connection import type keyfile` is a VPN
+# plugin name, not this file format, so it fails before the password is
+# checked and a right password looks the same as a wrong one. libnm
+# reads the keyfile and adds the profile over D-Bus instead.
 #
 # Exit codes the shell and the installer map to a message:
 #   0 ok  1 failed  2 rejected input  3 wrong password
@@ -32,7 +35,20 @@ nmcli_to() {
     timeout -k 2 "$seconds" "$NMCLI" "$@"
 }
 
-die() { printf 'wifi-join: %s\n' "$*" >&2; exit 2; }
+die() {
+    installer_log "rejected $*"
+    printf 'wifi-join: %s\n' "$*" >&2
+    exit 2
+}
+
+# The install chroot cannot see the live /tmp. This directory is
+# bind-mounted into it and copied to /var/log/modern-installer.
+installer_log() {
+    local dir=${MODERN_INSTALLER_LOG:-/run/modern/installer} line=$1
+    [[ -d $dir && -w $dir ]] || return 0
+    line=${line//$'\n'/ }
+    printf '%s %s\n' "$(date -Is 2>/dev/null || date)" "${line:0:800}" >>"$dir/wifi.log" 2>/dev/null || true
+}
 
 valid_label() {
     local s=$1
@@ -79,12 +95,28 @@ nm_up() {
     err=$(LC_ALL=C nmcli_to 18 -w 18 "$@" 2>&1 >/dev/null) || rc=$?
     [[ $rc -ne 0 ]] || return 0
     printf '%s\n' "$err" >&2
+    installer_log "nmcli rc=$rc $err"
     # 124 is timeout's own exit. 137 is the kill that follows if nmcli ignores TERM.
     [[ $rc -ne 3 && $rc -ne 124 && $rc -ne 137 ]] || return 5
     if [[ $rc -eq 10 || $err == *"could not be found"* || $err == *"No network with SSID"* ]]; then
         return 4
     fi
-    [[ $err != *[Ss]ecrets* ]] || return 3
+    # nmcli says "802.1X supplicant took too long to authenticate", not
+    # the journal's hyphenated reason. That is a timeout, not a bad key.
+    if [[ $err == *"took too long"* || $err == *"(11)"* ]]; then
+        return 5
+    fi
+    # A wrong key is reason 7, 8, 9 or 10. The sentence is "supplicant
+    # failed", not "supplicant-failed", so the hyphenated names never
+    # matched and every password looked like a generic failure.
+    if [[ $err == *"(7)"* || $err == *"(8)"* || $err == *"(9)"* || $err == *"(10)"* \
+        || $err == *[Ss]ecret* || $err == *"new key"* \
+        || $err == *"supplicant failed"* || $err == *"supplicant disconnected"* \
+        || $err == *"supplicant configuration failed"* \
+        || $err == *supplicant-disconnect* || $err == *supplicant-failed* \
+        || $err == *supplicant-config-failed* ]]; then
+        return 3
+    fi
     return 1
 }
 
@@ -114,20 +146,47 @@ key_mgmt() {
     esac
 }
 
-# passwd-file values are backslash-unescaped and space-trimmed.
-psk_line() {
+# Keyfile values treat a backslash as an escape. A space is literal.
+kf_escape() {
     local s=$1
     s=${s//\\/\\\\}
-    s=${s// /\\ }
-    s=${s//$'\t'/\\t}
-    printf '802-11-wireless-security.psk:%s\n' "$s"
+    printf '%s' "$s"
 }
 
-PW_FILE=""
-trap '[[ -z $PW_FILE ]] || rm -f "$PW_FILE"' EXIT
+PW_DIR=""
+cleanup_pw() {
+    [[ -z $PW_DIR ]] || rm -rf "$PW_DIR"
+    PW_DIR=""
+}
+trap cleanup_pw EXIT
+
+# Prints nothing. Exit 0 once NetworkManager has the profile in the file.
+add_keyfile() {
+    local file=$1 helper
+    helper=${MODERN_WIFI_ADD:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wifi-join-add.py}
+    # The image build drops the execute bit unless the path is listed.
+    # python3 can still read the helper. A test double is run directly.
+    if [[ -x $helper ]]; then
+        "$helper" "$file"
+    else
+        python3 "$helper" "$file"
+    fi
+}
+
+# python-gobject is what libnm needs. The live image did not ship it, so
+# every password failed before NetworkManager saw it. Root loads the same
+# 0600 keyfile from NetworkManager's directory instead.
+load_saved_keyfile() {
+    local file=$1 uuid=$2 dir dest
+    dir=${MODERN_WIFI_CONN_DIR:-/etc/NetworkManager/system-connections}
+    [[ -d $dir && -w $dir ]] || return 1
+    dest="$dir/modern-${uuid}.nmconnection"
+    install -m 600 "$file" "$dest" || return 1
+    nmcli_to 8 connection load "$dest"
+}
 
 connect_psk() {
-    local ssid=$1 psk=$2 sec km out uuid rc=0
+    local ssid=$1 psk=$2 sec km out uuid rc=0 file hidden=0
     # The installer already showed this network, so it knows the security.
     # Listing again waits on a scan and the screen stays on "Looking for…".
     printf 'status:lookup\n'
@@ -137,34 +196,71 @@ connect_psk() {
         sec=$(ap_security "$ssid") || return 4
     fi
     km=$(key_mgmt "$sec") || return 6
+    installer_log "connect key-mgmt=$km"
     printf 'status:password\n'
     forget_ssid "$ssid"
-    # Flags 2 only while the profile is created, so adding it does not open
-    # a password window this screen cannot show. Flags 0 before activation:
-    # the system stores the secret from the passwd-file. Leaving 2 in place
-    # drops the password, so the network never reconnects and the next try
-    # is reported as a wrong password.
-    out=$(LC_ALL=C nmcli_to 12 connection add type wifi con-name "$ssid" ssid "$ssid" \
-        wifi-sec.key-mgmt "$km" 802-11-wireless-security.psk-flags 2 2>&1) || {
-        printf '%s\n' "$out" >&2
+    uuid=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || true)
+    [[ -n $uuid ]] || return 1
+    # The secret is in the profile before activation, so NetworkManager
+    # does not open a password window this screen cannot show. One try
+    # made a dropped Realtek handshake look like a wrong password and a
+    # right one the same. Three tries still finish inside the installer's
+    # limit. A random MAC is rejected by the same chips. Forcing PMF
+    # makes those chips drop a correct password too, so it stays at the
+    # default. passwd-file supplies the secret again at activation, in
+    # case the profile stored the key where no agent can read it.
+    PW_DIR=$(umask 077 && mktemp -d "$SECRETS_DIR/wifi-join.XXXXXX")
+    file="$PW_DIR/wifi.nmconnection"
+    {
+        printf '%s\n' '[connection]' "id=$(kf_escape "$ssid")" "uuid=$uuid" 'type=wifi' 'auth-retries=3' 'autoconnect=true' ''
+        printf '%s\n' '[wifi]' 'mode=infrastructure' 'powersave=2' \
+            "ssid=$(kf_escape "$ssid")" ''
+        printf '%s\n' '[wifi-security]' "key-mgmt=$km" "psk=$(kf_escape "$psk")" ''
+        printf '%s\n' '[ipv4]' 'method=auto' '' '[ipv6]' 'method=auto' ''
+    } >"$file"
+    # Text after the first colon is the secret, so a colon in the
+    # password stays part of it.
+    printf '802-11-wireless-security.psk:%s\n' "$psk" >"$PW_DIR/passwd"
+    chmod 600 "$file" "$PW_DIR/passwd"
+        # libnm reads the file. nmcli's "import type keyfile" looks for a VPN
+    # plugin of that name and returns before the password is ever tried.
+    # The live image's helper needs python-gobject. When that import
+    # fails, root can still load the same keyfile. The secret stays in
+    # the file, not on argv, and a wrong password is still exit 3.
+    # Activate against the access point from the scan. A profile brought
+    # up on its own never associates on the Realtek chip in these laptops.
+    rc_add=0
+    out=$(WIFI_JOIN_ACTIVATE=1 add_keyfile "$file" 2>&1) || rc_add=$?
+    printf '%s\n' "$out" >&2
+    # The helper's text is the reason a later report can name. A line
+    # that contains the password is dropped rather than written out.
+    # grep -c reads the whole line, so pipefail cannot hide a match.
+    hidden=0
+    if [[ -n $psk ]]; then
+        hidden=$(printf '%s' "$out" | grep -F -c -- "$psk" || true)
+    fi
+    if [[ ${hidden:-0} != 0 ]]; then
+        installer_log "helper rc=$rc_add output-hidden"
+    else
+        installer_log "helper rc=$rc_add ${out//$'\n'/ }"
+    fi
+    if [[ $rc_add -eq 0 && $out == *activated* ]]; then
+        cleanup_pw
+        return 0
+    fi
+    if [[ $rc_add -eq 3 ]]; then
+        cleanup_pw
+        forget_ssid "$ssid"
+        return 3
+    fi
+    if [[ $rc_add -ne 0 ]] && ! load_saved_keyfile "$file" "$uuid"; then
+        cleanup_pw
+        forget_ssid "$ssid"
         return 1
-    }
-    uuid=$(grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' <<<"$out" | tail -n1 || true)
-    [[ -n $uuid ]] || { forget_ssid "$ssid"; return 1; }
-    # One try. The default keeps asking, so a wrong password never returns
-    # and the installer cannot accept a different one.
-    nmcli_to 8 connection modify uuid "$uuid" connection.auth-retries 1 >/dev/null || true
-    nmcli_to 8 connection modify uuid "$uuid" connection.autoconnect yes >/dev/null || true
-    nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless-security.psk-flags 0 >/dev/null || true
-    # Powersave drops the association on the Realtek chips in these
-    # laptops, so a correct password never finishes.
-    nmcli_to 8 connection modify uuid "$uuid" 802-11-wireless.powersave 2 >/dev/null || true
-    PW_FILE=$(umask 077 && mktemp "$SECRETS_DIR/wifi-join.XXXXXX")
-    psk_line "$psk" >"$PW_FILE"
+    fi
     printf 'status:address\n'
-    nm_up connection up uuid "$uuid" passwd-file "$PW_FILE" || rc=$?
-    rm -f "$PW_FILE"
-    PW_FILE=""
+    nm_up connection up uuid "$uuid" passwd-file "$PW_DIR/passwd" || rc=$?
+    cleanup_pw
     if [[ $rc -ne 0 ]]; then
         stop_wifi_attempt
         forget_ssid "$ssid"
@@ -188,15 +284,29 @@ stop_wifi_attempt() {
 cmd_connect() {
     local ssid=$1
     local from=${2-}
-    local psk="" saved rc=0
+    local psk="" saved rc=0 passfile=${WIFI_JOIN_PASSFILE:-}
+    # Closing the installer's stdin pipe before this process reads it
+    # made every password, right or wrong, look like a missing one.
+    # The password file is the copy that does not depend on that pipe.
+    installer_log "connect begin stdin=$([[ $from == - ]] && printf yes || printf no) passfile=$([[ -n $passfile ]] && printf yes || printf no)"
     valid_label "$ssid" || die "rejected network name"
+    if [[ -n $passfile && -r $passfile ]]; then
+        IFS= read -r psk <"$passfile" || true
+        rm -f -- "$passfile"
+    fi
     if [[ $from == - ]]; then
-        IFS= read -r psk || true
+        if [[ -z $psk ]]; then
+            IFS= read -r psk || true
+        fi
         [[ -n $psk ]] || die "missing password"
         # WPA passphrases are 8-63 characters, or 64 hex digits.
-        [[ ${#psk} -ge 8 && ${#psk} -le 64 ]] || exit 3
-        connect_psk "$ssid" "$psk" || exit $?
-        return 0
+        if [[ ${#psk} -lt 8 || ${#psk} -gt 64 ]]; then
+            installer_log "rejected password length rc=3"
+            exit 3
+        fi
+        connect_psk "$ssid" "$psk" || rc=$?
+        installer_log "finished rc=$rc"
+        exit "$rc"
     fi
     [[ -z $from ]] || die "pass the password on stdin with -"
     if saved=$(first_uuid "$ssid"); then
