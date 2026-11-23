@@ -42,6 +42,7 @@ if grep -F '/usr/lib/modern/live-xkb-cage.so' "$SESSION" >/dev/null \
     && grep -F 'unset LD_PRELOAD' "$WRAP" >/dev/null \
     && grep -F '/run/modern/xkb-layout' "$XKB_SH" >/dev/null \
     && grep -F 'wlr_keyboard_set_keymap' "$XKB_C" >/dev/null \
+    && grep -F 'wlr_seat_set_keyboard' "$XKB_C" >/dev/null \
     && grep -F 'wlr_scene_output_commit' "$XKB_C" >/dev/null \
     && grep -F 'wl_display_run' "$XKB_C" >/dev/null; then
     ok "installer keyboard is applied by cage, not only setxkbmap"
@@ -53,6 +54,7 @@ if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon && pkg-config
     # shellcheck disable=SC2046
     if gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -pthread -o "$so" "$XKB_C" $(pkg-config --cflags --libs xkbcommon wayland-server); then
         if nm -D "$so" | grep -q 'wlr_keyboard_set_keymap' \
+            && nm -D "$so" | grep -q 'wlr_seat_set_keyboard' \
             && nm -D "$so" | grep -q 'wlr_scene_output_commit' \
             && nm -D "$so" | grep -q 'wlr_seat_keyboard_notify_key' \
             && nm -D "$so" | grep -q 'wl_display_run'; then
@@ -60,6 +62,31 @@ if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon && pkg-config
         else
             err "keyboard helper is missing cage hooks"
         fi
+        layout=$(mktemp)
+        fake=$(mktemp)
+        call=$(mktemp)
+        seat=$(mktemp)
+        stub=$(mktemp /tmp/modern-xkb-seat-XXXXXX.c)
+        printf 'de\n\n' >"$layout"
+        printf '%s\n' '#include <dlfcn.h>' \
+            'int main(int argc, char **argv) {' \
+            '  void *h = dlopen(argv[1], RTLD_NOW | RTLD_GLOBAL);' \
+            '  int (*fn)(void) = h ? dlsym(h, "modern_seat_test") : 0;' \
+            '  if (!fn) return 9;' \
+            '  return fn();' \
+            '}' >"$stub"
+        # shellcheck disable=SC2046
+        if gcc -shared -fPIC -O2 -o "$fake" "$ROOT/tests/live-xkb-seat.c" \
+            $(pkg-config --cflags --libs xkbcommon) \
+            && gcc -shared -fPIC -O2 -o "$call" "$ROOT/tests/live-xkb-seat-call.c" \
+            $(pkg-config --cflags --libs xkbcommon) \
+            && gcc -O2 -o "$seat" "$stub" -ldl \
+            && MODERN_XKB_LAYOUT="$layout" LD_PRELOAD="$so:$fake" "$seat" "$call"; then
+            ok "the first key publishes the layout that was chosen first"
+        else
+            err "the first key still publishes the previous layout (seat exit $?)"
+        fi
+        rm -f "$layout" "$fake" "$call" "$seat" "$stub"
     else
         err "keyboard helper failed to compile"
     fi

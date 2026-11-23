@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <wayland-server-core.h>
@@ -28,7 +29,18 @@ static int nkeyboards;
 static char applied[160];
 static pthread_mutex_t applied_lock = PTHREAD_MUTEX_INITIALIZER;
 static int wake_pipe[2] = {-1, -1};
+static int seat_needs_push;
 static bool (*real_set_keymap)(struct wlr_keyboard *, struct xkb_keymap *);
+
+/* Tests point this at a temp file. The live image uses the path the
+ * installer writes. */
+static const char *layout_path(void)
+{
+    const char *p = getenv("MODERN_XKB_LAYOUT");
+    if (p && p[0])
+        return p;
+    return "/run/modern/xkb-layout";
+}
 
 static int layout_ok(const char *s)
 {
@@ -123,13 +135,19 @@ static int apply_layout(const char *layout, const char *variant)
     xkb_context_unref(ctx);
     if (!ok)
         return -1;
+    /* Cage publishes the group keyboard, not the device, and only when
+     * the next key arrives. The device map can already be the new layout
+     * while the group still has the previous one. The next
+     * wlr_seat_set_keyboard has to install this layout on that keyboard
+     * before the client is told. */
+    seat_needs_push = 1;
     note(layout);
     return 0;
 }
 
 /* force is set when some other caller just installed a keymap. The file
  * still wins, or that call puts the US map back after a German choice. */
-static void apply_if_needed(int force)
+static int apply_if_needed(int force)
 {
     FILE *f;
     char layout[64];
@@ -137,15 +155,15 @@ static void apply_if_needed(int force)
     char spec[160];
 
     if (!real_set_keymap || nkeyboards == 0)
-        return;
-    f = fopen("/run/modern/xkb-layout", "r");
+        return -1;
+    f = fopen(layout_path(), "r");
     if (!f)
-        return;
+        return -1;
     layout[0] = 0;
     variant[0] = 0;
     if (!fgets(layout, sizeof layout, f)) {
         fclose(f);
-        return;
+        return -1;
     }
     if (!fgets(variant, sizeof variant, f))
         variant[0] = 0;
@@ -153,13 +171,14 @@ static void apply_if_needed(int force)
     layout[strcspn(layout, "\r\n")] = 0;
     variant[strcspn(variant, "\r\n")] = 0;
     if (!layout_ok(layout) || (variant[0] && !layout_ok(variant)))
-        return;
+        return -1;
     snprintf(spec, sizeof spec, "%s\n%s", layout, variant);
     if (!force && same_applied(spec))
-        return;
+        return 0;
     if (apply_layout(layout, variant) != 0)
-        return;
+        return -1;
     store_applied(spec);
+    return 0;
 }
 
 static void poke_layout(void)
@@ -179,7 +198,7 @@ static void *watch_layout(void *unused)
         char spec[160];
 
         usleep(100000);
-        f = fopen("/run/modern/xkb-layout", "r");
+        f = fopen(layout_path(), "r");
         if (!f)
             continue;
         layout[0] = 0;
@@ -213,6 +232,30 @@ static int on_layout_wake(int fd, uint32_t mask, void *data)
         real_set_keymap = dlsym(RTLD_NEXT, "wlr_keyboard_set_keymap");
     apply_if_needed(0);
     return 0;
+}
+
+static int in_seat;
+
+void wlr_seat_set_keyboard(struct wlr_seat *seat, struct wlr_keyboard *keyboard)
+{
+    static void (*real)(struct wlr_seat *, struct wlr_keyboard *);
+    if (!real)
+        real = dlsym(RTLD_NEXT, "wlr_seat_set_keyboard");
+    /* The first key after a layout change is what publishes the group
+     * keyboard. Installing the file there is what makes the first
+     * selection the map the next character uses. Later keys must not
+     * compile again or held Shift is dropped. */
+    if (keyboard && seat_needs_push && !in_seat) {
+        in_seat = 1;
+        remember(keyboard);
+        if (!real_set_keymap)
+            real_set_keymap = dlsym(RTLD_NEXT, "wlr_keyboard_set_keymap");
+        if (apply_if_needed(1) == 0)
+            seat_needs_push = 0;
+        in_seat = 0;
+    }
+    if (real)
+        real(seat, keyboard);
 }
 
 bool wlr_keyboard_set_keymap(struct wlr_keyboard *keyboard, struct xkb_keymap *keymap)
