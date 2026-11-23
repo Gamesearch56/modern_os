@@ -480,6 +480,9 @@ fi
 if ! grep -Fq 'root.restarting = (root._ran' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml"; then
     err "a package update must not wait on a UI restart"
 fi
+if ! grep -Fq 'closeTimer.restart(); root.refresh(true)' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml"; then
+    err "a finished update must search again inside the quiet period"
+fi
 if ! grep -Fq 'settings.update.desktopApplied' "$ROOT/stow/shell/.config/quickshell/modern/Services/Update.qml" \
     || ! grep -Fq 'desktopAppliedBody' "$ROOT/stow/modern/.config/modern/translations/en.json" \
     || ! grep -Fq 'desktopAppliedBody' "$ROOT/stow/modern/.config/modern/translations/de.json"; then

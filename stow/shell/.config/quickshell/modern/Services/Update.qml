@@ -235,7 +235,7 @@ Singleton {
             root.notify(I18n.t("settings.update.rolledBack"), I18n.t("settings.update.rolledBackBody"), "");
         else if (!ok || classify.doneSummary(root._ran).length)
             root.notify(ok ? classify.doneSummary(root._ran) : classify.failureText(code), ok ? "" : root.step, "");
-        if (ok) { root.restarting = (root._ran || []).filter(p => String(p && p.kind || "") === "desktop").length > 0; closeTimer.restart(); root.refresh(); }
+        if (ok) { root.restarting = (root._ran || []).filter(p => String(p && p.kind || "") === "desktop").length > 0; closeTimer.restart(); root.refresh(true); }
     }
 
     function _parseCheck(text: string) {

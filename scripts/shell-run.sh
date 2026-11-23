@@ -9,6 +9,9 @@
 # on start does not spin. Everything is written to quickshell.log.
 set -uo pipefail
 
+# shellcheck source=lib/extensions.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/extensions.sh"
+
 LOG="${XDG_STATE_HOME:-$HOME/.local/state}/modern/quickshell.log"
 QS="${MODERN_SHELL_CMD:-qs}"
 MAX_CRASHES="${MODERN_SHELL_MAX_CRASHES:-5}"
@@ -55,7 +58,10 @@ trap stop TERM INT HUP
 
 crashes=()
 while :; do
-    "$QS" -c modern >>"$LOG" 2>&1 9>&- &
+    # No extensions directory: EXT_PREFIX stays empty and this is `qs -c modern`.
+    extension_prefix
+    [ -z "${EXT_WARN:-}" ] || note "$EXT_WARN"
+    "${EXT_PREFIX[@]}" "$QS" -c modern >>"$LOG" 2>&1 9>&- &
     child=$!
     wait "$child"
     rc=$?

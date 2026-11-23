@@ -3,9 +3,9 @@
 // Pure picture math for Stage.qml, tested with node (scripts/test-viewer.sh).
 // A scale is screen pixels per image pixel.
 
-// One mouse notch. Small enough that a few clicks walk in on a detail,
-// and a touchpad's pixel deltas stay smaller still.
-const step = 1.1;
+// One mouse notch, the same factor as the video picture. A smaller
+// factor made a scroll take a long time to reach a detail.
+const step = 1.25;
 const maxScale = 32;
 
 // The largest scale at which the turned picture still fits the view.
@@ -36,15 +36,39 @@ function zoomed(s, steps, base) {
     return clampScale(s * Math.pow(step, steps), base);
 }
 
-// Wheel delta in notches. A mouse sends 120 per detent and no pixels.
-// A touchpad sends both; the pixel distance is the smaller movement,
-// so the zoom follows the finger instead of jumping a whole detent.
+// One toolbar click. The label is the scale in percent, so a click
+// moves that number by one. The wheel keeps the larger step.
+function nudged(s, direction, base) {
+    return clampScale(s + direction * 0.01, base);
+}
+
+// Offset after scaling the view from z1 to z2 about its top-left corner,
+// keeping the point under `at` in place. Same motion as the video picture:
+// the image is a transform, so the zoom does not resize a scrolled page.
+function anchoredOffset(offset, at, z1, z2) {
+    return z1 > 0 ? at - (at - offset) * z2 / z1 : offset;
+}
+
+// Keeps a picture spanning [a, b] in the unscaled view from leaving a gap
+// it could fill. Centred while smaller than the view.
+function clampOffset(offset, z, view, a, b) {
+    if (!(b > a))
+        return 0;
+    const lo = a * z;
+    const hi = b * z;
+    if (hi - lo <= view)
+        return (view - lo - hi) / 2;
+    return Math.max(view - hi, Math.min(-lo, offset));
+}
+
+// Wheel delta in notches. A mouse sends 120 per detent, and on this
+// desktop it also sends a few pixels. Those pixels are a fraction of a
+// detent, so they must not replace the angle. A touchpad that sends
+// only pixels still follows the finger.
 function notches(angleY, pixelY) {
-    const fromAngle = angleY ? angleY / 120 : 0;
-    const fromPixel = pixelY ? pixelY / 48 : 0;
-    if (fromPixel && (!fromAngle || Math.abs(fromPixel) < Math.abs(fromAngle)))
-        return fromPixel;
-    return fromAngle;
+    if (angleY)
+        return angleY / 120;
+    return (pixelY || 0) / 48;
 }
 
 // The content offset after zooming from s1 to s2 that keeps the image

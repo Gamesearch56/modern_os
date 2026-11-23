@@ -100,11 +100,20 @@ else
 fi
 
 SECTION="$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/ai/Section.qml"
-if [ "$(grep -cF 'visible: root.ollamaOn && Ai.installed' "$SECTION")" -ge 4 ] \
+if [ "$(grep -cF 'visible: root.ollamaDone' "$SECTION")" -ge 4 ] \
+    && grep -Fq 'ollamaSetup.setupBusy' "$SECTION" \
     && grep -Fq 'Install {' "$SECTION"; then
-    ok "model, search key, and options stay hidden until ollama is installed"
+    ok "model, search key, and options stay hidden until the model is installed"
 else
-    err "ollama options show before the package is installed"
+    err "ollama options show before setup finishes"
+fi
+
+if grep -Fq 'ollama_quiet_pull' "$PULL" \
+    && grep -Fq 'nice -n 19' "$ROOT/scripts/lib/ollama-quiet.sh" \
+    && grep -Fq 'ionice -c 3' "$ROOT/scripts/lib/ollama-quiet.sh"; then
+    ok "the setup download stays at a low priority"
+else
+    err "the setup download can still pin the desktop"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

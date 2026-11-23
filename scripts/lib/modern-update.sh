@@ -61,11 +61,17 @@ modern_update() {
     # installed, that same process takes the snapshot and only then
     # says ready — a failure stops the update before the log moves.
     # A boot repair asks even when no package is pending.
-    local snap_first=0
+    local snap_first=0 desk_protect=0
     if [ "$boot_only" -eq 0 ] && _update_snap_wanted; then
         snap_first=1
     fi
-    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ] || [ "$snap_first" -eq 1 ]; then
+    # A desktop-only release update used to need no password. Replacing
+    # the immutable files needs one, and it is this same prompt.
+    if [ "$desk_new" -eq 1 ] && "$SCRIPT_DIR/repo-protect.sh" release-clone; then
+        desk_protect=1
+    fi
+    if [ "${pkgs:-0}" -gt 0 ] || [ -s "$plan" ] || [ "$boot_repair" -eq 1 ] \
+        || [ "$snap_first" -eq 1 ] || [ "$desk_protect" -eq 1 ]; then
         if [ -t 0 ]; then
             sudo -v || return 4
         else

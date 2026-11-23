@@ -329,6 +329,12 @@ xdg-desktop-portal reads backend descriptions only from `/usr/share/xdg-desktop-
 
 **Rejected:** writing `modern.portal` into `/usr/share` from `install.sh` (an untracked file pacman does not know about, never removed); `XDG_DESKTOP_PORTAL_DIR` (a test override, not read in a normal session); asking apps to use Files directly (Chromium, Firefox and Flatpak only talk to the portal); a chooser inside the main shell process (a hung request or a huge folder would stall the bar); dbus-python for the bus (one more dependency, and Gio is already there for the main loop). Hiding files that do not match the filter is left for later; today they show but cannot be used.
 
+## 29. Extensions replace a session file without touching the installed clone
+
+**Decision:** A mod lives in `~/.local/share/modern/extensions/` and repeats the repository path of the file it replaces (`docs/MODDING.md`). Only the Quickshell tree and the Hyprland Lua tree are read. The shell sees them through a symlink mirror bound over its config directory for that process alone, so `qs -c modern` and every keybind stay the same. Hyprland prepends the Lua directory to `package.path` only when that directory exists. The installed `~/modern_os` clone is marked immutable after install and after a successful update. The system update clears the flag, replaces the files, and sets the flag again. A development checkout is not a release clone, so it is never marked. A missing extensions directory does not scan, does not start bubblewrap, and does not change `package.path`.
+
+**Rejected:** editing `~/modern_os` or retargeting stow symlinks (the next update checks the clone out again, and a retargeted symlink makes stow conflict); a FUSE mount for every login including an empty folder (cost and a wider set of paths, including ones root reads); a QML import-path prefix (Qt will not replace one file inside a module); letting an extension replace `scripts/` or anything pkexec runs (that would be the user writing the root step).
+
 ## Open decisions
 
 - Whether `matugen` alone gives enough control over contrast/variant, or

@@ -25,52 +25,61 @@ Item {
 
     property bool follow: true
     property real zoom: 1
-    // The scroll position that keeps the zoomed point under the pointer.
-    // Flickable moves contentX itself when the content size changes, so
-    // this is applied again after that layout.
-    property real _aimX: 0
-    property real _aimY: 0
-    property bool _aiming: false
+    property real panX: 0
+    property real panY: 0
+    // 1 while the picture is fitted. Zooming changes only this transform,
+    // the same way the video picture scales, instead of resizing a page.
+    readonly property real factor: root.follow || !(root.baseScale > 0) ? 1 : root.zoom / root.baseScale
+    readonly property bool canPan: root.boxW * root.baseScale * root.factor > root.width + 0.5
+        || root.boxH * root.baseScale * root.factor > root.height + 0.5
 
-    function _applyAim() {
-        flick.contentX = root._aimX;
-        flick.contentY = root._aimY;
+    function _rect() {
+        const w = root.boxW * root.baseScale;
+        const h = root.boxH * root.baseScale;
+        return { x: (root.width - w) / 2, y: (root.height - h) / 2, w: w, h: h };
+    }
+
+    function _settle() {
+        if (root.follow)
+            return;
+        const r = root._rect();
+        root.panX = Ops.clampOffset(root.panX, root.factor, root.width, r.x, r.x + r.w);
+        root.panY = Ops.clampOffset(root.panY, root.factor, root.height, r.y, r.y + r.h);
     }
 
     function setScale(to: real, px: real, py: real) {
-        const from = root.scale;
+        const from = root.factor;
         const next = Ops.clampScale(to, root.baseScale);
-        root._aimX = Ops.anchored(flick.contentX, px, root.width, root.boxW, from, next);
-        root._aimY = Ops.anchored(flick.contentY, py, root.height, root.boxH, from, next);
-        root._aiming = true;
+        const nextFactor = root.baseScale > 0 ? next / root.baseScale : 1;
+        if (!root.follow && next === root.zoom)
+            return;
+        root.panX = Ops.anchoredOffset(root.follow ? 0 : root.panX, px, from, nextFactor);
+        root.panY = Ops.anchoredOffset(root.follow ? 0 : root.panY, py, from, nextFactor);
         root.zoom = next;
         root.follow = false;
-        root._applyAim();
-        Qt.callLater(() => {
-            if (!root._aiming)
-                return;
-            root._applyAim();
-            root._aiming = false;
-        });
+        root._settle();
     }
 
     function zoomBy(steps: real, px: real, py: real) {
         root.setScale(Ops.zoomed(root.scale, steps, root.baseScale), px, py);
     }
 
-    function zoomIn() { root.zoomBy(1, root.width / 2, root.height / 2); }
-    function zoomOut() { root.zoomBy(-1, root.width / 2, root.height / 2); }
+    function zoomIn() { root.setScale(Ops.nudged(root.scale, 1, root.baseScale), root.width / 2, root.height / 2); }
+    function zoomOut() { root.setScale(Ops.nudged(root.scale, -1, root.baseScale), root.width / 2, root.height / 2); }
     function actual() { root.setScale(1, root.width / 2, root.height / 2); }
 
     function fit() {
         root.follow = true;
-        flick.contentX = 0;
-        flick.contentY = 0;
+        root.panX = 0;
+        root.panY = 0;
     }
 
     function pan(dx: real, dy: real) {
-        flick.contentX = Ops.panned(flick.contentX, dx, root.width, flick.contentWidth);
-        flick.contentY = Ops.panned(flick.contentY, dy, root.height, flick.contentHeight);
+        if (root.follow)
+            return;
+        root.panX -= dx;
+        root.panY -= dy;
+        root._settle();
     }
 
     clip: true
@@ -88,50 +97,40 @@ Item {
         // A turned picture swaps its width and height; the old scroll
         // offset would point at a different part of it.
         function onRotationChanged() {
-            Qt.callLater(() => {
-                flick.contentX = Math.max(0, (flick.contentWidth - root.width) / 2);
-                flick.contentY = Math.max(0, (flick.contentHeight - root.height) / 2);
-            });
+            root._settle();
         }
     }
 
-    Flickable {
-        id: flick
-        anchors.fill: parent
-        contentWidth: Math.max(width, root.boxW * root.scale)
-        contentHeight: Math.max(height, root.boxH * root.scale)
-        interactive: contentWidth > width || contentHeight > height
-        boundsBehavior: Flickable.StopAtBounds
-        pixelAligned: true
-        onContentWidthChanged: if (root._aiming) root._applyAim()
-        onContentHeightChanged: if (root._aiming) root._applyAim()
+    onWidthChanged: root._settle()
+    onHeightChanged: root._settle()
 
-        // The flick would scroll once the picture is larger than the
-        // view. The wheel zooms around the pointer instead.
-        WheelHandler {
-            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-            onWheel: (event) => {
-                const steps = Ops.notches(event.angleDelta.y, event.pixelDelta.y);
-                if (!steps)
-                    return;
-                root.zoomBy(steps, event.x, event.y);
-                event.accepted = true;
-            }
+    WheelHandler {
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        onWheel: (event) => {
+            const steps = Ops.notches(event.angleDelta.y, event.pixelDelta.y);
+            if (!steps)
+                return;
+            root.zoomBy(steps, event.x, event.y);
+            event.accepted = true;
         }
+    }
 
-        Item {
-            width: flick.contentWidth
-            height: flick.contentHeight
+    Item {
+        width: root.width
+        height: root.height
+        x: root.follow ? 0 : root.panX
+        y: root.follow ? 0 : root.panY
+        scale: root.factor
+        transformOrigin: Item.TopLeft
 
-            Loader {
-                id: pic
-                anchors.centerIn: parent
-                width: root.srcW * root.scale
-                height: root.srcH * root.scale
-                rotation: ViewerDoc.rotation
-                active: ViewerDoc.path.length > 0
-                sourceComponent: root.animated ? moving : still
-            }
+        Loader {
+            id: pic
+            anchors.centerIn: parent
+            width: Math.max(1, root.srcW * root.baseScale)
+            height: Math.max(1, root.srcH * root.baseScale)
+            rotation: ViewerDoc.rotation
+            active: ViewerDoc.path.length > 0
+            sourceComponent: root.animated ? moving : still
         }
     }
 
@@ -167,6 +166,21 @@ Item {
         property real startScale: 1
         onActiveChanged: if (active) startScale = root.scale
         onActiveScaleChanged: if (active) root.setScale(startScale * activeScale, centroid.position.x, centroid.position.y)
+    }
+
+    DragHandler {
+        property point start
+        target: null
+        enabled: root.canPan
+        cursorShape: Qt.ClosedHandCursor
+        onActiveChanged: if (active) start = Qt.point(root.panX, root.panY)
+        onActiveTranslationChanged: {
+            if (!active)
+                return;
+            root.panX = start.x + activeTranslation.x;
+            root.panY = start.y + activeTranslation.y;
+            root._settle();
+        }
     }
 
     TapHandler {

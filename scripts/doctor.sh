@@ -91,6 +91,14 @@ else
     warn "ufw not on PATH"
 fi
 
+section "extensions"
+ext="${XDG_DATA_HOME:-$HOME/.local/share}/modern/extensions"
+if [ -d "$ext" ]; then
+    warn "extensions folder present — this system is modded and unsupported"
+else
+    ok "no extensions folder"
+fi
+
 section "user units"
 if pgrep -u "$USER" -x qs >/dev/null 2>&1 || pgrep -u "$USER" -f 'qs -c modern' >/dev/null 2>&1; then
     ok "qs -c modern is running as a Hyprland child (modern-shell.service stays disabled on TTY sessions)"

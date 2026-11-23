@@ -16,6 +16,12 @@ Item {
     readonly property bool open: root.state === "run" || root.state === "ok" || root.state === "fail"
     readonly property bool running: root.state === "run"
     readonly property bool showLog: root.action !== "remove" && root.log.trim().length > 0
+    readonly property real pullValue: {
+        const found = String(root.log || "").match(/(\d+)%/g);
+        if (!found || !found.length)
+            return -1;
+        return Number(found[found.length - 1].replace("%", "")) / 100;
+    }
     readonly property string titleKey: {
         if (root.state === "fail")
             return "settings.ollama.jobFailed";
@@ -107,7 +113,8 @@ Item {
             MLinearProgress {
                 visible: root.running
                 Layout.fillWidth: true
-                indeterminate: true
+                value: root.pullValue < 0 ? 0 : root.pullValue
+                indeterminate: root.pullValue < 0
             }
 
             MLogView {

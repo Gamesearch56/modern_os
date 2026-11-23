@@ -14,6 +14,8 @@ config="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/modern/editor.qml"
 log="${XDG_STATE_HOME:-$HOME/.local/state}/modern/editor.log"
 # shellcheck source=lib/app-log.sh
 . "$dir/lib/app-log.sh"
+# shellcheck source=lib/extensions.sh
+. "$dir/lib/extensions.sh"
 
 note() {
     app_log_open "$log" || return 0
@@ -57,7 +59,9 @@ start() {
     # save the main window's last place or focus that window.
     local out=/dev/null
     app_log_open "$log" && out="$log"
-    MODERN_FILE_WINDOW=1 MODERN_EDITOR_PATH="$path" setsid -f qs -p "$config" >>"$out" 2>&1 </dev/null
+    extension_prefix
+    [ -z "${EXT_WARN:-}" ] || note "$EXT_WARN"
+    MODERN_FILE_WINDOW=1 MODERN_EDITOR_PATH="$path" setsid -f "${EXT_PREFIX[@]}" qs -p "$config" >>"$out" 2>&1 </dev/null
 }
 
 if [ "$#" -eq 0 ]; then

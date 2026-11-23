@@ -29,6 +29,7 @@ run() {
     rm -f "$TMP/n" "$TMP/state/modern/quickshell.log"
     printf '%s\n' "$@" >"$TMP/codes"
     STUB_DIR="$TMP" XDG_STATE_HOME="$TMP/state" XDG_RUNTIME_DIR="$TMP" \
+        XDG_DATA_HOME="$TMP/share" \
         MODERN_SHELL_CMD="$TMP/qs" MODERN_SHELL_ALIVE="${ALIVE:-$TMP/alive}" \
         MODERN_SHELL_RESTART_DELAY=0 MODERN_SHELL_MAX_CRASHES=3 "$RUN"
 }
@@ -60,12 +61,14 @@ else
 fi
 
 printf 'hang\n' >"$TMP/codes"; rm -f "$TMP/n"
-STUB_DIR="$TMP" XDG_STATE_HOME="$TMP/state" XDG_RUNTIME_DIR="$TMP" MODERN_SHELL_CMD="$TMP/qs" \
+STUB_DIR="$TMP" XDG_STATE_HOME="$TMP/state" XDG_RUNTIME_DIR="$TMP" \
+    XDG_DATA_HOME="$TMP/share" MODERN_SHELL_CMD="$TMP/qs" \
     MODERN_SHELL_ALIVE="$TMP/alive" "$RUN" &
 sup=$!
 for _ in $(seq 1 50); do [ -s "$TMP/n" ] && break; sleep 0.1; done
 second=0
-STUB_DIR="$TMP" XDG_RUNTIME_DIR="$TMP" MODERN_SHELL_CMD="$TMP/qs" "$RUN" || second=$?
+STUB_DIR="$TMP" XDG_RUNTIME_DIR="$TMP" XDG_DATA_HOME="$TMP/share" \
+    MODERN_SHELL_CMD="$TMP/qs" "$RUN" || second=$?
 kill -TERM "$sup"
 wait "$sup" 2>/dev/null || true
 if [ "$second" = 0 ] && [ "$(cat "$TMP/n")" = 1 ] && ! pgrep -f "sleep 30" -P "$sup" >/dev/null 2>&1; then
@@ -77,7 +80,8 @@ fi
 mkdir -p "$TMP/state/modern"
 head -c 2048 /dev/zero >"$TMP/state/modern/quickshell.log"
 printf '0\n' >"$TMP/codes"; rm -f "$TMP/n"
-STUB_DIR="$TMP" XDG_STATE_HOME="$TMP/state" XDG_RUNTIME_DIR="$TMP" MODERN_SHELL_CMD="$TMP/qs" \
+STUB_DIR="$TMP" XDG_STATE_HOME="$TMP/state" XDG_RUNTIME_DIR="$TMP" \
+    XDG_DATA_HOME="$TMP/share" MODERN_SHELL_CMD="$TMP/qs" \
     MODERN_SHELL_ALIVE="$TMP/alive" MODERN_SHELL_LOG_CAP=1024 "$RUN"
 if [ "$(wc -c <"$TMP/state/modern/quickshell.log.1")" = 2048 ] \
     && [ "$(wc -c <"$TMP/state/modern/quickshell.log" 2>/dev/null || echo 0)" -lt 1024 ]; then

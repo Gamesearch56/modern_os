@@ -13,6 +13,10 @@ ColumnLayout {
 
     readonly property string provider: Config.accounts?.ai?.provider ?? "none"
     readonly property bool ollamaOn: root.provider === "ollama"
+    // Step 1 only installs the package. The rest of this page waits
+    // until a model is present and the download is not running.
+    readonly property bool ollamaDone: root.ollamaOn && Ai.installed && Ai.running
+            && (Ai.models || []).length > 0 && !ollamaSetup.setupBusy
     readonly property bool geminiOn: root.provider === "gemini"
     readonly property bool chatgptOn: root.provider === "chatgpt"
     readonly property string modelId: String(Config.accounts?.ai?.ollamaModel || "").replace(/:latest$/, "")
@@ -56,12 +60,12 @@ ColumnLayout {
 
     Install {
         id: ollamaSetup
-        visible: root.ollamaOn && (!Ai.ready || ollamaSetup.setupBusy || (Ai.models || []).length === 0)
+        visible: root.ollamaOn && !root.ollamaDone
         Layout.fillWidth: true
     }
 
     MField {
-        visible: root.ollamaOn && Ai.installed
+        visible: root.ollamaDone
         labelKey: "settings.fields.aiModel"
         MSelect {
             enabled: Ai.running
@@ -77,17 +81,17 @@ ColumnLayout {
     }
 
     BraveKey {
-        visible: root.ollamaOn && Ai.installed
+        visible: root.ollamaDone
         Layout.fillWidth: true
     }
 
     Tune {
-        visible: root.ollamaOn && Ai.installed
+        visible: root.ollamaDone
         Layout.fillWidth: true
     }
 
     Library {
-        visible: root.ollamaOn && Ai.installed
+        visible: root.ollamaDone
         Layout.fillWidth: true
         Layout.topMargin: Tokens.spacing.xxl
     }

@@ -48,8 +48,14 @@ fail() {
     printf 'update-apply: %s\n' "$*" >&2
     exit "$rc"
 }
+protect_on=0
 on_exit() {
     local rc=$?
+    if [ "$protect_on" -eq 1 ]; then
+        protect_on=0
+        "$SCRIPT_DIR/repo-protect.sh" lock \
+            || printf 'update-apply: could not protect the installed files again\n' >&2
+    fi
     [ "$rc" -ne 0 ] && [ "$FAILED" -eq 0 ] && [ -n "$STEP" ] || return 0
     printf 'update-apply: %s failed (exit %s)\n' "$STEP" "$rc" >&2
     exit "$STEP_RC"
@@ -116,6 +122,13 @@ fi
 # then. Take the snapshot before telling the caller it may log progress
 # or run the rest of the update. A failed snapshot stops here.
 if [ "$WAIT" -eq 1 ] && [ -z "${MODERN_UPDATE_UNIT:-}" ]; then
+    # The release checkout runs while this process waits. Clear the
+    # immutable flag first, and put it back when this process exits,
+    # including when the snapshot or the password step stops the update.
+    if "$SCRIPT_DIR/repo-protect.sh" release-clone; then
+        "$SCRIPT_DIR/repo-protect.sh" unlock || fail 1 "could not unlock the installed files"
+        protect_on=1
+    fi
     # shellcheck source=lib/update-guard.sh
     source "$SCRIPT_DIR/lib/update-guard.sh"
     # shellcheck source=../install/lib/kernel-boot.sh
