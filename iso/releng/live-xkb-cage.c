@@ -9,6 +9,7 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <xkbcommon/xkbcommon.h>
@@ -16,6 +17,7 @@
 struct wlr_keyboard;
 struct wlr_scene_output;
 struct wlr_scene_output_state_options;
+struct wlr_seat;
 
 static struct wlr_keyboard *keyboards[8];
 static int nkeyboards;
@@ -58,18 +60,21 @@ static void remember(struct wlr_keyboard *kb)
         keyboards[nkeyboards++] = kb;
 }
 
-static void apply_layout(const char *layout, const char *variant)
+static int applying;
+
+static int apply_layout(const char *layout, const char *variant)
 {
     struct xkb_context *ctx;
     struct xkb_keymap *map;
     struct xkb_rule_names names;
     int i;
+    int ok = 0;
 
     if (!real_set_keymap || nkeyboards == 0)
-        return;
+        return -1;
     ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     if (!ctx)
-        return;
+        return -1;
     memset(&names, 0, sizeof names);
     names.rules = "evdev";
     names.model = "pc105";
@@ -79,16 +84,25 @@ static void apply_layout(const char *layout, const char *variant)
     if (!map) {
         note("keymap compile failed");
         xkb_context_unref(ctx);
-        return;
+        return -1;
     }
-    for (i = 0; i < nkeyboards; i++)
-        (void)real_set_keymap(keyboards[i], map);
+    applying = 1;
+    for (i = 0; i < nkeyboards; i++) {
+        if (real_set_keymap(keyboards[i], map))
+            ok = 1;
+    }
+    applying = 0;
     xkb_keymap_unref(map);
     xkb_context_unref(ctx);
+    if (!ok)
+        return -1;
     note(layout);
+    return 0;
 }
 
-static void maybe_reload(void)
+/* force is set when some other caller just installed a keymap. The file
+ * still wins, or that call puts the US map back after a German choice. */
+static void apply_if_needed(int force)
 {
     FILE *f;
     char layout[64];
@@ -114,12 +128,11 @@ static void maybe_reload(void)
     if (!layout_ok(layout) || (variant[0] && !layout_ok(variant)))
         return;
     snprintf(spec, sizeof spec, "%s\n%s", layout, variant);
-    if (strcmp(spec, applied) == 0)
+    if (!force && strcmp(spec, applied) == 0)
         return;
-    /* Record first. set_keymap can re-enter the event loop, and a
-     * second read of the same file must not apply it again. */
+    if (apply_layout(layout, variant) != 0)
+        return;
     snprintf(applied, sizeof applied, "%s", spec);
-    apply_layout(layout, variant);
 }
 
 bool wlr_keyboard_set_keymap(struct wlr_keyboard *keyboard, struct xkb_keymap *keymap)
@@ -127,11 +140,31 @@ bool wlr_keyboard_set_keymap(struct wlr_keyboard *keyboard, struct xkb_keymap *k
     bool ok = false;
     if (!real_set_keymap)
         real_set_keymap = dlsym(RTLD_NEXT, "wlr_keyboard_set_keymap");
+    if (applying) {
+        if (!real_set_keymap)
+            return false;
+        return real_set_keymap(keyboard, keymap);
+    }
     remember(keyboard);
     if (real_set_keymap)
         ok = real_set_keymap(keyboard, keymap);
-    maybe_reload();
+    /* A keyboard group copies the member map and can write the old one
+     * back. The file the installer just wrote is the one the next key uses. */
+    apply_if_needed(1);
     return ok;
+}
+
+void wlr_seat_keyboard_notify_key(struct wlr_seat *seat, uint32_t time_msec,
+    uint32_t key, uint32_t state)
+{
+    static void (*real)(struct wlr_seat *, uint32_t, uint32_t, uint32_t);
+    if (!real)
+        real = dlsym(RTLD_NEXT, "wlr_seat_keyboard_notify_key");
+    /* The keycode is translated by Xwayland with the keymap it has now.
+     * Install the chosen layout before this key is delivered. */
+    apply_if_needed(0);
+    if (real)
+        real(seat, time_msec, key, state);
 }
 
 bool wlr_scene_output_commit(struct wlr_scene_output *scene_output,
@@ -140,8 +173,15 @@ bool wlr_scene_output_commit(struct wlr_scene_output *scene_output,
     static bool (*real)(struct wlr_scene_output *, const struct wlr_scene_output_state_options *);
     if (!real)
         real = dlsym(RTLD_NEXT, "wlr_scene_output_commit");
-    maybe_reload();
+    if (!real_set_keymap)
+        real_set_keymap = dlsym(RTLD_NEXT, "wlr_keyboard_set_keymap");
+    apply_if_needed(0);
     if (!real)
         return false;
     return real(scene_output, options);
+}
+
+__attribute__((constructor)) static void live_xkb_loaded(void)
+{
+    note("loaded");
 }

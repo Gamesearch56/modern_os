@@ -52,7 +52,8 @@ if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon; then
     # shellcheck disable=SC2046
     if gcc -shared -fPIC -O2 -Wall -Wextra -Wl,-z,defs -o "$so" "$XKB_C" $(pkg-config --cflags --libs xkbcommon); then
         if nm -D "$so" | grep -q 'wlr_keyboard_set_keymap' \
-            && nm -D "$so" | grep -q 'wlr_scene_output_commit'; then
+            && nm -D "$so" | grep -q 'wlr_scene_output_commit' \
+            && nm -D "$so" | grep -q 'wlr_seat_keyboard_notify_key'; then
             ok "keyboard helper exports the cage hooks"
         else
             err "keyboard helper is missing cage hooks"
