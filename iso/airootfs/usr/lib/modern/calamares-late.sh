@@ -748,6 +748,7 @@ LIVE_ONLY_PATHS=(
     usr/lib/modern/live-setup.sh
     usr/lib/modern/live-xdg-open.sh
     usr/lib/modern/live-xkb-filter.py
+    usr/lib/modern/live-xkb.sh
     usr/lib/modern/live-wifi-sim.sh
     usr/lib/modern/live-wifi-wl.sh
     usr/lib/modern/live-wifi-up.sh
