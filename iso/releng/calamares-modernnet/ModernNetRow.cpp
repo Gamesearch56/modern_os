@@ -9,6 +9,7 @@
 #include <QPixmap>
 #include <QPushButton>
 #include <QSizePolicy>
+#include <QStyle>
 #include <QVBoxLayout>
 
 ModernNetRow::ModernNetRow( const ModernNetNm::Wifi& wifi, QWidget* parent )
