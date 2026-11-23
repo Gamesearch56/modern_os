@@ -247,6 +247,35 @@ else
     err "installer wifi log missing or it contains the password"
 fi
 
+: >"$inst/wifi.log"
+rc=0
+printf '\n' | MODERN_INSTALLER_LOG="$inst" run_join connect 'Cafe Net' - >/dev/null 2>&1 || rc=$?
+if [[ $rc -eq 2 ]] && grep -F 'missing password' "$inst/wifi.log" >/dev/null; then
+    ok "a missing password is recorded instead of looking like a failed join"
+else
+    err "missing password exited $rc"
+fi
+
+pass="$TMP/wifi-pass"
+printf 'from-file-secret\n' >"$pass"
+chmod 600 "$pass"
+printf 'home\n' >"$STATE"
+rm -f "$STATE.left" "$STATE.secret"
+: >"$LOG"
+if printf '\n' | WIFI_JOIN_PASSFILE="$pass" LOG="$LOG" WIFI_JOIN_STATE="$STATE" \
+    MODERN_NMCLI="$TMP/nmcli" MODERN_WIFI_ADD="$TMP/add" MODERN_WIFI_SECRETS_DIR="$TMP" \
+    WIFI_JOIN_SECURITY='WPA2' "$JOIN" connect 'Cafe Net' - >/dev/null; then
+    if [[ ! -e $pass ]] \
+        && grep -F 'psk=from-file-secret' "$STATE.secret" >/dev/null \
+        && ! grep -F 'from-file-secret' "$LOG" >/dev/null; then
+        ok "the password file joins the network and is removed"
+    else
+        err "password file was not used: $(tr '\n' ' ' <"$LOG")"
+    fi
+else
+    err "password file connect failed"
+fi
+
 rc=0
 printf 'longenough\n' | run_join connect 'Office' - 2>/dev/null || rc=$?
 expect_rc 6 "an enterprise network reports unsupported security" "enterprise network exited $rc"
@@ -416,6 +445,7 @@ else
 fi
 
 if grep -Fq '/usr/lib/modern/wifi-join.sh' "$NM" && grep -Fq 'closeWriteChannel' "$NM" \
+    && grep -Fq 'WIFI_JOIN_PASSFILE' "$NM" && grep -Fq 'WIFI_JOIN_PASSFILE' "$JOIN" \
     && ! grep -Fq 'QStringLiteral( "password" )' "$NM" \
     && grep -Fq 'scripts/wifi-join.sh' "$ROOT/scripts/iso-build.sh" \
     && grep -Fq 'scripts/wifi-join-add.py' "$ROOT/scripts/iso-build.sh" \

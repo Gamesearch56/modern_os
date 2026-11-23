@@ -40,6 +40,7 @@ XKB_SH="$ROOT/iso/airootfs/usr/lib/modern/live-xkb.sh"
 XKB_C="$ROOT/iso/releng/live-xkb-cage.c"
 if grep -F '/usr/lib/modern/live-xkb-cage.so' "$SESSION" >/dev/null \
     && grep -F 'unset LD_PRELOAD' "$WRAP" >/dev/null \
+    && grep -F 'xkb_state_key_get_syms' "$XKB_C" >/dev/null \
     && grep -F '/run/modern/xkb-layout' "$XKB_SH" >/dev/null \
     && grep -F 'MODERN_XKB_PUSH_X=1' "$SESSION" >/dev/null \
     && grep -F 'wlr_keyboard_set_keymap' "$XKB_C" >/dev/null \
@@ -50,6 +51,19 @@ if grep -F '/usr/lib/modern/live-xkb-cage.so' "$SESSION" >/dev/null \
 else
     err "cage must reload /run/modern/xkb-layout when the layout changes"
 fi
+if python3 -c '
+import pathlib, sys
+text = pathlib.Path(sys.argv[1]).read_text()
+unset = text.find("unset LD_PRELOAD")
+start = text.find("\n(\n")
+end = text.find("\n) &\n", start)
+xwayland = text.find("exec Xwayland")
+sys.exit(0 if 0 <= start < unset < end < xwayland else 1)
+' "$WRAP"; then
+    ok "Xwayland keeps the keyboard helper and Calamares drops it"
+else
+    err "Xwayland must keep LD_PRELOAD; only the X clients may drop it"
+fi
 if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon && pkg-config --exists wayland-server; then
     so=$(mktemp)
     # shellcheck disable=SC2046
@@ -58,7 +72,8 @@ if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon && pkg-config
             && nm -D "$so" | grep -q 'wlr_seat_set_keyboard' \
             && nm -D "$so" | grep -q 'wlr_scene_output_commit' \
             && nm -D "$so" | grep -q 'wlr_seat_keyboard_notify_key' \
-            && nm -D "$so" | grep -q 'wl_display_run'; then
+            && nm -D "$so" | grep -q 'wl_display_run' \
+            && nm -D "$so" | grep -q 'xkb_state_key_get_syms'; then
             ok "keyboard helper exports the cage hooks"
         else
             err "keyboard helper is missing cage hooks"
@@ -88,6 +103,17 @@ if command -v gcc >/dev/null 2>&1 && pkg-config --exists xkbcommon && pkg-config
             err "the first key still publishes the previous layout (seat exit $?)"
         fi
         rm -f "$layout" "$fake" "$call" "$seat" "$stub"
+        trans=$(mktemp)
+        # shellcheck disable=SC2046
+        if gcc -O2 -o "$trans" "$ROOT/tests/live-xkb-translate.c" \
+            $(pkg-config --cflags --libs xkbcommon) \
+            && printf 'de\n\n' >"$layout" \
+            && MODERN_XKB_LAYOUT="$layout" LD_PRELOAD="$so" "$trans"; then
+            ok "Xwayland keysyms follow the layout file on the first key"
+        else
+            err "Xwayland still translates the first key with the previous layout (exit $?)"
+        fi
+        rm -f "$trans" "$layout"
     else
         err "keyboard helper failed to compile"
     fi

@@ -35,7 +35,11 @@ nmcli_to() {
     timeout -k 2 "$seconds" "$NMCLI" "$@"
 }
 
-die() { printf 'wifi-join: %s\n' "$*" >&2; exit 2; }
+die() {
+    installer_log "rejected $*"
+    printf 'wifi-join: %s\n' "$*" >&2
+    exit 2
+}
 
 # The install chroot cannot see the live /tmp. This directory is
 # bind-mounted into it and copied to /var/log/modern-installer.
@@ -176,7 +180,7 @@ load_saved_keyfile() {
 }
 
 connect_psk() {
-    local ssid=$1 psk=$2 sec km out uuid rc=0 file
+    local ssid=$1 psk=$2 sec km out uuid rc=0 file hidden=0
     # The installer already showed this network, so it knows the security.
     # Listing again waits on a scan and the screen stays on "Looking for…".
     printf 'status:lookup\n'
@@ -222,6 +226,18 @@ connect_psk() {
     rc_add=0
     out=$(WIFI_JOIN_ACTIVATE=1 add_keyfile "$file" 2>&1) || rc_add=$?
     printf '%s\n' "$out" >&2
+    # The helper's text is the reason a later report can name. A line
+    # that contains the password is dropped rather than written out.
+    # grep -c reads the whole line, so pipefail cannot hide a match.
+    hidden=0
+    if [[ -n $psk ]]; then
+        hidden=$(printf '%s' "$out" | grep -F -c -- "$psk" || true)
+    fi
+    if [[ ${hidden:-0} != 0 ]]; then
+        installer_log "helper rc=$rc_add output-hidden"
+    else
+        installer_log "helper rc=$rc_add ${out//$'\n'/ }"
+    fi
     if [[ $rc_add -eq 0 && $out == *activated* ]]; then
         cleanup_pw
         return 0
@@ -262,10 +278,20 @@ stop_wifi_attempt() {
 cmd_connect() {
     local ssid=$1
     local from=${2-}
-    local psk="" saved rc=0
+    local psk="" saved rc=0 passfile=${WIFI_JOIN_PASSFILE:-}
+    # Closing the installer's stdin pipe before this process reads it
+    # made every password, right or wrong, look like a missing one.
+    # The password file is the copy that does not depend on that pipe.
+    installer_log "connect begin stdin=$([[ $from == - ]] && printf yes || printf no) passfile=$([[ -n $passfile ]] && printf yes || printf no)"
     valid_label "$ssid" || die "rejected network name"
+    if [[ -n $passfile && -r $passfile ]]; then
+        IFS= read -r psk <"$passfile" || true
+        rm -f -- "$passfile"
+    fi
     if [[ $from == - ]]; then
-        IFS= read -r psk || true
+        if [[ -z $psk ]]; then
+            IFS= read -r psk || true
+        fi
         [[ -n $psk ]] || die "missing password"
         # WPA passphrases are 8-63 characters, or 64 hex digits.
         if [[ ${#psk} -lt 8 || ${#psk} -gt 64 ]]; then

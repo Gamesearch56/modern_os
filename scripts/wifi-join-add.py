@@ -23,7 +23,14 @@ def _ssid_text(obj) -> str:
     raw = obj.get_ssid() if obj is not None else None
     if raw is None:
         return ""
-    return bytes(raw.get_data()).decode("utf-8", "replace")
+    data = raw.get_data()
+    if isinstance(data, tuple):
+        data = data[0]
+    if isinstance(data, memoryview):
+        data = data.tobytes()
+    # A trailing NUL made the scanned name and the keyfile name differ,
+    # so a network that was on screen was reported as not in the scan.
+    return bytes(data).split(b"\x00", 1)[0].decode("utf-8", "replace")
 
 
 def _load_profile(path: Path):
@@ -73,7 +80,7 @@ def _activate(client, GLib, NM, profile) -> int:
     ssid = _ssid_text(profile.get_setting_wireless())
     device, ap = _best_ap(client, NM, ssid)
     if device is None or ap is None:
-        print(f"wifi-join-add: {ssid} is not in the scan", file=sys.stderr)
+        print("wifi-join-add: network is not in the scan", file=sys.stderr)
         return 4
     loop = GLib.MainLoop()
     holder: dict[str, object] = {"code": 1, "arm": False}

@@ -29,9 +29,9 @@ log() {
 
 log "live-session uid=$(id -u) HOME=${HOME:-} RUNTIME=${XDG_RUNTIME_DIR:-} cage=$(command -v cage || true) renderer=${WLR_RENDERER:-auto}"
 
-# Cage's own keymap is what Xwayland types with. The helper replaces
-# that map when the installer writes a layout. Xwayland and Calamares
-# drop the preload themselves.
+# Cage's keymap is what Xwayland types with. The helper answers
+# Xwayland's keysym lookups from the layout file. Calamares drops the
+# preload; Xwayland keeps it.
 if [ -f /usr/lib/modern/live-xkb-cage.so ]; then
     export LD_PRELOAD="/usr/lib/modern/live-xkb-cage.so${LD_PRELOAD:+:$LD_PRELOAD}"
     # The helper also runs setxkbmap. Xwayland keeps its own map when it

@@ -8,6 +8,7 @@
 #include <QTimer>
 
 #include <csignal>
+#include <fcntl.h>
 #include <unistd.h>
 
 namespace
@@ -103,6 +104,48 @@ leadGroup( QProcess* proc )
     proc->setChildProcessModifier( [] {
         ::setpgid( 0, 0 );
     } );
+}
+
+// The live session log is what a problem report can still read. The
+// password never goes in it. A failed start has no script log at all.
+static void
+noteJoin( const QString& text )
+{
+    QFile file( QStringLiteral( "/run/modern/installer/wifi.log" ) );
+    if ( !file.open( QIODevice::WriteOnly | QIODevice::Append ) )
+    {
+        return;
+    }
+    file.write( text.left( 800 ).toUtf8() );
+    file.write( "\n" );
+}
+
+// argv and the process environment are world-readable. The secret is a
+// 0600 file the script unlinks as it reads it. Stdin is only a second
+// copy: closing that pipe before the script reads it used to drop every
+// password, and a right one then looked the same as a wrong one.
+static QString
+writePassFile( const QString& password )
+{
+    if ( password.isEmpty() )
+    {
+        return {};
+    }
+    const char* path = "/run/modern/wifi-pass";
+    const int fd = ::open( path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600 );
+    if ( fd < 0 )
+    {
+        return {};
+    }
+    const QByteArray bytes = password.toUtf8() + '\n';
+    const ssize_t wrote = ::write( fd, bytes.constData(), static_cast< size_t >( bytes.size() ) );
+    ::close( fd );
+    if ( wrote != static_cast< ssize_t >( bytes.size() ) )
+    {
+        ::unlink( path );
+        return {};
+    }
+    return QString::fromLatin1( path );
 }
 
 QVector< QPair< QString, QString > >
@@ -450,6 +493,9 @@ ModernNetNm::settleJoin( int code )
     }
     m_joinSettled = true;
     m_connecting = false;
+    // The script unlinks this as it reads it. A join that never got that
+    // far must not leave the password in /run.
+    ::unlink( "/run/modern/wifi-pass" );
     QProcess* proc = m_join;
     m_join = nullptr;
     if ( proc && proc->state() != QProcess::NotRunning )
@@ -504,18 +550,30 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QS
             }
         }
     } );
-    connect( m_join, &QProcess::readyReadStandardError, m_join, [ this ]() {
-        m_join->readAllStandardError();
+    connect( m_join, &QProcess::readyReadStandardError, this, [ this, password ]() {
+        QByteArray chunk = m_join->readAllStandardError();
+        if ( !password.isEmpty() )
+        {
+            chunk.replace( password.toUtf8(), "<redacted>" );
+        }
+        const QString text = QString::fromUtf8( chunk ).simplified();
+        if ( !text.isEmpty() )
+        {
+            noteJoin( QStringLiteral( "calamares stderr %1" ).arg( text.left( 400 ) ) );
+        }
     } );
     connect( m_join,
              QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ),
              this,
              [ this ]( int code, QProcess::ExitStatus status ) {
+                 noteJoin( QStringLiteral( "calamares join exit %1" )
+                               .arg( status == QProcess::NormalExit ? code : -1 ) );
                  settleJoin( status == QProcess::NormalExit ? code : 1 );
              } );
     connect( m_join, &QProcess::errorOccurred, this, [ this ]( QProcess::ProcessError error ) {
         if ( error == QProcess::FailedToStart )
         {
+            noteJoin( QStringLiteral( "calamares join failed to start" ) );
             settleJoin( 1 );
         }
     } );
@@ -528,24 +586,41 @@ ModernNetNm::connectSsid( const QString& ssid, const QString& password, const QS
         settleJoin( 5 );
     } );
     joinLimit->start( 30000 );
-    // The password goes on stdin; argv is readable by every process in
-    // /proc. wifi-join.sh also drops a profile a failed password created.
+    // The password is a 0600 file, with a second copy on stdin. argv is
+    // readable by every process in /proc. wifi-join.sh also drops a
+    // profile a failed password created.
     QStringList args { QStringLiteral( "connect" ), ssid };
     if ( !password.isEmpty() )
     {
         args << QStringLiteral( "-" );
     }
+    const QString passFile = writePassFile( password );
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    bool customEnv = false;
     if ( !security.isEmpty() )
     {
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
         env.insert( QStringLiteral( "WIFI_JOIN_SECURITY" ), security );
+        customEnv = true;
+    }
+    if ( !passFile.isEmpty() )
+    {
+        env.insert( QStringLiteral( "WIFI_JOIN_PASSFILE" ), passFile );
+        customEnv = true;
+    }
+    if ( customEnv )
+    {
         m_join->setProcessEnvironment( env );
     }
+    noteJoin( QStringLiteral( "calamares join start passfile=%1" )
+                  .arg( passFile.isEmpty() ? QStringLiteral( "no" ) : QStringLiteral( "yes" ) ) );
+    connect( m_join, &QProcess::started, this, [ this, password ]() {
+        if ( password.isEmpty() )
+        {
+            return;
+        }
+        m_join->write( password.toUtf8() + '\n' );
+        m_join->closeWriteChannel();
+    } );
     leadGroup( m_join );
     m_join->start( kWifiJoin, args );
-    if ( !password.isEmpty() )
-    {
-        m_join->write( password.toUtf8() + '\n' );
-    }
-    m_join->closeWriteChannel();
 }

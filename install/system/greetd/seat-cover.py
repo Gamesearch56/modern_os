@@ -185,6 +185,25 @@ class PageFlip(ctypes.Structure):
     ]
 
 
+class GetPlane(ctypes.Structure):
+    _fields_ = [
+        ("plane_id", ctypes.c_uint32),
+        ("crtc_id", ctypes.c_uint32),
+        ("fb_id", ctypes.c_uint32),
+        ("possible_crtcs", ctypes.c_uint32),
+        ("gamma_size", ctypes.c_uint32),
+        ("count_format_types", ctypes.c_uint32),
+        ("format_type_ptr", ctypes.c_uint64),
+    ]
+
+
+class GetPlaneRes(ctypes.Structure):
+    _fields_ = [
+        ("plane_id_ptr", ctypes.c_uint64),
+        ("count_planes", ctypes.c_uint32),
+    ]
+
+
 class DrmEventVblank(ctypes.Structure):
     _fields_ = [
         ("type", ctypes.c_uint32),
@@ -235,6 +254,8 @@ GETPROPERTY = _iowr(0xAA, ctypes.sizeof(GetProperty))
 # mode alone. SETCRTC programs the mode again, and this panel draws its
 # firmware logo for that retrain.
 PAGE_FLIP = _iowr(0xB0, ctypes.sizeof(PageFlip))
+GETPLANERES = _iowr(0xB5, ctypes.sizeof(GetPlaneRes))
+GETPLANE = _iowr(0xB6, ctypes.sizeof(GetPlane))
 PAGE_FLIP_EVENT = 1
 FLIP_COMPLETE = 0x02
 # DRM_IOCTL_WAIT_VBLANK. SETCRTC can return while the kernel still has
@@ -288,6 +309,26 @@ def card_is_firmware_fb(driver: str) -> bool:
     and the hidden boot menu is not involved.
     """
     return driver in {"simpledrm", "simple-framebuffer", "efifb"}
+
+
+def choose_scanning_fb(legacy_fb: int, planes: list[tuple[int, int]]) -> int:
+    """The framebuffer the panel is showing.
+
+    Plymouth's splash is a plane. The controller's own id can still be
+    the firmware picture, and copying that id is what put the mainboard
+    logo between the splash and the login screen. A cursor is too small
+    to be that splash.
+    """
+    best = 0
+    best_area = 0
+    floor = 640 * 480
+    for fb_id, area in planes:
+        if fb_id == 0 or fb_id == legacy_fb or area < floor:
+            continue
+        if area > best_area:
+            best_area = area
+            best = fb_id
+    return best or legacy_fb
 
 
 def handoff_plan(attached: int, scanning: bool) -> str:
@@ -1007,6 +1048,54 @@ def hold() -> int:
                 pass
 
 
+def _fb_area(fd: int, fb_id: int) -> int:
+    info = FbCmd(fb_id=fb_id)
+    try:
+        _ioctl(fd, GETFB, info)
+    except OSError:
+        return 0
+    _gem_close(fd, int(info.handle))
+    width = int(info.width)
+    height = int(info.height)
+    if width < 1 or height < 1:
+        return 0
+    return width * height
+
+
+def _plane_pictures(fd: int, crtc_id: int) -> list[tuple[int, int]]:
+    """(fb id, area) for planes scanning on this controller."""
+    res = GetPlaneRes()
+    try:
+        _ioctl(fd, GETPLANERES, res)
+    except OSError:
+        return []
+    count = int(res.count_planes)
+    if count < 1:
+        return []
+    if count > 32:
+        count = 32
+    ids = (ctypes.c_uint32 * count)()
+    res.plane_id_ptr = ctypes.addressof(ids)
+    res.count_planes = count
+    try:
+        _ioctl(fd, GETPLANERES, res)
+    except OSError:
+        return []
+    found: list[tuple[int, int]] = []
+    for plane_id in ids[: int(res.count_planes)]:
+        info = GetPlane()
+        info.plane_id = int(plane_id)
+        try:
+            _ioctl(fd, GETPLANE, info)
+        except OSError:
+            continue
+        fb_id = int(info.fb_id)
+        if int(info.crtc_id) != crtc_id or fb_id == 0:
+            continue
+        found.append((fb_id, _fb_area(fd, fb_id)))
+    return found
+
+
 def _prepare_splash_copies(fds: list[int]) -> None:
     """Copy the splash while Plymouth is still master.
 
@@ -1031,9 +1120,15 @@ def _prepare_splash_copies(fds: list[int]) -> None:
             continue
         if info.mode_valid == 0:
             continue
+        source = choose_scanning_fb(current, _plane_pictures(fd, live))
+        if source != current:
+            print(
+                "seat-cover: copying the splash plane, not the firmware framebuffer",
+                file=sys.stderr,
+            )
         try:
             PREPARED[fd] = _make_splash_fb(
-                fd, int(info.mode.hdisplay), int(info.mode.vdisplay), copy_from=current
+                fd, int(info.mode.hdisplay), int(info.mode.vdisplay), copy_from=source
             )
         except (OSError, RuntimeError) as exc:
             print(f"seat-cover: could not copy the splash before Plymouth let go ({exc})", file=sys.stderr)
@@ -1200,6 +1295,16 @@ def self_test() -> int:
         return 1
     if ctypes.sizeof(PageFlip) != 24 or ctypes.sizeof(DrmEventVblank) != 32 or ctypes.sizeof(VBlank) != 24:
         print("seat-cover: page-flip struct size drifted", file=sys.stderr)
+        return 1
+    if ctypes.sizeof(GetPlane) != 32 or ctypes.sizeof(GetPlaneRes) != 16:
+        print("seat-cover: plane struct size drifted", file=sys.stderr)
+        return 1
+    # The legacy id is the firmware picture. The large other id is the splash.
+    if choose_scanning_fb(5, [(5, 1920 * 1080), (9, 64 * 64), (8, 1920 * 1080)]) != 8:
+        print("seat-cover: splash plane was not chosen", file=sys.stderr)
+        return 1
+    if choose_scanning_fb(5, [(5, 1920 * 1080), (9, 64 * 64)]) != 5:
+        print("seat-cover: a cursor must not replace the only full-size picture", file=sys.stderr)
         return 1
     if not output_needs_cover(14, False) or output_needs_cover(14, True) or output_needs_cover(15, False):
         print("seat-cover: cover decision is wrong", file=sys.stderr)

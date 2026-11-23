@@ -1,10 +1,11 @@
-/* Cage builds its keymap once and Xwayland uses that map for every key.
- * setxkbmap changes the X server, which this compositor ignores, so a
- * German selection still types Y for the key labeled Z. Loaded into
- * cage only. The installer writes /run/modern/xkb-layout. A static
- * screen does not commit a frame and the first selection is not a key,
- * so a thread wakes the compositor loop when the file changes and the
- * map is installed before the next character.
+/* Cage builds its keymap once and Xwayland translates every key with
+ * that map. setxkbmap updates the names `setxkbmap -query` prints and
+ * then warns that this is an Xwayland server; the next key is still
+ * translated from the map Cage sent. The installer writes
+ * /run/modern/xkb-layout. This library is already loaded into Xwayland
+ * (Cage starts it with the preload still set). Keysym lookups use the
+ * file, so the first selection types correctly even when Cage never
+ * calls the wlroots keymap symbol this library also wraps.
  */
 #define _GNU_SOURCE
 #include <dlfcn.h>
@@ -97,6 +98,7 @@ static void remember(struct wlr_keyboard *kb)
 }
 
 static int applying;
+static int noted_layout_fail;
 
 static int same_applied(const char *spec)
 {
@@ -270,8 +272,14 @@ static int apply_if_needed(int force)
     snprintf(spec, sizeof spec, "%s\n%s", layout, variant);
     if (!force && same_applied(spec))
         return 0;
-    if (apply_layout(layout, variant) != 0)
+    if (apply_layout(layout, variant) != 0) {
+        /* The file is the layout the user picked. Saying so once is
+         * enough: repeating it on every key hides the first failure. */
+        if (!noted_layout_fail)
+            note("layout was not installed");
+        noted_layout_fail = 1;
         return -1;
+    }
     store_applied(spec);
     return 0;
 }
@@ -327,6 +335,139 @@ static int on_layout_wake(int fd, uint32_t mask, void *data)
         real_set_keymap = dlsym(RTLD_NEXT, "wlr_keyboard_set_keymap");
     apply_if_needed(0);
     return 0;
+}
+
+/* Xwayland's xkb_state was built from Cage's map. These lookups are
+ * what turn a keycode into the character Calamares inserts. */
+static struct xkb_context *client_ctx;
+static struct xkb_keymap *client_map;
+static struct xkb_state *client_state;
+static char client_spec[160];
+static pthread_mutex_t client_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static int ensure_client_layout(void);
+
+static struct xkb_state *client_layout_state(void)
+{
+    struct xkb_state *mine = NULL;
+    if (ensure_client_layout()) {
+        pthread_mutex_lock(&client_lock);
+        mine = client_state;
+        pthread_mutex_unlock(&client_lock);
+    }
+    return mine;
+}
+
+static int ensure_client_layout(void)
+{
+    char spec[160];
+    char layout[64];
+    char variant[64];
+    struct xkb_rule_names names;
+    struct xkb_keymap *map;
+    struct xkb_state *state;
+    const char *split;
+
+    if (read_spec(spec, sizeof spec) != 0)
+        return 0;
+    pthread_mutex_lock(&client_lock);
+    if (client_state && strcmp(spec, client_spec) == 0) {
+        pthread_mutex_unlock(&client_lock);
+        return 1;
+    }
+    pthread_mutex_unlock(&client_lock);
+    split = strchr(spec, '\n');
+    if (!split || (size_t)(split - spec) >= sizeof layout)
+        return 0;
+    memcpy(layout, spec, (size_t)(split - spec));
+    layout[split - spec] = 0;
+    snprintf(variant, sizeof variant, "%s", split + 1);
+    if (!client_ctx)
+        client_ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+    if (!client_ctx)
+        return 0;
+    memset(&names, 0, sizeof names);
+    names.rules = "evdev";
+    names.model = "pc105";
+    names.layout = layout;
+    names.variant = variant[0] ? variant : NULL;
+    map = xkb_keymap_new_from_names(client_ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    if (!map) {
+        note("keymap compile failed");
+        return 0;
+    }
+    state = xkb_state_new(map);
+    if (!state) {
+        xkb_keymap_unref(map);
+        return 0;
+    }
+    pthread_mutex_lock(&client_lock);
+    if (client_state)
+        xkb_state_unref(client_state);
+    if (client_map)
+        xkb_keymap_unref(client_map);
+    client_map = map;
+    client_state = state;
+    snprintf(client_spec, sizeof client_spec, "%s", spec);
+    pthread_mutex_unlock(&client_lock);
+    note(layout);
+    return 1;
+}
+
+int xkb_state_key_get_syms(struct xkb_state *state, xkb_keycode_t key, const xkb_keysym_t **syms_out)
+{
+    static int (*real)(struct xkb_state *, xkb_keycode_t, const xkb_keysym_t **);
+    struct xkb_state *mine;
+    if (!real)
+        real = dlsym(RTLD_NEXT, "xkb_state_key_get_syms");
+    if (!real)
+        return 0;
+    mine = client_layout_state();
+    if (mine && mine != state)
+        return real(mine, key, syms_out);
+    return real(state, key, syms_out);
+}
+
+enum xkb_state_component xkb_state_update_key(struct xkb_state *state, xkb_keycode_t key, enum xkb_key_direction direction)
+{
+    static enum xkb_state_component (*real)(struct xkb_state *, xkb_keycode_t, enum xkb_key_direction);
+    struct xkb_state *mine;
+    if (!real)
+        real = dlsym(RTLD_NEXT, "xkb_state_update_key");
+    mine = client_layout_state();
+    if (real && mine && mine != state)
+        real(mine, key, direction);
+    if (!real)
+        return 0;
+    return real(state, key, direction);
+}
+
+int xkb_state_key_get_utf8(struct xkb_state *state, xkb_keycode_t key, char *buffer, size_t size)
+{
+    static int (*real)(struct xkb_state *, xkb_keycode_t, char *, size_t);
+    struct xkb_state *mine;
+    if (!real)
+        real = dlsym(RTLD_NEXT, "xkb_state_key_get_utf8");
+    if (!real)
+        return 0;
+    mine = client_layout_state();
+    if (mine && mine != state)
+        return real(mine, key, buffer, size);
+    return real(state, key, buffer, size);
+}
+
+uint32_t xkb_state_key_get_utf32(struct xkb_state *state, xkb_keycode_t key)
+{
+    static uint32_t (*real)(struct xkb_state *, xkb_keycode_t);
+    struct xkb_state *mine;
+    if (!real)
+        real = dlsym(RTLD_NEXT, "xkb_state_key_get_utf32");
+    if (!real)
+        return 0;
+    mine = client_layout_state();
+    if (mine && mine != state)
+        return real(mine, key);
+    return real(state, key);
 }
 
 static int in_seat;

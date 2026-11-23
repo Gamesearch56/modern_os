@@ -56,6 +56,8 @@ if grep -Fq 'MODERN_SEAT_KEEP_CRTC=1' "$KIOSK" \
     && grep -Fq '_copy_scanning_picture' "$COVER" \
     && grep -Fq '_prepare_splash_copies' "$COVER" \
     && grep -Fq 'flipping the splash copied before Plymouth let go' "$COVER" \
+    && grep -Fq 'choose_scanning_fb' "$COVER" \
+    && grep -Fq 'copying the splash plane, not the firmware framebuffer' "$COVER" \
     && grep -Fq 'install_image_seat' "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" \
     && grep -Fq 'seat-cover.next' "$ROOT/scripts/iso-build.sh"; then
     ok "login keeps the CRTC and the installed system gets this image's handoff"
