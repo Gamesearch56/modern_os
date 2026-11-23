@@ -163,16 +163,45 @@ cmd_status() {
     emit true "$cur" "$latest" "behind" "$boot"
 }
 
-# Installer chmod/overlay on the home release clone is not a user edit.
-# Ignored files stay. Any other clone, including a dev tree, is left alone.
-discard_installer_edits() {
+# The installed system is ~/modern_os, detached on a release tag.
+# A development checkout is left alone: another path, or a branch,
+# even when that branch commit is also a release tag.
+home_release_clone() {
     local resolved home_repo tag
     resolved="$(readlink -f "$REPO")"
     home_repo="$(readlink -f "$HOME/modern_os" 2>/dev/null || true)"
     tag="$(installed_tag)"
-    [ -n "$home_repo" ] && [ "$resolved" = "$home_repo" ] || return 0
-    [[ "$tag" =~ $TAG_RE ]] || return 0
+    [ -n "$home_repo" ] && [ "$resolved" = "$home_repo" ] || return 1
+    [[ "$tag" =~ $TAG_RE ]] || return 1
+    # symbolic-ref succeeds on a branch. The installer clone is detached.
+    git_safe -C "$REPO" symbolic-ref -q HEAD >/dev/null && return 1
+    return 0
+}
+
+# Installer chmod/overlay on the home release clone is not a user edit.
+# Ignored files stay. Any other clone, including a dev tree, is left alone.
+discard_installer_edits() {
+    home_release_clone || return 0
     git_safe -C "$REPO" checkout -- .
+}
+
+# --stale-bundle copies files the pin commit does not know. They show up
+# as untracked and the update stops, even though the release being
+# installed is where those files belong. A file the release does not
+# contain is still a local edit and keeps the stop.
+drop_overlay_untracked() {
+    local target="$1" line path
+    home_release_clone || return 0
+    [[ "$target" =~ $TAG_RE ]] || return 0
+    while IFS= read -r -d '' line; do
+        [ "${line:0:3}" = '?? ' ] || continue
+        path="${line:3}"
+        case "$path" in
+            ''|/*|..|../*|*/..|*/../*) continue ;;
+        esac
+        git_safe -C "$REPO" cat-file -e "${target}:${path}" 2>/dev/null || continue
+        git_safe -C "$REPO" clean -fd -- "$path" >/dev/null
+    done < <(git_safe -C "$REPO" status --porcelain -z)
 }
 
 cmd_apply() {
@@ -182,11 +211,6 @@ cmd_apply() {
     pause_hypr_config_watch
     trap resume_hypr_config_watch EXIT
     discard_installer_edits
-    local dirt
-    dirt="$(git_safe -C "$REPO" status --porcelain)"
-    if [ -n "$dirt" ]; then
-        die "work tree is dirty: $(printf '%s' "$dirt" | tr '\n' '; ')"
-    fi
     local latest unfinished
     latest="$(highest_tag)"
     unfinished="$(incomplete_tag)"
@@ -201,6 +225,14 @@ cmd_apply() {
         git_safe -C "$REPO" fetch --no-tags --no-recurse-submodules \
             "$url" "+refs/tags/${latest}:refs/tags/${latest}" \
             || die "could not download ${latest}"
+    fi
+    drop_overlay_untracked "$latest"
+    local dirt
+    dirt="$(git_safe -C "$REPO" status --porcelain)"
+    if [ -n "$dirt" ]; then
+        die "work tree is dirty: $(printf '%s' "$dirt" | tr '\n' '; ')"
+    fi
+    if [ -z "$unfinished" ] || { [ -n "$latest" ] && [ "$latest" != "$unfinished" ]; }; then
         git_safe -C "$REPO" merge --ff-only "refs/tags/${latest}" \
             || die "${latest} does not follow the installed version; the checkout has local commits"
         log "updated to ${latest}"

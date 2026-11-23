@@ -33,6 +33,7 @@ Singleton {
     property var _ran: []
     property int _gen: 0
     property int _hold: 0
+    property double _checkedAt: 0
     property bool restarting: false
     property var desktop: ({ kind: "desktop", name: "", from: "", to: "", pending: false, reason: "", iconName: "", iconSource: Paths.brandLogo, subtitle: "" })
     signal finished(bool ok)
@@ -51,8 +52,7 @@ Singleton {
     UpdateClassify { id: classify }
     UpdateProgress { id: meter }
 
-    // The release rewrites the shell's own files mid-update. A reload then
-    // would restart this service halfway; the finished update reloads once.
+    // A reload mid-update would restart this service; the finished update reloads once.
     Binding { target: Quickshell; property: "watchFiles"; value: false; when: root.running }
 
     Process {
@@ -91,7 +91,7 @@ Singleton {
         onFinished: (ok) => {
             root.notify(ok ? I18n.t("settings.update.mirrorsDone") : I18n.t("settings.update.mirrorsFailed"), "", "");
             if (ok)
-                root.refresh();
+                root.refresh(true);
         }
     }
 
@@ -115,13 +115,9 @@ Singleton {
         running: root.watching
         repeat: true
         triggeredOnStart: true
-        onTriggered: {
-            if (!root.running && !root.checking)
-                root.refresh();
-        }
+        onTriggered: root.refresh()
     }
 
-    // 100% stays up briefly. Closing the log starts the UI restart.
     Timer {
         id: closeTimer
         interval: Motion.updateSettleMs
@@ -137,16 +133,20 @@ Singleton {
         omit[n] = true;
         root._omit = omit;
         root._hold = root._gen + 1;
-        root.refresh();
+        root.refresh(true);
     }
 
-    function refresh() {
+    function refresh(force: bool) {
         if (root.running)
             return;
+        if (!force && root._checkedAt > 0 && Date.now() - root._checkedAt < Motion.updateCheckGapMs)
+            return;
         if (root.checking) {
-            root._queued = true;
+            if (force)
+                root._queued = true;
             return;
         }
+        root._checkedAt = Date.now();
         root._gen += 1;
         root.checking = true;
         root.error = "";
@@ -262,7 +262,7 @@ Singleton {
         root._rebuildLists();
         if (root._queued) {
             root._queued = false;
-            root.refresh();
+            root.refresh(true);
         }
     }
 

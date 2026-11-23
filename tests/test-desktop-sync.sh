@@ -42,7 +42,8 @@ git_cfg -C "$CLONE" tag -a v0.1.0 -m v0.1.0
 git_cfg -C "$CLONE" push origin HEAD >/dev/null
 git_cfg -C "$CLONE" push origin v0.1.0 >/dev/null
 printf 'two\n' >>"$CLONE/readme"
-git_cfg -C "$CLONE" add readme
+printf 'release\n' >"$CLONE/added.sh"
+git_cfg -C "$CLONE" add readme added.sh
 git_cfg -C "$CLONE" commit -m two >/dev/null
 git_cfg -C "$CLONE" tag -a v0.2.0 -m v0.2.0
 git_cfg -C "$CLONE" tag -a v0.2.0-rc1 -m rc
@@ -139,6 +140,36 @@ else
     ok "untracked file in the home clone still refuses apply"
 fi
 rm -f "$inst_home/modern_os/stray.txt"
+git_cfg -C "$inst_home/modern_os" checkout --detach v0.1.0 >/dev/null 2>&1
+printf 'overlay-copy\n' >"$inst_home/modern_os/added.sh"
+if "$SYNC" apply >/dev/null 2>"$TMP/apply-added.err" \
+    && [ "$(git_cfg -C "$inst_home/modern_os" describe --tags --exact-match HEAD)" = v0.2.0 ] \
+    && [ "$(cat "$inst_home/modern_os/added.sh")" = release ]; then
+    ok "an installer file the release contains is replaced"
+else
+    err "overlay file blocked the update: $(cat "$TMP/apply-added.err")"
+fi
+export HOME="$old_home"
+export MODERN_DESKTOP_REPO="$old_repo"
+
+# This machine develops in its own checkout, often sitting on a release
+# commit with local edits. Update must not discard those.
+dev_home="$TMP/devhome"
+mkdir -p "$dev_home"
+cp -a "$CLONE" "$dev_home/modern_os"
+git_cfg -C "$dev_home/modern_os" checkout -B dev >/dev/null 2>&1
+printf 'local edit\n' >>"$dev_home/modern_os/readme"
+printf 'keep me\n' >"$dev_home/modern_os/notes.txt"
+export HOME="$dev_home"
+export MODERN_DESKTOP_REPO="$dev_home/modern_os"
+if "$SYNC" apply >/dev/null 2>"$TMP/apply-dev.err"; then
+    err "a development branch must not be updated over local edits"
+elif ! grep -q 'local edit' "$dev_home/modern_os/readme" \
+    || [ "$(cat "$dev_home/modern_os/notes.txt")" != "keep me" ]; then
+    err "update changed a development checkout"
+else
+    ok "a development checkout on a release commit keeps its edits"
+fi
 export HOME="$old_home"
 export MODERN_DESKTOP_REPO="$old_repo"
 

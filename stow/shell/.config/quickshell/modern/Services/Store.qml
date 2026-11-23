@@ -64,7 +64,6 @@ Singleton {
             // button on Remove until it returned.
             fetch.noteInstalled(mutate.lastName, mutate.doneAction !== "remove");
             Update.drop(mutate.lastName);
-            Update.refresh();
             root.reload();
             if (root.detailName.length)
                 infoBox.load(root.detailName);
