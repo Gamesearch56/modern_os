@@ -685,9 +685,11 @@ def _plymouth_drop_master() -> None:
         pass
 
 
-def _adopt_fd(fd: int) -> str:
+def _adopt_fd(fd: int, modeset: bool = True) -> str:
     """Caller holds master. A scanning picture is page-flipped. An off
-    controller is programmed once."""
+    controller is programmed once, and only when modeset is allowed.
+    Logout and login must not modeset: this panel draws its firmware
+    logo for every retrain, and the next compositor retrains again."""
     live = _live_crtc(fd)
     if live:
         if _crtc_fb(fd, live) in OUR_FBS:
@@ -698,6 +700,9 @@ def _adopt_fd(fd: int) -> str:
             return f"seat-cover: replaced scanout without a modeset CRTC_ID={live}"
         # The flip did not land. An empty note makes the first adopt
         # try again. SETCRTC here would be the logo.
+        _drop_master(fd)
+        return ""
+    if not modeset:
         _drop_master(fd)
         return ""
     held = _paint_best(fd)
@@ -775,17 +780,18 @@ def hold() -> int:
         if live:
             # The guard, or the client that just exited, already has a
             # frame on the link. Another modeset is the logo flash.
+            if _crtc_fb(fd, live) not in OUR_FBS:
+                _replace_live(fd, live)
             print(f"seat-cover: keeping live scanout CRTC_ID={live}", file=sys.stderr)
             _drop_master(fd)
             _hold_fd(fd)
             opened.clear()
             return 0
-        attached = _paint_best(fd)
-        if attached < 0:
-            print("seat-cover: previous display owner still active", file=sys.stderr)
-        elif attached == 0:
-            _drop_master(fd)
-            print("seat-cover: no mode to replace", file=sys.stderr)
+        # The previous compositor already cleared CRTC_ID. Programming a
+        # mode here retrains the panel, which is the firmware logo, and
+        # the next compositor retrains it again. Leave the link alone.
+        _drop_master(fd)
+        print("seat-cover: link already dark, leaving the mode for the next compositor", file=sys.stderr)
         _hold_fd(fd)
         opened.clear()
         return 0
@@ -878,10 +884,10 @@ def pin() -> int:
             print(note, file=sys.stderr)
         _signal_ready(write_fd)
         # Stay up for logout as well. The previous compositor turns the
-        # panel off as it leaves, and that gap is the logo. A live
-        # picture is not reprogrammed. Master is taken only when the
-        # picture is already gone or no compositor is running, so a
-        # session that is still drawing is left alone.
+        # panel off as it leaves. Reprogramming that dark link retrains
+        # it, which is the firmware logo, and the next compositor does
+        # it again. A picture that is still scanning is page-flipped.
+        # A dark one is left for that next compositor.
         reported = note
         quiet_until = 0.0
         while True:
@@ -909,7 +915,7 @@ def pin() -> int:
                 except OSError:
                     delay = 0.02
                     continue
-                new_note = _adopt_fd(fd)
+                new_note = _adopt_fd(fd, modeset=False)
                 break
             if new_note and new_note != reported:
                 print(new_note, file=sys.stderr)
