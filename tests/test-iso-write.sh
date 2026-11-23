@@ -148,6 +148,23 @@ if [ "$chosen" = "$high_iso" ]; then
 else
     err "higher version chose $chosen"
 fi
+mkdir -p "$pick/repo/iso/out/release/v0.8.12"
+folder_iso="$pick/repo/iso/out/release/v0.8.12/modernos-x86_64.iso"
+: >"$folder_iso"
+touch -d '2018-01-01 00:00:00' "$folder_iso"
+chosen="$(HOME="$pick/home" XDG_CACHE_HOME="$pick/home/.cache" iso_newest_release "$pick/repo")"
+if [ "$chosen" = "$folder_iso" ]; then
+    ok "a release folder name beats an older version in the file name"
+else
+    err "release folder chose $chosen"
+fi
+label="$(iso_image_label "$folder_iso")"
+if [ "$label" = "v0.8.12/modernos-x86_64.iso" ] \
+    && [ "$(iso_image_label "$high_iso")" = "modernos-v0.8.11-x86_64.iso" ]; then
+    ok "a release image is printed with its folder"
+else
+    err "image label was $label"
+fi
 
 if grep -Fq 'iso_newest_release' "$ROOT/scripts/iso-qemu.sh" \
     && grep -Fq 'iso_newest_release' "$WRITE"; then

@@ -44,7 +44,7 @@ MStatusCard {
         iconAfter: true
         busy: Update.checking
         enabled: Passwd.canManage && !Update.running && !Update.mirrorsRunning && !Update.restarting
-        onClicked: Update.refresh()
+        onClicked: Update.refresh(true)
     }
 
     MLinearProgress {

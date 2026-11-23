@@ -73,6 +73,9 @@ Singleton {
     readonly property int durationUpdateSettle: 400
     // After the link is up, before the one login update check. Wall clock.
     readonly property int durationBootSettle: 12000
+    // Boot and opening the update page share one search. A second automatic
+    // search inside this gap is skipped; the search button ignores it.
+    readonly property int durationUpdateCheckGap: 300000
     // Re-read of a file another process is still rewriting — never scaled.
     readonly property int durationFileSettle: 400
     // Overlays fade out before a problem report's screenshots — wall clock.
@@ -107,6 +110,7 @@ Singleton {
     readonly property int bluetoothWarmMs: root.durationBluetoothWarm
     readonly property int updateSettleMs: root.durationUpdateSettle
     readonly property int bootSettleMs: root.durationBootSettle
+    readonly property int updateCheckGapMs: root.durationUpdateCheckGap
     readonly property int fileSettleMs: root.durationFileSettle
     readonly property int processWatchMs: root.durationProcessWatch
     readonly property int reportCaptureMs: root.durationReportCapture
