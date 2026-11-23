@@ -1,6 +1,34 @@
 # shellcheck shell=bash
-# Newest modernos-v*-x86_64.iso already on this computer.
+# Newest ModernOS image already on this computer.
 # $1 repo root, $2 optional extra directory (iso-qemu's MODERN_ISO_OUT).
+# A release copy is iso/out/release/vX.Y.Z/modernos-x86_64.iso: the version
+# is the folder, because the file name is the GitHub asset name.
+
+iso_image_version() {
+    local base="$1" name parent
+    name="$(basename "$base")"
+    if [ "$name" = "modernos-x86_64.iso" ]; then
+        parent="$(basename "$(dirname "$base")")"
+        printf '%s\n' "$parent"
+        return 0
+    fi
+    name="${name#modernos-}"
+    name="${name%-x86_64.iso}"
+    printf '%s\n' "$name"
+}
+
+# What iso-write prints. A release copy is v0.8.11/modernos-x86_64.iso
+# so the folder tells the version apart from the shared file name.
+iso_image_label() {
+    local base="$1" name parent
+    name="$(basename "$base")"
+    parent="$(basename "$(dirname "$base")")"
+    if [ "$name" = "modernos-x86_64.iso" ] && [[ "$parent" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        printf '%s/%s\n' "$parent" "$name"
+        return 0
+    fi
+    printf '%s\n' "$name"
+}
 
 iso_newest_release() {
     local root="$1" extra="${2:-}" cache="${XDG_CACHE_HOME:-$HOME/.cache}"
@@ -10,7 +38,7 @@ iso_newest_release() {
     globs=(
         "$root"/modernos-v*-x86_64.iso
         "$root"/iso/out/modernos-v*-x86_64.iso
-        "$root"/iso/out/release/*/modernos-v*-x86_64.iso
+        "$root"/iso/out/release/v*/modernos-x86_64.iso
         "$cache"/modern-v*/iso/out/modernos-v*-x86_64.iso
         "$HOME/.cache"/modern-v*/iso/out/modernos-v*-x86_64.iso
         /tmp/modern-v*/iso/out/modernos-v*-x86_64.iso
@@ -26,9 +54,7 @@ iso_newest_release() {
     # of v0.8.10 is chosen over the release image of that same name.
     found="$(
         for base in "${candidates[@]}"; do
-            ver="$(basename "$base")"
-            ver="${ver#modernos-}"
-            ver="${ver%-x86_64.iso}"
+            ver="$(iso_image_version "$base")"
             printf '%s\t%s\t%s\n' "$ver" "$(stat -c '%Y' "$base")" "$base"
         done | sort -k1,1V -k2,2n | tail -n 1 | cut -f3-
     )"

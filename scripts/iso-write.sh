@@ -22,10 +22,11 @@ Usage: iso-write.sh [--iso FILE|URL] [--disk /dev/sdX] [--yes] [--dry-run]
            iso-write.sh [FILE|URL]
 
 Writes an image onto a USB disk. --iso may be a local file or an
-https link. With no --iso, the newest modernos-v*-x86_64.iso already
-on this computer is used (the repo, iso/out, or the release build
-cache). Two files of the same version use the one written last, so
-the image just built in iso/out wins over the release copy. With no
+https link. With no --iso, the newest image already on this computer
+is used (the repo, iso/out, iso/out/release/vX.Y.Z, or the release
+build cache). The release folder name is the version. Two files of
+the same version use the one written last, so the image just built
+in iso/out wins over the release copy. With no
 --disk, the disk must be the only one whose model
 contains DataTraveler. --disk may name another whole USB disk. NVMe
 and partitions are refused. You must type the device name (sdb) before
@@ -227,7 +228,7 @@ MOUNTS="$(disk_field "$NAME" mounts "$JSON")"
 [ "$DEV_SIZE" -gt "$ISO_SIZE" ] || die "/dev/$NAME ($(human "$DEV_SIZE")) is smaller than the ISO ($(human "$ISO_SIZE"))"
 
 printf 'iso-write: %s (%s) -> /dev/%s %s (%s)\n' \
-    "$(basename "$ISO")" "$(human "$ISO_SIZE")" \
+    "$(iso_image_label "$ISO")" "$(human "$ISO_SIZE")" \
     "$NAME" "$MODEL" "$(human "$DEV_SIZE")"
 mount_list=()
 if [ -n "$MOUNTS" ]; then
@@ -273,4 +274,4 @@ else
         sync
     ' bash "$ISO" "/dev/$NAME" "${mount_list[@]}"
 fi
-printf 'iso-write: wrote %s to /dev/%s\n' "$(basename "$ISO")" "$NAME"
+printf 'iso-write: wrote %s to /dev/%s\n' "$(iso_image_label "$ISO")" "$NAME"
