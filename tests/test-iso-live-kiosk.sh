@@ -706,6 +706,12 @@ else
     err "packages.x86_64 must list linux-zen (not stock linux), rsync, python, yay-bin, m0 AUR, pipewire-jack, pipewire-pulse (no linux-zen-headers)"
 fi
 
+if grep -qxF 'python-gobject' "$PKGS"; then
+    ok "live ISO ships python-gobject for the Wi-Fi join"
+else
+    err "packages.x86_64 must list python-gobject or every Wi-Fi password fails before it is checked"
+fi
+
 if grep -qxF 'nbd' "$PKGS" && grep -qxF 'mkinitcpio-nfs-utils' "$PKGS" \
     && [ -x "$ROOT/iso/airootfs/usr/lib/initcpio/ipconfig" ]; then
     ok "live initramfs hooks have nbd, nfs, and ipconfig"

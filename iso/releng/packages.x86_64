@@ -35,6 +35,10 @@ grub
 cryptsetup
 lvm2
 networkmanager
+# The live installer adds a Wi-Fi profile through libnm. Without this
+# package the helper exits before the password is checked, and a right
+# password looks the same as a wrong one.
+python-gobject
 iwd
 iw
 wpa_supplicant

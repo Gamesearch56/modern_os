@@ -110,6 +110,10 @@ if [[ $* == '-g GENERAL.STATE device show wlan0' ]]; then
     printf '%s\n' "${WAKE_STATE:-30 (disconnected)}"
     exit 0
 fi
+if [[ $* == connection\ load\ * ]]; then
+    printf 'loaded\n' >"${state}.loaded"
+    exit 0
+fi
 if [[ $* == '-t -f DEVICE,TYPE,STATE device status' ]]; then
     tries="${state}.tries"
     n=0
@@ -371,6 +375,7 @@ fi
 if grep -Fq '/usr/lib/modern/wifi-join.sh' "$NM" && grep -Fq 'closeWriteChannel' "$NM" \
     && ! grep -Fq 'QStringLiteral( "password" )' "$NM" \
     && grep -Fq 'scripts/wifi-join.sh' "$ROOT/scripts/iso-build.sh" \
+    && grep -Fq 'scripts/wifi-join-add.py' "$ROOT/scripts/iso-build.sh" \
     && grep -Fq 'usr/lib/modern/wifi-join.sh' "$ROOT/iso/airootfs/usr/lib/modern/calamares-late.sh" \
     && grep -Fq 'joinProc.write' "$JOIN_QML" && ! grep -Fq 'cmd.push(extra)' "$JOIN_QML"; then
     ok "shell and installer hand the password over stdin"
@@ -406,6 +411,28 @@ if timeout 5 env LOG="$LOG" WIFI_JOIN_STATE="$STATE" HANG_LIST=1 WIFI_JOIN_SECUR
     fi
 else
     err "joining with a known security waited on the scan"
+fi
+
+cat >"$TMP/add-fail" <<'EOF'
+#!/bin/sh
+echo 'wifi-join-add: no gi' >&2
+exit 1
+EOF
+chmod +x "$TMP/add-fail"
+rm -f "$STATE.loaded"
+if timeout 8 env LOG="$LOG" WIFI_JOIN_STATE="$STATE" WIFI_JOIN_SECURITY='WPA2' \
+    MODERN_NMCLI="$TMP/nmcli" MODERN_WIFI_ADD="$TMP/add-fail" \
+    MODERN_WIFI_SECRETS_DIR="$TMP" MODERN_WIFI_CONN_DIR="$TMP" \
+    "$JOIN" connect 'Cafe Net' - <<<"right-password" >/dev/null; then
+    if [[ -f $STATE.loaded ]] \
+        && grep -F 'connection up uuid' "$LOG" >/dev/null \
+        && ! grep -F 'right-password' "$LOG" >/dev/null; then
+        ok "a missing libnm helper still joins from the keyfile"
+    else
+        err "missing libnm helper did not load the keyfile: $(tr '\n' ' ' <"$LOG")"
+    fi
+else
+    err "missing libnm helper failed the join"
 fi
 
 if [[ $FAIL -ne 0 ]]; then

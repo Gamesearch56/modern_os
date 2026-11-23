@@ -233,6 +233,8 @@ install -m 0755 "$ROOT/iso/airootfs/usr/lib/modern/live-wifi-up.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/live-wifi-up.sh"
 install -m 0755 "$ROOT/scripts/wifi-join.sh" \
     "$AIROOTFS_OUT/usr/lib/modern/wifi-join.sh"
+install -m 0755 "$ROOT/scripts/wifi-join-add.py" \
+    "$AIROOTFS_OUT/usr/lib/modern/wifi-join-add.py"
 # Cage ignores setxkbmap. This is loaded into cage and switches its
 # keymap when the installer writes a layout. Without it, German still
 # types Y for the key labeled Z, and the Wi-Fi password is the wrong one.

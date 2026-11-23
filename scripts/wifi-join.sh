@@ -142,6 +142,18 @@ add_keyfile() {
     "$helper" "$file"
 }
 
+# python-gobject is what libnm needs. The live image did not ship it, so
+# every password failed before NetworkManager saw it. Root loads the same
+# 0600 keyfile from NetworkManager's directory instead.
+load_saved_keyfile() {
+    local file=$1 uuid=$2 dir dest
+    dir=${MODERN_WIFI_CONN_DIR:-/etc/NetworkManager/system-connections}
+    [[ -d $dir && -w $dir ]] || return 1
+    dest="$dir/modern-${uuid}.nmconnection"
+    install -m 600 "$file" "$dest" || return 1
+    nmcli_to 8 connection load "$dest"
+}
+
 connect_psk() {
     local ssid=$1 psk=$2 sec km out uuid rc=0 file
     # The installer already showed this network, so it knows the security.
@@ -171,13 +183,18 @@ connect_psk() {
         printf '%s\n' '[ipv4]' 'method=auto' '' '[ipv6]' 'method=auto' ''
     } >"$file"
     chmod 600 "$file"
-    # libnm reads the file. nmcli's "import type keyfile" looks for a VPN
+        # libnm reads the file. nmcli's "import type keyfile" looks for a VPN
     # plugin of that name and returns before the password is ever tried.
+    # The live image's helper needs python-gobject. When that import
+    # fails, root can still load the same keyfile. The secret stays in
+    # the file, not on argv, and a wrong password is still exit 3.
     out=$(add_keyfile "$file" 2>&1) || {
         printf '%s\n' "$out" >&2
-        cleanup_pw
-        forget_ssid "$ssid"
-        return 1
+        if ! load_saved_keyfile "$file" "$uuid"; then
+            cleanup_pw
+            forget_ssid "$ssid"
+            return 1
+        fi
     }
     printf 'status:address\n'
     nm_up connection up uuid "$uuid" || rc=$?
