@@ -73,6 +73,14 @@ if [[ $* == *'connection up uuid '* ]]; then
         printf 'Error: Connection activation failed: disconnected during authentication, asking for new key.\n' >&2
         exit 1
     fi
+    if [[ ${FAIL_SUPPLICANT:-0} -eq 1 ]]; then
+        printf 'Error: Connection activation failed: (10) 802.1X supplicant failed.\n' >&2
+        exit 1
+    fi
+    if [[ ${FAIL_SUPPLICANT_DISC:-0} -eq 1 ]]; then
+        printf 'Error: Connection activation failed: (8) 802.1X supplicant disconnected.\n' >&2
+        exit 1
+    fi
     if [[ ${FAIL_GENERIC:-0} -eq 1 ]]; then
         printf 'Error: Connection activation failed: the device is not ready.\n' >&2
         exit 1
@@ -160,6 +168,8 @@ if printf '%s\n' 'correct pass\x' | run_join connect 'Cafe Net' -; then
         && grep -F 'psk=correct pass\\x' "$STATE.secret" >/dev/null \
         && grep -F 'key-mgmt=wpa-psk' "$STATE.secret" >/dev/null \
         && grep -F 'powersave=2' "$STATE.secret" >/dev/null \
+        && grep -F 'cloned-mac-address=permanent' "$STATE.secret" >/dev/null \
+        && grep -F 'auth-retries=3' "$STATE.secret" >/dev/null \
         && ! compgen -G "$TMP/wifi-join.*" >/dev/null; then
         ok "password goes through a private keyfile, never argv, and the file is removed"
     else
@@ -188,6 +198,26 @@ if [[ $rc -eq 3 ]]; then
     ok "a supplicant rejection is a wrong password"
 else
     err "supplicant rejection exited $rc"
+fi
+
+printf 'home\n' >"$STATE"
+rm -f "$STATE.left"
+rc=0
+printf 'wrongpass\n' | FAIL_SUPPLICANT=1 run_join connect 'Cafe Net' - 2>/dev/null || rc=$?
+if [[ $rc -eq 3 ]]; then
+    ok "nmcli's supplicant-failed sentence is a wrong password"
+else
+    err "nmcli supplicant failed exited $rc"
+fi
+
+printf 'home\n' >"$STATE"
+rm -f "$STATE.left"
+rc=0
+printf 'wrongpass\n' | FAIL_SUPPLICANT_DISC=1 run_join connect 'Cafe Net' - 2>/dev/null || rc=$?
+if [[ $rc -eq 3 ]]; then
+    ok "nmcli's supplicant-disconnected sentence is a wrong password"
+else
+    err "nmcli supplicant disconnected exited $rc"
 fi
 
 printf 'home\n' >"$STATE"
@@ -354,7 +384,7 @@ else
     err "installer wifi actions were not updated"
 fi
 
-if grep -Fq 'auth-retries=1' "$JOIN" \
+if grep -Fq 'auth-retries=3' "$JOIN" \
     && grep -Fq 'stop_wifi_attempt' "$JOIN" \
     && grep -Fq -- '--rescan no' "$NM" \
     && grep -Fq 'scanLimit->start( 25000 )' "$NM" \

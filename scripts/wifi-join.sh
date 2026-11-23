@@ -87,9 +87,20 @@ nm_up() {
     if [[ $rc -eq 10 || $err == *"could not be found"* || $err == *"No network with SSID"* ]]; then
         return 4
     fi
-    # A wrong key is "asking for new key" or a supplicant disconnect, not
-    # only the word Secrets. Those used to share the generic failure text.
-    if [[ $err == *[Ss]ecret* || $err == *"new key"* || $err == *supplicant-disconnect* || $err == *supplicant-failed* || $err == *supplicant-config-failed* ]]; then
+    # nmcli says "802.1X supplicant took too long to authenticate", not
+    # the journal's hyphenated reason. That is a timeout, not a bad key.
+    if [[ $err == *"took too long"* || $err == *"(11)"* ]]; then
+        return 5
+    fi
+    # A wrong key is reason 7, 8, 9 or 10. The sentence is "supplicant
+    # failed", not "supplicant-failed", so the hyphenated names never
+    # matched and every password looked like a generic failure.
+    if [[ $err == *"(7)"* || $err == *"(8)"* || $err == *"(9)"* || $err == *"(10)"* \
+        || $err == *[Ss]ecret* || $err == *"new key"* \
+        || $err == *"supplicant failed"* || $err == *"supplicant disconnected"* \
+        || $err == *"supplicant configuration failed"* \
+        || $err == *supplicant-disconnect* || $err == *supplicant-failed* \
+        || $err == *supplicant-config-failed* ]]; then
         return 3
     fi
     return 1
@@ -170,16 +181,21 @@ connect_psk() {
     uuid=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || true)
     [[ -n $uuid ]] || return 1
     # The secret is in the profile before activation, so NetworkManager
-    # does not ask for a password window this screen cannot show. One
-    # auth retry: the default keeps asking and a wrong password never
-    # returns. Powersave drops the association on the Realtek chips in
-    # these laptops, so a correct password never finishes.
+    # does not open a password window this screen cannot show. One try
+    # made a dropped Realtek handshake look like a wrong password and a
+    # right one the same. Three tries still finish inside the installer's
+    # limit. A random MAC is rejected by the same chips, so the address
+    # stays the one the radio probed with.
     PW_DIR=$(umask 077 && mktemp -d "$SECRETS_DIR/wifi-join.XXXXXX")
     file="$PW_DIR/wifi.nmconnection"
+    pmf=2
+    [[ $km != sae ]] || pmf=3
     {
-        printf '%s\n' '[connection]' "id=$(kf_escape "$ssid")" "uuid=$uuid" 'type=wifi' 'auth-retries=1' 'autoconnect=true' ''
-        printf '%s\n' '[wifi]' 'mode=infrastructure' 'powersave=2' "ssid=$(kf_escape "$ssid")" ''
-        printf '%s\n' '[wifi-security]' "key-mgmt=$km" "psk=$(kf_escape "$psk")" ''
+        printf '%s\n' '[connection]' "id=$(kf_escape "$ssid")" "uuid=$uuid" 'type=wifi' 'auth-retries=3' 'autoconnect=true' ''
+        printf '%s\n' '[wifi]' 'mode=infrastructure' 'powersave=2' \
+            'mac-address-randomization=1' 'cloned-mac-address=permanent' \
+            "ssid=$(kf_escape "$ssid")" ''
+        printf '%s\n' '[wifi-security]' "key-mgmt=$km" "pmf=$pmf" "psk=$(kf_escape "$psk")" ''
         printf '%s\n' '[ipv4]' 'method=auto' '' '[ipv6]' 'method=auto' ''
     } >"$file"
     chmod 600 "$file"
