@@ -718,6 +718,11 @@ if grep -qxF 'nbd' "$PKGS" && grep -qxF 'mkinitcpio-nfs-utils' "$PKGS" \
 else
     err "packages.x86_64 must list nbd and mkinitcpio-nfs-utils, and airootfs must not ship ipconfig"
 fi
+if grep -F 'rm -rf "$AIROOTFS_OUT"' "$BUILD" >/dev/null; then
+    ok "staging airootfs is replaced, so a removed file cannot linger"
+else
+    err "iso-build must remove the staging airootfs before copying it"
+fi
 
 # shellcheck source=../scripts/lib/iso-bundle.sh
 source "$ROOT/scripts/lib/iso-bundle.sh"

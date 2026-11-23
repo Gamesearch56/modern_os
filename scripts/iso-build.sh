@@ -207,6 +207,10 @@ WORK="$abs_out/work"
 BRAND_HOME="$WORK/brand-home"
 AIROOTFS_OUT="$abs_out/airootfs"
 rm -rf "$WORK"
+# Staging lives beside work/, so the wipe above leaves it. cp -a merges,
+# and a file removed from iso/airootfs (the ipconfig stand-in) then stays
+# and pacman aborts with "exists in filesystem".
+rm -rf "$AIROOTFS_OUT"
 mkdir -p "$BRAND_HOME/.config/modern/themes" \
     "$BRAND_HOME/.config/matugen/templates" \
     "$BRAND_HOME/.config/modern/wallpapers" \
