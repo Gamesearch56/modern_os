@@ -38,10 +38,7 @@ FocusScope {
         gap: Math.round(Tokens.spacing.md),
         tight: Math.round(Tokens.spacing.xs),
         headGap: Math.round(Tokens.spacing.xl),
-        pad: Math.round(Tokens.spacing.sm),
-        // Pixels, not a percentage. Qt has treated the same percentage as
-        // both 1.5x and 150x, and the larger one is a blank page.
-        leading: Math.round(root._style.lineHeight * root._scale)
+        pad: Math.round(Tokens.spacing.sm)
     })
     readonly property string _html: root.doc
         ? String(root.doc.html || "").replace(/\{\{(\w+)(?::(\d+))?\}\}/g, (m, k, pct) => pct
@@ -58,6 +55,19 @@ FocusScope {
 
     function zoomBy(steps: int) {
         root.zoom = Math.max(root.zoomMin, Math.min(root.zoomMax, root.zoom + steps * root.zoomStep));
+    }
+
+    // While a new page is laid out, ignore the flick still running from
+    // the previous one. Interactive scrolling comes back on the next turn.
+    property bool _reset: false
+
+    function _showTop() {
+        root._reset = true;
+        flick.contentY = 0;
+        Qt.callLater(() => {
+            flick.contentY = 0;
+            root._reset = false;
+        });
     }
 
     // Past the last link Tab is left unhandled, so focus moves on.
@@ -82,7 +92,7 @@ FocusScope {
 
     onDocChanged: {
         body.deselect();
-        flick.contentY = 0;
+        root._showTop();
         root._stops = null;
         root._stop = -1;
     }
@@ -150,6 +160,8 @@ FocusScope {
         contentWidth: width
         contentHeight: body.contentHeight + Tokens.spacing.xl * 2
         boundsBehavior: Flickable.StopAtBounds
+        interactive: !root._reset
+        onContentHeightChanged: if (root._reset) contentY = 0
 
         TextEdit {
             id: body

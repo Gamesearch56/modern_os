@@ -30,13 +30,14 @@ fi
 
 cat >"$TMP/systemctl" <<'EOF'
 #!/bin/sh
-printf '%s\n' "$*" >"$MODERN_OLLAMA_LOG"
+printf '%s\n' "$*" >>"$MODERN_OLLAMA_LOG"
 EOF
 chmod +x "$TMP/systemctl"
 export MODERN_OLLAMA_LOG="$TMP/log"
+: >"$TMP/log"
 MODERN_OLLAMA_SYSTEMCTL="$TMP/systemctl" "$ENABLE"
-if [ "$(cat "$TMP/log")" = "enable --now ollama.service" ]; then
-    ok "enable starts ollama.service"
+if [ "$(cat "$TMP/log")" = $'unmask ollama.service\nenable --now ollama.service' ]; then
+    ok "enable clears a mask and starts ollama.service"
 else
     err "enable command: $(cat "$TMP/log" 2>/dev/null)"
 fi
@@ -106,6 +107,16 @@ if [ "$(grep -cF 'visible: root.ollamaDone' "$SECTION")" -ge 4 ] \
     ok "model, search key, and options stay hidden until the model is installed"
 else
     err "ollama options show before setup finishes"
+fi
+
+STORE="$ROOT/stow/shell/.config/quickshell/modern/Services/Store.qml"
+AI="$ROOT/stow/shell/.config/quickshell/modern/Services/Ai.qml"
+if grep -Fq 'Ai.packageGone()' "$STORE" \
+    && grep -Fq 'function packageGone' "$AI" \
+    && grep -Fq 'focusStep: Ai.installed ? 1 : 0' "$INSTALL"; then
+    ok "removing ollama returns the guide to the first step"
+else
+    err "removing ollama leaves the guide on the download step"
 fi
 
 if grep -Fq 'ollama_quiet_pull' "$PULL" \

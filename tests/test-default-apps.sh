@@ -219,4 +219,28 @@ else
     ok "--can rejects a file with no handler"
 fi
 
+cat >"$tmp/.local/share/applications/firefox.desktop" <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=Firefox
+MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
+EOF
+printf '%s\n' '{"apps":{"defaults":{"browser":"firefox"}}}' >"$tmp/cfg/modern/config.json"
+if HOME="$tmp" XDG_CONFIG_HOME="$tmp/cfg" \
+    "$ROOT/scripts/mime-defaults.sh" --mimeapps "$tmp/mimeapps.list" \
+    && grep -qx 'x-scheme-handler/http=firefox.desktop' "$tmp/mimeapps.list" \
+    && grep -qx 'x-scheme-handler/https=firefox.desktop' "$tmp/mimeapps.list" \
+    && grep -qx 'text/html=firefox.desktop' "$tmp/mimeapps.list"; then
+    ok "the chosen browser becomes the handler for links and html"
+else
+    err "the chosen browser was not written into mimeapps.list"
+fi
+
+if grep -Fq 'apps.defaults.browser' "$ROOT/stow/shell/.config/quickshell/modern/Services/ConfigWritePaths.qml" \
+    && grep -Fq 'function role_id' "$ROOT/stow/hypr/.config/hypr/modules/keybinds.lua"; then
+    ok "Super+B and link opens follow the browser chosen in Settings"
+else
+    err "the browser shortcut still keeps the desktop id from startup"
+fi
+
 [ "$FAIL" -eq 0 ]

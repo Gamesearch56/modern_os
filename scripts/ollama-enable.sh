@@ -18,4 +18,7 @@ if [ -z "$SYSTEMCTL" ]; then
     SYSTEMCTL=/usr/bin/systemctl
 fi
 
+# enable refuses a masked unit. Setup is the request to run it, so a
+# mask left on the unit is cleared before the service is started.
+"$SYSTEMCTL" unmask ollama.service
 exec "$SYSTEMCTL" enable --now ollama.service

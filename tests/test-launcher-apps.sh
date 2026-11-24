@@ -64,6 +64,43 @@ else
     err "removing an app must drop it from the dock, autostart, defaults, and launcher lists"
 fi
 
+if {
+        grep -v '^\.pragma' "$ROOT/stow/shell/.config/quickshell/modern/Services/appEntries.js"
+        cat <<'JS'
+const modern = { "modern.imageviewer": true, "modern.mediaplayer": true, "modern.editor": true };
+if (keep("imageviewer", "modern-imageviewer %F", modern)) process.exit(1);
+if (keep("modern.imageviewer", "modern-imageviewer %F", modern) !== true) process.exit(1);
+if (keep("loupe", "loupe %F", modern) !== true) process.exit(1);
+const rows = [
+    { value: "wasistlos.desktop", titleValue: "wasistlos", _exec: "wasistlos" },
+    { value: "zapzap.desktop", titleValue: "zapzap", _exec: "zapzap" },
+    { value: "whatsapp-desktop.desktop", titleValue: "whatsapp-desktop", _exec: "whatsapp-desktop" },
+    { value: "io.github.mimbrero.WhatsAppDesktop.desktop", titleValue: "io.github.mimbrero.WhatsAppDesktop", _exec: "whatsapp" },
+    { value: "whatsapp.desktop", titleValue: "WhatsApp", _exec: "modern vivaldi --app=https://web.whatsapp.com" },
+    { value: "discord.desktop", titleValue: "Discord", _exec: "discord" },
+    { value: "org.mozilla.thunderbird.desktop", titleValue: "org.mozilla.thunderbird", _exec: "thunderbird" },
+    { value: "thunderbird.desktop", titleValue: "thunderbird", _exec: "thunderbird" },
+    { value: "org.proton.Mail.desktop", titleValue: "org.proton.mail", _exec: "proton-mail" },
+    { value: "proton-mail.desktop", titleValue: "Proton Mail", _exec: "modern vivaldi --app=https://mail.proton.me" },
+    { value: "imageviewer.desktop", titleValue: "imageviewer", _exec: "modern-imageviewer" },
+    { value: "modern.imageviewer.desktop", titleValue: "ModernOS Imageviewer", _exec: "modern-imageviewer" },
+    { value: "loupe.desktop", titleValue: "Loupe", _exec: "loupe" }
+];
+const ids = pick(rows).map(r => String(r.value).replace(/\.desktop$/, ""));
+function has(id) { return ids.indexOf(id) !== -1; }
+if (!has("whatsapp") || has("wasistlos") || has("zapzap") || has("whatsapp-desktop") || has("io.github.mimbrero.whatsappdesktop"))
+    process.exit(1);
+if (!has("discord") || !has("thunderbird") || has("org.mozilla.thunderbird"))
+    process.exit(1);
+if (!has("proton-mail") || has("org.proton.mail") || has("imageviewer") || !has("modern.imageviewer") || !has("loupe"))
+    process.exit(1);
+JS
+    } | node; then
+    ok "a short duplicate of a ModernOS app is not a second choice"
+else
+    err "the default list still offers imageviewer beside ModernOS Imageviewer"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

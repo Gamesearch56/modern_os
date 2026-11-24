@@ -1,7 +1,4 @@
-// Default-app launcher. Roles come from config apps.defaults
-// (browser, calendar, mail, communication, fileManager, videoPlayer,
-// imageViewer, textEditor, terminal). Empty text editor, image viewer,
-// and video player fall back through DefaultApps, not a second id here.
+// Default-app launcher. Roles come from config apps.defaults.
 // DesktopEntries lookup lives here so Modules never spawn processes.
 pragma Singleton
 
@@ -9,6 +6,7 @@ import Quickshell
 import QtQuick
 import "../Commons"
 import "fileManager.js" as FileManager
+import "appEntries.js" as AppEntries
 
 Singleton {
     id: root
@@ -47,39 +45,24 @@ Singleton {
             }
         }
         const out = [];
-        const seen = {};
         for (let i = 0; i < entries.length; i++) {
             const e = entries[i];
             const stem = root._stem(e.id || e.name);
             const pinned = !!(keep[stem]);
-            // MIME handlers often ship NoDisplay=true; a pinned id still shows.
             if (e.noDisplay && !pinned)
                 continue;
             if (role.length > 0 && !DesktopRoles.matches(role, e.categories, e.name, e.genericName, e.id, keep))
                 continue;
             const value = pinned ? (keep[stem] || e.id || e.name) : (e.id || e.name);
-            out.push({
-                value: value,
-                titleValue: e.name || e.id,
-                iconName: icons.resolve(String(e.icon || e.startupClass || e.id || value))
-            });
-            seen[stem] = true;
+            out.push({ value: value, titleValue: e.name || e.id,
+                iconName: icons.resolve(String(e.icon || e.startupClass || e.id || value)),
+                _exec: String(e.execString || "") });
         }
-        const missing = Object.keys(keep);
-        for (let j = 0; j < missing.length; j++) {
-            const stem = missing[j];
-            if (seen[stem])
-                continue;
-            const id = keep[stem];
-            const e = root._entryById(id);
-            out.push({
-                value: id,
-                titleValue: (e && e.name) ? e.name : stem,
-                iconName: icons.resolve(String((e && (e.icon || e.startupClass || e.id)) || id))
-            });
-        }
-        out.sort((a, b) => a.titleValue.localeCompare(b.titleValue));
-        return out;
+        // Fallback ids that are not installed are not choices. Listing
+        // them made every unofficial client look like a default app.
+        const kept = AppEntries.pick(out);
+        kept.sort((a, b) => a.titleValue.localeCompare(b.titleValue));
+        return kept;
     }
 
     function desktopId(role: string): string {
@@ -183,7 +166,7 @@ Singleton {
         if (role === "mail")
             return ["proton-mail.desktop", "proton-mail", "org.proton.Mail.desktop", "thunderbird.desktop", "org.mozilla.Thunderbird.desktop"];
         if (role === "communication")
-            return ["whatsapp.desktop", "whatsapp-desktop.desktop", "whatsapp-for-linux.desktop", "com.rtg.whatsapp.desktop", "io.github.mimbrero.WhatsAppDesktop.desktop", "wasistlos.desktop", "zapzap.desktop"];
+            return ["whatsapp.desktop"];
         const shipped = DefaultApps.ids(role);
         if (shipped.length)
             return shipped;

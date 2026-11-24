@@ -29,10 +29,11 @@ IMAGE_ID=""
 TEXT_ID=""
 FILES_ID=""
 MAIL_ID=""
+BROWSER_ID=""
 
 usage() {
     cat <<'EOF'
-Usage: mime-defaults.sh [--video DESKTOP] [--image DESKTOP] [--text DESKTOP] [--files DESKTOP] [--mail DESKTOP] [--config PATH] [--mimeapps PATH]
+Usage: mime-defaults.sh [--video DESKTOP] [--image DESKTOP] [--text DESKTOP] [--files DESKTOP] [--mail DESKTOP] [--browser DESKTOP] [--config PATH] [--mimeapps PATH]
 EOF
 }
 
@@ -43,6 +44,7 @@ while [ $# -gt 0 ]; do
         --text) TEXT_ID="${2:-}"; shift 2 ;;
         --files) FILES_ID="${2:-}"; shift 2 ;;
         --mail) MAIL_ID="${2:-}"; shift 2 ;;
+        --browser) BROWSER_ID="${2:-}"; shift 2 ;;
         --config) CONFIG="${2:-}"; shift 2 ;;
         --mimeapps) MIMEAPPS="${2:-}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
@@ -83,7 +85,8 @@ desktop_file() {
 
 mime_types() {
     local file="$1"
-    grep -E '^MimeType=' "$file" | head -n1 | cut -d= -f2- | tr ';' '\n' | sed '/^$/d'
+    # A desktop with no MimeType= line must not abort the other roles.
+    grep -E '^MimeType=' "$file" | head -n1 | cut -d= -f2- | tr ';' '\n' | sed '/^$/d' || true
 }
 
 [ -n "$VIDEO_ID" ] || VIDEO_ID="$(from_config videoPlayer)"
@@ -91,6 +94,7 @@ mime_types() {
 [ -n "$TEXT_ID" ] || TEXT_ID="$(from_config textEditor)"
 [ -n "$FILES_ID" ] || FILES_ID="$(from_config fileManager)"
 [ -n "$MAIL_ID" ] || MAIL_ID="$(from_config mail)"
+[ -n "$BROWSER_ID" ] || BROWSER_ID="$(from_config browser)"
 [ -n "$VIDEO_ID" ] || VIDEO_ID="$(default_app_desktop videoPlayer || true)"
 [ -n "$IMAGE_ID" ] || IMAGE_ID="$(default_app_desktop imageViewer || true)"
 [ -n "$TEXT_ID" ] || TEXT_ID="$(default_app_desktop textEditor || true)"
@@ -100,6 +104,7 @@ IMAGE_ID="$(desktop_id "$IMAGE_ID")"
 TEXT_ID="$(desktop_id "$TEXT_ID")"
 FILES_ID="$(desktop_id "$FILES_ID")"
 MAIL_ID="$(desktop_id "$MAIL_ID")"
+BROWSER_ID="$(desktop_id "$BROWSER_ID")"
 
 pairs=""
 add_role() {
@@ -155,6 +160,20 @@ add_folder_role() {
     pairs="${pairs}inode/mount-point=${id}"$'\n'
 }
 
+# http and https are the default browser, even when the .desktop
+# omits them. Other types still come from its MimeType= line.
+add_browser_role() {
+    local id="$1"
+    [ -n "$id" ] || return 0
+    if ! desktop_file "$id" >/dev/null; then
+        echo "mime-defaults: no desktop file for $id" >&2
+        return 0
+    fi
+    pairs="${pairs}x-scheme-handler/http=${id}"$'\n'
+    pairs="${pairs}x-scheme-handler/https=${id}"$'\n'
+    add_role "$id"
+}
+
 # mailto: is pinned even if the mail .desktop omits MimeType=.
 add_mail_role() {
     local id="$1"
@@ -171,6 +190,7 @@ add_role "$IMAGE_ID"
 add_text_role "$TEXT_ID"
 add_folder_role "$FILES_ID"
 add_mail_role "$MAIL_ID"
+add_browser_role "$BROWSER_ID"
 
 if [ -z "$pairs" ]; then
     echo "mime-defaults: nothing to apply" >&2

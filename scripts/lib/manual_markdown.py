@@ -149,9 +149,9 @@ def _list(lines: list[str], i: int) -> tuple[str, int]:
     for body in items:
         inner = render(body)
         inner = re.sub(r'^<p style="[^"]*">(.*?)</p>', r"\1", inner, count=1, flags=re.S)
-        # A percentage line-height is a multiplier in some Qt versions and
-        # a hundred times that in others, which opens a blank page.
-        out.append(f'<li style="margin-bottom:{{{{tight}}}}px;line-height:{{{{leading}}}}px;color:{{{{heading}}}}">{inner}</li>')
+        # No line-height. Qt has treated both a percentage and a pixel
+        # length as a multiplier, and either one opens a blank page.
+        out.append(f'<li style="margin-bottom:{{{{tight}}}}px;color:{{{{heading}}}}">{inner}</li>')
     out.append(f"</{tag}>")
     return "".join(out), i
 
@@ -206,7 +206,7 @@ def render(lines: list[str]) -> str:
                 and not ("|" in lines[i] and i + 1 < len(lines) and TABLE_RULE.match(lines[i + 1])):
             para.append(lines[i].strip())
             i += 1
-        out.append(f'<p style="margin-top:0px;margin-bottom:{{{{gap}}}}px;line-height:{{{{leading}}}}px;color:{{{{heading}}}}">{_inline(" ".join(para))}</p>')
+        out.append(f'<p style="margin-top:0px;margin-bottom:{{{{gap}}}}px;color:{{{{heading}}}}">{_inline(" ".join(para))}</p>')
     return "".join(out)
 
 

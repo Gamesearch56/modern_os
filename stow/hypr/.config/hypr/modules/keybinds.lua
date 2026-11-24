@@ -31,27 +31,43 @@ local modern_launch = paths.modern_launch
 local have_modern = readable(modern)
 local have_launch = readable(modern_launch)
 
-local function app_cmd(role, fallback)
+-- Read the role when the key is pressed. The bind used to keep the
+-- desktop id from the moment Hyprland loaded, so Settings → Applications
+-- changed the menu and Super+B still opened the previous browser.
+local function role_id(role, fallback)
     local id = config.value("apps.defaults." .. role, fallback) or fallback
-    id = tostring(id):gsub("%.desktop$", "")
+    return tostring(id):gsub("%.desktop$", "")
+end
+
+local function dispatch_exec(cmd)
+    if hl.dispatch and hl.dsp and hl.dsp.exec_cmd then
+        hl.dispatch(hl.dsp.exec_cmd(cmd))
+    end
+end
+
+local function app_cmd(role, fallback)
     -- File manager is one process. A plain gtk-launch focuses the
     -- window where it already is, so Super+E looks dead on this monitor.
-    local flag = ""
-    if role == "fileManager" then
-        flag = "--on-active "
+    local on_active = role == "fileManager"
+    return function()
+        local cmd = modern_launch .. " "
+        if on_active then
+            cmd = cmd .. "--on-active "
+        end
+        dispatch_exec(cmd .. role_id(role, fallback))
     end
-    return hl.dsp.exec_cmd(modern_launch .. " " .. flag .. id)
 end
 
 local function browser_incognito()
-    local id = config.value("apps.defaults.browser", "vivaldi-stable.desktop") or "vivaldi-stable.desktop"
-    id = tostring(id):gsub("%.desktop$", "")
-    local flag = "--incognito"
-    local lower = string.lower(id)
-    if lower:find("firefox", 1, true) or lower:find("librewolf", 1, true) then
-        flag = "--private-window"
+    return function()
+        local id = role_id("browser", "vivaldi-stable.desktop")
+        local flag = "--incognito"
+        local lower = string.lower(id)
+        if lower:find("firefox", 1, true) or lower:find("librewolf", 1, true) then
+            flag = "--private-window"
+        end
+        dispatch_exec(modern_launch .. " " .. id .. " " .. flag)
     end
-    return hl.dsp.exec_cmd(modern_launch .. " " .. id .. " " .. flag)
 end
 
 local workspaces = require("modules.workspaces")
