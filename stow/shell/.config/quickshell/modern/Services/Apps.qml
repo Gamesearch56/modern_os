@@ -45,7 +45,6 @@ Singleton {
             }
         }
         const out = [];
-        const seen = {};
         for (let i = 0; i < entries.length; i++) {
             const e = entries[i];
             const stem = root._stem(e.id || e.name);
@@ -58,26 +57,10 @@ Singleton {
             out.push({ value: value, titleValue: e.name || e.id,
                 iconName: icons.resolve(String(e.icon || e.startupClass || e.id || value)),
                 _exec: String(e.execString || "") });
-            seen[stem] = true;
         }
-        const missing = Object.keys(keep);
-        for (let j = 0; j < missing.length; j++) {
-            const stem = missing[j];
-            if (seen[stem])
-                continue;
-            const id = keep[stem];
-            const e = root._entryById(id);
-            out.push({ value: id, titleValue: (e && e.name) ? e.name : stem,
-                iconName: icons.resolve(String((e && (e.icon || e.startupClass || e.id)) || id)),
-                _exec: String((e && e.execString) || "") });
-        }
-        const modern = {};
-        for (let k = 0; k < out.length; k++) {
-            const s = root._stem(out[k].value);
-            if (s.indexOf("modern.") === 0)
-                modern[s] = true;
-        }
-        const kept = out.filter(row => AppEntries.keep(root._stem(row.value), row._exec, modern));
+        // Fallback ids that are not installed are not choices. Listing
+        // them made every unofficial client look like a default app.
+        const kept = AppEntries.pick(out);
         kept.sort((a, b) => a.titleValue.localeCompare(b.titleValue));
         return kept;
     }
@@ -183,7 +166,7 @@ Singleton {
         if (role === "mail")
             return ["proton-mail.desktop", "proton-mail", "org.proton.Mail.desktop", "thunderbird.desktop", "org.mozilla.Thunderbird.desktop"];
         if (role === "communication")
-            return ["whatsapp.desktop", "whatsapp-desktop.desktop", "whatsapp-for-linux.desktop", "com.rtg.whatsapp.desktop", "io.github.mimbrero.WhatsAppDesktop.desktop", "wasistlos.desktop", "zapzap.desktop"];
+            return ["whatsapp.desktop"];
         const shipped = DefaultApps.ids(role);
         if (shipped.length)
             return shipped;

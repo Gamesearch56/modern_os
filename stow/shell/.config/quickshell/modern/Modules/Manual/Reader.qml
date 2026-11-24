@@ -50,7 +50,6 @@ FocusScope {
     signal navRequested()
 
     function _scrollBy(dy: real) {
-        root._top = false;
         flick.contentY = Math.max(0, Math.min(flick.contentHeight - flick.height, flick.contentY + dy));
     }
 
@@ -58,22 +57,17 @@ FocusScope {
         root.zoom = Math.max(root.zoomMin, Math.min(root.zoomMax, root.zoom + steps * root.zoomStep));
     }
 
-    // Hold the top across the layout that follows a new document. The
-    // text height arrives after the page changes, and Flickable otherwise
-    // keeps the previous scroll, which lands in the empty stretch.
-    property bool _top: false
+    // While a new page is laid out, ignore the flick still running from
+    // the previous one. Interactive scrolling comes back on the next turn.
+    property bool _reset: false
 
     function _showTop() {
-        root._top = true;
+        root._reset = true;
         flick.contentY = 0;
-        // The new page's height arrives on a later turn. Hold the top
-        // through that layout, then let a scroll stay where the user put it.
-        Qt.callLater(() => Qt.callLater(() => {
-            if (!root._top)
-                return;
+        Qt.callLater(() => {
             flick.contentY = 0;
-            root._top = false;
-        }));
+            root._reset = false;
+        });
     }
 
     // Past the last link Tab is left unhandled, so focus moves on.
@@ -91,10 +85,8 @@ FocusScope {
         body.select(s.start, s.end);
         const r = body.positionToRectangle(s.start);
         const top = body.y + r.y - root._step;
-        if (top < flick.contentY || body.y + r.y + r.height > flick.contentY + flick.height) {
-            root._top = false;
+        if (top < flick.contentY || body.y + r.y + r.height > flick.contentY + flick.height)
             flick.contentY = Math.max(0, Math.min(flick.contentHeight - flick.height, top));
-        }
         return true;
     }
 
@@ -168,9 +160,8 @@ FocusScope {
         contentWidth: width
         contentHeight: body.contentHeight + Tokens.spacing.xl * 2
         boundsBehavior: Flickable.StopAtBounds
-        onContentHeightChanged: if (root._top) contentY = 0
-        onMovingChanged: if (moving) root._top = false
-        onDraggingChanged: if (dragging) root._top = false
+        interactive: !root._reset
+        onContentHeightChanged: if (root._reset) contentY = 0
 
         TextEdit {
             id: body
