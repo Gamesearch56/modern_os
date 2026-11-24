@@ -113,6 +113,7 @@ STORE="$ROOT/stow/shell/.config/quickshell/modern/Services/Store.qml"
 AI="$ROOT/stow/shell/.config/quickshell/modern/Services/Ai.qml"
 if grep -Fq 'Ai.packageGone()' "$STORE" \
     && grep -Fq 'function packageGone' "$AI" \
+    && grep -Fq 'pacman -Qq ollama' "$SETUP" \
     && grep -Fq 'focusStep: Ai.installed ? 1 : 0' "$INSTALL"; then
     ok "removing ollama returns the guide to the first step"
 else

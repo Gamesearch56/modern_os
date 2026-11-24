@@ -90,13 +90,17 @@ Item {
 
     Process {
         id: whichProc
-        // A missing ollama binary makes Quickshell warn if it is the command.
-        command: ["sh", "-c", "command -v ollama >/dev/null"]
+        // The store's Install button follows the package. A leftover
+        // ollama command still answers command -v, and step 2 then
+        // fails because the service was removed with the package.
+        command: ["sh", "-c", "if pacman -Qq ollama >/dev/null 2>&1; then echo yes; else echo no; fi"]
         running: false
+        stdout: StdioCollector { id: whichOut }
         onExited: (code) => {
             if (root._started !== root._epoch)
                 return;
-            const installed = code === 0;
+            const lines = String(whichOut.text || "").trim().split("\n");
+            const installed = lines.length > 0 && lines[lines.length - 1] === "yes";
             if (root.ai)
                 root.ai.installed = installed;
             if (!installed) {
@@ -222,6 +226,8 @@ Item {
         root.setupFailed = true;
         root.jobState = "fail";
         root.setupFinished(false, "");
+        if (root.ai)
+            root.ai.refreshStatus();
     }
 
     Process {

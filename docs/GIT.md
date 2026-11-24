@@ -57,8 +57,8 @@ Bug reports arrive two ways:
 
 Triage, once per new issue:
 
-1. Read it, reproduce it if you can, and replace `needs-triage` with an
-   `area:*` label (and `confirmed` once reproduced).
+1. Read it and reproduce it if you can. It already carries `Work Required`
+   and an `area:*` label. When the fix is done, remove `Work Required`.
 2. A private report you will work on gets a public twin, so the fix,
    the discussion and the release notes can point at a public number:
 
@@ -569,10 +569,10 @@ never with `provision-iso.sh` / Calamares on your everyday machine.
 **Labels**, once:
 
 ```bash
-for l in needs-triage confirmed breaking area:display area:hyprland \
+for l in "Work Required" confirmed breaking area:display area:hyprland \
          area:quickshell area:audio area:bluetooth area:network area:games \
-         area:updates area:session area:apps area:system-apps area:files \
-         area:keyboard area:power area:appearance area:other; do
+         area:updates area:session area:applications area:system-apps \
+         area:filesystem area:peripherals area:power area:design area:other; do
   gh label create "$l" --force
 done
 ```

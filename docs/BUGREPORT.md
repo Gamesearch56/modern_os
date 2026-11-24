@@ -62,8 +62,9 @@ numbers (`"serial"` fields, `Serial Number:`, `ID_SERIAL`), the
 hostname, the username and the home path. JSON loses every value under
 an account, location, serial, UUID or secret key.
 
-Reports are private issues labelled `bug`, `needs-triage` and one
-`area:*` per chosen category. Turning one into a public issue to work
+Reports are private issues labelled `bug`, `Work Required` and one
+`area:*` per chosen category. `Work Required` stays until the report
+is fixed, then it is removed. Turning one into a public issue to work
 on: `scripts/report-to-issue.sh` (`docs/GIT.md`, "From a report to a
 branch").
 

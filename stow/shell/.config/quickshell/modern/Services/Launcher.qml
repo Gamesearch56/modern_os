@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import "../Commons"
+import "command.js" as Command
 
 Singleton {
     id: root
@@ -157,6 +158,18 @@ Singleton {
         const out = root._matches(text);
         out.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
         return out;
+    }
+
+    function runCommand(argv: var) {
+        const list = argv || [];
+        if (!Command.ok(list))
+            return;
+        try {
+            Quickshell.execDetached(list);
+            root.hide();
+        } catch (e) {
+            Logger.error("Launcher", String(e));
+        }
     }
 
     function launch(item: var) {

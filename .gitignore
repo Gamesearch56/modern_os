@@ -56,6 +56,9 @@ install/*.log
 # Editor/OS
 .idea/
 .vscode/
+.cursor/settings.json
+# Wrangler login cache from a local deploy
+**/.wrangler/
 .DS_Store
 Thumbs.db
 *~

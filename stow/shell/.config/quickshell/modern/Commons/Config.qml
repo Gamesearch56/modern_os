@@ -276,6 +276,10 @@ Singleton {
                 ai: { provider: "none", ollamaModel: "llama3", geminiModel: "", chatgptModel: "", thinking: false, brief: true }
             })
 
+            property JsonObject census: JsonObject {
+                property string url: ""
+            }
+
             property JsonObject bugReport: JsonObject {
                 property string repo: "Gamesearch56/modern-reports"
                 property bool screenshotsDefault: true
@@ -404,6 +408,7 @@ Singleton {
     readonly property alias backup: adapter.backup
     readonly property alias keybinds: adapter.keybinds
     readonly property alias bugReport: adapter.bugReport
+    readonly property alias census: adapter.census
     readonly property alias files: adapter.files
     readonly property alias editor: adapter.editor
     readonly property alias viewer: adapter.viewer

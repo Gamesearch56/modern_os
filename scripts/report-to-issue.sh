@@ -17,7 +17,7 @@ usage() {
 Usage: report-to-issue.sh <report-number> [--create] [--from FILE]
 
 Prints the public draft. --create opens it in $EDITOR, files the issue
-here with the bug and needs-triage labels plus the report's area labels,
+here with the bug and Work Required labels plus the report's area labels,
 and links it from the private report. --from reads a saved report body
 instead of asking GitHub (for testing).
 EOF
@@ -72,7 +72,7 @@ if [ "$CREATE" -eq 0 ]; then
 fi
 
 "${EDITOR:-nano}" "$draft"
-labels="bug,needs-triage${areas:+,$areas}"
+labels="bug,Work Required${areas:+,$areas}"
 url="$(gh issue create --title "$title" --body-file "$draft" --label "$labels")"
 printf '%s\n' "$url"
 gh issue comment "$NUM" --repo "$reports" --body "Tracked publicly in $url" >/dev/null

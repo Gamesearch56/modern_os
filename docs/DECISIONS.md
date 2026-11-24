@@ -335,6 +335,12 @@ xdg-desktop-portal reads backend descriptions only from `/usr/share/xdg-desktop-
 
 **Rejected:** editing `~/modern_os` or retargeting stow symlinks (the next update checks the clone out again, and a retargeted symlink makes stow conflict); a FUSE mount for every login including an empty folder (cost and a wider set of paths, including ones root reads); a QML import-path prefix (Qt will not replace one file inside a module); letting an extension replace `scripts/` or anything pkexec runs (that would be the user writing the root step).
 
+## 30. Install counts are a random id and a release, or nothing
+
+**Decision:** A release clone can tell a counter its random install id and its `vX.Y.Z` tag, once a day, after the update check (`scripts/census.sh`, `docs/CENSUS.md`). The counter is a Cloudflare Worker on the free plan. The address lives in `census.url`. While that is empty, nothing is sent. A development checkout never sends. The read token that lists the totals is not in the image.
+
+**Rejected:** counting ISO downloads (one person can download twice, and an update does not download the image); reading GitHub clone traffic (every machine uses the same deploy key, so GitHub sees one actor); deriving the id from a serial, hostname, or account (that is a person, and the reports already strip those); sending on this development tree.
+
 ## Open decisions
 
 - Whether `matugen` alone gives enough control over contrast/variant, or
