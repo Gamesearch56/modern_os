@@ -140,6 +140,7 @@ cmd_status() {
         emit false "" "" "unavailable" "$boot"
         return 0
     fi
+    note_census
     # Local edits must not hide the GitHub result. Apply still refuses a
     # dirty tree; status only needs the commit and the remote tags.
     local cur latest unfinished
@@ -163,6 +164,15 @@ cmd_status() {
         return 0
     fi
     emit true "$cur" "$latest" "behind" "$boot"
+}
+
+# A release clone reports its version. Failure never changes the
+# update answer, and a checkout that is not a release sends nothing.
+note_census() {
+    [ "${MODERN_TEST_FIXTURE:-}" = "1" ] && return 0
+    home_release_clone || return 0
+    MODERN_CENSUS_RELEASE=1 MODERN_CENSUS_VERSION="$(installed_tag)" \
+        "$SCRIPT_DIR/census.sh" note || true
 }
 
 # The installed system is ~/modern_os, detached on a release tag.

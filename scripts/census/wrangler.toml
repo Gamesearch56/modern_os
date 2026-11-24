@@ -1,0 +1,9 @@
+name = "modern-census"
+main = "worker.js"
+compatibility_date = "2026-11-24"
+
+# npx wrangler kv namespace create CENSUS
+# then paste the id here.
+[[kv_namespaces]]
+binding = "CENSUS"
+id = "replace-me"
