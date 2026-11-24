@@ -74,6 +74,27 @@ else
     err "counts printed: $shown"
 fi
 
+printf '{}\n' >"$TMP/cfg/modern-missing.json"
+printf '{"census":{"url":"https://counter.example/from-default"}}\n' >"$TMP/cfg/config.default.json"
+before="$(wc -l <"$CENSUS_CURL_LOG" | tr -d ' ')"
+MODERN_CENSUS_VERSION=v0.8.15 MODERN_CENSUS_CONFIG="$TMP/cfg/modern-missing.json" "$CENSUS" note
+if [ "$(wc -l <"$CENSUS_CURL_LOG" | tr -d ' ')" = "$((before + 1))" ] \
+    && grep -Fq 'https://counter.example/from-default' "$CENSUS_CURL_LOG" \
+    && grep -Fq '"version": "v0.8.15"' "$CENSUS_CURL_LOG"; then
+    ok "a missing address uses the shipped default"
+else
+    err "default fallback log=$(cat "$CENSUS_CURL_LOG")"
+fi
+
+printf '{"census":{"url":""}}\n' >"$TMP/cfg/modern-optout.json"
+before="$(wc -l <"$CENSUS_CURL_LOG" | tr -d ' ')"
+MODERN_CENSUS_VERSION=v0.8.15 MODERN_CENSUS_CONFIG="$TMP/cfg/modern-optout.json" "$CENSUS" note
+if [ "$(wc -l <"$CENSUS_CURL_LOG" | tr -d ' ')" = "$before" ]; then
+    ok "an empty address stays out even when the default has one"
+else
+    err "opt-out still sent"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi
