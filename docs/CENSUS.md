@@ -11,7 +11,9 @@ the hostname, the user, a serial, or an address. The counter keeps the
 id, the version, and the time of the last note, and forgets a machine
 that has not checked in for 30 days.
 
-Nothing is sent while `census.url` is empty. That is the default.
+Nothing is sent while the address is empty. A `config.json` with no
+`census` block uses the address in `config.default.json`. Setting
+`census.url` to an empty string stays out.
 
 ## Turn it on
 
@@ -30,10 +32,10 @@ npx wrangler deploy
 ```
 
 Set `census.url` in `config.default.json` to the worker address
-(`https://modern-census.<account>.workers.dev`). The next install and
-the next update pick it up. A machine already installed keeps its own
-`config.json`; add the same `census.url` there, or leave it empty to
-stay out.
+(`https://modern-census.<account>.workers.dev`). A new install copies
+that file to `config.json`. An update leaves an existing `config.json`
+alone; the next update check uses the shipped address when that file
+has no `census.url`.
 
 ## Read the totals
 

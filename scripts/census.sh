@@ -14,17 +14,34 @@ ID_FILE="$STATE/install-id"
 STAMP="$STATE/census-day"
 CFG="${MODERN_CENSUS_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json}"
 
-census_url() {
-    local url=""
-    if [ -f "$CFG" ]; then
-        url="$(jq -r '.census.url // empty' "$CFG" 2>/dev/null || true)"
-    fi
-    # https only, and no password embedded in the address.
+# Prints one https address. Exit 0 when it is usable, 1 when this file
+# refuses it (empty on purpose, or not https), 2 when the file has no
+# census.url. An update does not rewrite config.json, so a machine
+# installed earlier has no key; that is not the same as opting out.
+census_field() {
+    local file="$1" url=""
+    [ -f "$file" ] || return 2
+    url="$(jq -r 'if (.census | type) == "object" and (.census | has("url")) then .census.url else "__MISSING__" end' "$file" 2>/dev/null)" || return 2
+    [ "$url" = "__MISSING__" ] && return 2
     case "$url" in
         https://*@*|http://*|https://|*" "*|"") return 1 ;;
         https://*) printf '%s\n' "$url" ;;
         *) return 1 ;;
     esac
+}
+
+census_url() {
+    local url="" rc=0
+    url="$(census_field "$CFG")" || rc=$?
+    if [ "$rc" -eq 0 ]; then
+        printf '%s\n' "$url"
+        return 0
+    fi
+    # A set address that is empty or not https stays out. Only a missing
+    # key falls through to the address shipped with this release.
+    [ "$rc" -eq 2 ] || return 1
+    url="$(census_field "$(dirname "$CFG")/config.default.json")" || return 1
+    printf '%s\n' "$url"
 }
 
 install_id() {
