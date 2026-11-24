@@ -32,10 +32,11 @@ LABELS = {
     "display": "area:display", "hyprland": "area:hyprland", "shell": "area:quickshell",
     "sound": "area:audio", "bluetooth": "area:bluetooth", "network": "area:network",
     "games": "area:games", "updates": "area:updates", "lock": "area:session",
-    "apps": "area:apps", "systemApps": "area:system-apps",
-    "files": "area:files", "keyboard": "area:keyboard", "power": "area:power",
-    "appearance": "area:appearance", "other": "area:other",
+    "apps": "area:applications", "systemApps": "area:system-apps",
+    "files": "area:filesystem", "keyboard": "area:peripherals", "power": "area:power",
+    "appearance": "area:design", "other": "area:other",
 }
+WORK = "Work Required"
 WHEN = {"now": "Just now", "today": "Today", "earlier": "Earlier"}
 REPEAT = {"always": "Every time", "sometimes": "Sometimes", "once": "Once"}
 EXCERPTS = (
@@ -269,7 +270,9 @@ def ensure_labels(tok, repo, names):
     for name in names:
         try:
             call(tok, "POST", "/repos/%s/labels" % repo, {
-                "name": name, "color": "6f42c1", "description": name.split(":", 1)[-1],
+                "name": name,
+                "color": "d93f0b" if name == WORK else "6f42c1",
+                "description": "A report still needs a fix" if name == WORK else name.split(":", 1)[-1],
             })
         except Rejected as err:
             if str(err) != "422":
@@ -308,7 +311,7 @@ def send(root, repo, tok):
             shots.append((os.path.splitext(os.path.basename(name))[0], url))
     title = (req.get("title") or "").strip() or "Problem report"
     labels = sorted({LABELS.get(c, "area:other") for c in req.get("categories") or ["other"]}
-                    | {"bug", "needs-triage"})
+                    | {"bug", WORK})
     ensure_labels(tok, repo, labels)
     body = {
         "title": "[%s] %s" % (version or "?", title[:200]),
