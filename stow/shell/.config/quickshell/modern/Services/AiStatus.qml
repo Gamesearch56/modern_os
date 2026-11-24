@@ -8,13 +8,22 @@ Item {
 
     property var ai: null
 
+    // A probe that started before a removal must not put the package back.
+    property int _epoch: 0
+    property int _started: 0
+
     function refresh() {
-        if (!root.ai || whichProc.running || tagsProc.running || root.ai.busy)
+        if (!root.ai || root.ai.busy)
             return;
+        root._epoch += 1;
+        const epoch = root._epoch;
         whichProc.running = false;
+        tagsProc.running = false;
         Qt.callLater(() => {
-            if (!root.ai.busy)
-                whichProc.running = true;
+            if (epoch !== root._epoch || !root.ai || root.ai.busy)
+                return;
+            root._started = epoch;
+            whichProc.running = true;
         });
     }
 
@@ -85,6 +94,8 @@ Item {
         command: ["sh", "-c", "command -v ollama >/dev/null"]
         running: false
         onExited: (code) => {
+            if (root._started !== root._epoch)
+                return;
             const installed = code === 0;
             if (root.ai)
                 root.ai.installed = installed;
@@ -97,7 +108,10 @@ Item {
                 return;
             }
             tagsProc.running = false;
+            const epoch = root._started;
             Qt.callLater(() => {
+                if (epoch !== root._epoch)
+                    return;
                 tagsProc.running = true;
             });
         }
@@ -108,9 +122,15 @@ Item {
         command: ["curl", "-sf", "--max-time", "1", "http://127.0.0.1:11434/api/tags"]
         running: false
         stdout: StdioCollector {
-            onStreamFinished: root._parseStatus(this.text)
+            onStreamFinished: {
+                if (root._started !== root._epoch)
+                    return;
+                root._parseStatus(this.text);
+            }
         }
         onExited: (code) => {
+            if (root._started !== root._epoch)
+                return;
             if (code !== 0)
                 root._parseStatus("");
         }

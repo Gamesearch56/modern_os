@@ -93,6 +93,12 @@ Singleton {
             cloud.probe();
     }
 
+    // Cleared before the probe returns, so the guide leaves the download step.
+    function packageGone() {
+        root.installed = false; root.running = false; root.models = [];
+        root.probed = true; root.refreshStatus();
+    }
+
     function _cloud(): var {
         if (root._provider === "gemini")
             return gemini;
@@ -127,18 +133,14 @@ Singleton {
     function _openOn(name: string) {
         root.hostScreenName = name;
         root.coverFullscreen = Hypr.focusedFullscreen;
-        root.panelOpen = true;
-        root.watching = true;
-        root.refreshStatus();
+        root.panelOpen = true; root.watching = true; root.refreshStatus();
     }
 
     function modelChoices(): var { return status.modelChoices(); }
 
     function hide() {
-        root.panelOpen = false;
-        root.hostScreenName = "";
-        root.coverFullscreen = false;
-        root.watching = false;
+        root.panelOpen = false; root.hostScreenName = "";
+        root.coverFullscreen = false; root.watching = false;
     }
 
     function openOn(screen: var): bool {

@@ -171,7 +171,11 @@ ShellRoot {
 
     IpcHandler {
         target: "shell"
-        function reload() { Quickshell.reload(true); }
+        function reload() {
+            // Kept notifications are delivered again after a reload, as banners.
+            Notifications.dismissAll();
+            Quickshell.reload(true);
+        }
         // SUPER+Q is a Hyprland bind (it never reaches QML Shortcuts).
         // Return "true" when a layer HUD/popup/control panel ate the close.
         function dismiss(): string {

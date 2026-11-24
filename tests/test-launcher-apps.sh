@@ -64,6 +64,20 @@ else
     err "removing an app must drop it from the dock, autostart, defaults, and launcher lists"
 fi
 
+if {
+        grep -v '^\.pragma' "$ROOT/stow/shell/.config/quickshell/modern/Services/appEntries.js"
+        cat <<'JS'
+const modern = { "modern.imageviewer": true, "modern.mediaplayer": true, "modern.editor": true };
+if (keep("imageviewer", "modern-imageviewer %F", modern)) process.exit(1);
+if (keep("modern.imageviewer", "modern-imageviewer %F", modern) !== true) process.exit(1);
+if (keep("loupe", "loupe %F", modern) !== true) process.exit(1);
+JS
+    } | node; then
+    ok "a short duplicate of a ModernOS app is not a second choice"
+else
+    err "the default list still offers imageviewer beside ModernOS Imageviewer"
+fi
+
 if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi

@@ -490,6 +490,10 @@ if ! grep -Fq 'settings.update.desktopApplied' "$ROOT/stow/shell/.config/quicksh
 fi
 grep -Fq 'inhibitReloadPopup' "$ROOT/stow/shell/.config/quickshell/modern/shell.qml" \
     || err "Quickshell's own reload popup must stay hidden"
+if ! grep -Fq 'Notifications.dismissAll()' "$ROOT/stow/shell/.config/quickshell/modern/shell.qml" \
+    || ! grep -Fq 'notification.lastGeneration' "$ROOT/stow/shell/.config/quickshell/modern/Services/Notifications.qml"; then
+    err "a reload must clear notifications so their banners do not return"
+fi
 grep -Fq 'clear_hypr_reload_banner' "$ROOT/scripts/reload-ui.sh" \
     || err "reload-ui must dismiss Hyprland's error bar after a clean reload"
 qs_line="$(grep -n 'ipc call shell reload' "$ROOT/scripts/reload-ui.sh" | head -1 | cut -d: -f1)"

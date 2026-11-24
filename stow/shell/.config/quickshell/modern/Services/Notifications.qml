@@ -76,6 +76,12 @@ Singleton {
         extraHints: ["x-kde-urls"]
         onNotification: (notification) => {
             try {
+                // A reload hands the previous list back. Drop it instead of
+                // showing the banners a second time.
+                if (notification.lastGeneration) {
+                    notification.dismiss();
+                    return;
+                }
                 if (root.effectiveDnd) {
                     notification.tracked = true;
                     return;
