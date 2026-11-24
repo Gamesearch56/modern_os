@@ -88,10 +88,13 @@ def _code(lines: list[str], i: int) -> tuple[str, int]:
     # A percentage width is resolved before the column exists, so the
     # document keeps the unwrapped width and the page opens on a blank
     # stretch. {{measure:100}} is the column, filled when the window lays out.
+    # The table margin is the gap outside the shade. A pre also has its
+    # own margin, and Qt paints that inside the table background, so a
+    # blank line shows up in the block. Zero it.
     out = ('<table width="{{measure:100}}" cellpadding="{{pad}}" cellspacing="0" bgcolor="{{codeBg}}" '
            'style="margin-top:{{gap}}px;margin-bottom:{{gap}}px"><tr><td>'
            f'<pre style="font-family:{{{{mono}}}};font-size:{{{{codeSize}}}}px;color:{{{{heading}}}};'
-           f'white-space:pre-wrap">{code}</pre>'
+           f'margin-top:0px;margin-bottom:0px;white-space:pre-wrap">{code}</pre>'
            "</td></tr></table>")
     return out, i + 1
 
