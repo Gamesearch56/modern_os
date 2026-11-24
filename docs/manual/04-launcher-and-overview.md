@@ -36,6 +36,14 @@ The system's own windows show up in the results as well. Typing "settings" offer
 
 If nothing matches, the list says No results (Keine Ergebnisse).
 
+### Calculate
+
+Type a sum, for example `2+2` or `(3-1)*4`. The result is the first row. Enter copies it. Only numbers and `+ - * / %` and parentheses are accepted, so the field cannot run a program by pretending it is a calculation. Start with `=` when you want a single number, for example `=2`.
+
+### Run a command
+
+Start the line with `>`. `>notify-send hello` starts that program with those arguments. The launcher does not use a shell, so `;`, `|`, `$` and similar cannot add a second program, and `sudo` or `sh` are refused. Open a terminal for those.
+
 ### Starting an app
 
 - Click a result, or move with the Up and Down keys and press Enter.

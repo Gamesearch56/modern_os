@@ -5,6 +5,8 @@ import Quickshell.Wayland
 import QtQuick
 import "../../Commons"
 import "../../Services"
+import "../../Services/calc.js" as Calc
+import "../../Services/command.js" as Command
 
 Scope {
     id: root
@@ -47,6 +49,7 @@ Scope {
     }
 
     function resultsFor(text: string): var {
+        const typed = root._typed(text);
         const needle = (text || "").trim().toLowerCase();
         const actions = [];
         if (needle.length > 0) {
@@ -58,6 +61,8 @@ Scope {
         }
         const apps = Launcher.query(text);
         const out = [];
+        for (let t = 0; t < typed.length; t++)
+            out.push(typed[t]);
         for (let i = 0; i < actions.length; i++)
             out.push(actions[i]);
         for (let j = 0; j < apps.length; j++) {
@@ -89,9 +94,39 @@ Scope {
         return en.indexOf(n) !== -1 || t.indexOf(n) !== -1 || n.indexOf(en) !== -1;
     }
 
+    function _typed(text: string): var {
+        const providers = (Config.launcher && Config.launcher.providers) || {};
+        const calcP = providers.calculator || {};
+        const shellP = providers.shell || {};
+        const out = [];
+        if (calcP.enabled !== false) {
+            const value = Calc.offer(text, calcP.prefix);
+            if (value !== null)
+                out.push({ id: "calc:" + value, name: value, genericName: I18n.t("launcher.copyResult"),
+                    icon: "accessories-calculator", kind: "calc" });
+        }
+        if (shellP.enabled !== false) {
+            const argv = Command.offer(text, shellP.prefix);
+            if (argv)
+                out.push({ id: "cmd:" + argv.join(" "), name: argv.join(" "),
+                    genericName: I18n.t("launcher.runCommand"), icon: "utilities-terminal",
+                    kind: "command", argv: argv });
+        }
+        return out;
+    }
+
     function activate(item: var) {
         if (!item)
             return;
+        if (item.kind === "calc") {
+            Quickshell.clipboardText = String(item.name || "");
+            Launcher.hide();
+            return;
+        }
+        if (item.kind === "command") {
+            Launcher.runCommand(item.argv);
+            return;
+        }
         if (item.kind === "settings") {
             Settings.show();
             Launcher.hide();

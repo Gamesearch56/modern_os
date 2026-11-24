@@ -399,6 +399,8 @@
     "results": "Results",
     "allApps": "All applications",
     "noResults": "No results",
+    "copyResult": "Copy result",
+    "runCommand": "Run the program directly, without a shell",
     "uninstall": {
       "trash": "Uninstall",
       "blocked": "{name} cannot be uninstalled",
