@@ -4,7 +4,7 @@
 # name, no account, no address. An empty census.url sends nothing.
 #
 #   census.sh note     used by desktop-sync on a release clone
-#   census.sh counts   print the totals (needs CENSUS_READ_TOKEN)
+#   census.sh counts   ask for the read secret, then print the totals
 set -euo pipefail
 
 TAG_RE='^v[0-9]+\.[0-9]+\.[0-9]+$'
@@ -59,20 +59,69 @@ cmd_note() {
     printf '%s %s\n' "$today" "$version" >"$STAMP"
 }
 
+read_token() {
+    local token="${CENSUS_READ_TOKEN:-}"
+    if [ -n "$token" ]; then
+        printf '%s' "$token"
+        return 0
+    fi
+    [ -r /dev/tty ] || {
+        printf 'census: set CENSUS_READ_TOKEN\n' >&2
+        return 1
+    }
+    printf 'Census secret: ' >/dev/tty
+    IFS= read -rs token </dev/tty || true
+    printf '\n' >/dev/tty
+    [ -n "$token" ] || {
+        printf 'census: the secret was empty\n' >&2
+        return 1
+    }
+    printf '%s' "$token"
+}
+
+show_counts() {
+    python3 -c '
+import json, sys
+raw = sys.stdin.read()
+try:
+    data = json.loads(raw)
+except json.JSONDecodeError:
+    sys.stderr.write("census: the counter did not return a count\n")
+    sys.exit(1)
+days = data.get("days", 30)
+versions = data.get("versions") or {}
+def key(name):
+    parts = str(name).lstrip("v").split(".")
+    return tuple(int(p) if p.isdigit() else 0 for p in parts)
+rows = sorted(versions.items(), key=lambda item: key(item[0]), reverse=True)
+print("Installs in the last %s days" % days)
+print()
+if not rows:
+    print("  no machines have checked in")
+    raise SystemExit
+width = max(len(str(name)) for name, _ in rows + [("total", 0)])
+total = 0
+for name, count in rows:
+    total += int(count)
+    print("  %-*s  %s" % (width, name, count))
+print("  %-*s  %s" % (width, "total", total))
+'
+}
+
 cmd_counts() {
-    local url token
+    local url token header body
     url="$(census_url)" || {
         printf 'census: set census.url to the counter address\n' >&2
         return 1
     }
-    token="${CENSUS_READ_TOKEN:-}"
-    [ -n "$token" ] || {
-        printf 'census: set CENSUS_READ_TOKEN\n' >&2
-        return 1
-    }
-    curl --proto '=https' --tlsv1.2 -fsS --max-time 20 \
-        -H "Authorization: Bearer $token" "$url"
-    printf '\n'
+    token="$(read_token)" || return 1
+    header="$(mktemp "${TMPDIR:-/tmp}/modern-census-XXXXXX")"
+    chmod 600 "$header"
+    trap 'rm -f "$header"' RETURN
+    printf 'header = "Authorization: Bearer %s"\n' "$token" >"$header"
+    body="$(curl --proto '=https' --tlsv1.2 -fsS --max-time 20 \
+        --config "$header" "$url")" || return 1
+    printf '%s' "$body" | show_counts
 }
 
 case "${1:-}" in

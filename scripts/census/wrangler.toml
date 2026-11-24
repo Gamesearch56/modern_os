@@ -6,4 +6,4 @@ compatibility_date = "2026-11-24"
 # then paste the id here.
 [[kv_namespaces]]
 binding = "CENSUS"
-id = "replace-me"
+id = "c3d7499c969f4ed691681cbca6922a02"

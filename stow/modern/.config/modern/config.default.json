@@ -266,7 +266,7 @@
   },
   "census": {
     "_comment": "Install counts (docs/CENSUS.md). Empty sends nothing. The id is a random UUID on that machine, sent with the release once a day.",
-    "url": ""
+    "url": "https://modern-census.gamesearch56.workers.dev"
   },
   "bugReport": {
     "_comment": "Problem reports (scripts/bug-report.sh). The access token lives in secrets.json as bugReport.githubToken, never here. See docs/BUGREPORT.md.",

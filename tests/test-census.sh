@@ -16,6 +16,9 @@ mkdir -p "$TMP/bin" "$TMP/state" "$TMP/cfg"
 cat >"$TMP/bin/curl" <<'EOF'
 #!/bin/sh
 printf '%s\n' "$*" >>"$CENSUS_CURL_LOG"
+if [ -n "${CENSUS_CURL_BODY:-}" ]; then
+    printf '%s' "$CENSUS_CURL_BODY"
+fi
 exit 0
 EOF
 chmod +x "$TMP/bin/curl" "$CENSUS"
@@ -57,6 +60,18 @@ if [[ "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{
     ok "one note a day carries the random id and the release"
 else
     err "note: id=$id mode=$mode posts=$posts log=$(cat "$CENSUS_CURL_LOG")"
+fi
+
+export CENSUS_READ_TOKEN=secret
+export CENSUS_CURL_BODY='{"days":30,"versions":{"v0.8.13":1,"v0.8.14":2}}'
+shown="$(MODERN_CENSUS_CONFIG="$TMP/cfg/modern-https.json" "$CENSUS" counts)"
+if printf '%s\n' "$shown" | grep -q 'Installs in the last 30 days' \
+    && printf '%s\n' "$shown" | grep -q 'v0.8.14  2' \
+    && printf '%s\n' "$shown" | grep -q 'total    3' \
+    && ! printf '%s\n' "$shown" | grep -q 'secret'; then
+    ok "counts lists each release and a total"
+else
+    err "counts printed: $shown"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

@@ -38,11 +38,17 @@ stay out.
 ## Read the totals
 
 ```bash
-CENSUS_READ_TOKEN='…' scripts/census.sh counts
+scripts/census.sh counts
 ```
 
-```json
-{ "days": 30, "versions": { "v0.8.14": 2 } }
+The command asks for the read secret and does not print it. The same secret can be passed as `CENSUS_READ_TOKEN` when nothing is there to type into.
+
+```
+Installs in the last 30 days
+
+  v0.8.14  2
+  v0.8.13  1
+  total    3
 ```
 
 That is machines whose update check reached the counter in the last 30
