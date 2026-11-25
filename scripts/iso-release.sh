@@ -238,10 +238,13 @@ release_upload_sums() {
 
 # A window tracks the image. The sums are tiny and stay on gh.
 release_upload_image() {
-    local id token url rc=0
+    local id token url rc=0 extra=() f
     if ! iso_ui_ready; then
-        gh release upload "$TAG" "$STAGE/$ISO_ASSET" --clobber
-        release_upload_sums
+        for f in "$STAGE/${TAG}-PACKAGES.txt" "$STAGE/${TAG}-SOURCE-OFFER.txt"; do
+            [ -f "$f" ] && extra+=( "$f" )
+        done
+        gh release upload "$TAG" "$STAGE/$ISO_ASSET" "$STAGE/SHA256SUMS" "$STAGE/SHA256SUMS.asc" \
+            "${extra[@]}" --clobber
         return
     fi
     id="$(gh api "repos/$NWO/releases/tags/$TAG" --jq .id)"
