@@ -50,9 +50,12 @@ Anyone who copies the token can read the other private reports. Those
 reports are redacted before they are sent.
 
 The token ships in `install/share/report-token`, so a fresh installation
-and a system update both receive it. `install.sh` copies that file to
-`~/.config/modern/report-token`. A fresh image also copies it to
-`/usr/lib/modern/report-token`.
+and a system update both receive it. The file is the token reversed in
+short lines. A raw personal access token committed to this public
+repository is revoked, so the report tool restores the token when it
+sends. A file that is already a raw token still works.
+`install.sh` copies that file to `~/.config/modern/report-token`. A fresh
+image also copies it to `/usr/lib/modern/report-token`.
 
 Every step's stderr and an unexpected exit land in the shell log under
 the `BugReport` tag (`Services/BugReportProc.qml`).

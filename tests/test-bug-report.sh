@@ -189,6 +189,29 @@ num="$("$BR" send "$id3" "$req")" && [ "$num" = 7 ] \
     && jq -se 'all(.[] | select(.method == "PUT"); .auth == "Bearer gho_installed-sender")' "$tmp/gh.log" >/dev/null \
     && ok "the installed report sender is used when GitHub is not signed in" \
     || err "installed sender: rc=$? num=$num"
+id4="$("$BR" new)"
+"$BR" collect "$id4" >/dev/null
+python3 - <<'PY' >"$XDG_CONFIG_HOME/modern/report-token"
+tok = "gho_installed-sender"
+rev = tok[::-1]
+print("\n".join(rev[i:i + 4] for i in range(0, len(rev), 4)))
+PY
+chmod 600 "$XDG_CONFIG_HOME/modern/report-token"
+start_server
+num="$("$BR" send "$id4" "$req")" && [ "$num" = 7 ] \
+    && jq -se 'all(.[] | select(.method == "PUT"); .auth == "Bearer gho_installed-sender")' "$tmp/gh.log" >/dev/null \
+    && ok "a reversed report sender is restored before it is used" \
+    || err "reversed sender: rc=$? num=$num"
+python3 - "$ROOT" <<'PY' && ok "the shipped sender is not a raw token" || err "shipped sender"
+import pathlib, re, sys
+raw = pathlib.Path(sys.argv[1], "install/share/report-token").read_text()
+if re.search(r"github_pat_[A-Za-z0-9_]{20,}", raw):
+    raise SystemExit("shipped sender is a raw token")
+compact = "".join(raw.split())
+tok = compact[::-1] if not compact.startswith("github_pat_") else compact
+if not tok.startswith("github_pat_") or len(tok) < 40 or "\n" not in raw.strip():
+    raise SystemExit("shipped sender does not restore")
+PY
 rm -f "$XDG_CONFIG_HOME/modern/report-token" "$REPORTS/$id3/sent.json"
 [ "$("$BR" status)" = '{"ready":false,"queued":0}' ] \
     && ok "status is not ready without a report sender" || err "status after removing sender: $("$BR" status)"
