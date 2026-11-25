@@ -8,14 +8,21 @@
 # older stow symlink, so a wallpaper change never touches the repo.
 set -euo pipefail
 
-TEMPLATES="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/install/icons/apps"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib/ensure-dir.sh
+source "$ROOT/scripts/lib/ensure-dir.sh"
+TEMPLATES="$ROOT/install/icons/apps"
+SYMBOLIC="$ROOT/stow/xdg/.local/share/icons/hicolor/scalable/apps"
 TOKENS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/tokens.json"
 ICONS="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/scalable/apps"
 
 if [ ! -d "$TEMPLATES" ] || ! command -v python3 >/dev/null 2>&1; then
     exit 0
 fi
-mkdir -p "$ICONS"
+ensure_real_dir "$ICONS"
+if [ -d "$SYMBOLIC" ]; then
+    find "$SYMBOLIC" -maxdepth 1 -name '*-symbolic.svg' -type f -exec cp -f {} "$ICONS/" \;
+fi
 
 TEMPLATES="$TEMPLATES" TOKENS="$TOKENS" ICONS="$ICONS" python3 - <<'PY'
 import json, os, re

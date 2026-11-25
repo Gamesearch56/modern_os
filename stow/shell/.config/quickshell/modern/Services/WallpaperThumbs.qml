@@ -30,6 +30,11 @@ Item {
             : [];
         root._paths = list;
         proc.running = false;
+        // Cleanup removes these JPEGs. The next thumb is the same name,
+        // so a tile that kept the old path never reloads and stays blank.
+        root._buf = ({});
+        root.map = ({});
+        root.rev++;
         if (list.length === 0)
             return;
         Qt.callLater(() => {
