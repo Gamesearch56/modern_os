@@ -106,6 +106,14 @@ def install_roots(home=None):
             path = clean(raw)
         except Refuse:
             return
+        # mktemp lives under a symlinked /tmp on some runners. The path
+        # Files is asked to delete is the symlink form; the home we
+        # compare against is the real one. Store the real directory.
+        if os.path.lexists(path):
+            try:
+                path = clean(os.path.realpath(path))
+            except Refuse:
+                return
         if not path.startswith(home + "/") or os.path.basename(path) != "modern_os":
             return
         if path not in roots:
@@ -131,9 +139,19 @@ def protected(path, home=None, user=None):
             return True
     if path == "/":
         return True
-    for root in install_roots(home):
-        if path == root or path.startswith(root + "/"):
-            return True
+    roots = install_roots(home)
+    candidates = [path]
+    if os.path.lexists(path):
+        try:
+            real = clean(os.path.realpath(path))
+        except Refuse:
+            real = ""
+        if real and real != path:
+            candidates.append(real)
+    for root in roots:
+        for cand in candidates:
+            if cand == root or cand.startswith(root + "/"):
+                return True
     return False
 
 

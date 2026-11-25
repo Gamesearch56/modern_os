@@ -401,9 +401,19 @@ fi
 : >"$dblock"
 (
     exec 7<"$dblock"
-    sleep 5
+    sleep 30
 ) &
 holder=$!
+# The checker looks at open fds. Wait until this holder has the lock,
+# or a busy machine removes it as stale before the fd exists.
+held=0
+for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+    for fd in /proc/"$holder"/fd/*; do
+        [ "$(readlink "$fd" 2>/dev/null || true)" = "$dblock" ] && held=1
+    done
+    [ "$held" -eq 1 ] && break
+    sleep 0.05
+done
 if (
     # shellcheck source=../scripts/lib/update-guard.sh
     source "$ROOT/scripts/lib/update-guard.sh"
