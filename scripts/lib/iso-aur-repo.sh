@@ -114,7 +114,8 @@ iso_aur_pkg_stamp() {
             cat "$src/PKGBUILD" \
                 "$ROOT/iso/releng/calamares-limit-languages.py" \
                 "${ISO_INSTALLER_LOCALES:?iso-build.sh generates it}"
-            find "$ROOT/iso/releng/calamares-modernnet" -type f -print0 \
+            find "$ROOT/iso/releng/calamares-modernnet" \
+                "$ROOT/iso/releng/calamares-modernapps" -type f -print0 \
                 | sort -z \
                 | xargs -0 -r cat
         } | sha256sum | awk '{print $1}'

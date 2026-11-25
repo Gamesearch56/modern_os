@@ -497,5 +497,12 @@ cp -a "$AIROOTFS_OUT/." "$PROFILE_WORK/airootfs/"
 chroot_wrap="$WORK/arch-chroot-bin"
 install_arch_chroot_mount_wrapper "$chroot_wrap"
 ISO_VERSION="$pin" PATH="$chroot_wrap:$PATH" mkarchiso -v -w "$WORK/mkarchiso" -o "$abs_out" "$PROFILE_WORK"
+offer_root="$WORK/mkarchiso/x86_64/airootfs"
+if [ -d "$offer_root/var/lib/pacman/local" ]; then
+    "$ROOT/scripts/source-offer.sh" --root "$offer_root" --tag "$pin" --out "$abs_out" \
+        || log "source offer was not written"
+else
+    log "no package database after the image build; source offer skipped"
+fi
 log "ISO written under $abs_out (live image is this clone; late install still clones $pin)"
 log "boot it with: scripts/iso-qemu.sh"

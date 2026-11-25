@@ -49,24 +49,34 @@ for pkg in steam gamemode gamescope spotify-launcher btop lutris docker; do
     else ok "$pkg is removable in Store"; fi
 done
 apps="$ROOT/install/manifests/30-apps.txt"
-for pkg in steam gamemode gamescope umu-launcher; do
+for pkg in gamemode gamescope umu-launcher; do
     if grep -qE "^${pkg}([[:space:]]|#|$)" "$apps"; then
         ok "$pkg is a default app in 30-apps"
     else
         err "$pkg must be in 30-apps.txt (default install, not a system package)"
     fi
 done
-pass="$ROOT/install/manifests/30-apps.aur.txt"
-if grep -qE '^proton-pass-bin([[:space:]]|#|$)' "$pass" \
-    && ! grep -qE '^proton-pass-bin([[:space:]]|#|$)' "$ROOT/install/manifests/90-accounts.aur.txt"; then
-    ok "proton-pass-bin is a default app, not an extra account package"
+for pkg in steam spotify-launcher; do
+    if grep -qE "^${pkg}([[:space:]]|#|$)" "$apps"; then
+        err "$pkg must be an installer download, not a default app"
+    else
+        ok "$pkg is not a default app"
+    fi
+done
+if grep -qE '^discord([[:space:]]|#|$)' "$ROOT/install/manifests/70-workstation.txt" \
+    || grep -qE '^proton-vpn-gtk-app([[:space:]]|#|$)' "$ROOT/install/manifests/50-gaming.txt" \
+    || grep -qE '^proton-pass-bin([[:space:]]|#|$)' "$ROOT/install/manifests/30-apps.aur.txt" \
+    || grep -qxF proton-pass-bin "$ROOT/iso/releng/packages.x86_64" \
+    || grep -qxF proton-pass-bin "$ROOT/iso/releng/packages.aur.x86_64" \
+    || grep -qxF nvidia-utils "$ROOT/iso/releng/packages.x86_64"; then
+    err "proprietary programs must not be baked into the image or an automatic manifest"
 else
-    err "proton-pass-bin must be in 30-apps.aur.txt and not only behind --extra proton"
+    ok "proprietary programs are installer downloads"
 fi
-if in_core proton-pass-bin; then
-    err "proton-pass-bin must stay removable in Store (not --core)"
+if grep -q 'nvidia|nvidia-legacy' "$ROOT/install/install.sh"; then
+    ok "install.sh skips the proprietary NVIDIA packages"
 else
-    ok "proton-pass-bin is removable in Store"
+    err "install.sh must skip the proprietary NVIDIA driver unless the installer page asks"
 fi
 if grep -F 'core: true' "$ROOT/stow/shell/.config/quickshell/modern/Services/Store.qml" >/dev/null \
     && grep -F "protected_pkg \"\$name\"" "$ROOT/scripts/pkg-mutate.sh" >/dev/null \

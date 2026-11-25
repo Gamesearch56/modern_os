@@ -935,7 +935,9 @@
       "notifications": "Benachrichtigungen",
       "connectedServices": "Verbundene Dienste",
       "quietHours": "Ruhezeiten",
-      "bannerDuration": "Banner-Dauer (Sekunden)"
+      "bannerDuration": "Banner-Dauer (Sekunden)",
+      "census": "Entwicklern helfen, installierte Releases zu verfolgen",
+      "censusHint": "Zeigt, wie viele Geräte welches ModernOS-Release nutzen. Einmal am Tag eine zufällige Kennung und die Version. Kein Name, kein Konto, keine Adresse."
     },
     "energy": {
       "power": "Ein/Aus",
@@ -2128,6 +2130,26 @@
     "steps": {
       "user": "Benutzer",
       "summary": "Übersicht"
+    },
+    "apps": {
+      "step": "Programme",
+      "intro": "Vivaldi ist der Browser und wird mit dem System installiert. Setze ein Häkchen, damit ein Programm während der Installation heruntergeladen wird. Eine NVIDIA-Grafikkarte braucht den proprietären Treiber.",
+      "vivaldi": "Vivaldi",
+      "vivaldiHint": "Standardbrowser. Bleibt installiert.",
+      "drivers": "Treiber",
+      "driversHint": "Offene Grafik- und WLAN-Firmware für diesen Computer. Bleibt installiert.",
+      "desktop": "Desktop",
+      "desktopHint": "Die Sitzung, Ton und Netzwerk. Bleibt installiert.",
+      "nvidia": "NVIDIA-Treiber",
+      "nvidiaHint": "Proprietärer Treiber. Eine NVIDIA-Grafikkarte braucht ihn. Er wird während der Installation heruntergeladen.",
+      "steam": "Steam",
+      "steamHint": "Spiele-Shop. Wird heruntergeladen, wenn das Häkchen gesetzt ist.",
+      "spotify": "Spotify",
+      "spotifyHint": "Musik. Wird heruntergeladen, wenn das Häkchen gesetzt ist.",
+      "discord": "Discord",
+      "discordHint": "Chat. Wird heruntergeladen, wenn das Häkchen gesetzt ist.",
+      "protonVpn": "Proton VPN",
+      "protonVpnHint": "VPN-Client. Wird heruntergeladen, wenn das Häkchen gesetzt ist."
     },
     "finished": {
       "done": "<h1>Alles erledigt.</h1><br/>%1 ist installiert und einsatzbereit.<br/>Starte neu, um deinen neuen Desktop zu nutzen."

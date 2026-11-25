@@ -180,6 +180,20 @@ chmod 600 ~/.config/modern/secrets.json
 Your account password itself is never stored by ModernOS; it is checked
 by the system each time you sign in or unlock.
 
+## Install count
+
+**Settings → Privacy → Help developers track installed releases**
+(**Entwicklern helfen, installierte Releases zu verfolgen**)
+is off until you turn it on.
+
+When it is on, this computer tells a counter a random id and the
+ModernOS version, once a day, after it looks for an update. The id is
+created on this computer. It is not your name, your account, or your
+address. The connection itself is seen by the counter's host
+(Cloudflare), the same way any web request is. Turn the switch off to
+stop the next note. Notes already sent are forgotten after 30 days of
+silence.
+
 ## Problem reports: what is sent
 
 Press **SUPER + #** (on a US keyboard, the same key is `\`) to open

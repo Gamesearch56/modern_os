@@ -265,7 +265,8 @@
     }
   },
   "census": {
-    "_comment": "Install counts (docs/CENSUS.md). Empty sends nothing. The id is a random UUID on that machine, sent with the release once a day.",
+    "_comment": "Install counts (docs/CENSUS.md). Off until enabled is true. The id is a random UUID on that machine, sent with the release once a day. An empty url sends nothing.",
+    "enabled": false,
     "url": "https://modern-census.gamesearch56.workers.dev"
   },
   "bugReport": {

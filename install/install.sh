@@ -195,15 +195,28 @@ if [ -f "$hw_cpu" ]; then
     mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_cpu")
 fi
 hw_gpu="$MANIFEST_DIR/00-hw-gpu-${GPU_FAMILY}.txt"
-if [ -f "$hw_gpu" ]; then
-    mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_gpu")
-fi
-# Steam (30-apps, every profile) needs a 32-bit Vulkan driver. Unnamed,
-# pacman picks the first provider, lib32-vulkan-radeon, on any GPU.
+# The proprietary NVIDIA driver is not part of the image. The installer
+# Programs page downloads it only when that row is ticked.
+case "$GPU_FAMILY" in
+    nvidia|nvidia-legacy) ;;
+    *)
+        if [ -f "$hw_gpu" ]; then
+            mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_gpu")
+        fi
+        ;;
+esac
+# 32-bit Vulkan for an optional Steam install. The NVIDIA file is
+# lib32-nvidia-utils, which pulls the proprietary driver, so it is
+# left to the same installer page.
 hw_apps="$MANIFEST_DIR/30-hw-gpu-${GPU_FAMILY}.txt"
-if [ -f "$hw_apps" ]; then
-    mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_apps")
-fi
+case "$GPU_FAMILY" in
+    nvidia|nvidia-legacy) ;;
+    *)
+        if [ -f "$hw_apps" ]; then
+            mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_apps")
+        fi
+        ;;
+esac
 if detect_wifi_wl; then
     log_info "Broadcom wifi needs the wl driver"
     mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$MANIFEST_DIR/00-hw-wifi-broadcom-wl.txt")
@@ -212,9 +225,14 @@ if [ "$PROFILE" = "gaming" ] || [ "$PROFILE" = "full" ]; then
     # GPU_FAMILY, not HW: 50-hw-nvidia's lib32-nvidia-utils would pull
     # nvidia-utils onto a nouveau (nvidia-legacy) machine.
     hw_game="$MANIFEST_DIR/50-hw-${GPU_FAMILY}.txt"
-    if [ -f "$hw_game" ]; then
-        mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_game")
-    fi
+    case "$GPU_FAMILY" in
+        nvidia|nvidia-legacy) ;;
+        *)
+            if [ -f "$hw_game" ]; then
+                mapfile -t -O "${#native_pkgs[@]}" native_pkgs < <(parse_manifest "$hw_game")
+            fi
+            ;;
+    esac
 fi
 hw_work="$MANIFEST_DIR/70-hw-gpu-${GPU_FAMILY}.txt"
 if [ "$PROFILE" = "full" ] && [ -f "$hw_work" ]; then

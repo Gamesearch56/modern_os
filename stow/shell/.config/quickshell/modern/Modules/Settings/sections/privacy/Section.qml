@@ -98,6 +98,30 @@ ColumnLayout {
     }
 
     MSectionHeader {
+        key: "settings.privacy.census"
+        topMargin: Tokens.spacing.xxl
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 0
+            MText {
+                key: "settings.privacy.censusHint"
+                styleName: "bodySmall"
+                color: Colors.color.onSurfaceVariant
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+        MSwitch {
+            checked: !!(Config.census && Config.census.enabled)
+            onToggled: (v) => ConfigWrite.set("census.enabled", v)
+        }
+    }
+
+    MSectionHeader {
         key: "settings.privacy.connectedServices"
         topMargin: Tokens.spacing.xxl
     }

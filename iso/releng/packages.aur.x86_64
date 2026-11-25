@@ -4,8 +4,11 @@ calamares
 # unpackfs copies this onto the target so late install.sh skips git clone
 # of yay-bin (that clone was failing on systemd-resolved in the chroot).
 yay-bin
-# m0 AUR (10-desktop.aur.txt / 20-theming.aur.txt / 30-apps.aur.txt). On the squashfs so
+# m0 AUR (10-desktop.aur.txt / 20-theming.aur.txt). On the squashfs so
 # late `yay -S --needed` is a no-op instead of building in the chroot.
+# Optional programs (Steam, Spotify, Discord, Proton VPN, Proton Pass,
+# the proprietary NVIDIA driver) are not in this list. The installer
+# downloads a ticked row during installation.
 # matugen-bin: the source AUR matugen calls rustup in prepare(), which
 # fails for a build user without a default toolchain. The binary package
 # provides `matugen` (templates in THEMING.md).
@@ -13,4 +16,3 @@ matugen-bin
 # Source bibata needs AUR python-clickgen; makepkg -s cannot see AUR.
 bibata-cursor-theme-bin
 phylax-git
-proton-pass-bin

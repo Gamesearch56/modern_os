@@ -195,6 +195,13 @@ size="$(stat -c %s "$ISO")"
 STAGE="$OUT/release/$TAG"
 mkdir -p "$STAGE"
 ln -f "$ISO" "$STAGE/$ISO_ASSET" 2>/dev/null || cp --reflink=auto "$ISO" "$STAGE/$ISO_ASSET"
+for extra in "$OUT/${TAG}-PACKAGES.txt" "$OUT/${TAG}-SOURCE-OFFER.txt"; do
+    if [ -f "$extra" ]; then
+        cp --reflink=auto "$extra" "$STAGE/"
+    else
+        log "WARNING: missing $(basename "$extra"); the source offer is not beside this image"
+    fi
+done
 (cd "$STAGE" && sha256sum "$ISO_ASSET" >SHA256SUMS)
 sha="$(cut -d' ' -f1 "$STAGE/SHA256SUMS")"
 rm -f "$STAGE/SHA256SUMS.asc"
@@ -220,11 +227,21 @@ release_curl_progress() {
     done
 }
 
+# Sums, and the source offer when this build wrote one.
+release_upload_sums() {
+    local extra=() f
+    for f in "$STAGE/${TAG}-PACKAGES.txt" "$STAGE/${TAG}-SOURCE-OFFER.txt"; do
+        [ -f "$f" ] && extra+=( "$f" )
+    done
+    gh release upload "$TAG" "$STAGE/SHA256SUMS" "$STAGE/SHA256SUMS.asc" "${extra[@]}" --clobber
+}
+
 # A window tracks the image. The sums are tiny and stay on gh.
 release_upload_image() {
     local id token url rc=0
     if ! iso_ui_ready; then
-        gh release upload "$TAG" "$STAGE/$ISO_ASSET" "$STAGE/SHA256SUMS" "$STAGE/SHA256SUMS.asc" --clobber
+        gh release upload "$TAG" "$STAGE/$ISO_ASSET" --clobber
+        release_upload_sums
         return
     fi
     id="$(gh api "repos/$NWO/releases/tags/$TAG" --jq .id)"
@@ -246,12 +263,12 @@ release_upload_image() {
     iso_progress_close
     rm -f "$STAGE/upload-response.json"
     [ "$rc" -eq 0 ] || die "the image upload did not finish"
-    gh release upload "$TAG" "$STAGE/SHA256SUMS" "$STAGE/SHA256SUMS.asc" --clobber
+    release_upload_sums
 }
 
 if [ "$(remote_sha)" = "sha256:$sha" ]; then
     log "GitHub already has this image"
-    gh release upload "$TAG" "$STAGE/SHA256SUMS" "$STAGE/SHA256SUMS.asc" --clobber
+    release_upload_sums
 else
     release_upload_image
     got="$(remote_sha)"
