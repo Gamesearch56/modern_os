@@ -218,6 +218,8 @@ if [[ -x "$RAISE" ]] \
     && grep -Fq 'windowParked' "$HYPR_WIN" \
     && grep -Fq 'windowParked' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'special:' "$ROOT/stow/shell/.config/quickshell/modern/Services/taskbarEntries.js" \
+    && grep -Fq 'entry.runInTerminal' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
+    && grep -Fq 'Apps.runInTerminal' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \
     && grep -Fq 'isAutostartDesktop' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprAutostart.qml" \
     && grep -Fq 'session-raise.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/HyprRaise.qml" \

@@ -26,9 +26,7 @@ Item {
             root._parkStem = "";
             if (exitCode === 0)
                 return;
-            if (entry && entry.execute) {
-                root._armNew(stem);
-                entry.execute();
+            if (root._start(entry, stem)) {
                 // The class rule parks the new window. Move that one
                 // here once it exists, so the click still opens it.
                 if (stem.length)
@@ -97,6 +95,25 @@ Item {
                 return true;
         }
         return false;
+    }
+
+    // DesktopEntry.execute() ignores Terminal=true, so btop and the
+    // other console programs exit immediately. Open those in the
+    // configured terminal instead.
+    function _start(entry: var, stem: string): bool {
+        if (!entry)
+            return false;
+        const cmd = entry.command || [];
+        if (entry.runInTerminal && cmd.length) {
+            root._armNew(stem);
+            Apps.runInTerminal(cmd);
+            return true;
+        }
+        if (!entry.execute)
+            return false;
+        root._armNew(stem);
+        entry.execute();
+        return true;
     }
 
     function _armNew(desktopId: string) {
@@ -195,23 +212,13 @@ Item {
     function raiseDesktopOrLaunch(desktopId: string, entry: var): bool {
         const id = String(desktopId || "");
         const win = root.windows;
-        if (!win || !win.autostart.isAutostartDesktop(id)) {
-            if (entry && entry.execute) {
-                root._armNew(id);
-                entry.execute();
-            }
-            return !!(entry && entry.execute);
-        }
+        if (!win || !win.autostart.isAutostartDesktop(id))
+            return root._start(entry, id);
         if (root.raiseDesktop(id))
             return true;
         const stem = id.replace(/\.desktop$/i, "");
-        if (!stem.length) {
-            if (entry && entry.execute) {
-                root._armNew(stem);
-                entry.execute();
-            }
-            return !!(entry && entry.execute);
-        }
+        if (!stem.length)
+            return root._start(entry, stem);
         if (raiseProc.running)
             return true;
         root._stopParkedOpen();
