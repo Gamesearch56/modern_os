@@ -22,7 +22,8 @@ FocusScope {
     readonly property real _scale: root.zoom / 100
     readonly property real _step: root._style.lineHeight * 3
     // {{measure:N}} is N % of the text column, for pictures sized in percent.
-    readonly property real _measure: Math.min(Tokens.window.manualMeasure, flick.width - Tokens.spacing.md * 2)
+    readonly property real _inset: Tokens.spacing.lg
+    readonly property real _measure: Math.min(Tokens.window.manualMeasure, flick.width - root._inset * 2)
     readonly property var _fills: ({
         heading: String(Colors.color.onSurface),
         muted: String(Colors.color.onSurfaceVariant),
@@ -35,10 +36,13 @@ FocusScope {
         h3: Math.round(Typography.style("titleMedium").pixelSize * root._scale),
         h4: Math.round(Typography.style("titleSmall").pixelSize * root._scale),
         codeSize: Math.round(Typography.style("bodyMedium").pixelSize * root._scale),
-        gap: Math.round(Tokens.spacing.md),
-        tight: Math.round(Tokens.spacing.xs),
-        headGap: Math.round(Tokens.spacing.xl),
-        pad: Math.round(Tokens.spacing.sm)
+        // One rhythm for a long read. block is the pause between
+        // paragraphs, item the pause inside a list or a table cell,
+        // headTop the break before a new section.
+        gap: Math.round(Tokens.spacing.lg),
+        tight: Math.round(Tokens.spacing.sm),
+        headGap: Math.round(Tokens.spacing.xxl),
+        pad: Math.round(Tokens.spacing.md)
     })
     readonly property string _html: root.doc
         ? String(root.doc.html || "").replace(/\{\{(\w+)(?::(\d+))?\}\}/g, (m, k, pct) => pct
@@ -69,17 +73,33 @@ FocusScope {
         root.zoom = Math.max(root.zoomMin, Math.min(root.zoomMax, root.zoom + steps * root.zoomStep));
     }
 
-    // While a new page is laid out, ignore the flick still running from
-    // the previous one. Interactive scrolling comes back on the next turn.
-    property bool _reset: false
+    // A page opened from the bottom of another is put back at the end
+    // when its text arrives. The flick does that in the same step, after
+    // any assignment we make, so keep putting the scroll back at the top
+    // until the new text has stopped changing height.
+    property bool _holdTop: false
+
+    function _log(why: string) {
+        console.log("MANUALPAGE",
+                    root.doc ? root.doc.title : "",
+                    why,
+                    "y", Math.round(flick.contentY),
+                    "item", Math.round(flick.contentItem.y),
+                    "max", Math.round(root._maxY()),
+                    "body", Math.round(body.implicitHeight),
+                    "hold", root._holdTop);
+    }
+
+    function _pinTop() {
+        flick.cancelFlick();
+        flick.contentY = 0;
+        root._log("pin");
+    }
 
     function _showTop() {
-        root._reset = true;
-        flick.contentY = 0;
-        Qt.callLater(() => {
-            flick.contentY = 0;
-            root._reset = false;
-        });
+        root._holdTop = true;
+        root._pinTop();
+        holdTop.restart();
     }
 
     // Past the last link Tab is left unhandled, so focus moves on.
@@ -102,13 +122,42 @@ FocusScope {
         return true;
     }
 
+    // Reassigning the text throws away the old scene-graph node. After a
+    // wheel scroll that node keeps showing the previous screen, so the
+    // new chapter looks empty until the wheel moves again. The new html
+    // arrives with this signal, so this is the moment to swap it in.
+    function _loadText() {
+        const next = root._html;
+        if (body.text === next)
+            return;
+        body.clear();
+        body.text = next;
+        // Walking the cursor makes Qt lay out the blocks the viewport
+        // can see. Without it, a chapter opened after a wheel scroll
+        // keeps the previous page's clip and paints only a sliver.
+        if (body.length > 1) {
+            body.cursorPosition = body.length - 1;
+            body.cursorPosition = 0;
+            body.deselect();
+        }
+    }
+
     onDocChanged: {
         body.deselect();
         root._showTop();
         root._stops = null;
         root._stop = -1;
     }
-    on_HtmlChanged: root._stops = null
+    Component.onCompleted: {
+        root._loadText();
+        holdTop.restart();
+    }
+    on_HtmlChanged: {
+        root._stops = null;
+        root._loadText();
+        if (root._holdTop)
+            root._pinTop();
+    }
     activeFocusOnTab: true
     onActiveFocusChanged: if (!activeFocus) root._stop = -1
     Accessible.role: Accessible.Document
@@ -170,23 +219,43 @@ FocusScope {
         visible: !!root.doc
         clip: true
         contentWidth: width
-        contentHeight: body.y + body.height + Tokens.spacing.xl
+        contentHeight: Math.max(height, body.y + body.implicitHeight + Tokens.spacing.xl)
         boundsBehavior: Flickable.StopAtBounds
-        interactive: !root._reset
-        onContentHeightChanged: root._reset ? contentY = 0 : root._clampY()
-        onHeightChanged: root._clampY()
-        onMovementEnded: root._clampY()
-        onFlickEnded: root._clampY()
+        onContentYChanged: {
+            root._log("scroll");
+            if (root._holdTop && contentY > 0)
+                Qt.callLater(root._pinTop);
+        }
+        onHeightChanged: if (!root._holdTop) root._clampY()
+        onMovementEnded: if (!root._holdTop) root._clampY()
+        onFlickEnded: if (!root._holdTop) root._clampY()
+
+        Connections {
+            target: body
+            function onImplicitHeightChanged() {
+                if (root._holdTop)
+                    holdTop.restart();
+                else
+                    root._clampY();
+            }
+        }
+
+        Timer {
+            id: holdTop
+            interval: Motion.durationLong
+            onTriggered: {
+                root._loadText();
+                root._pinTop();
+                root._holdTop = false;
+                root._log("hold-end");
+            }
+        }
 
         TextEdit {
             id: body
-            x: Math.max(Tokens.spacing.md, (flick.width - width) / 2)
+            x: Math.max(root._inset, (flick.width - width) / 2)
             y: Tokens.spacing.xl
             width: root._measure
-            // As tall as the text, so the page cannot scroll into the
-            // empty area under a shorter control (report 54).
-            height: contentHeight
-            text: root._html
             textFormat: TextEdit.RichText
             readOnly: true
             selectByMouse: true
