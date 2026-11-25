@@ -43,7 +43,7 @@ FloatingWindow {
     // focus, which on a slow machine is after a short timer would fire.
     property bool _spaceLive: false
 
-    on_ImageUrlChanged: zoomFlick.zoom = 1
+    on_ImageUrlChanged: stage.reset()
 
     Timer {
         id: spaceLive
@@ -54,63 +54,108 @@ FloatingWindow {
     onVisibleChanged: if (visible) { win._spaceLive = false; spaceLive.restart(); }
     Component.onCompleted: spaceLive.restart()
 
-    Flickable {
-        id: zoomFlick
+    // The fitted picture stays one size. Zoom is a transform, the same
+    // motion as the image viewer: resizing the image on every wheel
+    // step is what made the preview stutter.
+    Item {
+        id: stage
         anchors.fill: parent
         clip: true
         property real zoom: 1
+        property real panX: 0
+        property real panY: 0
         readonly property real _maxZoom: 8
-        contentWidth: shot.width
-        contentHeight: shot.height
-        boundsBehavior: Flickable.StopAtBounds
-        interactive: zoom > 1
 
-        Image {
-            id: shot
-            width: Math.max(1, zoomFlick.width * zoomFlick.zoom)
-            height: Math.max(1, zoomFlick.height * zoomFlick.zoom)
-            fillMode: Image.PreserveAspectFit
-            asynchronous: true
-            cache: false
-            source: win._imageUrl
-            onStatusChanged: {
-                if (status === Image.Ready)
-                    win._fit();
-                if (status !== Image.Error || !win._imageUrl.length)
-                    return;
-                const url = win._imageUrl;
-                Qt.callLater(() => {
-                    if (shot.status === Image.Error && String(shot.source) === url)
-                        FilePreview.markImageFailed();
-                });
+        function reset() {
+            zoom = 1;
+            panX = 0;
+            panY = 0;
+        }
+
+        function _clamp(offset: real, z: real, view: real): real {
+            const span = view * z;
+            if (span <= view + 0.5)
+                return (view - span) / 2;
+            return Math.max(view - span, Math.min(0, offset));
+        }
+
+        function _settle() {
+            panX = _clamp(panX, zoom, width);
+            panY = _clamp(panY, zoom, height);
+        }
+
+        onWidthChanged: _settle()
+        onHeightChanged: _settle()
+
+        function _setZoom(next: real, px: real, py: real) {
+            next = Math.min(_maxZoom, Math.max(1, next));
+            if (!(zoom > 0) || Math.abs(next - zoom) < 0.001)
+                return;
+            panX = px - (px - panX) * next / zoom;
+            panY = py - (py - panY) * next / zoom;
+            zoom = next;
+            _settle();
+        }
+
+        Item {
+            width: stage.width
+            height: stage.height
+            x: stage.panX
+            y: stage.panY
+            scale: stage.zoom
+            transformOrigin: Item.TopLeft
+
+            Image {
+                id: shot
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+                cache: false
+                smooth: true
+                mipmap: true
+                source: win._imageUrl
+                onStatusChanged: {
+                    if (status === Image.Ready)
+                        win._fit();
+                    if (status !== Image.Error || !win._imageUrl.length)
+                        return;
+                    const url = win._imageUrl;
+                    Qt.callLater(() => {
+                        if (shot.status === Image.Error && String(shot.source) === url)
+                            FilePreview.markImageFailed();
+                    });
+                }
             }
         }
 
         // Wayland delivers the wheel as a synthesized scroll. A handler
-        // that only accepts a plain mouse never sees it.
+        // that only accepts a plain mouse never sees it. A mouse also
+        // sends a few pixels with its angle; those are not a second zoom.
         WheelHandler {
             acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-            onWheel: (event) => zoomFlick._scale(event)
+            onWheel: (event) => {
+                const angle = event.angleDelta.y || 0;
+                const steps = angle !== 0 ? angle / 120 : (event.pixelDelta.y || 0) / 48;
+                if (!steps)
+                    return;
+                stage._setZoom(stage.zoom * Math.pow(1.25, steps), event.x, event.y);
+                event.accepted = true;
+            }
         }
 
-        function _scale(event) {
-            const angle = event.angleDelta.y || 0;
-            const pixel = event.pixelDelta.y || 0;
-            const steps = angle !== 0 ? angle / 120 : pixel / 48;
-            if (!steps)
-                return;
-            const prev = zoom;
-            const next = Math.min(_maxZoom, Math.max(1, prev * Math.pow(1.25, steps)));
-            if (Math.abs(next - prev) < 0.001)
-                return;
-            event.accepted = true;
-            const rx = contentWidth > 0 ? (contentX + event.x) / contentWidth : 0.5;
-            const ry = contentHeight > 0 ? (contentY + event.y) / contentHeight : 0.5;
-            zoom = next;
-            Qt.callLater(() => {
-                contentX = Math.max(0, rx * contentWidth - event.x);
-                contentY = Math.max(0, ry * contentHeight - event.y);
-            });
+        DragHandler {
+            property point start
+            target: null
+            enabled: stage.zoom > 1
+            cursorShape: Qt.ClosedHandCursor
+            onActiveChanged: if (active) start = Qt.point(stage.panX, stage.panY)
+            onActiveTranslationChanged: {
+                if (!active)
+                    return;
+                stage.panX = start.x + activeTranslation.x;
+                stage.panY = start.y + activeTranslation.y;
+                stage._settle();
+            }
         }
     }
 
