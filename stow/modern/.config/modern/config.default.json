@@ -1,0 +1,394 @@
+{
+  "_comment": "Shipped defaults. Tracked in git. Copied to config.json on first install; config.json is the live, gitignored, per-machine file that the Settings app edits. Never edit this file to change YOUR machine's behaviour — edit config.json. QML JsonAdapter does not deep-merge var blobs (keybinds, widgets, windowRules) — restore those keys from this file after a shipped-key add.",
+  "general": {
+    "autostart": ["proton-mail.desktop", "proton-calendar.desktop", "whatsapp.desktop"],
+    "notificationTimeoutMs": 6000,
+    "dndSchedule": {
+      "enabled": false,
+      "from": "23:00",
+      "to": "07:00"
+    },
+    "idleTimings": {
+      "dimSec": 120,
+      "screenOffSec": 300,
+      "lockSec": 600,
+      "suspendSec": 1800
+    },
+    "autologin": false
+  },
+  "motion": {
+    "scale": 1.0,
+    "overlay": "fadeZoom"
+  },
+  "typography": {
+    "ui": "Inter",
+    "document": "Inter",
+    "monospace": "JetBrainsMono Nerd Font",
+    "scale": 1.0,
+    "weight": 400
+  },
+  "design": {
+    "activeProfile": "tonal-spot-dark",
+    "sourceSeed": "",
+    "cornerRounding": 1.0,
+    "transparency": 0.85,
+    "blurStrength": 40,
+    "iconTheme": "Papirus-Dark",
+    "cursorTheme": "Bibata-Modern-Classic",
+    "cursorSize": 24,
+    "wallpaperProvider": "https://4kwallpapers.com",
+    "wallpaperTransition": "fade",
+    "bootScreen": {
+      "mode": "static",
+      "wallpaperOnSplash": true,
+      "wallpaperOnLock": true,
+      "wallpaperOnLogin": true,
+      "wallpaperOnVivaldi": true
+    },
+    "surfaceTint": 0.7
+  },
+  "language": {
+    "ui": "en",
+    "fallback": "en",
+    "dateFormat": "DD.MM.YYYY",
+    "timeFormat": "HH:mm",
+    "firstDayOfWeek": 1,
+    "previewDate": "",
+    "timezone": ""
+  },
+  "bar": {
+    "position": "top",
+    "style": "floating",
+    "height": 36,
+    "edgeGap": 8,
+    "endGap": 8,
+    "autoHide": false,
+    "perMonitor": {
+      "enabled": true
+    },
+    "left": [
+      "launcher",
+      "ai",
+      "workspaces",
+      "media"
+    ],
+    "center": [
+      "clock"
+    ],
+    "right": [
+      "weather",
+      "connectivity",
+      "audio",
+      "taskbar",
+      "battery",
+      "settings",
+      "power"
+    ]
+  },
+  "dock": {
+    "enabled": true,
+    "autoHide": false,
+    "iconSize": 48,
+    "showNames": false,
+    "pad": 8,
+    "gap": 8,
+    "theme": "floating",
+    "hover": "zoom",
+    "apps": [
+      "vivaldi-stable",
+      "whatsapp",
+      "spotify-launcher",
+      "steam",
+      "kitty",
+      "shell:files",
+      "modern.manual",
+      "shell:store",
+      "shell:settings"
+    ]
+  },
+  "widgets": {
+    "clock": {
+      "dateFormat": "DD.MM.YYYY",
+      "timeFormat": "HH:mm",
+      "showSeconds": false,
+      "showWeekday": false,
+      "calendarProvider": "none",
+      "calendarAccount": ""
+    },
+    "weather": {
+      "locationMode": "auto",
+      "manualLocation": "",
+      "placeName": "",
+      "units": "metric",
+      "pollIntervalMs": 600000
+    },
+    "performance": {
+      "pollIntervalMs": 2000,
+      "showGpu": true,
+      "showTemps": true
+    },
+    "audio": {
+      "scrollStepPercent": 5,
+      "scrollStepFinePercent": 1
+    }
+  },
+  "input": {
+    "kbLayout": "us",
+    "kbVariant": "",
+    "repeatRate": 25,
+    "repeatDelay": 600,
+    "numlockOnBoot": false,
+    "mouseSideButtons": true
+  },
+  "monitors": {
+    "profiles": {},
+    "rules": [],
+    "workspaceMode": "dynamic",
+    "primaryDescription": ""
+  },
+  "windowRules": [
+    {
+      "name": "jetbrains-dialogs",
+      "match": {
+        "class": "jetbrains-.*",
+        "title": "win0"
+      },
+      "float": true
+    },
+    {
+      "name": "battlenet-launcher",
+      "match": {
+        "title": ".*[Bb]attle\\.net.*"
+      },
+      "float": true,
+      "center": true,
+      "size": "1280 800"
+    }
+  ],
+  "launcher": {
+    "providers": {
+      "apps": {
+        "enabled": true,
+        "prefix": ""
+      },
+      "shell": {
+        "enabled": true,
+        "prefix": ">"
+      },
+      "calculator": {
+        "enabled": true,
+        "prefix": "="
+      },
+      "websearch": {
+        "enabled": true,
+        "prefix": "?"
+      },
+      "emoji": {
+        "enabled": true,
+        "prefix": ":"
+      },
+      "files": {
+        "enabled": true,
+        "prefix": "/"
+      },
+      "windows": {
+        "enabled": true,
+        "prefix": "w "
+      }
+    },
+    "frecencyEnabled": true,
+    "mostUsedGridSize": 8,
+    "resultCount": 9,
+    "showIcons": true,
+    "showDescriptions": true
+  },
+  "power": {
+    "buttonAction": "ask",
+    "lidActionAc": "lock",
+    "lidActionBattery": "suspend",
+    "inhibitOnFullscreen": true,
+    "inhibitOnMedia": true
+  },
+  "screenshots": {
+    "directory": "~/Pictures/Screenshots",
+    "filenameTemplate": "screenshot-%Y%m%d-%H%M%S",
+    "format": "png",
+    "quality": 90,
+    "copyToClipboard": true,
+    "openEditorAfterCapture": false,
+    "includeCursor": false,
+    "videoDirectory": "~/Videos/Recordings",
+    "videoFilenameTemplate": "recording-%Y%m%d-%H%M%S",
+    "recordAudio": true
+  },
+  "gaming": {
+    "mode": false,
+    "autoFullscreen": true,
+    "autoOptimize": false,
+    "hdrSession": false,
+    "browserLight": false,
+    "matchClass": "steam_app_.*|gamescope|.*\\.exe|ProjectZomboid.*|projectzomboid|LWJGL|lwjgl|wow|Wow|Warcraft.*",
+    "matchTitle": ".*\\.exe|Project Zomboid|World of Warcraft|Warcraft III|Warcraft 3|Diablo.*|Overwatch.*|Hearthstone|StarCraft.*|Call of Duty.*"
+  },
+  "audio": {
+    "autoSwitchBluetooth": "on",
+    "fallbackSink": "",
+    "fallbackSource": "",
+    "lastSink": "",
+    "lastSource": "",
+    "perAppVolume": {},
+    "masterVolume": -1,
+    "masterVolumeLimit": 100
+  },
+  "network": {
+    "wifiAutoconnectPriority": {},
+    "dnsOverride": [],
+    "mirrorCountry": "Germany"
+  },
+  "kdeconnect": {
+    "enabled": true,
+    "mirrorNotifications": true,
+    "sharedClipboard": true
+  },
+  "accounts": {
+    "protonDrive": {
+      "enabled": false
+    },
+    "calendarIcsUrl": "",
+    "ai": {
+      "provider": "none",
+      "ollamaModel": "llama3",
+      "geminiModel": "",
+      "chatgptModel": "",
+      "thinking": false,
+      "brief": true
+    }
+  },
+  "census": {
+    "_comment": "Install counts (docs/CENSUS.md). Off until enabled is true. The id is a random UUID on that machine, sent with the release once a day. An empty url sends nothing.",
+    "enabled": false,
+    "url": "https://modern-census.gamesearch56.workers.dev"
+  },
+  "bugReport": {
+    "_comment": "Problem reports (scripts/bug-report.sh). Sending uses this computer's GitHub login. See docs/BUGREPORT.md.",
+    "repo": "Gamesearch56/modern_os",
+    "screenshotsDefault": true
+  },
+  "files": {
+    "sortKey": "name",
+    "sortDesc": true,
+    "foldersFirst": true,
+    "view": "grid",
+    "showHidden": false,
+    "showSize": true,
+    "showCreated": true,
+    "showModified": true,
+    "showType": true,
+    "showRecent": true,
+    "showNetwork": false,
+    "favorites": []
+  },
+  "editor": {
+    "wordWrap": true,
+    "statusBar": true,
+    "monospace": true,
+    "zoom": 100,
+    "maxMegabytes": 8
+  },
+  "viewer": {
+    "scaling": "shrink",
+    "info": false,
+    "slideshowSeconds": 4
+  },
+  "player": {
+    "volume": 1,
+    "muted": true,
+    "loop": true,
+    "seekSeconds": 5,
+    "jumpSeconds": 60
+  },
+  "backup": {
+    "snapperEnabled": false,
+    "resticEnabled": false,
+    "preUpdateSnapshot": true,
+    "pruneEnabled": true,
+    "keepCount": 8
+  },
+  "keybinds": {
+    "_comment": "Combo strings use Hyprland's Lua hl.bind() format: 'MOD + MOD + KEY', matching docs.hypr.land's 0.55+ Lua examples (e.g. 'SUPER + SHIFT + T'). Settings > Keyboard lists this table; Modules/Cheatsheet reads it. SUPER+T and SUPER+RETURN always open kitty even if terminal is omitted.",
+    "launcher": "SUPER + SPACE",
+    "aiChat": "SUPER + A",
+    "powerMenu": "SUPER + M",
+    "controlCenter": "SUPER + N",
+    "lockScreen": "SUPER + L",
+    "exitSession": "SUPER + SHIFT + M",
+    "cheatsheet": "SUPER + K",
+    "settings": "SUPER + I",
+    "wallpaperPicker": "SUPER + W",
+    "taskbar": "SUPER + DELETE",
+    "overview": "SUPER + TAB",
+    "terminal": "SUPER + T",
+    "browser": "SUPER + B",
+    "browserIncognito": "SUPER + SHIFT + B",
+    "fileManager": "SUPER + E",
+    "spotify": "SUPER + R",
+    "closeWindow": "SUPER + Q",
+    "fullscreen": "SUPER + F",
+    "toggleFloating": "SUPER + V",
+    "pseudoTile": "SUPER + P",
+    "toggleSplit": "SUPER + J",
+    "moveFocusLeft": "SUPER + LEFT",
+    "moveFocusRight": "SUPER + RIGHT",
+    "moveFocusUp": "SUPER + UP",
+    "moveFocusDown": "SUPER + DOWN",
+    "moveWindowLeft": "SUPER + SHIFT + LEFT",
+    "moveWindowRight": "SUPER + SHIFT + RIGHT",
+    "moveWindowUp": "SUPER + SHIFT + UP",
+    "moveWindowDown": "SUPER + SHIFT + DOWN",
+    "workspace1": "SUPER + 1",
+    "workspace2": "SUPER + 2",
+    "workspace3": "SUPER + 3",
+    "workspace4": "SUPER + 4",
+    "workspace5": "SUPER + 5",
+    "workspace6": "SUPER + 6",
+    "workspace7": "SUPER + 7",
+    "workspace8": "SUPER + 8",
+    "workspace9": "SUPER + 9",
+    "workspace10": "SUPER + 0",
+    "moveToWorkspace1": "SUPER + SHIFT + 1",
+    "moveToWorkspace2": "SUPER + SHIFT + 2",
+    "moveToWorkspace3": "SUPER + SHIFT + 3",
+    "moveToWorkspace4": "SUPER + SHIFT + 4",
+    "moveToWorkspace5": "SUPER + SHIFT + 5",
+    "moveToWorkspace6": "SUPER + SHIFT + 6",
+    "moveToWorkspace7": "SUPER + SHIFT + 7",
+    "moveToWorkspace8": "SUPER + SHIFT + 8",
+    "moveToWorkspace9": "SUPER + SHIFT + 9",
+    "moveToWorkspace10": "SUPER + SHIFT + 0",
+    "screenshotRegion": "PRINT",
+    "screenshotWindow": "SHIFT + PRINT",
+    "screenshotFull": "SUPER + PRINT",
+    "colorPicker": "SUPER + SHIFT + C",
+    "manual": "SUPER + Y",
+    "filePreview": "SPACE",
+    "bugReport": "SUPER + #"
+  },
+  "apps": {
+    "defaults": {
+      "browser": "vivaldi-stable.desktop",
+      "calendar": "proton-calendar.desktop",
+      "mail": "proton-mail.desktop",
+      "communication": "whatsapp.desktop",
+      "fileManager": "modern.files.desktop",
+      "videoPlayer": "modern.mediaplayer.desktop",
+      "imageViewer": "modern.imageviewer.desktop",
+      "textEditor": "modern.editor.desktop",
+      "terminal": "kitty.desktop"
+    }
+  },
+  "windows": {
+    "opacity": 1.0,
+    "gapsIn": 5,
+    "gapsOut": 10
+  }
+}

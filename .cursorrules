@@ -1,0 +1,60 @@
+# modern_os — agent rules
+
+Material Design 3 Hyprland environment: Quickshell (QML) shell, matugen token
+pipeline, JSON config layer, layered package manifests. See `AGENTS.md` for
+the full architecture and `docs/DECISIONS.md` for why things are this way.
+
+## Hard rules (lint-enforced by scripts/lint-layers.sh)
+
+1. **Layer direction is one-way.** `Commons` depends on nothing. `Services`
+   import `Commons` only and own all process/D-Bus/filesystem access.
+   `Widgets` are stateless and import neither `Services` nor `Modules`.
+   `Modules` compose `Widgets` and read `Services`; a Module never spawns a
+   process or touches a file directly, and never reaches into another
+   Module's internals — only its `Module.qml`.
+2. **No hardcoded colors, durations, fonts or sizes.** Everything comes from
+   `Commons/Tokens.qml`, `Commons/Motion.qml` and `Commons/Typography.qml`.
+   If a value isn't a token yet, add it as one — don't inline it.
+3. **No hardcoded monitor names, device IDs or usernames.** Monitors are
+   matched on `description` + serial. Audio/Bluetooth devices come from
+   `Services/Audio` and `Services/Bluetooth`, never a literal ALSA/PipeWire
+   node name.
+4. **Every user-visible string goes through `I18n.t()`.** Never a bare
+   string literal in a `Text`/`MText` binding. Add the key to both
+   `translations/en.json` and `translations/de.json` in the same change.
+   Labels, hints, and dialogs describe this desktop only — never the
+   previous setup, other backup tools, other accounts, or cutover.
+5. **Never poll where a signal or socket exists.** Hyprland state comes from
+   its event socket, MPRIS from D-Bus signals. Where polling is genuinely
+   necessary (sensors), use one shared timer and stop it while the
+   consuming widget is not visible.
+6. **Files stay under ~200 lines, one exported component per file.** Split
+   before you exceed it.
+7. **Use `require()` in Hyprland Lua, never `dofile()`.** `require` gives
+   `ConfigWatcher` dependency tracking; `dofile` does not.
+8. **The Settings app writes `config.json` only.** It never rewrites Lua,
+   QML or shell scripts. `hyprland.lua` and the shell read `config.json` at
+   load/reload; they never write it.
+9. **Initramfs and extra `/etc` stay staged.** Plymouth, NVIDIA
+   mkinitcpio, polkit `modern-usersd`, snapper, and similar live under
+   `install/system/` and are applied only by an explicit ISO provision
+   command. `install.sh` does apply the greetd login screen on a real
+   user home. See `docs/ISOLATION.md`.
+10. **No secrets committed.** API keys and tokens go in the gitignored
+    `secrets.json`, never in `config.default.json`, a template, or a
+    comment.
+11. **Every `Commons`/`Services`/`Widgets` `.qml` file is listed in that
+    directory's `qmldir`.** Never rely on Quickshell's implicit
+    directory-scan auto-synthesis — it has been observed silently
+    registering a `pragma Singleton` file as a plain (non-singleton) type,
+    breaking every method call on it. See `docs/DECISIONS.md` #19.
+
+## Style
+
+- Comments explain *why*, never *what*. No narration comments.
+- Bash: `set -euo pipefail`, shellcheck-clean, functions in `install/lib/`
+  are sourced, not copy-pasted between scripts.
+- QML: one `Singleton` per Service/Commons file, PascalCase component
+  names, camelCase properties.
+- Keep configuration snippets complete and directly usable — no
+  conversational filler inside generated config files.

@@ -1,0 +1,12 @@
+# User identity (name/email) is omitted on purpose — it is per-machine
+# and must not be committed. Put it in ~/.gitconfig.local (gitignored)
+# or run `git config --global user.name` / `user.email` on the account.
+
+[include]
+	path = ~/.gitconfig.local
+
+[credential]
+	# libsecret, NOT `store`. `store` writes passwords in plaintext to
+	# ~/.git-credentials. libsecret keeps them in the Secret Service
+	# (GNOME Keyring / KWallet) so a stolen home copy is not enough.
+	helper = libsecret

@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+# Launch a .desktop app with the Qt theme env Hyprland's own process
+# does not keep after display-server init (hl.env only applies at start).
+# --background parks the next window on special:background so mail/chat
+# keep running (and notifying) without occupying a workspace.
+# --raise restores a running single-instance app (Electron with no window)
+# via its x-scheme-handler, else gtk-launch, on the current workspace.
+# Extra args after the desktop id are appended to Exec= (incognito, etc.).
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+# A window that was only raised is already on screen. The watch cursor
+# is for a process that still has to map. A missing helper must not
+# stop the launch.
+arm_busy() {
+    if [[ -x "$SCRIPT_DIR/cursor-busy.sh" ]]; then
+        "$SCRIPT_DIR/cursor-busy.sh" start || true
+    fi
+}
+
+export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
+export QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}"
+export QT_WAYLAND_DISABLE_WINDOWDECORATION="${QT_WAYLAND_DISABLE_WINDOWDECORATION:-1}"
+
+desktop_file() {
+    local id="$1.desktop"
+    local dirs="${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+    local IFS=:
+    local d
+    for d in $dirs; do
+        if [[ -f "$d/applications/$id" ]]; then
+            printf '%s\n' "$d/applications/$id"
+            return 0
+        fi
+    done
+    return 1
+}
+
+scheme_for_desktop() {
+    local path="$1"
+    local mime t
+    mime="$(awk -F= '/^MimeType=/{ print substr($0, 10); exit }' "$path")"
+    IFS=';' read -ra parts <<< "${mime:-}"
+    for t in "${parts[@]}"; do
+        t="${t// /}"
+        case "$t" in
+            # http, https, and mailto are real navigations. Opening
+            # http://-/ is how a browser raise showed a blank page.
+            x-scheme-handler/http|x-scheme-handler/https|x-scheme-handler/mailto)
+                ;;
+            x-scheme-handler/*)
+                printf '%s\n' "${t#x-scheme-handler/}"
+                return 0
+                ;;
+        esac
+    done
+    return 1
+}
+
+if [[ "${1:-}" == "--background" ]]; then
+    shift
+    inner=$(printf '%q ' "$0" "$@")
+    inner="${inner% }"
+    # Hyprland 0.56 Lua treats `hyprctl dispatch exec` as invalid syntax.
+    exec hyprctl dispatch "hl.dsp.exec_cmd([=[${inner}]=], { workspace = \"special:background silent\" })"
+fi
+
+on_active=0
+if [[ "${1:-}" == "--on-active" ]]; then
+    on_active=1
+    shift
+fi
+
+if [[ "${1:-}" == "--raise" ]]; then
+    shift
+    desktop="${1:-}"
+    desktop="${desktop%.desktop}"
+    if [[ -z "$desktop" ]]; then
+        echo "modern-launch: missing desktop id" >&2
+        exit 1
+    fi
+    path="$(desktop_file "$desktop" || true)"
+    scheme=""
+    if [[ -n "$path" ]]; then
+        scheme="$(scheme_for_desktop "$path" || true)"
+    fi
+    if [[ -n "$scheme" ]]; then
+        arm_busy
+        exec xdg-open "${scheme}://-/"
+    fi
+    arm_busy
+    exec gtk-launch "$desktop"
+fi
+
+desktop="${1:-}"
+if [[ -z "$desktop" ]]; then
+    echo "modern-launch: missing desktop id" >&2
+    exit 1
+fi
+shift
+desktop="${desktop%.desktop}"
+
+case "$desktop" in
+    vivaldi-stable|vivaldi)
+        # Native theme lives in Preferences; Vivaldi rewrites that file on
+        # quit, so merge immediately before a cold start.
+        # shellcheck source=lib/vivaldi-prefs.sh
+        source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/vivaldi-prefs.sh"
+        merge_vivaldi_prefs "${XDG_CONFIG_HOME:-$HOME/.config}/modern/tokens.json" || true
+        ;;
+esac
+
+# Breeze reads ColorScheme=modern and rounds widgets; qt6ct QSS must stay
+# unloaded (Fusion would drop the Active palette). Other apps keep qt6ct-style.
+case "$desktop" in
+    org.kde.dolphin|dolphin)
+        for breeze_so in \
+            /usr/lib/qt6/plugins/styles/breeze6.so \
+            /usr/lib/qt6/plugins/styles/libbreeze6.so \
+            /usr/lib/qt6/plugins/styles/breeze.so
+        do
+            if [ -e "$breeze_so" ]; then
+                export QT_STYLE_OVERRIDE=Breeze
+                break
+            fi
+        done
+        ;;
+esac
+
+if [[ $# -eq 0 ]]; then
+    # gtk-launch of a running app activates its existing window, which
+    # stays on the other monitor. Bring that window here first.
+    if [[ "$on_active" -eq 1 ]]; then
+        raise_sh="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/session-raise.sh"
+        if [[ -x "$raise_sh" ]] && "$raise_sh" "$desktop"; then
+            exit 0
+        fi
+    fi
+    arm_busy
+    exec gtk-launch "$desktop"
+fi
+
+path="$(desktop_file "$desktop" || true)"
+if [[ -z "$path" ]]; then
+    arm_busy
+    exec gtk-launch "$desktop" "$@"
+fi
+
+exec_line="$(awk -F= '/^Exec=/{ print substr($0, 6); exit }' "$path")"
+if [[ -z "$exec_line" ]]; then
+    arm_busy
+    exec gtk-launch "$desktop" "$@"
+fi
+exec_line="${exec_line//%%/__PCT__}"
+exec_line="$(printf '%s\n' "$exec_line" | sed -E 's/ %[fFuUdDnNickvm]//g')"
+exec_line="${exec_line//__PCT__/%}"
+# Exec= comes from a trusted .desktop; extra args are quoted.
+# shellcheck disable=SC2086
+arm_busy
+eval "exec ${exec_line} $(printf '%q ' "$@")"

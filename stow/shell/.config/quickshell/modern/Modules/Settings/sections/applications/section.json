@@ -1,0 +1,7 @@
+{
+  "id": "applications",
+  "icon": "applications-other",
+  "key": "settings.sections.applications",
+  "order": 20,
+  "keywords": ["autostart", "apps", "startup", "browser", "calendar", "mail", "messenger", "whatsapp", "proton", "video", "image", "text", "editor"]
+}

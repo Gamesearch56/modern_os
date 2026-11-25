@@ -1,0 +1,2 @@
+# AMD GPU extras for the gaming profile. Selected with --hw amd / gpu=amd.
+lib32-vulkan-radeon        # 32-bit RADV

@@ -1,0 +1,8 @@
+[Unit]
+Description=Hold the boot splash across a session handoff
+DefaultDependencies=no
+ConditionKernelCommandLine=!plymouth.enable=0
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/modern/splash-hold.sh show

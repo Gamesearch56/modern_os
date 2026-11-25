@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Hand a side-button click back to the focused window after
+# modules/mouse_windows.lua decided it was a click, not a drag.
+# Press and release must be separate dispatches: one call (or one
+# --batch) delivers the press and drops the release.
+set -euo pipefail
+
+case "${1:-}" in
+    275 | 276) ;;
+    *)
+        echo "usage: mouse-replay 275|276" >&2
+        exit 2
+        ;;
+esac
+
+pos=$(hyprctl cursorpos)
+x=${pos%%,*}
+y=${pos##*, }
+[[ $x =~ ^-?[0-9]+(\.[0-9]+)?$ && $y =~ ^-?[0-9]+(\.[0-9]+)?$ ]] || exit 1
+
+for state in down up; do
+    hyprctl dispatch "hl.dsp.send_key_state({mods = \"\", key = \"mouse:$1\", state = \"$state\"})" >/dev/null
+done
+# Hyprland sends the replayed buttons without a pointer frame, so the
+# app holds the release until the next motion. Moving the cursor onto
+# itself sends that frame and puts the app's pointer back under it.
+hyprctl dispatch "hl.dsp.cursor.move({x = $x, y = $y})" >/dev/null

@@ -1,0 +1,2 @@
+# Tracked so stow can link ~/.config/fastfetch. config.jsonc is generated
+# by scripts/theme-apply.sh and gitignored.

@@ -1,0 +1,18 @@
+# Registers ModernOS Files as the file chooser for other apps. The
+# backend itself is scripts/file-chooser-portal.py in the user's
+# checkout, started by the session D-Bus service file in stow/xdg;
+# xdg-desktop-portal only reads backends from /usr/share, so that one
+# file is installed by pacman instead of copied there by hand.
+pkgname=modern-portal
+pkgver=1
+pkgrel=1
+pkgdesc="ModernOS file chooser portal registration"
+arch=('any')
+license=('GPL-3.0-or-later')
+depends=('xdg-desktop-portal' 'python-gobject')
+source=('modern.portal')
+sha256sums=('a2f7fcda76d21875e2e7152aa6524380b07bfbd89cb3afe800433c88d6a4b5c9')
+
+package() {
+    install -Dm644 modern.portal "$pkgdir/usr/share/xdg-desktop-portal/portals/modern.portal"
+}

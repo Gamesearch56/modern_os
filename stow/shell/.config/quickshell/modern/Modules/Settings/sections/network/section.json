@@ -1,0 +1,7 @@
+{
+  "id": "network",
+  "icon": "network-wireless",
+  "key": "settings.sections.network",
+  "order": 120,
+  "keywords": ["wifi", "ethernet", "speed"]
+}

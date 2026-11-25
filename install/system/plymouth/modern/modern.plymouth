@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=modern
+Description=Material Design 3 boot splash. Solid installer colors, a large ModernOS word, and a spinner. Copied into the initramfs by the plymouth hook.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/modern
+ScriptFile=/usr/share/plymouth/themes/modern/modern.script

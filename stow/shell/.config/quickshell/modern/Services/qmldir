@@ -1,0 +1,150 @@
+module Services
+singleton Hypr 1.0 Hypr.qml
+HyprMonitors 1.0 HyprMonitors.qml
+HyprWindows 1.0 HyprWindows.qml
+HyprAutostart 1.0 HyprAutostart.qml
+HyprRaise 1.0 HyprRaise.qml
+singleton MonitorCaps 1.0 MonitorCaps.qml
+singleton Network 1.0 Network.qml
+NetworkJoin 1.0 NetworkJoin.qml
+NetworkSpeed 1.0 NetworkSpeed.qml
+singleton Bluetooth 1.0 Bluetooth.qml
+singleton BluetoothLink 1.0 BluetoothLink.qml
+singleton BluetoothAudio 1.0 BluetoothAudio.qml
+singleton BluetoothClassic 1.0 BluetoothClassic.qml
+singleton BluetoothWarmup 1.0 BluetoothWarmup.qml
+singleton BluetoothSignal 1.0 BluetoothSignal.qml
+singleton Audio 1.0 Audio.qml
+AudioBluetooth 1.0 AudioBluetooth.qml
+AudioNowPlaying 1.0 AudioNowPlaying.qml
+AudioPersist 1.0 AudioPersist.qml
+singleton Brightness 1.0 Brightness.qml
+BrightnessMatch 1.0 BrightnessMatch.qml
+BrightnessWatch 1.0 BrightnessWatch.qml
+singleton Power 1.0 Power.qml
+MediaRoster 1.0 MediaRoster.qml
+singleton Media 1.0 Media.qml
+singleton Notifications 1.0 Notifications.qml
+singleton Settings 1.0 Settings.qml
+singleton Launcher 1.0 Launcher.qml
+singleton DesktopShortcuts 1.0 DesktopShortcuts.qml
+singleton LaunchCursor 1.0 LaunchCursor.qml
+LaunchBusy 1.0 LaunchBusy.qml
+singleton PowerMenu 1.0 PowerMenu.qml
+singleton Cheatsheet 1.0 Cheatsheet.qml
+singleton CheatsheetModel 1.0 CheatsheetModel.qml
+singleton SystemStats 1.0 SystemStats.qml
+singleton ConfigWrite 1.0 ConfigWrite.qml
+ConfigWriteFollow 1.0 ConfigWriteFollow.qml
+ConfigWritePaths 1.0 ConfigWritePaths.qml
+singleton Diagnostics 1.0 Diagnostics.qml
+singleton KdeConnect 1.0 KdeConnect.qml
+singleton FirstRun 1.0 FirstRun.qml
+singleton Overview 1.0 Overview.qml
+singleton Plugins 1.0 Plugins.qml
+singleton Weather 1.0 Weather.qml
+singleton WeatherGeocode 1.0 WeatherGeocode.qml
+singleton Secrets 1.0 Secrets.qml
+singleton CalendarAccount 1.0 CalendarAccount.qml
+singleton Calendar 1.0 Calendar.qml
+singleton Ai 1.0 Ai.qml
+singleton AiSearch 1.0 AiSearch.qml
+AiStatus 1.0 AiStatus.qml
+AiLibrary 1.0 AiLibrary.qml
+AiChat 1.0 AiChat.qml
+AiStore 1.0 AiStore.qml
+AiGemini 1.0 AiGemini.qml
+AiGeminiAccount 1.0 AiGeminiAccount.qml
+AiChatGpt 1.0 AiChatGpt.qml
+AiChatGptAccount 1.0 AiChatGptAccount.qml
+AiFocus 1.0 AiFocus.qml
+singleton Wallpaper 1.0 Wallpaper.qml
+WallpaperThumbs 1.0 WallpaperThumbs.qml
+singleton FilePreview 1.0 FilePreview.qml
+singleton FilePick 1.0 FilePick.qml
+singleton Session 1.0 Session.qml
+SessionAuth 1.0 SessionAuth.qml
+singleton User 1.0 User.qml
+singleton Apps 1.0 Apps.qml
+singleton AppsPrune 1.0 AppsPrune.qml
+singleton Dock 1.0 Dock.qml
+DockPlace 1.0 DockPlace.qml
+singleton AppUninstall 1.0 AppUninstall.qml
+singleton DefaultApps 1.0 DefaultApps.qml
+AppsIcons 1.0 AppsIcons.qml
+singleton IdleInhibit 1.0 IdleInhibit.qml
+singleton IdleDaemon 1.0 IdleDaemon.qml
+singleton Autologin 1.0 Autologin.qml
+singleton Screenshot 1.0 Screenshot.qml
+singleton Recording 1.0 Recording.qml
+singleton Popups 1.0 Popups.qml
+singleton Battery 1.0 Battery.qml
+singleton Alarm 1.0 Alarm.qml
+singleton Taskbar 1.0 Taskbar.qml
+singleton Tray 1.0 Tray.qml
+TrayRoster 1.0 TrayRoster.qml
+singleton RunningApps 1.0 RunningApps.qml
+singleton Theme 1.0 Theme.qml
+ThemeSpec 1.0 ThemeSpec.qml
+singleton ThemePalettes 1.0 ThemePalettes.qml
+singleton Passwd 1.0 Passwd.qml
+PasswdParse 1.0 PasswdParse.qml
+PasswdSelf 1.0 PasswdSelf.qml
+singleton Storage 1.0 Storage.qml
+StorageParse 1.0 StorageParse.qml
+singleton StorageUsage 1.0 StorageUsage.qml
+singleton StorageClean 1.0 StorageClean.qml
+singleton Update 1.0 Update.qml
+singleton UpdateBoot 1.0 UpdateBoot.qml
+UpdateClassify 1.0 UpdateClassify.qml
+UpdateMirrors 1.0 UpdateMirrors.qml
+UpdateProgress 1.0 UpdateProgress.qml
+singleton Snapshots 1.0 Snapshots.qml
+singleton Support 1.0 Support.qml
+SnapshotsParse 1.0 SnapshotsParse.qml
+singleton Firewall 1.0 Firewall.qml
+FirewallParse 1.0 FirewallParse.qml
+StoreHistory 1.0 StoreHistory.qml
+singleton Store 1.0 Store.qml
+StoreCatalog 1.0 StoreCatalog.qml
+StoreClassify 1.0 StoreClassify.qml
+StoreMutate 1.0 StoreMutate.qml
+StoreBrowse 1.0 StoreBrowse.qml
+StoreDetail 1.0 StoreDetail.qml
+StoreFetch 1.0 StoreFetch.qml
+singleton BugReport 1.0 BugReport.qml
+BugReportProc 1.0 BugReportProc.qml
+singleton Files 1.0 Files.qml
+singleton FilesChoose 1.0 FilesChoose.qml
+singleton FilesRequest 1.0 FilesRequest.qml
+singleton FilesSaveAs 1.0 FilesSaveAs.qml
+FilesOps 1.0 FilesOps.qml
+singleton FilesSearch 1.0 FilesSearch.qml
+singleton FilesSizes 1.0 FilesSizes.qml
+singleton FilesTrash 1.0 FilesTrash.qml
+singleton FilesUndo 1.0 FilesUndo.qml
+singleton FilesConflict 1.0 FilesConflict.qml
+singleton FilesSelect 1.0 FilesSelect.qml
+singleton FilesZip 1.0 FilesZip.qml
+singleton FilesPlaces 1.0 FilesPlaces.qml
+singleton FilesNet 1.0 FilesNet.qml
+singleton FilesAccess 1.0 FilesAccess.qml
+singleton FilesTabs 1.0 FilesTabs.qml
+singleton FilesExtra 1.0 FilesExtra.qml
+singleton FilesBus 1.0 FilesBus.qml
+singleton FilesThumbs 1.0 FilesThumbs.qml
+singleton FilesDrag 1.0 FilesDrag.qml
+singleton FilesHistory 1.0 FilesHistory.qml
+singleton FilesLocate 1.0 FilesLocate.qml
+singleton GamesLibrary 1.0 GamesLibrary.qml
+singleton EditorIo 1.0 EditorIo.qml
+singleton EditorDoc 1.0 EditorDoc.qml
+singleton EditorPrefs 1.0 EditorPrefs.qml
+JsonJobs 1.0 JsonJobs.qml
+singleton ViewerIo 1.0 ViewerIo.qml
+singleton ViewerDoc 1.0 ViewerDoc.qml
+singleton ViewerPrefs 1.0 ViewerPrefs.qml
+singleton PlayerIo 1.0 PlayerIo.qml
+singleton PlayerDoc 1.0 PlayerDoc.qml
+singleton PlayerPrefs 1.0 PlayerPrefs.qml
+singleton ManualDocs 1.0 ManualDocs.qml

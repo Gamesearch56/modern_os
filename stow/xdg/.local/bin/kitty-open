@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# kitty.conf forces the Wayland GLFW backend. On some laptop GPUs that
+# init exits before a window, so the launcher and Super+T look dead.
+# A process that is still alive after the grace period has mapped; only
+# a fast death is retried, first on XWayland and then with software GL.
+set -u
+
+log="${XDG_STATE_HOME:-$HOME/.local/state}/modern/kitty-open.log"
+grace="${KITTY_OPEN_GRACE:-0.5}"
+if ! mkdir -p "$(dirname "$log")" 2>/dev/null; then
+    log=/dev/null
+fi
+
+if ! command -v kitty >/dev/null 2>&1; then
+    printf 'kitty-open: kitty is not installed\n' >>"$log"
+    exit 127
+fi
+
+# Kitty creates this before it opens a window. A root-owned ~/.cache
+# (left by the login wallpaper step) makes every launch die with EACCES.
+kitty_cache="${XDG_CACHE_HOME:-$HOME/.cache}/kitty"
+if ! mkdir -p "$kitty_cache" 2>/dev/null || [ ! -w "$kitty_cache" ]; then
+    export KITTY_CACHE_DIRECTORY="${XDG_STATE_HOME:-$HOME/.local/state}/modern/kitty-cache"
+    mkdir -p "$KITTY_CACHE_DIRECTORY" 2>/dev/null || true
+    printf 'kitty-open: %s is not writable, using %s\n' \
+        "$kitty_cache" "$KITTY_CACHE_DIRECTORY" >>"$log"
+fi
+
+# Returns 0 when kitty stayed up, 1 when it died during the grace period.
+launch() {
+    "$@" >>"$log" 2>&1 &
+    pid=$!
+    sleep "$grace"
+    if kill -0 "$pid" 2>/dev/null; then
+        wait "$pid"
+        return 0
+    fi
+    wait "$pid" || true
+    return 1
+}
+
+printf '\n--- %s ---\n' "$(date -Iseconds 2>/dev/null || date)" >>"$log"
+if launch kitty "$@"; then
+    exit 0
+fi
+printf 'wayland start failed, retrying on XWayland\n' >>"$log"
+if KITTY_DISABLE_WAYLAND=1 launch kitty --override linux_display_server=x11 "$@"; then
+    exit 0
+fi
+printf 'XWayland start failed, retrying with software GL\n' >>"$log"
+LIBGL_ALWAYS_SOFTWARE=1 KITTY_DISABLE_WAYLAND=1 exec kitty --override linux_display_server=x11 "$@" >>"$log" 2>&1

@@ -1,0 +1,7 @@
+{
+  "id": "keyboard",
+  "icon": "input-keyboard",
+  "key": "settings.sections.keyboard",
+  "order": 70,
+  "keywords": ["keybinds", "shortcuts", "hotkeys", "cheatsheet", "layout", "repeat", "numlock"]
+}

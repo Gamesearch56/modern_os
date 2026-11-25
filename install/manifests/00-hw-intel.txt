@@ -1,0 +1,2 @@
+# Compatibility alias: CPU ucode only. GPU packages live in 00-hw-gpu-intel.txt.
+intel-ucode

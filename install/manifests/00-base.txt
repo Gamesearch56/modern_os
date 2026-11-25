@@ -1,0 +1,37 @@
+# Base system — every profile installs this layer first.
+base                    # minimal Arch base group
+base-devel              # toolchain required to build AUR packages
+linux-zen               # low-latency desktop kernel, the default boot entry
+linux-zen-headers       # required for DKMS-style modules against linux-zen
+linux-firmware          # firmware blobs for GPU/network/etc.
+btrfs-progs             # the root filesystem is btrfs (see docs/BACKUP.md)
+dosfstools              # mkfs.vfat for the EFI System Partition
+exfatprogs              # read/write exFAT USB sticks, SD cards and external drives
+fuse2                   # required by several AppImage-style AUR packages
+sudo                    # privilege escalation for install.sh and daily use
+git                     # clone this repo, and general dev use
+stow                    # symlinks every stow/ package into $HOME
+jq                      # JSON manipulation used throughout install/ and scripts/
+bash-completion         # completion for pacman/systemctl/etc.
+man-db                  # man pages
+pacman-contrib          # paccache, checkupdates — used by Settings > Update
+reflector               # mirrorlist refresh, see Settings > Update
+openssh                 # remote access / git over ssh
+unzip                   # unpacking release archives (OptiScaler, fonts)
+zip                     # export/import of config.json and backups
+zram-generator          # swap-on-zram; provision-iso.sh installs the config that turns it on
+ufw                     # firewall — see docs/SECURITY.md and the KDE Connect port rule
+sof-firmware            # laptop audio (Intel/AMD SOF)
+alsa-firmware           # older Broadwell-era and similar codecs
+# Shipped on the live squashfs, so an ISO install has them marked
+# explicit. Listed so Store keeps them as system packages.
+mkinitcpio              # builds the initramfs for linux-zen
+e2fsprogs               # ext4 tools (fsck at boot when a partition is ext4)
+efibootmgr              # UEFI boot entries for systemd-boot
+polkit                  # pkexec prompts (Store, Update, Firewall)
+python                  # scripts/ JSON helpers (python3)
+xdg-utils               # xdg-open / xdg-mime for default apps
+xorg-xwayland           # X11 apps under Hyprland, Steam included
+wpa_supplicant          # NetworkManager's wifi backend
+wireless-regdb          # wifi regulatory domain
+less                    # pager for man-db and git

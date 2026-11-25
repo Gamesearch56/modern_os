@@ -1,0 +1,52 @@
+# Hyprland desktop core — every profile past 00-base installs this.
+hyprland                       # the compositor
+hyprland-guiutils               # hyprland-dialog; without it Hyprland shows a 15s login overlay
+mesa                           # OpenGL/EGL (Hyprland also pulls this; listed so m0 is explicit)
+libdisplay-info                # di-edid-decode: Settings > Displays reads HDR/wide-gamut support (Services/MonitorCaps)
+libdrm                         # modetest: Settings > Displays reads the connector's vrr_capable (Services/MonitorCaps)
+greetd                         # login (enabled by install.sh on a real user home)
+plymouth                        # boot and shutdown splash (enabled by provision, not install.sh)
+gnome-keyring                  # login keyring via greetd PAM; without it Electron/libsecret prompt for Default Keyring
+xdg-user-dirs                  # Desktop/Pictures before wallpaper copy
+gvfs                           # removable disks and network places
+gvfs-mtp                       # phone MTP
+gvfs-smb                       # SMB file servers in the file manager
+hypridle                       # idle handling (screen off, suspend) — see Services/Power
+hyprland-qt-support             # org.hyprland.style QML chrome (application-style.conf); polkit UI is phylax-git (10-desktop.aur.txt)
+xdg-desktop-portal-hyprland     # screen share / screenshot portal backend
+xdg-desktop-portal-gtk          # fallback portal backend (file chooser before modern-portal is installed)
+python-dbus                     # FileManager1 bus (file-manager-bus.py)
+python-gobject                  # Gio/GLib for the file chooser portal and the FileManager1 main loop
+quickshell                      # the shell itself — bar, panels, launcher, lock, greeter
+qt6-wayland                     # native Wayland for Qt6 apps (Quickshell, Settings)
+qt6-declarative                 # qml6 for wallpaper-provider.sh
+qt6-webengine                   # wallpaper provider: WebEngine process (scripts/wallpaper-provider.sh)
+qt6ct                           # Qt6 theme configuration, written by theme-apply.sh
+networkmanager                  # network management daemon
+curl                             # Settings speed test (scripts/network-speed.sh)
+bluez                            # bluetoothd + bluetooth.service; org.bluez for Services/Bluetooth
+bluez-utils                      # bluetoothctl and friends (does not depend on bluez)
+kdeconnect                       # Android integration — see Services/KdeConnect
+pipewire                         # audio/video server
+pipewire-alsa                    # ALSA compatibility shim
+pipewire-jack                    # JACK compatibility shim (audio production tools)
+pipewire-pulse                   # PulseAudio compatibility shim (most apps still expect this)
+wireplumber                      # PipeWire session manager, spoken to by Services/Audio
+rtkit                            # realtime priority for PipeWire; without it audio crackles under load
+wl-clipboard                     # wl-copy/wl-paste for screenshots, file preview, copy
+cliphist                         # clipboard history store (wl-clipboard companion)
+grim                             # screenshot capture backend
+slurp                            # region selection for screenshots
+swappy                           # screenshot annotation (GTK, follows token gtk.css)
+wf-recorder                      # screen recording backend (Services/Recording)
+ddcutil                         # DDC/CI brightness for external displays — see Services/Brightness
+brightnessctl                    # XF86 brightness keys in modules/keybinds.lua
+upower                           # battery state for Services/Battery (laptops)
+playerctl                        # XF86 / KDE Connect play-pause via MPRIS (scripts/modern media)
+hyprpicker                       # color picker shortcut (colorPicker in modules/keybinds.lua)
+inotify-tools                    # wallpaper-provider.sh watches the download folder
+# Desktop defaults the keybinds and scripts call directly.
+kitty                   # terminal — SUPER+T
+vivaldi                 # browser — SUPER+B, themed per docs/THEMING.md
+# Text editor, image viewer, and video player packages are
+# default-apps.json (default_app_packages). Not inlined here.

@@ -1,0 +1,99 @@
+# Every PR into dev or main, and every push to them. Stages, cheapest
+# first, so a lint error does not wait for the Arch container:
+#   lint -> unit
+#        -> install-dry (profile x GPU matrix)
+#   ci-ok: the one required status check (docs/GIT.md "Rulesets").
+# The ISO build and the QEMU install test stay local (docs/GIT.md "Release").
+name: CI
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq python3 git lua5.4
+      # Not apt's shellcheck: Ubuntu's lags Arch's by two releases, and
+      # SC2317 fires there on trap handlers that newer versions recognise.
+      # ci-check.sh has to reach the same verdict here and on a clone.
+      - name: Pinned shellcheck
+        env:
+          SHELLCHECK_VERSION: v0.11.0
+          # A changed release asset must fail the job, not run unchecked.
+          SHELLCHECK_SHA256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+        run: |
+          url="https://github.com/koalaman/shellcheck/releases/download"
+          curl -fsSL --retry 3 -o /tmp/shellcheck.tar.xz \
+            "$url/$SHELLCHECK_VERSION/shellcheck-$SHELLCHECK_VERSION.linux.x86_64.tar.xz"
+          echo "$SHELLCHECK_SHA256  /tmp/shellcheck.tar.xz" | sha256sum -c -
+          sudo tar -xJf /tmp/shellcheck.tar.xz --strip-components=1 -C /usr/local/bin \
+            "shellcheck-$SHELLCHECK_VERSION/shellcheck"
+          shellcheck --version
+      - name: Layer lint, translations, shellcheck
+        run: scripts/ci-check.sh lint
+
+  unit:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq python3 git lua5.4
+      - name: Unit tests
+        run: scripts/ci-check.sh test
+
+  install-dry:
+    needs: lint
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { profile: m0, gpu: amd }
+          - { profile: m0, gpu: intel }
+          - { profile: gaming, gpu: nvidia }
+          - { profile: full, gpu: amd }
+    name: install-dry (${{ matrix.profile }}, ${{ matrix.gpu }})
+    steps:
+      - uses: actions/checkout@v7
+      - name: Pacman + builder user
+        run: |
+          pacman -Syu --noconfirm --needed git jq sudo
+          useradd -m builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+      - name: install.sh dry-run
+        env:
+          PROFILE: ${{ matrix.profile }}
+          GPU: ${{ matrix.gpu }}
+        run: |
+          sudo -u builder ./install/install.sh --dry-run --profile "$PROFILE" \
+            --gpu "$GPU" --target /tmp/modern-dry
+        # check-isolation.sh is local only — do not run it here.
+
+  ci-ok:
+    name: CI passed
+    if: always()
+    needs: [lint, unit, install-dry]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All stages succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "stages: $RESULTS"
+          for r in $RESULTS; do [ "$r" = success ] || exit 1; done

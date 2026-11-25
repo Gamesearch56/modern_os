@@ -1,0 +1,258 @@
+#!/usr/bin/env bash
+# Launch Battle.net under Proton. Finds an existing install (this
+# desktop's own prefix, any Steam compatdata prefix, a Lutris ~/Games
+# prefix); with none, the first start downloads Blizzard's installer into
+# this desktop's prefix. battlenet.env (gitignored) may still pin
+# BATTLENET_EXE / WINEPREFIX / PROTONPATH. Started from the app list
+# there is no terminal, so every failure ends in a notification and the
+# runner's output lands in battlenet.log.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=../install/lib/i18n.sh
+source "$REPO_ROOT/install/lib/i18n.sh"
+# shellcheck source=lib/wow-hdr.sh
+source "$SCRIPT_DIR/lib/wow-hdr.sh"
+
+MODERN_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/modern"
+ENV_FILE="${MODERN_DIR}/battlenet.env"
+CFG="${MODERN_DIR}/config.json"
+if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    I18N_LANG="$(jq -r '.language.ui // "en"' "$CFG" 2>/dev/null || printf 'en')"
+    [ "$I18N_LANG" = "de" ] || I18N_LANG="en"
+fi
+
+DATA_DIR="${BATTLENET_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/modern/battlenet}"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/modern"
+LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
+LOG="$LOG_DIR/battlenet.log"
+SETUP_URL="${BATTLENET_SETUP_URL:-https://downloader.battle.net/download/getInstaller?os=win&installer=Battle.net-Setup.exe}"
+EXE_REL="drive_c/Program Files (x86)/Battle.net/Battle.net Launcher.exe"
+# A runner that dies sooner than this never showed the client.
+QUICK_EXIT_SECONDS="${BATTLENET_QUICK_EXIT:-30}"
+
+STEAM_ROOT="${STEAM_ROOT:-$HOME/.local/share/Steam}"
+if [ ! -d "$STEAM_ROOT/steamapps" ] && [ -d "$HOME/.steam/steam/steamapps" ]; then
+    STEAM_ROOT="$HOME/.steam/steam"
+fi
+
+# Play starts WoW Forever later, from the agent. Turn HDR output off
+# before that, unless a game is already running or the HDR launcher
+# holds the lock.
+wow_hdr_off_if_idle
+
+export PROTON_ENABLE_WAYLAND="${PROTON_ENABLE_WAYLAND:-0}"
+export WINE_SIMULATE_WRITECOPY="${WINE_SIMULATE_WRITECOPY:-1}"
+export AMD_VULKAN_ICD="${AMD_VULKAN_ICD:-RADV}"
+
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    # shellcheck source=/dev/null
+    source "$ENV_FILE"
+    set +a
+fi
+
+say() {
+    notify-send --app-name="Battle.net" --icon=battlenet "$(t battlenet.title)" "$1" 2>/dev/null || true
+    printf 'battlenet: %s\n' "$1" >&2
+}
+
+fail() {
+    say "$1"
+    exit 1
+}
+
+cfg_bool() {
+    local v=""
+    if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+        v="$(jq -r --arg k "$1" '.gaming[$k] // empty' "$CFG" 2>/dev/null || true)"
+    fi
+    [ "$v" = "true" ]
+}
+
+# HDR for games spawned from this Proton prefix (WoW etc.). Battle.net
+# stays on XWayland (PROTON_ENABLE_WAYLAND=0) so the Chromium UI works.
+if [ "${BATTLENET_HDR:-}" = "1" ] || cfg_bool hdrSession; then
+    export DXVK_HDR="${DXVK_HDR:-1}"
+    export ENABLE_HDR_WSI="${ENABLE_HDR_WSI:-1}"
+    export PROTON_ENABLE_HDR="${PROTON_ENABLE_HDR:-1}"
+fi
+
+# Drop 32-bit-only preloads that spam ld.so on 64-bit helpers.
+clean_preload() {
+    local out="" part
+    IFS=':' read -ra parts <<<"${LD_PRELOAD:-}"
+    for part in "${parts[@]}"; do
+        case "$part" in
+            "" | *libextest.so*) continue ;;
+        esac
+        out="${out:+$out:}$part"
+    done
+    if [ -n "$out" ]; then
+        export LD_PRELOAD="$out"
+    else
+        unset LD_PRELOAD
+    fi
+}
+
+find_exe() {
+    if [ -n "${BATTLENET_EXE:-}" ] && [ -f "$BATTLENET_EXE" ]; then
+        printf '%s\n' "$BATTLENET_EXE"
+        return 0
+    fi
+    local c
+    for c in "$DATA_DIR/pfx/$EXE_REL" \
+        "$STEAM_ROOT"/steamapps/compatdata/*/pfx/"$EXE_REL" \
+        "$HOME/Games/battlenet/$EXE_REL"; do
+        if [ -f "$c" ]; then
+            printf '%s\n' "$c"
+            return 0
+        fi
+    done
+    return 1
+}
+
+find_proton() {
+    if [ -n "${PROTONPATH:-}" ]; then
+        if [ -f "$PROTONPATH" ] && [ -x "$PROTONPATH" ]; then
+            printf '%s\n' "$PROTONPATH"
+            return 0
+        fi
+        if [ -x "$PROTONPATH/proton" ]; then
+            printf '%s\n' "$PROTONPATH/proton"
+            return 0
+        fi
+    fi
+    # The newest Proton Steam already installed. Experimental is the
+    # rolling build; otherwise the highest numbered Proton N.N.
+    local common="$STEAM_ROOT/steamapps/common"
+    if [ -x "$common/Proton - Experimental/proton" ]; then
+        printf '%s\n' "$common/Proton - Experimental/proton"
+        return 0
+    fi
+    local d name ver best="" bestver=""
+    shopt -s nullglob
+    for d in "$common"/Proton\ *; do
+        [ -x "$d/proton" ] || continue
+        name="$(basename "$d")"
+        ver="${name#Proton }"
+        case "$ver" in
+            *[!0-9.]*) continue ;;
+        esac
+        if [ -z "$bestver" ] || [ "$(printf '%s\n%s\n' "$bestver" "$ver" | sort -V | tail -n 1)" = "$ver" ]; then
+            best="$d/proton"
+            bestver="$ver"
+        fi
+    done
+    shopt -u nullglob
+    if [ -n "$best" ]; then
+        printf '%s\n' "$best"
+        return 0
+    fi
+    local c
+    for c in \
+        "$common/Proton Hotfix/proton" \
+        "$common/Proton - Hotfix/proton"; do
+        if [ -x "$c" ]; then
+            printf '%s\n' "$c"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# The prefix is whatever holds drive_c; Steam's sits in compatdata/<id>/pfx.
+use_prefix_of() {
+    local exe="$1"
+    case "$exe" in
+        */drive_c/*) export WINEPREFIX="${WINEPREFIX:-${exe%%/drive_c/*}}" ;;
+    esac
+    if [ -z "${STEAM_COMPAT_DATA_PATH:-}" ] && [ "$(basename "${WINEPREFIX:-}")" = "pfx" ]; then
+        export STEAM_COMPAT_DATA_PATH="${WINEPREFIX%/pfx}"
+    fi
+}
+
+run_exe() {
+    local exe="$1"
+    local -a cmd=() extra=()
+    clean_preload
+    export STEAM_COMPAT_CLIENT_INSTALL_PATH="${STEAM_COMPAT_CLIENT_INSTALL_PATH:-$STEAM_ROOT}"
+    # CEF under Proton often blacks/whites out; --in-process-gpu is the GE workaround.
+    if [ "${BATTLENET_IN_PROCESS_GPU:-1}" != "0" ]; then
+        extra+=(--in-process-gpu)
+    fi
+    if [ -n "${BATTLENET_ARGS:-}" ]; then
+        # shellcheck disable=SC2206
+        extra+=(${BATTLENET_ARGS})
+    fi
+
+    local proton=""
+    proton="$(find_proton || true)"
+    if command -v umu-run >/dev/null 2>&1; then
+        export GAMEID="${GAMEID:-umu-battlenet}"
+        if [ -n "$proton" ]; then
+            PROTONPATH="$(dirname "$proton")"
+            export PROTONPATH
+        else
+            say "$(t battlenet.preparing)"
+        fi
+        cmd=(umu-run "$exe")
+    elif [ -n "$proton" ] && [ -n "${STEAM_COMPAT_DATA_PATH:-}" ]; then
+        mkdir -p "$STEAM_COMPAT_DATA_PATH"
+        local id
+        id="$(basename "$STEAM_COMPAT_DATA_PATH")"
+        if [[ "$id" =~ ^[0-9]+$ ]]; then
+            export SteamAppId="${SteamAppId:-$id}" SteamGameId="${SteamGameId:-$id}"
+            export STEAM_COMPAT_APP_ID="${STEAM_COMPAT_APP_ID:-$id}"
+        fi
+        # waitforexitandrun is Steam's own verb; plain `run` makes
+        # ProtonFixes skip and Wine often aborts early.
+        cmd=("$proton" waitforexitandrun "$exe")
+    else
+        fail "$(t battlenet.noRunner)"
+    fi
+    if command -v gamemoderun >/dev/null 2>&1; then
+        cmd=(gamemoderun "${cmd[@]}")
+    fi
+
+    mkdir -p "$LOG_DIR"
+    printf '== %s %s\n' "$(date -Is)" "${cmd[*]}" >"$LOG"
+    local started=$SECONDS rc=0
+    "${cmd[@]}" "${extra[@]}" >>"$LOG" 2>&1 || rc=$?
+    if [ "$rc" -ne 0 ] && [ $((SECONDS - started)) -lt "$QUICK_EXIT_SECONDS" ]; then
+        fail "$(t battlenet.crashed "$LOG")"
+    fi
+    return 0
+}
+
+install_client() {
+    command -v curl >/dev/null 2>&1 || fail "$(t battlenet.downloadFailed)"
+    mkdir -p "$CACHE_DIR" "$DATA_DIR"
+    local setup="$CACHE_DIR/Battle.net-Setup.exe"
+    # The installer already saved this file when Battle.net was ticked.
+    if [ ! -s "$setup" ]; then
+        say "$(t battlenet.installing)"
+        if ! curl -fsSL --max-time 300 -o "$setup.part" "$SETUP_URL"; then
+            rm -f "$setup.part"
+            fail "$(t battlenet.downloadFailed)"
+        fi
+        mv -f "$setup.part" "$setup"
+    fi
+    export WINEPREFIX="${WINEPREFIX:-$DATA_DIR/pfx}"
+    export STEAM_COMPAT_DATA_PATH="${STEAM_COMPAT_DATA_PATH:-$DATA_DIR}"
+    run_exe "$setup"
+}
+
+if exe="$(find_exe)"; then
+    use_prefix_of "$exe"
+    run_exe "$exe"
+    exit 0
+fi
+
+if [ -n "${STEAM_APPID:-}" ] && command -v steam >/dev/null 2>&1; then
+    clean_preload
+    exec steam "steam://rungameid/${STEAM_APPID}"
+fi
+
+install_client

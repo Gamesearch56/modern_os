@@ -1,0 +1,36 @@
+# STAGED — do not enable. install.sh never copies this into
+# /etc/pacman.d/hooks/. A hook that runs before every kernel upgrade can
+# brick the ESP if Exec is wrong, so this file stays in the repo until
+# you review it and copy it yourself.
+#
+# Intent: copy the EFI System Partition aside *before* pacman unpacks a
+# new kernel/systemd/bootloader, so a bad mkinitcpio or a full ESP still
+# has a known-good tree to restore. See docs/BACKUP.md.
+#
+# When you do enable it:
+#   1. Create the destination (e.g. /var/lib/modern/esp-backup) on a
+#      filesystem that is NOT the ESP itself.
+#   2. Replace Exec below with a real copy (rsync -a /efi/ dest/ or
+#      /boot/ depending on your mount). AbortOnFail means a copy failure
+#      blocks the upgrade — that is the point.
+#   3. sudo cp this file to /etc/pacman.d/hooks/esp-backup.hook
+#
+# Exec is /usr/bin/true so an accidental copy of this file is a no-op.
+
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = linux
+Target = linux-lts
+Target = linux-zen
+Target = linux-headers
+Target = systemd
+Target = grub
+Target = refind
+Target = systemd-boot
+
+[Action]
+Description = Back up EFI system partition before kernel/bootloader upgrade (STAGED — no-op Exec)
+When = PreTransaction
+# AbortOnFail
+Exec = /usr/bin/true

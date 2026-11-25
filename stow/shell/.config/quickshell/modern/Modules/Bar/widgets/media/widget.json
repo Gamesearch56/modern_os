@@ -1,0 +1,7 @@
+{
+  "id": "media",
+  "key": "bar.media",
+  "defaultEnabled": true,
+  "bubble": true,
+  "services": ["Media", "Audio"]
+}

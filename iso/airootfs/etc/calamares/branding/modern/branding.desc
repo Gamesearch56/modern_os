@@ -1,0 +1,34 @@
+---
+componentName: modern
+welcomeStyleCalamares: false
+welcomeExpandingLogo: false
+windowExpanding: normal
+windowSize: 1100px,720px
+windowPlacement: center
+# Widget ProgressTreeView cannot round the current step. QML can.
+sidebar: qml
+navigation: widget
+strings:
+    productName:         ModernOS
+    shortProductName:    ModernOS
+    version:             "release"
+    shortVersion:        "release"
+    versionedName:       ModernOS
+    shortVersionedName:  ModernOS
+    bootloaderEntryName: ModernOS
+    productUrl:          https://github.com/Gamesearch56/modern_os
+    supportUrl:          https://github.com/Gamesearch56/modern_os
+    knownIssuesUrl:      https://github.com/Gamesearch56/modern_os/issues
+    releaseNotesUrl:     https://github.com/Gamesearch56/modern_os
+    donateUrl:           https://ko-fi.com/gamesearch56
+images:
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "logo.png"
+style:
+    SidebarBackground:        "#141218"
+    SidebarText:              "#E6E0E9"
+    SidebarTextCurrent:       "#141218"
+    SidebarBackgroundCurrent: "#D0BCFF"
+slideshow:               "show.qml"
+slideshowAPI:            2

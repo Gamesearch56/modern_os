@@ -1,0 +1,3 @@
+# AMD GPU compute for the workstation (`full` profile): ROCm lets
+# Ollama run models on Radeon cards.
+rocm-hip-sdk

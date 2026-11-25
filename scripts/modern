@@ -1,0 +1,384 @@
+#!/usr/bin/env bash
+# Drive the running Quickshell session from scripts and Hyprland
+# keybinds. Maintenance commands (update/cleanup/pkg/mirrors/repair)
+# live here too — i18n from translations/*.json, sudo stays explicit.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=../install/lib/i18n.sh
+source "$REPO_ROOT/install/lib/i18n.sh"
+# shellcheck source=lib/polkit-agent.sh
+source "$SCRIPT_DIR/lib/polkit-agent.sh"
+# shellcheck source=lib/modern-update.sh
+source "$SCRIPT_DIR/lib/modern-update.sh"
+
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
+if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+    I18N_LANG="$(jq -r '.language.ui // "en"' "$CFG")"
+    [ "$I18N_LANG" = "de" ] || I18N_LANG="en"
+fi
+
+usage() {
+    cat <<EOF
+$(t cli.usage)
+
+  modern launcher toggle
+  modern filepreview
+  modern update
+  modern cleanup
+  modern pkg find [q]
+  modern mirrors
+  modern repair
+  modern ui reload
+  modern window close
+  modern config set motion.scale 1.2
+  modern config restore design typography
+  modern report [sound|display|...]
+  modern device
+  modern battlenet
+  modern vivaldi
+EOF
+}
+
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ] || [ $# -lt 1 ]; then
+    usage
+    exit 0
+fi
+
+TARGET="$1"
+shift
+
+ipc() {
+    exec qs -c modern ipc call "$@"
+}
+
+cfg() {
+    local path="$1" default="$2"
+    if [ -f "$CFG" ] && command -v jq >/dev/null 2>&1; then
+        jq -r --arg p "$path" --arg d "$default" 'getpath($p | split(".")) // $d' "$CFG"
+    else
+        printf '%s\n' "$default"
+    fi
+}
+
+priv() {
+    if [ -t 0 ]; then
+        sudo "$@"
+    else
+        ensure_polkit_agent || true
+        pkexec "$@"
+    fi
+}
+
+case "$TARGET" in
+    update)
+        modern_update
+        ;;
+    update-notice)
+        modern_update_notice
+        ;;
+    cleanup)
+        yay -Yc
+        paccache -r
+        ;;
+    pkg)
+        SUB="${1:-find}"
+        shift || true
+        case "$SUB" in
+            find)
+                pacman -Q | grep -i -- "${1:-.}" || true
+                ;;
+            load)
+                exec yay -S --needed -- "$@"
+                ;;
+            unload)
+                exec yay -Rns -- "$@"
+                ;;
+            *)
+                echo "$(t cli.unknown) pkg $SUB" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    mirrors)
+        # Location when it has Arch mirrors. Germany is the fallback.
+        country="$("$SCRIPT_DIR/mirror-country.sh")"
+        t cli.mirrors "$country"
+        priv "$SCRIPT_DIR/mirrors-refresh.sh" --country "$country"
+        ;;
+    repair)
+        t cli.repairReset
+        systemctl reset-failed || true
+        t cli.repairScrub
+        sudo btrfs scrub start -B / || true
+        t cli.repairDmesg
+        dmesg -T 2>/dev/null | grep -Ei 'corrupt|unmount|I/O error' | tail -n 20 || true
+        t cli.repairFsck
+        ;;
+    volume)
+        ACTION="${1:-up}"
+        case "$ACTION" in
+            up)
+                qs -c modern ipc call audio volumeUp >/dev/null 2>&1 \
+                    || wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+
+                ;;
+            down)
+                qs -c modern ipc call audio volumeDown >/dev/null 2>&1 \
+                    || wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+                ;;
+            mute)
+                qs -c modern ipc call audio mute >/dev/null 2>&1 \
+                    || wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+                ;;
+            *) t cli.volumeUnknown "$ACTION" >&2; exit 1 ;;
+        esac
+        ;;
+    media)
+        ACTION="${1:-play-pause}"
+        case "$ACTION" in
+            play-pause | toggle)
+                qs -c modern ipc call media playPause >/dev/null 2>&1 \
+                    || playerctl play-pause
+                ;;
+            play)
+                qs -c modern ipc call media play >/dev/null 2>&1 \
+                    || playerctl play
+                ;;
+            pause)
+                qs -c modern ipc call media pause >/dev/null 2>&1 \
+                    || playerctl pause
+                ;;
+            next)
+                qs -c modern ipc call media next >/dev/null 2>&1 \
+                    || playerctl next
+                ;;
+            previous | prev)
+                qs -c modern ipc call media previous >/dev/null 2>&1 \
+                    || playerctl previous
+                ;;
+            *) t cli.mediaUnknown "$ACTION" >&2; exit 1 ;;
+        esac
+        ;;
+    brightness)
+        ACTION="${1:-get}"
+        case "$ACTION" in
+            up | down)
+                if qs -c modern ipc call brightness "$ACTION" >/dev/null 2>&1; then
+                    exit 0
+                fi
+                exec "$SCRIPT_DIR/brightness.sh" "$ACTION"
+                ;;
+            get | set)
+                exec "$SCRIPT_DIR/brightness.sh" "$@"
+                ;;
+            *)
+                echo "usage: modern brightness up|down|get|set PERCENT" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    lang)
+        t cli.languageViaSettings >&2
+        exit 1
+        ;;
+    wallpaper)
+        ipc wallpaper "${1:-pick}"
+        ;;
+    ui)
+        ACTION="${1:-reload}"
+        case "$ACTION" in
+            reload)
+                exec "$SCRIPT_DIR/reload-ui.sh"
+                ;;
+            *)
+                echo "usage: modern ui reload" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    shell)
+        ipc shell "${1:-reload}"
+        ;;
+    window)
+        ACTION="${1:-close}"
+        case "$ACTION" in
+            close)
+                dismissed="$(qs -c modern ipc call shell dismiss 2>/dev/null || true)"
+                dismissed="$(printf '%s' "$dismissed" | tr -d '[:space:]\"')"
+                if [ "$dismissed" = "true" ]; then
+                    exit 0
+                fi
+                # Close an open background workspace before Quickshell
+                # reports the window hidden. An open special workspace
+                # keeps the app on screen.
+                if "$SCRIPT_DIR/session-hide.sh" focused; then
+                    exit 0
+                fi
+                parked="$(qs -c modern ipc call shell closeFocused 2>/dev/null || true)"
+                parked="$(printf '%s' "$parked" | tr -d '[:space:]\"')"
+                if [ "$parked" = "hidden" ]; then
+                    exit 0
+                fi
+                exec hyprctl dispatch "hl.dsp.window.close()"
+                ;;
+            *)
+                echo "unknown window action: $ACTION" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    settings)
+        ipc settings "${1:-open}"
+        ;;
+    report)
+        # The window when the shell answers; otherwise a quick report
+        # straight from the script, so a dead shell can still be reported.
+        if ! timeout 3 qs -c modern ipc call bugReport open "${1:-}" >/dev/null 2>&1; then
+            exec "$SCRIPT_DIR/bug-report.sh" quick "${1:-}"
+        fi
+        ;;
+    device)
+        exec "$SCRIPT_DIR/bug-report.sh" device
+        ;;
+    config)
+        SUB="${1:-}"
+        shift || true
+        case "$SUB" in
+            set)
+                exec "$SCRIPT_DIR/config-set.sh" "$@"
+                ;;
+            restore)
+                exec "$SCRIPT_DIR/config-restore.sh" "$@"
+                ;;
+            *)
+                echo "Usage: modern config set PATH VALUE | restore PATH..." >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    game)
+        shift || true
+        exec modern-game "$@"
+        ;;
+    screenshot)
+        MODE="${1:-region}"
+        PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/modern/screencast.pid"
+        if [ -f "$PIDFILE" ]; then
+            pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+            if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                qs -c modern ipc call recording stop 2>/dev/null \
+                    || "$SCRIPT_DIR/screencast.sh" stop
+                exit 0
+            fi
+            rm -f "$PIDFILE"
+        fi
+        reply="$(qs -c modern ipc call screenshot "$MODE" 2>&1)" || true
+        if ! printf '%s' "$reply" | grep -qiE 'not ready|unknown|error'; then
+            exit 0
+        fi
+        exec "$SCRIPT_DIR/screenshot.sh" "$MODE"
+        ;;
+    recording)
+        ACTION="${1:-stop}"
+        rec_ipc() {
+            local reply
+            reply="$(qs -c modern ipc call recording "$1" 2>&1)" || true
+            if ! printf '%s' "$reply" | grep -qiE 'not ready|unknown|error'; then
+                return 0
+            fi
+            return 1
+        }
+        case "$ACTION" in
+            start | region | startRegion)
+                rec_ipc startRegion && exit 0
+                exec "$SCRIPT_DIR/screencast.sh" region
+                ;;
+            window)
+                rec_ipc window && exit 0
+                exec "$SCRIPT_DIR/screencast.sh" window
+                ;;
+            full)
+                rec_ipc full && exit 0
+                exec "$SCRIPT_DIR/screencast.sh" full
+                ;;
+            stop | *)
+                rec_ipc stop || "$SCRIPT_DIR/screencast.sh" stop
+                exit 0
+                ;;
+        esac
+        ;;
+    power)
+        ACTION="${1:-button}"
+        # hypridle (inhibit_sleep 3) also holds sleep for the lock; this
+        # covers sleep while hypridle is down. A shell that never confirms
+        # gets the marker instead, so its next start comes up locked.
+        lock_before_sleep() {
+            local i reply
+            timeout 2 qs -c modern ipc call session lock >/dev/null 2>&1 || true
+            for i in $(seq 1 15); do
+                reply="$(timeout 1 qs -c modern ipc call session secured 2>/dev/null)" || break
+                [ "$reply" = true ] && return 0
+                sleep 0.2
+            done
+            logger -t modern-power "lock not confirmed before $1 (try $i); the shell starts locked" 2>/dev/null || true
+            [ -n "${XDG_RUNTIME_DIR:-}" ] && printf '1' >"$XDG_RUNTIME_DIR/modern-session-locked"
+            return 0
+        }
+        act() {
+            case "$1" in
+                lock)
+                    exec qs -c modern ipc call session lock
+                    ;;
+                suspend | hibernate)
+                    lock_before_sleep "$1"
+                    exec systemctl "$1"
+                    ;;
+                poweroff)
+                    exec systemctl poweroff
+                    ;;
+                ask | *)
+                    # `show` is a qs ipc subcommand and would not call the handler.
+                    exec qs -c modern ipc call powermenu open
+                    ;;
+            esac
+        }
+        on_battery() {
+            grep -q Discharging /sys/class/power_supply/BAT*/status 2>/dev/null
+        }
+        case "$ACTION" in
+            button)
+                act "$(cfg power.buttonAction ask)"
+                ;;
+            lid)
+                if on_battery; then
+                    act "$(cfg power.lidActionBattery suspend)"
+                else
+                    act "$(cfg power.lidActionAc lock)"
+                fi
+                ;;
+            lock | suspend | hibernate)
+                act "$ACTION"
+                ;;
+            *)
+                echo "usage: modern power button|lid|lock|suspend|hibernate" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    filepreview)
+        # shellcheck source=lib/filepreview.sh
+        source "$SCRIPT_DIR/lib/filepreview.sh"
+        filepreview_run
+        ;;
+    battlenet)
+        exec "$SCRIPT_DIR/battlenet"
+        ;;
+    vivaldi)
+        exec "$SCRIPT_DIR/vivaldi" "$@"
+        ;;
+    *)
+        FUNC="${1:-toggle}"
+        ipc "$TARGET" "$FUNC"
+        ;;
+esac

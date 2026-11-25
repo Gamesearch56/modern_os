@@ -1,0 +1,7 @@
+{
+  "id": "power",
+  "icon": "system-shutdown",
+  "key": "settings.sections.power",
+  "order": 150,
+  "keywords": ["lid", "suspend", "inhibit", "button", "idle", "battery", "charge", "remaining", "health"]
+}

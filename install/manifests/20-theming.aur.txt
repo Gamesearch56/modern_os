@@ -1,0 +1,6 @@
+# matugen isn't in the official repos. Prefer the AUR -bin packages
+# (no rustup / python-clickgen). install_aur skips these when the
+# source names `matugen` / `bibata-cursor-theme` are already installed
+# — they conflict with the -bin packages.
+matugen-bin
+bibata-cursor-theme-bin     # gtk-cursor-theme-name / config.json design.cursorTheme

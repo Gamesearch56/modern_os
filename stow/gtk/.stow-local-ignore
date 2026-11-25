@@ -1,0 +1,3 @@
+# Live gtk-3.0/bookmarks is gitignored and may still sit in this tree
+# with a hardcoded home. nautilus-prefs.sh writes the target user's file.
+bookmarks

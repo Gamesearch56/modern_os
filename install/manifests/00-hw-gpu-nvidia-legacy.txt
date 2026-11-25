@@ -1,0 +1,4 @@
+# Pre-Turing NVIDIA (Kepler … Volta). The repos only carry nvidia-open
+# (Turing+); the proprietary branches for these chips are gone, so they
+# run on nouveau from mesa. No nvidia-utils: it blacklists nouveau.
+vulkan-nouveau             # NVK Vulkan for Kepler+

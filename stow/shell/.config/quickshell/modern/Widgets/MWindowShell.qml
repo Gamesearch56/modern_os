@@ -1,0 +1,80 @@
+// FloatingWindow chrome: rounded surface + title bar + fill body.
+// Settings, Store, wallpaper, and cheatsheet share this.
+import QtQuick
+import QtQuick.Layouts
+import "../Commons"
+
+Item {
+    id: root
+
+    property string titleKey: ""
+    property string titleValue: ""
+    property string subtitleKey: ""
+    property string subtitleValue: ""
+    property string actionKey: ""
+    property string actionIcon: ""
+    property string iconName: ""
+    property real titleColumnWidth: 0
+    property real chromeOpacity: Chrome.washOpacity
+    property bool busy: false
+    property alias trailing: chrome.trailing
+    property alias trailingFill: chrome.trailingFill
+
+    signal closed()
+    signal actionClicked()
+
+    default property alias body: contentSlot.data
+
+    implicitHeight: {
+        const body = contentSlot.children.length === 1 ? contentSlot.children[0].implicitHeight : 0;
+        return chrome.implicitHeight + Tokens.spacing.md * 3 + body;
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: Colors.color.surface
+        radius: Tokens.radius.medium
+        opacity: root.chromeOpacity
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: "transparent"
+        radius: Tokens.radius.medium
+        border.color: Colors.color.outlineVariant
+        border.width: Tokens.stroke.hairline
+    }
+
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: Tokens.spacing.md
+        spacing: Tokens.spacing.md
+
+        MWindowChrome {
+            id: chrome
+            Layout.fillWidth: true
+            titleKey: root.titleKey
+            titleValue: root.titleValue
+            subtitleKey: root.subtitleKey
+            subtitleValue: root.subtitleValue
+            actionKey: root.actionKey
+            actionIcon: root.actionIcon
+            iconName: root.iconName
+            titleColumnWidth: root.titleColumnWidth
+            busy: root.busy
+            onClosed: root.closed()
+            onActionClicked: root.actionClicked()
+        }
+
+        Item {
+            id: contentSlot
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            onChildrenChanged: {
+                if (children.length === 1)
+                    children[0].anchors.fill = contentSlot;
+            }
+        }
+    }
+}

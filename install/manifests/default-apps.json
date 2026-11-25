@@ -1,0 +1,14 @@
+{
+  "textEditor": {
+    "desktop": "modern.editor.desktop",
+    "packages": []
+  },
+  "imageViewer": {
+    "desktop": "modern.imageviewer.desktop",
+    "packages": []
+  },
+  "videoPlayer": {
+    "desktop": "modern.mediaplayer.desktop",
+    "packages": []
+  }
+}

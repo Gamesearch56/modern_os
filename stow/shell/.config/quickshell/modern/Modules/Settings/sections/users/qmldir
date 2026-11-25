@@ -1,0 +1,10 @@
+Model 1.0 Model.qml
+SessionCard 1.0 SessionCard.qml
+UserList 1.0 UserList.qml
+UserRow 1.0 UserRow.qml
+GroupList 1.0 GroupList.qml
+GroupRow 1.0 GroupRow.qml
+UserDialog 1.0 UserDialog.qml
+FaceDialog 1.0 FaceDialog.qml
+FaceCrop 1.0 FaceCrop.qml
+GroupDialog 1.0 GroupDialog.qml

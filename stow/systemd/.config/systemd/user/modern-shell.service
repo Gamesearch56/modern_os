@@ -1,0 +1,26 @@
+[Unit]
+Description=modern Quickshell desktop shell
+After=graphical-session.target
+# Skip a boot-time WantedBy= start that has no compositor display.
+# autostart.lua imports WAYLAND_DISPLAY then restarts this unit.
+ConditionEnvironment=WAYLAND_DISPLAY
+# Not PartOf=graphical-session.target: a TTY start without UWSM never
+# reaches that target, and PartOf would stop the shell immediately.
+# A startup crash must not respawn forever. systemd only reads the
+# start limit from [Unit].
+StartLimitBurst=5
+StartLimitIntervalSec=30
+
+[Service]
+# -c modern is ~/.config/quickshell/modern (same name Hyprland IPC uses).
+ExecStartPre=/bin/mkdir -p %h/.local/state/modern
+ExecStart=quickshell -c modern
+StandardOutput=append:%h/.local/state/modern/quickshell.log
+StandardError=append:%h/.local/state/modern/quickshell.log
+# Hyprland owns the shell; this unit is only a fallback and autostart
+# disables it.
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

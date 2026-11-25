@@ -1,0 +1,23 @@
+[Unit]
+Description=Phylax Polkit Authentication Agent
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+# Crash-loop from a missing XDG_SESSION_ID must not hit default 5/10s
+# StartLimit and leave pkexec with no dialog.
+StartLimitBurst=20
+StartLimitIntervalSec=60
+
+[Service]
+# Phylax registers as unix-session using $XDG_SESSION_ID. systemd --user
+# does not inherit that unless import-environment ran; fall back to the
+# loginctl graphical session. Prefer ~/.local/bin (session-user Confirm)
+# over the AUR binary. $$ is a literal $ for the shell; %h / %u are systemd.
+ExecStart=/usr/bin/sh -c 'export USER="$${USER:-%u}"; export XDG_SESSION_TYPE="$${XDG_SESSION_TYPE:-wayland}"; export XDG_SESSION_ID="$${XDG_SESSION_ID:-$$(loginctl show-user %u -p Display --value)}"; bin="%h/.local/bin/phylax"; [ -x "$$bin" ] || bin=/usr/bin/phylax; exec "$$bin"'
+Slice=session.slice
+Restart=on-failure
+RestartSec=1
+TimeoutStopSec=5
+
+[Install]
+WantedBy=graphical-session.target

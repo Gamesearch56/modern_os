@@ -1,0 +1,178 @@
+import Quickshell
+import Quickshell.Wayland
+import QtQuick
+import "../../Commons"
+import "../../Widgets"
+import "../../Services"
+
+// One region overlay per output. Mouse coords are local to this
+// surface. screenshot.sh adds hyprctl's monitor x/y so grim -g is
+// compositor-global (grim forbids combining -o and -g).
+// Namespace is not "quickshell" so decoration.blur does not frost the crop.
+// Overlay + exclusive keyboard focus: Hyprland only releases a game's
+// pointer lock when keyboard focus leaves its surface, and it never hands
+// focus to a Top layer over a fullscreen window. Focus (and the lock)
+// return to the game when the HUD unmaps.
+PanelWindow {
+    id: root
+
+    visible: Screenshot.hudOpen && !Recording.active
+    color: "transparent"
+    anchors.top: true
+    anchors.left: true
+    anchors.right: true
+    anchors.bottom: true
+    exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.namespace: "modern-screenshot"
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+
+    Item {
+        id: hud
+        anchors.fill: parent
+
+        property real x0: 0
+        property real y0: 0
+        property real x1: 0
+        property real y1: 0
+        property bool dragging: false
+        readonly property real selX: Math.min(hud.x0, hud.x1)
+        readonly property real selY: Math.min(hud.y0, hud.y1)
+        readonly property real selW: Math.abs(hud.x1 - hud.x0)
+        readonly property real selH: Math.abs(hud.y1 - hud.y0)
+        // A virtual GPU draws this fullscreen wash as solid black.
+        readonly property bool softwareGpu: Quickshell.env("MODERN_SOFTWARE_GPU") === "1"
+
+        function outputName() {
+            const scr = root.screen;
+            const mon = Hypr.monitorForScreen(scr);
+            if (mon && mon.name)
+                return String(mon.name);
+            if (scr && scr.name)
+                return String(scr.name);
+            return "";
+        }
+
+        component DimBand: Rectangle {
+            color: Colors.color.scrim
+            opacity: hud.softwareGpu ? 0 : Tokens.overlay.scrim
+        }
+
+        DimBand {
+            x: 0
+            y: 0
+            width: hud.width
+            height: hud.dragging ? hud.selY : hud.height
+        }
+        DimBand {
+            visible: hud.dragging
+            x: 0
+            y: hud.selY
+            width: hud.selX
+            height: hud.selH
+        }
+        DimBand {
+            visible: hud.dragging
+            x: hud.selX + hud.selW
+            y: hud.selY
+            width: hud.width - hud.selX - hud.selW
+            height: hud.selH
+        }
+        DimBand {
+            visible: hud.dragging
+            x: 0
+            y: hud.selY + hud.selH
+            width: hud.width
+            height: hud.height - hud.selY - hud.selH
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onPressed: (m) => {
+                hud.dragging = true;
+                hud.x0 = m.x;
+                hud.y0 = m.y;
+                hud.x1 = m.x;
+                hud.y1 = m.y;
+            }
+            onPositionChanged: (m) => {
+                if (hud.dragging) {
+                    hud.x1 = m.x;
+                    hud.y1 = m.y;
+                }
+            }
+            onReleased: {
+                hud.dragging = false;
+                const x = Math.round(hud.selX);
+                const y = Math.round(hud.selY);
+                const w = Math.round(hud.selW);
+                const h = Math.round(hud.selH);
+                if (w < Tokens.spacing.xxs || h < Tokens.spacing.xxs) {
+                    Screenshot.cancelHud();
+                    return;
+                }
+                const geom = x + "," + y + " " + w + "x" + h;
+                const output = hud.outputName();
+                if (Screenshot.tool === "recording") {
+                    Screenshot.cancelHud();
+                    Recording.start("region", geom, output);
+                    return;
+                }
+                Screenshot.finishRegion(geom, output);
+            }
+        }
+
+        Rectangle {
+            visible: hud.dragging
+            x: hud.selX
+            y: hud.selY
+            width: hud.selW
+            height: hud.selH
+            color: "transparent"
+            border.color: Colors.color.primary
+            border.width: Tokens.spacing.xxs
+            radius: Tokens.radius.small
+        }
+
+        Rectangle {
+            visible: !hud.dragging
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Tokens.spacing.xl
+            width: hintLabel.implicitWidth + Tokens.spacing.md * 2
+            height: hintLabel.implicitHeight + Tokens.spacing.sm * 2
+            color: "transparent"
+            radius: Tokens.radius.full
+            border.color: Colors.color.outlineVariant
+            border.width: Tokens.stroke.hairline
+
+            Rectangle {
+                anchors.fill: parent
+                radius: parent.radius
+                color: Colors.color.surface
+                opacity: Chrome.washOpacity
+                z: -1
+            }
+
+            MText {
+                id: hintLabel
+                anchors.centerIn: parent
+                key: "screenshot.dragHint"
+                styleName: "labelLarge"
+            }
+        }
+
+        Toolbar {
+            z: 2
+            visible: !hud.dragging
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+        }
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: Screenshot.hudOpen && !Recording.active
+        onActivated: Screenshot.cancelHud()
+    }
+}

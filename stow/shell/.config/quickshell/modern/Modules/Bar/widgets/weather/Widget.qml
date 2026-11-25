@@ -1,0 +1,79 @@
+import QtQuick
+import QtQuick.Layouts
+import "../../../../Commons"
+import "../../../../Widgets"
+import "../../../../Services"
+import "../../"
+
+Item {
+    id: root
+    property var barScreen: null
+    implicitWidth: BarLayout.vertical ? BarLayout.height : (row.implicitWidth + Tokens.spacing.md * 2)
+    implicitHeight: BarLayout.height
+    Component.onCompleted: Weather.watch()
+    Component.onDestruction: Weather.unwatch()
+
+    Connections {
+        target: Network
+        function onConnectedChanged() {
+            if (Network.connected)
+                Weather.refresh();
+        }
+    }
+
+    readonly property color _fg: popup.open ? Colors.color.onPrimaryContainer : Colors.color.onSurface
+
+    BarIslandHit {
+        checked: popup.open
+        onClicked: popup.open = !popup.open
+    }
+
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        z: 1
+        spacing: Tokens.spacing.xs
+
+        MIcon {
+            name: Weather.iconName
+            size: Tokens.icon.md
+            color: root._fg
+        }
+
+        MText {
+            visible: !BarLayout.vertical
+            key: Weather.available ? "" : "weather.unavailable"
+            value: Weather.display
+            styleName: "labelLarge"
+            color: root._fg
+        }
+    }
+
+    BarLayerPopup {
+        id: popup
+        open: false
+        anchorItem: root
+        barScreen: root.barScreen
+        panelWidth: Tokens.spacing.xxl * 14
+        panelHeight: (panelLoader.item ? panelLoader.item.implicitHeight : Tokens.spacing.xxl * 10) + Tokens.spacing.md * 2
+        hAlign: Qt.AlignRight
+
+        Loader {
+            id: panelLoader
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            height: item ? item.implicitHeight : parent.height
+            source: Qt.resolvedUrl("Panel.qml")
+            onLoaded: {
+                if (!item)
+                    return;
+                item.width = Qt.binding(() => panelLoader.width);
+                item.setupRequested.connect(() => {
+                    popup.open = false;
+                    Settings.openAt("bar", "weather");
+                });
+            }
+        }
+    }
+}

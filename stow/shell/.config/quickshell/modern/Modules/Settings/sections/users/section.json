@@ -1,0 +1,7 @@
+{
+  "id": "users",
+  "icon": "user-identity",
+  "key": "settings.sections.users",
+  "order": 170,
+  "keywords": ["accounts", "passwd", "groups", "autologin", "users"]
+}

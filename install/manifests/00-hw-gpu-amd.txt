@@ -1,0 +1,3 @@
+# AMD GPU for every profile (not gaming-only). amdgpu is in linux-zen.
+vulkan-radeon              # RADV Vulkan
+libva-mesa-driver          # VA-API video decode

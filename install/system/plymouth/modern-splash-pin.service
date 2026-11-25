@@ -1,0 +1,18 @@
+[Unit]
+Description=Keep the splash frame until the login screen has the display
+DefaultDependencies=no
+Before=plymouth-quit.service plymouth-quit-wait.service
+After=plymouth-start.service
+ConditionKernelCommandLine=!plymouth.enable=0
+ConditionPathExists=/usr/lib/modern/seat-cover.py
+
+[Service]
+Type=oneshot
+# The program forks a child that holds the display open. Killing the
+# whole service group would close that device and the panel would show
+# its firmware picture. The parent waits until that child has taken
+# the picture, then exits so Plymouth can quit. It does not wait for
+# the login screen.
+KillMode=process
+ExecStart=/usr/bin/python3 /usr/lib/modern/seat-cover.py pin
+TimeoutStartSec=5

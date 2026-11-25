@@ -1,0 +1,209 @@
+{
+  "calamares": [
+    { "context": "UsersViewStep", "source": "User", "key": "installer.steps.user" },
+    { "context": "Config", "source": "Summary", "comment": "@label", "key": "installer.steps.summary" },
+    {
+      "context": "FinishedPage",
+      "source": "<h1>All done.</h1><br/>%1 is installed and ready.<br/>Restart to start using your new desktop.",
+      "comment": "@info",
+      "key": "installer.finished.done"
+    },
+    { "context": "ModernNetViewStep", "source": "Network", "comment": "@title", "key": "installer.net.title" },
+    { "context": "ModernNetPage", "source": "Ethernet", "key": "installer.net.ethernet" },
+    { "context": "ModernNetPage", "source": "Nearby networks", "key": "installer.net.nearby" },
+    { "context": "ModernNetPage", "source": "Refresh", "key": "installer.net.refresh" },
+    { "context": "ModernNetPage", "source": "Password", "key": "installer.net.password" },
+    { "context": "ModernNetPage", "source": "Connect to network", "key": "installer.net.connectNetwork" },
+    { "context": "ModernNetPage", "source": "Show", "key": "installer.net.showPassword" },
+    { "context": "ModernNetPage", "source": "Hide", "key": "installer.net.hidePassword" },
+    { "context": "ModernNetPage", "source": "Not connected", "key": "installer.net.notConnected" },
+    { "context": "ModernNetPage", "source": "You're connected with Ethernet", "key": "installer.net.viaEthernet" },
+    { "context": "ModernNetPage", "source": "You're connected with Wi-Fi", "key": "installer.net.viaWifi" },
+    { "context": "ModernNetPage", "source": "You can continue to the next step.", "key": "installer.net.canContinue" },
+    { "context": "ModernNetPage", "source": "Enter the password to connect.", "key": "installer.net.enterPassword" },
+    { "context": "ModernNetPage", "source": "Pick a network to get online.", "key": "installer.net.needWifi" },
+    { "context": "ModernNetPage", "source": "Looking for networks…", "key": "installer.net.searching" },
+    { "context": "ModernNetPage", "source": "Looking for %1…", "key": "installer.net.lookingFor" },
+    { "context": "ModernNetPage", "source": "Checking the password…", "key": "installer.net.checkingPassword" },
+    { "context": "ModernNetPage", "source": "Waiting for an address from %1…", "key": "installer.net.waitingAddress" },
+    { "context": "ModernNetPage", "source": "No networks found.", "key": "installer.net.noneFound" },
+    {
+      "context": "ModernNetPage",
+      "source": "No networks showed up. Move closer to the router, then tap Refresh.",
+      "key": "installer.net.noneFoundHint"
+    },
+    { "context": "ModernNetPage", "source": "Couldn't join that network. You can try again.", "key": "installer.net.badPassword" },
+    {
+      "context": "ModernNetPage",
+      "source": "Can't see that network from here. Move closer, then tap Refresh.",
+      "key": "installer.net.outOfRange"
+    },
+    { "context": "ModernNetPage", "source": "The router didn't answer. You can try again.", "key": "installer.net.timeout" },
+    {
+      "context": "ModernNetPage",
+      "source": "This network needs a sign-in the installer cannot enter. Choose another network.",
+      "key": "installer.net.portal"
+    },
+    { "context": "ModernNetPage", "source": "That password didn't work. Type it again.", "key": "installer.net.rejected" },
+    { "context": "ModernNetPage", "source": "Choose another network", "key": "installer.net.another" },
+    {
+      "context": "ModernNetPage",
+      "source": "This computer's Wi-Fi chip (%1) has no driver in the installer. %2",
+      "key": "installer.net.noDriver"
+    },
+    { "context": "ModernNetPage", "source": "No Wi-Fi adapter was found. %1", "key": "installer.net.noAdapter" },
+    {
+      "context": "ModernNetPage",
+      "source": "Connect an Ethernet cable or share your phone's connection over USB.",
+      "key": "installer.net.wiredHint"
+    },
+    {
+      "context": "ModernNetPage",
+      "source": "If this cannot be fixed here, connect a network cable instead.",
+      "key": "installer.net.useCable"
+    },
+    { "context": "ModernNetRow", "source": "Connected", "key": "installer.net.connected" },
+    { "context": "ModernNetRow", "source": "Saved", "key": "installer.net.saved" },
+    { "context": "ModernNetRow", "source": "Password required", "key": "installer.net.passwordRequired" },
+    { "context": "ModernNetRow", "source": "Open network", "key": "installer.net.openNetwork" },
+    { "context": "ModernNetRow", "source": "Connect", "key": "installer.net.connect" },
+    { "context": "ModernNetRow", "source": "Forget", "key": "installer.net.forget" },
+    { "context": "ModernNetRow", "source": "Disconnect", "key": "installer.net.disconnect" },
+    { "context": "ModernAppsViewStep", "source": "Programs", "comment": "@title", "key": "installer.apps.step" },
+    {
+      "context": "ModernAppsPage",
+      "source": "Vivaldi is the browser and is installed with the system. Tick a program to download it during installation. An NVIDIA graphics card needs the proprietary driver.",
+      "key": "installer.apps.intro"
+    },
+    { "context": "ModernAppsPage", "source": "Vivaldi", "key": "installer.apps.vivaldi" },
+    { "context": "ModernAppsPage", "source": "Default browser.", "key": "installer.apps.vivaldiHint" },
+    { "context": "ModernAppsPage", "source": "Drivers", "key": "installer.apps.drivers" },
+    {
+      "context": "ModernAppsPage",
+      "source": "Open graphics and Wi-Fi firmware for this computer.",
+      "key": "installer.apps.driversHint"
+    },
+    { "context": "ModernAppsPage", "source": "Desktop", "key": "installer.apps.desktop" },
+    { "context": "ModernAppsPage", "source": "The session, sound and network.", "key": "installer.apps.desktopHint" },
+    { "context": "ModernAppsPage", "source": "NVIDIA driver", "key": "installer.apps.nvidia" },
+    {
+      "context": "ModernAppsPage",
+      "source": "Proprietary driver. An NVIDIA graphics card needs this. It is downloaded during installation.",
+      "key": "installer.apps.nvidiaHint"
+    },
+    { "context": "ModernAppsPage", "source": "Steam", "key": "installer.apps.steam" },
+    { "context": "ModernAppsPage", "source": "Game store.", "key": "installer.apps.steamHint" },
+    { "context": "ModernAppsPage", "source": "Battle.net", "key": "installer.apps.battlenet" },
+    { "context": "ModernAppsPage", "source": "Game launcher.", "key": "installer.apps.battlenetHint" },
+    { "context": "ModernAppsPage", "source": "Spotify", "key": "installer.apps.spotify" },
+    { "context": "ModernAppsPage", "source": "Music.", "key": "installer.apps.spotifyHint" },
+    { "context": "ModernAppsPage", "source": "Discord", "key": "installer.apps.discord" },
+    { "context": "ModernAppsPage", "source": "Chat.", "key": "installer.apps.discordHint" },
+    { "context": "ModernAppsPage", "source": "Proton VPN", "key": "installer.apps.protonVpn" },
+    { "context": "ModernAppsPage", "source": "VPN client.", "key": "installer.apps.protonVpnHint" }
+  ],
+  "branding": [
+    { "context": "show", "source": "The Super key", "key": "installer.slides.superTitle" },
+    {
+      "context": "show",
+      "source": "Super is the key with the Windows logo, between Ctrl and Alt. Most shortcuts on this desktop start while you hold it.",
+      "key": "installer.slides.super"
+    },
+    { "context": "show", "source": "Open an app", "key": "installer.slides.launcherTitle" },
+    {
+      "context": "show",
+      "source": "Super+Space opens the launcher. Type a few letters of the app name and press Enter.",
+      "key": "installer.slides.launcher"
+    },
+    { "context": "show", "source": "The bar and the dock", "key": "installer.slides.barTitle" },
+    {
+      "context": "show",
+      "source": "The bar along the top shows the clock, sound, and network. The dock along the bottom holds the apps you open often. Click one to start it.",
+      "key": "installer.slides.bar"
+    },
+    { "context": "show", "source": "Close a window", "key": "installer.slides.closeTitle" },
+    {
+      "context": "show",
+      "source": "Super+Q closes the window in front of you. Super+F fills the screen with it. Press Super+F again to bring it back to its old size.",
+      "key": "installer.slides.close"
+    },
+    { "context": "show", "source": "Move between windows", "key": "installer.slides.windowsTitle" },
+    {
+      "context": "show",
+      "source": "Hold Super and press an arrow key to jump to the window in that direction. Add Shift to slide the window itself. Super+Tab shows every window.",
+      "key": "installer.slides.windows"
+    },
+    { "context": "show", "source": "More than one desk", "key": "installer.slides.desksTitle" },
+    {
+      "context": "show",
+      "source": "Super and a number key from 1 to 0 switches workspace, like another desk. Super+Shift and that number takes the current window with you. Use the number row, not the number pad.",
+      "key": "installer.slides.desks"
+    },
+    { "context": "show", "source": "Save a picture of the screen", "key": "installer.slides.shotTitle" },
+    {
+      "context": "show",
+      "source": "Print lets you drag around an area. Shift+Print captures the window. Super+Print captures the whole screen. The pictures are saved in Pictures.",
+      "key": "installer.slides.shot"
+    },
+    { "context": "show", "source": "Sound, light, and Wi-Fi", "key": "installer.slides.soundTitle" },
+    {
+      "context": "show",
+      "source": "The volume and brightness keys on the keyboard work as usual. Super+N opens a panel for Wi-Fi, Bluetooth, sound, and brightness.",
+      "key": "installer.slides.sound"
+    },
+    { "context": "show", "source": "Lock and shut down", "key": "installer.slides.powerTitle" },
+    {
+      "context": "show",
+      "source": "Super+L locks the screen. Super+M opens the menu for sleep, restart, and shut down.",
+      "key": "installer.slides.power"
+    },
+    { "context": "show", "source": "A new wallpaper", "key": "installer.slides.colorsTitle" },
+    {
+      "context": "show",
+      "source": "Super+W picks a wallpaper. The bar, the apps, and the login screen take their colors from that picture.",
+      "key": "installer.slides.colors"
+    },
+    { "context": "show", "source": "Every shortcut, listed", "key": "installer.slides.keysTitle" },
+    {
+      "context": "show",
+      "source": "Super+K opens the list of shortcuts. Type what you want to do, then press the keys it shows.",
+      "key": "installer.slides.keys"
+    },
+    { "context": "show", "source": "Change a setting", "key": "installer.slides.settingsTitle" },
+    {
+      "context": "show",
+      "source": "Super+I opens Settings. Language, keyboard, displays, the dock, and updates are all in there.",
+      "key": "installer.slides.settings"
+    },
+    { "context": "show", "source": "Files and the browser", "key": "installer.slides.filesTitle" },
+    {
+      "context": "show",
+      "source": "Super+E opens your files. Super+B opens the browser. In Files, Delete moves something to the Trash, and you can restore it from there.",
+      "key": "installer.slides.files"
+    },
+    { "context": "show", "source": "Install an app", "key": "installer.slides.storeTitle" },
+    {
+      "context": "show",
+      "source": "Open the App Store from the dock or the launcher. Search for a program, open it, and confirm. It is installed when the button changes.",
+      "key": "installer.slides.store"
+    },
+    { "context": "show", "source": "Your language", "key": "installer.slides.languageTitle" },
+    {
+      "context": "show",
+      "source": "The desktop starts in the language and keyboard layout you chose here. You can change both later in Settings.",
+      "key": "installer.slides.language"
+    },
+    { "context": "show", "source": "After the restart", "key": "installer.slides.rebootTitle" },
+    {
+      "context": "show",
+      "source": "Remove the USB stick while the computer restarts. Sign in with the name and password you just created.",
+      "key": "installer.slides.reboot"
+    },
+    { "context": "show", "source": "If something looks wrong", "key": "installer.slides.helpTitle" },
+    {
+      "context": "show",
+      "source": "Super+# opens a short form to report a problem. Super+Y opens the Manual, which explains the desktop in plain language.",
+      "key": "installer.slides.help"
+    }
+  ]
+}

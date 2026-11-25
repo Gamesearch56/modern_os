@@ -1,0 +1,3 @@
+vulkan-intel
+intel-media-driver         # VA-API, Broadwell and newer
+libva-intel-driver         # VA-API, older laptops (Sandy Bridge … Haswell)
