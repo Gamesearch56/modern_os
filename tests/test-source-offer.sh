@@ -60,6 +60,8 @@ with open(os.path.join(tmp, "etc", "passwd"), "w", encoding="utf-8") as handle:
 assert fetch_battlenet(tmp, user, run=_curl) is None
 dest = os.path.join(tmp, "home", user, ".cache", "modern", "Battle.net-Setup.exe")
 assert open(dest, "rb").read() == b"MZ"
+entry = os.path.join(tmp, "home", user, ".local", "share", "applications", "battlenet.desktop")
+assert os.path.isfile(entry)
 assert fetch_battlenet(tmp, user, run=_curl) is None
 assert len(_calls) == 1
 print("test-source-offer: ok a ticked Battle.net downloads its setup once")
@@ -78,6 +80,12 @@ if grep -Fq 'modernapps' "$conf" && awk '
     ok "the program list is before confirmation and the download is after install"
 else
     err "settings.conf step order"
+fi
+
+if [ -e "$ROOT/stow/xdg/.local/share/applications/battlenet.desktop" ]; then
+    err "Battle.net must not ship in the desktop for every install"
+else
+    ok "an unticked Battle.net is not a launcher entry"
 fi
 
 if [ "$FAIL" -ne 0 ]; then

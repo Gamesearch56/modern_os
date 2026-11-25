@@ -299,6 +299,7 @@ differs; tighten the rule. WoW’s title must not match Battle.net.
 
 ### App manager
 
-- Desktop: `stow/xdg/.local/share/applications/battlenet.desktop`
-- Icon: `stow/xdg/.local/share/icons/hicolor/scalable/apps/battlenet.svg`
+- Desktop and icon ship only when the installer Programs tick is on
+  (`iso/airootfs/usr/lib/modern/battlenet/`). They are not in `stow/`,
+  so an install that leaves the tick off does not get a launcher entry.
 - After restow: Super+Space → **Battle.net**
