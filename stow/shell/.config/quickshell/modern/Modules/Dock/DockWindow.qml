@@ -226,8 +226,6 @@ PanelWindow {
         id: surface
         anchors.fill: parent
 
-        Rectangle { anchors.fill: parent; z: -1; visible: Chrome.softwareGpu; color: Colors.color.surface; opacity: Chrome.washOpacity }
-
         HoverHandler {
             id: hover
             onHoveredChanged: {

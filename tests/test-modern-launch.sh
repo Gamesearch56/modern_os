@@ -335,9 +335,12 @@ if grep -Fq 'virtual_gpu' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'modern-imageviewer-no-blur' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
     && grep -Fq 'softwareGpu' \
         "$ROOT/stow/shell/.config/quickshell/modern/Commons/Chrome.qml" \
-    && grep -Fq 'visible: Chrome.softwareGpu' \
+    && grep -Fq 'color: "transparent"' \
         "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/BarWindow.qml" \
-    && grep -Fq 'visible: Chrome.softwareGpu' \
+    && grep -Fq 'color: "transparent"' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockWindow.qml" \
+    && ! grep -Fq 'visible: Chrome.softwareGpu' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/BarWindow.qml" \
         "$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockWindow.qml" \
     && grep -Fq 'function _local' \
         "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/BarLayerPopup.qml" \

@@ -71,9 +71,9 @@ PanelWindow {
             : (root._edgeOnly ? root._hot : root._fullH)
     }
     visible: Config.loaded && !root._cover
-    // The layer stays clear. A desktop GPU frosts it. A virtual GPU
-    // cannot blur without painting black, so the wash below tints the
-    // wallpaper the same way the islands do.
+    // Clear on every GPU. A desktop GPU frosts this layer. A virtual
+    // GPU cannot blur without painting black, and a surface tint across
+    // the whole strip is that black band. The islands carry their own wash.
     color: "transparent"
     focusable: Popups.active !== null
 
@@ -159,14 +159,6 @@ PanelWindow {
 
     Item {
         anchors.fill: parent
-
-        Rectangle {
-            anchors.fill: parent
-            visible: Chrome.softwareGpu
-            color: Colors.color.surface
-            opacity: Chrome.washOpacity
-            z: -1
-        }
 
         HoverHandler {
             id: barHover
