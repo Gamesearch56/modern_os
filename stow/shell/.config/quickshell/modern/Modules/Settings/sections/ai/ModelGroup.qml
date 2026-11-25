@@ -200,13 +200,15 @@ ColumnLayout {
 
                 MButton {
                     id: action
-                    opacity: modelData.inUse ? 0 : 1
+                    // Hidden while the label is showing. An opacity of 0 still
+                    // sits in front of this button and eats the click.
+                    visible: !modelData.inUse
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     kind: modelData.installed ? "text" : "filled"
                     key: modelData.installed ? "settings.ollama.deleteModel" : "settings.ollama.installModel"
                     busy: root.busyName === modelData.name
-                    enabled: !modelData.inUse && !root.busyName.length && (modelData.installed || root.canInstall)
+                    enabled: !root.busyName.length && (modelData.installed || root.canInstall)
                     onClicked: {
                         if (modelData.installed)
                             root.askRemove(modelData.name);
@@ -216,7 +218,7 @@ ColumnLayout {
                 }
                 MText {
                     id: useLabel
-                    opacity: modelData.inUse ? 1 : 0
+                    visible: modelData.inUse
                     anchors.fill: parent
                     key: "settings.ollama.inUse"
                     styleName: "labelMedium"

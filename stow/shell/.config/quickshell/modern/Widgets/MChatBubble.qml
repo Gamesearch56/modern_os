@@ -10,6 +10,7 @@ Item {
     property bool mine: false
     property string text: ""
     property string thinking: ""
+    property string phase: ""
     property bool pending: false
 
     readonly property bool _table: !root.mine && md.hasTable(root.text)
@@ -26,8 +27,11 @@ Item {
     }
     readonly property real _bodyW: Math.min(root._inner, Math.max(1, body.implicitWidth))
     readonly property bool _wait: !root.mine && root.pending && root.text.length === 0
-    readonly property bool _reason: false
+    readonly property bool _search: root._wait && root.phase === "search"
+    readonly property bool _reason: !root.mine && String(root.thinking || "").trim().length > 0
     readonly property real _colW: {
+        if (root._search)
+            return root._max;
         if (root._wait)
             return dots.implicitWidth + root._pad;
         if (!root.mine)
@@ -121,6 +125,14 @@ Item {
                     id: dots
                     visible: root._wait
                     running: root._wait
+                }
+                MText {
+                    visible: root._search
+                    key: "ai.searching"
+                    styleName: "labelMedium"
+                    color: Colors.color.onSurfaceVariant
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
                 }
                 TextEdit {
                     id: body

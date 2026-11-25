@@ -50,7 +50,7 @@ Singleton {
 
     AiChat {
         id: stream
-        onChunk: (content, thinking) => root._patchTail(content, thinking, true)
+        onChunk: (content, thinking) => root._patchTail(content, thinking, true, stream.phase)
         onFinished: (ok, err) => root._end(ok, err, stream.content)
     }
 
@@ -93,7 +93,6 @@ Singleton {
             cloud.probe();
     }
 
-    // Cleared before the probe returns, so the guide leaves the download step.
     function packageGone() {
         root.installed = false; root.running = false; root.models = [];
         root.probed = true; root.refreshStatus();
@@ -253,7 +252,7 @@ Singleton {
         return out;
     }
 
-    function _patchTail(content: string, thinking: string, streaming: bool) {
+    function _patchTail(content: string, thinking: string, streaming: bool, phase: string) {
         const list = root.history.slice();
         if (list.length === 0)
             return;
@@ -261,6 +260,7 @@ Singleton {
         last.text = content;
         last.thinking = thinking;
         last.streaming = streaming;
+        last.phase = streaming ? String(phase || "") : "";
         if (root._provider === "gemini" && gemini.signature)
             last.sig = gemini.signature;
         list[list.length - 1] = last;
@@ -268,21 +268,22 @@ Singleton {
     }
 
     function _end(ok: bool, err: string, text: string) {
-        const live = !!(root.history.length && root.history[root.history.length - 1]
-            && root.history[root.history.length - 1].streaming);
-        if (!root.busy && !live)
+        const tail = root.history.length ? root.history[root.history.length - 1] : null;
+        if (!root.busy && !(tail && tail.streaming))
             return;
         root.busy = false;
-        if (!ok || !String(text || "").trim().length) {
-            const msg = String(err || "").trim() || I18n.t("ai.errorEmpty");
-            root.lastError = msg;
-            root._patchTail(msg, "", false);
-            store.save(root.history);
-            return;
-        }
-        root.lastError = "";
-        root._patchTail(String(text || "").replace(/\r/g, "")
-            .replace(/([^\n])\n(?!\n)([^\n])/g, "$1\n\n$2").replace(/\n{3,}/g, "\n\n").trim(), "", false);
+        const thought = String(tail && tail.thinking || "").trim();
+        let body = String(text || "").trim();
+        const why = String(err || "").trim();
+        // A reasoning model can spend the whole reply in the thought.
+        let keep = (!why && !body && thought) ? "" : thought;
+        if (!why && !body && thought)
+            body = thought;
+        const failed = !ok || !!why || !body;
+        root.lastError = failed ? (why || I18n.t("ai.errorEmpty")) : "";
+        const shown = failed ? root.lastError : body.replace(/\r/g, "")
+            .replace(/([^\n])\n(?!\n)([^\n])/g, "$1\n\n$2").replace(/\n{3,}/g, "\n\n").trim();
+        root._patchTail(shown, failed ? "" : keep, false, "");
         store.save(root.history);
     }
 }

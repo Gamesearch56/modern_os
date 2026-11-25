@@ -99,4 +99,43 @@ else
     err "Vivaldi chrome must scale with typography.scale"
 fi
 
+if [ "$(jq -r '.intl.app_locale' "$state")" = "en-US" ] \
+    && [ "$(jq -r '.intl.accept_languages' "$prefs")" = "en-US,en" ] \
+    && [ "$(jq -r '.spellcheck.dictionaries[0]' "$prefs")" = "en-US" ]; then
+    ok "a fresh profile follows English"
+else
+    err "fresh profile language was $(jq -c '.intl' "$state") $(jq -c '.intl' "$prefs")"
+fi
+
+if [ "$(vivaldi_ui_locale en GB)" = "en-GB" ] \
+    && [ "$(vivaldi_ui_locale de DE)" = "de" ] \
+    && [ "$(vivaldi_ui_locale pt BR)" = "pt-BR" ]; then
+    ok "UI locales match the browser language packs"
+else
+    err "UI locale mapping drifted"
+fi
+
+cp "$ROOT/stow/modern/.config/modern/languages.json" "$HOME/.config/modern/languages.json"
+printf '%s\n' '{"language":{"ui":"de"}}' >"$HOME/.config/modern/config.json"
+mkdir -p "$HOME/.config/vivaldi/Profile 1"
+printf '%s\n' '{}' >"$HOME/.config/vivaldi/Profile 1/Preferences"
+vivaldi_apply_language_now
+other="$HOME/.config/vivaldi/Profile 1/Preferences"
+if [ "$(jq -r '.intl.app_locale' "$state")" = "de" ] \
+    && [ "$(jq -r '.intl.accept_languages' "$prefs")" = "de-DE,de,en-US,en" ] \
+    && [ "$(jq -r '.intl.selected_languages' "$prefs")" = "de-DE,de,en-US,en" ] \
+    && [ "$(jq -r '.spellcheck.dictionaries[0]' "$prefs")" = "de" ] \
+    && [ "$(jq -r '.intl.accept_languages' "$other")" = "de-DE,de,en-US,en" ] \
+    && [ "$(jq -r '.vivaldi.themes.current' "$prefs")" = modern ]; then
+    ok "the desktop language is the browser language"
+else
+    err "German did not reach Vivaldi: $(jq -c '.intl' "$state") $(jq -c '.intl' "$prefs")"
+fi
+
+if grep -Fq -- '--lang=' "$ROOT/scripts/vivaldi"; then
+    ok "the launcher passes the desktop language"
+else
+    err "scripts/vivaldi must start Vivaldi with --lang"
+fi
+
 [ "$FAIL" -eq 0 ]

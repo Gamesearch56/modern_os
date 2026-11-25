@@ -20,6 +20,7 @@ Item {
     property string thinking: ""
     property string content: ""
     property string lastError: ""
+    property string phase: ""
     property string _body: ""
     property bool _restarting: false
     property bool _dirty: false
@@ -55,20 +56,24 @@ Item {
         root._restarting = false;
         root.thinking = "";
         root.content = "";
+        root.phase = "";
         root.lastError = "";
         root._dirty = false;
         const think = Config.accounts?.ai?.thinking === true;
         const brief = Config.accounts?.ai?.brief !== false;
+        const clipped = root._clipMessages(messages);
         try {
             root._body = JSON.stringify({
                 model: safe,
-                messages: root._clipMessages(messages),
+                messages: clipped,
                 stream: true,
                 think: think,
                 options: {
                     num_thread: 4,
-                    num_ctx: think ? 4096 : 2048,
-                    num_predict: brief ? (think ? root.maxPredict * 2 : root.maxPredict) : root.maxPredict * 3
+                    num_ctx: root._ctx(clipped, think),
+                    // Thinking spends the budget before the answer. Leave
+                    // room for the reply or the bubble stays empty.
+                    num_predict: brief ? (think ? root.maxPredict * 3 : root.maxPredict) : root.maxPredict * 4
                 }
             });
         } catch (e) {
@@ -86,6 +91,7 @@ Item {
     function stop() {
         root._restarting = false;
         root._dirty = false;
+        root.phase = "";
         if (proc.running)
             proc.running = false;
         root.running = false;
@@ -125,6 +131,29 @@ Item {
         return out;
     }
 
+    // Short chats stay on the small window. A long thread needs more
+    // room or the runner rejects it and the bubble has no reason.
+    function _ctx(messages: var, think: bool): int {
+        let chars = 0;
+        const list = messages || [];
+        for (let i = 0; i < list.length; i++)
+            chars += String(list[i] && list[i].content || "").length;
+        const fit = Math.ceil(chars / 3) + 512;
+        return Math.max(think ? 4096 : 2048, Math.min(8192, fit));
+    }
+
+    function _explain(code: string): string {
+        switch (String(code || "")) {
+        case "offline": return I18n.t("ai.errorOffline");
+        case "timeout": return I18n.t("ai.timeout");
+        case "memory": return I18n.t("ai.errorMemory");
+        case "context": return I18n.t("ai.errorContext");
+        case "model": return I18n.t("ai.errorModel");
+        case "empty": return I18n.t("ai.errorEmpty");
+        default: return I18n.t("ai.errorRefused");
+        }
+    }
+
     function _launch() {
         try {
             req.setText(root._body);
@@ -156,14 +185,21 @@ Item {
             return;
         }
         if (data.error) {
-            root.lastError = String(data.error).substring(0, 240);
+            root.lastError = root._explain(String(data.error));
+            return;
+        }
+        if (data.status === "search") {
+            root.phase = "search";
+            root.chunk(root.content, root.thinking);
             return;
         }
         const msg = data.message || ({});
         if (msg.thinking)
             root.thinking += String(msg.thinking).replace(/\0/g, "");
-        if (msg.content)
+        if (msg.content) {
+            root.phase = "";
             root.content += String(msg.content).replace(/\0/g, "");
+        }
         if (root.content.length > root.maxReply) {
             root.content = root.content.substring(0, root.maxReply);
             root._overflow();
@@ -219,7 +255,7 @@ Item {
                 return;
             }
             if (code !== 0 && !root.lastError)
-                root.lastError = I18n.t("ai.error");
+                root.lastError = I18n.t("ai.errorRefused");
             root._finish(code === 0, root.lastError);
         }
     }
