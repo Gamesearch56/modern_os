@@ -93,6 +93,8 @@
     },
     { "context": "ModernAppsPage", "source": "Steam", "key": "installer.apps.steam" },
     { "context": "ModernAppsPage", "source": "Game store.", "key": "installer.apps.steamHint" },
+    { "context": "ModernAppsPage", "source": "Battle.net", "key": "installer.apps.battlenet" },
+    { "context": "ModernAppsPage", "source": "Game launcher.", "key": "installer.apps.battlenetHint" },
     { "context": "ModernAppsPage", "source": "Spotify", "key": "installer.apps.spotify" },
     { "context": "ModernAppsPage", "source": "Music.", "key": "installer.apps.spotifyHint" },
     { "context": "ModernAppsPage", "source": "Discord", "key": "installer.apps.discord" },

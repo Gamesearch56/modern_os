@@ -106,6 +106,17 @@ else
     err "first-start install (rc $rc)"
 fi
 
+reset "umu"
+mkdir -p "$tmp/home/.cache/modern"
+printf 'MZ' >"$tmp/home/.cache/modern/Battle.net-Setup.exe"
+rc="$(run)"
+if [ "$rc" = 0 ] && [ ! -f "$tmp/calls/curl" ] \
+    && grep -Fq "$tmp/home/.cache/modern/Battle.net-Setup.exe" "$tmp/calls/umu" 2>/dev/null; then
+    ok "a setup saved at install time is not downloaded again"
+else
+    err "saved setup (rc $rc)"
+fi
+
 reset "umu curl-fail"
 rc="$(run)"
 if [ "$rc" = 1 ] && [ ! -f "$tmp/calls/umu" ] && grep -Fq 'Could not download' "$tmp/calls/notify"; then

@@ -230,12 +230,15 @@ install_client() {
     command -v curl >/dev/null 2>&1 || fail "$(t battlenet.downloadFailed)"
     mkdir -p "$CACHE_DIR" "$DATA_DIR"
     local setup="$CACHE_DIR/Battle.net-Setup.exe"
-    say "$(t battlenet.installing)"
-    if ! curl -fsSL --max-time 300 -o "$setup.part" "$SETUP_URL"; then
-        rm -f "$setup.part"
-        fail "$(t battlenet.downloadFailed)"
+    # The installer already saved this file when Battle.net was ticked.
+    if [ ! -s "$setup" ]; then
+        say "$(t battlenet.installing)"
+        if ! curl -fsSL --max-time 300 -o "$setup.part" "$SETUP_URL"; then
+            rm -f "$setup.part"
+            fail "$(t battlenet.downloadFailed)"
+        fi
+        mv -f "$setup.part" "$setup"
     fi
-    mv -f "$setup.part" "$setup"
     export WINEPREFIX="${WINEPREFIX:-$DATA_DIR/pfx}"
     export STEAM_COMPAT_DATA_PATH="${STEAM_COMPAT_DATA_PATH:-$DATA_DIR}"
     run_exe "$setup"

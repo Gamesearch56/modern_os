@@ -60,6 +60,11 @@ ModernAppsPage::ModernAppsPage( QWidget* parent )
             tr( "Game store." ),
             false,
             false );
+    addRow( QStringLiteral( "battlenet" ),
+            tr( "Battle.net" ),
+            tr( "Game launcher." ),
+            false,
+            false );
     addRow( QStringLiteral( "spotify-launcher" ),
             tr( "Spotify" ),
             tr( "Music." ),

@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, "/usr/lib/modern")
-from install_optional import packages_for  # noqa: E402
+from install_optional import fetch_battlenet, packages_for, wants_battlenet  # noqa: E402
 
 
 def _as_list(value):
@@ -49,20 +49,24 @@ def run():
     selected = _as_list(gs.value("modernappsInstall"))
     if not selected:
         return None
-    pkgs = packages_for(selected)
-    if not pkgs:
-        return None
     root = gs.value("rootMountPoint") or ""
     if not root:
         return ("Could not see the installed system", "the selected programs were not downloaded")
-    sync = subprocess.run(["pacman", "--sysroot", root, "-Sy", "--noconfirm"])
-    if sync.returncode != 0:
-        return ("Could not refresh the package lists", " ".join(pkgs))
-    proc = subprocess.run(
-        ["pacman", "--sysroot", root, "-S", "--needed", "--noconfirm", "--", *pkgs]
-    )
-    if proc.returncode != 0:
-        return ("Could not download a selected program", " ".join(pkgs))
+    user = str(gs.value("username") or "")
+    pkgs = packages_for(selected)
+    if pkgs:
+        sync = subprocess.run(["pacman", "--sysroot", root, "-Sy", "--noconfirm"])
+        if sync.returncode != 0:
+            return ("Could not refresh the package lists", " ".join(pkgs))
+        proc = subprocess.run(
+            ["pacman", "--sysroot", root, "-S", "--needed", "--noconfirm", "--", *pkgs]
+        )
+        if proc.returncode != 0:
+            return ("Could not download a selected program", " ".join(pkgs))
+    if wants_battlenet(selected):
+        failed = fetch_battlenet(root, user)
+        if failed:
+            return failed
     if "nvidia-proprietary" in selected:
-        _nvidia_modeset(root, str(gs.value("username") or ""))
+        _nvidia_modeset(root, user)
     return None

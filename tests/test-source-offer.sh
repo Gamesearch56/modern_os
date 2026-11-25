@@ -32,7 +32,37 @@ got = packages_for(["steam", "nvidia-proprietary"])
 assert got == ["nvidia-open-dkms", "nvidia-utils", "steam", "lib32-nvidia-utils"], got
 assert packages_for([]) == []
 assert "vivaldi" not in packages_for(["steam", "spotify-launcher", "discord", "proton-vpn-gtk-app", "nvidia-proprietary"])
+assert packages_for(["battlenet"]) == []
+assert packages_for(["battlenet", "discord"]) == ["discord"]
 print("test-source-offer: ok ticked programs become download names")
+
+import os, tempfile
+from install_optional import fetch_battlenet
+
+class _Ok:
+    returncode = 0
+
+_calls = []
+
+def _curl(cmd, **_kw):
+    _calls.append(cmd)
+    out = cmd[cmd.index("-o") + 1]
+    with open(out, "wb") as handle:
+        handle.write(b"MZ")
+    return _Ok()
+
+tmp = tempfile.mkdtemp()
+user = "ada"
+os.makedirs(os.path.join(tmp, "home", user))
+os.makedirs(os.path.join(tmp, "etc"))
+with open(os.path.join(tmp, "etc", "passwd"), "w", encoding="utf-8") as handle:
+    handle.write("ada:x:1000:1000::/home/ada:/bin/bash\n")
+assert fetch_battlenet(tmp, user, run=_curl) is None
+dest = os.path.join(tmp, "home", user, ".cache", "modern", "Battle.net-Setup.exe")
+assert open(dest, "rb").read() == b"MZ"
+assert fetch_battlenet(tmp, user, run=_curl) is None
+assert len(_calls) == 1
+print("test-source-offer: ok a ticked Battle.net downloads its setup once")
 PY
 
 conf="$ROOT/iso/airootfs/etc/calamares/settings.conf"

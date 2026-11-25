@@ -2144,6 +2144,8 @@
       "nvidiaHint": "Proprietary driver. An NVIDIA graphics card needs this. It is downloaded during installation.",
       "steam": "Steam",
       "steamHint": "Game store.",
+      "battlenet": "Battle.net",
+      "battlenetHint": "Game launcher.",
       "spotify": "Spotify",
       "spotifyHint": "Music.",
       "discord": "Discord",
