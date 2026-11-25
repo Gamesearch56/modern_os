@@ -12,8 +12,10 @@ ok() { printf 'test-files: ok %s\n' "$*"; }
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-files-XXXXXX")"
 trap 'chmod -R u+w "$TMP" 2>/dev/null || true; rm -rf "$TMP"' EXIT
-export XDG_DATA_HOME="$TMP/data"
 export HOME="$TMP/home"
+export XDG_DATA_HOME="$TMP/data"
+export XDG_CONFIG_HOME="$HOME/.config"
+unset MODERN_REPO
 mkdir -p "$HOME" "$TMP/data"
 
 mkdir -p "$TMP/box/c" "$TMP/box/d"
