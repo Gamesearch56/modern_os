@@ -326,6 +326,21 @@ if [ -f "$AIROOTFS_OUT/usr/lib/modern/deploy_key" ]; then
 else
     log "no secrets/github-deploy-key — release checks use HTTPS"
 fi
+# A fresh install reads this. It can write only to the private reports
+# repository. It is not a login for the public repository.
+rm -f "$AIROOTFS_OUT/usr/lib/modern/report-token"
+token_src=""
+if [ -f "$ROOT/secrets/report-token" ] && [ ! -L "$ROOT/secrets/report-token" ]; then
+    token_src="$ROOT/secrets/report-token"
+elif [ -f "$ROOT/install/share/report-token" ] && [ ! -L "$ROOT/install/share/report-token" ]; then
+    token_src="$ROOT/install/share/report-token"
+fi
+if [ -n "$token_src" ] && [ -s "$token_src" ]; then
+    install -m 0644 "$token_src" "$AIROOTFS_OUT/usr/lib/modern/report-token"
+    log "report sender is in the image"
+else
+    log "no report sender — problem reports stay on the computer"
+fi
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/usr/share/modern/wallpaper.jpg"
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/var/lib/modern/session/wallpaper.jpg"
 install -m 0644 "$WALLPAPER" "$AIROOTFS_OUT/etc/calamares/branding/modern/wallpaper.jpg"

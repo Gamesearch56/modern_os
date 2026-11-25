@@ -110,6 +110,8 @@ source "$REPO_ROOT/install/lib/mirrors.sh"
 source "$REPO_ROOT/install/lib/portal.sh"
 # shellcheck source=lib/workstation.sh
 source "$REPO_ROOT/install/lib/workstation.sh"
+# shellcheck source=lib/report-sender.sh
+source "$REPO_ROOT/install/lib/report-sender.sh"
 
 : > "$LOG_FILE"
 _err_trap() {
@@ -527,6 +529,8 @@ elif greetd_target_is_live_user "$TARGET"; then
 else
     log_info "skipping boot splash (target '$TARGET' is not a login home)"
 fi
+
+install_report_sender
 
 # The installed release clone cannot be deleted by the account that
 # uses it. An update that already cleared the flag locks it again
