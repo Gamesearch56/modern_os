@@ -301,6 +301,8 @@ The video is saved as an MP4 file in Videos/Recordings, and a Recording saved (A
 
 Settings → Recording (Aufnahme) has the options for both:
 
+![Settings, on the Recording page](images/settings-recording.webp)
+
 - for screenshots: picture format and quality, Copy to clipboard, Open editor after capture, Include cursor, and the Screenshot directory
 - for recordings: Record microphone (Mikrofon aufnehmen) and the Recordings directory
 

@@ -6,6 +6,8 @@ SUPER is the key with the Windows or logo symbol, usually between Ctrl and Alt. 
 
 Each name is given in English with the German label in parentheses. You can switch the desktop language in System Settings under Language & Time (Sprache & Zeit).
 
+![The keyboard shortcut sheet, open on Applications](images/shortcuts.webp)
+
 ## Applications (Anwendungen)
 
 | Keys | What it does |
