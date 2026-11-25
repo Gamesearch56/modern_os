@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# ModernOS Manual: the documentation reader (SUPER+Y). One manual window
+# is enough, so a call while one is open focuses it instead of opening
+# another; naming a document always opens a window on it.
+#
+# Usage: modern-manual [DOCUMENT.md]
+# MODERN_MANUAL_DRY=1 prints what would run instead of running it.
+set -euo pipefail
+
+dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+config="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/modern/manual.qml"
+log="${XDG_STATE_HOME:-$HOME/.local/state}/modern/manual.log"
+# shellcheck source=lib/app-log.sh
+. "$dir/lib/app-log.sh"
+# shellcheck source=lib/extensions.sh
+. "$dir/lib/extensions.sh"
+
+note() {
+    app_log_open "$log" || return 0
+    printf '%s modern-manual: %s\n' "$(date '+%F %T')" "$*" >>"$log" 2>/dev/null || true
+}
+
+doc=""
+if [ "$#" -gt 0 ] && [ -n "$1" ]; then
+    case "$1" in
+        file://*) doc="$(python3 -c 'import sys, urllib.parse; sys.stdout.write(urllib.parse.unquote(urllib.parse.urlsplit(sys.argv[1]).path))' "$1")" ;;
+        /*) doc="$1" ;;
+        *) doc="$PWD/$1" ;;
+    esac
+fi
+
+open_window() {
+    hyprctl clients -j 2>/dev/null \
+        | jq -r 'map(select(.class == "modern.manual")) | .[0].address // empty' 2>/dev/null || true
+}
+
+if [ -z "$doc" ]; then
+    addr="$(open_window)"
+    if [ -n "$addr" ]; then
+        if [ "${MODERN_MANUAL_DRY:-}" = "1" ]; then
+            printf 'focus %s\n' "$addr"
+            exit 0
+        fi
+        hyprctl dispatch "hl.dsp.focus({ window = \"address:${addr}\" })" >/dev/null 2>&1 && exit 0
+        note "window $addr did not take focus; opening another"
+    fi
+fi
+
+if [ "${MODERN_MANUAL_DRY:-}" = "1" ]; then
+    printf 'start %s\n' "${doc:-<first chapter>}"
+    exit 0
+fi
+if [ ! -f "$config" ]; then
+    note "missing $config"
+    exit 1
+fi
+
+out=/dev/null
+app_log_open "$log" && out="$log"
+extension_prefix
+[ -z "${EXT_WARN:-}" ] || note "$EXT_WARN"
+MODERN_MANUAL_DOC="$doc" setsid -f "${EXT_PREFIX[@]}" qs -p "$config" >>"$out" 2>&1 </dev/null

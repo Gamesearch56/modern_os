@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Open Files in the running shell, on a folder or file path or file:// URI
+# when one is given. modern.files.desktop runs this: xdg-open's generic
+# desktop-file parser cannot unquote an inline `sh -c` Exec line.
+set -euo pipefail
+
+exec qs -c modern ipc call files open "${1:-}"

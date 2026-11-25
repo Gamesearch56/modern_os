@@ -1,0 +1,28 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Vivaldi
+Name[de]=Vivaldi
+GenericName=Web Browser
+GenericName[de]=Web-Browser
+Comment=Web browser
+Comment[de]=Webbrowser
+Exec=modern vivaldi %U
+TryExec=modern
+Icon=modern-vivaldi
+Terminal=false
+StartupNotify=true
+StartupWMClass=vivaldi
+Categories=Network;WebBrowser;
+MimeType=application/pdf;application/rdf+xml;application/rss+xml;application/xhtml+xml;application/xhtml_xml;application/xml;image/gif;image/jpeg;image/png;image/webp;text/html;text/xml;x-scheme-handler/http;x-scheme-handler/https;
+Actions=new-window;new-private-window;
+
+[Desktop Action new-window]
+Name=New Window
+Name[de]=Neues Fenster
+Exec=modern vivaldi --new-window
+
+[Desktop Action new-private-window]
+Name=New Private Window
+Name[de]=Neues privates Fenster
+Exec=modern vivaldi --incognito

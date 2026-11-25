@@ -1,0 +1,73 @@
+-- hl.on("hyprland.start", ...) fires exactly once per session, even
+-- though hyprland.lua re-parses on every save. A command at file scope
+-- would re-exec on each save. Always put autostart inside this callback.
+
+local config = require("modules.config")
+local paths = require("modules.paths")
+
+hl.on("hyprland.start", function()
+    -- Shell first so the first frame is the bar, not a bus timeout.
+    -- Wallpaper and systemd stay in the background. shell-run.sh restarts
+    -- a crashed shell so a locked session can always be unlocked.
+    hl.exec_cmd("sh -lc '"
+        .. "if pgrep -u \"$USER\" -x qs >/dev/null 2>&1 || pgrep -u \"$USER\" -x quickshell >/dev/null 2>&1; then exit 0; fi; "
+        .. "export QT_QPA_PLATFORM=wayland QT_QPA_PLATFORMTHEME=qt6ct "
+        .. "QS_ICON_THEME=\"${QS_ICON_THEME:-Papirus-Dark}\"; "
+        .. "exec " .. paths.scripts .. "/shell-run.sh'")
+
+    hl.exec_cmd("awww-daemon")
+    -- Own current-wallpaper first. The shared greeter JPEG is last so a
+    -- new account keeps the shipped default instead of the previous seat.
+    hl.exec_cmd("sh -lc '"
+        .. "state=\"${XDG_STATE_HOME:-$HOME/.local/state}/modern/current-wallpaper\"; "
+        .. "default=\"$HOME/.config/modern/wallpapers/default.jpg\"; "
+        .. "shared=/var/lib/modern/session/wallpaper.jpg; "
+        .. "img=\"\"; cand=\"\"; "
+        .. "if [ -f \"$state\" ]; then cand=$(head -n 1 \"$state\"); fi; "
+        .. "splash_quit() { command -v plymouth >/dev/null 2>&1 && plymouth quit --retain-splash || true; }; "
+        .. "if [ -n \"$cand\" ] && [ -r \"$cand\" ]; then img=\"$cand\"; "
+        .. "elif [ -r \"$default\" ]; then img=\"$default\"; "
+        .. "elif [ -r \"$shared\" ]; then img=\"$shared\"; "
+        .. "else splash_quit; exit 0; fi; "
+        .. "i=0; while ! pgrep -x awww-daemon >/dev/null; do i=$((i+1)); [ \"$i\" -gt 30 ] && { splash_quit; exit 0; }; sleep 0.1; done; "
+        .. "i=0; while ! awww img \"$img\" --transition-type none; do i=$((i+1)); [ \"$i\" -gt 20 ] && break; sleep 0.15; done; "
+        .. "splash_quit'")
+
+    -- Background: import/dbus/polkit overlap; phylax waits on them.
+    -- restart, not start: after a compositor crash Restart= has already
+    -- brought phylax up for the old session, and start would keep it.
+    hl.exec_cmd("sh -lc '("
+        .. "if systemctl --user is-enabled --quiet modern-shell.service 2>/dev/null "
+        .. "|| systemctl --user is-active --quiet modern-shell.service; then "
+        .. "timeout 3 systemctl --user disable --now modern-shell.service || true; fi; "
+        .. "timeout 1 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XDG_SESSION_ID XDG_SESSION_TYPE QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION QS_ICON_THEME || true & "
+        .. "timeout 1 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORM QT_QPA_PLATFORMTHEME QT_WAYLAND_DISABLE_WINDOWDECORATION || true & "
+        .. "timeout 1 systemctl --user stop hyprpolkitagent.service || true & "
+        .. "wait; "
+        .. "timeout 1 systemctl --user daemon-reload || true; "
+        .. "timeout 3 systemctl --user enable --now modern-wine-reap.service || true; "
+        .. "timeout 1 systemctl --user reset-failed phylax.service || true; "
+        .. "timeout 3 systemctl --user restart phylax || true) &'")
+
+    hl.exec_cmd("sh -lc '" .. paths.scripts .. "/hypridle-apply.sh'")
+    -- logind HandleLidSwitch/HandlePowerKey would steal Energy actions.
+    hl.exec_cmd("sh -lc '" .. paths.scripts .. "/logind-handles.sh &'")
+    -- hyprpm stores plugins in /var/cache/hyprpm/$USER and needs pkexec
+    -- to create that tree the first time. Calling reload before the
+    -- store exists dies with "Failed to run a superuser cmd" and the
+    -- -n flag turns that into the startup "plugin loaded failed"
+    -- overlay. Skip until the user has run `hyprpm add` once.
+    hl.exec_cmd("sh -lc 'if [ -d /var/cache/hyprpm/\"$USER\" ]; then hyprpm reload -n; fi'")
+
+    if config.value("kdeconnect.enabled", true) then
+        -- Package unit is kdeconnectd via XDG autostart; kdeconnect.service
+        -- is not shipped. Start the daemon if it is not already running.
+        hl.exec_cmd("sh -lc 'pgrep -u \"$USER\" -x kdeconnectd >/dev/null || kdeconnectd &'")
+    end
+
+    -- GameMode raises the CPU governor only while a game is registered,
+    -- then restores it — other apps stay on the default policy.
+    hl.exec_cmd("sh -lc 'command -v gamemoded >/dev/null 2>&1 || exit 0; pgrep -u \"$USER\" -x gamemoded >/dev/null || gamemoded -d'")
+
+    require("modules.session_apps").on_start()
+end)

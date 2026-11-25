@@ -1,0 +1,4 @@
+# Alternative game launcher for Epic/GOG/Amazon titles.
+heroic-games-launcher-bin
+# GUI front-end for tracking/switching Proton-GE builds.
+protonup-qt

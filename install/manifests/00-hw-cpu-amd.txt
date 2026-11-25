@@ -1,0 +1,2 @@
+# CPU microcode for AMD. Selected when detect_hw reports cpu=amd.
+amd-ucode

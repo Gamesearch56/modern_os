@@ -1,0 +1,2 @@
+# Optional AUR apps are offered on the installer Programs page and
+# downloaded then. Nothing in this file is baked into the image.

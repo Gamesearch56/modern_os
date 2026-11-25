@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# Privileged, allowlisted disk cleanup. Settings pkexecs this once.
+# Only regenerable caches, unused package files, and logs older than
+# 14 days. Never touches documents, photos, games, or $HOME itself.
+# Fixture env is ignored when running as root.
+set -euo pipefail
+
+die() { printf 'storage-clean: ERROR: %s\n' "$*" >&2; exit 1; }
+
+[ "$#" -eq 0 ] || die "usage: storage-clean.sh"
+
+FIXTURE=0
+HOME_DIR=""
+PKG_DIR="/var/cache/pacman/pkg"
+if [ "$(id -u)" -ne 0 ] && [ "${MODERN_TEST_FIXTURE:-}" = "1" ] \
+    && [ -n "${MODERN_CLEAN_HOME:-}" ]; then
+    FIXTURE=1
+    HOME_DIR="${MODERN_CLEAN_HOME}"
+    PKG_DIR="${MODERN_CLEAN_PKG:-}"
+fi
+
+if [ "$FIXTURE" -eq 0 ]; then
+    [ "$(id -u)" -eq 0 ] || die "must run as root (pkexec)"
+    uid="${PKEXEC_UID:-${SUDO_UID:-}}"
+    [[ "$uid" =~ ^[0-9]+$ ]] || die "missing calling user"
+    HOME_DIR="$(getent passwd "$uid" | cut -d: -f6 || true)"
+fi
+
+[ -n "$HOME_DIR" ] || die "home missing"
+HOME_DIR="$(realpath -q "$HOME_DIR" || true)"
+[ -n "$HOME_DIR" ] && [ -d "$HOME_DIR" ] || die "home is not a directory"
+[ "$HOME_DIR" != / ] || die "refusing /"
+if [ "$FIXTURE" -eq 0 ]; then
+    case "$HOME_DIR" in
+        /tmp|/tmp/*|/var/tmp|/var/tmp/*) die "refusing a temp home" ;;
+    esac
+fi
+
+SAVED=0
+add_saved() {
+    local n="${1:-0}"
+    [[ "$n" =~ ^[0-9]+$ ]] || n=0
+    SAVED=$((SAVED + n))
+}
+
+dir_bytes() {
+    local d="$1" n=0
+    [ -d "$d" ] || { printf '0\n'; return; }
+    n="$(du -sb --one-file-system "$d" 2>/dev/null | awk '{print $1}')"
+    [[ "$n" =~ ^[0-9]+$ ]] || n=0
+    printf '%s\n' "$n"
+}
+
+# Resolved path of a real directory under this home's .cache, or empty.
+# A symlink anywhere in the path (including .cache itself) is refused,
+# so cleanup cannot follow a link out of the home directory.
+cache_real() {
+    local dir="$1" resolved cache_root
+    [ -n "$dir" ] || return 1
+    [ -d "$dir" ] || return 1
+    [ ! -L "$dir" ] || return 1
+    resolved="$(realpath -e "$dir" 2>/dev/null || true)"
+    cache_root="$(realpath -e "$HOME_DIR/.cache" 2>/dev/null || true)"
+    [ -n "$resolved" ] && [ -n "$cache_root" ] || return 1
+    [ "$cache_root" = "$HOME_DIR/.cache" ] || return 1
+    [ "$resolved" != "$cache_root" ] && [ "$resolved" != "$HOME_DIR" ] && [ "$resolved" != / ] || return 1
+    case "$resolved" in
+        "$cache_root"/*) printf '%s\n' "$resolved" ;;
+        *) return 1 ;;
+    esac
+}
+
+# $1 = a cache directory. Only its contents go. The saved count is the
+# bytes that were actually removed.
+wipe_cache_dir() {
+    local resolved before after
+    resolved="$(cache_real "$1" 2>/dev/null || true)"
+    [ -n "$resolved" ] || return 0
+    before="$(dir_bytes "$resolved")"
+    find "$resolved" -xdev -mindepth 1 -delete 2>/dev/null || true
+    after="$(dir_bytes "$resolved")"
+    if [ "$after" -le "$before" ]; then
+        add_saved "$((before - after))"
+    fi
+}
+
+step() { printf 'step %s\n' "$1"; }
+
+step thumbnails
+wipe_cache_dir "$HOME_DIR/.cache/thumbnails"
+wipe_cache_dir "$HOME_DIR/.cache/modern/wallpaper-thumbs"
+
+step sizes
+wipe_cache_dir "$HOME_DIR/.cache/modern/folder-sizes"
+
+step gpu
+wipe_cache_dir "$HOME_DIR/.cache/mesa_shader_cache"
+wipe_cache_dir "$HOME_DIR/.cache/mesa_shader_cache_db"
+wipe_cache_dir "$HOME_DIR/.cache/nvidia/GLCache"
+wipe_cache_dir "$HOME_DIR/.cache/nvidia/ComputeCache"
+wipe_cache_dir "$HOME_DIR/.cache/radv_builtin_shaders"
+if [ -d "$HOME_DIR/.cache" ] && [ ! -L "$HOME_DIR/.cache" ]; then
+    for _qt in "$HOME_DIR/.cache"/qtshadercache-*; do
+        [ -d "$_qt" ] || continue
+        wipe_cache_dir "$_qt"
+    done
+fi
+unset _qt
+
+step fonts
+wipe_cache_dir "$HOME_DIR/.cache/fontconfig"
+
+step packages
+if [ "$FIXTURE" -eq 1 ]; then
+    if [ -n "$PKG_DIR" ] && [ -d "$PKG_DIR" ] && [ ! -L "$PKG_DIR" ]; then
+        before="$(dir_bytes "$PKG_DIR")"
+        find "$PKG_DIR" -xdev -mindepth 1 -name '*.pkg.tar*' -delete 2>/dev/null || true
+        after="$(dir_bytes "$PKG_DIR")"
+        add_saved "$((before - after))"
+    fi
+elif [ -x /usr/bin/paccache ] && [ -d "$PKG_DIR" ]; then
+    before="$(dir_bytes "$PKG_DIR")"
+    /usr/bin/paccache -ruk0 >/dev/null 2>&1 || true
+    /usr/bin/paccache -rk2 >/dev/null 2>&1 || true
+    after="$(dir_bytes "$PKG_DIR")"
+    if [ "$after" -le "$before" ]; then
+        add_saved "$((before - after))"
+    fi
+fi
+
+step journal
+if [ "$FIXTURE" -eq 0 ] && command -v journalctl >/dev/null 2>&1; then
+    freed="$(LC_ALL=C journalctl --vacuum-time=14d 2>&1 | python3 -c 'import re,sys
+t=sys.stdin.read()
+m=re.search(r"freed ([0-9]+(\.[0-9]+)?)([BKMGT])", t)
+if not m:
+    print(0)
+    raise SystemExit(0)
+n=float(m.group(1)); u=m.group(3)
+mul={"B":1,"K":1024,"M":1024**2,"G":1024**3,"T":1024**4}[u]
+print(int(n*mul))' || true)"
+    add_saved "${freed:-0}"
+fi
+
+printf 'done %s\n' "$SAVED"

@@ -1,0 +1,2 @@
+# Flatpak-distributed apps (M6, `full` profile), one app ID per line.
+com.usebottles.bottles  # Windows apps in Wine prefixes

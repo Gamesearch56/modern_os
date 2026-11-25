@@ -1,0 +1,2 @@
+# NVIDIA 32-bit extras for the gaming profile. 64-bit utils are in 00-hw-gpu-nvidia*.
+lib32-nvidia-utils

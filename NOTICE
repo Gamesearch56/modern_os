@@ -1,0 +1,49 @@
+ModernOS
+Copyright (C) 2026 Gamesearch56 (https://github.com/Gamesearch56)
+
+ModernOS is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+ModernOS is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License in
+the LICENSE file for more details.
+
+Additional terms under section 7 of the GNU GPL version 3
+---------------------------------------------------------
+
+These terms supplement the license for all of ModernOS. They are
+permitted by section 7, paragraphs (b), (c) and (e), and anyone who
+conveys ModernOS or a work based on it must keep them in place.
+
+1. Attribution (section 7b). Every copy and every modified version must
+   keep this NOTICE file and the copyright notices in the source. A
+   modified version that shows an "About" page, a README or similar
+   credits must include the line:
+       Based on ModernOS by Gamesearch56 - https://github.com/Gamesearch56/modern_os
+
+2. Origin (section 7c). A modified version must be marked as changed, in
+   its README and in any place it states its name and version, and must
+   not be presented as the original ModernOS or as the work of anyone
+   other than its actual authors.
+
+3. Names and logos (section 7e). This license grants no right to use
+   the name "ModernOS", the ModernOS logo, or the Gamesearch56 name for
+   a modified version or to suggest endorsement. A modified version
+   that is distributed must use a different name and logo. See
+   TRADEMARKS.md.
+
+Third-party components
+----------------------
+
+install/prebuilt/phylax is the Phylax polkit authentication agent by
+jakeb-grant (https://github.com/jakeb-grant/phylax), licensed under the
+Apache License 2.0; the full text is in install/prebuilt/phylax.LICENSE.
+It is built from upstream commit 4946e2465edad3c441af81cfc543c04807902ef4
+with ModernOS changes to its dialog: the session user preselected, the
+identity dropdown hidden, keyboard navigation, the Authenticating label
+and the button row. scripts/build-phylax.sh fetches the source, applies
+those changes and rebuilds the binary, so the changes and the way to
+reproduce it are both part of this repository.

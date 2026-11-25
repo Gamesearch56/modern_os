@@ -1,0 +1,154 @@
+import QtQuick
+import QtQuick.Layouts
+import "../../../../Commons"
+import "../../../../Widgets"
+import "../../../../Services"
+
+ColumnLayout {
+    id: root
+
+    spacing: Tokens.spacing.md
+
+    readonly property bool kdeOn: Config.kdeconnect.enabled
+    onKdeOnChanged: KdeConnect.watching = root.kdeOn
+
+    Component.onCompleted: KdeConnect.watching = Config.kdeconnect.enabled
+
+    MSectionHeader {
+        key: "settings.privacy.notifications"
+        topMargin: 0
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "notifications.dnd"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: Notifications.dnd
+            onToggled: (v) => Notifications.dnd = v
+        }
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.privacy.quietHours"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.fillWidth: true
+        }
+        MSwitch {
+            checked: !!(Config.general.dndSchedule.enabled)
+            onToggled: (v) => ConfigWrite.set("general.dndSchedule.enabled", v)
+        }
+    }
+    RowLayout {
+        visible: !!(Config.general.dndSchedule.enabled)
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+
+        MField {
+            Layout.fillWidth: true
+            labelKey: "settings.fields.dndFrom"
+            MTextField {
+                id: fromField
+                text: Config.general.dndSchedule.from
+                onAccepted: ConfigWrite.set("general.dndSchedule.from", text)
+                onFocusedChanged: {
+                    if (!fromField.focused)
+                        ConfigWrite.set("general.dndSchedule.from", fromField.text);
+                }
+            }
+        }
+        MField {
+            Layout.fillWidth: true
+            labelKey: "settings.fields.dndTo"
+            MTextField {
+                id: toField
+                text: Config.general.dndSchedule.to
+                onAccepted: ConfigWrite.set("general.dndSchedule.to", text)
+                onFocusedChanged: {
+                    if (!toField.focused)
+                        ConfigWrite.set("general.dndSchedule.to", toField.text);
+                }
+            }
+        }
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        MText {
+            key: "settings.privacy.bannerDuration"
+            styleName: "bodyMedium"
+            color: Colors.color.onSurfaceVariant
+            Layout.preferredWidth: Tokens.spacing.xxl * 8
+        }
+        MSlider {
+            Layout.fillWidth: true
+            from: 2
+            to: 15
+            value: (Config.general.notificationTimeoutMs ?? 6000) / 1000
+            showValue: true
+            onCommitted: (v) => ConfigWrite.set("general.notificationTimeoutMs", Math.round(v) * 1000)
+        }
+    }
+
+    MSectionHeader {
+        key: "settings.privacy.census"
+        topMargin: Tokens.spacing.xxl
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 0
+            MText {
+                key: "settings.privacy.censusHint"
+                styleName: "bodySmall"
+                color: Colors.color.onSurfaceVariant
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+        MSwitch {
+            checked: !!(Config.census && Config.census.enabled)
+            onToggled: (v) => ConfigWrite.set("census.enabled", v)
+        }
+    }
+
+    MSectionHeader {
+        key: "settings.privacy.connectedServices"
+        topMargin: Tokens.spacing.xxl
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.md
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 0
+            MText {
+                key: "settings.fields.kdeconnectEnabled"
+                styleName: "bodyMedium"
+                color: Colors.color.onSurfaceVariant
+                Layout.fillWidth: true
+            }
+            MText {
+                value: root.kdeOn && KdeConnect.connectedCount > 0
+                    ? I18n.t("kdeconnect.connected", ({ count: KdeConnect.connectedCount }))
+                    : I18n.t("kdeconnect.off")
+                styleName: "bodySmall"
+                color: Colors.color.onSurfaceVariant
+                Layout.fillWidth: true
+            }
+        }
+        MSwitch {
+            checked: root.kdeOn
+            onToggled: (v) => ConfigWrite.set("kdeconnect.enabled", v)
+        }
+    }
+}

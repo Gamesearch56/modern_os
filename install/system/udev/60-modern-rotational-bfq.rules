@@ -1,0 +1,6 @@
+# GATED — copied to /etc/udev/rules.d/ by provision-iso.sh.
+# A spinning disk's default scheduler lets one large write (browser cache,
+# an update) hold the drive long enough that the pointer stops. bfq shares
+# the drive with the desktop. SSDs and NVMe report rotational=0 and are
+# left on the kernel default, so a machine with an SSD is unchanged.
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"

@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=ModernOS Manual
+Name[de]=ModernOS Handbuch
+GenericName=User manual
+GenericName[de]=Benutzerhandbuch
+Comment=Read how ModernOS works: the desktop, the apps, settings, and help
+Comment[de]=Nachlesen, wie ModernOS funktioniert: Desktop, Apps, Einstellungen und Hilfe
+Keywords=manual;help;documentation;docs;guide;Handbuch;Hilfe;Dokumentation;Anleitung;
+Keywords[de]=manual;help;documentation;docs;guide;Handbuch;Hilfe;Dokumentation;Anleitung;
+Exec=modern-manual
+Icon=modern-manual
+Terminal=false
+Categories=Documentation;Utility;
+StartupNotify=false
+StartupWMClass=modern.manual

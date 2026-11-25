@@ -1,0 +1,17 @@
+// Login-screen power actions. The greeter account is not a session user,
+// so loginctl reboot/poweroff would otherwise sit on a polkit prompt
+// nobody can answer.
+polkit.addRule(function (action, subject) {
+    if (subject.user !== "greeter")
+        return;
+    var ids = {
+        "org.freedesktop.login1.reboot": true,
+        "org.freedesktop.login1.reboot-multiple-sessions": true,
+        "org.freedesktop.login1.power-off": true,
+        "org.freedesktop.login1.power-off-multiple-sessions": true,
+        "org.freedesktop.login1.reboot-ignore-inhibit": true,
+        "org.freedesktop.login1.power-off-ignore-inhibit": true
+    };
+    if (ids[action.id])
+        return polkit.Result.YES;
+});

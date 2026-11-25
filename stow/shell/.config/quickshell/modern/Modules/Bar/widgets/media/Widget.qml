@@ -1,0 +1,229 @@
+import QtQuick
+import QtQuick.Layouts
+import "../../../../Commons"
+import "../../../../Widgets"
+import "../../../../Services"
+
+Item {
+    id: root
+    // Keep this pill in the layout from the first frame. Hiding it until
+    // a player exists leaves a hollow circle after MPRIS appears.
+    implicitWidth: {
+        void Media.trackTitle;
+        void Media.trackArtist;
+        void Media.hasPlayer;
+        void Media.playing;
+        void Audio.playback;
+        void Typography.scale;
+        if (BarLayout.vertical)
+            return BarLayout.height;
+        return row.implicitWidth + Tokens.spacing.md * 2;
+    }
+    implicitHeight: BarLayout.height
+
+    readonly property bool _mpris: Media.hasPlayer
+    readonly property bool _sound: Media.playing || (!root._mpris && !!Audio.playback)
+    readonly property real _art: BarLayout.vertical
+        ? BarLayout.height - Tokens.spacing.md
+        : Tokens.spacing.xl - Tokens.spacing.xxs
+    readonly property real _titleMax: Tokens.spacing.xxl * 4
+    readonly property string _label: {
+        if (root._mpris) {
+            const title = Media.trackTitle || "";
+            const artist = Media.trackArtist || "";
+            if (title.length > 0 && artist.length > 0)
+                return title + " — " + artist;
+            if (title.length || artist.length)
+                return title || artist;
+            if ((Media.identity || "").length)
+                return Media.identity;
+        }
+        if (Audio.playback)
+            return Audio.streamTitle(Audio.playback);
+        return I18n.t("bar.media");
+    }
+    readonly property string _artUrl: root._mpris ? (Media.trackArtUrl || "") : ""
+    readonly property string _streamIcon: root._mpris ? "" : Audio.streamIcon(Audio.playback)
+    readonly property bool _appActive: Media.hasPlayer || !!Audio.playback
+    readonly property var _stream: {
+        void Audio.streams;
+        if (Media.hasPlayer)
+            return Audio.findStream(Media.desktopEntry)
+                || Audio.findStream(Media.identity)
+                || Audio.playback;
+        return Audio.playback;
+    }
+
+    function _raise() {
+        if (root._mpris) {
+            const desk = Media.desktopEntry;
+            const ident = Media.identity;
+            if ((desk.length > 0 && Hypr.raiseDesktop(desk)) || (ident.length > 0 && Hypr.raiseDesktop(ident)))
+                return;
+            Media.raise();
+            return;
+        }
+        const app = Audio.streamAppId(Audio.playback);
+        if (app.length)
+            Hypr.raiseDesktop(app);
+    }
+
+    function _toggle() {
+        if (root._mpris)
+            Media.togglePlaying();
+        else
+            Audio.toggleStreamMute(Audio.playback);
+    }
+
+    function _nudge(steps, fine) {
+        const step = fine
+            ? (Config.widgets.audio?.scrollStepFinePercent ?? 1)
+            : (Config.widgets.audio?.scrollStepPercent ?? 5);
+        Audio.adjustStreamVolume(root._stream, steps > 0 ? step : -step);
+    }
+
+    function _onWheel(w) {
+        root._nudge(w.angleDelta.y > 0 ? 1 : -1, !!(w.modifiers & Qt.ShiftModifier));
+        w.accepted = true;
+    }
+
+    RowLayout {
+        id: row
+        anchors.centerIn: BarLayout.vertical ? parent : undefined
+        anchors.left: BarLayout.vertical ? undefined : parent.left
+        anchors.leftMargin: BarLayout.vertical ? 0 : Tokens.spacing.md
+        anchors.verticalCenter: BarLayout.vertical ? undefined : parent.verticalCenter
+        spacing: BarLayout.vertical ? 0 : Tokens.spacing.sm
+
+        Rectangle {
+            Layout.preferredWidth: root._art
+            Layout.preferredHeight: root._art
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+            radius: Tokens.radius.small
+            color: Colors.color.surfaceContainerHighest
+            clip: true
+
+            Image {
+                anchors.fill: parent
+                visible: root._artUrl.length > 0
+                source: root._artUrl
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                smooth: true
+                sourceSize.width: root._art * 2
+                sourceSize.height: root._art * 2
+            }
+
+            MIcon {
+                anchors.centerIn: parent
+                visible: root._artUrl.length === 0
+                name: root._streamIcon.length ? root._streamIcon : "audio-x-generic-symbolic"
+                size: Tokens.icon.sm
+                color: Colors.color.onSurface
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: root._appActive ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root._raise()
+                onWheel: (w) => root._onWheel(w)
+            }
+        }
+
+        MText {
+            visible: !BarLayout.vertical && root._label.length > 0
+            Layout.alignment: Qt.AlignVCenter
+            Layout.maximumWidth: root._titleMax
+            value: root._label
+            styleName: "titleSmall"
+            elide: Text.ElideRight
+            wrapMode: Text.NoWrap
+            verticalAlignment: Text.AlignVCenter
+
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: root._appActive ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root._raise()
+                onWheel: (w) => root._onWheel(w)
+            }
+        }
+
+        MIconButton {
+            tabFocus: false
+            visible: !BarLayout.vertical && root._mpris
+            iconName: "media-skip-backward-symbolic"
+            size: root._art
+            iconSize: Tokens.icon.sm
+            Layout.preferredWidth: root._art
+            Layout.preferredHeight: root._art
+            Layout.alignment: Qt.AlignVCenter
+            enabled: Media.canGoPrevious
+            pointer: root._appActive
+            acceptWheel: true
+            onClicked: Media.previous()
+            onWheel: (steps, fine) => root._nudge(steps, fine)
+        }
+        MIconButton {
+            tabFocus: false
+            visible: !BarLayout.vertical
+            iconName: (root._mpris ? Media.playing : !!Audio.playback) ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
+            size: root._art
+            iconSize: Tokens.icon.sm
+            Layout.preferredWidth: root._art
+            Layout.preferredHeight: root._art
+            Layout.alignment: Qt.AlignVCenter
+            pointer: root._appActive
+            acceptWheel: true
+            onClicked: root._toggle()
+            onWheel: (steps, fine) => root._nudge(steps, fine)
+        }
+        MIconButton {
+            tabFocus: false
+            visible: !BarLayout.vertical && root._mpris
+            iconName: "media-skip-forward-symbolic"
+            size: root._art
+            iconSize: Tokens.icon.sm
+            Layout.preferredWidth: root._art
+            Layout.preferredHeight: root._art
+            Layout.alignment: Qt.AlignVCenter
+            enabled: Media.canGoNext
+            pointer: root._appActive
+            acceptWheel: true
+            onClicked: Media.next()
+            onWheel: (steps, fine) => root._nudge(steps, fine)
+        }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        z: -1
+        hoverEnabled: true
+        cursorShape: root._appActive ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onClicked: root._raise()
+        onWheel: (w) => root._onWheel(w)
+    }
+
+    HoverHandler {
+        enabled: root._appActive && !!root._stream
+        onHoveredChanged: {
+            const p = sliderLoader.item;
+            if (p)
+                p.setPillHovered(hovered);
+        }
+    }
+
+    Loader {
+        id: sliderLoader
+        source: Qt.resolvedUrl("HoverSlider.qml")
+        onLoaded: {
+            const p = sliderLoader.item;
+            if (!p)
+                return;
+            p.anchorItem = root;
+            p.stream = Qt.binding(() => root._stream);
+            p.appActive = Qt.binding(() => root._appActive);
+        }
+    }
+}

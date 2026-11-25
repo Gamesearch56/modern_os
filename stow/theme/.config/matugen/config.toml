@@ -1,0 +1,69 @@
+# matugen pipeline config. Regenerated in place by scripts/theme-apply.sh
+# (which passes --type/--mode/--contrast from the active theme profile,
+# see stow/modern/.config/modern/themes/) — this file's [templates.*]
+# section itself rarely needs hand-editing. See docs/THEMING.md.
+#
+# Real syntax verified against matugen v4.2.0 (cargo install matugen)
+# during development — see docs/DECISIONS.md and docs/THEMING.md.
+
+[config]
+
+# No [config.wallpaper] section: scripts/theme-apply.sh calls awww
+# itself, before invoking matugen, because it needs to pass per-call
+# transition flags from Settings > Design (matugen's own
+# config.wallpaper.command is fixed and can't vary per invocation).
+
+[templates.tokens_json]
+input_path = "~/.config/matugen/templates/tokens.json.template"
+output_path = "~/.config/modern/tokens.json"
+
+# Colors.qml FileView-watches tokens.json (not generated) so the bar
+# and overlays pick up a new wallpaper without restarting Quickshell.
+
+[templates.hyprland_colors]
+input_path = "~/.config/matugen/templates/hyprland-colors.lua.template"
+output_path = "~/.config/hypr/modules/colors.lua"
+
+[templates.kitty_colors]
+input_path = "~/.config/matugen/templates/kitty-colors.conf.template"
+output_path = "~/.config/kitty/colors.conf"
+
+[templates.fastfetch]
+input_path = "~/.config/matugen/templates/fastfetch.jsonc.template"
+output_path = "~/.config/fastfetch/config.jsonc"
+
+[templates.gtk3_css]
+input_path = "~/.config/matugen/templates/gtk.css.template"
+output_path = "~/.config/gtk-3.0/gtk.css"
+
+[templates.gtk4_css]
+input_path = "~/.config/matugen/templates/gtk.css.template"
+output_path = "~/.config/gtk-4.0/gtk.css"
+
+[templates.qt_colors]
+input_path = "~/.config/matugen/templates/qt6ct-colors.conf.template"
+output_path = "~/.config/qt6ct/colors/modern.conf"
+
+[templates.kdeglobals]
+input_path = "~/.config/matugen/templates/kdeglobals.template"
+output_path = "~/.config/kdeglobals"
+
+[templates.kde_colorscheme]
+input_path = "~/.config/matugen/templates/kde-colorscheme.template"
+output_path = "~/.local/share/color-schemes/modern.colors"
+
+[templates.vivaldi_css]
+input_path = "~/.config/matugen/templates/vivaldi.css.template"
+output_path = "~/.config/vivaldi/custom_css/00-modern.css"
+
+[templates.qt6ct_qss]
+input_path = "~/.config/matugen/templates/qt6ct-modern.qss.template"
+output_path = "~/.config/qt6ct/qss/modern.qss"
+
+[templates.folder_svg]
+input_path = "~/.config/matugen/templates/folder.svg.template"
+output_path = "~/.local/share/icons/modern-folders/scalable/places/folder.svg"
+
+[templates.phylax_css]
+input_path = "~/.config/matugen/templates/phylax.css.template"
+output_path = "~/.config/phylax/style.css"

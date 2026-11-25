@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# ModernOS Imageviewer: a new window per call, like imv. Each window is
+# its own qs process, so a huge or broken picture can only take down its
+# own window, never the bar or the lock screen. One picture opens its
+# whole folder; several pictures or folders open just those.
+#
+# Usage: modern-imageviewer [FILE|FOLDER|file://URI]...
+# MODERN_VIEWER_DRY=1 prints what would run instead of running it.
+set -euo pipefail
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/modern/imageviewer.qml"
+log="${XDG_STATE_HOME:-$HOME/.local/state}/modern/imageviewer.log"
+# shellcheck source=lib/app-log.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/app-log.sh"
+# shellcheck source=lib/extensions.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/extensions.sh"
+
+note() {
+    app_log_open "$log" || return 0
+    printf '%s modern-imageviewer: %s\n' "$(date '+%F %T')" "$*" >>"$log" 2>/dev/null || true
+}
+
+# Arguments go to the window as one JSON array, so no name is ever split
+# or re-parsed by a shell. URIs become paths, relative paths absolute.
+args_json() {
+    python3 - "$PWD" "$@" <<'PY'
+import json, os, sys, urllib.parse
+
+cwd, raw = sys.argv[1], sys.argv[2:]
+out = []
+for arg in raw:
+    if not arg:
+        continue
+    if arg.startswith("file://"):
+        arg = urllib.parse.unquote(urllib.parse.urlsplit(arg).path)
+    elif "://" in arg:
+        continue
+    out.append(os.path.normpath(os.path.join(cwd, arg)))
+sys.stdout.write(json.dumps(out))
+PY
+}
+
+paths="$(args_json "$@")"
+
+if [ "${MODERN_VIEWER_DRY:-}" = "1" ]; then
+    printf 'start %s\n' "$paths"
+    exit 0
+fi
+if [ ! -f "$config" ]; then
+    note "missing $config"
+    exit 1
+fi
+
+# The Open chooser is the file manager in this process; it must not save
+# the main window's last place or focus that window. Large photos need
+# more than Qt's default 256 MB decode budget.
+out=/dev/null
+app_log_open "$log" && out="$log"
+extension_prefix
+[ -z "${EXT_WARN:-}" ] || note "$EXT_WARN"
+MODERN_FILE_WINDOW=1 MODERN_VIEWER_ARGS="$paths" QT_IMAGEIO_MAXALLOC="${QT_IMAGEIO_MAXALLOC:-1024}" \
+    setsid -f "${EXT_PREFIX[@]}" qs -p "$config" >>"$out" 2>&1 </dev/null

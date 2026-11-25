@@ -1,0 +1,7 @@
+{
+  "id": "storage",
+  "icon": "drive-harddisk",
+  "key": "settings.sections.storage",
+  "order": 180,
+  "keywords": ["disk", "mount", "eject", "usb", "nvme", "usage", "free", "games", "files"]
+}

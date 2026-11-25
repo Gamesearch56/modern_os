@@ -1,0 +1,4 @@
+# Compatibility alias. Turing+ packages are in 00-hw-gpu-nvidia.txt.
+# install.sh prefers 00-hw-gpu-nvidia.txt / 00-hw-gpu-nvidia-legacy.txt.
+nvidia-open-dkms
+nvidia-utils

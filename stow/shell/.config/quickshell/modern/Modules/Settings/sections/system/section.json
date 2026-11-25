@@ -1,0 +1,7 @@
+{
+  "id": "system",
+  "icon": "system-software-update",
+  "key": "settings.sections.system",
+  "order": 190,
+  "keywords": ["update", "mirrors", "kernel", "hyprland", "packages", "changelog"]
+}

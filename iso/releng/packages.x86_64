@@ -1,0 +1,93 @@
+# Full live+Calamares set. iso-build.sh replaces stock releng
+# packages.x86_64 with this file (releng is bootloaders/layout only).
+# Package names must be the whole line. mkarchiso keeps trailing spaces
+# as part of the pacman target.
+base
+# Live and installed kernel are linux-zen only. Stock linux stayed off
+# so the ISO fits GitHub's 2GiB release-asset cap. iso-build.sh rewrites
+# releng boot files to vmlinuz-linux-zen.
+linux-firmware
+amd-ucode
+intel-ucode
+sof-firmware
+mkinitcpio
+mkinitcpio-archiso
+# The archiso PXE hooks are in the live preset. Without these, mkinitcpio
+# exits with an error and pacman reports the initramfs hook failed.
+# A USB boot does not run them; the image was still written.
+# ipconfig comes from mkinitcpio-nfs-utils. A copy of that path under
+# airootfs makes pacman abort with "exists in filesystem".
+mkinitcpio-nfs-utils
+nbd
+syslinux
+squashfs-tools
+# unpackfs rsyncs airootfs.sfs onto the target. Exit 127 is missing rsync.
+# AUR calamares does not depend on either binary; the module is Python.
+rsync
+python
+btrfs-progs
+dosfstools
+e2fsprogs
+ntfs-3g
+gptfdisk
+parted
+efibootmgr
+# BIOS/CSM laptops: Calamares' bootloader job takes the GRUB path there.
+grub
+cryptsetup
+lvm2
+networkmanager
+# The live installer adds a Wi-Fi profile through libnm. Without this
+# package the helper exits before the password is checked, and a right
+# password looks the same as a wrong one.
+python-gobject
+iwd
+iw
+wpa_supplicant
+wireless-regdb
+dnsmasq
+sudo
+git
+jq
+base-devel
+openssh
+less
+nano
+linux-zen
+hyprland
+hyprland-guiutils
+quickshell
+# AUR: built into a local repo by iso-build.sh (packages.aur.x86_64).
+calamares
+yay-bin
+matugen-bin
+bibata-cursor-theme-bin
+phylax-git
+# AUR calamares PKGBUILD omits this; the binary links libKF6Crash.so.6.
+kcrash
+cage
+xorg-xwayland
+xorg-xhost
+xorg-setxkbmap
+xorg-xkbcomp
+openbox
+qt6-declarative
+qt6-translations
+qt6-wayland
+mesa
+awww
+inter-font
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-emoji
+greetd
+polkit
+xdg-utils
+firefox
+# PipeWire stack on the squashfs so unpackfs already provides virtual
+# `jack` / pulse. Otherwise install.sh's one pacman -S picks jack2.
+pipewire
+pipewire-alsa
+pipewire-jack
+pipewire-pulse
+wireplumber

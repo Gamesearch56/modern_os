@@ -1,0 +1,5 @@
+# Gaming layer (M4/M6). Only `gaming` and `full` profiles.
+lib32-mesa                # 32-bit Mesa for Proton/older titles
+protontricks               # winetricks helpers scoped to individual Proton prefixes
+mangohud                   # in-game performance overlay, used by game profiles (docs/GAMING.md)
+lib32-gamemode             # 32-bit GameMode hook for older titles

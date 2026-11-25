@@ -1,0 +1,23 @@
+[Desktop Entry]
+Type=Application
+Name=ModernOS Mediaplayer
+Name[de]=ModernOS Mediaplayer
+GenericName=Media player
+GenericName[de]=Mediaplayer
+Comment=Play videos and music
+Comment[de]=Videos und Musik abspielen
+Keywords=video;movie;film;music;audio;player;Video;Musik;Abspielen;
+Keywords[de]=video;movie;film;music;audio;player;Video;Musik;Abspielen;
+Exec=modern-mediaplayer %F
+Icon=modern-mediaplayer
+Terminal=false
+Categories=AudioVideo;Video;Player;
+MimeType=audio/aac;audio/flac;audio/mp4;audio/mpeg;audio/ogg;audio/opus;audio/x-matroska;audio/x-ms-wma;audio/x-wav;video/3gpp;video/mp2t;video/mp4;video/mpeg;video/ogg;video/quicktime;video/webm;video/x-flv;video/x-m4v;video/x-matroska;video/x-ms-wmv;video/x-msvideo;
+StartupNotify=false
+StartupWMClass=modern.mediaplayer
+Actions=new-window;
+
+[Desktop Action new-window]
+Name=New window
+Name[de]=Neues Fenster
+Exec=modern-mediaplayer

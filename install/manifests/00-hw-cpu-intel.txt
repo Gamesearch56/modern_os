@@ -1,0 +1,2 @@
+# CPU microcode for Intel. Selected when detect_hw reports cpu=intel.
+intel-ucode

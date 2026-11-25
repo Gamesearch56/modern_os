@@ -1,0 +1,4 @@
+# AUR helper itself. install.sh bootstraps this one specially (builds it
+# with makepkg before any other AUR package can be installed) — see
+# install/lib/pkg.sh:bootstrap_yay(). Listed here only for the audit trail.
+yay

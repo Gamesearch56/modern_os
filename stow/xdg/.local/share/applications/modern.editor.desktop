@@ -1,0 +1,23 @@
+[Desktop Entry]
+Type=Application
+Name=ModernOS Texteditor
+Name[de]=ModernOS Texteditor
+GenericName=Text editor
+GenericName[de]=Texteditor
+Comment=Write and edit plain text files
+Comment[de]=Textdateien schreiben und bearbeiten
+Keywords=text;editor;notepad;notes;txt;gedit;Text;Editor;Notizen;Textdatei;
+Keywords[de]=text;editor;notepad;notes;txt;gedit;Text;Editor;Notizen;Textdatei;
+Exec=modern-editor %F
+Icon=modern-editor
+Terminal=false
+Categories=Utility;TextEditor;
+MimeType=text/plain;text/markdown;text/x-log;text/csv;text/css;text/x-readme;text/x-python;text/x-csrc;text/x-chdr;text/x-c++src;text/x-c++hdr;text/x-lua;text/x-java;text/x-rust;text/x-go;text/x-makefile;text/x-cmake;text/x-patch;text/x-diff;text/x-sql;application/x-shellscript;application/json;application/xml;application/x-yaml;application/toml;application/x-desktop;application/x-zerosize;
+StartupNotify=false
+StartupWMClass=modern.editor
+Actions=new-window;
+
+[Desktop Action new-window]
+Name=New window
+Name[de]=Neues Fenster
+Exec=modern-editor

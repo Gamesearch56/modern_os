@@ -1,0 +1,14 @@
+# hardware.conf.example — sourced by scripts/bootstrap.sh
+# Copy to install/hardware.conf (gitignored if you add secrets) and fill DISK=.
+# bootstrap.sh defaults to dry-run and will not wipe a disk unless you pass
+# --yes --disk /dev/X together.
+#
+# USERNAME is the Unix account created on the new disk, not a hardcoded
+# desktop identity. LOCALE is glibc (en_US.UTF-8); the shell UI language
+# is config.default.json language.ui (English) and is independent.
+
+DISK=
+HOSTNAME=
+USERNAME=devuser
+TIMEZONE=Europe/Berlin
+LOCALE=en_US.UTF-8

@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=ModernOS Filemanager
+Name[de]=ModernOS Filemanager
+GenericName=File manager
+GenericName[de]=Dateimanager
+Comment=Browse files and folders
+Comment[de]=Dateien und Ordner durchsuchen
+Keywords=file;explorer;nautilus;manager;Datei;Dateien;Dateimanager;
+Keywords[de]=file;explorer;nautilus;manager;Datei;Dateien;Dateimanager;
+Exec=modern-files %u
+Icon=modern-files
+Terminal=false
+Categories=System;FileManager;
+MimeType=inode/directory;inode/mount-point;
+StartupNotify=false
