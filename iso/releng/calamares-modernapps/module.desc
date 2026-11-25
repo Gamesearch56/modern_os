@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2026 ModernOS
+# SPDX-License-Identifier: GPL-3.0-or-later
+---
+type: view
+interface: qtplugin
+name: modernapps

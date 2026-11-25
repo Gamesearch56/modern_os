@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 ModernOS
+# SPDX-License-Identifier: GPL-3.0-or-later
+---
+type: job
+name: modernappsjob
+interface: python
+script: main.py

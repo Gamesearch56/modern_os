@@ -11,9 +11,11 @@ the hostname, the user, a serial, or an address. The counter keeps the
 id, the version, and the time of the last note, and forgets a machine
 that has not checked in for 30 days.
 
-Nothing is sent while the address is empty. A `config.json` with no
-`census` block uses the address in `config.default.json`. Setting
-`census.url` to an empty string stays out.
+Nothing is sent until **Settings → Privacy → Help developers track installed releases** is
+on. That switch is off on a new install and on a settings file that
+never had it. The address still comes from `census.url`, or from
+`config.default.json` when the settings file has no address. An empty
+address sends nothing even when the switch is on.
 
 ## Turn it on
 
@@ -33,9 +35,9 @@ npx wrangler deploy
 
 Set `census.url` in `config.default.json` to the worker address
 (`https://modern-census.<account>.workers.dev`). A new install copies
-that file to `config.json`. An update leaves an existing `config.json`
-alone; the next update check uses the shipped address when that file
-has no `census.url`.
+that file to `config.json` with the switch off. An update leaves an
+existing `config.json` alone; when the switch is on and that file has
+no address, the check uses the shipped one.
 
 ## Read the totals
 

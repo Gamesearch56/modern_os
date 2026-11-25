@@ -996,6 +996,17 @@ def src_root_from(arg: Path) -> Path:
     return arg.parents[2]
 
 
+def install_modernapps(src: Path) -> None:
+    incoming = Path(__file__).resolve().parent / "calamares-modernapps"
+    dest = src / "modules" / "modernapps"
+    if not incoming.is_dir():
+        print(f"live-calamares: missing {incoming}", file=sys.stderr)
+        sys.exit(1)
+    if dest.exists():
+        shutil.rmtree(dest)
+    shutil.copytree(incoming, dest)
+
+
 def install_modernnet(src: Path) -> None:
     incoming = Path(__file__).resolve().parent / "calamares-modernnet"
     dest = src / "modules" / "modernnet"
@@ -1020,6 +1031,7 @@ def main() -> int:
         return 2
     src = src_root_from(Path(sys.argv[1]))
     install_modernnet(src)
+    install_modernapps(src)
     trans = src / "libcalamares" / "locale" / "TranslationsModel.cpp"
     window = src / "calamares" / "CalamaresWindow.cpp"
     locale = src / "modules" / "locale" / "LocalePage.cpp"

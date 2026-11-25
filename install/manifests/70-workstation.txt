@@ -31,7 +31,6 @@ wsdd                    # lets Windows see the Samba host
 ollama
 
 # Apps
-discord
 lutris
 goverlay                # MangoHud configurator
 shotcut                 # video editor

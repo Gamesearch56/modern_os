@@ -30,6 +30,13 @@ census_field() {
     esac
 }
 
+# The counter is off until Settings → Privacy turns it on. A missing
+# key is off as well: an older settings file never agreed to this.
+census_on() {
+    [ -f "$CFG" ] || return 1
+    jq -e '.census.enabled == true' "$CFG" >/dev/null 2>&1
+}
+
 census_url() {
     local url="" rc=0
     url="$(census_field "$CFG")" || rc=$?
@@ -60,6 +67,7 @@ install_id() {
 
 cmd_note() {
     [ "${MODERN_CENSUS_FORCE:-}" = "1" ] || [ "${MODERN_CENSUS_RELEASE:-}" = "1" ] || return 0
+    census_on || return 0
     local url version id today stamp body
     url="$(census_url)" || return 0
     version="${MODERN_CENSUS_VERSION:-}"

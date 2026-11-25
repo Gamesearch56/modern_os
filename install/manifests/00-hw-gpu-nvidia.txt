@@ -1,3 +1,5 @@
 # NVIDIA Turing and newer (GTX 16 / RTX 20+). linux-zen-headers is in 00-base.
+# install.sh does not install these. The installer Programs page downloads
+# them only when "NVIDIA driver" is ticked.
 nvidia-open-dkms
 nvidia-utils

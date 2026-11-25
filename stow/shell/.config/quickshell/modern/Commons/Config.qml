@@ -277,6 +277,7 @@ Singleton {
             })
 
             property JsonObject census: JsonObject {
+                property bool enabled: false
                 property string url: ""
             }
 

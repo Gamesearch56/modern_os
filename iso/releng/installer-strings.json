@@ -68,7 +68,37 @@
     { "context": "ModernNetRow", "source": "Open network", "key": "installer.net.openNetwork" },
     { "context": "ModernNetRow", "source": "Connect", "key": "installer.net.connect" },
     { "context": "ModernNetRow", "source": "Forget", "key": "installer.net.forget" },
-    { "context": "ModernNetRow", "source": "Disconnect", "key": "installer.net.disconnect" }
+    { "context": "ModernNetRow", "source": "Disconnect", "key": "installer.net.disconnect" },
+    { "context": "ModernAppsViewStep", "source": "Programs", "comment": "@title", "key": "installer.apps.step" },
+    {
+      "context": "ModernAppsPage",
+      "source": "Vivaldi is the browser and is installed with the system. Tick a program to download it during installation. An NVIDIA graphics card needs the proprietary driver.",
+      "key": "installer.apps.intro"
+    },
+    { "context": "ModernAppsPage", "source": "Vivaldi", "key": "installer.apps.vivaldi" },
+    { "context": "ModernAppsPage", "source": "Default browser. This stays.", "key": "installer.apps.vivaldiHint" },
+    { "context": "ModernAppsPage", "source": "Drivers", "key": "installer.apps.drivers" },
+    {
+      "context": "ModernAppsPage",
+      "source": "Open graphics and Wi-Fi firmware for this computer. These stay.",
+      "key": "installer.apps.driversHint"
+    },
+    { "context": "ModernAppsPage", "source": "Desktop", "key": "installer.apps.desktop" },
+    { "context": "ModernAppsPage", "source": "The session, sound and network. This stays.", "key": "installer.apps.desktopHint" },
+    { "context": "ModernAppsPage", "source": "NVIDIA driver", "key": "installer.apps.nvidia" },
+    {
+      "context": "ModernAppsPage",
+      "source": "Proprietary driver. An NVIDIA graphics card needs this. It is downloaded during installation.",
+      "key": "installer.apps.nvidiaHint"
+    },
+    { "context": "ModernAppsPage", "source": "Steam", "key": "installer.apps.steam" },
+    { "context": "ModernAppsPage", "source": "Game store. Downloaded during installation if ticked.", "key": "installer.apps.steamHint" },
+    { "context": "ModernAppsPage", "source": "Spotify", "key": "installer.apps.spotify" },
+    { "context": "ModernAppsPage", "source": "Music. Downloaded during installation if ticked.", "key": "installer.apps.spotifyHint" },
+    { "context": "ModernAppsPage", "source": "Discord", "key": "installer.apps.discord" },
+    { "context": "ModernAppsPage", "source": "Chat. Downloaded during installation if ticked.", "key": "installer.apps.discordHint" },
+    { "context": "ModernAppsPage", "source": "Proton VPN", "key": "installer.apps.protonVpn" },
+    { "context": "ModernAppsPage", "source": "VPN client. Downloaded during installation if ticked.", "key": "installer.apps.protonVpnHint" }
   ],
   "branding": [
     { "context": "show", "source": "The Super key", "key": "installer.slides.superTitle" },

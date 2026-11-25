@@ -47,7 +47,7 @@ else
     err "http was accepted"
 fi
 
-printf '{"census":{"url":"https://counter.example/note"}}\n' >"$TMP/cfg/modern-https.json"
+printf '{"census":{"enabled":true,"url":"https://counter.example/note"}}\n' >"$TMP/cfg/modern-https.json"
 MODERN_CENSUS_CONFIG="$TMP/cfg/modern-https.json" "$CENSUS" note
 MODERN_CENSUS_CONFIG="$TMP/cfg/modern-https.json" "$CENSUS" note
 id="$(head -n 1 "$TMP/state/modern/install-id")"
@@ -74,7 +74,7 @@ else
     err "counts printed: $shown"
 fi
 
-printf '{}\n' >"$TMP/cfg/modern-missing.json"
+printf '{"census":{"enabled":true}}\n' >"$TMP/cfg/modern-missing.json"
 printf '{"census":{"url":"https://counter.example/from-default"}}\n' >"$TMP/cfg/config.default.json"
 before="$(wc -l <"$CENSUS_CURL_LOG" | tr -d ' ')"
 MODERN_CENSUS_VERSION=v0.8.15 MODERN_CENSUS_CONFIG="$TMP/cfg/modern-missing.json" "$CENSUS" note
@@ -86,11 +86,11 @@ else
     err "default fallback log=$(cat "$CENSUS_CURL_LOG")"
 fi
 
-printf '{"census":{"url":""}}\n' >"$TMP/cfg/modern-optout.json"
+printf '{"census":{"enabled":false,"url":"https://counter.example/note"}}\n' >"$TMP/cfg/modern-optout.json"
 before="$(wc -l <"$CENSUS_CURL_LOG" | tr -d ' ')"
 MODERN_CENSUS_VERSION=v0.8.15 MODERN_CENSUS_CONFIG="$TMP/cfg/modern-optout.json" "$CENSUS" note
 if [ "$(wc -l <"$CENSUS_CURL_LOG" | tr -d ' ')" = "$before" ]; then
-    ok "an empty address stays out even when the default has one"
+    ok "a switch that is off sends nothing"
 else
     err "opt-out still sent"
 fi

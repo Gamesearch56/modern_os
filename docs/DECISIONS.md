@@ -337,7 +337,7 @@ xdg-desktop-portal reads backend descriptions only from `/usr/share/xdg-desktop-
 
 ## 30. Install counts are a random id and a release, or nothing
 
-**Decision:** A release clone can tell a counter its random install id and its `vX.Y.Z` tag, once a day, after the update check (`scripts/census.sh`, `docs/CENSUS.md`). The counter is a Cloudflare Worker on the free plan. The address lives in `census.url`. While that is empty, nothing is sent. A development checkout never sends. The read token that lists the totals is not in the image.
+**Decision:** A release clone can tell a counter its random install id and its `vX.Y.Z` tag, once a day, after the update check (`scripts/census.sh`, `docs/CENSUS.md`). The counter is a Cloudflare Worker on the free plan. The address lives in `census.url`. Nothing is sent until `census.enabled` is true in Settings → Privacy. A development checkout never sends. The read token that lists the totals is not in the image.
 
 **Rejected:** counting ISO downloads (one person can download twice, and an update does not download the image); reading GitHub clone traffic (every machine uses the same deploy key, so GitHub sees one actor); deriving the id from a serial, hostname, or account (that is a person, and the reports already strip those); sending on this development tree.
 

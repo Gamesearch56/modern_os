@@ -166,6 +166,7 @@ PY
 
 cp "$HOOK" "$WORKDIR/calamares-limit-languages.py"
 cp -a "$ROOT/iso/releng/calamares-modernnet" "$WORKDIR/calamares-modernnet"
+cp -a "$ROOT/iso/releng/calamares-modernapps" "$WORKDIR/calamares-modernapps"
 python3 "$ROOT/scripts/installer-locales.py" --json "$WORKDIR/installer-locales.json" >/dev/null \
     || { err "installer-locales.py could not generate installer-locales.json"; exit 1; }
 if ! python3 "$WORKDIR/calamares-limit-languages.py" "$WORKDIR"; then

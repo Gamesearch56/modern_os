@@ -35,6 +35,8 @@ nested = html("- a\n  - b\n- c")
 check(nested.count("<ul") == 2 and nested.count("<li") == 3, "nested list")
 code = html("```bash\necho <x> & y\n```")
 check("<pre" in code and "&lt;x&gt; &amp; y" in code, "fenced code is escaped")
+check("margin-top:0px;margin-bottom:0px" in code and "margin-top:{{gap}}px" in code,
+      "a code block keeps its blank line outside the shade")
 check("# not a heading" in html("```\n# not a heading\n```"), "a fence keeps its lines")
 table = html("| A | B |\n|---|---|\n| 1 | 2 |")
 check(table.count("<th") == 2 and table.count("<td") == 2, "table")

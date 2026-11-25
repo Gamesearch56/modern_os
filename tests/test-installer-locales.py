@@ -225,7 +225,11 @@ def test_coverage() -> None:
     mapping = json.loads(STRINGS.read_text(encoding="utf-8"))
     have = {(e["context"], e["source"], e.get("comment", "")) for e in mapping["calamares"]}
     want = set()
-    for cpp in (ROOT / "iso/releng/calamares-modernnet").glob("*.cpp"):
+    roots = [
+        ROOT / "iso/releng/calamares-modernnet",
+        ROOT / "iso/releng/calamares-modernapps",
+    ]
+    for cpp in (path for root in roots for path in root.glob("*.cpp")):
         for m in re.finditer(r'\btr\(\s*"((?:[^"\\]|\\.)*)"\s*(?:,\s*"([^"]*)")?\s*\)', cpp.read_text()):
             want.add((cpp.stem, m.group(1).replace("\\'", "'"), m.group(2) or ""))
     hook = load_hook()
@@ -322,6 +326,7 @@ def test_real_source(tmp: Path, data: dict) -> None:
     hookdir.mkdir()
     shutil.copy(HOOK, hookdir)
     shutil.copytree(ROOT / "iso/releng/calamares-modernnet", hookdir / "calamares-modernnet")
+    shutil.copytree(ROOT / "iso/releng/calamares-modernapps", hookdir / "calamares-modernapps")
     (hookdir / "installer-locales.json").write_text(json.dumps(data), encoding="utf-8")
     shutil.copytree(src, tree)
     runs = [subprocess.run([sys.executable, hookdir / HOOK.name, tree], capture_output=True, text=True) for _ in (1, 2)]

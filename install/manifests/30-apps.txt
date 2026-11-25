@@ -1,6 +1,8 @@
 # Daily-driver apps. This is the M0 bar: minimal, but enough to be
 # usable day to day. Store lists these as removable apps, not system
 # packages (scripts/pkg-manifest-names.sh --core).
+# Steam and Spotify are not here. The installer downloads them only
+# when their row is ticked, so the image does not carry them.
 fastfetch                # terminal banner, themed via matugen (docs/DECISIONS.md, .bashrc)
 ffmpeg                    # Mediaplayer "save frame" (scripts/lib/player_io.py)
 ffmpegthumbnailer         # Nautilus video thumbnails
@@ -12,8 +14,6 @@ gst-libav
 libva-utils               # VA-API diagnostics for hardware video decode
 neovim                    # $EDITOR
 btop                      # terminal system monitor, complements the bar's performance widget
-spotify-launcher          # Spotify client — MPRIS source for the media widget
-steam                     # primary game platform
 gamemode                  # CPU governor while a game runs
 gamescope                 # per-game resolution and upscaling
 umu-launcher              # Proton outside Steam: modern battlenet runs and installs Battle.net with it
