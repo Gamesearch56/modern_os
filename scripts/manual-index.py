@@ -15,7 +15,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
-from manual_markdown import plain, to_html  # noqa: E402
+from manual_markdown import headings, plain, to_html  # noqa: E402
 
 
 # Sections shown in the sidebar, in this order. Manual chapters are listed
@@ -81,6 +81,7 @@ def entry(repo: str, rel: str, group: str) -> dict | None:
         "title": title_of(text, name),
         "text": text,
         "html": to_html(text, os.path.dirname(path)),
+        "headings": headings(text),
     }
 
 

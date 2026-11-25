@@ -2,6 +2,7 @@ import QtQuick
 import "../../Commons"
 import "../../Widgets"
 import "links.js" as Links
+import "outline.js" as OutlineJs
 
 // The open document, rendered from its markdown. Text can be selected
 // and copied (commands in the troubleshooting chapters); the column is
@@ -54,6 +55,8 @@ FocusScope {
     property string _shown: ""
     property bool _opening: false
     readonly property var body: page.item
+    property var _marks: []
+    readonly property int headingIndex: OutlineJs.current(root._marks, flick.contentY + root._step)
 
     signal linkActivated(string link)
     signal navRequested()
@@ -100,6 +103,26 @@ FocusScope {
         root._shown = root.doc ? String(root.doc.path || "chapter") : "";
         if (!root._shown.length)
             root._opening = false;
+    }
+
+    function _mark() {
+        if (!body || !root.doc) {
+            root._marks = [];
+            return;
+        }
+        root._marks = OutlineJs.marks(body.getText(0, body.length), root.doc.headings || [], (at) => {
+            const r = body.positionToRectangle(at);
+            return page.y + r.y;
+        });
+    }
+
+    function revealHeading(index: int) {
+        root._mark();
+        if (index < 0 || index >= root._marks.length)
+            return;
+        flick.cancelFlick();
+        const top = root._marks[index] - root._step;
+        flick.contentY = Math.max(0, Math.min(root._maxY(), top));
     }
 
     // Past the last link Tab is left unhandled, so focus moves on.
@@ -200,6 +223,7 @@ FocusScope {
                 settle.restart();
             } else {
                 root._clampY();
+                root._mark();
             }
         }
         onHeightChanged: if (!root._opening) root._clampY()
@@ -213,6 +237,7 @@ FocusScope {
                 if (root._opening)
                     root._pinTop();
                 root._opening = false;
+                root._mark();
             }
         }
 

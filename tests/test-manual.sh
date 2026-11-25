@@ -64,7 +64,7 @@ fi
 for lang in en de; do
     file="$ROOT/stow/modern/.config/modern/translations/$lang.json"
     for key in manual.title manual.launcherName manual.windowTitle manual.search manual.groups.manual \
-        manual.groups.reference manual.back manual.forward manual.contents manual.chapter manual.link \
+        manual.groups.reference manual.back manual.forward manual.contents manual.onThisPage manual.chapter manual.link \
         manual.sections.start manual.sections.system manual.sections.more cheatsheet.action.manual; do
         if [ -n "$(jq -r --arg k "$key" 'getpath($k | split(".")) // empty' "$file")" ]; then
             ok "$lang has $key"

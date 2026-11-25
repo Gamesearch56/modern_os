@@ -2260,6 +2260,7 @@
     "unavailable": "The manual could not be loaded",
     "unavailableHint": "The documentation files are missing from the ModernOS folder.",
     "contents": "Contents",
+    "onThisPage": "On this page",
     "chapter": "{number}. {title}",
     "link": "Link: {name}. Press Enter to open it."
   }

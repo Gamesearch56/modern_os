@@ -9,7 +9,7 @@ import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(ROOT, "scripts", "lib"))
-from manual_markdown import plain, to_html  # noqa: E402
+from manual_markdown import headings, plain, to_html  # noqa: E402
 
 FAIL = 0
 
@@ -28,6 +28,9 @@ def html(md: str) -> str:
 
 
 check("<h1" in html("# Title") and "<h2" in html("## Sub"), "headings")
+check(headings("# T\n\n## A\n```\n# not\n```\n### B\n") == [
+    {"level": 1, "text": "T"}, {"level": 2, "text": "A"}, {"level": 3, "text": "B"},
+], "an outline lists headings and skips a fence")
 check(html("a\nb").count("<p") == 1, "lines join into one paragraph")
 check(html("- a\n- b").count("<li") == 2 and "<ul" in html("- a"), "bullet list")
 check("<ol" in html("1. one\n2. two"), "numbered list")
@@ -74,7 +77,8 @@ paths = {d["path"] for d in docs}
 manual = [d for d in docs if d["group"] == "manual"]
 check(len(manual) > 0 and docs[0]["group"] == "manual", "the user manual comes first")
 check([d["rel"] for d in manual] == sorted(d["rel"] for d in manual), "chapters keep file-name order")
-check(all(d["title"] and d["html"] for d in docs), "every document has a title and a body")
+check(all(d["title"] and d["html"] and isinstance(d.get("headings"), list) for d in docs),
+      "every document has a title, a body and an outline")
 check(os.path.join(ROOT, "docs", "MANUAL.md") in paths, "the reference includes docs/MANUAL.md")
 check('<ol start="3"' in html("3. c\n4. d"), "a numbered list keeps its first number")
 unplaced = [d["rel"] for d in docs if d.get("section") == "more"]

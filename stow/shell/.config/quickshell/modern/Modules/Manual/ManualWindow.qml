@@ -75,6 +75,20 @@ FloatingWindow {
                 onLinkActivated: (link) => win.module.follow(link)
                 onNavRequested: nav.focusActive()
             }
+
+            MPane {
+                visible: outline.heads.length > 0
+                Layout.preferredWidth: visible ? Tokens.spacing.xxl * 7 : 0
+                Layout.fillHeight: true
+
+                Outline {
+                    id: outline
+                    anchors.fill: parent
+                    anchors.margins: Tokens.spacing.sm
+                    doc: win.doc
+                    reader: reader
+                }
+            }
         }
     }
 

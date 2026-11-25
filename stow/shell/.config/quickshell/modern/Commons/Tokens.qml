@@ -122,7 +122,7 @@ Singleton {
         readonly property real editorHeight: root.spacing.xxl * 20
         readonly property real viewerWidth: root.spacing.xxl * 24
         readonly property real viewerHeight: root.spacing.xxl * 18
-        readonly property real manualWidth: root.spacing.xxl * 30
+        readonly property real manualWidth: root.spacing.xxl * 36
         readonly property real manualHeight: root.spacing.xxl * 21
         // About 80 characters of body text, past which lines get hard to track.
         readonly property real manualMeasure: root.spacing.xxl * 19

@@ -254,6 +254,30 @@ def render(lines: list[str]) -> str:
     return "".join(out)
 
 
+def headings(text: str) -> list[dict]:
+    """ATX headings in reading order. A fence is not a heading, so a
+    command that starts with # stays in the code block."""
+    lines = text.replace("\r", "").split("\n")
+    out: list[dict] = []
+    fence = ""
+    for line in lines:
+        if fence:
+            if line.strip() == fence:
+                fence = ""
+            continue
+        marker = FENCE.match(line)
+        if marker:
+            fence = marker.group(1)
+            continue
+        found = HEADING.match(line)
+        if not found:
+            continue
+        title = plain(found.group(2))
+        if title:
+            out.append({"level": len(found.group(1)), "text": title})
+    return out
+
+
 def plain(text: str) -> str:
     """A heading as plain text, for window titles and the document list."""
     text = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", text)

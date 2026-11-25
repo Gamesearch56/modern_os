@@ -2260,6 +2260,7 @@
     "unavailable": "Das Handbuch konnte nicht geladen werden",
     "unavailableHint": "Die Dokumentationsdateien fehlen im ModernOS-Ordner.",
     "contents": "Inhalt",
+    "onThisPage": "Auf dieser Seite",
     "chapter": "{number}. {title}",
     "link": "Link: {name}. Mit Enter öffnen."
   }
