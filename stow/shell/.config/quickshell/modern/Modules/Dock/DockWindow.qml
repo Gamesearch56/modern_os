@@ -14,8 +14,7 @@ PanelWindow {
     readonly property bool _hold: Launcher.open
     readonly property bool _shown: DockLayout.enabled && !root._cover && (!root._auto || root._peek || root._hold)
     readonly property real _full: DockLayout.cross
-    // A few pixels at the screen edge is easy to miss. This band is the
-    // only input while the dock is tucked away.
+    // Wide enough that the pointer can catch a tucked-away dock.
     readonly property real _hot: Tokens.spacing.lg
     readonly property bool _edgeOnly: root._auto && !root._shown && !root._slidingOut
     readonly property string _screenKey: root.screen ? String(root.screen.name) : ""
@@ -72,7 +71,7 @@ PanelWindow {
     }
     on_ZoneChanged: Qt.callLater(root._applyZone)
     visible: Config.loaded && DockLayout.enabled && !root._cover
-    color: Chrome.softwareGpu ? Colors.color.surface : "transparent"
+    color: "transparent"
     // Stay focusable while the launcher is open. Turning keyboard
     // interactivity off here destroys the grab and Super+Space closes it.
     focusable: DockLayout.enabled && (Launcher.open || !Dock.dragActive)
@@ -226,6 +225,8 @@ PanelWindow {
     Item {
         id: surface
         anchors.fill: parent
+
+        Rectangle { anchors.fill: parent; z: -1; visible: Chrome.softwareGpu; color: Colors.color.surface; opacity: Chrome.washOpacity }
 
         HoverHandler {
             id: hover

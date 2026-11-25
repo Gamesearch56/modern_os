@@ -59,32 +59,59 @@ PanelWindow {
         return Qt.point(g.x - o.x, g.y - o.y);
     }
 
+    // mapToGlobal on a layer-shell window stays at the screen origin
+    // under the software scene graph, so every panel opened at the
+    // top-left. The layout x/y chain is the widget's real place.
+    function _local(item: var): point {
+        let x = 0;
+        let y = 0;
+        let it = item;
+        const win = item && item.Window ? item.Window.window : null;
+        const stop = win ? win.contentItem : null;
+        while (it && it !== stop) {
+            x += it.x;
+            y += it.y;
+            it = it.parent;
+        }
+        return Qt.point(x, y);
+    }
+
     function _place(): point {
         root.open;
         const s = root.screen;
         const sw = s ? s.width : root.panelWidth;
         const sh = s ? s.height : root.panelHeight;
-        const ox = s ? s.virtualX : 0;
-        const oy = s ? s.virtualY : 0;
         const p = root.anchorItem;
         let x = root._gap;
         let y = root._gap;
         if (p) {
-            const g = p.mapToGlobal(0, 0);
-            x = g.x - ox;
-            y = g.y - oy;
+            const local = root._local(p);
+            const win = p.Window.window;
+            const edge = BarLayout.position;
+            const ww = win ? win.width : sw;
+            const wh = win ? win.height : sh;
+            let ax = local.x;
+            let ay = local.y;
+            if (edge === "bottom")
+                ay = Math.max(0, sh - wh) + local.y;
+            else if (edge === "right")
+                ax = Math.max(0, sw - ww) + local.x;
             if (root._barRight)
                 x = sw - root.panelWidth - root._gap;
             else if (root._barLeft)
                 x = root._gap;
             else if (root.hAlign === Qt.AlignRight)
-                x = g.x - ox + p.width - root.panelWidth;
+                x = ax + p.width - root.panelWidth;
             else if (root.hAlign === Qt.AlignHCenter)
-                x = g.x - ox + (p.width - root.panelWidth) / 2;
+                x = ax + (p.width - root.panelWidth) / 2;
+            else
+                x = ax;
             if (root._barBottom)
-                y = g.y - oy - root.panelHeight;
+                y = ay - root.panelHeight;
             else if (!root._side)
-                y = g.y - oy + p.height + root._gap;
+                y = ay + p.height + root._gap;
+            else
+                y = ay;
         }
         const maxX = Math.max(root._gap, sw - root.panelWidth - root._gap);
         const maxY = Math.max(0, sh - root.panelHeight);

@@ -71,10 +71,10 @@ PanelWindow {
             : (root._edgeOnly ? root._hot : root._fullH)
     }
     visible: Config.loaded && !root._cover
-    // A virtual GPU draws this transparent strip as a black bar. An
-    // opaque surface fill keeps the islands visible; a desktop GPU
-    // still sees the wallpaper through the gaps.
-    color: Chrome.softwareGpu ? Colors.color.surface : "transparent"
+    // The layer stays clear. A desktop GPU frosts it. A virtual GPU
+    // cannot blur without painting black, so the wash below tints the
+    // wallpaper the same way the islands do.
+    color: "transparent"
     focusable: Popups.active !== null
 
     Behavior on _slide {
@@ -159,6 +159,14 @@ PanelWindow {
 
     Item {
         anchors.fill: parent
+
+        Rectangle {
+            anchors.fill: parent
+            visible: Chrome.softwareGpu
+            color: Colors.color.surface
+            opacity: Chrome.washOpacity
+            z: -1
+        }
 
         HoverHandler {
             id: barHover

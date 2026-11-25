@@ -335,8 +335,12 @@ if grep -Fq 'virtual_gpu' "$ROOT/stow/hypr/.config/hypr/modules/general.lua" \
     && grep -Fq 'modern-imageviewer-no-blur' "$ROOT/stow/hypr/.config/hypr/modules/windowrules.lua" \
     && grep -Fq 'softwareGpu' \
         "$ROOT/stow/shell/.config/quickshell/modern/Commons/Chrome.qml" \
-    && grep -Fq 'Chrome.softwareGpu ? Colors.color.surface' \
+    && grep -Fq 'visible: Chrome.softwareGpu' \
         "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/BarWindow.qml" \
+    && grep -Fq 'visible: Chrome.softwareGpu' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Modules/Dock/DockWindow.qml" \
+    && grep -Fq 'function _local' \
+        "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/BarLayerPopup.qml" \
     && grep -Fq 'anchors.right: !root._soft' \
         "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/BarLayerPopup.qml"; then
     ok "virtual GPUs skip the black translucent path; desktop GPUs stay frosted"

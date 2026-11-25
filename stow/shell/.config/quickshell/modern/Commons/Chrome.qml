@@ -48,7 +48,11 @@ Singleton {
     readonly property bool lightEffects: Config.gaming.autoOptimize === true
 
     readonly property real washOpacity: {
-        if (root.softwareGpu || root.lightEffects)
+        // The speed switch is a solid panel on purpose. A virtual GPU
+        // keeps this wash: its blur pass is black, and the software
+        // scene graph still carries the alpha, so the wallpaper shows
+        // through the same tint a desktop GPU frosts.
+        if (root.lightEffects)
             return 1;
         void Config.design.transparency;
         void Tokens.glass;

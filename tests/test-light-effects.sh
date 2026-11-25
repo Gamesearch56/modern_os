@@ -78,7 +78,7 @@ expect "blur strength 0 skips the blur passes" \
     "false true true 0.9 0 false quickshell-noblur glass" false 0
 
 if grep -Fq 'lightEffects: Config.gaming.autoOptimize === true' "$QS/Commons/Chrome.qml" \
-    && grep -Fq 'root.softwareGpu || root.lightEffects' "$QS/Commons/Chrome.qml" \
+    && grep -Fq 'if (root.lightEffects)' "$QS/Commons/Chrome.qml" \
     && grep -Fq '!Chrome.lightEffects' "$QS/Widgets/MCard.qml"; then
     ok "shell panels turn opaque and cards drop their texture layer"
 else
