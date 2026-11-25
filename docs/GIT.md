@@ -45,10 +45,12 @@ Force-pushing your own topic branch after a rebase is fine.
 Bug reports arrive two ways:
 
 1. **In-app reports** (Super+# or `modern report`, see
-   `docs/BUGREPORT.md`) open an issue in this repository
-   (`bugReport.repo` in `config.default.json`) when that computer is
-   signed in to GitHub. They carry redacted logs, screenshots, the
-   environment and a device summary. A computer that is not signed in
+   `docs/BUGREPORT.md`) open a **private** issue in
+   `Gamesearch56/modern-reports` (`bugReport.repo` in
+   `config.default.json`) when that computer is signed in to GitHub.
+   They carry redacted logs, screenshots, the environment and a device
+   summary. They are not published on this repository. A computer that
+   is not signed in, or whose login cannot see the private repository,
    saves the report to Downloads and does not send it.
 2. **Issues** through the bug form in this repository
    (`.github/ISSUE_TEMPLATE/bug.yml`). It asks for the version, the

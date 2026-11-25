@@ -282,7 +282,7 @@ Singleton {
             }
 
             property JsonObject bugReport: JsonObject {
-                property string repo: "Gamesearch56/modern_os"
+                property string repo: "Gamesearch56/modern-reports"
                 property bool screenshotsDefault: true
             }
 

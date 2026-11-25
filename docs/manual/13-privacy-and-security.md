@@ -235,11 +235,12 @@ is exactly what gets sent:
 
 ### Where it goes
 
-The report opens an issue for ModernOS when this computer is signed in
-to GitHub. If you are offline, it is saved and sent automatically once
-you are back online. If this computer is not signed in, the report is
-not sent. Choose **Save as file** (**Als Datei speichern**); the report
-is saved in your `Downloads` folder, and you can send it yourself.
+The report is sent privately to the ModernOS maintainers when this
+computer is signed in to GitHub. It is not published as a public issue.
+If you are offline, it is saved and sent automatically once you are
+back online. If this computer is not signed in, the report is not sent.
+Choose **Save as file** (**Als Datei speichern**); the report is saved
+in your `Downloads` folder, and you can send it yourself.
 
 If the desktop shell is not responding, SUPER + # still works: it then
 takes the screenshots, collects the information and sends a quick report

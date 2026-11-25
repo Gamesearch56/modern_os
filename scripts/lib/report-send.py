@@ -26,6 +26,8 @@ import urllib.error
 import urllib.request
 
 API = os.environ.get("BUG_REPORT_API", "https://api.github.com")
+# main only accepts a pull request, so the bundle cannot be committed there.
+BRANCH = "reports"
 LABELS = {
     "display": "area:display", "hyprland": "area:hyprland", "shell": "area:quickshell",
     "sound": "area:audio", "bluetooth": "area:bluetooth", "network": "area:network",
@@ -124,16 +126,47 @@ def bundle(root, req):
     return buf.getvalue()
 
 
+def ensure_branch(tok, repo):
+    """Create the reports branch from main the first time a report is sent."""
+    ref = "/repos/%s/git/ref/heads/%s" % (repo, BRANCH)
+    try:
+        call(tok, "GET", ref, None)
+        return
+    except Rejected as err:
+        if str(err) != "404":
+            raise
+    main = call(tok, "GET", "/repos/%s/git/ref/heads/main" % repo, None)
+    sha = str((main.get("object") or {}).get("sha") or "")
+    if not sha:
+        raise Rejected("422")
+    call(tok, "POST", "/repos/%s/git/refs" % repo, {
+        "ref": "refs/heads/%s" % BRANCH,
+        "sha": sha,
+    })
+
+
 def upload(tok, repo, path, data, message):
     url = "/repos/%s/contents/%s" % (repo, path)
-    body = {"message": message, "content": base64.b64encode(data).decode()}
+    body = {
+        "message": message,
+        "content": base64.b64encode(data).decode(),
+        "branch": BRANCH,
+    }
     try:
         resp = call(tok, "PUT", url, body)
     except Rejected as err:
         # A resend after a half-finished upload: overwriting needs the sha.
-        if str(err) != "422":
+        if str(err) not in ("409", "422"):
             raise
-        body["sha"] = call(tok, "GET", url, None).get("sha", "")
+        try:
+            got = call(tok, "GET", "%s?ref=%s" % (url, BRANCH), None)
+        except Rejected as missing:
+            if str(missing) == "404":
+                raise err
+            raise
+        body["sha"] = got.get("sha", "")
+        if not body["sha"]:
+            raise err
         resp = call(tok, "PUT", url, body)
     return str((resp.get("content") or {}).get("html_url") or "")
 
@@ -291,6 +324,7 @@ def send(root, repo, tok):
         req = json.load(fh)
     rid = os.path.basename(os.path.normpath(root))
     version = version_of(root)
+    ensure_branch(tok, repo)
     base = "reports/%s" % rid
     bundle_url = upload(tok, repo, base + "/report.tar.xz", bundle(root, req), "Report %s" % rid)
     shots = []
@@ -343,6 +377,9 @@ def main():
     except Refused:
         return 22
     except Rejected as err:
+        # A private reports repository looks like 404 to anyone else.
+        if str(err) == "404":
+            return 22
         print("report-send: server answered %s" % err, file=sys.stderr)
         return 23
     return 0

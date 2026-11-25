@@ -17,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 STORE = {}
 BLOBS = {}
 ISSUE = {}
+BRANCHES = set()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -49,6 +50,15 @@ class Handler(BaseHTTPRequestHandler):
             return None
         if mode == "down":
             return self._answer(503, {"message": "Service Unavailable"})
+        if "/git/ref/heads/" in self.path and self.command == "GET":
+            name = self.path.split("?", 1)[0].rsplit("/", 1)[-1]
+            if name == "main" or name in BRANCHES:
+                return self._answer(200, {"object": {"sha": "abc123"}})
+            return self._answer(404, {"message": "Not Found"})
+        if self.path.endswith("/git/refs") and self.command == "POST":
+            ref = str(body.get("ref") or "")
+            BRANCHES.add(ref.rsplit("/", 1)[-1])
+            return self._answer(201, {"ref": ref, "object": {"sha": body.get("sha", "")}})
         if "/contents/" in self.path:
             if self.command == "GET":
                 if "application/vnd.github.raw" in (self.headers.get("Accept") or ""):

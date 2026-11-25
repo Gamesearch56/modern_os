@@ -77,6 +77,9 @@ def _ciphertext(data):
 
 
 def _derive(password, salt, iterations):
+    # Gnome-keyring files use this exact construction to derive the AES
+    # key. It is a compatibility check against an existing file, not a
+    # password hash we chose or store.
     digest = hashlib.sha256(password + salt).digest()
     for _ in range(iterations - 1):
         digest = hashlib.sha256(digest).digest()

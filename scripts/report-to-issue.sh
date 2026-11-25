@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Build a shorter issue from a problem report (docs/GIT.md "From a
-# report to a branch"). Steps, Environment and Device are kept. Logs,
-# screenshots and the bundle are left out. The draft opens in $EDITOR
-# before anything is created, because the steps are the reporter's own
-# words.
+# Build a public issue from a private problem report (docs/GIT.md "From
+# a report to a branch"). Steps, Environment and Device are kept. Logs,
+# screenshots and the bundle stay in the private report. The draft
+# opens in $EDITOR before anything is created, because the steps are
+# the reporter's own words.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

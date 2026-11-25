@@ -270,8 +270,8 @@
     "url": "https://modern-census.gamesearch56.workers.dev"
   },
   "bugReport": {
-    "_comment": "Problem reports (scripts/bug-report.sh). Sending uses this computer's GitHub login. See docs/BUGREPORT.md.",
-    "repo": "Gamesearch56/modern_os",
+    "_comment": "Problem reports (scripts/bug-report.sh). Private repository. Sending uses this computer's GitHub login. See docs/BUGREPORT.md.",
+    "repo": "Gamesearch56/modern-reports",
     "screenshotsDefault": true
   },
   "files": {

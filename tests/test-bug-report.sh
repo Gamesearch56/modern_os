@@ -137,8 +137,10 @@ req='{"title":"Sound drops","description":"Audio stops after resume","categories
 
 start_server
 num="$("$BR" send "$id" "$req")" && [ "$num" = 7 ] && ok "send prints the issue number" || err "send: $num"
-jq -se '[.[] | select(.method == "PUT")] | length == 2' "$tmp/gh.log" >/dev/null \
-    && ok "bundle and the one ticked screenshot uploaded" || err "uploads: $(cat "$tmp/gh.log")"
+jq -se '[.[] | select(.method == "PUT")] | length == 2
+    and all(.[] | select(.method == "PUT"); .body.branch == "reports")' "$tmp/gh.log" >/dev/null \
+    && jq -se 'any(.body.ref == "refs/heads/reports")' "$tmp/gh.log" >/dev/null \
+    && ok "bundle and the one ticked screenshot uploaded on the reports branch" || err "uploads: $(cat "$tmp/gh.log")"
 jq -se '.[] | select(.path == "/repos/owner/reports/issues") | .body
     | (.labels == ["Work Required", "area:audio", "bug"]) and (.body | test("## Steps")) and (.body | test("## Environment"))
       and (.body | test("eDP-1-[0-9]+\\.jpg\\?raw=true")) and (.title | startswith("["))' "$tmp/gh.log" >/dev/null \

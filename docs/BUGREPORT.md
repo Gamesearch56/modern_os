@@ -18,13 +18,16 @@ sends with no questions, so a dead shell can still be reported.
 3. `collect` runs `scripts/lib/bug-report-collect.sh`, then
    `scripts/lib/report-redact.py`. Redaction happens before the review
    list, so what the user can open is what gets sent.
-4. `send` uploads the ticked files and screenshots to `bugReport.repo`
-   (`Gamesearch56/modern_os`) and opens an issue, using this computer's
-   GitHub login (`gh auth token`). A project token is never read. Exit
+4. `send` uploads the ticked files and screenshots to the `reports`
+   branch of the private repository `bugReport.repo`
+   (`Gamesearch56/modern-reports`) and opens a private issue, using this
+   computer's GitHub login (`gh auth token`). Nothing is committed to
+   the public repository. A project token is never read. Exit
    20 (offline, rate limited, timeout or a GitHub 5xx) leaves a `queued`
    marker; `outbox` sends it when the network returns. 21 means this
    computer is not signed in to GitHub, so the report is not sent. 22
-   is a refused login, 23 any other answer.
+   is a refused login or a repository this login cannot see, 23 any
+   other answer.
 5. `export` writes `modernos-report-<id>.tar.xz` to the XDG Downloads
    folder (`~/Downloads` by default). A quick report that cannot be
    sent does this itself.
@@ -62,11 +65,11 @@ numbers (`"serial"` fields, `Serial Number:`, `ID_SERIAL`), the
 hostname, the username and the home path. JSON loses every value under
 an account, location, serial, UUID or secret key.
 
-Reports are issues labelled `bug`, `Work Required` and one `area:*`
-per chosen category. `Work Required` stays until the report is fixed,
-then it is removed. A shorter issue that leaves logs and screenshots
-out: `scripts/report-to-issue.sh` (`docs/GIT.md`, "From a report to a
-branch").
+Reports are private issues labelled `bug`, `Work Required` and one
+`area:*` per chosen category. `Work Required` stays until the report
+is fixed, then it is removed. A public issue that leaves logs and
+screenshots out: `scripts/report-to-issue.sh` (`docs/GIT.md`, "From a
+report to a branch").
 
 Tests: `tests/test-bug-report.sh` (stubbed tools, fake GitHub server in
 `tests/lib/fake-github.py`), `tests/test-report-device.py`,
