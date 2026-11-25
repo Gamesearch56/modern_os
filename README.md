@@ -13,6 +13,8 @@ Material Design 3, colors that follow your wallpaper, and everything set up for 
 [![Hyprland](https://img.shields.io/badge/window%20manager-Hyprland-58e1ff)](https://hypr.land/)
 [![Ko-fi](https://img.shields.io/badge/support-Ko--fi-ff5e5b?logo=ko-fi&logoColor=white)](https://ko-fi.com/gamesearch56)
 
+**Hobby project.** ModernOS is maintained by one person in their spare time. It is built on Arch Linux. It is not an official Arch Linux, Hyprland, or Material Design release.
+
 [Install](#install) · [Screenshots](#screenshots) · [Documentation](#documentation) · [Contribute](#contributing) · [Support](#support-modernos)
 
 <img src="docs/screenshots/desktop.jpg" alt="The ModernOS desktop with the Files app and the Texteditor open, the top bar and the dock" width="100%">

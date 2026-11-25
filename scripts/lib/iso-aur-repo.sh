@@ -81,17 +81,21 @@ iso_calamares_limit_languages() {
     local hook="$ROOT/iso/releng/calamares-limit-languages.py"
     local locales="${ISO_INSTALLER_LOCALES:-}"
     local net="$ROOT/iso/releng/calamares-modernnet"
+    local apps="$ROOT/iso/releng/calamares-modernapps"
     [ -f "$hook" ] || die "missing $hook"
     [ -n "$locales" ] && [ -f "$locales" ] \
         || die "ISO_INSTALLER_LOCALES unset or missing (iso-build.sh generates it)"
     [ -d "$net" ] || die "missing $net"
+    [ -d "$apps" ] || die "missing $apps"
     install -m 0644 "$hook" "$src/calamares-limit-languages.py"
     install -m 0644 "$locales" "$src/installer-locales.json"
-    rm -rf "$src/calamares-modernnet"
-    cp -a "$ROOT/iso/releng/calamares-modernnet" "$src/calamares-modernnet"
+    rm -rf "$src/calamares-modernnet" "$src/calamares-modernapps"
+    cp -a "$net" "$src/calamares-modernnet"
+    cp -a "$apps" "$src/calamares-modernapps"
     chown "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" \
         "$src/calamares-limit-languages.py" "$src/installer-locales.json"
-    chown -R "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" "$src/calamares-modernnet"
+    chown -R "$ISO_AUR_BUILDER:$ISO_AUR_BUILDER" \
+        "$src/calamares-modernnet" "$src/calamares-modernapps"
     if ! grep -F 'calamares-limit-languages.py' "$src/PKGBUILD" >/dev/null; then
         cat >>"$src/PKGBUILD" <<'EOF'
 

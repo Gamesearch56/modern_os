@@ -534,11 +534,15 @@ if [ -f "$LANGHOOK" ] \
     && grep -F 'tr( "User" )' "$LANGHOOK" >/dev/null \
     && grep -F 'tr( "Summary", "@label" )' "$LANGHOOK" >/dev/null \
     && grep -F 'install_modernnet' "$LANGHOOK" >/dev/null \
+    && grep -F 'install_modernapps' "$LANGHOOK" >/dev/null \
     && grep -F 'calamares-modernnet' "$LANGHOOK" >/dev/null \
+    && grep -F 'calamares-modernapps' "$LANGHOOK" >/dev/null \
     && grep -F 'calamares-modernnet' "$AUR" >/dev/null \
     && grep -F 'iso/releng/calamares-modernnet' "$AUR" >/dev/null \
+    && grep -F 'calamares-modernapps' "$AUR" >/dev/null \
     && [ -f "$ROOT/iso/releng/calamares-modernnet/CMakeLists.txt" ] \
     && [ -f "$ROOT/iso/releng/calamares-modernnet/ModernNetRow.cpp" ] \
+    && [ -f "$ROOT/iso/releng/calamares-modernapps/CMakeLists.txt" ] \
     && ! grep -F 'Übersicht' "$LANGHOOK" >/dev/null \
     && ! grep -F 'calamares_en.ts' "$LANGHOOK" >/dev/null; then
     ok "AUR Calamares build patches languages, sidebar, combos, i18n, cancel, keyboard"
