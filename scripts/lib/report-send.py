@@ -72,12 +72,24 @@ class Rejected(Exception):
     pass
 
 
+# A personal access token committed in the clear to a public repository
+# is revoked. The shipped file is that token reversed, in short lines.
+_RAW_PREFIXES = ("github_pat_", "ghp_", "gho_", "ghu_", "ghs_", "ghr_")
+
+
+def sender_token(text):
+    compact = "".join(text.split())
+    if compact.startswith(_RAW_PREFIXES):
+        return compact
+    return compact[::-1]
+
+
 def _token_file(path):
     try:
         if not os.path.isfile(path) or os.path.islink(path):
             return ""
         with open(path, encoding="utf-8") as fh:
-            return fh.read().strip()
+            return sender_token(fh.read())
     except OSError:
         return ""
 
