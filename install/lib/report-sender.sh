@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Install the report sender. One line, a token that can write only to the
-# private reports repository. A missing file is normal: the report stays
-# on the computer. The token is never printed.
+# Install the report sender. The shipped file is the token reversed in
+# short lines: a raw personal access token in a public repository is
+# revoked. report-send.py restores it. A missing file is normal: the
+# report stays on the computer. The token is never printed.
 install_report_sender() {
     local src="" dest="$TARGET/.config/modern/report-token" system="/usr/lib/modern/report-token"
     if [ -f "$REPO_ROOT/install/share/report-token" ] && [ ! -L "$REPO_ROOT/install/share/report-token" ]; then
