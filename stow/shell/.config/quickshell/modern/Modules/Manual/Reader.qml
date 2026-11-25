@@ -49,8 +49,20 @@ FocusScope {
     signal linkActivated(string link)
     signal navRequested()
 
+    function _maxY(): real {
+        return Math.max(0, flick.contentHeight - flick.height);
+    }
+
+    // A layout pass (a new chapter, or a recolor) can leave the scroll
+    // past the text. That is the blank page: the text is above the view.
+    function _clampY() {
+        const maxY = root._maxY();
+        if (flick.contentY < 0 || flick.contentY > maxY)
+            flick.contentY = Math.max(0, Math.min(maxY, flick.contentY));
+    }
+
     function _scrollBy(dy: real) {
-        flick.contentY = Math.max(0, Math.min(flick.contentHeight - flick.height, flick.contentY + dy));
+        flick.contentY = Math.max(0, Math.min(root._maxY(), flick.contentY + dy));
     }
 
     function zoomBy(steps: int) {
@@ -158,16 +170,22 @@ FocusScope {
         visible: !!root.doc
         clip: true
         contentWidth: width
-        contentHeight: body.contentHeight + Tokens.spacing.xl * 2
+        contentHeight: body.y + body.height + Tokens.spacing.xl
         boundsBehavior: Flickable.StopAtBounds
         interactive: !root._reset
-        onContentHeightChanged: if (root._reset) contentY = 0
+        onContentHeightChanged: root._reset ? contentY = 0 : root._clampY()
+        onHeightChanged: root._clampY()
+        onMovementEnded: root._clampY()
+        onFlickEnded: root._clampY()
 
         TextEdit {
             id: body
             x: Math.max(Tokens.spacing.md, (flick.width - width) / 2)
             y: Tokens.spacing.xl
             width: root._measure
+            // As tall as the text, so the page cannot scroll into the
+            // empty area under a shorter control (report 54).
+            height: contentHeight
             text: root._html
             textFormat: TextEdit.RichText
             readOnly: true
