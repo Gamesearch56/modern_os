@@ -12,8 +12,10 @@ ok() { printf 'test-files: ok %s\n' "$*"; }
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/modern-files-XXXXXX")"
 trap 'chmod -R u+w "$TMP" 2>/dev/null || true; rm -rf "$TMP"' EXIT
-export XDG_DATA_HOME="$TMP/data"
 export HOME="$TMP/home"
+export XDG_DATA_HOME="$TMP/data"
+export XDG_CONFIG_HOME="$HOME/.config"
+unset MODERN_REPO
 mkdir -p "$HOME" "$TMP/data"
 
 mkdir -p "$TMP/box/c" "$TMP/box/d"
@@ -143,23 +145,6 @@ fi
 mkdir -p "$HOME/.config/modern"
 printf '%s\n' "$HOME/Desktop/modern_os" >"$HOME/.config/modern/repo"
 if "$OPS" delete "$HOME/Desktop/modern_os/x" >/dev/null 2>"$TMP/ptr.err"; then
-    {
-        echo "HOME=$HOME"
-        echo "realpath=$(readlink -f "$HOME" || true)"
-        echo "XDG_CONFIG_HOME=${XDG_CONFIG_HOME-<unset>}"
-        echo "MODERN_REPO=${MODERN_REPO-<unset>}"
-        echo "repo=$(cat "$HOME/.config/modern/repo" 2>/dev/null || true)"
-        ROOT="$ROOT" HOME="$HOME" python3 - <<'PY'
-import os, sys
-sys.path.insert(0, os.path.join(os.environ["ROOT"], "scripts/lib"))
-import files_safe
-print("home_dir", files_safe.home_dir())
-print("pointer", files_safe._checkout_pointer(files_safe.home_dir()))
-print("roots", files_safe.install_roots())
-print("protected", files_safe.protected(os.environ["HOME"] + "/Desktop/modern_os/x"))
-PY
-        echo "stderr=$(cat "$TMP/ptr.err" 2>/dev/null || true)"
-    } >&2
     err "delete inside a modern_os checkout was allowed"
 elif [ -f "$HOME/Desktop/modern_os/x" ]; then
     ok "a modern_os checkout stays in place"
