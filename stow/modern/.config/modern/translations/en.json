@@ -2135,21 +2135,21 @@
       "step": "Programs",
       "intro": "Vivaldi is the browser and is installed with the system. Tick a program to download it during installation. An NVIDIA graphics card needs the proprietary driver.",
       "vivaldi": "Vivaldi",
-      "vivaldiHint": "Default browser. This stays.",
+      "vivaldiHint": "Default browser.",
       "drivers": "Drivers",
-      "driversHint": "Open graphics and Wi-Fi firmware for this computer. These stay.",
+      "driversHint": "Open graphics and Wi-Fi firmware for this computer.",
       "desktop": "Desktop",
-      "desktopHint": "The session, sound and network. This stays.",
+      "desktopHint": "The session, sound and network.",
       "nvidia": "NVIDIA driver",
       "nvidiaHint": "Proprietary driver. An NVIDIA graphics card needs this. It is downloaded during installation.",
       "steam": "Steam",
-      "steamHint": "Game store. Downloaded during installation if ticked.",
+      "steamHint": "Game store.",
       "spotify": "Spotify",
-      "spotifyHint": "Music. Downloaded during installation if ticked.",
+      "spotifyHint": "Music.",
       "discord": "Discord",
-      "discordHint": "Chat. Downloaded during installation if ticked.",
+      "discordHint": "Chat.",
       "protonVpn": "Proton VPN",
-      "protonVpnHint": "VPN client. Downloaded during installation if ticked."
+      "protonVpnHint": "VPN client."
     },
     "finished": {
       "done": "<h1>All done.</h1><br/>%1 is installed and ready.<br/>Restart to start using your new desktop."

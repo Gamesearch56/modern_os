@@ -47,9 +47,9 @@ ModernAppsPage::ModernAppsPage( QWidget* parent )
     m_list->setSelectionMode( QAbstractItemView::NoSelection );
     layout->addWidget( m_list, 1 );
 
-    addRow( QString(), tr( "Vivaldi" ), tr( "Default browser. This stays." ), true, true );
-    addRow( QString(), tr( "Drivers" ), tr( "Open graphics and Wi-Fi firmware for this computer. These stay." ), true, true );
-    addRow( QString(), tr( "Desktop" ), tr( "The session, sound and network. This stays." ), true, true );
+    addRow( QString(), tr( "Vivaldi" ), tr( "Default browser." ), true, true );
+    addRow( QString(), tr( "Drivers" ), tr( "Open graphics and Wi-Fi firmware for this computer." ), true, true );
+    addRow( QString(), tr( "Desktop" ), tr( "The session, sound and network." ), true, true );
     addRow( QStringLiteral( "nvidia-proprietary" ),
             tr( "NVIDIA driver" ),
             tr( "Proprietary driver. An NVIDIA graphics card needs this. It is downloaded during installation." ),
@@ -57,22 +57,22 @@ ModernAppsPage::ModernAppsPage( QWidget* parent )
             nvidiaCard() );
     addRow( QStringLiteral( "steam" ),
             tr( "Steam" ),
-            tr( "Game store. Downloaded during installation if ticked." ),
+            tr( "Game store." ),
             false,
             false );
     addRow( QStringLiteral( "spotify-launcher" ),
             tr( "Spotify" ),
-            tr( "Music. Downloaded during installation if ticked." ),
+            tr( "Music." ),
             false,
             false );
     addRow( QStringLiteral( "discord" ),
             tr( "Discord" ),
-            tr( "Chat. Downloaded during installation if ticked." ),
+            tr( "Chat." ),
             false,
             false );
     addRow( QStringLiteral( "proton-vpn-gtk-app" ),
             tr( "Proton VPN" ),
-            tr( "VPN client. Downloaded during installation if ticked." ),
+            tr( "VPN client." ),
             false,
             false );
 

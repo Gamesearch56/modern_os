@@ -2135,21 +2135,21 @@
       "step": "Programme",
       "intro": "Vivaldi ist der Browser und wird mit dem System installiert. Setze ein Häkchen, damit ein Programm während der Installation heruntergeladen wird. Eine NVIDIA-Grafikkarte braucht den proprietären Treiber.",
       "vivaldi": "Vivaldi",
-      "vivaldiHint": "Standardbrowser. Bleibt installiert.",
+      "vivaldiHint": "Standardbrowser.",
       "drivers": "Treiber",
-      "driversHint": "Offene Grafik- und WLAN-Firmware für diesen Computer. Bleibt installiert.",
+      "driversHint": "Offene Grafik- und WLAN-Firmware für diesen Computer.",
       "desktop": "Desktop",
-      "desktopHint": "Die Sitzung, Ton und Netzwerk. Bleibt installiert.",
+      "desktopHint": "Die Sitzung, Ton und Netzwerk.",
       "nvidia": "NVIDIA-Treiber",
       "nvidiaHint": "Proprietärer Treiber. Eine NVIDIA-Grafikkarte braucht ihn. Er wird während der Installation heruntergeladen.",
       "steam": "Steam",
-      "steamHint": "Spiele-Shop. Wird heruntergeladen, wenn das Häkchen gesetzt ist.",
+      "steamHint": "Spiele-Shop.",
       "spotify": "Spotify",
-      "spotifyHint": "Musik. Wird heruntergeladen, wenn das Häkchen gesetzt ist.",
+      "spotifyHint": "Musik.",
       "discord": "Discord",
-      "discordHint": "Chat. Wird heruntergeladen, wenn das Häkchen gesetzt ist.",
+      "discordHint": "Chat.",
       "protonVpn": "Proton VPN",
-      "protonVpnHint": "VPN-Client. Wird heruntergeladen, wenn das Häkchen gesetzt ist."
+      "protonVpnHint": "VPN-Client."
     },
     "finished": {
       "done": "<h1>Alles erledigt.</h1><br/>%1 ist installiert und einsatzbereit.<br/>Starte neu, um deinen neuen Desktop zu nutzen."
