@@ -78,6 +78,8 @@ you trust, such as your home Wi-Fi.
 
 Open **System Settings → Privacy** (**Datenschutz**).
 
+![Settings, on the Privacy page](images/settings-privacy.webp)
+
 ### Notifications
 
 - **Do not disturb** (**Nicht stören**) hides notification banners.

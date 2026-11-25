@@ -88,15 +88,49 @@ def _code(lines: list[str], i: int) -> tuple[str, int]:
     # A percentage width is resolved before the column exists, so the
     # document keeps the unwrapped width and the page opens on a blank
     # stretch. {{measure:100}} is the column, filled when the window lays out.
-    # The table margin is the gap outside the shade. A pre also has its
-    # own margin, and Qt paints that inside the table background, so a
-    # blank line shows up in the block. Zero it.
-    out = ('<table width="{{measure:100}}" cellpadding="{{pad}}" cellspacing="0" bgcolor="{{codeBg}}" '
-           'style="margin-top:{{gap}}px;margin-bottom:{{gap}}px"><tr><td>'
+    # Qt paints a table's own margin inside its background. The gap lives
+    # on an outer cell with no shade; the shaded table has no margin, or
+    # the empty line sits inside the block and the text sticks to it.
+    out = ('<table width="{{measure:100}}" cellpadding="0" cellspacing="0" style="margin:0px">'
+           '<tr><td style="padding-top:{{gap}}px;padding-bottom:{{gap}}px">'
+           '<table width="{{measure:100}}" cellpadding="{{pad}}" cellspacing="0" bgcolor="{{codeBg}}" '
+           'style="margin:0px"><tr><td>'
            f'<pre style="font-family:{{{{mono}}}};font-size:{{{{codeSize}}}}px;color:{{{{heading}}}};'
            f'margin-top:0px;margin-bottom:0px;white-space:pre-wrap">{code}</pre>'
-           "</td></tr></table>")
+           "</td></tr></table></td></tr></table>")
     return out, i + 1
+
+
+def _weight(cell: str) -> int:
+    """How much of the row a column needs. Capped so one long sentence
+    does not squeeze every other column into a few letters."""
+    plain = re.sub(r"`([^`]*)`", r"\1", cell)
+    plain = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", plain)
+    plain = re.sub(r"[*_]", "", plain).strip()
+    n = len(plain)
+    # A short cell should stay on one line. A long one wraps instead of
+    # taking the whole row.
+    if n <= 16:
+        return max(1, n + 6)
+    return min(n, 36)
+
+
+def _widths(head: list[str], rows: list[list[str]]) -> list[int]:
+    n = len(head)
+    scores = []
+    for col in range(n):
+        vals = [head[col]] + [r[col] if col < len(r) else "" for r in rows]
+        scores.append(max(_weight(v) for v in vals))
+    total = sum(scores) or 1
+    floor = max(4, min(12, 100 // n // 2 or 4))
+    pcts = [max(floor, round(100 * s / total)) for s in scores]
+    while sum(pcts) > 100:
+        big = max(range(n), key=lambda i: pcts[i])
+        if pcts[big] <= floor:
+            break
+        pcts[big] -= 1
+    pcts[-1] += 100 - sum(pcts)
+    return pcts
 
 
 def _table(lines: list[str], i: int) -> tuple[str, int]:
@@ -107,15 +141,22 @@ def _table(lines: list[str], i: int) -> tuple[str, int]:
         rows.append(_cells(lines[i]))
         i += 1
     # border="1" draws the grid in the palette color and leaves the cell
-    # text black. On a dark page that is an empty stretch with a faint
-    # grid at the bottom. The cell color is the same one headings use.
-    cell = 'style="color:{{heading}};border:1px solid {{rule}}"'
-    out = ['<table width="{{measure:100}}" cellpadding="{{pad}}" cellspacing="0" '
-           'style="border-collapse:collapse;margin-top:{{gap}}px;margin-bottom:{{gap}}px">',
-           "<tr>" + "".join(f'<th align="left" {cell}>{_inline(c)}</th>' for c in head) + "</tr>"]
+    # text black. A bottom rule and a shaded header keep the columns
+    # readable without that. Widths follow the text, so a short column
+    # does not wrap a long one into a stack.
+    widths = _widths(head, rows)
+    rule = 'style="color:{{heading}};border-bottom:1px solid {{rule}}" valign="top"'
+    head_cell = 'bgcolor="{{codeBg}}" ' + rule
+    out = ['<table width="{{measure:100}}" cellpadding="{{tight}}" cellspacing="0" '
+           'style="margin-top:{{gap}}px;margin-bottom:{{gap}}px">',
+           "<tr>" + "".join(
+               f'<th width="{{{{measure:{w}}}}}" align="left" {head_cell}><b>{_inline(c)}</b></th>'
+               for c, w in zip(head, widths)) + "</tr>"]
     for r in rows:
         r = (r + [""] * len(head))[: len(head)]
-        out.append("<tr>" + "".join(f"<td {cell}>{_inline(c)}</td>" for c in r) + "</tr>")
+        out.append("<tr>" + "".join(
+            f'<td width="{{{{measure:{w}}}}}" align="left" {rule}>{_inline(c)}</td>'
+            for c, w in zip(r, widths)) + "</tr>")
     out.append("</table>")
     return "".join(out), i
 
@@ -152,9 +193,9 @@ def _list(lines: list[str], i: int) -> tuple[str, int]:
     for body in items:
         inner = render(body)
         inner = re.sub(r'^<p style="[^"]*">(.*?)</p>', r"\1", inner, count=1, flags=re.S)
-        # No line-height. Qt has treated both a percentage and a pixel
+        # Unitless only. A percentage has been seen as 150x, and a pixel
         # length as a multiplier, and either one opens a blank page.
-        out.append(f'<li style="margin-bottom:{{{{tight}}}}px;color:{{{{heading}}}}">{inner}</li>')
+        out.append(f'<li style="margin-bottom:{{{{tight}}}}px;line-height:1.5;color:{{{{heading}}}}">{inner}</li>')
     out.append(f"</{tag}>")
     return "".join(out), i
 
@@ -180,7 +221,7 @@ def render(lines: list[str]) -> str:
             level = len(m.group(1))
             top = "0" if not out else "{{headGap}}"
             out.append(f'<h{level} style="margin-top:{top}px;margin-bottom:{{{{tight}}}}px;'
-                       f'font-size:{{{{h{min(level, 4)}}}}}px;color:{{{{heading}}}}">{_inline(m.group(2))}</h{level}>')
+                       f'font-size:{{{{h{min(level, 4)}}}}}px;line-height:1.5;color:{{{{heading}}}}">{_inline(m.group(2))}</h{level}>')
             i += 1
             continue
         if RULE.match(line):
@@ -209,7 +250,7 @@ def render(lines: list[str]) -> str:
                 and not ("|" in lines[i] and i + 1 < len(lines) and TABLE_RULE.match(lines[i + 1])):
             para.append(lines[i].strip())
             i += 1
-        out.append(f'<p style="margin-top:0px;margin-bottom:{{{{gap}}}}px;color:{{{{heading}}}}">{_inline(" ".join(para))}</p>')
+        out.append(f'<p style="margin-top:0px;margin-bottom:{{{{gap}}}}px;line-height:1.5;color:{{{{heading}}}}">{_inline(" ".join(para))}</p>')
     return "".join(out)
 
 

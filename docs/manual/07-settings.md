@@ -64,6 +64,8 @@ Some safety rules always apply: you cannot delete or rename the account you are 
 
 ### Privacy (Datenschutz)
 
+![Settings, on the Privacy page](images/settings-privacy.webp)
+
 **Notifications** (Benachrichtigungen)
 
 - **Do not disturb** (Nicht stören): hides notification banners.
@@ -190,6 +192,8 @@ Restore on this page resets the look of the dock but keeps your pinned apps and 
 
 ### Applications (Anwendungen)
 
+![Settings, where each job has its app](images/settings-apps.webp)
+
 Choose which app is used for each job.
 
 **Web and accounts** (Web und Konten): **Browser**, **Calendar** (Kalender), **Mail** and **Messenger**. Calendar, Mail and Messenger can also be left empty. When you choose one, it is added to autostart and started in the background so you get notifications.
@@ -201,6 +205,8 @@ Choose which app is used for each job.
 The apps themselves are described in [Apps](09-apps.md).
 
 ### Recording (Aufnahme)
+
+![Settings, on the Recording page](images/settings-recording.webp)
 
 **Screenshot** (Bildschirmfoto)
 
@@ -249,6 +255,8 @@ A live preview of the date and time is shown at the top.
 - **Time format** (Zeitformat): 24-hour (HH:mm) or 12-hour (hh:mm a).
 
 ### Keyboard (Tastatur)
+
+![Settings, on the Keyboard page](images/settings-keyboard.webp)
 
 - **Keyboard layout** (Tastaturlayout): pick your layout from a searchable list.
 - **Key repeat speed** (Tastenwiederholung) and **Key repeat delay** (Wiederholverzögerung): how fast a held key repeats, and how long before it starts.

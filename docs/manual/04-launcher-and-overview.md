@@ -140,6 +140,8 @@ See [Windows and workspaces](05-windows-and-workspaces.md) for more about the ba
 
 Press `SUPER + K` to open Keyboard shortcuts (Tastenkombinationen). It is a window that lists every shortcut of this desktop, grouped into categories:
 
+![The keyboard shortcut sheet, open on Applications](images/shortcuts.webp)
+
 - Applications (Anwendungen)
 - System
 - Recording (Aufnahme)

@@ -16,6 +16,8 @@ Which app opens which kind of file is chosen in Settings > **Applications** (Anw
 
 Press **SUPER + E** to open **Files** (Dateien). In the launcher it is called "Filemanager".
 
+![Files, open on a folder of notes, pictures and videos](images/files.webp)
+
 ### Getting around
 
 The sidebar shows your places: **Home** (Persönlicher Ordner), **Recent** (Zuletzt verwendet), **Favorites** (Favoriten), **Downloads**, **Pictures** (Bilder), **Videos**, **Computer**, **Network** (Netzwerk) and **Trash** (Papierkorb). Connected drives also appear here with an eject button.
@@ -61,6 +63,8 @@ When an app such as Vivaldi asks you to pick a file, for example to upload a pic
 
 A simple, fast editor for notes and plain text files. Open it from the launcher, or open any text file from Files.
 
+![Texteditor with a short note](images/editor.webp)
+
 - The **File**, **Edit** (Bearbeiten) and **View** (Ansicht) menus hold every command, together with its shortcut.
 - **Find…** (Suchen…, **Ctrl + F**), **Replace…** (Ersetzen…, **Ctrl + H**) and **Go to line…** (Gehe zu Zeile…, **Ctrl + G**).
 - **F5** inserts the current **Time/Date** (Uhrzeit/Datum).
@@ -71,6 +75,8 @@ A simple, fast editor for notes and plain text files. Open it from the launcher,
 ## Imageviewer
 
 Open a picture from Files and the Imageviewer shows it, together with every other picture in the same folder.
+
+![Imageviewer showing a picture](images/viewer.webp)
 
 | Keys | What they do |
 |---|---|
@@ -93,6 +99,8 @@ Turning a picture only changes the view until you press **Ctrl + S**. The contro
 
 The Mediaplayer plays both videos and music. When you open a file, the other files in the same folder become the playlist.
 
+![Mediaplayer with a clip and its controls](images/player.webp)
+
 | Keys | What they do |
 |---|---|
 | **Space** or click | Play / pause |
@@ -114,6 +122,8 @@ The Mediaplayer plays both videos and music. When you open a file, the other fil
 ## App Store
 
 The **App Store** is where you add and remove programs. Open it from the launcher, from the dock, or from the control panel.
+
+![App Store on the Discover page](images/store.webp)
 
 - Browse **Discover** (Entdecken), **Popular** (Beliebt) and categories such as **Internet**, **Office** (Büro), **Graphics** (Grafik), **Multimedia**, **Games** (Spiele), **Communication** (Kommunikation), **Learning** (Lernen), **Development** (Entwicklung), **System** and **Utilities** (Werkzeuge).
 - **Installed** (Installiert) shows the programs you have installed.
@@ -147,6 +157,8 @@ To only take an icon off the dock, drag it from the dock onto **Remove from dock
 
 The manual you are reading is an app too. Open it with **SUPER + Y**, or search for "Manual" in the launcher.
 
+![The manual, open on this chapter](images/manual.webp)
+
 - On the left is a list of every document, in two parts: **User manual** (Benutzerhandbuch), the numbered chapters written for everyday use, and **Technical reference** (Technische Referenz), the documents for people who want to look under the hood. Each part is split into topics, such as **Getting started** (Los geht's) or **Installation and system** (Installation und System).
 - The search field, **Search the manual...** (Handbuch durchsuchen...), looks through titles and full text. Press **Ctrl + F** to jump to it, **Enter** to open the first match, and **Esc** to clear it.
 - On the right is the open document. You can select and copy text, which is handy for commands in [Troubleshooting](14-troubleshooting.md).
@@ -178,6 +190,8 @@ Proton Mail, Proton Calendar, Proton Drive and WhatsApp are included as web apps
 ### Default apps
 
 Out of the box, ModernOS uses:
+
+![Settings, where each job has its app](images/settings-apps.webp)
 
 | Job | App |
 |---|---|

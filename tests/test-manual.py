@@ -35,12 +35,17 @@ nested = html("- a\n  - b\n- c")
 check(nested.count("<ul") == 2 and nested.count("<li") == 3, "nested list")
 code = html("```bash\necho <x> & y\n```")
 check("<pre" in code and "&lt;x&gt; &amp; y" in code, "fenced code is escaped")
-check("margin-top:0px;margin-bottom:0px" in code and "margin-top:{{gap}}px" in code,
+check("margin-top:0px;margin-bottom:0px" in code
+      and 'style="margin:0px"' in code
+      and "padding-top:{{gap}}px;padding-bottom:{{gap}}px" in code,
       "a code block keeps its blank line outside the shade")
 check("# not a heading" in html("```\n# not a heading\n```"), "a fence keeps its lines")
 table = html("| A | B |\n|---|---|\n| 1 | 2 |")
 check(table.count("<th") == 2 and table.count("<td") == 2, "table")
-check('width="{{measure:100}}"' in table and "line-height" not in html("Hello") and "line-height" not in html("- a"), "tables use the column and lines stay the font height")
+body = html("Hello")
+check('width="{{measure:100}}"' in table and "line-height:1.5" in body and "line-height:1.5" in html("- a")
+      and "line-height:" not in body.replace("line-height:1.5", ""),
+      "tables use the column and body lines have unitless leading")
 check(table.count("color:{{heading}}") >= 4 and "color:{{heading}}" in html("Hello"), "body and cells carry the surface text color")
 check('<a href="07-settings.md"' in html("[Settings](07-settings.md)"), "links")
 check('<a href="https://example.org">' in html("<https://example.org>"), "autolinks")
