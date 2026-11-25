@@ -6,8 +6,8 @@ Usage: report-send.py <report-dir> <owner/repo>
 Reads request.json (title, description, categories, when, repeat and the
 file/shot names the user left ticked), uploads the bundle and the ticked
 screenshots with the Contents API, then opens an issue that shows the
-screenshots inline and links the bundle. The token is this computer's
-`gh` login. A saved project token is never read.
+screenshots inline and links the bundle. The token is the installed report sender. This computer's `gh` login
+is used only when that file is absent.
 
 Exit: 0 sent (prints the issue number), 20 unreachable, rate limited or
 a GitHub outage (queued, try again later), 21 not signed in to GitHub,
@@ -72,8 +72,26 @@ class Rejected(Exception):
     pass
 
 
+def _token_file(path):
+    try:
+        if not os.path.isfile(path) or os.path.islink(path):
+            return ""
+        with open(path, encoding="utf-8") as fh:
+            return fh.read().strip()
+    except OSError:
+        return ""
+
+
 def token():
-    """This computer's GitHub login. Never a token stored for the project."""
+    """Installed report sender, then this computer's GitHub login."""
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
+    for path in (
+        os.path.join(base, "modern", "report-token"),
+        "/usr/lib/modern/report-token",
+    ):
+        saved = _token_file(path)
+        if saved:
+            return saved
     try:
         out = subprocess.check_output(["gh", "auth", "token"], stderr=subprocess.DEVNULL, timeout=10)
     except (OSError, subprocess.SubprocessError):

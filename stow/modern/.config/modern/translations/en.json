@@ -1590,7 +1590,7 @@
     "queued": "No connection. The report is saved and will be sent automatically.",
     "queuedSent": "A saved problem report was sent",
     "notSetUp": "The report was not sent. It was saved to:",
-    "notSetUpHint": "The report was not sent. Sign in to GitHub on this computer to send it, or save the report as a file.",
+    "notSetUpHint": "The report was not sent. Save the report as a file.",
     "refused": "The report could not be sent because access was refused. Save it as a file instead.",
     "failed": "The report could not be sent. Save it as a file instead.",
     "quickTitle": "Quick report (shortcut)",

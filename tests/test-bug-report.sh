@@ -180,7 +180,18 @@ rm -f "$REPORTS/$id3/queued"
 printf '{}\n' >"$XDG_CONFIG_HOME/modern/secrets.json"
 [ "$("$BR" status)" = '{"ready":true,"queued":0}' ] \
     && ok "status is ready from this computer's GitHub login" || err "status with gh: $("$BR" status)"
+printf 'gho_installed-sender\n' >"$XDG_CONFIG_HOME/modern/report-token"
+chmod 600 "$XDG_CONFIG_HOME/modern/report-token"
 stub gh 'exit 1'
+rm -f "$REPORTS/$id3/sent.json" "$REPORTS/$id3/queued"
+start_server
+num="$("$BR" send "$id3" "$req")" && [ "$num" = 7 ] \
+    && jq -se 'all(.[] | select(.method == "PUT"); .auth == "Bearer gho_installed-sender")' "$tmp/gh.log" >/dev/null \
+    && ok "the installed report sender is used when GitHub is not signed in" \
+    || err "installed sender: rc=$? num=$num"
+rm -f "$XDG_CONFIG_HOME/modern/report-token" "$REPORTS/$id3/sent.json"
+[ "$("$BR" status)" = '{"ready":false,"queued":0}' ] \
+    && ok "status is not ready without a report sender" || err "status after removing sender: $("$BR" status)"
 rc=0; "$BR" send "$id3" "$req" >/dev/null || rc=$?
 [ "$rc" = 21 ] && ok "no GitHub login answers 21" || err "no-login rc=$rc"
 [ "$("$BR" status)" = '{"ready":false,"queued":0}' ] \

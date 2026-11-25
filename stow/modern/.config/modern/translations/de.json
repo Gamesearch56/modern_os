@@ -1590,7 +1590,7 @@
     "queued": "Keine Verbindung. Der Bericht ist gespeichert und wird automatisch gesendet.",
     "queuedSent": "Ein gespeicherter Problembericht wurde gesendet",
     "notSetUp": "Der Bericht wurde nicht gesendet. Er wurde gespeichert unter:",
-    "notSetUpHint": "Der Bericht wurde nicht gesendet. Melde dich auf diesem Computer bei GitHub an, um ihn zu senden, oder speichere ihn als Datei.",
+    "notSetUpHint": "Der Bericht wurde nicht gesendet. Speichere den Bericht als Datei.",
     "refused": "Der Bericht konnte nicht gesendet werden, weil der Zugriff verweigert wurde. Speichere ihn stattdessen als Datei.",
     "failed": "Der Bericht konnte nicht gesendet werden. Speichere ihn stattdessen als Datei.",
     "quickTitle": "Schnellbericht (Tastenkürzel)",

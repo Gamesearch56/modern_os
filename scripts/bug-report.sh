@@ -145,9 +145,17 @@ cmd_prune() {
     done
 }
 
+report_sender_ready() {
+    local f
+    for f in "$MODERN_DIR/report-token" /usr/lib/modern/report-token; do
+        [ -f "$f" ] && [ ! -L "$f" ] && [ -s "$f" ] && return 0
+    done
+    command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1
+}
+
 cmd_status() {
     local ready=false n=0 q
-    if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+    if report_sender_ready; then
         ready=true
     fi
     for q in "$REPORTS"/*/queued; do [ -f "$q" ] && n=$((n + 1)); done

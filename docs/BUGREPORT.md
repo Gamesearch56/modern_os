@@ -20,19 +20,39 @@ sends with no questions, so a dead shell can still be reported.
    list, so what the user can open is what gets sent.
 4. `send` uploads the ticked files and screenshots to the `reports`
    branch of the private repository `bugReport.repo`
-   (`Gamesearch56/modern-reports`) and opens a private issue, using this
-   computer's GitHub login (`gh auth token`). Nothing is committed to
-   the public repository. A project token is never read. Exit
-   20 (offline, rate limited, timeout or a GitHub 5xx) leaves a `queued`
-   marker; `outbox` sends it when the network returns. 21 means this
-   computer is not signed in to GitHub, so the report is not sent. 22
-   is a refused login or a repository this login cannot see, 23 any
-   other answer.
+   (`Gamesearch56/modern-reports`) and opens a private issue. The token
+   is the installed report sender (`~/.config/modern/report-token`, or
+   `/usr/lib/modern/report-token`). This computer's `gh` login is used
+   only when that file is absent. Signing in on the GitHub website does
+   not create that file. Nothing is committed to the public repository.
+   Exit 20 (offline, rate limited, timeout or a GitHub 5xx) leaves a
+   `queued` marker; `outbox` sends it when the network returns. 21 means
+   this computer has no report sender, so the report is not sent. 22 is
+   a refused login or a repository this login cannot see, 23 any other
+   answer.
 5. `export` writes `modernos-report-<id>.tar.xz` to the XDG Downloads
    folder (`~/Downloads` by default). A quick report that cannot be
    sent does this itself.
 
 To read a report back: `scripts/report-fetch.sh <issue>`.
+
+## Report sender
+
+The sender is a fine-grained personal access token on the repository
+owner's account. Repository access is **Only select repositories**,
+and the only repository is `Gamesearch56/modern-reports`. **Contents**
+and **Issues** are **Read and write**. Every other permission stays
+**No access**. Metadata stays read-only because GitHub requires it.
+
+That token can open a report and upload its bundle. It cannot change
+the public repository, change settings, or delete `modern-reports`.
+Anyone who copies the token can read the other private reports. Those
+reports are redacted before they are sent.
+
+The token ships in `install/share/report-token`, so a fresh installation
+and a system update both receive it. `install.sh` copies that file to
+`~/.config/modern/report-token`. A fresh image also copies it to
+`/usr/lib/modern/report-token`.
 
 Every step's stderr and an unexpected exit land in the shell log under
 the `BugReport` tag (`Services/BugReportProc.qml`).
