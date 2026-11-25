@@ -590,9 +590,27 @@ kernel_boot_menu_matches_installed() {
     [ -r "$img" ] && cmp -s "$root/usr/lib/modules/$kver/vmlinuz" "$img"
 }
 
+# The session copy of the boot stamp. A root update has no HOME; the
+# account that started it is PKEXEC_UID or SUDO_UID.
+kernel_boot_session_ready() {
+    local uid home
+    if [ -n "${XDG_STATE_HOME:-}" ]; then
+        printf '%s\n' "$XDG_STATE_HOME/modern/boot-ready"
+        return 0
+    fi
+    uid="${PKEXEC_UID:-${SUDO_UID:-}}"
+    if [ -n "$uid" ] && [ "$uid" != 0 ]; then
+        home="$(getent passwd "$uid" | cut -d: -f6 || true)"
+    elif [ -n "${HOME:-}" ] && [ "$(id -u)" -ne 0 ]; then
+        home="$HOME"
+    fi
+    [ -n "${home:-}" ] || return 1
+    printf '%s\n' "$home/.local/state/modern/boot-ready"
+}
+
 # True when this boot already pointed the menu at the installed kernel.
 kernel_boot_ready_for_this_boot() {
-    local root kver id file ready_kver ready_id
+    local root kver id file ready_kver ready_id session
     root="$(kernel_boot_root)"
     kver="$(kernel_boot_kver "$root" 2>/dev/null || true)"
     [ -n "$kver" ] || return 1
@@ -600,7 +618,8 @@ kernel_boot_ready_for_this_boot() {
     [ -n "$id" ] || return 1
     local files=("$root/var/lib/modern/boot-ready")
     if [ -z "$root" ]; then
-        files+=("${XDG_STATE_HOME:-$HOME/.local/state}/modern/boot-ready")
+        session="$(kernel_boot_session_ready 2>/dev/null || true)"
+        [ -n "$session" ] && files+=("$session")
     fi
     for file in "${files[@]}"; do
         [ -r "$file" ] || continue

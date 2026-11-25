@@ -303,6 +303,29 @@ else
 fi
 unset KERNEL_BOOT_BOOT_ID
 rm -f "$TMP/var/lib/modern/boot-ready"
+# Settings starts the update, then the root step has no HOME.
+if (
+    unset HOME XDG_STATE_HOME PKEXEC_UID SUDO_UID
+    KERNEL_BOOT_ROOT=""
+    kernel_boot_ready_for_this_boot || true
+); then
+    ok "a root update with no HOME still checks the boot stamp"
+else
+    err "a root update with no HOME aborted on the boot stamp"
+fi
+if [ "$(id -u)" -ne 0 ]; then
+    session_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
+    got="$(
+        unset HOME XDG_STATE_HOME
+        PKEXEC_UID="$(id -u)"
+        kernel_boot_session_ready
+    )"
+    if [ "$got" = "$session_home/.local/state/modern/boot-ready" ]; then
+        ok "the session stamp follows the account that started the update"
+    else
+        err "session stamp was $got"
+    fi
+fi
 chmod u+r "$TMP/boot/loader/loader.conf"
 unset KERNEL_BOOT_RUNNING
 
