@@ -7,16 +7,9 @@ set -euo pipefail
 SHARED="${MODERN_SESSION_DIR:-/var/lib/modern/session}"
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
 TRANSLATIONS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/translations"
-command -v jq >/dev/null 2>&1 || exit 0
-
-# Vivaldi follows the same language. A missing greeter directory must
-# not skip it: the browser is the thing Settings → Language changes.
-# shellcheck source=lib/vivaldi-prefs.sh
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/vivaldi-prefs.sh"
-vivaldi_apply_language || true
-
 [ -d "$SHARED" ] || exit 0
 [ -f "$CFG" ] || exit 0
+command -v jq >/dev/null 2>&1 || exit 0
 
 lang="$(jq -r '.language.ui // "en"' "$CFG")"
 lang="${lang//[!a-z]/}"
