@@ -10,5 +10,7 @@ _collect_apps() {
         _copy apps.txt "$state/$app.log.1" 300
         _copy apps.txt "$state/$app.log" 1000
     done
+    # Launcher and theme repair. The settings file itself stays out.
+    _copy apps.txt "$state/vivaldi.log" 200
     return 0
 }

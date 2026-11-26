@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=ModernOS Wallpapers
+Name[de]=ModernOS Hintergründe
+GenericName=Wallpaper picker
+GenericName[de]=Hintergrund wählen
+Comment=Choose the desktop picture. Colors follow that picture.
+Comment[de]=Wähle das Bild für den Desktop. Die Farben folgen diesem Bild.
+Keywords=wallpaper;background;picture;color;Hintergrund;Bild;Farben;
+Keywords[de]=wallpaper;background;picture;color;Hintergrund;Bild;Farben;
+Exec=modern-wallpaper
+Icon=modern-wallpaper
+Terminal=false
+Categories=Utility;Settings;
+StartupNotify=false
+StartupWMClass=modern.wallpaper

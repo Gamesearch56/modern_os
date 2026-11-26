@@ -232,6 +232,7 @@
   },
   "wallpaper": {
     "title": "Hintergründe",
+    "launcherName": "Hintergründe",
     "empty": "Keine Hintergründe gefunden",
     "add": "Hinzufügen",
     "browse": "Hintergründe durchsuchen",
@@ -303,6 +304,7 @@
   },
   "cheatsheet": {
     "title": "Tastenkombinationen",
+    "launcherName": "Tastatur",
     "search": "Kombinationen durchsuchen...",
     "noResults": "Keine passenden Tastenkombinationen",
     "mouseHint": "MB4 ist die hintere Seitentaste der Maus, MB5 die vordere. Die Steuerung mit den Seitentasten muss in den Systemeinstellungen unter Tastatur → Maussteuerung aktiviert sein.",
@@ -1121,6 +1123,7 @@
       "search": "Nach Updates suchen",
       "checkFailed": "Updates konnten nicht geprüft werden",
       "success": "Systemupdate abgeschlossen",
+      "finished": "Fertig",
       "failed": "Systemupdate fehlgeschlagen",
       "rolledBack": "Systemupdate rückgängig gemacht",
       "rolledBackBody": "Das Update wurde mittendrin abgebrochen, deshalb wurde das System auf den Stand davor zurückgesetzt. Starte neu, um abzuschließen.",
@@ -1520,6 +1523,7 @@
   },
   "bugReport": {
     "title": "Problem melden",
+    "launcherName": "Meldung",
     "stepDescribe": "Was ist passiert?",
     "stepShots": "Bildschirmfotos",
     "stepReview": "Was gesendet wird",

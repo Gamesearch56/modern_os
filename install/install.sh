@@ -331,6 +331,16 @@ fi
 # installer mid-stow. reload-ui.sh applies the new tree once, after.
 if [ "${MODERN_LIVE_UPDATE:-}" = 1 ]; then
     log_info "live session update — leaving theme and user services alone"
+    # The open browser rewrites its settings on exit. A language list
+    # stored as one string makes it refuse the file, so the repair runs
+    # after that write. Colors and the wallpaper image stay on the
+    # theme path.
+    if [ "$DRY_RUN" -eq 0 ]; then
+        env HOME="$TARGET" \
+            XDG_CONFIG_HOME="$TARGET/.config" \
+            XDG_STATE_HOME="$TARGET/.local/state" \
+            bash "$REPO_ROOT/scripts/lib/vivaldi-prefs.sh" || true
+    fi
 else
 if [ -S "${XDG_RUNTIME_DIR:-}/bus" ]; then
     run systemctl --user daemon-reload 2>/dev/null || true

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Download optional programs the installer page ticked.
+"""Download optional Programs.
 
 Runs on the live system after install.sh, using the target's pacman
 database and this machine's network. Nothing in this list is stored

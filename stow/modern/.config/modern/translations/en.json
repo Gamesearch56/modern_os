@@ -232,6 +232,7 @@
   },
   "wallpaper": {
     "title": "Wallpapers",
+    "launcherName": "Wallpapers",
     "empty": "No wallpapers found",
     "add": "Add",
     "browse": "Browse wallpapers",
@@ -303,6 +304,7 @@
   },
   "cheatsheet": {
     "title": "Keyboard shortcuts",
+    "launcherName": "Keyboard",
     "search": "Search shortcuts...",
     "noResults": "No matching shortcuts",
     "mouseHint": "MB4 is the rear mouse side button, MB5 the front one. The side-button controls have to be turned on in System Settings under Keyboard → Mouse control.",
@@ -1121,6 +1123,7 @@
       "search": "Search for Updates",
       "checkFailed": "Could not check for updates",
       "success": "System update finished",
+      "finished": "Finished",
       "failed": "System update failed",
       "rolledBack": "System update undone",
       "rolledBackBody": "The update stopped partway, so the system was restored to how it was before. Restart to finish.",
@@ -1520,6 +1523,7 @@
   },
   "bugReport": {
     "title": "Report a problem",
+    "launcherName": "Report",
     "stepDescribe": "What happened?",
     "stepShots": "Screenshots",
     "stepReview": "What gets sent",

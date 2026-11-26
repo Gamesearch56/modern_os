@@ -91,10 +91,8 @@ drop_old_keystore() {
 
 profile="$(profile_directory)"
 drop_old_keystore "$profile"
-# A live browser rewrites this file on exit. Repair only before it starts.
-if ! vivaldi_is_running; then
-    vivaldi_repair_selected_languages
-fi
+# A live browser rewrites this file on exit. Repair before the next start.
+vivaldi_repair_after_exit
 
 args=(
     --profile-directory="$profile"

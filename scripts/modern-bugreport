@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Open Report a problem. The shell window when it answers; otherwise a
+# quick report, the same path as SUPER+#.
+set -euo pipefail
+
+dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$dir/modern" report

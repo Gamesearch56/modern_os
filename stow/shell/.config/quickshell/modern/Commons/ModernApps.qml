@@ -15,7 +15,10 @@ Singleton {
         "modern.editor": { nameKey: "editor.launcherName", icon: "modern-editor" },
         "modern.imageviewer": { nameKey: "viewer.launcherName", icon: "modern-imageviewer" },
         "modern.mediaplayer": { nameKey: "player.launcherName", icon: "modern-mediaplayer" },
-        "modern.manual": { nameKey: "manual.launcherName", icon: "modern-manual" }
+        "modern.manual": { nameKey: "manual.launcherName", icon: "modern-manual" },
+        "modern.wallpaper": { nameKey: "wallpaper.launcherName", icon: "modern-wallpaper" },
+        "modern.cheatsheet": { nameKey: "cheatsheet.launcherName", icon: "modern-cheatsheet" },
+        "modern.bugreport": { nameKey: "bugReport.launcherName", icon: "modern-bugreport" }
     })
 
     function _key(raw: string): string {

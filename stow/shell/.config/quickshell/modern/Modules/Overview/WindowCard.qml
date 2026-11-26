@@ -24,6 +24,12 @@ Item {
         // The compositor title stays modern.files so window rules still match.
         if (root._rawTitle === "modern.files")
             return I18n.t("files.launcherName");
+        if (root._rawTitle === "modern.wallpaper")
+            return I18n.t("wallpaper.launcherName");
+        if (root._rawTitle === "modern.cheatsheet")
+            return I18n.t("cheatsheet.launcherName");
+        if (root._rawTitle === "modern.bugreport")
+            return I18n.t("bugReport.launcherName");
         const own = ModernApps.shortName(root._class);
         if (own.length)
             return own;
