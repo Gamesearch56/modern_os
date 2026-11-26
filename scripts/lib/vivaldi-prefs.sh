@@ -101,8 +101,35 @@ merge_vivaldi_prefs() {
         )
     ' "$state" >"$state.tmp" && mv "$state.tmp" "$state"
     chmod 600 "$state" 2>/dev/null || true
+    # A theme write must not leave the broken language list in place.
+    vivaldi_repair_selected_languages
     # Chromium drops a pre-seeded profile when this file is missing.
     # theme-apply may already have written Preferences, so this is not
     # limited to a brand-new file.
     : >"$cfg/First Run" || true
+}
+
+# An earlier release stored intl.selected_languages as one string.
+# Chromium registers that preference as a list, so it refuses the
+# whole file: settings cannot be read and nothing is saved. Split the
+# tags that are already there. Do not pick a language.
+vivaldi_repair_selected_languages() {
+    local cfg prefs tmp
+    cfg="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi"
+    [ -d "$cfg" ] || return 0
+    shopt -s nullglob
+    for prefs in "$cfg"/*/Preferences; do
+        tmp="$prefs.tmp.$$"
+        if ! jq -e '.intl.selected_languages | type == "string"' "$prefs" >/dev/null 2>&1; then
+            continue
+        fi
+        if jq '.intl.selected_languages |= (split(",") | map(select(length > 0)))' \
+            "$prefs" >"$tmp"; then
+            mv "$tmp" "$prefs"
+            chmod 600 "$prefs" 2>/dev/null || true
+        else
+            rm -f "$tmp"
+        fi
+    done
+    shopt -u nullglob
 }

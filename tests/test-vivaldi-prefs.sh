@@ -101,10 +101,27 @@ fi
 
 if ! grep -Fq -- '--lang=' "$ROOT/scripts/vivaldi" \
     && ! grep -Fq 'vivaldi_apply_language' "$ROOT/scripts/session-chrome-sync.sh" \
-    && ! grep -Fq 'intl.selected_languages' "$ROOT/scripts/lib/vivaldi-prefs.sh"; then
+    && ! grep -Fq 'language.ui' "$ROOT/scripts/lib/vivaldi-prefs.sh"; then
     ok "the desktop language is not written into Vivaldi"
 else
     err "Vivaldi must keep its own language"
+fi
+
+broken="$HOME/.config/vivaldi/Profile 1/Preferences"
+mkdir -p "$(dirname "$broken")"
+printf '%s\n' '{"intl":{"selected_languages":"de-DE,de,en-US,en"},"homepage":"kept"}' >"$broken"
+vivaldi_repair_selected_languages
+vivaldi_repair_selected_languages
+if [ "$(jq -c '.intl.selected_languages' "$broken")" = '["de-DE","de","en-US","en"]' ] \
+    && [ "$(jq -r '.homepage' "$broken")" = kept ]; then
+    ok "a string language list is split so the settings file can be read"
+else
+    err "the string language list was not repaired"
+fi
+if grep -Fq 'vivaldi_repair_selected_languages' "$ROOT/scripts/vivaldi"; then
+    ok "the launcher repairs the language list before Vivaldi starts"
+else
+    err "the launcher must repair the language list before Vivaldi starts"
 fi
 
 [ "$FAIL" -eq 0 ]

@@ -10,6 +10,9 @@
 # stay. Saved passwords and site logins sealed with the keyring do not.
 set -euo pipefail
 
+# shellcheck source=lib/vivaldi-prefs.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/vivaldi-prefs.sh"
+
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
 VIVALDI_ROOT="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi"
 VIVALDI_STATE="$VIVALDI_ROOT/Local State"
@@ -88,6 +91,10 @@ drop_old_keystore() {
 
 profile="$(profile_directory)"
 drop_old_keystore "$profile"
+# A live browser rewrites this file on exit. Repair only before it starts.
+if ! vivaldi_is_running; then
+    vivaldi_repair_selected_languages
+fi
 
 args=(
     --profile-directory="$profile"
