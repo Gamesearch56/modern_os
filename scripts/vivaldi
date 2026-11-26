@@ -10,9 +10,6 @@
 # stay. Saved passwords and site logins sealed with the keyring do not.
 set -euo pipefail
 
-# shellcheck source=lib/vivaldi-prefs.sh
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/vivaldi-prefs.sh"
-
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/modern/config.json"
 VIVALDI_ROOT="${XDG_CONFIG_HOME:-$HOME/.config}/vivaldi"
 VIVALDI_STATE="$VIVALDI_ROOT/Local State"
@@ -92,17 +89,11 @@ drop_old_keystore() {
 profile="$(profile_directory)"
 drop_old_keystore "$profile"
 
-locale=""
-IFS= read -r locale < <(vivaldi_language_fields) || true
-
 args=(
     --profile-directory="$profile"
     --password-store=basic
     --disable-features=DbusSecretPortal
 )
-if [ -n "$locale" ]; then
-    args+=(--lang="$locale")
-fi
 if [ "$on" = "true" ]; then
     args+=(--in-process-gpu)
 fi
