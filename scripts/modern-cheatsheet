@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Open the keyboard shortcut list in the running shell. SUPER+K toggles
+# it; the application opens it.
+set -euo pipefail
+
+exec qs -c modern ipc call cheatsheet show

@@ -215,8 +215,7 @@ Singleton {
         }
         const marker = meter.feed(t);
         root.progress = meter.value;
-        if (marker)
-            return;
+        if (marker) { if (meter.stage === "finish") root.step = I18n.t("settings.update.finished"); return; }
         root.log += t + "\n";
         // The clock and INFO/OK stay in the log. The title is the message.
         const label = t.replace(/^\[[0-9:.T +-]+\]\s*/, "").replace(/^(?:INFO|OK|WARN|ERROR)\s+/, "").trim();

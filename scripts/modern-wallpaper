@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Open the wallpaper picker in the running shell. SUPER+W toggles it;
+# the application opens it.
+set -euo pipefail
+
+exec qs -c modern ipc call wallpaper pick

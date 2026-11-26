@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=ModernOS Report
+Name[de]=ModernOS Meldung
+GenericName=Report a problem
+GenericName[de]=Problem melden
+Comment=Describe a problem on this desktop and send a report.
+Comment[de]=Beschreibe ein Problem auf diesem Desktop und sende eine Meldung.
+Keywords=report;problem;bug;help;Problem;Meldung;melden;
+Keywords[de]=report;problem;bug;help;Problem;Meldung;melden;
+Exec=modern-bugreport
+Icon=modern-bugreport
+Terminal=false
+Categories=Utility;System;
+StartupNotify=false
+StartupWMClass=modern.bugreport

@@ -9,7 +9,7 @@ QtObject {
     id: root
 
     property real value: -1
-    property string _stage: ""
+    property string stage: ""
     property int _pkgs: 0
     property int _lines: 0
 
@@ -25,7 +25,7 @@ QtObject {
 
     function reset() {
         root.value = -1;
-        root._stage = "";
+        root.stage = "";
         root._pkgs = 0;
         root._lines = 0;
     }
@@ -42,27 +42,27 @@ QtObject {
         root._lines += 1;
         const phase = line.match(/Phase (\d+)\/(\d+)/);
         const hook = line.match(/^\((\d+)\/(\d+)\)/);
-        if (root._stage === "desktop" && phase)
+        if (root.stage === "desktop" && phase)
             root._at(Number(phase[1]) / Number(phase[2]));
-        else if ((root._stage === "pacman" || root._stage === "hooks") && hook) {
+        else if ((root.stage === "pacman" || root.stage === "hooks") && hook) {
             root._enter("hooks");
             root._at(Number(hook[1]) / Number(hook[2]));
-        } else if (root._stage === "pacman")
+        } else if (root.stage === "pacman")
             // Download, five checks, then one line per package.
             root._at(Math.min(1, root._lines / (2 * Math.max(1, root._pkgs) + 8)));
         return false;
     }
 
     function _enter(stage: string) {
-        if (!root._slices[stage] || stage === root._stage)
+        if (!root._slices[stage] || stage === root.stage)
             return;
-        root._stage = stage;
+        root.stage = stage;
         root._lines = 0;
         root._at(0);
     }
 
     function _at(fraction: real) {
-        const s = root._slices[root._stage];
+        const s = root._slices[root.stage];
         if (!s)
             return;
         root.value = Math.max(root.value, s[0] + (s[1] - s[0]) * fraction);

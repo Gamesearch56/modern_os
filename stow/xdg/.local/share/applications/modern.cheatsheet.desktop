@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=ModernOS Keyboard
+Name[de]=ModernOS Tastatur
+GenericName=Keyboard shortcuts
+GenericName[de]=Tastenkombinationen
+Comment=Every keyboard shortcut on this desktop.
+Comment[de]=Alle Tastenkombinationen auf diesem Desktop.
+Keywords=keyboard;shortcuts;keys;cheatsheet;Tastatur;Tastenkombinationen;
+Keywords[de]=keyboard;shortcuts;keys;cheatsheet;Tastatur;Tastenkombinationen;
+Exec=modern-cheatsheet
+Icon=modern-cheatsheet
+Terminal=false
+Categories=Utility;Documentation;
+StartupNotify=false
+StartupWMClass=modern.cheatsheet
