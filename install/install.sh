@@ -360,19 +360,12 @@ pictures="$(
     source "$REPO_ROOT/scripts/lib/paths.sh"
     xdg_wallpapers_dir
 )"
-if [ -d "$shipped_wp_dir" ]; then
-    run mkdir -p "$pictures"
-    for f in "$shipped_wp_dir"/*; do
-        [ -f "$f" ] || continue
-        case "${f,,}" in
-            *.jpg|*.jpeg|*.png|*.webp) ;;
-            *) continue ;;
-        esac
-        dest="$pictures/$(basename "$f")"
-        if [ ! -e "$dest" ]; then
-            run cp "$f" "$dest"
-        fi
-    done
+if [ -d "$shipped_wp_dir" ] && [ -x "$REPO_ROOT/scripts/wallpaper-seed.sh" ]; then
+    run env HOME="$TARGET" \
+        XDG_CACHE_HOME="$TARGET/.cache" \
+        XDG_CONFIG_HOME="$TARGET/.config" \
+        "$REPO_ROOT/scripts/wallpaper-seed.sh" "$shipped_wp_dir" "$pictures" \
+        || log_warn "wallpaper library seed skipped — the picker uses the shipped copies"
 fi
 # The picker lists the library copy and hides the shipped symlink of
 # the same name. Remember the library file so the tile is selected

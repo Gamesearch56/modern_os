@@ -13,7 +13,7 @@ wallpaper_thumb_key() {
     [ -n "$src" ] || return 1
     st="$(stat -c '%Y %s' "$src" 2>/dev/null || true)"
     [ -n "$st" ] || return 1
-    printf '%s %s v1' "$src" "$st" | sha256sum | awk '{print $1}'
+    printf '%s %s v2' "$src" "$st" | sha256sum | awk '{print $1}'
 }
 
 wallpaper_thumb_path() {

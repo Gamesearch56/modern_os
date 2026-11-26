@@ -66,6 +66,7 @@ ColumnLayout {
                     : "";
             }
             selected: Wallpaper.currentPath.length > 0
+            onImageFailed: Wallpaper.tileFailed(Wallpaper.currentPath)
         }
 
         GridLayout {
@@ -89,6 +90,7 @@ ColumnLayout {
                         return path.length > 0 ? Wallpaper.tileSource(path) : "";
                     }
                     onClicked: root._pick(index)
+                    onImageFailed: Wallpaper.tileFailed(path)
                     tabFocus: true
                 }
             }

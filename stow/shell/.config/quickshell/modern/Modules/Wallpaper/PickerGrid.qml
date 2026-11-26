@@ -142,6 +142,7 @@ Item {
                 onHovered: root._hoverAt(cell.index, false)
                 onPointerMoved: root._hoverAt(cell.index, true)
                 onRemoveClicked: root.removeRequested(cell.path)
+                onImageFailed: Wallpaper.tileFailed(cell.path)
             }
         }
     }

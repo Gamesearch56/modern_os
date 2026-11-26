@@ -3,7 +3,6 @@
 // gallery) — the wallpaper picker keeps it off so a parked cursor
 // cannot draw a second ring next to the arrow-key selection.
 import QtQuick
-import QtQuick.Window
 import Quickshell.Widgets
 import "../Commons"
 
@@ -24,12 +23,30 @@ Item {
     readonly property bool _ring: root.current || root.activeFocus || (root.hoverRing && !root.selected && ma.containsMouse)
     readonly property real _radius: Tokens.radius.small
     readonly property bool _removeHot: removeMa.containsMouse || removeMa.pressed
-    readonly property int _px: {
-        const dpr = root.Screen.devicePixelRatio || 1;
-        const w = Math.max(0, Math.round(root.width * dpr));
-        const h = Math.max(0, Math.round(root.height * dpr));
-        return Math.max(w, h);
+    // The grid creates cells before the window has a width. Loading then
+    // sticks on the tile color, so the picture waits until the cell is real.
+    readonly property bool _laidOut: root.width >= Tokens.spacing.xl && root.height >= Tokens.spacing.xl
+    property int _attempt: 0
+    property url _shown: ""
+
+    signal imageFailed()
+
+    function _arm() {
+        if (!root._laidOut || !root.source.toString().length) {
+            root._shown = "";
+            return;
+        }
+        if (root._shown.toString() === root.source.toString())
+            return;
+        root._shown = root.source;
     }
+
+    onSourceChanged: {
+        root._attempt = 0;
+        root._arm();
+    }
+    onWidthChanged: root._arm()
+    onHeightChanged: root._arm()
 
     scale: (!root.dimRest || root.selected || root._ring) ? 1 : Motion.overlayScale(false)
     opacity: (!root.dimRest || root.selected || root._ring) ? 1 : (1 - Tokens.interaction.hover)
@@ -75,15 +92,28 @@ Item {
         color: Colors.color.surfaceContainerHighest
 
         Image {
+            id: pic
             anchors.fill: parent
-            visible: root._px > 0
-            source: (root._px > 0 && root.source.toString().length) ? root.source : ""
-            sourceSize.width: root._px
-            sourceSize.height: root._px
+            // One edge only. A square request stretches the bitmap before
+            // the crop can keep the picture's shape.
+            sourceSize.width: Tokens.spacing.xxl * 16
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
-            cache: true
+            cache: root._attempt === 0
             smooth: true
+            source: root._shown
+            onStatusChanged: {
+                if (status !== Image.Error || !root._shown.toString().length)
+                    return;
+                if (root._attempt >= 1) {
+                    root.imageFailed();
+                    return;
+                }
+                root._attempt = 1;
+                const again = root._shown;
+                root._shown = "";
+                Qt.callLater(() => { root._shown = again; });
+            }
         }
     }
 

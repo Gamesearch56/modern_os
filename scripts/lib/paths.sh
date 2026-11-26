@@ -119,6 +119,21 @@ xdg_wallpapers_dir() {
     printf '%s/Wallpapers\n' "$(xdg_user_dir PICTURES Pictures)"
 }
 
+# The picker paints a JPEG, PNG or WebP. Anything else with a picture
+# name (an interrupted download, a copied link) must not take the slot
+# of the shipped file that has the same name.
+xdg_wallpaper_bytes() {
+    local f="$1" sig
+    [ -f "$f" ] || return 1
+    sig="$(od -An -N 12 -t x1 -- "$f" 2>/dev/null | tr -d ' \n' || true)"
+    case "$sig" in
+        ffd8ff*) return 0 ;;
+        89504e470d0a1a0a*) return 0 ;;
+        52494646????????57454250) return 0 ;;
+    esac
+    return 1
+}
+
 xdg_wallpaper_library_dirs() {
     local lib pic
     lib="$(xdg_wallpapers_dir)"
