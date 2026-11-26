@@ -61,30 +61,31 @@ role_desktop() {
 mime="$(xdg-mime query filetype "$path" 2>/dev/null || true)"
 desktop=""
 role=""
-if [[ -n "$mime" ]]; then
-    desktop="$(xdg-mime query default "$mime" 2>/dev/null || true)"
-fi
-if [[ -z "$desktop" ]]; then
-    case "$mime" in
-        image/*) role="imageViewer" ;;
-        video/*|audio/*) role="videoPlayer" ;;
-        text/*|application/json|application/xml|application/javascript|application/x-shellscript|inode/x-empty)
-            role="textEditor"
-            ;;
+# Settings → Applications owns these kinds. A browser or an old player
+# often sits first in mimeapps.list; that answer must not beat the
+# viewer the user picked (an empty role is the shipped app).
+case "$mime" in
+    image/*) role="imageViewer" ;;
+    video/*|audio/*) role="videoPlayer" ;;
+    text/html|application/xhtml+xml) ;;
+    text/*|application/json|application/xml|application/javascript|application/x-shellscript|inode/x-empty)
+        role="textEditor"
+        ;;
+esac
+if [[ -z "$role" ]]; then
+    case "${path##*.}" in
+        png|jpg|jpeg|gif|webp|bmp|svg|avif|jxl|tif|tiff|heif|heic|qoi) role="imageViewer" ;;
+        mp4|mkv|webm|avi|mov|m4v|mp3|flac|ogg|opus|wav) role="videoPlayer" ;;
+        txt|md|json|xml|sh|py|lua|qml|conf|ini|log|csv) role="textEditor" ;;
     esac
-    if [[ -z "$role" ]]; then
-        case "${path##*.}" in
-            png|jpg|jpeg|gif|webp|bmp|svg|avif|jxl|tif|tiff|heif|qoi) role="imageViewer" ;;
-            mp4|mkv|webm|avi|mov|mp3|flac|ogg|opus) role="videoPlayer" ;;
-            txt|md|json|xml|sh|py|lua|qml|conf|ini|log|csv) role="textEditor" ;;
-        esac
+fi
+if [[ -n "$role" ]]; then
+    desktop="$(role_desktop "$role" || true)"
+    if [[ -z "$desktop" ]]; then
+        desktop="$(default_app_desktop "$role" || true)"
     fi
-    if [[ -n "$role" ]]; then
-        desktop="$(role_desktop "$role" || true)"
-        if [[ -z "$desktop" ]]; then
-            desktop="$(default_app_desktop "$role" || true)"
-        fi
-    fi
+elif [[ -n "$mime" ]]; then
+    desktop="$(xdg-mime query default "$mime" 2>/dev/null || true)"
 fi
 desktop="${desktop%.desktop}"
 

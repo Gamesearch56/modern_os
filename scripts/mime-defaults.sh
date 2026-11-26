@@ -125,6 +125,19 @@ add_role() {
     done <<< "$types"
 }
 
+# A browser claims image/jpeg and image/png for itself, and a retired
+# player keeps video/mkv and audio/mp3. The desktop MimeType= line does
+# not list every alias, so the chosen viewer would never see those files.
+IMAGE_TYPES="image/jpeg image/jpg image/pjpeg image/png image/gif image/webp
+image/bmp image/avif image/heif image/heic image/jxl image/qoi image/svg+xml
+image/tiff image/apng image/x-png image/x-bmp image/x-ms-bmp
+image/vnd.microsoft.icon"
+VIDEO_TYPES="video/mp4 video/webm video/x-matroska video/mkv video/avi
+video/x-msvideo video/quicktime video/ogg video/mpeg video/mp2t video/3gpp
+video/x-flv video/x-m4v video/x-ms-wmv video/divx video/msvideo video/x-avi"
+AUDIO_TYPES="audio/mpeg audio/mp3 audio/flac audio/ogg audio/opus audio/wav
+audio/x-wav audio/aac audio/mp4 audio/x-m4a audio/webm audio/mpeg3 audio/x-mp3"
+
 # Editors list text/plain only, so Nautilus would hand scripts, configs
 # and source files to whatever claims them first (often a browser).
 TEXT_TYPES="text/plain text/markdown text/x-log text/csv text/css text/x-readme
@@ -142,6 +155,18 @@ add_text_role() {
         return 0
     fi
     for t in $TEXT_TYPES; do
+        pairs="${pairs}${t}=${id}"$'\n'
+    done
+}
+
+pin_types() {
+    local id="$1" list="$2" t
+    [ -n "$id" ] || return 0
+    if ! desktop_file "$id" >/dev/null; then
+        echo "mime-defaults: no desktop file for $id" >&2
+        return 0
+    fi
+    for t in $list; do
         pairs="${pairs}${t}=${id}"$'\n'
     done
 }
@@ -171,7 +196,20 @@ add_browser_role() {
     fi
     pairs="${pairs}x-scheme-handler/http=${id}"$'\n'
     pairs="${pairs}x-scheme-handler/https=${id}"$'\n'
-    add_role "$id"
+    # The browser desktop also lists pictures and video. Those stay with
+    # the viewer and player chosen above.
+    local file types t
+    if ! file="$(desktop_file "$id")"; then
+        return 0
+    fi
+    types="$(mime_types "$file")"
+    while IFS= read -r t; do
+        [ -n "$t" ] || continue
+        case $'\n'"${pairs}" in
+            *$'\n'"${t}="*) continue ;;
+        esac
+        pairs="${pairs}${t}=${id}"$'\n'
+    done <<< "$types"
 }
 
 # mailto: is pinned even if the mail .desktop omits MimeType=.
@@ -186,7 +224,10 @@ add_mail_role() {
 }
 
 add_role "$VIDEO_ID"
+pin_types "$VIDEO_ID" "$VIDEO_TYPES"
+pin_types "$VIDEO_ID" "$AUDIO_TYPES"
 add_role "$IMAGE_ID"
+pin_types "$IMAGE_ID" "$IMAGE_TYPES"
 add_text_role "$TEXT_ID"
 add_folder_role "$FILES_ID"
 add_mail_role "$MAIL_ID"
