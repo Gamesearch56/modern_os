@@ -197,9 +197,12 @@ vivaldi_apply_language_now() {
     shopt -s nullglob
     for prefs in "$cfg"/*/Preferences; do
         tmp="$prefs.tmp.$$"
+        # selected_languages is a list. A comma-separated string is the
+        # accept_languages type, and Vivaldi then refuses the whole file:
+        # settings cannot be read and nothing the user changes is saved.
         if jq --arg accept "$accept" --arg spell "$spell" '
             .intl.accept_languages = $accept
-            | .intl.selected_languages = $accept
+            | .intl.selected_languages = ($accept | split(","))
             | .spellcheck.dictionaries = [$spell]
         ' "$prefs" >"$tmp"; then
             mv "$tmp" "$prefs"
