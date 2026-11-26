@@ -92,6 +92,25 @@ if code != 0 or "Here is the answer." not in blob or "test-key-not-real" in blob
     raise SystemExit("loop code=%s out=%s" % (code, blob))
 if not any(obj.get("done") is True for obj in out):
     raise SystemExit("missing done")
+if not any(obj.get("status") == "search" for obj in out):
+    raise SystemExit("search did not tell the shell it was searching")
+if ollama_chat._kind('{"error":"cuda out of memory"}', 500) != "memory":
+    raise SystemExit("memory")
+if ollama_chat._kind("context length exceeded", 400) != "context":
+    raise SystemExit("context")
+if ollama_chat._kind("no such model", 404) != "model":
+    raise SystemExit("model")
+out.clear()
+ollama_chat._emit = lambda obj: out.append(obj)
+code = ollama_chat.run(
+    {"messages": [{"role": "user", "content": "hi"}]},
+    "",
+    lambda body: iter([{"error": "offline"}]),
+    lambda query: "",
+)
+ollama_chat._emit = real_emit
+if code != 1 or not any(obj.get("error") == "offline" for obj in out):
+    raise SystemExit("offline was swallowed: %s %s" % (code, out))
 PY
 then
     ok "a search result reaches the model and the key stays out of it"
@@ -102,6 +121,12 @@ fi
 if grep -Fq 'ollama-chat.sh' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiChat.qml" \
     && grep -Fq 'web_search' "$ROOT/stow/modern/.config/modern/translations/en.json" \
     && grep -Fq 'web_search' "$ROOT/stow/modern/.config/modern/translations/de.json" \
+    && grep -Fq 'ai.errorOffline' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiChat.qml" \
+    && grep -Fq '"errorOffline"' "$ROOT/stow/modern/.config/modern/translations/en.json" \
+    && grep -Fq '"errorOffline"' "$ROOT/stow/modern/.config/modern/translations/de.json" \
+    && grep -Fq 'ai.searching' "$ROOT/stow/shell/.config/quickshell/modern/Widgets/MChatBubble.qml" \
+    && grep -Fq '_pinEnd' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/ai/Thread.qml" \
+    && ! grep -Fq 'positionViewAtEnd' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Bar/widgets/ai/Thread.qml" \
     && grep -Fq 'BraveKey {' "$ROOT/stow/shell/.config/quickshell/modern/Modules/Settings/sections/ai/Section.qml" \
     && grep -Fq 'Secrets.value("brave", "apiKey")' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiSearch.qml" \
     && grep -Fq 'Secrets.put("brave"' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiSearch.qml" \

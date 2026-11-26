@@ -52,6 +52,8 @@ THEMES_DIR="$MODERN_DIR/themes"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/modern"
 # shellcheck source=lib/theme-seed.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/theme-seed.sh"
+# shellcheck source=lib/ensure-dir.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/ensure-dir.sh"
 WALLPAPER_STATE="$STATE_DIR/current-wallpaper"
 LAST_APPLIED_STATE="$STATE_DIR/theme-last-applied.json"
 MATUGEN_CONFIG="$HOME/.config/matugen/config.toml"
@@ -64,11 +66,7 @@ die()  { printf '\033[31m[theme-apply] ERROR\033[0m %s\n' "$*" >&2; exit 1; }
 # package's tree was missing. matugen then prints "folder doesnt exist,
 # trying to create" and dies with EEXIST — wallpaper apply toasts that.
 ensure_writable_dir() {
-    local dir="$1"
-    if [ -L "$dir" ] && [ ! -e "$dir" ]; then
-        rm -f "$dir"
-    fi
-    mkdir -p "$dir"
+    ensure_real_dir "$1"
 }
 
 # Variant-mode slugs Settings creates on the fly (tonal-spot-light, …)
@@ -170,7 +168,8 @@ overlay_folder_icons() {
     local inherit="$1"
     local dest="${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders"
     local src="$dest/scalable/places/folder.svg"
-    mkdir -p "$dest/scalable/places" "$dest/64x64/places"
+    ensure_real_dir "$dest/scalable/places"
+    ensure_real_dir "$dest/64x64/places"
     [ -f "$src" ] || return 0
     cat > "$dest/index.theme" <<EOF
 [Icon Theme]
@@ -660,7 +659,8 @@ ensure_writable_dir "$cfg/kitty"
 ensure_writable_dir "$cfg/vivaldi/custom_css"
 
 log "running matugen (${MATUGEN_ARGS[*]})"
-mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places"
+ensure_writable_dir "${XDG_DATA_HOME:-$HOME/.local/share}/icons/modern-folders/scalable/places" \
+    || warn "icon theme directory is not a directory; leaving it untouched"
 matugen "${MATUGEN_ARGS[@]}"
 if [ "$EXTRACTED_IMAGE" -eq 1 ] && [ -n "$WALLPAPER" ] && [ -f "$MODERN_DIR/tokens.json" ]; then
     theme_store_seed "$WALLPAPER" "$(jq -r '.sourceColor // empty' "$MODERN_DIR/tokens.json")" || true

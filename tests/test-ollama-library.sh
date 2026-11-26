@@ -159,6 +159,9 @@ if grep -Fq 'ollama-library.sh' "$SVC" \
     && grep -Fq 'settings.ollama.installModel' "$GROUP" \
     && grep -Fq 'settings.ollama.deleteModel' "$GROUP" \
     && grep -Fq 'settings.ollama.inUse' "$GROUP" \
+    && grep -Fq 'visible: modelData.inUse' "$GROUP" \
+    && grep -Fq 'visible: !modelData.inUse' "$GROUP" \
+    && grep -Fq 'anchors.fill: parent' "$QML" \
     && grep -Fq 'settings.ollama.hasSize' "$GROUP" \
     && grep -Fq 'Colors.fitGood' "$GROUP" \
     && grep -Fq 'n === cur' "$ROOT/stow/shell/.config/quickshell/modern/Services/AiLibrary.qml" \

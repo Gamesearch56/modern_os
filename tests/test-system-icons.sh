@@ -66,4 +66,36 @@ else
     err "system-icons.sh wrote into install/icons/apps"
 fi
 
+rm -rf "$XDG_DATA_HOME/icons"
+ln -s "$tmp/missing-dotfiles/icons" "$XDG_DATA_HOME/icons"
+"$ROOT/scripts/system-icons.sh"
+if [ -d "$icons" ] && [ ! -L "$XDG_DATA_HOME/icons" ] && [ -f "$icons/${names[0]}" ] \
+    && [ -f "$icons/modern-settings-symbolic.svg" ] && [ ! -L "$icons/modern-settings-symbolic.svg" ]; then
+    ok "a dangling icons symlink becomes a real theme"
+else
+    err "dangling icons symlink was not replaced with the app icons"
+fi
+
+rm -rf "$XDG_DATA_HOME/icons"
+printf 'keep' >"$XDG_DATA_HOME/icons"
+if "$ROOT/scripts/system-icons.sh"; then
+    err "a real icons file was treated as a directory"
+fi
+if [ "$(cat "$XDG_DATA_HOME/icons")" = keep ]; then
+    ok "a real icons file is left untouched"
+else
+    err "a real icons file was removed"
+fi
+
+rm -rf "$XDG_DATA_HOME/icons"
+mkdir -p "$icons"
+printf 'stale' >"$(dirname "$(dirname "$icons")")/icon-theme.cache"
+"$ROOT/scripts/system-icons.sh"
+if [ -f "$icons/battlenet.svg" ] && [ ! -L "$icons/battlenet.svg" ] \
+    && [ ! -e "$(dirname "$(dirname "$icons")")/icon-theme.cache" ]; then
+    ok "the battle.net icon is restored and the theme cache is not kept"
+else
+    err "battle.net icon or theme cache"
+fi
+
 exit "$FAIL"

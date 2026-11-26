@@ -95,6 +95,42 @@ else
     err "lutris png=$lutris_png cover=$witcher"
 fi
 
+mkdir -p "$TMP/library/4242/sub" "$TMP/library/1636440" \
+    "$TMP/web/Default/Web Applications/Manifest Resources/abc/Icons"
+printf 'nope' >"$TMP/library/1636440/zz.jpg"
+printf 'icon' >"$TMP/library/4242/ab.jpg"
+printf 'wide' >"$TMP/library/4242/sub/library_header.jpg"
+printf 's' >"$TMP/web/Default/Web Applications/Manifest Resources/abc/Icons/32.png"
+printf 'l' >"$TMP/web/Default/Web Applications/Manifest Resources/abc/Icons/128.png"
+cat >"$TMP/desk/Library Game.desktop" <<'EOF'
+[Desktop Entry]
+Name=Library Game
+Exec=steam steam://rungameid/4242
+Icon=steam_icon_4242
+Type=Application
+EOF
+
+out="$(MODERN_DESKTOP_DIR="$TMP/desk" MODERN_ICON_ROOTS="$TMP/icons" MODERN_LUTRIS_COVER="$TMP/covers" \
+    MODERN_STEAM_LIBRARY="$TMP/library" MODERN_WEBAPP_DIR="$TMP/web/Default" python3 "$SCAN")"
+kept="$(printf '%s' "$out" | jq -r '.icons["steam_icon_1636440"]')"
+library="$(printf '%s' "$out" | jq -r '.icons["steam_icon_4242"]')"
+webapp="$(printf '%s' "$out" | jq -r '.icons["vivaldi-abc-Default"]')"
+if [[ "$kept" == "$TMP/icons/hicolor/256x256/apps/steam_icon_1636440.png" ]]; then
+    ok "a theme png still wins over the library cache"
+else
+    err "theme png lost to library cache: $kept"
+fi
+if [[ "$library" == "$TMP/library/4242/ab.jpg" ]]; then
+    ok "a missing steam png uses the library picture"
+else
+    err "library icon=$library"
+fi
+if [[ "$webapp" == "$TMP/web/Default/Web Applications/Manifest Resources/abc/Icons/128.png" ]]; then
+    ok "a browser app uses its largest profile icon"
+else
+    err "webapp icon=$webapp"
+fi
+
 if grep -Fq 'DesktopShortcuts.iconFor' "$ROOT/stow/shell/.config/quickshell/modern/Services/AppsIcons.qml" \
     && grep -Fq 'DesktopShortcuts.rows' "$ROOT/stow/shell/.config/quickshell/modern/Services/Launcher.qml"; then
     ok "the app list asks for the file path"

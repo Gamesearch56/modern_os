@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Privileged, allowlisted disk cleanup. Settings pkexecs this once.
 # Only regenerable caches, unused package files, and logs older than
-# 14 days. Never touches documents, photos, games, or $HOME itself.
+# 14 days. Icon themes, wallpaper originals, documents, photos, and
+# games stay. A symlink is never followed out of .cache.
 # Fixture env is ignored when running as root.
 set -euo pipefail
 

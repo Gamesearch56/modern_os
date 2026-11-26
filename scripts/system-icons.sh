@@ -8,14 +8,38 @@
 # older stow symlink, so a wallpaper change never touches the repo.
 set -euo pipefail
 
-TEMPLATES="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/install/icons/apps"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib/ensure-dir.sh
+source "$ROOT/scripts/lib/ensure-dir.sh"
+TEMPLATES="$ROOT/install/icons/apps"
+SYMBOLIC="$ROOT/stow/xdg/.local/share/icons/hicolor/scalable/apps"
 TOKENS="${XDG_CONFIG_HOME:-$HOME/.config}/modern/tokens.json"
 ICONS="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/scalable/apps"
 
 if [ ! -d "$TEMPLATES" ] || ! command -v python3 >/dev/null 2>&1; then
     exit 0
 fi
-mkdir -p "$ICONS"
+ensure_real_dir "$ICONS"
+if [ -d "$SYMBOLIC" ]; then
+    find "$SYMBOLIC" -maxdepth 1 -name '*-symbolic.svg' -type f -exec cp -f {} "$ICONS/" \;
+fi
+# Battle.net and anything that reuses its name (the WoW launcher) look
+# this file up by name. It lives in the user theme, so a rebuilt theme
+# has to put it back.
+for _icon_src in \
+    "$ROOT/iso/airootfs/usr/lib/modern/battlenet/battlenet.svg" \
+    /usr/lib/modern/battlenet/battlenet.svg
+do
+    if [ -f "$_icon_src" ]; then
+        cp -f "$_icon_src" "$ICONS/battlenet.svg"
+        break
+    fi
+done
+unset _icon_src
+# A cache written when this directory only held the system glyphs hides
+# every icon added afterwards. After a restart the shell trusts that
+# cache and game tiles stay empty. The directory itself is the list.
+rm -f "$(dirname "$(dirname "$ICONS")")/icon-theme.cache"
 
 TEMPLATES="$TEMPLATES" TOKENS="$TOKENS" ICONS="$ICONS" python3 - <<'PY'
 import json, os, re
@@ -47,6 +71,3 @@ for src in sorted(Path(os.environ["TEMPLATES"]).glob("modern-*.svg")):
     os.replace(tmp, dest)
 PY
 
-if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-    gtk-update-icon-cache -f -t "$(dirname "$(dirname "$ICONS")")" >/dev/null 2>&1 || true
-fi

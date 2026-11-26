@@ -133,8 +133,7 @@ ColumnLayout {
 
     JobOverlay {
         parent: Window.window ? Window.window.contentItem : root
-        width: parent ? parent.width : 0
-        height: parent ? parent.height : 0
+        anchors.fill: parent
         action: setup.jobAction
         name: setup.jobName
         log: setup.jobLog

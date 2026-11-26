@@ -35,6 +35,24 @@ def _emit(obj):
     sys.stdout.flush()
 
 
+def _kind(detail, code=0):
+    """A short code the shell can translate. Raw runner text stays here."""
+    text = str(detail or "").lower()
+    try:
+        parsed = json.loads(detail) if isinstance(detail, str) else None
+    except (TypeError, ValueError):
+        parsed = None
+    if isinstance(parsed, dict) and parsed.get("error"):
+        text = str(parsed["error"]).lower()
+    if any(word in text for word in ("out of memory", "oom", "cuda", "unable to allocate")):
+        return "memory"
+    if "context" in text or "truncat" in text:
+        return "context"
+    if code == 404:
+        return "model"
+    return "refused"
+
+
 def _visible(chunk):
     msg = chunk.get("message") if isinstance(chunk, dict) else None
     if not isinstance(msg, dict):
@@ -121,17 +139,17 @@ def run(body, key, stream_fn, search_fn):
             body.pop("tools", None)
         calls = []
         content = []
-        failed = False
         for chunk in stream_fn(body):
             if not isinstance(chunk, dict):
                 continue
             if chunk.get("error"):
-                err = str(chunk["error"])[:240]
-                if err in ("offline", "timeout"):
-                    return 28 if err == "timeout" else 1
+                err = str(chunk["error"])[:32]
+                if err not in ("offline", "timeout", "memory", "context", "model", "refused", "empty"):
+                    err = "refused"
+                # The shell only learns the reason from this line. Returning
+                # without it becomes "could not reply".
                 _emit({"error": err})
-                failed = True
-                break
+                return 28 if err == "timeout" else 1
             msg = chunk.get("message") if isinstance(chunk.get("message"), dict) else {}
             if msg.get("content"):
                 content.append(str(msg["content"]))
@@ -141,11 +159,10 @@ def run(body, key, stream_fn, search_fn):
                 _emit(visible)
             if chunk.get("done"):
                 break
-        if failed:
-            return 1
         if not use_tools or not calls:
             _emit({"done": True})
             return 0
+        _emit({"status": "search"})
         messages.append({
             "role": "assistant",
             "content": "".join(content),
@@ -187,7 +204,16 @@ def main(path):
     def stream_fn(payload):
         try:
             yield from _stream(payload, deadline, urllib.request.urlopen)
-        except (OSError, urllib.error.URLError, TimeoutError):
+        except urllib.error.HTTPError as exc:
+            detail = ""
+            try:
+                detail = exc.read().decode("utf-8", "replace")
+            except OSError:
+                detail = ""
+            yield {"error": _kind(detail, exc.code)}
+        except TimeoutError:
+            yield {"error": "timeout"}
+        except (OSError, urllib.error.URLError):
             yield {"error": "offline"}
 
     def search_fn(query):

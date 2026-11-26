@@ -134,6 +134,100 @@ def _lutris_cover(name: str) -> str:
     return ""
 
 
+def _steam_library_roots() -> list[Path]:
+    override = os.environ.get("MODERN_STEAM_LIBRARY", "").strip()
+    if override:
+        return [Path(override)]
+    # A fixture icon root must not read the real Steam library.
+    if os.environ.get("MODERN_ICON_ROOTS", "").strip():
+        return []
+    home = _home()
+    return [
+        home / ".local/share/Steam/appcache/librarycache",
+        home / ".steam/steam/appcache/librarycache",
+        home / ".steam/root/appcache/librarycache",
+    ]
+
+
+def _steam_library_icon(appid: str) -> str:
+    # Steam's desktop shortcut asks for steam_icon_<id>.png. That file is
+    # written once into the user theme. The square picture in the library
+    # cache is still there when the png is not.
+    if not appid.isdigit():
+        return ""
+    skip = {
+        "library_header.jpg",
+        "library_hero.jpg",
+        "library_hero_blur.jpg",
+        "library_capsule.jpg",
+        "logo.png",
+        "logo.jpg",
+    }
+    for root in _steam_library_roots():
+        folder = root / appid
+        if not folder.is_dir():
+            continue
+        direct = [
+            path for path in folder.iterdir()
+            if path.is_file()
+            and path.suffix.lower() in EXTS
+            and path.name.lower() not in skip
+        ]
+        if not direct:
+            continue
+        direct.sort(key=lambda path: path.stat().st_size)
+        return str(direct[0])
+    return ""
+
+
+def _webapp_profiles() -> list[Path]:
+    override = os.environ.get("MODERN_WEBAPP_DIR", "").strip()
+    if override:
+        return [Path(override)]
+    if os.environ.get("MODERN_ICON_ROOTS", "").strip():
+        return []
+    config = Path(os.environ.get("XDG_CONFIG_HOME", str(_home() / ".config")))
+    browser = config / "vivaldi"
+    if not browser.is_dir():
+        return []
+    return [path for path in browser.iterdir() if path.is_dir()]
+
+
+def _largest_png(folder: Path) -> str:
+    if not folder.is_dir():
+        return ""
+    best = ""
+    best_n = -1
+    for path in folder.iterdir():
+        if not path.is_file() or path.suffix.lower() != ".png":
+            continue
+        n = int(path.stem) if path.stem.isdigit() else 0
+        if n >= best_n:
+            best_n = n
+            best = str(path)
+    return best
+
+
+def _webapp_icon(name: str) -> str:
+    # vivaldi-<app id>-<profile>. The picture stays in the browser profile.
+    prefix = "vivaldi-"
+    if not name.startswith(prefix):
+        return ""
+    rest = name[len(prefix):]
+    if "-" not in rest:
+        return ""
+    appid, profile = rest.rsplit("-", 1)
+    if not appid or not profile or "/" in appid or "/" in profile:
+        return ""
+    for prof in _webapp_profiles():
+        if prof.name.lower() != profile.lower() and os.environ.get("MODERN_WEBAPP_DIR", "").strip() == "":
+            continue
+        found = _largest_png(prof / "Web Applications" / "Manifest Resources" / appid / "Icons")
+        if found:
+            return found
+    return ""
+
+
 def _find_icon(name: str, roots: list[Path]) -> str:
     if not name or name.startswith("."):
         return ""
@@ -151,6 +245,13 @@ def _find_icon(name: str, roots: list[Path]) -> str:
                 path = hicolor / size / "apps" / f"{stem}{ext}"
                 if path.is_file():
                     return str(path)
+    if stem.startswith("steam_icon_") and stem[11:].isdigit():
+        found = _steam_library_icon(stem[11:])
+        if found:
+            return found
+    found = _webapp_icon(stem)
+    if found:
+        return found
     return _lutris_cover(stem)
 
 
@@ -213,6 +314,31 @@ def _index_hicolor(roots: list[Path], icons: dict[str, str]) -> None:
                     found[stem] = (rank.get(size, 99), str(path))
     for stem, (_, path) in found.items():
         icons.setdefault(stem, path)
+    for root in _steam_library_roots():
+        if not root.is_dir():
+            continue
+        for child in root.iterdir():
+            if not child.is_dir() or not child.name.isdigit():
+                continue
+            key = "steam_icon_" + child.name
+            if key in icons:
+                continue
+            path = _steam_library_icon(child.name)
+            if path:
+                icons[key] = path
+    for prof in _webapp_profiles():
+        apps = prof / "Web Applications" / "Manifest Resources"
+        if not apps.is_dir():
+            continue
+        for child in apps.iterdir():
+            if not child.is_dir():
+                continue
+            key = "vivaldi-" + child.name + "-" + prof.name
+            if key in icons:
+                continue
+            path = _largest_png(child / "Icons")
+            if path:
+                icons[key] = path
 
 
 def _index_lutris(icons: dict[str, str]) -> None:

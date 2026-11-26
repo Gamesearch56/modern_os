@@ -71,6 +71,26 @@ else
     err "clean: out=$out docs=$(cat "$HOME_FAKE/Documents/keep.txt" 2>/dev/null)"
 fi
 
+mkdir -p \
+    "$HOME_FAKE/Pictures/Wallpapers" \
+    "$HOME_FAKE/.config/modern/wallpapers" \
+    "$HOME_FAKE/.local/share" \
+    "$HOME_FAKE/.cache/thumbnails/large"
+printf 'photo' >"$HOME_FAKE/Pictures/Wallpapers/photo.jpg"
+printf 'shipped' >"$HOME_FAKE/.config/modern/wallpapers/default.jpg"
+ln -s "$TMP/missing-icons" "$HOME_FAKE/.local/share/icons"
+ln -s "$HOME_FAKE/Pictures/Wallpapers/photo.jpg" "$HOME_FAKE/.cache/thumbnails/large/photo.jpg"
+printf 'thumb' >"$HOME_FAKE/.cache/thumbnails/large/a.png"
+"$SCRIPT" >/dev/null
+if [ "$(cat "$HOME_FAKE/Pictures/Wallpapers/photo.jpg")" = photo ] \
+    && [ "$(cat "$HOME_FAKE/.config/modern/wallpapers/default.jpg")" = shipped ] \
+    && [ -L "$HOME_FAKE/.local/share/icons" ] \
+    && [ ! -e "$HOME_FAKE/.cache/thumbnails/large/a.png" ]; then
+    ok "leaves wallpapers and the icon theme alone"
+else
+    err "cleanup touched wallpapers or icons"
+fi
+
 mkdir -p "$TMP/evil" "$HOME_FAKE/.cache"
 ln -s "$TMP/evil" "$HOME_FAKE/.cache/thumbnails"
 printf 'nope' >"$TMP/evil/x"

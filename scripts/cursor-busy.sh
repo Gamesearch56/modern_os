@@ -6,6 +6,9 @@
 # XCURSOR_THEME is left alone so the new process still starts with the arrow.
 set -euo pipefail
 
+# shellcheck source=lib/ensure-dir.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/ensure-dir.sh"
+
 busy_name=modern-cursor-busy
 timeout_s="${MODERN_CURSOR_BUSY_TIMEOUT:-60}"
 
@@ -76,6 +79,7 @@ install_busy_theme() {
     fi
     # dest is always .../modern-cursor-busy, never a theme we were given.
     [[ "$dest" == */modern-cursor-busy ]] || return 1
+    ensure_real_dir "$dest" || return 1
     rm -rf -- "$dest"
     mkdir -p "$dest/cursors"
     for f in "$src/cursors"/*; do

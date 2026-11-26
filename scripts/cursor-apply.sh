@@ -23,8 +23,11 @@ if command -v hyprctl >/dev/null 2>&1; then
     hyprctl keyword env "HYPRCURSOR_SIZE,$size" >/dev/null 2>&1 || true
 fi
 
+# shellcheck source=lib/ensure-dir.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/ensure-dir.sh"
 dir="${XDG_DATA_HOME:-$HOME/.local/share}/icons/default"
-mkdir -p "$dir" "$HOME/.icons/default"
+ensure_real_dir "$dir"
+ensure_real_dir "$HOME/.icons/default"
 idx="[Icon Theme]
 Name=Default
 Comment=Default cursor theme

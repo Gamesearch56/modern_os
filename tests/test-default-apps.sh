@@ -142,9 +142,21 @@ if [ "$1" = query ] && [ "$2" = filetype ]; then
         *.png) printf '%s\n' image/png ;;
         *.txt) printf '%s\n' text/plain ;;
         *.mp4) printf '%s\n' video/mp4 ;;
+        *.html) printf '%s\n' text/html ;;
         *) printf '%s\n' application/octet-stream ;;
     esac
     exit 0
+fi
+# A browser or an old player already claimed the type. Settings still wins.
+# An unknown type has no answer, so --can can reject it.
+if [ "$1" = query ] && [ "$2" = default ]; then
+    case "$3" in
+        image/*|video/*|audio/*|text/plain|text/html)
+            printf '%s\n' vivaldi-stable.desktop
+            exit 0
+            ;;
+    esac
+    exit 1
 fi
 exit 1
 EOF
@@ -193,6 +205,15 @@ else
     printf '%s\n' "$got" >&2
 fi
 
+: >"$tmp/page.html"
+got="$(run_open "$tmp/page.html")"
+if printf '%s\n' "$got" | grep -Fq 'vivaldi-stable'; then
+    ok "an html file still follows the mime list, not the text editor"
+else
+    err "html was not left to the mime handler"
+    printf '%s\n' "$got" >&2
+fi
+
 write_cfg '"loupe.desktop"' '""' '""'
 got="$(run_open "$tmp/picture.png")"
 if printf '%s\n' "$got" | grep -Fxq 'loupe' \
@@ -219,18 +240,39 @@ else
     ok "--can rejects a file with no handler"
 fi
 
+for id in modern.imageviewer modern.mediaplayer modern.editor modern.files; do
+    cp "$ROOT/stow/xdg/.local/share/applications/$id.desktop" \
+        "$tmp/.local/share/applications/$id.desktop"
+done
+printf '%s\n' '[Default Applications]' 'image/jpeg=vivaldi-stable.desktop' \
+    'image/avif=firefox.desktop' 'video/mkv=mpv.desktop' 'audio/mp3=mpv.desktop' \
+    >"$tmp/mimeapps.list"
+if HOME="$tmp" XDG_CONFIG_HOME="$tmp/cfg" \
+    "$ROOT/scripts/mime-defaults.sh" --mimeapps "$tmp/mimeapps.list" \
+    && grep -qx 'image/jpeg=modern.imageviewer.desktop' "$tmp/mimeapps.list" \
+    && grep -qx 'image/avif=modern.imageviewer.desktop' "$tmp/mimeapps.list" \
+    && grep -qx 'video/mkv=modern.mediaplayer.desktop' "$tmp/mimeapps.list" \
+    && grep -qx 'audio/mp3=modern.mediaplayer.desktop' "$tmp/mimeapps.list" \
+    && ! grep -q 'vivaldi-stable.desktop' "$tmp/mimeapps.list"; then
+    ok "image, video, and audio aliases follow Settings, not an old claim"
+else
+    err "stale image or media handlers were left in mimeapps.list"
+fi
+
 cat >"$tmp/.local/share/applications/firefox.desktop" <<'EOF'
 [Desktop Entry]
 Type=Application
 Name=Firefox
-MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
+MimeType=text/html;image/jpeg;video/mp4;x-scheme-handler/http;x-scheme-handler/https;
 EOF
 printf '%s\n' '{"apps":{"defaults":{"browser":"firefox"}}}' >"$tmp/cfg/modern/config.json"
 if HOME="$tmp" XDG_CONFIG_HOME="$tmp/cfg" \
     "$ROOT/scripts/mime-defaults.sh" --mimeapps "$tmp/mimeapps.list" \
     && grep -qx 'x-scheme-handler/http=firefox.desktop' "$tmp/mimeapps.list" \
     && grep -qx 'x-scheme-handler/https=firefox.desktop' "$tmp/mimeapps.list" \
-    && grep -qx 'text/html=firefox.desktop' "$tmp/mimeapps.list"; then
+    && grep -qx 'text/html=firefox.desktop' "$tmp/mimeapps.list" \
+    && grep -qx 'image/jpeg=modern.imageviewer.desktop' "$tmp/mimeapps.list" \
+    && grep -qx 'video/mp4=modern.mediaplayer.desktop' "$tmp/mimeapps.list"; then
     ok "the chosen browser becomes the handler for links and html"
 else
     err "the chosen browser was not written into mimeapps.list"
