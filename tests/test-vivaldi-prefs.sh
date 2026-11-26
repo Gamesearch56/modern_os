@@ -99,4 +99,12 @@ else
     err "Vivaldi chrome must scale with typography.scale"
 fi
 
+if ! grep -Fq -- '--lang=' "$ROOT/scripts/vivaldi" \
+    && ! grep -Fq 'vivaldi_apply_language' "$ROOT/scripts/session-chrome-sync.sh" \
+    && ! grep -Fq 'intl.selected_languages' "$ROOT/scripts/lib/vivaldi-prefs.sh"; then
+    ok "the desktop language is not written into Vivaldi"
+else
+    err "Vivaldi must keep its own language"
+fi
+
 [ "$FAIL" -eq 0 ]
