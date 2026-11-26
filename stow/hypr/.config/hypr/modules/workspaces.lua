@@ -47,8 +47,9 @@ local function send_to_workspace(win, n)
     adopting = false
 end
 
--- hl.get_workspace warns "Workspace not found" for every workspace that
--- does not exist yet, which is all of them while the config loads.
+-- Looking up or moving a workspace that does not exist yet makes
+-- Hyprland put "Workspace not found" on the error overlay. The
+-- workspace rule already binds the id; only an existing one is moved.
 local function existing_workspace(n)
     if not hl.get_workspaces then
         return nil
@@ -76,7 +77,10 @@ local function pin(n, mon)
     end
     local home = layout.live_match(dest) or dest
     local ws = existing_workspace(n)
-    local cur = ws and ws.monitor
+    if not ws then
+        return
+    end
+    local cur = ws.monitor
     if cur and layout.same_output(cur, home) then
         return
     end
@@ -374,8 +378,9 @@ end
 
 local rules = config.value("monitors.rules", {})
 for _, rule in ipairs(rules) do
-    if rule.workspace and rule.monitorDescription then
-        local spec = { workspace = tostring(rule.workspace), monitor = "desc:" .. rule.monitorDescription }
+    local id = tonumber(rule.workspace)
+    if id and rule.monitorDescription and existing_workspace(id) then
+        local spec = { workspace = tostring(id), monitor = "desc:" .. rule.monitorDescription }
         if hl.dispatch and hl.dsp.workspace and hl.dsp.workspace.move then
             pcall(hl.dispatch, hl.dsp.workspace.move(spec))
         end
