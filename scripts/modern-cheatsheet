@@ -3,4 +3,4 @@
 # it; the application opens it.
 set -euo pipefail
 
-exec qs -c modern ipc call cheatsheet show
+exec qs -c modern ipc call cheatsheet open

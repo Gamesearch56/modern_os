@@ -47,7 +47,7 @@ check_app() {
 }
 
 check_app wallpaper wallpaper wallpaper.launcherName wallpaper 'ipc call wallpaper pick'
-check_app cheatsheet cheatsheet cheatsheet.launcherName cheatsheet 'ipc call cheatsheet show'
+check_app cheatsheet cheatsheet cheatsheet.launcherName cheatsheet 'ipc call cheatsheet open'
 check_app bugreport bugreport bugReport.launcherName bugreport 'modern" report'
 
 [ "$FAIL" -eq 0 ]

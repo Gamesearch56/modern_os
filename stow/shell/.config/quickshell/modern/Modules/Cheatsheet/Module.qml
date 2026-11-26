@@ -14,6 +14,9 @@ Scope {
         target: "cheatsheet"
         function toggle() { Cheatsheet.toggle(); }
         function show() { Cheatsheet.show(); }
+        // `show` is a `qs ipc` subcommand, so `ipc call cheatsheet show`
+        // lists targets and never opens the window. Callers use open.
+        function open() { Cheatsheet.show(); }
         function hide() { Cheatsheet.hide(); }
     }
 
