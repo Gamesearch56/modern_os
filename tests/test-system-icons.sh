@@ -87,4 +87,15 @@ else
     err "a real icons file was removed"
 fi
 
+rm -rf "$XDG_DATA_HOME/icons"
+mkdir -p "$icons"
+printf 'stale' >"$(dirname "$(dirname "$icons")")/icon-theme.cache"
+"$ROOT/scripts/system-icons.sh"
+if [ -f "$icons/battlenet.svg" ] && [ ! -L "$icons/battlenet.svg" ] \
+    && [ ! -e "$(dirname "$(dirname "$icons")")/icon-theme.cache" ]; then
+    ok "the battle.net icon is restored and the theme cache is not kept"
+else
+    err "battle.net icon or theme cache"
+fi
+
 exit "$FAIL"

@@ -23,6 +23,23 @@ ensure_real_dir "$ICONS"
 if [ -d "$SYMBOLIC" ]; then
     find "$SYMBOLIC" -maxdepth 1 -name '*-symbolic.svg' -type f -exec cp -f {} "$ICONS/" \;
 fi
+# Battle.net and anything that reuses its name (the WoW launcher) look
+# this file up by name. It lives in the user theme, so a rebuilt theme
+# has to put it back.
+for _icon_src in \
+    "$ROOT/iso/airootfs/usr/lib/modern/battlenet/battlenet.svg" \
+    /usr/lib/modern/battlenet/battlenet.svg
+do
+    if [ -f "$_icon_src" ]; then
+        cp -f "$_icon_src" "$ICONS/battlenet.svg"
+        break
+    fi
+done
+unset _icon_src
+# A cache written when this directory only held the system glyphs hides
+# every icon added afterwards. After a restart the shell trusts that
+# cache and game tiles stay empty. The directory itself is the list.
+rm -f "$(dirname "$(dirname "$ICONS")")/icon-theme.cache"
 
 TEMPLATES="$TEMPLATES" TOKENS="$TOKENS" ICONS="$ICONS" python3 - <<'PY'
 import json, os, re
@@ -54,6 +71,3 @@ for src in sorted(Path(os.environ["TEMPLATES"]).glob("modern-*.svg")):
     os.replace(tmp, dest)
 PY
 
-if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-    gtk-update-icon-cache -f -t "$(dirname "$(dirname "$ICONS")")" >/dev/null 2>&1 || true
-fi
