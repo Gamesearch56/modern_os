@@ -13,6 +13,17 @@ Item {
     property var _paths: []
     property var _buf: ({})
 
+    function drop(path: string): bool {
+        const p = String(path || "");
+        if (!p.length || typeof root.map[p] !== "string")
+            return false;
+        const next = Object.assign({}, root.map);
+        delete next[p];
+        root.map = next;
+        root.rev++;
+        return true;
+    }
+
     function url(path: string): string {
         void root.rev;
         const p = String(path || "");

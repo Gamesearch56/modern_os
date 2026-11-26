@@ -110,7 +110,8 @@ else
 fi
 
 mkdir -p "$HOME/Pictures/Wallpapers" "$HOME/.local/state/modern"
-printf 'wp\n' >"$HOME/Pictures/Wallpapers/keep.jpg"
+# JPEG magic so the list accepts it. The bytes are not a full picture.
+printf '\377\330\377\340' >"$HOME/Pictures/Wallpapers/keep.jpg"
 printf '%s\n' "$HOME/Pictures/Wallpapers/keep.jpg" \
     >"$HOME/.local/state/modern/current-wallpaper"
 "$ROOT/scripts/xdg-capture-seed.sh" "$HOME/.config/modern/config.json"
@@ -128,6 +129,49 @@ if printf '%s\n' "$listed" | grep -Fx "$HOME/Bilder/Wallpapers/keep.jpg" >/dev/n
     ok "wallpaper-list prefers XDG PICTURES/Wallpapers"
 else
     err "wallpaper-list was '$listed'"
+fi
+
+mkdir -p "$HOME/.config/modern/wallpapers"
+printf 'not-a-picture\n' >"$HOME/Bilder/Wallpapers/default.jpg"
+printf '\377\330\377\340' >"$HOME/.config/modern/wallpapers/default.jpg"
+listed="$("$ROOT/scripts/wallpaper-list.sh" || true)"
+if printf '%s\n' "$listed" | grep -Fx "$HOME/.config/modern/wallpapers/default.jpg" >/dev/null \
+    && ! printf '%s\n' "$listed" | grep -Fx "$HOME/Bilder/Wallpapers/default.jpg" >/dev/null; then
+    ok "a non-image does not hide the shipped wallpaper"
+else
+    err "wallpaper-list hid the shipped file: $listed"
+fi
+
+if grep -F 'wallpaper-seed.sh' "$ROOT/install/install.sh" >/dev/null \
+    && grep -F 'cp -L' "$ROOT/scripts/wallpaper-seed.sh" >/dev/null \
+    && grep -F 'xdg_wallpaper_bytes' "$ROOT/scripts/wallpaper-seed.sh" >/dev/null \
+    && grep -F 'wallpaper_thumb_make' "$ROOT/scripts/wallpaper-seed.sh" >/dev/null; then
+    ok "install stores real default wallpapers and their thumbnails"
+else
+    err "install does not materialize the shipped wallpapers"
+fi
+
+seed_src="$TMP/shipped"
+seed_lib="$TMP/library"
+mkdir -p "$seed_src" "$seed_lib"
+printf '\377\330\377\340' >"$seed_src/default.jpg"
+ln -s "$seed_src/default.jpg" "$seed_src/default-blue-abstract.jpg"
+printf 'not-a-picture\n' >"$seed_lib/default-blue-abstract.jpg"
+printf '\377\330\377\340kept' >"$seed_lib/default-blue-dark.jpg"
+printf '\377\330\377\340' >"$seed_src/default-blue-dark.jpg"
+if HOME="$TMP/seed-home" XDG_CACHE_HOME="$TMP/seed-cache" \
+    "$ROOT/scripts/wallpaper-seed.sh" "$seed_src" "$seed_lib" >/dev/null 2>&1; then
+    if [ ! -L "$seed_lib/default.jpg" ] \
+        && [ "$(od -An -N 3 -t x1 "$seed_lib/default.jpg" | tr -d ' \n')" = "ffd8ff" ] \
+        && [ ! -L "$seed_lib/default-blue-abstract.jpg" ] \
+        && [ "$(od -An -N 3 -t x1 "$seed_lib/default-blue-abstract.jpg" | tr -d ' \n')" = "ffd8ff" ] \
+        && [ "$(cat "$seed_lib/default-blue-dark.jpg")" = "$(printf '\377\330\377\340kept')" ]; then
+        ok "seed replaces a bad library file and keeps a real one"
+    else
+        err "seed left the library wrong"
+    fi
+else
+    err "wallpaper-seed.sh failed"
 fi
 
 if grep -F 'xdg_wallpapers_dir' "$ROOT/install/install.sh" >/dev/null \

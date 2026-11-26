@@ -216,6 +216,10 @@ Singleton {
 
     function tileSource(path: string): string { return thumbs.url(path); }
 
+    // A thumbnail that does not decode would stay in front of the
+    // original. Drop it so the tile asks for the picture itself.
+    function tileFailed(path: string) { thumbs.drop(String(path || "")); }
+
     function _refresh() { listProc.running = false; Qt.callLater(() => { listProc.running = true; }); }
 
     function importFile(path: string) {

@@ -43,6 +43,9 @@ fi
         f="${rec#*$'\t'}"
         real="$(realpath "$f" 2>/dev/null || true)"
         [ -n "$real" ] || continue
+        # Checked before the basename is remembered, so a bad library
+        # copy does not hide the shipped picture of the same name.
+        xdg_wallpaper_bytes "$real" || continue
         base="${real##*/}"
         base="${base,,}"
         if [ -n "${seen[$real]+x}" ] || [ -n "${seen_base[$base]+x}" ]; then
