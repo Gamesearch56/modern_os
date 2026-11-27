@@ -185,10 +185,18 @@ local function kind_of(w)
     return "app"
 end
 
-local function dispatch(spec)
-    if hl.dispatch and spec then
-        pcall(hl.dispatch, spec)
+-- The window selector runs while the dispatch is built. Pass a
+-- function so an expired window stays inside pcall.
+local function dispatch(make)
+    if not hl.dispatch or make == nil then
+        return
     end
+    pcall(function()
+        local spec = type(make) == "function" and make() or make
+        if spec then
+            hl.dispatch(spec)
+        end
+    end)
 end
 
 -- Vivaldi's own balloon has no app id and no title. Close it and hand
@@ -213,7 +221,9 @@ local function drop_vivaldi_notice(w)
     local api = hl.dsp and hl.dsp.window
     local target = live_window(addr) or w
     if api and api.close then
-        dispatch(api.close({ window = target }))
+        dispatch(function()
+            return api.close({ window = target })
+        end)
     end
     if hl.exec_cmd then
         hl.exec_cmd(string.format(
@@ -230,13 +240,17 @@ end
 
 local function float_set(w, on)
     if win() and win().float then
-        dispatch(win().float({ action = on and "set" or "unset", window = w }))
+        dispatch(function()
+            return win().float({ action = on and "set" or "unset", window = w })
+        end)
     end
 end
 
 local function restore_focus()
     if focused and hl.dsp and hl.dsp.focus then
-        dispatch(hl.dsp.focus({ window = focused }))
+        dispatch(function()
+            return hl.dsp.focus({ window = focused })
+        end)
     end
 end
 
@@ -256,14 +270,18 @@ local function place_toast(w)
         return
     end
     if api.set_prop then
-        dispatch(api.set_prop({
-            prop = "max_size",
-            value = tostring(TOAST_W) .. " " .. tostring(TOAST_H),
-            window = w,
-        }))
+        dispatch(function()
+            return api.set_prop({
+                prop = "max_size",
+                value = tostring(TOAST_W) .. " " .. tostring(TOAST_H),
+                window = w,
+            })
+        end)
     end
     if api.resize then
-        dispatch(api.resize({ x = TOAST_W, y = TOAST_H, window = w }))
+        dispatch(function()
+            return api.resize({ x = TOAST_W, y = TOAST_H, window = w })
+        end)
     end
     local m = w.monitor
     if type(m) ~= "table" and hl.get_active_monitor then
@@ -283,11 +301,13 @@ local function place_toast(w)
     else
         top = top + BAR_FALLBACK
     end
-    dispatch(api.move({
-        x = (tonumber(m.x) or 0) + mw - TOAST_W - right,
-        y = (tonumber(m.y) or 0) + top + toast_slot() * (TOAST_H + MARGIN),
-        window = w,
-    }))
+    dispatch(function()
+        return api.move({
+            x = (tonumber(m.x) or 0) + mw - TOAST_W - right,
+            y = (tonumber(m.y) or 0) + top + toast_slot() * (TOAST_H + MARGIN),
+            window = w,
+        })
+    end)
 end
 
 local function apply_kind(w, kind)
@@ -304,10 +324,14 @@ local function apply_kind(w, kind)
         state[addr] = "dialog"
         float_set(w, true)
         if win() and win().center then
-            dispatch(win().center({ window = w }))
+            dispatch(function()
+                return win().center({ window = w })
+            end)
         end
         if hl.dsp and hl.dsp.focus then
-            dispatch(hl.dsp.focus({ window = w }))
+            dispatch(function()
+                return hl.dsp.focus({ window = w })
+            end)
         end
     elseif kind == "app" and (state[addr] == "pending" or state[addr] == "dialog") then
         state[addr] = "app"

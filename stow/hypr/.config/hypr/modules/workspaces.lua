@@ -38,11 +38,23 @@ local function send_to_workspace(win, n)
         return
     end
     adopting = true
-    local spec = { workspace = n, follow = false, window = win }
-    local ok = pcall(hl.dispatch, hl.dsp.window.move(spec))
-    if not ok and win.address then
-        spec.window = "address:" .. tostring(win.address):gsub("^address:", "")
-        pcall(hl.dispatch, hl.dsp.window.move(spec))
+    -- The selector runs while the dispatch is built. pcall around
+    -- hl.dispatch alone still lets an expired window reach the overlay.
+    local addr = ""
+    pcall(function()
+        addr = tostring(win.address or ""):gsub("^address:", "")
+    end)
+    local ok = pcall(function()
+        hl.dispatch(hl.dsp.window.move({ workspace = n, follow = false, window = win }))
+    end)
+    if not ok and addr ~= "" then
+        pcall(function()
+            hl.dispatch(hl.dsp.window.move({
+                workspace = n,
+                follow = false,
+                window = "address:" .. addr,
+            }))
+        end)
     end
     adopting = false
 end

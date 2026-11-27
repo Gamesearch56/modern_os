@@ -130,17 +130,32 @@ local function move_to_background(w)
     -- Dispatch does not error when the move is ignored, so try the
     -- window and the address. One of the two sticks once the window
     -- has a workspace.
-    local spec = { workspace = "special:background", follow = false, window = w }
-    pcall(hl.dispatch, hl.dsp.window.move(spec))
-    local addr = tostring(w and w.address or ""):gsub("^address:", "")
+    -- The selector runs while the dispatch is built. An expired window
+    -- object is a runtime error unless that build is inside pcall.
+    local addr = ""
+    pcall(function()
+        addr = tostring(w and w.address or ""):gsub("^address:", "")
+    end)
     if addr ~= "" and not addr:lower():find("^0x") then
         addr = "0x" .. addr
     end
-    if addr == "" then
+    local ok = pcall(function()
+        hl.dispatch(hl.dsp.window.move({
+            workspace = "special:background",
+            follow = false,
+            window = w,
+        }))
+    end)
+    if ok or addr == "" then
         return
     end
-    spec.window = "address:" .. addr
-    pcall(hl.dispatch, hl.dsp.window.move(spec))
+    pcall(function()
+        hl.dispatch(hl.dsp.window.move({
+            workspace = "special:background",
+            follow = false,
+            window = "address:" .. addr,
+        }))
+    end)
 end
 
 local function on_window(w)
