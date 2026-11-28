@@ -270,12 +270,21 @@ Singleton {
         root._pump();
     }
 
+    property bool _settled: false
+    function _settle(retry: bool) {
+        if (proc.running) { Qt.callLater(() => root._settle(false)); return; }
+        const text = String(placeOut.text || "");
+        if (!text.length && !retry) { Qt.callLater(() => root._settle(true)); return; }
+        if (root._settled) return;
+        root._settled = true;
+        root._out = text;
+        root._apply();
+    }
     Process {
         id: proc
         running: false
-        stdout: StdioCollector {
-            onStreamFinished: root._out = String(this.text || "")
-        }
-        onExited: root._apply()
+        stdout: StdioCollector { id: placeOut }
+        onStarted: root._settled = false
+        onExited: Qt.callLater(() => root._settle(false))
     }
 }

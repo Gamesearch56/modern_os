@@ -108,8 +108,6 @@ Flickable {
                         key: "files.places.eject"; tip: true; tipEdge: "right"
                         size: Tokens.spacing.xl
                         iconSize: Tokens.icon.sm
-                        // The active row is a primary pill. A primary wash on
-                        // that pill does not show, so the hover uses on-primary.
                         glyphColor: diskRow.selected ? Chrome.navSelected.fg : Colors.color.onSurface
                         layerColor: diskRow.selected ? Chrome.navSelected.fg : Colors.color.primary
                         enabled: Storage.ejecting !== String(modelData.name || "")
@@ -177,11 +175,13 @@ Flickable {
 
     function _dir(id: string): string {
         const dirs = FilesPlaces.dirs || [];
-        for (let i = 0; i < dirs.length; i++) {
-            if (dirs[i].id === id)
-                return String(dirs[i].path || "");
-        }
-        return "";
+        for (let i = 0; i < dirs.length; i++)
+            if (dirs[i].id === id) return String(dirs[i].path || "");
+        if (id === "home") return String(Paths.home || "");
+        if (dirs.length) return "";
+        const key = id === "downloads" ? "DOWNLOAD" : id === "pictures" ? "PICTURES" : id === "videos" ? "VIDEOS" : "";
+        const mapped = String((XdgDirs._map || {})[key] || "");
+        return mapped.charAt(0) === "/" ? mapped : "";
     }
 
     readonly property var _rows: {
