@@ -31,7 +31,8 @@ QtObject {
 
     function groupProtected(grp: var): bool {
         const gid = Number(grp && grp.gid);
-        return !(gid >= 1000);
+        // 60000 and above is nobody and systemd DynamicUser, not a local group.
+        return !(gid >= 1000 && gid < 60000);
     }
 
     function canRenameGroup(grp: var, people: var): bool {
@@ -255,8 +256,9 @@ QtObject {
                     mem.push(people[j].login);
             }
             const humans = mem.filter(n => logins.indexOf(n) !== -1);
-            if (g.gid >= 1000 || humans.length > 0)
-                shown.push({ name: g.name, gid: g.gid, members: humans, protected: g.gid < 1000 });
+            const local = g.gid >= 1000 && g.gid < 60000;
+            if (local || humans.length > 0)
+                shown.push({ name: g.name, gid: g.gid, members: humans, protected: !local });
         }
         return { users: people, groups: shown };
     }

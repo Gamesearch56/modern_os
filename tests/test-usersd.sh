@@ -123,6 +123,14 @@ else
     ok "refuses to delete a system group"
 fi
 
+if printf '%s\n' '{"action":"group-delete","group":"wsdd"}' | env MODERN_TEST_FIXTURE=1 \
+    MODERN_USERSD_GROUP_NAMES=wsdd MODERN_USERSD_GID=64757 \
+    "$SCRIPT" >/dev/null 2>&1; then
+    err "service group was deletable"
+else
+    ok "refuses to delete a service group"
+fi
+
 if printf '%s\n' '{"action":"group-delete","group":"alice"}' | env MODERN_TEST_FIXTURE=1 \
     MODERN_USERSD_INVOKER=alice MODERN_USERSD_USERS=alice,bob \
     MODERN_USERSD_ADMINS=alice MODERN_USERSD_GROUP_NAMES=alice,wheel \

@@ -895,6 +895,8 @@
       "deleteUserBody": "They will not be able to sign in. Their home folder is removed.",
       "deleteGroupTitle": "Delete {group}?",
       "deleteGroupBody": "Accounts stay. They just leave this group.",
+      "groupDeleted": "{group} was deleted",
+      "groupDeleteFailed": "Could not delete {group}",
       "empty": "No other people yet",
       "emptyHint": "Add a user so someone else can sign in from the login screen.",
       "emptyGroups": "No groups yet",

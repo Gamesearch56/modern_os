@@ -203,16 +203,17 @@ Singleton {
         root._start(body);
     }
 
-    function deleteGroup(name: string) {
+    function deleteGroup(name: string): bool {
         if (!root._requireManage())
-            return;
+            return false;
         const g = String(name || "").trim();
         const grp = rules.findGroup(root.localGroups, g);
         if (!grp || !root.canDeleteGroup(grp)) {
             root.lastError = I18n.t("settings.users.protected");
-            return;
+            return false;
         }
         root._start({ action: "group-delete", group: g });
+        return true;
     }
 
     function _start(body) {
@@ -270,9 +271,9 @@ Singleton {
         onExited: (code) => {
             mutateProc.stdinEnabled = true;
             mutateProc.running = false;
-            root.running = false;
             root.lastError = code !== 0
                 ? rules.mapError(String(errOut.text || "").trim()) : "";
+            root.running = false;
             if (root.watching)
                 root.refresh();
         }

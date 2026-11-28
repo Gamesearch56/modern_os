@@ -895,6 +895,8 @@
       "deleteUserBody": "Diese Person kann sich nicht mehr anmelden. Der Home-Ordner wird entfernt.",
       "deleteGroupTitle": "{group} löschen?",
       "deleteGroupBody": "Konten bleiben. Sie verlassen nur diese Gruppe.",
+      "groupDeleted": "{group} wurde gelöscht",
+      "groupDeleteFailed": "{group} konnte nicht gelöscht werden",
       "empty": "Noch keine anderen Personen",
       "emptyHint": "Füge eine Person hinzu, die sich am Anmeldebildschirm anmelden kann.",
       "emptyGroups": "Noch keine Gruppen",

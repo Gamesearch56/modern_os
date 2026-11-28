@@ -399,7 +399,7 @@ delete_group() {
     require_existing_group
     local gid
     gid="$(group_gid "$groupname")"
-    [ "${gid:-0}" -ge 1000 ] || fail "protected group"
+    [ "${gid:-0}" -ge 1000 ] && [ "${gid:-0}" -lt 60000 ] || fail "protected group"
     user_exists "$groupname" && fail "protected group"
     run groupdel -- "$groupname"
     [ "$DRY" -eq 1 ] || ok group-delete
@@ -409,7 +409,7 @@ rename_group() {
     require_existing_group
     local gid new
     gid="$(group_gid "$groupname")"
-    [ "${gid:-0}" -ge 1000 ] || fail "protected group"
+    [ "${gid:-0}" -ge 1000 ] && [ "${gid:-0}" -lt 60000 ] || fail "protected group"
     user_exists "$groupname" && fail "protected group"
     new="$(jq -r '.newGroup // empty' <<<"$json")"
     valid_name "$new" || fail "invalid group"

@@ -11,6 +11,7 @@ Item {
 
     property var pendingUser: null
     property var pendingGroup: null
+    property string pendingDelete: ""
 
     implicitHeight: col.implicitHeight
 
@@ -137,6 +138,20 @@ Item {
         }
     }
 
+    Connections {
+        target: Passwd
+        function onRunningChanged() {
+            if (Passwd.running || root.pendingDelete.length === 0)
+                return;
+            const name = root.pendingDelete;
+            root.pendingDelete = "";
+            if (Passwd.lastError.length > 0)
+                Notifications.toast(I18n.t("settings.users.groupDeleteFailed", ({ group: name })), Passwd.lastError);
+            else
+                Notifications.toast(I18n.t("settings.users.groupDeleted", ({ group: name })), "");
+        }
+    }
+
     FaceDialog {
         id: faceDlg
         parent: Window.window ? Window.window.contentItem : root
@@ -202,10 +217,14 @@ Item {
         cancelKey: "settings.cancel"
         destructive: true
         onConfirmed: {
-            if (root.pendingGroup)
-                Passwd.deleteGroup(root.pendingGroup.name || "");
+            const name = root.pendingGroup ? (root.pendingGroup.name || "") : "";
+            const started = name.length > 0 && Passwd.deleteGroup(name);
             delGroup.open = false;
             root.pendingGroup = null;
+            if (started)
+                root.pendingDelete = name;
+            else if (name.length > 0)
+                Notifications.toast(I18n.t("settings.users.groupDeleteFailed", ({ group: name })), Passwd.lastError);
         }
         onCancelled: {
             delGroup.open = false;
