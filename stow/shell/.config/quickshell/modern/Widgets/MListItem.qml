@@ -125,10 +125,10 @@ Item {
         anchors.fill: parent
         anchors.rightMargin: trailing.visible ? trailing.width + root._padH : 0
         enabled: root.hoverHighlight
-        hoverEnabled: true
+        hoverEnabled: root.hoverHighlight
         propagateComposedEvents: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-        cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+        cursorShape: !root.hoverHighlight ? Qt.ArrowCursor : (root.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor)
         onPressed: (mouse) => {
             if (!root.enabled)
                 return;
@@ -152,10 +152,10 @@ Item {
             root.activated();
         }
     }
-
     HoverHandler {
+        // MouseArea.cursorShape does not win on this session.
         enabled: root.hoverHighlight
-        cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+        cursorShape: !root.hoverHighlight ? Qt.ArrowCursor : (root.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor)
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     }
 
